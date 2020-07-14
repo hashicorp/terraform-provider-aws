@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,6 +26,7 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 				),
 			},

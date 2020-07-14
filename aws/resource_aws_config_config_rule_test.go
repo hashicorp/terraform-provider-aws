@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func testAccConfigConfigRule_basic(t *testing.T) {
@@ -43,10 +44,9 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckConfigConfigRuleDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfigRuleConfig_ownerAws(rName),
@@ -64,7 +64,7 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_id", "blablah"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.3865728585", "AWS::EC2::Instance"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "scope.0.compliance_resource_types.*", "AWS::EC2::Instance"),
 				),
 			},
 		},
@@ -80,10 +80,9 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 	path := "test-fixtures/lambdatest.zip"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckConfigConfigRuleDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfigRuleConfig_customLambda(rInt, path),
@@ -99,9 +98,11 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.f", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.event_source", "aws.config"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.message_type", "ConfigurationSnapshotDeliveryCompleted"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.maximum_execution_frequency", ""),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail", map[string]string{
+						"event_source":                "aws.config",
+						"message_type":                "ConfigurationSnapshotDeliveryCompleted",
+						"maximum_execution_frequency": "",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "IsTemporary"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "yes"),

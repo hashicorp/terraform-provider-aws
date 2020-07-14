@@ -112,6 +112,8 @@ The following arguments are supported:
 * `name` - The name of the launch template. If you leave this blank, Terraform will auto-generate a unique name.
 * `name_prefix` - Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - Description of the launch template.
+* `default_version` - Default Version of the launch template.
+* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`. 
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -336,7 +338,6 @@ The following attributes are exported along with all argument references:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
-* `default_version` - The default version of the launch template.
 * `latest_version` - The latest version of the launch template.
 
 ## Import

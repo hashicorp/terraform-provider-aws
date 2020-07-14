@@ -194,12 +194,6 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"network_interface_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Removed:  "Use `primary_network_interface_id` attribute instead",
-			},
-
 			"primary_network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -660,7 +654,10 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			log.Print("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		runResp, err = conn.RunInstances(runOpts)

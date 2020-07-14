@@ -531,24 +531,6 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 	partition := testAccGetPartition()
 	resourceName := "aws_s3_bucket.bucket"
 
-	checkFn := func(s []*terraform.InstanceState) error {
-		// Expect 2: bucket + policy
-		if len(s) != 2 {
-			return fmt.Errorf("expected 2 states: %#v", s)
-		}
-		bucketState, policyState := s[0], s[1]
-
-		if bucketState.ID != bucketName {
-			return fmt.Errorf("expected bucket of ID %s, %s received", bucketName, bucketState.ID)
-		}
-
-		if policyState.ID != bucketName {
-			return fmt.Errorf("expected policy of ID %s, %s received", bucketName, bucketState.ID)
-		}
-
-		return nil
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -562,9 +544,20 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: checkFn,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"acl",
+					"force_destroy",
+					"grant",
+					// NOTE: Prior to Terraform AWS Provider 3.0, this attribute did not import correctly either.
+					//       The Read function does not require GetBucketPolicy, if the argument is not configured.
+					//       Rather than introduce that breaking change as well with 3.0, instead we leave the
+					//       current Read behavior and note this will be deprecated in a later 3.x release along
+					//       with other inline policy attributes across the provider.
+					"policy",
+				},
 			},
 			{
 				Config: testAccAWSS3BucketConfig_Basic(bucketName),
@@ -622,10 +615,9 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSS3BucketDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketConfigWithGrants(bucketName),
@@ -2857,21 +2849,15 @@ func testAccCheckAWSS3BucketReplicationRules(n string, providerF func() *schema.
 
 func testAccCheckAWSS3BucketUpdateGrantSingle(resourceName string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
-		gh := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
-			"id":   id,
-			"type": "CanonicalUser",
-			"uri":  "",
-			"permissions": schema.NewSet(
-				schema.HashString,
-				[]interface{}{"FULL_CONTROL", "WRITE"},
-			),
-		}))
 		for _, t := range []resource.TestCheckFunc{
-			resource.TestCheckResourceAttr(resourceName, gh+".permissions.#", "2"),
-			resource.TestCheckResourceAttr(resourceName, gh+".permissions.3535167073", "FULL_CONTROL"),
-			resource.TestCheckResourceAttr(resourceName, gh+".permissions.2319431919", "WRITE"),
-			resource.TestCheckResourceAttr(resourceName, gh+".type", "CanonicalUser"),
+			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+				"permissions.#": "2",
+			}),
+			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "FULL_CONTROL"),
+			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "WRITE"),
+			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+				"type": "CanonicalUser",
+			}),
 		} {
 			if err := t(s); err != nil {
 				return err
@@ -2903,13 +2889,19 @@ func testAccCheckAWSS3BucketUpdateGrantMulti(resourceName string) func(s *terraf
 			),
 		}))
 		for _, t := range []resource.TestCheckFunc{
+			// TODO TypeSet Check to differentiate between sets
 			resource.TestCheckResourceAttr(resourceName, gh1+".permissions.#", "1"),
-			resource.TestCheckResourceAttr(resourceName, gh1+".permissions.2931993811", "READ"),
-			resource.TestCheckResourceAttr(resourceName, gh1+".type", "CanonicalUser"),
+			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ"),
+			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+				"type": "CanonicalUser",
+			}),
+			// TODO TypeSet Check to differentiate between sets
 			resource.TestCheckResourceAttr(resourceName, gh2+".permissions.#", "1"),
-			resource.TestCheckResourceAttr(resourceName, gh2+".permissions.1600971645", "READ_ACP"),
-			resource.TestCheckResourceAttr(resourceName, gh2+".type", "Group"),
-			resource.TestCheckResourceAttr(resourceName, gh2+".uri", "http://acs.amazonaws.com/groups/s3/LogDelivery"),
+			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ_ACP"),
+			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+				"type": "Group",
+				"uri":  "http://acs.amazonaws.com/groups/s3/LogDelivery",
+			}),
 		} {
 			if err := t(s); err != nil {
 				return err

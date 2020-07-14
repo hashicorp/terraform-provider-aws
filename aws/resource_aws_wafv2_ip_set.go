@@ -50,8 +50,7 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 						for _, ov := range oldAddresses {
 							hasAddress := false
 							for _, nv := range newAddresses {
-								// isIpv6CidrsEquals works for both IPv4 and IPv6
-								if isIpv6CidrsEquals(ov.(string), nv.(string)) {
+								if cidrBlocksEqual(ov.(string), nv.(string)) {
 									hasAddress = true
 									break
 								}

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsWafv2IPSet_Basic(t *testing.T) {
@@ -101,9 +102,9 @@ func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", wafv2.IPAddressVersionIpv6),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.1676510651", "1234:5678:9abc:6811:0000:0000:0000:0000/64"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.3671909787", "2001:db8::/32"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.4089736081", "0:0:0:0:0:ffff:7f00:1/64"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "1234:5678:9abc:6811:0000:0000:0000:0000/64"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "2001:db8::/32"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "1111:0000:0000:0000:0000:0000:0000:0111/128"),
 				),
 			},
 			{
@@ -374,7 +375,7 @@ resource "aws_wafv2_ip_set" "ip_set" {
   scope              = "REGIONAL"
   ip_address_version = "IPV6"
   addresses          = [
-    "0:0:0:0:0:ffff:7f00:1/64",
+    "1111:0000:0000:0000:0000:0000:0000:0111/128",
     "1234:5678:9abc:6811:0000:0000:0000:0000/64",
     "2001:db8::/32"
   ]

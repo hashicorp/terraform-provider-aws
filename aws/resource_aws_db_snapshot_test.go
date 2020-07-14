@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,6 +19,9 @@ func init() {
 	resource.AddTestSweepers("aws_db_snapshot", &resource.Sweeper{
 		Name: "aws_db_snapshot",
 		F:    testSweepDbSnapshots,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
 	})
 }
 
@@ -45,6 +49,11 @@ func testSweepDbSnapshots(region string) error {
 			id := aws.StringValue(dbSnapshot.DBSnapshotIdentifier)
 			input := &rds.DeleteDBSnapshotInput{
 				DBSnapshotIdentifier: dbSnapshot.DBSnapshotIdentifier,
+			}
+
+			if strings.HasPrefix(id, "rds:") {
+				log.Printf("[INFO] Skipping RDS Automated DB Snapshot: %s", id)
+				continue
 			}
 
 			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)

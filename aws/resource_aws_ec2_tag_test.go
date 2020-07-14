@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func TestAccAWSEc2Tag_basic(t *testing.T) {
-	var tag ec2.TagDescription
 	rBgpAsn := randIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
@@ -23,7 +21,7 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName, &tag),
+					testAccCheckEc2TagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -38,7 +36,6 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 }
 
 func TestAccAWSEc2Tag_disappears(t *testing.T) {
-	var tag ec2.TagDescription
 	rBgpAsn := randIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
@@ -50,7 +47,7 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName, &tag),
+					testAccCheckEc2TagExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -60,7 +57,6 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 }
 
 func TestAccAWSEc2Tag_Value(t *testing.T) {
-	var tag ec2.TagDescription
 	rBgpAsn := randIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
@@ -72,7 +68,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName, &tag),
+					testAccCheckEc2TagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -85,7 +81,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 			{
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2TagExists(resourceName, &tag),
+					testAccCheckEc2TagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
@@ -108,35 +104,13 @@ func testAccCheckEc2TagDestroy(s *terraform.State) error {
 			return err
 		}
 
-		input := &ec2.DescribeTagsInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("resource-id"),
-					Values: []*string{aws.String(resourceID)},
-				},
-				{
-					Name:   aws.String("key"),
-					Values: []*string{aws.String(key)},
-				},
-			},
-		}
-
-		output, err := conn.DescribeTags(input)
+		exists, _, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
 
 		if err != nil {
 			return err
 		}
 
-		var tag *ec2.TagDescription
-
-		for _, outputTag := range output.Tags {
-			if aws.StringValue(outputTag.Key) == key {
-				tag = outputTag
-				break
-			}
-		}
-
-		if tag != nil {
+		if exists {
 			return fmt.Errorf("Tag (%s) for resource (%s) still exists", key, resourceID)
 		}
 	}
@@ -144,7 +118,7 @@ func testAccCheckEc2TagDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEc2TagExists(n string, tag *ec2.TagDescription) resource.TestCheckFunc {
+func testAccCheckEc2TagExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -163,33 +137,13 @@ func testAccCheckEc2TagExists(n string, tag *ec2.TagDescription) resource.TestCh
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		input := &ec2.DescribeTagsInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("resource-id"),
-					Values: []*string{aws.String(resourceID)},
-				},
-				{
-					Name:   aws.String("key"),
-					Values: []*string{aws.String(key)},
-				},
-			},
-		}
-
-		output, err := conn.DescribeTags(input)
+		exists, _, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
 
 		if err != nil {
 			return err
 		}
 
-		for _, outputTag := range output.Tags {
-			if aws.StringValue(outputTag.Key) == key {
-				*tag = *outputTag
-				break
-			}
-		}
-
-		if tag == nil {
+		if !exists {
 			return fmt.Errorf("Tag (%s) for resource (%s) not found", key, resourceID)
 		}
 

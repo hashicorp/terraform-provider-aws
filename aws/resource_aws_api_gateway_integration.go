@@ -114,12 +114,6 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Optional: true,
 			},
 
-			"request_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `request_parameters` argument instead",
-			},
-
 			"content_handling": {
 				Type:         schema.TypeString,
 				Optional:     true,

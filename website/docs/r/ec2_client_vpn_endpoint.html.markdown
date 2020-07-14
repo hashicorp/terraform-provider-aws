@@ -43,8 +43,9 @@ The following arguments are supported:
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the VPC that is to be associated with Client VPN endpoint is used as the DNS server.
 * `server_certificate_arn` - (Required) The ARN of the ACM server certificate.
 * `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
+
 
 ### `authentication_options` Argument Reference
 

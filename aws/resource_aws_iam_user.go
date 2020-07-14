@@ -142,7 +142,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	if d.HasChange("name") || d.HasChange("path") {
+	if d.HasChanges("name", "path") {
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 

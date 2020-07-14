@@ -263,7 +263,7 @@ func resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn *globalaccelerator.Glo
 func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).globalacceleratorconn
 
-	if d.HasChange("name") || d.HasChange("ip_address_type") || d.HasChange("enabled") {
+	if d.HasChanges("name", "ip_address_type", "enabled") {
 		opts := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
 			Name:           aws.String(d.Get("name").(string)),

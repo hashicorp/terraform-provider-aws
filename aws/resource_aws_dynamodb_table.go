@@ -399,14 +399,20 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		output, err = conn.CreateTable(req)
 	}
+
 	if err != nil {
 		return fmt.Errorf("error creating DynamoDB Table: %s", err)
 	}
 
-	d.SetId(*output.TableDescription.TableName)
+	if output == nil || output.TableDescription == nil {
+		return fmt.Errorf("error creating DynamoDB Table: empty response")
+	}
+
+	d.SetId(aws.StringValue(output.TableDescription.TableName))
 	d.Set("arn", output.TableDescription.TableArn)
 
 	if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutCreate), conn); err != nil {
@@ -492,7 +498,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		TableName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("billing_mode") || d.HasChange("read_capacity") || d.HasChange("write_capacity") {
+	if d.HasChanges("billing_mode", "read_capacity", "write_capacity") {
 		hasTableUpdate = true
 
 		capacityMap := map[string]interface{}{
@@ -508,7 +514,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		input.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
 	}
 
-	if d.HasChange("stream_enabled") || d.HasChange("stream_view_type") {
+	if d.HasChanges("stream_enabled", "stream_view_type") {
 		hasTableUpdate = true
 
 		input.StreamSpecification = &dynamodb.StreamSpecification{

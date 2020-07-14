@@ -38,6 +38,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -678,6 +679,28 @@ func DynamodbListTags(conn *dynamodb.DynamoDB, identifier string) (KeyValueTags,
 	}
 
 	return DynamodbKeyValueTags(output.Tags), nil
+}
+
+// Ec2ListTags lists ec2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Ec2ListTags(conn *ec2.EC2, identifier string) (KeyValueTags, error) {
+	input := &ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Ec2KeyValueTags(output.Tags), nil
 }
 
 // EcrListTags lists ecr service tags.

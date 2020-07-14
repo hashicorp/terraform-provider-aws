@@ -276,8 +276,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_lambda_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"), // Must be removed with aws_secretsmanager_secret_rotation after version 2.67.0
 				),
 			},
 		},
@@ -330,8 +329,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"), // Must be removed with aws_secretsmanager_secret_rotation after version 2.67.0
 				),
 			},
 		},
