@@ -7,6 +7,7 @@ BREAKING CHANGES
 * provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
 * resource/aws_dx_gateway: Remove automatic `aws_dx_gateway_association` resource import [GH-14124]
 * resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
+* resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
 
 ENHANCEMENTS
 
