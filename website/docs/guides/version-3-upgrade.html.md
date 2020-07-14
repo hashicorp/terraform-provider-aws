@@ -21,6 +21,7 @@ Upgrade topics:
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
+- [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
@@ -156,6 +157,12 @@ output "lambda_result" {
 ### Removal of Automatic aws_dx_gateway_association Import
 
 Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
+
+## Resource: aws_elastic_transcoder_preset
+
+### video Configuration Block max_frame_rate Argument No Longer Uses 30 Default
+
+Previously when the `max_frame_rate` argument was not configured, the resource would default to 30. This behavior has been removed and allows for auto frame rate presets to automatically set the appropriate value.
 
 ## Resource: aws_emr_cluster
 
