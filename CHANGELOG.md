@@ -6,6 +6,7 @@ BREAKING CHANGES
 * provider: All "removed" attributes are cut, using them would result in a Terraform Core level error [GH-14001]
 * provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
 * provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
+* data-source/aws_availability_zones: Remove deprecated `blacklisted_names` and `blacklisted_zone_ids` arguments [GH-14134]
 * data-source/aws_directory_service_directory: Return an error when a single result is not found [GH-14006]
 * data-source/aws_efs_file_system: Return an error when a single result is not found [GH-14005]
 * resource/aws_acm_certificate: `certificate_body`, `certificate_chain`, and `private_key` attributes are no longer stored in the Terraform state with hash values [GH-9685]
