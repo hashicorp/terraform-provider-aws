@@ -1,3 +1,9 @@
+## 2.70.1 (Unreleased)
+
+NOTES:
+
+* provider: This version is built using Go 1.13.13, mitigating CVE-2020-14039.
+
 ## 2.70.0 (July 10, 2020)
 
 FEATURES:
