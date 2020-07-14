@@ -1342,39 +1342,6 @@ func TestAccAWSAutoScalingGroup_classicVpcZoneIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSAutoScalingGroup_emptyAvailabilityZones(t *testing.T) {
-	var group autoscaling.Group
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.test", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.test", "availability_zones.#", "1"),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"name_prefix",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-		},
-	})
-}
-
 func TestAccAWSAutoScalingGroup_launchTemplate(t *testing.T) {
 	var group autoscaling.Group
 
@@ -2606,7 +2573,6 @@ resource "aws_launch_configuration" "foobar" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${aws_subnet.foo.availability_zone}"]
   vpc_zone_identifier = ["${aws_subnet.foo.id}"]
   max_size = 2
   min_size = 2
@@ -3462,7 +3428,6 @@ resource "aws_autoscaling_group" "test" {
 
   availability_zones   = ["us-west-2a"]
   launch_configuration = "${aws_launch_configuration.test.name}"
-  vpc_zone_identifier  = []
 }
 
 data "aws_ami" "test_ami" {
@@ -3478,59 +3443,6 @@ data "aws_ami" "test_ami" {
 resource "aws_launch_configuration" "test" {
   image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t1.micro"
-}
-`
-
-const testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-empty-azs"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  # t2.micro is not supported in us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-  
-resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  vpc_id     = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "tf-acc-autoscaling-group-empty-availability-zones"
-  }
-}
-
-resource "aws_autoscaling_group" "test" {
-  min_size = 0
-  max_size = 0
-
-  availability_zones   = []
-  launch_configuration = "${aws_launch_configuration.test.name}"
-  vpc_zone_identifier  = ["${aws_subnet.test.id}"]
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = "${data.aws_ami.test_ami.id}"
-  instance_type = "t2.micro"
 }
 `
 
