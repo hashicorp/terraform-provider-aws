@@ -10,16 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAWSEc2InstanceSpotPriceDataSource_Filter(t *testing.T) {
+func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2InstanceSpotPrice(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2InstanceSpotPriceDataSourceConfig(),
+				Config: testAccAwsEc2SpotPriceDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
@@ -29,7 +29,7 @@ func TestAccAWSEc2InstanceSpotPriceDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSEc2InstanceSpotPrice(t *testing.T) {
+func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
@@ -47,7 +47,7 @@ func testAccPreCheckAWSEc2InstanceSpotPrice(t *testing.T) {
 	}
 }
 
-func testAccAWSEc2InstanceSpotPriceDataSourceConfig() string {
+func testAccAwsEc2SpotPriceDataSourceConfig() string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

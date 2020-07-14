@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func dataSourceAwsEc2InstanceSpotPrice() *schema.Resource {
+func dataSourceAwsEc2SpotPrice() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2InstanceSpotPriceRead,
+		Read: dataSourceAwsEc2SpotPriceRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -36,7 +36,7 @@ func dataSourceAwsEc2InstanceSpotPrice() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2InstanceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2SpotPriceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	now := time.Now()
