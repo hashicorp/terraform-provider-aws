@@ -1584,15 +1584,13 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(1),
-				// Below checks commented out, but will check state count.
+				ResourceName: resourceName,
+				ImportState:  true,
 				// In rules with cidr_block drift, import only creates a single ingress
 				// rule with the cidr_blocks de-normalized. During subsequent apply, its
 				// normalized to create the 2 ingress rules seen in checks above.
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
 			},
 		},
 	})
@@ -1663,15 +1661,13 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(1),
-				// Below checks commented out, but will check state count.
+				ResourceName: resourceName,
+				ImportState:  true,
 				// In rules with cidr_block drift, import only creates a single ingress
 				// rule with the cidr_blocks de-normalized. During subsequent apply, its
 				// normalized to create the 2 ingress rules seen in checks above.
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
 			},
 		},
 	})
@@ -1964,15 +1960,6 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccAWSSecurityGroupImportStateCheckFunc(expectedStates int) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		if len(s) != expectedStates {
-			return fmt.Errorf("expected %d states, got %d: %#v", expectedStates, len(s), s)
-		}
-		return nil
-	}
 }
 
 func testAccAWSSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.TestCheckFunc {
