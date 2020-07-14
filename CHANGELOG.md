@@ -2,6 +2,7 @@
 
 BREAKING CHANGES
 
+* provider: New versions of the provider can only be automatically installed on Terraform 0.12 and later [GH-14143]
 * provider: All "removed" attributes are cut, using them would result in a Terraform Core level error [GH-14001]
 * provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
 * provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
