@@ -6,6 +6,7 @@ BREAKING CHANGES
 * provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
 * provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
 * resource/aws_dx_gateway: Remove automatic `aws_dx_gateway_association` resource import [GH-14124]
+* resource/aws_elastic_transcoder_preset: Remove `video` configuration block `max_frame_rate` argument default value [GH-7141]
 * resource/aws_emr_cluster: Remove deprecated `instance_group` configuration block, `core_instance_count`, `core_instance_type`, and `master_instance_type` arguments [GH-14137]
 * resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
 * resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
