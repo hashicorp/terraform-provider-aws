@@ -178,6 +178,33 @@ func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_federatedAuth(t *testing.T) {
+	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -505,6 +532,30 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   authentication_options {
     type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_iam_saml_provider" "default" {
+  name                   = "myprovider-%s"
+  saml_metadata_document = "${file("./test-fixtures/saml-metadata.xml")}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type              = "federated-authentication"
+    saml_provider_arn = "${aws_iam_saml_provider.default.arn}"
   }
 
   connection_log_options {
