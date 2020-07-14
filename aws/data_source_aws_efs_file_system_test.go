@@ -67,6 +67,20 @@ func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsEfsFileSystem_NonExistent(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceAwsEfsFileSystemIDConfig_NonExistent,
+				ExpectError: regexp.MustCompile(`error reading EFS FileSystem`),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsEfsFileSystemCheck(dName, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dName]
@@ -101,11 +115,17 @@ func testAccDataSourceAwsEfsFileSystemCheck(dName, rName string) resource.TestCh
 	}
 }
 
+const testAccDataSourceAwsEfsFileSystemIDConfig_NonExistent = `
+data "aws_efs_file_system" "test" {
+  file_system_id = "fs-nonexistent"
+}
+`
+
 const testAccDataSourceAwsEfsFileSystemNameConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
-creation_token = "${aws_efs_file_system.test.creation_token}"
+  creation_token = "${aws_efs_file_system.test.creation_token}"
 }
 `
 
