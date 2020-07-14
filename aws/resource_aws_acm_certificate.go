@@ -36,21 +36,20 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				StateFunc: normalizeCert,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressACMCertificateDiff,
 			},
-
 			"certificate_chain": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				StateFunc: normalizeCert,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressACMCertificateDiff,
 			},
 			"private_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				StateFunc: normalizeCert,
-				Sensitive: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressACMCertificateDiff,
+				Sensitive:        true,
 			},
 			"certificate_authority_arn": {
 				Type:     schema.TypeString,
@@ -445,4 +444,10 @@ func flattenAcmCertificateOptions(co *acm.CertificateOptions) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func suppressACMCertificateDiff(k, old, new string, d *schema.ResourceData) bool {
+	// old == normalizeCert(new) is there for legacy reasons. The certificates used to be stored as a hash in the state
+	// However that prevented updates
+	return normalizeCert(old) == normalizeCert(new) || old == normalizeCert(new)
 }
