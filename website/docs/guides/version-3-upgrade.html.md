@@ -27,6 +27,7 @@ Upgrade topics:
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
+- [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_sns_platform_application](#resource-aws_sns_platform_application)
 - [Resource: aws_spot_fleet_request](#resource-aws_spot_fleet_request)
@@ -397,6 +398,30 @@ resource "aws_lb_listener_rule" "example" {
   condition {
     path_pattern {
       values = ["/static/*"]
+    }
+  }
+}
+```
+
+## Resource: aws_msk_cluster
+
+### encryption_info.encryption_in_transit.client_broker Default Updated to Match API
+
+A few weeks after general availability launch and initial release of the `aws_msk_cluster` resource, the MSK API default for client broker encryption switched from `TLS_PLAINTEXT` to `TLS`. The attribute default has now been updated to match the more secure API default, however existing Terraform configurations may show a difference if this setting is not configured.
+
+To continue using the old default when it was previously not configured, add or modify this configuration:
+
+```hcl
+resource "aws_msk_cluster" "example" {
+  # ... other configuration ...
+
+  encryption_info {
+    # ... potentially other configuration ...
+
+    encryption_in_transit {
+      # ... potentially other configuration ...
+
+      client_broker = "TLS_PLAINTEXT"
     }
   }
 }
