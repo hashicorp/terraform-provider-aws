@@ -5,6 +5,7 @@ BREAKING CHANGES
 * provider: All "removed" attributes are cut, using them would result in a Terraform Core level error [GH-14001]
 * provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
 * provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
+* data-source/aws_directory_service_directory: Return an error when a single result is not found [GH-14006]
 * data-source/aws_efs_file_system: Return an error when a single result is not found [GH-14005] 
 * resource/aws_autoscaling_group: `availability_zones` and `vpc_zone_identifier` argument conflict now reported at plan-time [GH-12927]
 * resource/aws_autoscaling_group: Remove `Computed` property from `load_balancers` and `target_group_arns` arguments, enabling drift detection [GH-14064]
