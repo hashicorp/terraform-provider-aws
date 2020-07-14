@@ -60,12 +60,15 @@ func dataSourceAwsEc2SpotPriceRead(d *schema.ResourceData, meta interface{}) err
 		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
-	output, err := conn.DescribeSpotPriceHistory(input)
+	var foundSpotPrice []*ec2.SpotPrice
+
+	err := conn.DescribeSpotPriceHistoryPages(input, func(output *ec2.DescribeSpotPriceHistoryOutput, lastPage bool) bool {
+		foundSpotPrice = append(foundSpotPrice, output.SpotPriceHistory...)
+		return true
+	})
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Spot Price History: %w", err)
 	}
-
-	foundSpotPrice := output.SpotPriceHistory
 
 	if len(foundSpotPrice) == 0 {
 		return fmt.Errorf("no EC2 Spot Price History found matching criteria; try different search")

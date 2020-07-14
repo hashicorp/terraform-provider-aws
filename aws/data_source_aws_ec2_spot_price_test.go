@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
-	dataSourceName := "data.aws_ec2_instance_spot_price.test"
+func TestAccAwsEc2SpotPriceDataSource(t *testing.T) {
+	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
@@ -20,6 +20,25 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2SpotPriceDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsEc2SpotPriceDataSourceFilter(t *testing.T) {
+	dataSourceName := "data.aws_ec2_spot_price.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2SpotPriceDataSourceFilterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
@@ -67,7 +86,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_ec2_instance_spot_price" "test" {
+data "aws_ec2_spot_price" "test" {
   instance_type = data.aws_ec2_instance_type_offering.test.instance_type
 
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -75,6 +94,45 @@ data "aws_ec2_instance_spot_price" "test" {
   filter {
     name   = "product-description"
     values = ["Linux/UNIX"]
+  }
+}
+`)
+}
+
+func testAccAwsEc2SpotPriceDataSourceFilterConfig() string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_ec2_instance_type_offering" "test" {
+  filter {
+    name   = "instance-type"
+    values = ["m5.xlarge"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "region-name"
+    values = [data.aws_region.current.name]
+  }
+}
+
+data "aws_ec2_spot_price" "test" {
+  filter {
+    name   = "product-description"
+    values = ["Linux/UNIX"]
+  }
+
+  filter {
+    name   = "instance-type"
+    values = [data.aws_ec2_instance_type_offering.test.instance_type]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [data.aws_availability_zones.available.names[0]]
   }
 }
 `)
