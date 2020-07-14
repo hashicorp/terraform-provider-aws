@@ -615,25 +615,42 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 
+	commonName := "example.com"
+	caKey := tlsRsaPrivateKeyPem(2048)
+	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, commonName)
+
+	newCaKey := tlsRsaPrivateKeyPem(2048)
+	newCaCertificate := tlsRsaX509SelfSignedCaCertificatePem(newCaKey)
+	newCertificate := tlsRsaX509LocallySignedCertificatePem(newCaKey, newCaCertificate, key, commonName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfigPrivateKey("example.com"),
+				Config: testAccAcmCertificateConfigPrivateKey(certificate, key, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
 				),
 			},
 			{
-				Config: testAccAcmCertificateConfigPrivateKey("example.org"),
+				Config: testAccAcmCertificateConfigPrivateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.org"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+				),
+			},
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain("example2.com"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
 				),
 			},
 			{
@@ -641,7 +658,7 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
 		},
 	})
@@ -657,7 +674,7 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: h
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfigPrivateKey("1.2.3.4"),
+				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain("1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
@@ -745,7 +762,7 @@ resource "aws_acm_certificate" "cert" {
 `, domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccAcmCertificateConfigPrivateKey(commonName string) string {
+func testAccAcmCertificateConfigPrivateKeyWithoutChain(commonName string) string {
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
 
@@ -755,6 +772,16 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[2]s"
 }
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+}
+
+func testAccAcmCertificateConfigPrivateKey(certificate, privateKey, chain string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body =  "%[1]s"
+  private_key      =  "%[2]s"
+  certificate_chain = "%[3]s"
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey), tlsPemEscapeNewlines(chain))
 }
 
 func testAccAcmCertificateConfig_disableCTLogging(domainName, validationMethod string) string {
