@@ -115,14 +115,6 @@ func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.Resou
 	return normalizedOld == normalizedNew
 }
 
-func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
-	// "." is different from "".
-	if old == "." || new == "." {
-		return old == new
-	}
-	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
-}
-
 // suppressEqualCIDRBlockDiffs provides custom difference suppression for CIDR blocks
 // that have different string values but represent the same CIDR.
 func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {

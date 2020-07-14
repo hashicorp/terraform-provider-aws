@@ -23,6 +23,10 @@ Upgrade topics:
 - [Provider Custom Service Endpoint Updates](#provider-custom-service-endpoint-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
+- [Data Source: aws_route53_resolver_rule](#data-source-aws_route53_resolver_rule)
+- [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
+- [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
+- [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
@@ -42,6 +46,8 @@ Upgrade topics:
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
+- [Resource: aws_route53_resolver_rule](#resource-aws_route53_resolver_rule)
+- [Resource: aws_route53_zone](#resource-aws_route53_zone)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_s3_bucket_metric](#resource-aws_s3_bucket_metric)
 - [Resource: aws_security_group](#resource-aws_security_group)
@@ -208,6 +214,20 @@ output "lambda_result" {
   value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
+
+## Data Source: aws_route53_resolver_rule
+
+### Removal of domain_name trailing period
+
+Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
+
+## Data Source: aws_route53_zone
+
+### Removal of name trailing period
+
+Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_acm_certificate
 
@@ -1019,6 +1039,20 @@ resource "aws_msk_cluster" "example" {
 ### scaling_configuration.min_capacity Now Defaults to 1
 
 Previously when the `min_capacity` argument in a `scaling_configuration` block was not configured, the resource would default to 2. This behavior has been updated to align with the AWS RDS Cluster API default of 1. 
+
+## Resource: aws_route53_resolver_rule
+
+### Removal of domain_name trailing period
+
+Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
+
+## Resource: aws_route53_zone
+
+### Removal of name trailing period
+
+Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_s3_bucket
 

@@ -38,11 +38,11 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressRoute53ZoneNameWithTrailingDot,
-				ValidateFunc:     validation.StringLenBetween(1, 256),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+				StateFunc:    trimTrailingPeriod,
 			},
 
 			"rule_type": {
@@ -163,7 +163,9 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 
 	rule := ruleRaw.(*route53resolver.ResolverRule)
 	d.Set("arn", rule.Arn)
-	d.Set("domain_name", rule.DomainName)
+	// To be consistent with other AWS services that do not accept a trailing period,
+	// we remove the suffix from the Domain Name returned from the API
+	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
 	d.Set("name", rule.Name)
 	d.Set("owner_id", rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
