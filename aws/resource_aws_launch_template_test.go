@@ -295,7 +295,7 @@ func TestAccAWSLaunchTemplate_NetworkInterfaces_DeleteOnTermination(t *testing.T
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, true),
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
@@ -304,12 +304,30 @@ func TestAccAWSLaunchTemplate_NetworkInterfaces_DeleteOnTermination(t *testing.T
 				),
 			},
 			{
-				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, false),
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "\"\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
 				),
 			},
 			{
@@ -1072,7 +1090,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, deleteOnTermination, rName)
 }
 
-func testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName string, deleteOnTermination bool) string {
+func testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName string, deleteOnTermination string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %q
@@ -1080,7 +1098,7 @@ resource "aws_launch_template" "test" {
   network_interfaces {
     network_interface_id = "eni-123456ab"
     security_groups = ["sg-1a23bc45"]
-    delete_on_termination = %t
+    delete_on_termination = %s
   }
 }
 `, rName, deleteOnTermination)

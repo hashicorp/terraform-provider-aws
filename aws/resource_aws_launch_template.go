@@ -1322,7 +1322,7 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 	if v, ok := ni["delete_on_termination"]; ok && v.(string) != "" {
 		vBool, err := strconv.ParseBool(v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %s", v.(string), err)
+			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %w", v.(string), err)
 		}
 		networkInterface.DeleteOnTermination = aws.Bool(vBool)
 	}
