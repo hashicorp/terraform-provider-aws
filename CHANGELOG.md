@@ -18,6 +18,7 @@ BREAKING CHANGES
 * resource/aws_msk_cluster: Update `encryption_info` `encryption_in_transit` `client_broker` argument default to match API default of `TLS` [GH-14132]
 * resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
 * resource/aws_s3_bucket: Convert `region` to read-only attribute [GH-14127]
+* resource/aws_security_group: Remove automatic `aws_security_group_rule` resource import [GH-12616]
 * resource/aws_sns_platform_application: `platform_credential` and `platform_principal` attributes are no longer stored in the Terraform state with hash values [GH-3894]
 * resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
 
