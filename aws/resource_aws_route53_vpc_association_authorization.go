@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	//"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,7 +41,7 @@ func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	conn := meta.(*AWSClient).r53conn
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
@@ -56,14 +55,9 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Creating Route53 VPC Association Authorization for hosted zone %s with VPC %s and region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
-	var err error
-	_, err = r53.CreateVPCAssociationAuthorization(req)
+	_, err := conn.CreateVPCAssociationAuthorization(req)
 	if err != nil {
-		log.Println("sadafasdf", d.Get("zone_id").(string))
-		log.Println("asdfasdf", d.Get("zone_id").(string))
-		if !strings.Contains(err.Error(), d.Get("zone_id").(string)) {
-			return err
-		}
+		return fmt.Errorf("Error creating Route53 VPC Association Authorization: %s", err)
 	}
 
 	// Store association id
@@ -74,13 +68,23 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	conn := meta.(*AWSClient).r53conn
 	zone_id, vpc_id := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
-	req := route53.ListVPCAssociationAuthorizationsInput{HostedZoneId: aws.String(zone_id)}
+
+	req := route53.ListVPCAssociationAuthorizationsInput{
+		HostedZoneId: aws.String(zone_id),
+	}
 	for {
-		res, err := r53.ListVPCAssociationAuthorizations(&req)
+		log.Printf("[DEBUG] Listing Route53 VPC Association Authorizations for hosted zone %s", zone_id)
+		res, err := conn.ListVPCAssociationAuthorizations(&req)
+
+		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+			d.SetId("")
+			return nil
+		}
+
 		if err != nil {
-			return err
+			return fmt.Errorf("Error listing Route53 VPC Association Authorizations: %s", err)
 		}
 
 		for _, vpc := range res.VPCs {
@@ -103,10 +107,8 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	conn := meta.(*AWSClient).r53conn
 	zone_id, vpc_id := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
-	log.Printf("[DEBUG] Deleting Route53 Assocatiation Authorization for (%s) from vpc %s)",
-		zone_id, vpc_id)
 
 	req := route53.DeleteVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(zone_id),
@@ -116,9 +118,10 @@ func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData,
 		},
 	}
 
-	_, err := r53.DeleteVPCAssociationAuthorization(&req)
+	log.Printf("[DEBUG] Deleting Route53 Assocatiation Authorization for hosted zone %s for VPC %s", zone_id, vpc_id)
+	_, err := conn.DeleteVPCAssociationAuthorization(&req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting Route53 VPC Association Authorization: %s", err)
 	}
 
 	return nil

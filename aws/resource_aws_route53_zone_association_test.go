@@ -155,7 +155,7 @@ func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		vpc, err := route53GetZoneAssociation(conn, zoneID, vpcID)
+		vpc, err := testAccCheckRoute53ZoneAssociationGet(conn, zoneID, vpcID)
 
 		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
 			continue
@@ -191,7 +191,7 @@ func testAccCheckRoute53ZoneAssociationExists(n string, vpc *route53.VPC) resour
 
 		conn := testAccProvider.Meta().(*AWSClient).r53conn
 
-		associationVPC, err := route53GetZoneAssociation(conn, zoneID, vpcID)
+		associationVPC, err := testAccCheckRoute53ZoneAssociationGet(conn, zoneID, vpcID)
 
 		if err != nil {
 			return err
@@ -221,6 +221,28 @@ func testAccCheckRoute53ZoneAssociationDisappears(zone *route53.GetHostedZoneOut
 
 		return err
 	}
+}
+
+func testAccCheckRoute53ZoneAssociationGet(conn *route53.Route53, zoneID, vpcID string) (*route53.VPC, error) {
+	input := &route53.GetHostedZoneInput{
+		Id: aws.String(zoneID),
+	}
+
+	output, err := conn.GetHostedZone(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var vpc *route53.VPC
+	for _, zoneVPC := range output.VPCs {
+		if vpcID == aws.StringValue(zoneVPC.VPCId) {
+			vpc = zoneVPC
+			break
+		}
+	}
+
+	return vpc, nil
 }
 
 const testAccRoute53ZoneAssociationConfig = `
