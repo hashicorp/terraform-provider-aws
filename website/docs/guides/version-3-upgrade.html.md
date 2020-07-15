@@ -36,6 +36,7 @@ Upgrade topics:
 - [Resource: aws_glue_job](#resource-aws_glue_job)
 - [Resource: aws_iam_access_key](#resource-aws_iam_access_key)
 - [Resource: aws_iam_instance_profile](#resource-aws_iam_instance_profile)
+- [Resource: aws_iam_server_certificate](#resource-aws_iam_server_certificate)
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_lambda_alias](#resource-aws_lambda_alias)
 - [Resource: aws_launch_template](#resource-aws_launch_template)
@@ -909,6 +910,12 @@ resource "aws_iam_instance_profile" "example" {
   role = aws_iam_role.example.id
 }
 ```
+
+## Resource: aws_iam_server_certificate
+
+### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
+
+Previously when the `certificate_body`, `certificate_chain`, and `private_key` arguments were stored in state, they were stored as a hash of the actual value. This hashing has been removed for new or recreated resources to prevent lifecycle issues.
 
 ## Resource: aws_instance
 
