@@ -712,19 +712,20 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	// Use AdvancedSecurityOptions from resource if possible
 	// because DescribeElasticsearchDomainConfig does not return MasterUserOptions
 	if ds.AdvancedSecurityOptions != nil {
-		if _, ok := d.GetOk("advanced_security_options"); ok {
-			if err := d.Set("advanced_security_options", []interface{}{
-				map[string]interface{}{
-					"enabled":                        ds.AdvancedSecurityOptions.Enabled,
-					"internal_user_database_enabled": ds.AdvancedSecurityOptions.InternalUserDatabaseEnabled,
-				},
-			}); err != nil {
-				return fmt.Errorf("error setting advanced_security_options: %w", err)
+		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
+
+		// Append nested MasterUserOptions block held in resource state, if available
+		if v, ok := d.GetOk("advanced_security_options"); ok {
+			masterUserOptions := flattenMasterUserOptions(v.([]interface{}))
+			if masterUserOptions != nil {
+				for k, v := range masterUserOptions {
+					advSecOpts[0][k] = v.(string)
+				}
 			}
-		} else {
-			if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
-				return fmt.Errorf("error setting advanced_security_options: %w", err)
-			}
+		}
+
+		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
+			return fmt.Errorf("error setting advanced_security_options: %w", err)
 		}
 	}
 
@@ -1178,4 +1179,18 @@ func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.
 	}
 
 	return []interface{}{m}
+}
+
+func flattenMasterUserOptions(options []interface{}) map[string]interface{} {
+	if len(options) == 0 || options[0] == nil {
+		return nil
+	}
+	m := options[0].(map[string]interface{})
+	if opts, ok := m["master_user_options"]; ok {
+		if muo := opts.([]interface{}); len(muo) > 0 && muo[0] != nil {
+			return muo[0].(map[string]interface{})
+		}
+	}
+
+	return nil
 }
