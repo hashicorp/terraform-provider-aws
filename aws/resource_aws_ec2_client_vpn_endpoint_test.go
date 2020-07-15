@@ -629,7 +629,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName)
+`, rName, rName)
 }
 
 func testAccEc2ClientVpnEndpointConfig_tags(rName string) string {
