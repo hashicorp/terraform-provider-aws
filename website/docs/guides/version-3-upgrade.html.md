@@ -30,6 +30,7 @@ Upgrade topics:
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
+- [Resource: aws_security_group](#resource-aws_security_group)
 - [Resource: aws_sns_platform_application](#resource-aws_sns_platform_application)
 - [Resource: aws_spot_fleet_request](#resource-aws_spot_fleet_request)
 
@@ -459,6 +460,12 @@ resource "aws_s3_bucket" "example" {
   # ... other configuration ...
 }
 ```
+
+## Resource: aws_security_group
+
+### Removal of Automatic aws_security_group_rule Import
+
+Previously when importing the `aws_security_group` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_security_group_rule` resource(s) as well. This automatic resource import has been removed. Use the [`aws_security_group_rule` resource import](/docs/providers/aws/r/security_group_rule.html#import) to import those resources separately.
 
 ## Resource: aws_sns_platform_application
 

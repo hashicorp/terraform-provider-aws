@@ -643,7 +643,6 @@ func TestAccAWSSecurityGroup_IPRangeAndSecurityGroupWithSameRules(t *testing.T) 
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(4),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -669,7 +668,6 @@ func TestAccAWSSecurityGroup_IPRangesWithSameRules(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(3),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -710,13 +708,10 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				// NOTE: These ImportStateVerify functions are currently broken because of known issues with multi-import.
-				// Once those are fixed we can uncomment all these.
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -739,11 +734,10 @@ func TestAccAWSSecurityGroup_egressConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
 				Config: testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks(),
@@ -780,11 +774,10 @@ func TestAccAWSSecurityGroup_ingressConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
 				Config: testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks(),
@@ -894,11 +887,10 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(8),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -937,11 +929,10 @@ func TestAccAWSSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed. Terraform tries to destroy them but cannot. Expect a
@@ -1019,11 +1010,10 @@ func TestAccAWSSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed, and the Groups not configured to revoke their ruls.
@@ -1094,11 +1084,10 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1170,11 +1159,10 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1217,11 +1205,10 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1257,11 +1244,10 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1295,11 +1281,10 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1321,11 +1306,10 @@ func TestAccAWSSecurityGroup_multiIngress(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1348,11 +1332,10 @@ func TestAccAWSSecurityGroup_change(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
 				Config: testAccAWSSecurityGroupConfigChange,
@@ -1407,11 +1390,10 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			// Change just the rule descriptions.
 			{
@@ -1521,11 +1503,10 @@ func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1554,7 +1535,6 @@ func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(1),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -1604,11 +1584,13 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName: resourceName,
+				ImportState:  true,
+				// In rules with cidr_block drift, import only creates a single ingress
+				// rule with the cidr_blocks de-normalized. During subsequent apply, its
+				// normalized to create the 2 ingress rules seen in checks above.
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
 			},
 		},
 	})
@@ -1679,11 +1661,13 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(5),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName: resourceName,
+				ImportState:  true,
+				// In rules with cidr_block drift, import only creates a single ingress
+				// rule with the cidr_blocks de-normalized. During subsequent apply, its
+				// normalized to create the 2 ingress rules seen in checks above.
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
 			},
 		},
 	})
@@ -1735,7 +1719,6 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(1),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -1769,11 +1752,10 @@ func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(5),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1821,11 +1803,10 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(5),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1865,11 +1846,10 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(4),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1894,11 +1874,10 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1923,11 +1902,10 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1975,23 +1953,13 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
 		},
 	})
-}
-
-func testAccAWSSecurityGroupImportStateCheckFunc(expectedStates int) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		if len(s) != expectedStates {
-			return fmt.Errorf("expected %d states, got %d: %#v", expectedStates, len(s), s)
-		}
-		return nil
-	}
 }
 
 func testAccAWSSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.TestCheckFunc {
