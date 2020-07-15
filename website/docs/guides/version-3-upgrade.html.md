@@ -185,6 +185,41 @@ resource "aws_emr_cluster" "example" {
 }
 ```
 
+## Resource: aws_launch_template
+
+### network_interfaces.delete_on_termination Argument type change
+
+
+Enforce `delete_on_termination` to `false` if it was not set previously to keep the (incorrect) behavior to treat no value as `false`.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_launch_template" "example" {
+  # ... other configuration ...
+
+  network_interfaces {
+    # ... other configuration ...
+
+    delete_on_termination = null
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_launch_template" "example" {
+  # ... other configuration ...
+
+  network_interfaces {
+    # ... other configuration ...
+
+    delete_on_termination = false
+  }
+}
+```
+
 ## Resource: aws_lb_listener_rule
 
 ### condition.field and condition.values Arguments Removal
