@@ -27,6 +27,7 @@ Upgrade topics:
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
+- [Resource: aws_launch_template](#resource-aws_launch_template)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
@@ -372,6 +373,40 @@ resource "aws_emr_cluster" "example" {
 
   master_instance_group {
     instance_type = "m4.large"
+  }
+}
+```
+
+## Resource: aws_launch_template
+
+### network_interfaces.delete_on_termination Argument type change
+
+The `network_interfaces.delete_on_termination` argument is now of type `string`, allowing an unspecified value for the argument since the previous `bool` type only allowed for `true/false` and defaulted to `false` when no value was set. Now to enforce `delete_on_termination` to `false`, the string `"false"` or bare `false` value must be used.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_launch_template" "example" {
+  # ... other configuration ...
+
+  network_interfaces {
+    # ... other configuration ...
+
+    delete_on_termination = null
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_launch_template" "example" {
+  # ... other configuration ...
+
+  network_interfaces {
+    # ... other configuration ...
+
+    delete_on_termination = false
   }
 }
 ```
