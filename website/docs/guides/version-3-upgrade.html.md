@@ -22,6 +22,7 @@ Upgrade topics:
 - [Provider Authentication Updates](#provider-authentication-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
+- [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
@@ -158,6 +159,10 @@ output "lambda_result" {
 ```
 
 ## Resource: aws_acm_certificate
+
+### subject_alternative_names Changed from List to Set
+
+Previously the `subject_alternative_names` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g. `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subject_alternative_names` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 ### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
 
