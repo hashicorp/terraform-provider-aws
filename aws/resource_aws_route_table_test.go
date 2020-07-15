@@ -1020,3 +1020,21 @@ resource "aws_route_table" "test" {
 }
 `, rName, ipv6Route)
 }
+
+// testAccLatestAmazonNatInstanceAmiConfig returns the configuration for a data source that
+// describes the latest Amazon NAT instance AMI.
+// See https://docs.aws.amazon.com/vpc/latest/userguide/VPC_NAT_Instance.html#nat-instance-ami.
+// The data source is named 'amzn-ami-nat-instance'.
+func testAccLatestAmazonNatInstanceAmiConfig() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-nat-instance" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-vpc-nat-*"]
+  }
+}
+`)
+}
