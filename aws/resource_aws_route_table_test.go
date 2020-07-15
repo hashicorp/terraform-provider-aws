@@ -1273,7 +1273,7 @@ resource "aws_route_table" "test" {
 
 func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -1306,7 +1306,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -2110,7 +2110,7 @@ func testAccAWSRouteTableConfigMultipleRoutes(rName,
 	destinationAttr2, destinationValue2, targetAttribute2, targetValue2,
 	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -2168,7 +2168,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -2208,4 +2208,22 @@ resource "aws_route_table" "test" {
   }
 }
 `, rName, destinationAttr1, destinationValue1, targetAttribute1, targetValue1, destinationAttr2, destinationValue2, targetAttribute2, targetValue2, destinationAttr3, destinationValue3, targetAttribute3, targetValue3))
+}
+
+// testAccLatestAmazonNatInstanceAmiConfig returns the configuration for a data source that
+// describes the latest Amazon NAT instance AMI.
+// See https://docs.aws.amazon.com/vpc/latest/userguide/VPC_NAT_Instance.html#nat-instance-ami.
+// The data source is named 'amzn-ami-nat-instance'.
+func testAccLatestAmazonNatInstanceAmiConfig() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-nat-instance" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-vpc-nat-*"]
+  }
+}
+`)
 }
