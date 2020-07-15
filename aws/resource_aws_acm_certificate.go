@@ -68,11 +68,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				},
 			},
 			"subject_alternative_names": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					StateFunc: func(v interface{}) string {
@@ -81,6 +80,8 @@ func resourceAwsAcmCertificate() *schema.Resource {
 						return strings.TrimSuffix(v.(string), ".")
 					},
 				},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
 			"validation_method": {
 				Type:          schema.TypeString,
@@ -208,8 +209,8 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	}
 
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
-		subjectAlternativeNames := make([]*string, len(sans.([]interface{})))
-		for i, sanRaw := range sans.([]interface{}) {
+		subjectAlternativeNames := make([]*string, len(sans.(*schema.Set).List()))
+		for i, sanRaw := range sans.(*schema.Set).List() {
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames

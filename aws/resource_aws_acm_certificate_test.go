@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -309,7 +310,7 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.0", wildcardDomain),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", wildcardDomain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -350,7 +351,7 @@ func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.0", sanDomain),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -396,8 +397,8 @@ func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.2.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.0", sanDomain1),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.1", sanDomain2),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain1),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain2),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -438,7 +439,7 @@ func TestAccAWSAcmCertificate_san_TrailingPeriod(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.0", strings.TrimSuffix(sanDomain, ".")),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", strings.TrimSuffix(sanDomain, ".")),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -513,7 +514,7 @@ func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.0", rootDomain),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
