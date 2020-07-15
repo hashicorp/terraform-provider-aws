@@ -22,7 +22,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 		Update: resourceAwsCloudFrontDistributionUpdate,
 		Delete: resourceAwsCloudFrontDistributionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudFrontDistributionImport,
+			State: schema.ImportStatePassthrough,
 		},
 		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
 		SchemaVersion: 1,
