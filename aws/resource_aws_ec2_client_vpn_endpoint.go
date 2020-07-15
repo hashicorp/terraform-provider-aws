@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
@@ -179,7 +181,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 	resp, err := conn.CreateClientVpnEndpoint(req)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Client VPN endpoint: %s", err)
+		return fmt.Errorf("Error creating Client VPN endpoint: %w", err)
 	}
 
 	d.SetId(*resp.ClientVpnEndpointId)
@@ -191,20 +193,18 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	var err error
-
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, "InvalidClientVpnEndpointId.NotFound", "") {
+	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
+		return fmt.Errorf("Error reading Client VPN endpoint: %w", err)
 	}
 
 	if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
@@ -229,22 +229,21 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	if result.ClientVpnEndpoints[0].Status != nil {
 		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
 	}
-
 	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
-		return fmt.Errorf("error setting authentication_options: %s", err)
+		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 
 	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
 	if err != nil {
-		return fmt.Errorf("error setting connection_log_options: %s", err)
+		return fmt.Errorf("error setting connection_log_options: %w", err)
 	}
 
 	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -254,7 +253,6 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
 
 	return nil
@@ -263,11 +261,9 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
-		ClientVpnEndpointId: aws.String(d.Id()),
-	})
+	err := deleteClientVpnEndpoint(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error deleting Client VPN endpoint: %s", err)
+		return fmt.Errorf("error deleting Client VPN endpoint: %w", err)
 	}
 
 	return nil
@@ -331,14 +327,13 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.ModifyClientVpnEndpoint(req); err != nil {
-		return fmt.Errorf("Error modifying Client VPN endpoint: %s", err)
+		return fmt.Errorf("Error modifying Client VPN endpoint: %w", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Client VPN Endpoint (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Client VPN Endpoint (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -392,4 +387,20 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 	}
 
 	return req
+}
+
+func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
+	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+	})
+	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = waiter.ClientVpnEndpointDeleted(conn, endpointID)
+
+	return err
 }

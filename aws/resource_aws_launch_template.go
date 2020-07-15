@@ -57,8 +57,17 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"default_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"update_default_version"},
+				ValidateFunc:  validation.IntAtLeast(1),
+			},
+
+			"update_default_version": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"default_version"},
 			},
 
 			"latest_version": {
@@ -579,11 +588,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 		},
 
+		// Enable downstream updates for resources referencing schema attributes
+		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("default_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+				for _, changedKey := range diff.GetChangedKeysPrefix("") {
+					switch changedKey {
+					case "name", "name_prefix", "description":
+						continue
+					default:
+						return diff.Get("update_default_version").(bool)
+					}
+				}
+				return false
+			}),
 			customdiff.ComputedIf("latest_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description", "default_version", "latest_version":
+					case "name", "name_prefix", "description", "default_version", "update_default_version":
 						continue
 					default:
 						return true
@@ -792,24 +814,52 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	launchTemplateData, err := buildLaunchTemplateData(d)
-	if err != nil {
-		return err
+	latestVersion := int64(d.Get("latest_version").(int))
+	defaultVersion := d.Get("default_version").(int)
+
+	if d.HasChanges(updateKeys...) {
+		launchTemplateData, err := buildLaunchTemplateData(d)
+		if err != nil {
+			return err
+		}
+
+		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
+			ClientToken:        aws.String(resource.UniqueId()),
+			LaunchTemplateId:   aws.String(d.Id()),
+			LaunchTemplateData: launchTemplateData,
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
+		}
+
+		output, err := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		if err != nil {
+			return fmt.Errorf("error creating Launch Template (%s) Version: %w", d.Id(), err)
+		}
+
+		if output == nil || output.LaunchTemplateVersion == nil || output.LaunchTemplateVersion.VersionNumber == nil {
+			return fmt.Errorf("error creating Launch Template (%s) Version: empty output", d.Id())
+		}
+
+		latestVersion = aws.Int64Value(output.LaunchTemplateVersion.VersionNumber)
+
 	}
 
-	launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
-		ClientToken:        aws.String(resource.UniqueId()),
-		LaunchTemplateId:   aws.String(d.Id()),
-		LaunchTemplateData: launchTemplateData,
-	}
+	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
+		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+			LaunchTemplateId: aws.String(d.Id()),
+		}
+		if d.Get("update_default_version").(bool) {
+			modifyLaunchTemplateOpts.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
+		} else if d.HasChange("default_version") {
+			modifyLaunchTemplateOpts.DefaultVersion = aws.String(strconv.Itoa(defaultVersion))
+		}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
-		launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
-	}
-
-	_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
-	if createErr != nil {
-		return createErr
+		_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+		if err != nil {
+			return fmt.Errorf("error modifying Launch Template (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -1712,4 +1762,34 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 	}
 
 	return placement
+}
+
+var updateKeys = []string{
+	"block_device_mappings",
+	"capacity_reservation_specification",
+	"cpu_options",
+	"credit_specification",
+	"description",
+	"disable_api_termination",
+	"ebs_optimized",
+	"elastic_gpu_specifications",
+	"elastic_inference_accelerator",
+	"hibernation_options",
+	"iam_instance_profile",
+	"image_id",
+	"instance_initiated_shutdown_behavior",
+	"instance_market_options",
+	"instance_type",
+	"kernel_id",
+	"key_name",
+	"license_specification",
+	"metadata_options",
+	"monitoring",
+	"network_interfaces",
+	"placement",
+	"ram_disk_id",
+	"security_group_names",
+	"tag_specifications",
+	"user_data",
+	"vpc_security_group_ids",
 }

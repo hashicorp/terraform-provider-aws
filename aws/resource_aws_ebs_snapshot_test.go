@@ -113,6 +113,7 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", acctest.RandString(7))
+	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,8 +125,7 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 				Config: testAccAwsEbsSnapshotConfigWithKms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_id",
-						regexp.MustCompile(`^arn:aws:kms:[a-z]{2}-[a-z]+-\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{

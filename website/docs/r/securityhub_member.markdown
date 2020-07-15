@@ -37,7 +37,7 @@ The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ID of the member AWS account (matches `account_id`).
 * `master_id` - The ID of the master Security Hub AWS account.
-* `member_status` - The status of the relationship between the member account and its master account.
+* `member_status` - The status of the member account relationship.
 
 ## Import
 

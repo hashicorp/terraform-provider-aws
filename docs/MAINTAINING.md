@@ -82,11 +82,8 @@ Create an issue to cover the update noting down any areas of particular interest
 Ensure that the following steps are tracked within the issue and completed within the resulting pull request.
 
 - Update go version in `go.mod`
-- Verify all formatting, linting, and testing works as expected
-- Verify `gox` builds for all currently supported architectures:
-```
-gox -os='linux darwin windows freebsd openbsd solaris' -arch='386 amd64 arm' -osarch='!darwin/arm !darwin/386' -ldflags '-s -w -X aws/version.ProviderVersion=99.99.99 -X aws/version.ProtocolVersion=4' -output 'results/{{.OS}}_{{.Arch}}/terraform-provider-aws_v99.99.99_x4' .
-```
+- Verify `make test lint` works as expected
+- Verify `goreleaser build --snapshot` succeeds for all currently supported architectures
 - Verify `goenv` support for the new version
 - Update `docs/DEVELOPMENT.md`
 - Update `.github/workflows/*.yml`
@@ -393,6 +390,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_COGNITO_USER_POOL_DOMAIN_CERTIFICATE_ARN` | Amazon Resource Name of ACM Certificate in `us-east-1` for Cognito User Pool Domain Name testing. |
 | `AWS_COGNITO_USER_POOL_DOMAIN_ROOT_DOMAIN` | Root domain name to use with Cognito User Pool Domain testing. |
 | `AWS_DEFAULT_REGION` | Primary AWS region for tests. Defaults to `us-west-2`. |
+| `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `AWS_GUARDDUTY_MEMBER_EMAIL` | Email address for GuardDuty Member testing. **DEPRECATED:** It may be possible to use a placeholder email address instead. |
