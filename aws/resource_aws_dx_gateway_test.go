@@ -140,13 +140,6 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 }
 
 func TestAccAwsDxGateway_complex(t *testing.T) {
-	checkFn := func(s []*terraform.InstanceState) error {
-		if len(s) != 3 {
-			return fmt.Errorf("Got %d resources, expected 3. State: %#v", len(s), s)
-		}
-		return nil
-	}
-
 	rName1 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rName2 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := randIntRange(64512, 65534)
@@ -167,7 +160,6 @@ func TestAccAwsDxGateway_complex(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateCheck:  checkFn,
 				ImportStateVerify: true,
 			},
 		},

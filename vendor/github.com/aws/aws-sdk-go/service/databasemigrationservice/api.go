@@ -4951,8 +4951,8 @@ func (c *DatabaseMigrationService) TestConnectionWithContext(ctx aws.Context, in
 // AWS DMS was denied access to the endpoint. Check that the role is correctly
 // configured.
 type AccessDeniedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4969,17 +4969,17 @@ func (s AccessDeniedFault) GoString() string {
 
 func newErrorAccessDeniedFault(v protocol.ResponseMetadata) error {
 	return &AccessDeniedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedFault) Code() string {
+func (s *AccessDeniedFault) Code() string {
 	return "AccessDeniedFault"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedFault) Message() string {
+func (s *AccessDeniedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4987,22 +4987,22 @@ func (s AccessDeniedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedFault) OrigErr() error {
+func (s *AccessDeniedFault) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedFault) Error() string {
+func (s *AccessDeniedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes a quota for an AWS account, for example, the number of replication
@@ -5220,7 +5220,7 @@ func (s *ApplyPendingMaintenanceActionOutput) SetResourcePendingMaintenanceActio
 	return s
 }
 
-// The name of the Availability Zone for use during database migration.
+// The name of an Availability Zone for use during database migration.
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
@@ -5377,7 +5377,15 @@ type Connection struct {
 	// string.
 	ReplicationInstanceIdentifier *string `type:"string"`
 
-	// The connection status.
+	// The connection status. This parameter can return one of the following values:
+	//
+	//    * "successful"
+	//
+	//    * "testing"
+	//
+	//    * "failed"
+	//
+	//    * "deleting"
 	Status *string `type:"string"`
 }
 
@@ -5464,7 +5472,7 @@ type CreateEndpointInput struct {
 	// Settings in JSON format for the target Elasticsearch endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
 	// Elasticsearch as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
-	// in the AWS Database Migration User Guide.
+	// in the AWS Database Migration Service User Guide.
 	ElasticsearchSettings *ElasticsearchSettings `type:"structure"`
 
 	// The database endpoint identifier. Identifiers must begin with a letter and
@@ -5482,7 +5490,7 @@ type CreateEndpointInput struct {
 	// The type of engine for the endpoint. Valid values, depending on the EndpointType
 	// value, include "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	//
 	// EngineName is a required field
 	EngineName *string `type:"string" required:"true"`
@@ -5498,16 +5506,16 @@ type CreateEndpointInput struct {
 	// in the AWS Database Migration Service User Guide.
 	ExtraConnectionAttributes *string `type:"string"`
 
-	// Settings in JSON format for the target Apache Kafka endpoint. For information
-	// about other available settings, see Using Object Mapping to Migrate Data
-	// to Apache Kafka (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html#CHAP_Target.Kafka.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// Settings in JSON format for the target Apache Kafka endpoint. For more information
+	// about the available settings, see Using Apache Kafka as a Target for AWS
+	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
+	// in the AWS Database Migration Service User Guide.
 	KafkaSettings *KafkaSettings `type:"structure"`
 
 	// Settings in JSON format for the target endpoint for Amazon Kinesis Data Streams.
-	// For information about other available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// For more information about the available settings, see Using Amazon Kinesis
+	// Data Streams as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html)
+	// in the AWS Database Migration Service User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// An AWS KMS key identifier that is used to encrypt the connection parameters
@@ -5521,10 +5529,16 @@ type CreateEndpointInput struct {
 	KmsKeyId *string `type:"string"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
-	// about the available settings, see the configuration properties section in
-	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// about the available settings, see Using MongoDB as a Target for AWS Database
+	// Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html#CHAP_Source.MongoDB.Configuration)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the target Amazon Neptune endpoint. For more
+	// information about the available settings, see Specifying Endpoint Settings
+	// for Amazon Neptune as a Target (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings)
+	// in the AWS Database Migration Service User Guide.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The password to be used to log in to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
@@ -5589,6 +5603,11 @@ func (s *CreateEndpointInput) Validate() error {
 	if s.ElasticsearchSettings != nil {
 		if err := s.ElasticsearchSettings.Validate(); err != nil {
 			invalidParams.AddNested("ElasticsearchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NeptuneSettings != nil {
+		if err := s.NeptuneSettings.Validate(); err != nil {
+			invalidParams.AddNested("NeptuneSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -5679,6 +5698,12 @@ func (s *CreateEndpointInput) SetKmsKeyId(v string) *CreateEndpointInput {
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *CreateEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *CreateEndpointInput {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *CreateEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *CreateEndpointInput {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -5915,7 +5940,11 @@ type CreateReplicationInstanceInput struct {
 	// AWS Region, for example: us-east-1d
 	AvailabilityZone *string `type:"string"`
 
-	// A list of DNS name servers supported for the replication instance.
+	// A list of custom DNS name servers supported for the replication instance
+	// to access your on-premise source or target database. This list overrides
+	// the default name servers supported by the replication instance. You can specify
+	// a comma-separated list of internet addresses for up to four on-premise DNS
+	// name servers. For example: "1.1.1.1,2.2.2.2,3.3.3.3,4.4.4.4"
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
@@ -5954,11 +5983,13 @@ type CreateReplicationInstanceInput struct {
 	// represents an instance with a private IP address. The default value is true.
 	PubliclyAccessible *bool `type:"boolean"`
 
-	// The compute and memory capacity of the replication instance as specified
-	// by the replication instance class.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class. For example to specify the instance
+	// class dms.c4.large, set this parameter to "dms.c4.large".
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	//
 	// ReplicationInstanceClass is a required field
 	ReplicationInstanceClass *string `type:"string" required:"true"`
@@ -5968,7 +5999,7 @@ type CreateReplicationInstanceInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 63 alphanumeric characters or hyphens.
+	//    * Must contain 1-63 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -6280,7 +6311,7 @@ type CreateReplicationTaskInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 alphanumeric characters or hyphens.
+	//    * Must contain 1-255 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -6290,7 +6321,7 @@ type CreateReplicationTaskInput struct {
 	ReplicationTaskIdentifier *string `type:"string" required:"true"`
 
 	// Overall settings for the task, in JSON format. For more information, see
-	// Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
+	// Specifying Task Settings for AWS Database Migration Service Tasks (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
 	// in the AWS Database Migration User Guide.
 	ReplicationTaskSettings *string `type:"string"`
 
@@ -6300,8 +6331,8 @@ type CreateReplicationTaskInput struct {
 	SourceEndpointArn *string `type:"string" required:"true"`
 
 	// The table mappings for the task, in JSON format. For more information, see
-	// Table Mapping (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
-	// in the AWS Database Migration User Guide.
+	// Using Table Mapping to Specify Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
+	// in the AWS Database Migration Service User Guide.
 	//
 	// TableMappings is a required field
 	TableMappings *string `type:"string" required:"true"`
@@ -6313,6 +6344,12 @@ type CreateReplicationTaskInput struct {
 	//
 	// TargetEndpointArn is a required field
 	TargetEndpointArn *string `type:"string" required:"true"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration Service User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6416,6 +6453,12 @@ func (s *CreateReplicationTaskInput) SetTags(v []*Tag) *CreateReplicationTaskInp
 // SetTargetEndpointArn sets the TargetEndpointArn field's value.
 func (s *CreateReplicationTaskInput) SetTargetEndpointArn(v string) *CreateReplicationTaskInput {
 	s.TargetEndpointArn = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *CreateReplicationTaskInput) SetTaskData(v string) *CreateReplicationTaskInput {
+	s.TaskData = &v
 	return s
 }
 
@@ -8156,6 +8199,8 @@ type DescribeReplicationSubnetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the describe action.
+	//
+	// Valid filter names: replication-subnet-group-id
 	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -8905,7 +8950,7 @@ type Endpoint struct {
 	// The database engine name. Valid values, depending on the EndpointType, include
 	// "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	EngineName *string `type:"string"`
 
 	// Value returned by a call to CreateEndpoint that can be used for cross-account
@@ -8940,6 +8985,10 @@ type Endpoint struct {
 	// The settings for the MongoDB source endpoint. For more information, see the
 	// MongoDbSettings structure.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// The settings for the Amazon Neptune target endpoint. For more information,
+	// see the NeptuneSettings structure.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The port value used to access the endpoint.
 	Port *int64 `type:"integer"`
@@ -9076,6 +9125,12 @@ func (s *Endpoint) SetKmsKeyId(v string) *Endpoint {
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *Endpoint) SetMongoDbSettings(v *MongoDbSettings) *Endpoint {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *Endpoint) SetNeptuneSettings(v *NeptuneSettings) *Endpoint {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -9269,7 +9324,7 @@ type EventSubscription struct {
 	// topic was deleted after the subscription was created.
 	Status *string `type:"string"`
 
-	// The time the RDS event notification subscription was created.
+	// The time the AWS DMS event notification subscription was created.
 	SubscriptionCreationTime *string `type:"string"`
 }
 
@@ -9485,8 +9540,8 @@ func (s *ImportCertificateOutput) SetCertificate(v *Certificate) *ImportCertific
 
 // There are not enough resources allocated to the database migration.
 type InsufficientResourceCapacityFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9503,17 +9558,17 @@ func (s InsufficientResourceCapacityFault) GoString() string {
 
 func newErrorInsufficientResourceCapacityFault(v protocol.ResponseMetadata) error {
 	return &InsufficientResourceCapacityFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InsufficientResourceCapacityFault) Code() string {
+func (s *InsufficientResourceCapacityFault) Code() string {
 	return "InsufficientResourceCapacityFault"
 }
 
 // Message returns the exception's message.
-func (s InsufficientResourceCapacityFault) Message() string {
+func (s *InsufficientResourceCapacityFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9521,28 +9576,28 @@ func (s InsufficientResourceCapacityFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InsufficientResourceCapacityFault) OrigErr() error {
+func (s *InsufficientResourceCapacityFault) OrigErr() error {
 	return nil
 }
 
-func (s InsufficientResourceCapacityFault) Error() string {
+func (s *InsufficientResourceCapacityFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InsufficientResourceCapacityFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InsufficientResourceCapacityFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InsufficientResourceCapacityFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InsufficientResourceCapacityFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The certificate was not valid.
 type InvalidCertificateFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9559,17 +9614,17 @@ func (s InvalidCertificateFault) GoString() string {
 
 func newErrorInvalidCertificateFault(v protocol.ResponseMetadata) error {
 	return &InvalidCertificateFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidCertificateFault) Code() string {
+func (s *InvalidCertificateFault) Code() string {
 	return "InvalidCertificateFault"
 }
 
 // Message returns the exception's message.
-func (s InvalidCertificateFault) Message() string {
+func (s *InvalidCertificateFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9577,29 +9632,29 @@ func (s InvalidCertificateFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidCertificateFault) OrigErr() error {
+func (s *InvalidCertificateFault) OrigErr() error {
 	return nil
 }
 
-func (s InvalidCertificateFault) Error() string {
+func (s *InvalidCertificateFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidCertificateFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidCertificateFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidCertificateFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidCertificateFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource is in a state that prevents it from being used for database
 // migration.
 type InvalidResourceStateFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9616,17 +9671,17 @@ func (s InvalidResourceStateFault) GoString() string {
 
 func newErrorInvalidResourceStateFault(v protocol.ResponseMetadata) error {
 	return &InvalidResourceStateFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResourceStateFault) Code() string {
+func (s *InvalidResourceStateFault) Code() string {
 	return "InvalidResourceStateFault"
 }
 
 // Message returns the exception's message.
-func (s InvalidResourceStateFault) Message() string {
+func (s *InvalidResourceStateFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9634,28 +9689,28 @@ func (s InvalidResourceStateFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResourceStateFault) OrigErr() error {
+func (s *InvalidResourceStateFault) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResourceStateFault) Error() string {
+func (s *InvalidResourceStateFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResourceStateFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResourceStateFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResourceStateFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResourceStateFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The subnet provided is invalid.
 type InvalidSubnet struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9672,17 +9727,17 @@ func (s InvalidSubnet) GoString() string {
 
 func newErrorInvalidSubnet(v protocol.ResponseMetadata) error {
 	return &InvalidSubnet{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidSubnet) Code() string {
+func (s *InvalidSubnet) Code() string {
 	return "InvalidSubnet"
 }
 
 // Message returns the exception's message.
-func (s InvalidSubnet) Message() string {
+func (s *InvalidSubnet) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9690,29 +9745,29 @@ func (s InvalidSubnet) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidSubnet) OrigErr() error {
+func (s *InvalidSubnet) OrigErr() error {
 	return nil
 }
 
-func (s InvalidSubnet) Error() string {
+func (s *InvalidSubnet) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidSubnet) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidSubnet) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidSubnet) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidSubnet) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The ciphertext references a key that doesn't exist or that the DMS account
 // doesn't have access to.
 type KMSAccessDeniedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9729,17 +9784,17 @@ func (s KMSAccessDeniedFault) GoString() string {
 
 func newErrorKMSAccessDeniedFault(v protocol.ResponseMetadata) error {
 	return &KMSAccessDeniedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s KMSAccessDeniedFault) Code() string {
+func (s *KMSAccessDeniedFault) Code() string {
 	return "KMSAccessDeniedFault"
 }
 
 // Message returns the exception's message.
-func (s KMSAccessDeniedFault) Message() string {
+func (s *KMSAccessDeniedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9747,28 +9802,28 @@ func (s KMSAccessDeniedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s KMSAccessDeniedFault) OrigErr() error {
+func (s *KMSAccessDeniedFault) OrigErr() error {
 	return nil
 }
 
-func (s KMSAccessDeniedFault) Error() string {
+func (s *KMSAccessDeniedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s KMSAccessDeniedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *KMSAccessDeniedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s KMSAccessDeniedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *KMSAccessDeniedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified master key (CMK) isn't enabled.
 type KMSDisabledFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9785,17 +9840,17 @@ func (s KMSDisabledFault) GoString() string {
 
 func newErrorKMSDisabledFault(v protocol.ResponseMetadata) error {
 	return &KMSDisabledFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s KMSDisabledFault) Code() string {
+func (s *KMSDisabledFault) Code() string {
 	return "KMSDisabledFault"
 }
 
 // Message returns the exception's message.
-func (s KMSDisabledFault) Message() string {
+func (s *KMSDisabledFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9803,28 +9858,28 @@ func (s KMSDisabledFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s KMSDisabledFault) OrigErr() error {
+func (s *KMSDisabledFault) OrigErr() error {
 	return nil
 }
 
-func (s KMSDisabledFault) Error() string {
+func (s *KMSDisabledFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s KMSDisabledFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *KMSDisabledFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s KMSDisabledFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *KMSDisabledFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The state of the specified AWS KMS resource isn't valid for this request.
 type KMSInvalidStateFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9841,17 +9896,17 @@ func (s KMSInvalidStateFault) GoString() string {
 
 func newErrorKMSInvalidStateFault(v protocol.ResponseMetadata) error {
 	return &KMSInvalidStateFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s KMSInvalidStateFault) Code() string {
+func (s *KMSInvalidStateFault) Code() string {
 	return "KMSInvalidStateFault"
 }
 
 // Message returns the exception's message.
-func (s KMSInvalidStateFault) Message() string {
+func (s *KMSInvalidStateFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9859,28 +9914,28 @@ func (s KMSInvalidStateFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s KMSInvalidStateFault) OrigErr() error {
+func (s *KMSInvalidStateFault) OrigErr() error {
 	return nil
 }
 
-func (s KMSInvalidStateFault) Error() string {
+func (s *KMSInvalidStateFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s KMSInvalidStateFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *KMSInvalidStateFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s KMSInvalidStateFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *KMSInvalidStateFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // AWS DMS cannot access the AWS KMS key.
 type KMSKeyNotAccessibleFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9897,17 +9952,17 @@ func (s KMSKeyNotAccessibleFault) GoString() string {
 
 func newErrorKMSKeyNotAccessibleFault(v protocol.ResponseMetadata) error {
 	return &KMSKeyNotAccessibleFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s KMSKeyNotAccessibleFault) Code() string {
+func (s *KMSKeyNotAccessibleFault) Code() string {
 	return "KMSKeyNotAccessibleFault"
 }
 
 // Message returns the exception's message.
-func (s KMSKeyNotAccessibleFault) Message() string {
+func (s *KMSKeyNotAccessibleFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9915,28 +9970,28 @@ func (s KMSKeyNotAccessibleFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s KMSKeyNotAccessibleFault) OrigErr() error {
+func (s *KMSKeyNotAccessibleFault) OrigErr() error {
 	return nil
 }
 
-func (s KMSKeyNotAccessibleFault) Error() string {
+func (s *KMSKeyNotAccessibleFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s KMSKeyNotAccessibleFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *KMSKeyNotAccessibleFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s KMSKeyNotAccessibleFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *KMSKeyNotAccessibleFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified AWS KMS entity or resource can't be found.
 type KMSNotFoundFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9953,17 +10008,17 @@ func (s KMSNotFoundFault) GoString() string {
 
 func newErrorKMSNotFoundFault(v protocol.ResponseMetadata) error {
 	return &KMSNotFoundFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s KMSNotFoundFault) Code() string {
+func (s *KMSNotFoundFault) Code() string {
 	return "KMSNotFoundFault"
 }
 
 // Message returns the exception's message.
-func (s KMSNotFoundFault) Message() string {
+func (s *KMSNotFoundFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9971,28 +10026,28 @@ func (s KMSNotFoundFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s KMSNotFoundFault) OrigErr() error {
+func (s *KMSNotFoundFault) OrigErr() error {
 	return nil
 }
 
-func (s KMSNotFoundFault) Error() string {
+func (s *KMSNotFoundFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s KMSNotFoundFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *KMSNotFoundFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s KMSNotFoundFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *KMSNotFoundFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // This request triggered AWS KMS request throttling.
 type KMSThrottlingFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -10009,17 +10064,17 @@ func (s KMSThrottlingFault) GoString() string {
 
 func newErrorKMSThrottlingFault(v protocol.ResponseMetadata) error {
 	return &KMSThrottlingFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s KMSThrottlingFault) Code() string {
+func (s *KMSThrottlingFault) Code() string {
 	return "KMSThrottlingFault"
 }
 
 // Message returns the exception's message.
-func (s KMSThrottlingFault) Message() string {
+func (s *KMSThrottlingFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -10027,22 +10082,22 @@ func (s KMSThrottlingFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s KMSThrottlingFault) OrigErr() error {
+func (s *KMSThrottlingFault) OrigErr() error {
 	return nil
 }
 
-func (s KMSThrottlingFault) Error() string {
+func (s *KMSThrottlingFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s KMSThrottlingFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *KMSThrottlingFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s KMSThrottlingFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *KMSThrottlingFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides information that describes an Apache Kafka endpoint. This information
@@ -10287,7 +10342,7 @@ type ModifyEndpointInput struct {
 	// Settings in JSON format for the target Elasticsearch endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
 	// Elasticsearch as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
-	// in the AWS Database Migration User Guide.
+	// in the AWS Database Migration Service User Guide.
 	ElasticsearchSettings *ElasticsearchSettings `type:"structure"`
 
 	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
@@ -10306,7 +10361,7 @@ type ModifyEndpointInput struct {
 	// The type of engine for the endpoint. Valid values, depending on the EndpointType,
 	// include "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	EngineName *string `type:"string"`
 
 	// The external table definition.
@@ -10316,16 +10371,16 @@ type ModifyEndpointInput struct {
 	// pass the empty string ("") as an argument.
 	ExtraConnectionAttributes *string `type:"string"`
 
-	// Settings in JSON format for the target Apache Kafka endpoint. For information
-	// about other available settings, see Using Object Mapping to Migrate Data
-	// to Apache Kafka (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html#CHAP_Target.Kafka.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// Settings in JSON format for the target Apache Kafka endpoint. For more information
+	// about the available settings, see Using Apache Kafka as a Target for AWS
+	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
+	// in the AWS Database Migration Service User Guide.
 	KafkaSettings *KafkaSettings `type:"structure"`
 
 	// Settings in JSON format for the target endpoint for Amazon Kinesis Data Streams.
-	// For information about other available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// For more information about the available settings, see Using Amazon Kinesis
+	// Data Streams as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html)
+	// in the AWS Database Migration Service User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
@@ -10333,6 +10388,12 @@ type ModifyEndpointInput struct {
 	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the target Amazon Neptune endpoint. For more
+	// information about the available settings, see Specifying Endpoint Settings
+	// for Amazon Neptune as a Target (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings)
+	// in the AWS Database Migration Service User Guide.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The password to be used to login to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
@@ -10387,6 +10448,11 @@ func (s *ModifyEndpointInput) Validate() error {
 	if s.ElasticsearchSettings != nil {
 		if err := s.ElasticsearchSettings.Validate(); err != nil {
 			invalidParams.AddNested("ElasticsearchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NeptuneSettings != nil {
+		if err := s.NeptuneSettings.Validate(); err != nil {
+			invalidParams.AddNested("NeptuneSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -10477,6 +10543,12 @@ func (s *ModifyEndpointInput) SetKinesisSettings(v *KinesisSettings) *ModifyEndp
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *ModifyEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *ModifyEndpointInput {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *ModifyEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *ModifyEndpointInput {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -10717,10 +10789,13 @@ type ModifyReplicationInstanceInput struct {
 	// ReplicationInstanceArn is a required field
 	ReplicationInstanceArn *string `type:"string" required:"true"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class. For example to specify the instance
+	// class dms.c4.large, set this parameter to "dms.c4.large".
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
 	// The replication instance identifier. This parameter is stored as a lowercase
@@ -10979,14 +11054,14 @@ type ModifyReplicationTaskInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 alphanumeric characters or hyphens.
+	//    * Must contain 1-255 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
 	//    * Cannot end with a hyphen or contain two consecutive hyphens.
 	ReplicationTaskIdentifier *string `type:"string"`
 
-	// JSON file that contains settings for the task, such as target metadata settings.
+	// JSON file that contains settings for the task, such as task metadata settings.
 	ReplicationTaskSettings *string `type:"string"`
 
 	// When using the AWS CLI or boto3, provide the path of the JSON file that contains
@@ -10994,6 +11069,12 @@ type ModifyReplicationTaskInput struct {
 	// DMS API, provide the JSON as the parameter value, for example: --table-mappings
 	// file://mappingfile.json
 	TableMappings *string `type:"string"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration Service User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -11067,6 +11148,12 @@ func (s *ModifyReplicationTaskInput) SetTableMappings(v string) *ModifyReplicati
 	return s
 }
 
+// SetTaskData sets the TaskData field's value.
+func (s *ModifyReplicationTaskInput) SetTaskData(v string) *ModifyReplicationTaskInput {
+	s.TaskData = &v
+	return s
+}
+
 type ModifyReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11096,37 +11183,35 @@ type MongoDbSettings struct {
 
 	// The authentication mechanism you use to access the MongoDB source endpoint.
 	//
-	// Valid values: DEFAULT, MONGODB_CR, SCRAM_SHA_1
-	//
-	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version
-	// 3.x, use SCRAM_SHA_1. This setting isn't used when authType=No.
+	// For the default value, in MongoDB version 2.x, "default" is "mongodb_cr".
+	// For MongoDB version 3.x or later, "default" is "scram_sha_1". This setting
+	// isn't used when AuthType is set to "no".
 	AuthMechanism *string `type:"string" enum:"AuthMechanismValue"`
 
-	// The MongoDB database name. This setting isn't used when authType=NO.
+	// The MongoDB database name. This setting isn't used when AuthType is set to
+	// "no".
 	//
-	// The default is admin.
+	// The default is "admin".
 	AuthSource *string `type:"string"`
 
 	// The authentication type you use to access the MongoDB source endpoint.
 	//
-	// Valid values: NO, PASSWORD
-	//
-	// When NO is selected, user name and password parameters are not used and can
-	// be empty.
+	// When when set to "no", user name and password parameters are not used and
+	// can be empty.
 	AuthType *string `type:"string" enum:"AuthTypeValue"`
 
 	// The database name on the MongoDB source endpoint.
 	DatabaseName *string `type:"string"`
 
 	// Indicates the number of documents to preview to determine the document organization.
-	// Use this setting when NestingLevel is set to ONE.
+	// Use this setting when NestingLevel is set to "one".
 	//
 	// Must be a positive value greater than 0. Default value is 1000.
 	DocsToInvestigate *string `type:"string"`
 
-	// Specifies the document ID. Use this setting when NestingLevel is set to NONE.
+	// Specifies the document ID. Use this setting when NestingLevel is set to "none".
 	//
-	// Default value is false.
+	// Default value is "false".
 	ExtractDocId *string `type:"string"`
 
 	// The AWS KMS key identifier that is used to encrypt the content on the replication
@@ -11138,10 +11223,8 @@ type MongoDbSettings struct {
 
 	// Specifies either document or table mode.
 	//
-	// Valid values: NONE, ONE
-	//
-	// Default value is NONE. Specify NONE to use document mode. Specify ONE to
-	// use table mode.
+	// Default value is "none". Specify "none" to use document mode. Specify "one"
+	// to use table mode.
 	NestingLevel *string `type:"string" enum:"NestingLevelValue"`
 
 	// The password for the user account you use to access the MongoDB source endpoint.
@@ -11239,6 +11322,120 @@ func (s *MongoDbSettings) SetUsername(v string) *MongoDbSettings {
 	return s
 }
 
+// Provides information that defines an Amazon Neptune endpoint.
+type NeptuneSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The number of milliseconds for AWS DMS to wait to retry a bulk-load of migrated
+	// graph data to the Neptune target database before raising an error. The default
+	// is 250.
+	ErrorRetryDuration *int64 `type:"integer"`
+
+	// If you want AWS Identity and Access Management (IAM) authorization enabled
+	// for this endpoint, set this parameter to true. Then attach the appropriate
+	// IAM policy document to your service role specified by ServiceAccessRoleArn.
+	// The default is false.
+	IamAuthEnabled *bool `type:"boolean"`
+
+	// The maximum size in kilobytes of migrated graph data stored in a .csv file
+	// before AWS DMS bulk-loads the data to the Neptune target database. The default
+	// is 1,048,576 KB. If the bulk load is successful, AWS DMS clears the bucket,
+	// ready to store the next batch of migrated graph data.
+	MaxFileSize *int64 `type:"integer"`
+
+	// The number of times for AWS DMS to retry a bulk load of migrated graph data
+	// to the Neptune target database before raising an error. The default is 5.
+	MaxRetryCount *int64 `type:"integer"`
+
+	// A folder path where you want AWS DMS to store migrated graph data in the
+	// S3 bucket specified by S3BucketName
+	//
+	// S3BucketFolder is a required field
+	S3BucketFolder *string `type:"string" required:"true"`
+
+	// The name of the Amazon S3 bucket where AWS DMS can temporarily store migrated
+	// graph data in .csv files before bulk-loading it to the Neptune target database.
+	// AWS DMS maps the SQL source data to graph data before storing it in these
+	// .csv files.
+	//
+	// S3BucketName is a required field
+	S3BucketName *string `type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the service role that you created for the
+	// Neptune target endpoint. For more information, see Creating an IAM Service
+	// Role for Accessing Amazon Neptune as a Target (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.ServiceRole)
+	// in the AWS Database Migration Service User Guide.
+	ServiceAccessRoleArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NeptuneSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NeptuneSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NeptuneSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NeptuneSettings"}
+	if s.S3BucketFolder == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketFolder"))
+	}
+	if s.S3BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetErrorRetryDuration sets the ErrorRetryDuration field's value.
+func (s *NeptuneSettings) SetErrorRetryDuration(v int64) *NeptuneSettings {
+	s.ErrorRetryDuration = &v
+	return s
+}
+
+// SetIamAuthEnabled sets the IamAuthEnabled field's value.
+func (s *NeptuneSettings) SetIamAuthEnabled(v bool) *NeptuneSettings {
+	s.IamAuthEnabled = &v
+	return s
+}
+
+// SetMaxFileSize sets the MaxFileSize field's value.
+func (s *NeptuneSettings) SetMaxFileSize(v int64) *NeptuneSettings {
+	s.MaxFileSize = &v
+	return s
+}
+
+// SetMaxRetryCount sets the MaxRetryCount field's value.
+func (s *NeptuneSettings) SetMaxRetryCount(v int64) *NeptuneSettings {
+	s.MaxRetryCount = &v
+	return s
+}
+
+// SetS3BucketFolder sets the S3BucketFolder field's value.
+func (s *NeptuneSettings) SetS3BucketFolder(v string) *NeptuneSettings {
+	s.S3BucketFolder = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *NeptuneSettings) SetS3BucketName(v string) *NeptuneSettings {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
+func (s *NeptuneSettings) SetServiceAccessRoleArn(v string) *NeptuneSettings {
+	s.ServiceAccessRoleArn = &v
+	return s
+}
+
 // In response to the DescribeOrderableReplicationInstances operation, this
 // object describes an available replication instance. This description includes
 // the replication instance's type, engine version, and allocated storage.
@@ -11273,10 +11470,13 @@ type OrderableReplicationInstance struct {
 	// AWS DMS supports the ReleaseStatus parameter in versions 3.1.4 and later.
 	ReleaseStatus *string `type:"string" enum:"ReleaseStatusValues"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class. For example to specify the instance
+	// class dms.c4.large, set this parameter to "dms.c4.large".
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
 	// The type of storage used by the replication instance.
@@ -12097,7 +12297,8 @@ type ReplicationInstance struct {
 	// The Availability Zone for the instance.
 	AvailabilityZone *string `type:"string"`
 
-	// The DNS name servers for the replication instance.
+	// The DNS name servers supported for the replication instance to access your
+	// on-premise source or target database.
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
@@ -12139,10 +12340,12 @@ type ReplicationInstance struct {
 	// The Amazon Resource Name (ARN) of the replication instance.
 	ReplicationInstanceArn *string `type:"string"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class.
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
 	// The replication instance identifier. This parameter is stored as a lowercase
@@ -12150,7 +12353,7 @@ type ReplicationInstance struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 63 alphanumeric characters or hyphens.
+	//    * Must contain 1-63 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -12175,7 +12378,33 @@ type ReplicationInstance struct {
 	// One or more public IP addresses for the replication instance.
 	ReplicationInstancePublicIpAddresses []*string `type:"list"`
 
-	// The status of the replication instance.
+	// The status of the replication instance. The possible return values include:
+	//
+	//    * "available"
+	//
+	//    * "creating"
+	//
+	//    * "deleted"
+	//
+	//    * "deleting"
+	//
+	//    * "failed"
+	//
+	//    * "modifying"
+	//
+	//    * "upgrading"
+	//
+	//    * "rebooting"
+	//
+	//    * "resetting-master-credentials"
+	//
+	//    * "storage-full"
+	//
+	//    * "incompatible-credentials"
+	//
+	//    * "incompatible-network"
+	//
+	//    * "maintenance"
 	ReplicationInstanceStatus *string `type:"string"`
 
 	// The subnet group for the replication instance.
@@ -12396,10 +12625,12 @@ type ReplicationPendingModifiedValues struct {
 	// to true.
 	MultiAZ *bool `type:"boolean"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class.
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 }
 
@@ -12501,8 +12732,8 @@ func (s *ReplicationSubnetGroup) SetVpcId(v string) *ReplicationSubnetGroup {
 // The replication subnet group does not cover enough Availability Zones (AZs).
 // Edit the replication subnet group and add more AZs.
 type ReplicationSubnetGroupDoesNotCoverEnoughAZs struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -12519,17 +12750,17 @@ func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) GoString() string {
 
 func newErrorReplicationSubnetGroupDoesNotCoverEnoughAZs(v protocol.ResponseMetadata) error {
 	return &ReplicationSubnetGroupDoesNotCoverEnoughAZs{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Code() string {
+func (s *ReplicationSubnetGroupDoesNotCoverEnoughAZs) Code() string {
 	return "ReplicationSubnetGroupDoesNotCoverEnoughAZs"
 }
 
 // Message returns the exception's message.
-func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Message() string {
+func (s *ReplicationSubnetGroupDoesNotCoverEnoughAZs) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12537,22 +12768,22 @@ func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) OrigErr() error {
+func (s *ReplicationSubnetGroupDoesNotCoverEnoughAZs) OrigErr() error {
 	return nil
 }
 
-func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) Error() string {
+func (s *ReplicationSubnetGroupDoesNotCoverEnoughAZs) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ReplicationSubnetGroupDoesNotCoverEnoughAZs) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ReplicationSubnetGroupDoesNotCoverEnoughAZs) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ReplicationSubnetGroupDoesNotCoverEnoughAZs) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides information that describes a replication task created by the CreateReplicationTask
@@ -12606,7 +12837,7 @@ type ReplicationTask struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 alphanumeric characters or hyphens.
+	//    * Must contain 1-255 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -12629,7 +12860,20 @@ type ReplicationTask struct {
 	// The status of the replication task.
 	Status *string `type:"string"`
 
-	// The reason the replication task was stopped.
+	// The reason the replication task was stopped. This response parameter can
+	// return one of the following values:
+	//
+	//    * "STOP_REASON_FULL_LOAD_COMPLETED" – Full-load migration completed.
+	//
+	//    * "STOP_REASON_CACHED_CHANGES_APPLIED" – Change data capture (CDC) load
+	//    completed.
+	//
+	//    * "STOP_REASON_CACHED_CHANGES_NOT_APPLIED" – In a full-load and CDC
+	//    migration, the full-load stopped as specified before starting the CDC
+	//    migration.
+	//
+	//    * "STOP_REASON_SERVER_TIME" – The migration stopped at the specified
+	//    server time.
 	StopReason *string `type:"string"`
 
 	// Table mappings specified in the task.
@@ -12637,6 +12881,12 @@ type ReplicationTask struct {
 
 	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
 	TargetEndpointArn *string `type:"string"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration Service User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12748,6 +12998,12 @@ func (s *ReplicationTask) SetTableMappings(v string) *ReplicationTask {
 // SetTargetEndpointArn sets the TargetEndpointArn field's value.
 func (s *ReplicationTask) SetTargetEndpointArn(v string) *ReplicationTask {
 	s.TargetEndpointArn = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *ReplicationTask) SetTaskData(v string) *ReplicationTask {
+	s.TaskData = &v
 	return s
 }
 
@@ -12949,8 +13205,8 @@ func (s *ReplicationTaskStats) SetTablesQueued(v int64) *ReplicationTaskStats {
 
 // The resource you are attempting to create already exists.
 type ResourceAlreadyExistsFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -12969,17 +13225,17 @@ func (s ResourceAlreadyExistsFault) GoString() string {
 
 func newErrorResourceAlreadyExistsFault(v protocol.ResponseMetadata) error {
 	return &ResourceAlreadyExistsFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceAlreadyExistsFault) Code() string {
+func (s *ResourceAlreadyExistsFault) Code() string {
 	return "ResourceAlreadyExistsFault"
 }
 
 // Message returns the exception's message.
-func (s ResourceAlreadyExistsFault) Message() string {
+func (s *ResourceAlreadyExistsFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12987,28 +13243,28 @@ func (s ResourceAlreadyExistsFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceAlreadyExistsFault) OrigErr() error {
+func (s *ResourceAlreadyExistsFault) OrigErr() error {
 	return nil
 }
 
-func (s ResourceAlreadyExistsFault) Error() string {
+func (s *ResourceAlreadyExistsFault) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceAlreadyExistsFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceAlreadyExistsFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource could not be found.
 type ResourceNotFoundFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13025,17 +13281,17 @@ func (s ResourceNotFoundFault) GoString() string {
 
 func newErrorResourceNotFoundFault(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundFault) Code() string {
+func (s *ResourceNotFoundFault) Code() string {
 	return "ResourceNotFoundFault"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundFault) Message() string {
+func (s *ResourceNotFoundFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13043,22 +13299,22 @@ func (s ResourceNotFoundFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundFault) OrigErr() error {
+func (s *ResourceNotFoundFault) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundFault) Error() string {
+func (s *ResourceNotFoundFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Identifies an AWS DMS resource and any pending actions for it.
@@ -13099,8 +13355,8 @@ func (s *ResourcePendingMaintenanceActions) SetResourceIdentifier(v string) *Res
 
 // The quota for this resource quota has been exceeded.
 type ResourceQuotaExceededFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13117,17 +13373,17 @@ func (s ResourceQuotaExceededFault) GoString() string {
 
 func newErrorResourceQuotaExceededFault(v protocol.ResponseMetadata) error {
 	return &ResourceQuotaExceededFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceQuotaExceededFault) Code() string {
+func (s *ResourceQuotaExceededFault) Code() string {
 	return "ResourceQuotaExceededFault"
 }
 
 // Message returns the exception's message.
-func (s ResourceQuotaExceededFault) Message() string {
+func (s *ResourceQuotaExceededFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13135,22 +13391,22 @@ func (s ResourceQuotaExceededFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceQuotaExceededFault) OrigErr() error {
+func (s *ResourceQuotaExceededFault) OrigErr() error {
 	return nil
 }
 
-func (s ResourceQuotaExceededFault) Error() string {
+func (s *ResourceQuotaExceededFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceQuotaExceededFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceQuotaExceededFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceQuotaExceededFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceQuotaExceededFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Settings for exporting data to Amazon S3.
@@ -13529,8 +13785,8 @@ func (s *S3Settings) SetTimestampColumnName(v string) *S3Settings {
 
 // The SNS topic is invalid.
 type SNSInvalidTopicFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13547,17 +13803,17 @@ func (s SNSInvalidTopicFault) GoString() string {
 
 func newErrorSNSInvalidTopicFault(v protocol.ResponseMetadata) error {
 	return &SNSInvalidTopicFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s SNSInvalidTopicFault) Code() string {
+func (s *SNSInvalidTopicFault) Code() string {
 	return "SNSInvalidTopicFault"
 }
 
 // Message returns the exception's message.
-func (s SNSInvalidTopicFault) Message() string {
+func (s *SNSInvalidTopicFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13565,28 +13821,28 @@ func (s SNSInvalidTopicFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s SNSInvalidTopicFault) OrigErr() error {
+func (s *SNSInvalidTopicFault) OrigErr() error {
 	return nil
 }
 
-func (s SNSInvalidTopicFault) Error() string {
+func (s *SNSInvalidTopicFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s SNSInvalidTopicFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *SNSInvalidTopicFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s SNSInvalidTopicFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *SNSInvalidTopicFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You are not authorized for the SNS subscription.
 type SNSNoAuthorizationFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13603,17 +13859,17 @@ func (s SNSNoAuthorizationFault) GoString() string {
 
 func newErrorSNSNoAuthorizationFault(v protocol.ResponseMetadata) error {
 	return &SNSNoAuthorizationFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s SNSNoAuthorizationFault) Code() string {
+func (s *SNSNoAuthorizationFault) Code() string {
 	return "SNSNoAuthorizationFault"
 }
 
 // Message returns the exception's message.
-func (s SNSNoAuthorizationFault) Message() string {
+func (s *SNSNoAuthorizationFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13621,22 +13877,22 @@ func (s SNSNoAuthorizationFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s SNSNoAuthorizationFault) OrigErr() error {
+func (s *SNSNoAuthorizationFault) OrigErr() error {
 	return nil
 }
 
-func (s SNSNoAuthorizationFault) Error() string {
+func (s *SNSNoAuthorizationFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s SNSNoAuthorizationFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *SNSNoAuthorizationFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s SNSNoAuthorizationFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *SNSNoAuthorizationFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type StartReplicationTaskAssessmentInput struct {
@@ -13891,8 +14147,8 @@ func (s *StopReplicationTaskOutput) SetReplicationTask(v *ReplicationTask) *Stop
 
 // The storage quota has been exceeded.
 type StorageQuotaExceededFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13909,17 +14165,17 @@ func (s StorageQuotaExceededFault) GoString() string {
 
 func newErrorStorageQuotaExceededFault(v protocol.ResponseMetadata) error {
 	return &StorageQuotaExceededFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s StorageQuotaExceededFault) Code() string {
+func (s *StorageQuotaExceededFault) Code() string {
 	return "StorageQuotaExceededFault"
 }
 
 // Message returns the exception's message.
-func (s StorageQuotaExceededFault) Message() string {
+func (s *StorageQuotaExceededFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13927,22 +14183,22 @@ func (s StorageQuotaExceededFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s StorageQuotaExceededFault) OrigErr() error {
+func (s *StorageQuotaExceededFault) OrigErr() error {
 	return nil
 }
 
-func (s StorageQuotaExceededFault) Error() string {
+func (s *StorageQuotaExceededFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s StorageQuotaExceededFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *StorageQuotaExceededFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s StorageQuotaExceededFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *StorageQuotaExceededFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // In response to a request by the DescribeReplicationSubnetGroup operation,
@@ -13991,8 +14247,8 @@ func (s *Subnet) SetSubnetStatus(v string) *Subnet {
 
 // The specified subnet is already in use.
 type SubnetAlreadyInUse struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -14009,17 +14265,17 @@ func (s SubnetAlreadyInUse) GoString() string {
 
 func newErrorSubnetAlreadyInUse(v protocol.ResponseMetadata) error {
 	return &SubnetAlreadyInUse{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s SubnetAlreadyInUse) Code() string {
+func (s *SubnetAlreadyInUse) Code() string {
 	return "SubnetAlreadyInUse"
 }
 
 // Message returns the exception's message.
-func (s SubnetAlreadyInUse) Message() string {
+func (s *SubnetAlreadyInUse) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14027,22 +14283,22 @@ func (s SubnetAlreadyInUse) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s SubnetAlreadyInUse) OrigErr() error {
+func (s *SubnetAlreadyInUse) OrigErr() error {
 	return nil
 }
 
-func (s SubnetAlreadyInUse) Error() string {
+func (s *SubnetAlreadyInUse) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s SubnetAlreadyInUse) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *SubnetAlreadyInUse) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s SubnetAlreadyInUse) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *SubnetAlreadyInUse) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides information about types of supported endpoints in response to a
@@ -14062,8 +14318,13 @@ type SupportedEndpointType struct {
 	// The database engine name. Valid values, depending on the EndpointType, include
 	// "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	EngineName *string `type:"string"`
+
+	// The earliest AWS DMS engine version that supports this endpoint engine. Note
+	// that endpoint engines released with AWS DMS versions earlier than 3.1.1 do
+	// not return a value for this parameter.
+	ReplicationInstanceEngineMinimumVersion *string `type:"string"`
 
 	// Indicates if Change Data Capture (CDC) is supported.
 	SupportsCDC *bool `type:"boolean"`
@@ -14094,6 +14355,12 @@ func (s *SupportedEndpointType) SetEngineDisplayName(v string) *SupportedEndpoin
 // SetEngineName sets the EngineName field's value.
 func (s *SupportedEndpointType) SetEngineName(v string) *SupportedEndpointType {
 	s.EngineName = &v
+	return s
+}
+
+// SetReplicationInstanceEngineMinimumVersion sets the ReplicationInstanceEngineMinimumVersion field's value.
+func (s *SupportedEndpointType) SetReplicationInstanceEngineMinimumVersion(v string) *SupportedEndpointType {
+	s.ReplicationInstanceEngineMinimumVersion = &v
 	return s
 }
 
@@ -14365,16 +14632,16 @@ func (s *TableToReload) SetTableName(v string) *TableToReload {
 type Tag struct {
 	_ struct{} `type:"structure"`
 
-	// A key is the required name of the tag. The string value can be from 1 to
-	// 128 Unicode characters in length and can't be prefixed with "aws:" or "dms:".
-	// The string can only contain only the set of Unicode letters, digits, white-space,
-	// '_', '.', '/', '=', '+', '-' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
+	// A key is the required name of the tag. The string value can be 1-128 Unicode
+	// characters in length and can't be prefixed with "aws:" or "dms:". The string
+	// can only contain only the set of Unicode letters, digits, white-space, '_',
+	// '.', '/', '=', '+', '-' (Java regular expressions: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
 	Key *string `type:"string"`
 
-	// A value is the optional value of the tag. The string value can be from 1
-	// to 256 Unicode characters in length and can't be prefixed with "aws:" or
-	// "dms:". The string can only contain only the set of Unicode letters, digits,
-	// white-space, '_', '.', '/', '=', '+', '-' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
+	// A value is the optional value of the tag. The string value can be 1-256 Unicode
+	// characters in length and can't be prefixed with "aws:" or "dms:". The string
+	// can only contain only the set of Unicode letters, digits, white-space, '_',
+	// '.', '/', '=', '+', '-' (Java regular expressions: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
 	Value *string `type:"string"`
 }
 
@@ -14477,8 +14744,8 @@ func (s *TestConnectionOutput) SetConnection(v *Connection) *TestConnectionOutpu
 
 // An upgrade dependency is preventing the database migration.
 type UpgradeDependencyFailureFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -14495,17 +14762,17 @@ func (s UpgradeDependencyFailureFault) GoString() string {
 
 func newErrorUpgradeDependencyFailureFault(v protocol.ResponseMetadata) error {
 	return &UpgradeDependencyFailureFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UpgradeDependencyFailureFault) Code() string {
+func (s *UpgradeDependencyFailureFault) Code() string {
 	return "UpgradeDependencyFailureFault"
 }
 
 // Message returns the exception's message.
-func (s UpgradeDependencyFailureFault) Message() string {
+func (s *UpgradeDependencyFailureFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14513,33 +14780,33 @@ func (s UpgradeDependencyFailureFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UpgradeDependencyFailureFault) OrigErr() error {
+func (s *UpgradeDependencyFailureFault) OrigErr() error {
 	return nil
 }
 
-func (s UpgradeDependencyFailureFault) Error() string {
+func (s *UpgradeDependencyFailureFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UpgradeDependencyFailureFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UpgradeDependencyFailureFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UpgradeDependencyFailureFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UpgradeDependencyFailureFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
-// Describes status of a security group associated with the virtual private
-// cloud hosting your replication and DB instances.
+// Describes the status of a security group associated with the virtual private
+// cloud (VPC) hosting your replication and DB instances.
 type VpcSecurityGroupMembership struct {
 	_ struct{} `type:"structure"`
 
 	// The status of the VPC security group.
 	Status *string `type:"string"`
 
-	// The VPC security group Id.
+	// The VPC security group ID.
 	VpcSecurityGroupId *string `type:"string"`
 }
 

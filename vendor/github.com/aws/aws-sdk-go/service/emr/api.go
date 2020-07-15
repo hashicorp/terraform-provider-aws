@@ -1059,6 +1059,80 @@ func (c *EMR) GetBlockPublicAccessConfigurationWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
+const opGetManagedScalingPolicy = "GetManagedScalingPolicy"
+
+// GetManagedScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetManagedScalingPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetManagedScalingPolicy for more information on using the GetManagedScalingPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetManagedScalingPolicyRequest method.
+//    req, resp := client.GetManagedScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetManagedScalingPolicy
+func (c *EMR) GetManagedScalingPolicyRequest(input *GetManagedScalingPolicyInput) (req *request.Request, output *GetManagedScalingPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetManagedScalingPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetManagedScalingPolicyInput{}
+	}
+
+	output = &GetManagedScalingPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetManagedScalingPolicy API operation for Amazon Elastic MapReduce.
+//
+// Fetches the attached managed scaling policy for an Amazon EMR cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation GetManagedScalingPolicy for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetManagedScalingPolicy
+func (c *EMR) GetManagedScalingPolicy(input *GetManagedScalingPolicyInput) (*GetManagedScalingPolicyOutput, error) {
+	req, out := c.GetManagedScalingPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetManagedScalingPolicyWithContext is the same as GetManagedScalingPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetManagedScalingPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) GetManagedScalingPolicyWithContext(ctx aws.Context, input *GetManagedScalingPolicyInput, opts ...request.Option) (*GetManagedScalingPolicyOutput, error) {
+	req, out := c.GetManagedScalingPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListBootstrapActions = "ListBootstrapActions"
 
 // ListBootstrapActionsRequest generates a "aws/request.Request" representing the
@@ -2473,6 +2547,84 @@ func (c *EMR) PutBlockPublicAccessConfigurationWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
+const opPutManagedScalingPolicy = "PutManagedScalingPolicy"
+
+// PutManagedScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutManagedScalingPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutManagedScalingPolicy for more information on using the PutManagedScalingPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutManagedScalingPolicyRequest method.
+//    req, resp := client.PutManagedScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutManagedScalingPolicy
+func (c *EMR) PutManagedScalingPolicyRequest(input *PutManagedScalingPolicyInput) (req *request.Request, output *PutManagedScalingPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutManagedScalingPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutManagedScalingPolicyInput{}
+	}
+
+	output = &PutManagedScalingPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutManagedScalingPolicy API operation for Amazon Elastic MapReduce.
+//
+// Creates or updates a managed scaling policy for an Amazon EMR cluster. The
+// managed scaling policy defines the limits for resources, such as EC2 instances
+// that can be added or terminated from a cluster. The policy only applies to
+// the core and task nodes. The master node cannot be scaled after initial configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation PutManagedScalingPolicy for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutManagedScalingPolicy
+func (c *EMR) PutManagedScalingPolicy(input *PutManagedScalingPolicyInput) (*PutManagedScalingPolicyOutput, error) {
+	req, out := c.PutManagedScalingPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutManagedScalingPolicyWithContext is the same as PutManagedScalingPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutManagedScalingPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) PutManagedScalingPolicyWithContext(ctx aws.Context, input *PutManagedScalingPolicyInput, opts ...request.Option) (*PutManagedScalingPolicyOutput, error) {
+	req, out := c.PutManagedScalingPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRemoveAutoScalingPolicy = "RemoveAutoScalingPolicy"
 
 // RemoveAutoScalingPolicyRequest generates a "aws/request.Request" representing the
@@ -2544,6 +2696,81 @@ func (c *EMR) RemoveAutoScalingPolicy(input *RemoveAutoScalingPolicyInput) (*Rem
 // for more information on using Contexts.
 func (c *EMR) RemoveAutoScalingPolicyWithContext(ctx aws.Context, input *RemoveAutoScalingPolicyInput, opts ...request.Option) (*RemoveAutoScalingPolicyOutput, error) {
 	req, out := c.RemoveAutoScalingPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRemoveManagedScalingPolicy = "RemoveManagedScalingPolicy"
+
+// RemoveManagedScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveManagedScalingPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RemoveManagedScalingPolicy for more information on using the RemoveManagedScalingPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RemoveManagedScalingPolicyRequest method.
+//    req, resp := client.RemoveManagedScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/RemoveManagedScalingPolicy
+func (c *EMR) RemoveManagedScalingPolicyRequest(input *RemoveManagedScalingPolicyInput) (req *request.Request, output *RemoveManagedScalingPolicyOutput) {
+	op := &request.Operation{
+		Name:       opRemoveManagedScalingPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RemoveManagedScalingPolicyInput{}
+	}
+
+	output = &RemoveManagedScalingPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RemoveManagedScalingPolicy API operation for Amazon Elastic MapReduce.
+//
+// Removes a managed scaling policy from a specified EMR cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation RemoveManagedScalingPolicy for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/RemoveManagedScalingPolicy
+func (c *EMR) RemoveManagedScalingPolicy(input *RemoveManagedScalingPolicyInput) (*RemoveManagedScalingPolicyOutput, error) {
+	req, out := c.RemoveManagedScalingPolicyRequest(input)
+	return out, req.Send()
+}
+
+// RemoveManagedScalingPolicyWithContext is the same as RemoveManagedScalingPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RemoveManagedScalingPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) RemoveManagedScalingPolicyWithContext(ctx aws.Context, input *RemoveManagedScalingPolicyInput, opts ...request.Option) (*RemoveManagedScalingPolicyOutput, error) {
+	req, out := c.RemoveManagedScalingPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4146,6 +4373,11 @@ type Cluster struct {
 	// in the EMR Management Guide.
 	KerberosAttributes *KerberosAttributes `type:"structure"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. This
+	// attribute is only available with EMR version 5.30.0 and later, excluding
+	// EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The path to the Amazon S3 location where logs for this cluster are stored.
 	LogUri *string `type:"string"`
 
@@ -4307,6 +4539,12 @@ func (s *Cluster) SetInstanceCollectionType(v string) *Cluster {
 // SetKerberosAttributes sets the KerberosAttributes field's value.
 func (s *Cluster) SetKerberosAttributes(v *KerberosAttributes) *Cluster {
 	s.KerberosAttributes = v
+	return s
+}
+
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *Cluster) SetLogEncryptionKmsKeyId(v string) *Cluster {
+	s.LogEncryptionKmsKeyId = &v
 	return s
 }
 
@@ -4643,6 +4881,110 @@ func (s *Command) SetName(v string) *Command {
 // SetScriptPath sets the ScriptPath field's value.
 func (s *Command) SetScriptPath(v string) *Command {
 	s.ScriptPath = &v
+	return s
+}
+
+// The EC2 unit limits for a managed scaling policy. The managed scaling activity
+// of a cluster can not be above or below these limits. The limit only applies
+// to the core and task nodes. The master node cannot be scaled after initial
+// configuration.
+type ComputeLimits struct {
+	_ struct{} `type:"structure"`
+
+	// The upper boundary of EC2 units. It is measured through VCPU cores or instances
+	// for instance groups and measured through units for instance fleets. Managed
+	// scaling activities are not allowed beyond this boundary. The limit only applies
+	// to the core and task nodes. The master node cannot be scaled after initial
+	// configuration.
+	//
+	// MaximumCapacityUnits is a required field
+	MaximumCapacityUnits *int64 `type:"integer" required:"true"`
+
+	// The upper boundary of EC2 units for core node type in a cluster. It is measured
+	// through VCPU cores or instances for instance groups and measured through
+	// units for instance fleets. The core units are not allowed to scale beyond
+	// this boundary. The parameter is used to split capacity allocation between
+	// core and task nodes.
+	MaximumCoreCapacityUnits *int64 `type:"integer"`
+
+	// The upper boundary of On-Demand EC2 units. It is measured through VCPU cores
+	// or instances for instance groups and measured through units for instance
+	// fleets. The On-Demand units are not allowed to scale beyond this boundary.
+	// The parameter is used to split capacity allocation between On-Demand and
+	// Spot instances.
+	MaximumOnDemandCapacityUnits *int64 `type:"integer"`
+
+	// The lower boundary of EC2 units. It is measured through VCPU cores or instances
+	// for instance groups and measured through units for instance fleets. Managed
+	// scaling activities are not allowed beyond this boundary. The limit only applies
+	// to the core and task nodes. The master node cannot be scaled after initial
+	// configuration.
+	//
+	// MinimumCapacityUnits is a required field
+	MinimumCapacityUnits *int64 `type:"integer" required:"true"`
+
+	// The unit type used for specifying a managed scaling policy.
+	//
+	// UnitType is a required field
+	UnitType *string `type:"string" required:"true" enum:"ComputeLimitsUnitType"`
+}
+
+// String returns the string representation
+func (s ComputeLimits) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ComputeLimits) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ComputeLimits) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ComputeLimits"}
+	if s.MaximumCapacityUnits == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaximumCapacityUnits"))
+	}
+	if s.MinimumCapacityUnits == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinimumCapacityUnits"))
+	}
+	if s.UnitType == nil {
+		invalidParams.Add(request.NewErrParamRequired("UnitType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumCapacityUnits sets the MaximumCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumCapacityUnits = &v
+	return s
+}
+
+// SetMaximumCoreCapacityUnits sets the MaximumCoreCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumCoreCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumCoreCapacityUnits = &v
+	return s
+}
+
+// SetMaximumOnDemandCapacityUnits sets the MaximumOnDemandCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumOnDemandCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumOnDemandCapacityUnits = &v
+	return s
+}
+
+// SetMinimumCapacityUnits sets the MinimumCapacityUnits field's value.
+func (s *ComputeLimits) SetMinimumCapacityUnits(v int64) *ComputeLimits {
+	s.MinimumCapacityUnits = &v
+	return s
+}
+
+// SetUnitType sets the UnitType field's value.
+func (s *ComputeLimits) SetUnitType(v string) *ComputeLimits {
+	s.UnitType = &v
 	return s
 }
 
@@ -5521,6 +5863,12 @@ type GetBlockPublicAccessConfigurationOutput struct {
 	// and public access is allowed on this port. You can change this by updating
 	// the block public access configuration to remove the exception.
 	//
+	// For accounts that created clusters in a Region before November 25, 2019,
+	// block public access is disabled by default in that Region. To use this feature,
+	// you must manually enable and configure it. For accounts that did not create
+	// an EMR cluster in a Region before this date, block public access is enabled
+	// by default in that Region.
+	//
 	// BlockPublicAccessConfiguration is a required field
 	BlockPublicAccessConfiguration *BlockPublicAccessConfiguration `type:"structure" required:"true"`
 
@@ -5552,6 +5900,68 @@ func (s *GetBlockPublicAccessConfigurationOutput) SetBlockPublicAccessConfigurat
 // SetBlockPublicAccessConfigurationMetadata sets the BlockPublicAccessConfigurationMetadata field's value.
 func (s *GetBlockPublicAccessConfigurationOutput) SetBlockPublicAccessConfigurationMetadata(v *BlockPublicAccessConfigurationMetadata) *GetBlockPublicAccessConfigurationOutput {
 	s.BlockPublicAccessConfigurationMetadata = v
+	return s
+}
+
+type GetManagedScalingPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the ID of the cluster for which the managed scaling policy will
+	// be fetched.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetManagedScalingPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetManagedScalingPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetManagedScalingPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetManagedScalingPolicyInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *GetManagedScalingPolicyInput) SetClusterId(v string) *GetManagedScalingPolicyInput {
+	s.ClusterId = &v
+	return s
+}
+
+type GetManagedScalingPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the managed scaling policy that is attached to an Amazon EMR cluster.
+	ManagedScalingPolicy *ManagedScalingPolicy `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetManagedScalingPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetManagedScalingPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetManagedScalingPolicy sets the ManagedScalingPolicy field's value.
+func (s *GetManagedScalingPolicyOutput) SetManagedScalingPolicy(v *ManagedScalingPolicy) *GetManagedScalingPolicyOutput {
+	s.ManagedScalingPolicy = v
 	return s
 }
 
@@ -6152,18 +6562,25 @@ func (s *InstanceFleetModifyConfig) SetTargetSpotCapacity(v int64) *InstanceFlee
 }
 
 // The launch specification for Spot instances in the fleet, which determines
-// the defined duration and provisioning timeout behavior.
+// the defined duration, provisioning timeout behavior, and allocation strategy.
 //
 // The instance fleet configuration is available only in Amazon EMR versions
-// 4.8.0 and later, excluding 5.0.x versions.
+// 4.8.0 and later, excluding 5.0.x versions. On-Demand and Spot instance allocation
+// strategies are available in Amazon EMR version 5.12.1 and later.
 type InstanceFleetProvisioningSpecifications struct {
 	_ struct{} `type:"structure"`
 
-	// The launch specification for Spot instances in the fleet, which determines
-	// the defined duration and provisioning timeout behavior.
+	// The launch specification for On-Demand instances in the instance fleet, which
+	// determines the allocation strategy.
 	//
-	// SpotSpecification is a required field
-	SpotSpecification *SpotProvisioningSpecification `type:"structure" required:"true"`
+	// The instance fleet configuration is available only in Amazon EMR versions
+	// 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation
+	// strategy is available in Amazon EMR version 5.12.1 and later.
+	OnDemandSpecification *OnDemandProvisioningSpecification `type:"structure"`
+
+	// The launch specification for Spot instances in the fleet, which determines
+	// the defined duration, provisioning timeout behavior, and allocation strategy.
+	SpotSpecification *SpotProvisioningSpecification `type:"structure"`
 }
 
 // String returns the string representation
@@ -6179,8 +6596,10 @@ func (s InstanceFleetProvisioningSpecifications) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *InstanceFleetProvisioningSpecifications) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "InstanceFleetProvisioningSpecifications"}
-	if s.SpotSpecification == nil {
-		invalidParams.Add(request.NewErrParamRequired("SpotSpecification"))
+	if s.OnDemandSpecification != nil {
+		if err := s.OnDemandSpecification.Validate(); err != nil {
+			invalidParams.AddNested("OnDemandSpecification", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.SpotSpecification != nil {
 		if err := s.SpotSpecification.Validate(); err != nil {
@@ -6192,6 +6611,12 @@ func (s *InstanceFleetProvisioningSpecifications) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetOnDemandSpecification sets the OnDemandSpecification field's value.
+func (s *InstanceFleetProvisioningSpecifications) SetOnDemandSpecification(v *OnDemandProvisioningSpecification) *InstanceFleetProvisioningSpecifications {
+	s.OnDemandSpecification = v
+	return s
 }
 
 // SetSpotSpecification sets the SpotSpecification field's value.
@@ -7392,8 +7817,8 @@ func (s *InstanceTypeSpecification) SetWeightedCapacity(v int64) *InstanceTypeSp
 // Indicates that an error occurred while processing the request and that the
 // request was not completed.
 type InternalServerError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7410,17 +7835,17 @@ func (s InternalServerError) GoString() string {
 
 func newErrorInternalServerError(v protocol.ResponseMetadata) error {
 	return &InternalServerError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerError) Code() string {
+func (s *InternalServerError) Code() string {
 	return "InternalServerError"
 }
 
 // Message returns the exception's message.
-func (s InternalServerError) Message() string {
+func (s *InternalServerError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7428,28 +7853,28 @@ func (s InternalServerError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerError) OrigErr() error {
+func (s *InternalServerError) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerError) Error() string {
+func (s *InternalServerError) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // This exception occurs when there is an internal failure in the EMR service.
 type InternalServerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message associated with the exception.
 	Message_ *string `locationName:"Message" type:"string"`
@@ -7467,17 +7892,17 @@ func (s InternalServerException) GoString() string {
 
 func newErrorInternalServerException(v protocol.ResponseMetadata) error {
 	return &InternalServerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerException) Code() string {
+func (s *InternalServerException) Code() string {
 	return "InternalServerException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerException) Message() string {
+func (s *InternalServerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7485,28 +7910,28 @@ func (s InternalServerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerException) OrigErr() error {
+func (s *InternalServerException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerException) Error() string {
+func (s *InternalServerException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // This exception occurs when there is something wrong with user input.
 type InvalidRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error code associated with the exception.
 	ErrorCode *string `min:"1" type:"string"`
@@ -7527,17 +7952,17 @@ func (s InvalidRequestException) GoString() string {
 
 func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRequestException) Code() string {
+func (s *InvalidRequestException) Code() string {
 	return "InvalidRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidRequestException) Message() string {
+func (s *InvalidRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7545,22 +7970,22 @@ func (s InvalidRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRequestException) OrigErr() error {
+func (s *InvalidRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRequestException) Error() string {
+func (s *InvalidRequestException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A description of a cluster (job flow).
@@ -7598,6 +8023,11 @@ type JobFlowDetail struct {
 	// The IAM role that was specified when the job flow was launched. The EC2 instances
 	// of the job flow assume this role.
 	JobFlowRole *string `type:"string"`
+
+	// The AWS KMS customer master key (CMK) used for encrypting log files. This
+	// attribute is only available with EMR version 5.30.0 and later, excluding
+	// EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
 
 	// The location in Amazon S3 where log files for the job are stored.
 	LogUri *string `type:"string"`
@@ -7693,6 +8123,12 @@ func (s *JobFlowDetail) SetJobFlowId(v string) *JobFlowDetail {
 // SetJobFlowRole sets the JobFlowRole field's value.
 func (s *JobFlowDetail) SetJobFlowRole(v string) *JobFlowDetail {
 	s.JobFlowRole = &v
+	return s
+}
+
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *JobFlowDetail) SetLogEncryptionKmsKeyId(v string) *JobFlowDetail {
+	s.LogEncryptionKmsKeyId = &v
 	return s
 }
 
@@ -8933,6 +9369,51 @@ func (s *ListStepsOutput) SetSteps(v []*StepSummary) *ListStepsOutput {
 	return s
 }
 
+// Managed scaling policy for an Amazon EMR cluster. The policy specifies the
+// limits for resources that can be added or terminated from a cluster. The
+// policy only applies to the core and task nodes. The master node cannot be
+// scaled after initial configuration.
+type ManagedScalingPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The EC2 unit limits for a managed scaling policy. The managed scaling activity
+	// of a cluster is not allowed to go above or below these limits. The limit
+	// only applies to the core and task nodes. The master node cannot be scaled
+	// after initial configuration.
+	ComputeLimits *ComputeLimits `type:"structure"`
+}
+
+// String returns the string representation
+func (s ManagedScalingPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ManagedScalingPolicy) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ManagedScalingPolicy) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ManagedScalingPolicy"}
+	if s.ComputeLimits != nil {
+		if err := s.ComputeLimits.Validate(); err != nil {
+			invalidParams.AddNested("ComputeLimits", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetComputeLimits sets the ComputeLimits field's value.
+func (s *ManagedScalingPolicy) SetComputeLimits(v *ComputeLimits) *ManagedScalingPolicy {
+	s.ComputeLimits = v
+	return s
+}
+
 // A CloudWatch dimension, which is specified using a Key (known as a Name in
 // CloudWatch), Value pair. By default, Amazon EMR uses one dimension whose
 // Key is JobFlowID and Value is a variable representing the cluster ID, which
@@ -9179,6 +9660,52 @@ func (s ModifyInstanceGroupsOutput) GoString() string {
 	return s.String()
 }
 
+// The launch specification for On-Demand instances in the instance fleet, which
+// determines the allocation strategy.
+//
+// The instance fleet configuration is available only in Amazon EMR versions
+// 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation
+// strategy is available in Amazon EMR version 5.12.1 and later.
+type OnDemandProvisioningSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the strategy to use in launching On-Demand instance fleets. Currently,
+	// the only option is lowest-price (the default), which launches the lowest
+	// price first.
+	//
+	// AllocationStrategy is a required field
+	AllocationStrategy *string `type:"string" required:"true" enum:"OnDemandProvisioningAllocationStrategy"`
+}
+
+// String returns the string representation
+func (s OnDemandProvisioningSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnDemandProvisioningSpecification) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OnDemandProvisioningSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OnDemandProvisioningSpecification"}
+	if s.AllocationStrategy == nil {
+		invalidParams.Add(request.NewErrParamRequired("AllocationStrategy"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *OnDemandProvisioningSpecification) SetAllocationStrategy(v string) *OnDemandProvisioningSpecification {
+	s.AllocationStrategy = &v
+	return s
+}
+
 // The Amazon EC2 Availability Zone configuration of the cluster (job flow).
 type PlacementType struct {
 	_ struct{} `type:"structure"`
@@ -9407,6 +9934,12 @@ type PutBlockPublicAccessConfigurationInput struct {
 	// and public access is allowed on this port. You can change this by updating
 	// BlockPublicSecurityGroupRules to remove the exception.
 	//
+	// For accounts that created clusters in a Region before November 25, 2019,
+	// block public access is disabled by default in that Region. To use this feature,
+	// you must manually enable and configure it. For accounts that did not create
+	// an EMR cluster in a Region before this date, block public access is enabled
+	// by default in that Region.
+	//
 	// BlockPublicAccessConfiguration is a required field
 	BlockPublicAccessConfiguration *BlockPublicAccessConfiguration `type:"structure" required:"true"`
 }
@@ -9456,6 +9989,77 @@ func (s PutBlockPublicAccessConfigurationOutput) String() string {
 
 // GoString returns the string representation
 func (s PutBlockPublicAccessConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+type PutManagedScalingPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the ID of an EMR cluster where the managed scaling policy is attached.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// Specifies the constraints for the managed scaling policy.
+	//
+	// ManagedScalingPolicy is a required field
+	ManagedScalingPolicy *ManagedScalingPolicy `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutManagedScalingPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutManagedScalingPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutManagedScalingPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutManagedScalingPolicyInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+	if s.ManagedScalingPolicy == nil {
+		invalidParams.Add(request.NewErrParamRequired("ManagedScalingPolicy"))
+	}
+	if s.ManagedScalingPolicy != nil {
+		if err := s.ManagedScalingPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ManagedScalingPolicy", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *PutManagedScalingPolicyInput) SetClusterId(v string) *PutManagedScalingPolicyInput {
+	s.ClusterId = &v
+	return s
+}
+
+// SetManagedScalingPolicy sets the ManagedScalingPolicy field's value.
+func (s *PutManagedScalingPolicyInput) SetManagedScalingPolicy(v *ManagedScalingPolicy) *PutManagedScalingPolicyInput {
+	s.ManagedScalingPolicy = v
+	return s
+}
+
+type PutManagedScalingPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutManagedScalingPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutManagedScalingPolicyOutput) GoString() string {
 	return s.String()
 }
 
@@ -9523,6 +10127,59 @@ func (s RemoveAutoScalingPolicyOutput) String() string {
 
 // GoString returns the string representation
 func (s RemoveAutoScalingPolicyOutput) GoString() string {
+	return s.String()
+}
+
+type RemoveManagedScalingPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the ID of the cluster from which the managed scaling policy will
+	// be removed.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RemoveManagedScalingPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveManagedScalingPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemoveManagedScalingPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemoveManagedScalingPolicyInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *RemoveManagedScalingPolicyInput) SetClusterId(v string) *RemoveManagedScalingPolicyInput {
+	s.ClusterId = &v
+	return s
+}
+
+type RemoveManagedScalingPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RemoveManagedScalingPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveManagedScalingPolicyOutput) GoString() string {
 	return s.String()
 }
 
@@ -9659,9 +10316,17 @@ type RunJobFlowInput struct {
 	// in the EMR Management Guide.
 	KerberosAttributes *KerberosAttributes `type:"structure"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. If a
+	// value is not provided, the logs will remain encrypted by AES-256. This attribute
+	// is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The location in Amazon S3 to write the log files of the job flow. If a value
 	// is not provided, logs are not created.
 	LogUri *string `type:"string"`
+
+	// The specified managed scaling policy for an Amazon EMR cluster.
+	ManagedScalingPolicy *ManagedScalingPolicy `type:"structure"`
 
 	// The name of the job flow.
 	//
@@ -9804,6 +10469,11 @@ func (s *RunJobFlowInput) Validate() error {
 			invalidParams.AddNested("KerberosAttributes", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.ManagedScalingPolicy != nil {
+		if err := s.ManagedScalingPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ManagedScalingPolicy", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Steps != nil {
 		for i, v := range s.Steps {
 			if v == nil {
@@ -9887,9 +10557,21 @@ func (s *RunJobFlowInput) SetKerberosAttributes(v *KerberosAttributes) *RunJobFl
 	return s
 }
 
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *RunJobFlowInput) SetLogEncryptionKmsKeyId(v string) *RunJobFlowInput {
+	s.LogEncryptionKmsKeyId = &v
+	return s
+}
+
 // SetLogUri sets the LogUri field's value.
 func (s *RunJobFlowInput) SetLogUri(v string) *RunJobFlowInput {
 	s.LogUri = &v
+	return s
+}
+
+// SetManagedScalingPolicy sets the ManagedScalingPolicy field's value.
+func (s *RunJobFlowInput) SetManagedScalingPolicy(v *ManagedScalingPolicy) *RunJobFlowInput {
+	s.ManagedScalingPolicy = v
 	return s
 }
 
@@ -10585,12 +11267,20 @@ func (s *SimpleScalingPolicyConfiguration) SetScalingAdjustment(v int64) *Simple
 }
 
 // The launch specification for Spot instances in the instance fleet, which
-// determines the defined duration and provisioning timeout behavior.
+// determines the defined duration, provisioning timeout behavior, and allocation
+// strategy.
 //
 // The instance fleet configuration is available only in Amazon EMR versions
-// 4.8.0 and later, excluding 5.0.x versions.
+// 4.8.0 and later, excluding 5.0.x versions. Spot instance allocation strategy
+// is available in Amazon EMR version 5.12.1 and later.
 type SpotProvisioningSpecification struct {
 	_ struct{} `type:"structure"`
+
+	// Specifies the strategy to use in launching Spot instance fleets. Currently,
+	// the only option is capacity-optimized (the default), which launches instances
+	// from Spot instance pools with optimal capacity for the number of instances
+	// that are launching.
+	AllocationStrategy *string `type:"string" enum:"SpotProvisioningAllocationStrategy"`
 
 	// The defined duration for Spot instances (also known as Spot blocks) in minutes.
 	// When specified, the Spot instance does not terminate before the defined duration
@@ -10645,6 +11335,12 @@ func (s *SpotProvisioningSpecification) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *SpotProvisioningSpecification) SetAllocationStrategy(v string) *SpotProvisioningSpecification {
+	s.AllocationStrategy = &v
+	return s
 }
 
 // SetBlockDurationMinutes sets the BlockDurationMinutes field's value.
@@ -11405,6 +12101,17 @@ const (
 )
 
 const (
+	// ComputeLimitsUnitTypeInstanceFleetUnits is a ComputeLimitsUnitType enum value
+	ComputeLimitsUnitTypeInstanceFleetUnits = "InstanceFleetUnits"
+
+	// ComputeLimitsUnitTypeInstances is a ComputeLimitsUnitType enum value
+	ComputeLimitsUnitTypeInstances = "Instances"
+
+	// ComputeLimitsUnitTypeVcpu is a ComputeLimitsUnitType enum value
+	ComputeLimitsUnitTypeVcpu = "VCPU"
+)
+
+const (
 	// InstanceCollectionTypeInstanceFleet is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceFleet = "INSTANCE_FLEET"
 
@@ -11601,6 +12308,11 @@ const (
 )
 
 const (
+	// OnDemandProvisioningAllocationStrategyLowestPrice is a OnDemandProvisioningAllocationStrategy enum value
+	OnDemandProvisioningAllocationStrategyLowestPrice = "lowest-price"
+)
+
+const (
 	// RepoUpgradeOnBootSecurity is a RepoUpgradeOnBoot enum value
 	RepoUpgradeOnBootSecurity = "SECURITY"
 
@@ -11614,6 +12326,11 @@ const (
 
 	// ScaleDownBehaviorTerminateAtTaskCompletion is a ScaleDownBehavior enum value
 	ScaleDownBehaviorTerminateAtTaskCompletion = "TERMINATE_AT_TASK_COMPLETION"
+)
+
+const (
+	// SpotProvisioningAllocationStrategyCapacityOptimized is a SpotProvisioningAllocationStrategy enum value
+	SpotProvisioningAllocationStrategyCapacityOptimized = "capacity-optimized"
 )
 
 const (

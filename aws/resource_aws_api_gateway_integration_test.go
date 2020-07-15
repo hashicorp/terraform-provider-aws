@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
@@ -224,7 +225,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.path.param", "method.request.path.param"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_key_parameters.#", "1"),
-					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_key_parameters.550492954", "method.request.path.param"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_api_gateway_integration.test", "cache_key_parameters.*", "method.request.path.param"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_namespace", "foobar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", ""),
@@ -695,7 +696,14 @@ variable "name" {
   default = "%s"
 }
 
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"

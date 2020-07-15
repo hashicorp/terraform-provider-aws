@@ -124,7 +124,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists(resourceName, &vault),
-					testAccCheckAwsBackupVaultDisappears(&vault),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,18 +174,6 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 		*vault = *resp
 
 		return nil
-	}
-}
-
-func testAccCheckAwsBackupVaultDisappears(vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
-		params := &backup.DeleteBackupVaultInput{
-			BackupVaultName: vault.BackupVaultName,
-		}
-		_, err := conn.DeleteBackupVault(params)
-
-		return err
 	}
 }
 
