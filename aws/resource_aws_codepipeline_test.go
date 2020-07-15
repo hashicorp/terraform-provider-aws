@@ -316,8 +316,7 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
 			testAccAlternateRegionPreCheck(t)
-			testAccPreCheckAWSCodePipeline(t)
-			testAccPreCheckAWSCodePipelineAlternateRegion(t)
+			testAccPreCheckAWSCodePipeline(t, testAccGetAlternateRegion())
 		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
@@ -367,8 +366,7 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
 			testAccAlternateRegionPreCheck(t)
-			testAccPreCheckAWSCodePipeline(t)
-			testAccPreCheckAWSCodePipelineAlternateRegion(t)
+			testAccPreCheckAWSCodePipeline(t, testAccGetAlternateRegion())
 		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
@@ -432,8 +430,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
 			testAccAlternateRegionPreCheck(t)
-			testAccPreCheckAWSCodePipeline(t)
-			testAccPreCheckAWSCodePipelineAlternateRegion(t)
+			testAccPreCheckAWSCodePipeline(t, testAccGetAlternateRegion())
 		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
@@ -576,38 +573,29 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheckAWSCodePipeline(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+func testAccPreCheckAWSCodePipeline(t *testing.T, regions ...string) {
+	regions = append(regions, testAccGetRegion())
 
-	input := &codepipeline.ListPipelinesInput{}
+	for _, region := range regions {
+		conf := &Config{
+			Region: region,
+		}
+		client, err := conf.Client()
+		if err != nil {
+			t.Fatalf("error getting AWS client for region %s", region)
+		}
+		conn := client.(*AWSClient).codepipelineconn
 
-	_, err := conn.ListPipelines(input)
+		input := &codepipeline.ListPipelinesInput{}
+		_, err = conn.ListPipelines(input)
 
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
+		if testAccPreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
 
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccPreCheckAWSCodePipelineAlternateRegion(t *testing.T) {
-	// There isn't a way to get the alternate region provider at PreCheck time, so hardcode it
-	if testAccGetAlternateRegion() == "us-gov-east-1" {
-
-		t.Skipf(`skipping acceptance testing:
-
-Test provider region (us-gov-east-1) does not support AWS CodePipeline.
-
-The allowed regions are hardcoded in the acceptance testing since there isn't a convenientway to check for
-support in alternate regions. If this check is out of date, please create an issue in the Terraform AWS Provider
-repository (https://github.com/terraform-providers/terraform-provider-aws) or submit a PR to update the
-check itself (testAccPreCheckAWSCodePipelineAlternateRegion).
-
-For the most up to date supported region information, see the GovCloud AWS CodePipeline User Guide:
-https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-acp.html
-`)
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
 	}
 }
 
