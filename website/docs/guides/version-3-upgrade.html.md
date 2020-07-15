@@ -433,6 +433,28 @@ resource "aws_msk_cluster" "example" {
 
 Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
 
+### region Attribute Is Now Read-Only
+
+The `region` attribute is no longer configurable, but it remains as a read-only attribute. The region of the `aws_s3_bucket` resource is determined by the region of the Terraform AWS Provider, similar to all other resources.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+
+  region = "us-west-2"
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+```
+
 ## Resource: aws_sns_platform_application
 
 ### platform_credential and platform_principal Arguments No Longer Stored as SHA256 Hash
