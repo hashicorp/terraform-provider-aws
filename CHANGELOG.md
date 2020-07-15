@@ -31,6 +31,8 @@ ENHANCEMENTS
 
 * provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
 * provider: Add `assume_role` configuration block `duration_seconds`, `policy_arns`, `tags`, and `transitive_tag_keys` arguments [GH-14077]
+* data-source/aws_instance: Add `secondary_private_ips` attribute [GH-14079]
+* resource/aws_instance: Add `secondary_private_ips` argument (conflicts with `network_interface` configuration block) [GH-14079]
 
 BUG FIXES
 
