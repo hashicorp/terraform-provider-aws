@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsEcrRepositoryPolicy() *schema.Resource {
@@ -31,6 +31,7 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"registry_id": {
@@ -49,7 +50,7 @@ func resourceAwsEcrRepositoryPolicyCreate(d *schema.ResourceData, meta interface
 		PolicyText:     aws.String(d.Get("policy").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating ECR resository policy: %s", input)
+	log.Printf("[DEBUG] Creating ECR resository policy: %#v", input)
 
 	// Retry due to IAM eventual consistency
 	var err error
@@ -57,7 +58,7 @@ func resourceAwsEcrRepositoryPolicyCreate(d *schema.ResourceData, meta interface
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
-		if isAWSErr(err, "InvalidParameterException", "Invalid repository policy provided") {
+		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -69,15 +70,12 @@ func resourceAwsEcrRepositoryPolicyCreate(d *schema.ResourceData, meta interface
 		out, err = conn.SetRepositoryPolicy(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating ECR Repository Policy: %s", err)
+		return fmt.Errorf("error creating ECR Repository Policy: %w", err)
 	}
 
-	repositoryPolicy := *out
+	log.Printf("[DEBUG] ECR repository policy created: %s", aws.StringValue(out.RepositoryName))
 
-	log.Printf("[DEBUG] ECR repository policy created: %s", *repositoryPolicy.RepositoryName)
-
-	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
-	d.Set("registry_id", repositoryPolicy.RegistryId)
+	d.SetId(aws.StringValue(out.RepositoryName))
 
 	return resourceAwsEcrRepositoryPolicyRead(d, meta)
 }
@@ -90,26 +88,20 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 		RepositoryName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok {
-			switch ecrerr.Code() {
-			case "RepositoryNotFoundException", "RepositoryPolicyNotFoundException":
-				d.SetId("")
-				return nil
-			default:
-				return err
-			}
+		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
+			isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+			log.Printf("[WARN] ECR Repositoy Policy %s not found, removing", d.Id())
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
 
-	log.Printf("[DEBUG] Received repository policy %s", out)
+	log.Printf("[DEBUG] Received repository policy %#v", out)
 
-	repositoryPolicy := out
-
-	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
-	d.Set("repository", repositoryPolicy.RepositoryName)
-	d.Set("registry_id", repositoryPolicy.RegistryId)
-	d.Set("policy", repositoryPolicy.PolicyText)
+	d.Set("repository", out.RepositoryName)
+	d.Set("registry_id", out.RegistryId)
+	d.Set("policy", out.PolicyText)
 
 	return nil
 }
@@ -117,25 +109,20 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 func resourceAwsEcrRepositoryPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrconn
 
-	if !d.HasChange("policy") {
-		return nil
-	}
-
 	input := ecr.SetRepositoryPolicyInput{
-		RepositoryName: aws.String(d.Get("repository").(string)),
+		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		PolicyText:     aws.String(d.Get("policy").(string)),
 	}
 
-	log.Printf("[DEBUG] Updating ECR resository policy: %s", input)
+	log.Printf("[DEBUG] Updating ECR resository policy: %#v", input)
 
 	// Retry due to IAM eventual consistency
 	var err error
-	var out *ecr.SetRepositoryPolicyOutput
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		out, err = conn.SetRepositoryPolicy(&input)
+		_, err = conn.SetRepositoryPolicy(&input)
 
-		if isAWSErr(err, "InvalidParameterException", "Invalid repository policy provided") {
+		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -144,18 +131,13 @@ func resourceAwsEcrRepositoryPolicyUpdate(d *schema.ResourceData, meta interface
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		out, err = conn.SetRepositoryPolicy(&input)
+		_, err = conn.SetRepositoryPolicy(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating ECR Repository Policy: %s", err)
+		return fmt.Errorf("error updating ECR Repository Policy: %w", err)
 	}
 
-	repositoryPolicy := *out
-
-	d.SetId(aws.StringValue(repositoryPolicy.RepositoryName))
-	d.Set("registry_id", repositoryPolicy.RegistryId)
-
-	return nil
+	return resourceAwsEcrRepositoryPolicyRead(d, meta)
 }
 
 func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
@@ -166,13 +148,9 @@ func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	})
 	if err != nil {
-		if ecrerr, ok := err.(awserr.Error); ok {
-			switch ecrerr.Code() {
-			case "RepositoryNotFoundException", "RepositoryPolicyNotFoundException":
-				return nil
-			default:
-				return err
-			}
+		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
+			isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+			return nil
 		}
 		return err
 	}
