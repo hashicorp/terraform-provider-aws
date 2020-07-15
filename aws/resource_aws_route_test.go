@@ -1334,7 +1334,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv6Instance(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -1369,7 +1369,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -1631,7 +1631,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -1664,7 +1664,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -1746,7 +1746,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4NetworkInterfaceAttached(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -1787,7 +1787,7 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   network_interface {
@@ -1821,7 +1821,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -1870,7 +1870,7 @@ resource "aws_network_interface" "test2" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   network_interface {
@@ -2086,7 +2086,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -2138,7 +2138,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   network_interface {
@@ -2231,7 +2231,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -2285,7 +2285,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
