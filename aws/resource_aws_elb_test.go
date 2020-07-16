@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -80,20 +81,16 @@ func TestAccAWSELB_basic(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "subnets.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.lb_protocol", "http"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -141,8 +138,7 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 				Config: fmt.Sprintf(testAccAWSELBFullRangeOfCharacters, lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", lbName),
+					resource.TestCheckResourceAttr(resourceName, "name", lbName),
 				),
 			},
 		},
@@ -152,7 +148,7 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
-	rName := fmt.Sprintf("terraform-access-logs-bucket-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-access-logs-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -171,14 +167,10 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 				Config: testAccAWSELBAccessLogsOn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.bucket", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.interval", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "true"),
 				),
 			},
 
@@ -186,8 +178,7 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 				Config: testAccAWSELBAccessLogs,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
 				),
 			},
 		},
@@ -197,7 +188,7 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
-	rName := fmt.Sprintf("terraform-access-logs-bucket-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-access-logs-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -211,22 +202,16 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAccessLogsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.bucket", rName),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.interval", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "access_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAccessLogs,
 				Check: resource.ComposeTestCheckFunc(
@@ -254,8 +239,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 				Config: testAccAWSELB_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", nameRegex),
+					resource.TestMatchResourceAttr(resourceName, "name", nameRegex),
 				),
 			},
 		},
@@ -277,8 +261,7 @@ func TestAccAWSELB_generatedName(t *testing.T) {
 				Config: testAccAWSELBGeneratedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
 				),
 			},
 		},
@@ -300,8 +283,7 @@ func TestAccAWSELB_generatesNameForZeroValue(t *testing.T) {
 				Config: testAccAWSELB_zeroValueName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
 				),
 			},
 		},
@@ -322,8 +304,7 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 				Config: testAccAWSELBConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 				),
 			},
 
@@ -331,8 +312,7 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 				Config: testAccAWSELBConfig_AvailabilityZonesUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
 				),
 			},
 		},
@@ -341,7 +321,6 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 
 func TestAccAWSELB_tags(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	var td elb.TagDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -351,23 +330,36 @@ func TestAccAWSELB_tags(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSELBConfig,
+				Config: testAccAWSELBConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
-					testAccLoadTags(&conf, &td),
-					testAccCheckELBTags(&td.Tags, "test", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-
 			{
-				Config: testAccAWSELBConfig_TagUpdate,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSELBConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
-					testAccLoadTags(&conf, &td),
-					testAccCheckELBTags(&td.Tags, "test", "test"),
-					testAccCheckELBTags(&td.Tags, "new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSELBConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccCheckAWSELBAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -428,8 +420,7 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 				Config: testAccAWSELBConfig_subnets,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
 			},
 
@@ -437,8 +428,7 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 				Config: testAccAWSELBConfig_subnet_swap,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists("aws_elb.test", &conf),
-					resource.TestCheckResourceAttr(
-						"aws_elb.test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
 				),
 			},
 		},
@@ -498,10 +488,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -509,14 +501,18 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.instance_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.instance_protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.lb_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.lb_protocol", "tcp"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "22",
+						"instance_protocol": "tcp",
+						"lb_port":           "22",
+						"lb_protocol":       "tcp",
+					}),
 				),
 			},
 			{
@@ -524,10 +520,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -535,10 +533,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.instance_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8080",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -557,10 +557,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -586,10 +588,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 		},
@@ -611,16 +615,11 @@ func TestAccAWSELB_HealthCheck(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributesHealthCheck(&conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.healthy_threshold", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.target", "HTTP:8000/"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.timeout", "30"),
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.interval", "60"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.target", "HTTP:8000/"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 				),
 			},
 		},
@@ -646,8 +645,7 @@ func TestAccAWSELBUpdate_HealthCheck(t *testing.T) {
 			{
 				Config: testAccAWSELBConfigHealthCheck_update,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "health_check.0.healthy_threshold", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "10"),
 				),
 			},
 		},
@@ -668,9 +666,7 @@ func TestAccAWSELB_Timeout(t *testing.T) {
 				Config: testAccAWSELBConfigIdleTimeout,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "idle_timeout", "200",
-					),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
 				),
 			},
 		},
@@ -689,17 +685,13 @@ func TestAccAWSELBUpdate_Timeout(t *testing.T) {
 			{
 				Config: testAccAWSELBConfigIdleTimeout,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "idle_timeout", "200",
-					),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigIdleTimeout_update,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "idle_timeout", "400",
-					),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "400"),
 				),
 			},
 		},
@@ -721,9 +713,7 @@ func TestAccAWSELB_ConnectionDraining(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "connection_draining", "true",
 					),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining_timeout", "400",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "400"),
 				),
 			},
 		},
@@ -742,31 +732,21 @@ func TestAccAWSELBUpdate_ConnectionDraining(t *testing.T) {
 			{
 				Config: testAccAWSELBConfigConnectionDraining,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining_timeout", "400",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "400"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigConnectionDraining_update_timeout,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining_timeout", "600",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "600"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigConnectionDraining_update_disable,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_draining", "false",
-					),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
 				),
 			},
 		},
@@ -786,40 +766,18 @@ func TestAccAWSELB_SecurityGroups(t *testing.T) {
 				Config: testAccAWSELBConfig,
 				Check: resource.ComposeTestCheckFunc(
 					// ELBs get a default security group
-					resource.TestCheckResourceAttr(
-						resourceName, "security_groups.#", "1",
-					),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 			{
 				Config: testAccAWSELBConfigSecurityGroups,
 				Check: resource.ComposeTestCheckFunc(
 					// Count should still be one as we swap in a custom security group
-					resource.TestCheckResourceAttr(
-						resourceName, "security_groups.#", "1",
-					),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 		},
 	})
-}
-
-func testAccLoadTags(conf *elb.LoadBalancerDescription, td *elb.TagDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
-
-		describe, err := conn.DescribeTags(&elb.DescribeTagsInput{
-			LoadBalancerNames: []*string{conf.LoadBalancerName},
-		})
-
-		if err != nil {
-			return err
-		}
-		if len(describe.TagDescriptions) > 0 {
-			*td = *describe.TagDescriptions[0]
-		}
-		return nil
-	}
 }
 
 // Unit test for listeners hash
@@ -1052,7 +1010,7 @@ func testAccCheckAWSELBDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if providerErr.Code() != "LoadBalancerNotFound" {
+		if providerErr.Code() != elb.ErrCodeAccessPointNotFoundException {
 			return fmt.Errorf("Unexpected error: %s", err)
 		}
 	}
@@ -1166,6 +1124,11 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 const testAccAWSELBConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1178,17 +1141,79 @@ resource "aws_elb" "test" {
     lb_protocol = "http"
   }
 
-	tags = {
-		test = "test2"
-	}
-
   cross_zone_load_balancing = true
 }
 `
 
+func testAccAWSELBConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_elb" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+
+  listener {
+    instance_port = 8000
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+
+  cross_zone_load_balancing = true
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAWSELBConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_elb" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+
+  listener {
+    instance_port = 8000
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+
+  cross_zone_load_balancing = true
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
 const testAccAWSELBFullRangeOfCharacters = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1207,6 +1232,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBAccessLogs = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1222,39 +1252,7 @@ resource "aws_elb" "test" {
 `
 
 func testAccAWSELBAccessLogsOn(r string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-data "aws_elb_service_account" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket        = "%s"
-  acl           = "private"
-  force_destroy = true
-
-  policy = <<EOF
-{
-  "Id": "Policy1446577137248",
-  "Statement": [
-    {
-      "Action": "s3:PutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_elb_service_account.current.arn}"
-      },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%s/*",
-      "Sid": "Stmt1446575236270"
-    }
-  ],
-  "Version": "2012-10-17"
-}
-EOF
-}
-
+	return `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1267,24 +1265,59 @@ resource "aws_elb" "test" {
 
   access_logs {
     interval = 5
-    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
+    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
   }
 }
-`, r, r)
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+` + testAccAWSELBAccessLogsCommon(r)
 }
 
 func testAccAWSELBAccessLogsDisabled(r string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+	return `
+resource "aws_elb" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  access_logs {
+    interval = 5
+    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
+    enabled  = false
+  }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+` + testAccAWSELBAccessLogsCommon(r)
+}
+
+func testAccAWSELBAccessLogsCommon(r string) string {
+	return fmt.Sprintf(`
 data "aws_elb_service_account" "current" {}
 
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket        = "%s"
+resource "aws_s3_bucket" "accesslogs_bucket" {
+  bucket        = "%[1]s"
   acl           = "private"
   force_destroy = true
 
@@ -1298,7 +1331,7 @@ resource "aws_s3_bucket" "acceslogs_bucket" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%s/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -1306,29 +1339,17 @@ resource "aws_s3_bucket" "acceslogs_bucket" {
 }
 EOF
 }
-
-resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-
-  listener {
-    instance_port     = 8000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
-  access_logs {
-    interval = 5
-    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
-    enabled  = false
-  }
-}
-`, r, r)
+`, r)
 }
 
 const testAccAWSELB_namePrefix = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1347,6 +1368,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBGeneratedName = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1364,6 +1390,11 @@ resource "aws_elb" "test" {
 const testAccAWSELB_zeroValueName = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1387,6 +1418,11 @@ output "lb_name" {
 const testAccAWSELBConfig_AvailabilityZonesUpdate = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1398,30 +1434,6 @@ resource "aws_elb" "test" {
     lb_port = 80
     lb_protocol = "http"
   }
-}
-`
-
-const testAccAWSELBConfig_TagUpdate = `
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-
-  listener {
-    instance_port = 8000
-    instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
-  }
-
-	tags = {
-		test = "test"
-		new = "type"
-	}
-
-  cross_zone_load_balancing = true
 }
 `
 
@@ -1443,6 +1455,11 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1467,6 +1484,11 @@ resource "aws_instance" "test" {
 const testAccAWSELBConfigHealthCheck = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1492,6 +1514,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigHealthCheck_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1517,6 +1544,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigListener_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1534,6 +1566,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigListener_multipleListeners = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1558,6 +1595,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigIdleTimeout = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1577,6 +1619,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigIdleTimeout_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1596,6 +1643,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigConnectionDraining = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1616,6 +1668,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigConnectionDraining_update_timeout = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1636,6 +1693,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigConnectionDraining_update_disable = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1655,6 +1717,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigSecurityGroups = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1686,7 +1753,14 @@ resource "aws_security_group" "test" {
 
 func testAccELBConfig_Listener_IAMServerCertificate(certName, certificate, key, lbProtocol string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -1710,7 +1784,14 @@ resource "aws_elb" "test" {
 
 func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -1744,6 +1825,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfig_subnets = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "azelb" {
@@ -1815,6 +1901,11 @@ resource "aws_internet_gateway" "gw" {
 const testAccAWSELBConfig_subnet_swap = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "azelb" {

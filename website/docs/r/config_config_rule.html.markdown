@@ -1,4 +1,5 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_config_rule"
 description: |-
@@ -117,7 +118,7 @@ The following arguments are supported:
 * `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule as documented below.
 * `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause
 	the function to evaluate your AWS resources as documented below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### `scope`
 
@@ -140,20 +141,20 @@ Provides the rule owner (AWS or customer), the rule identifier, and the notifica
 * `owner` - (Required) Indicates whether AWS or the customer owns and manages the AWS Config rule. Valid values are `AWS` or `CUSTOM_LAMBDA`. For more information about managed rules, see the [AWS Config Managed Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html). For more information about custom rules, see the [AWS Config Custom Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html). Custom Lambda Functions require permissions to allow the AWS Config service to invoke them, e.g. via the [`aws_lambda_permission` resource](/docs/providers/aws/r/lambda_permission.html).
 * `source_identifier` - (Required) For AWS Config managed rules, a predefined identifier, e.g `IAM_PASSWORD_POLICY`. For custom Lambda rules, the identifier is the ARN of the Lambda Function, such as `arn:aws:lambda:us-east-1:123456789012:function:custom_rule_name` or the [`arn` attribute of the `aws_lambda_function` resource](/docs/providers/aws/r/lambda_function.html#arn).
 * `source_detail` - (Optional) Provides the source and type of the event that causes AWS Config to evaluate your AWS resources. Only valid if `owner` is `CUSTOM_LAMBDA`.
-	* `event_source` - (Optional) The source of the event, such as an AWS service, that triggers AWS Config
+    * `event_source` - (Optional) The source of the event, such as an AWS service, that triggers AWS Config
 		to evaluate your AWS resources. This defaults to `aws.config` and is the only valid value.
-	* `maximum_execution_frequency` - (Optional) The frequency that you want AWS Config to run evaluations for a rule that
+    * `maximum_execution_frequency` - (Optional) The frequency that you want AWS Config to run evaluations for a rule that
 		is triggered periodically. If specified, requires `message_type` to be `ScheduledNotification`.
-	* `message_type` - (Optional) The type of notification that triggers AWS Config to run an evaluation for a rule. You can specify the following notification types:
-	    * `ConfigurationItemChangeNotification` - Triggers an evaluation when AWS
+    * `message_type` - (Optional) The type of notification that triggers AWS Config to run an evaluation for a rule. You can specify the following notification types:
+        * `ConfigurationItemChangeNotification` - Triggers an evaluation when AWS
 	    	Config delivers a configuration item as a result of a resource change.
-	    * `OversizedConfigurationItemChangeNotification` - Triggers an evaluation
+        * `OversizedConfigurationItemChangeNotification` - Triggers an evaluation
 	    	when AWS Config delivers an oversized configuration item. AWS Config may
 	    	generate this notification type when a resource changes and the notification
 	    	exceeds the maximum size allowed by Amazon SNS.
-	    * `ScheduledNotification` - Triggers a periodic evaluation at the frequency
+        * `ScheduledNotification` - Triggers a periodic evaluation at the frequency
 	    	specified for `maximum_execution_frequency`.
-	    * `ConfigurationSnapshotDeliveryCompleted` - Triggers a periodic evaluation
+        * `ConfigurationSnapshotDeliveryCompleted` - Triggers a periodic evaluation
 	    	when AWS Config delivers a configuration snapshot.
 
 ## Attributes Reference

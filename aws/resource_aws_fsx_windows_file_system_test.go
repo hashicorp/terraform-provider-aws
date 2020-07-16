@@ -89,13 +89,13 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexp.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(`fs-.+\..+`)),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_id", regexp.MustCompile(`^arn:`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "300"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
@@ -362,6 +362,43 @@ func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory_Username(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername("Admin"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"self_managed_active_directory",
+					"skip_final_backup",
+				},
+			},
+			{
+				Config: testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername("Administrator"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_windows_file_system.test"
@@ -372,10 +409,10 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(301),
+				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(33),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "301"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "33"),
 				),
 			},
 			{
@@ -388,11 +425,11 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(302),
+				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(34),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "302"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "34"),
 				),
 			},
 		},
@@ -614,6 +651,11 @@ func testAccAwsFsxWindowsFileSystemConfigBase() string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -652,7 +694,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id             = "${aws_directory_service_directory.test.id}"
   automatic_backup_retention_days = %[1]d
   skip_final_backup               = true
-  storage_capacity                = 300
+  storage_capacity                = 32
   subnet_ids                      = ["${aws_subnet.test1.id}"]
   throughput_capacity             = 8
 }
@@ -665,7 +707,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id  = "${aws_directory_service_directory.test.id}"
   copy_tags_to_backups = %[1]t
   skip_final_backup    = true
-  storage_capacity     = 300
+  storage_capacity     = 32
   subnet_ids           = ["${aws_subnet.test1.id}"]
   throughput_capacity  = 8
 }
@@ -678,7 +720,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id               = "${aws_directory_service_directory.test.id}"
   daily_automatic_backup_start_time = %[1]q
   skip_final_backup                 = true
-  storage_capacity                  = 300
+  storage_capacity                  = 32
   subnet_ids                        = ["${aws_subnet.test1.id}"]
   throughput_capacity               = 8
 }
@@ -696,7 +738,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   kms_key_id          = "${aws_kms_key.test1.arn}"
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 }
@@ -714,7 +756,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   kms_key_id          = "${aws_kms_key.test2.arn}"
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 }
@@ -746,7 +788,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id  = "${aws_directory_service_directory.test.id}"
   security_group_ids   = ["${aws_security_group.test1.id}"]
   skip_final_backup    = true
-  storage_capacity     = 300
+  storage_capacity     = 32
   subnet_ids           = ["${aws_subnet.test1.id}"]
   throughput_capacity  = 8
 }
@@ -797,7 +839,7 @@ resource "aws_fsx_windows_file_system" "test" {
   active_directory_id  = "${aws_directory_service_directory.test.id}"
   security_group_ids   = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
   skip_final_backup    = true
-  storage_capacity     = 300
+  storage_capacity     = 32
   subnet_ids           = ["${aws_subnet.test1.id}"]
   throughput_capacity  = 8
 }
@@ -808,7 +850,7 @@ func testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectory() string {
 	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 
@@ -820,6 +862,23 @@ resource "aws_fsx_windows_file_system" "test" {
   }
 }
 `)
+}
+
+func testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername(username string) string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = ["${aws_subnet.test1.id}"]
+  throughput_capacity = 8
+  self_managed_active_directory {
+    dns_ips     = aws_directory_service_directory.test.dns_ip_addresses
+    domain_name = aws_directory_service_directory.test.name
+    password    = aws_directory_service_directory.test.password
+    username    = %[1]q
+  }
+}
+`, username)
 }
 
 func testAccAwsFsxWindowsFileSystemConfigStorageCapacity(storageCapacity int) string {
@@ -839,7 +898,7 @@ func testAccAwsFsxWindowsFileSystemConfigSubnetIds1() string {
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 }
@@ -851,7 +910,7 @@ func testAccAwsFsxWindowsFileSystemConfigTags1(tagKey1, tagValue1 string) string
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 
@@ -867,7 +926,7 @@ func testAccAwsFsxWindowsFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagV
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 
@@ -884,7 +943,7 @@ func testAccAwsFsxWindowsFileSystemConfigThroughputCapacity(throughputCapacity i
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   skip_final_backup   = true
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = %[1]d
 }
@@ -896,7 +955,7 @@ func testAccAwsFsxWindowsFileSystemConfigWeeklyMaintenanceStartTime(weeklyMainte
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id           = "${aws_directory_service_directory.test.id}"
   skip_final_backup             = true
-  storage_capacity              = 300
+  storage_capacity              = 32
   subnet_ids                    = ["${aws_subnet.test1.id}"]
   throughput_capacity           = 8
   weekly_maintenance_start_time = %[1]q

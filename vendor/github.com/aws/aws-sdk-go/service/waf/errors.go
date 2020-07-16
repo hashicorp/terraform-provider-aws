@@ -2,6 +2,10 @@
 
 package waf
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeBadRequestException for service response error code
@@ -209,4 +213,52 @@ const (
 	// ErrCodeTagOperationInternalErrorException for service response error code
 	// "WAFTagOperationInternalErrorException".
 	ErrCodeTagOperationInternalErrorException = "WAFTagOperationInternalErrorException"
+
+	// ErrCodeWAFEntityMigrationException for service response error code
+	// "WAFEntityMigrationException".
+	//
+	// The operation failed due to a problem with the migration. The failure cause
+	// is provided in the exception, in the MigrationErrorType:
+	//
+	//    * ENTITY_NOT_SUPPORTED - The web ACL has an unsupported entity but the
+	//    IgnoreUnsupportedType is not set to true.
+	//
+	//    * ENTITY_NOT_FOUND - The web ACL doesn't exist.
+	//
+	//    * S3_BUCKET_NO_PERMISSION - You don't have permission to perform the PutObject
+	//    action to the specified Amazon S3 bucket.
+	//
+	//    * S3_BUCKET_NOT_ACCESSIBLE - The bucket policy doesn't allow AWS WAF to
+	//    perform the PutObject action in the bucket.
+	//
+	//    * S3_BUCKET_NOT_FOUND - The S3 bucket doesn't exist.
+	//
+	//    * S3_BUCKET_INVALID_REGION - The S3 bucket is not in the same Region as
+	//    the web ACL.
+	//
+	//    * S3_INTERNAL_ERROR - AWS WAF failed to create the template in the S3
+	//    bucket for another reason.
+	ErrCodeWAFEntityMigrationException = "WAFEntityMigrationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"WAFBadRequestException":                newErrorBadRequestException,
+	"WAFDisallowedNameException":            newErrorDisallowedNameException,
+	"WAFInternalErrorException":             newErrorInternalErrorException,
+	"WAFInvalidAccountException":            newErrorInvalidAccountException,
+	"WAFInvalidOperationException":          newErrorInvalidOperationException,
+	"WAFInvalidParameterException":          newErrorInvalidParameterException,
+	"WAFInvalidPermissionPolicyException":   newErrorInvalidPermissionPolicyException,
+	"WAFInvalidRegexPatternException":       newErrorInvalidRegexPatternException,
+	"WAFLimitsExceededException":            newErrorLimitsExceededException,
+	"WAFNonEmptyEntityException":            newErrorNonEmptyEntityException,
+	"WAFNonexistentContainerException":      newErrorNonexistentContainerException,
+	"WAFNonexistentItemException":           newErrorNonexistentItemException,
+	"WAFReferencedItemException":            newErrorReferencedItemException,
+	"WAFServiceLinkedRoleErrorException":    newErrorServiceLinkedRoleErrorException,
+	"WAFStaleDataException":                 newErrorStaleDataException,
+	"WAFSubscriptionNotFoundException":      newErrorSubscriptionNotFoundException,
+	"WAFTagOperationException":              newErrorTagOperationException,
+	"WAFTagOperationInternalErrorException": newErrorTagOperationInternalErrorException,
+	"WAFEntityMigrationException":           newErrorWAFEntityMigrationException,
+}

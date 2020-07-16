@@ -21,12 +21,12 @@ If you are running into one of these scenarios, we recommend opening an issue in
 ### Community Note
 
 * Please vote on this issue by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original issue to help the community and maintainers prioritize this request
-* Please do not leave "+1" or "me too" comments, they generate extra noise for issue followers and do not help prioritize the request
+* Please do not leave "+1" or other comments that do not add relevant new information or questions, they generate extra noise for issue followers and do not help prioritize the request
 * If you are interested in working on this issue or have submitted a pull request, please leave a comment
 
 <!--- Thank you for keeping this note for the community --->
 
-### Terraform Version
+### Terraform CLI and Terraform AWS Provider Version
 
 <!--- Please run `terraform -v` to show the Terraform core version and provider version(s). If you are not running the latest version of Terraform or the provider, please upgrade because your issue may have already been fixed. [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions). --->
 

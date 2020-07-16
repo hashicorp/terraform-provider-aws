@@ -67,6 +67,29 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketPublicAccessBlock_bucketDisappears(t *testing.T) {
+	var config s3.PublicAccessBlockConfiguration
+	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	bucketResourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketPublicAccessBlockExists(resourceName, &config),
+					testAccCheckAWSS3DestroyBucket(bucketResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())

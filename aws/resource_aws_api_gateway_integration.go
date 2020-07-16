@@ -114,12 +114,6 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				Optional: true,
 			},
 
-			"request_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `request_parameters` argument instead",
-			},
-
 			"content_handling": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -162,7 +156,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 }
 
 func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Print("[DEBUG] Creating API Gateway Integration")
 
@@ -259,7 +253,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Integration: %s", d.Id())
 	integration, err := conn.GetIntegration(&apigateway.GetIntegrationInput{
@@ -312,7 +306,7 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Updating API Gateway Integration: %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -489,7 +483,7 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 
 	_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{

@@ -3,7 +3,7 @@ package golinters
 import (
 	"sync"
 
-	"github.com/bombsimon/wsl"
+	"github.com/bombsimon/wsl/v3"
 	"golang.org/x/tools/go/analysis"
 
 	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis"
@@ -18,7 +18,7 @@ const (
 // NewWSL returns a new WSL linter.
 func NewWSL() *goanalysis.Linter {
 	var (
-		issues   []result.Issue
+		issues   []goanalysis.Issue
 		mu       = sync.Mutex{}
 		analyzer = &analysis.Analyzer{
 			Name: goanalysis.TheOnlyAnalyzerName,
@@ -37,11 +37,17 @@ func NewWSL() *goanalysis.Linter {
 				files        = []string{}
 				linterCfg    = lintCtx.Cfg.LintersSettings.WSL
 				processorCfg = wsl.Configuration{
-					StrictAppend:               linterCfg.StrictAppend,
-					AllowAssignAndCallCuddle:   linterCfg.AllowAssignAndCallCuddle,
-					AllowMultiLineAssignCuddle: linterCfg.AllowMultiLineAssignCuddle,
-					AllowCuddleWithCalls:       []string{"Lock", "RLock"},
-					AllowCuddleWithRHS:         []string{"Unlock", "RUnlock"},
+					StrictAppend:                     linterCfg.StrictAppend,
+					AllowAssignAndCallCuddle:         linterCfg.AllowAssignAndCallCuddle,
+					AllowMultiLineAssignCuddle:       linterCfg.AllowMultiLineAssignCuddle,
+					AllowCuddleDeclaration:           linterCfg.AllowCuddleDeclaration,
+					AllowTrailingComment:             linterCfg.AllowTrailingComment,
+					AllowSeparatedLeadingComment:     linterCfg.AllowSeparatedLeadingComment,
+					ForceCuddleErrCheckAndAssign:     linterCfg.ForceCuddleErrCheckAndAssign,
+					ForceCaseTrailingWhitespaceLimit: linterCfg.ForceCaseTrailingWhitespaceLimit,
+					AllowCuddleWithCalls:             []string{"Lock", "RLock"},
+					AllowCuddleWithRHS:               []string{"Unlock", "RUnlock"},
+					ErrorVariableNames:               []string{"err"},
 				}
 			)
 
@@ -60,16 +66,16 @@ func NewWSL() *goanalysis.Linter {
 			defer mu.Unlock()
 
 			for _, err := range wslErrors {
-				issues = append(issues, result.Issue{
+				issues = append(issues, goanalysis.NewIssue(&result.Issue{
 					FromLinter: name,
 					Pos:        err.Position,
 					Text:       err.Reason,
-				})
+				}, pass))
 			}
 
 			return nil, nil
 		}
-	}).WithIssuesReporter(func(*linter.Context) []result.Issue {
+	}).WithIssuesReporter(func(*linter.Context) []goanalysis.Issue {
 		return issues
 	}).WithLoadMode(goanalysis.LoadModeSyntax)
 }

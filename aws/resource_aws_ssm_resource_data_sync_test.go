@@ -96,7 +96,6 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
   bucket        = "tf-test-bucket-%d"
-  region        = "us-west-2"
   force_destroy = true
 }
 
@@ -150,7 +149,6 @@ func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
   bucket        = "tf-test-bucket-%d"
-  region        = "us-west-2"
   force_destroy = true
 }
 

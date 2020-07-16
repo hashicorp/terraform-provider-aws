@@ -76,18 +76,12 @@ func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 				Optional: true,
 			},
-
-			"response_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `response_parameters` argument instead",
-			},
 		},
 	}
 }
 
 func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	models := make(map[string]string)
 	for k, v := range d.Get("response_models").(map[string]interface{}) {
@@ -130,7 +124,7 @@ func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Method Response %s", d.Id())
 	methodResponse, err := conn.GetMethodResponse(&apigateway.GetMethodResponseInput{
@@ -162,7 +156,7 @@ func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Updating API Gateway Method Response %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -172,10 +166,7 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("response_parameters") {
-		ops, err := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
-		if err != nil {
-			return err
-		}
+		ops := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
 		operations = append(operations, ops...)
 	}
 
@@ -197,7 +188,7 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsApiGatewayMethodResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Method Response: %s", d.Id())
 
 	_, err := conn.DeleteMethodResponse(&apigateway.DeleteMethodResponseInput{

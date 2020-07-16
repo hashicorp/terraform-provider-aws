@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSubnet() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSubnetCreate,
 		Read:   resourceAwsSubnetRead,
@@ -71,6 +73,13 @@ func resourceAwsSubnet() *schema.Resource {
 				Default:  false,
 			},
 
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
+
 			"assign_ipv6_address_on_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -111,6 +120,10 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		createOpts.OutpostArn = aws.String(v.(string))
+	}
+
 	var err error
 	resp, err := conn.CreateSubnet(createOpts)
 
@@ -140,11 +153,47 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 			d.Id(), err)
 	}
 
-	return resourceAwsSubnetUpdate(d, meta)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
+	// You cannot modify multiple subnet attributes in the same request.
+	// Reference: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySubnetAttribute.html
+
+	if d.Get("assign_ipv6_address_on_creation").(bool) {
+		input := &ec2.ModifySubnetAttributeInput{
+			AssignIpv6AddressOnCreation: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(true),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error enabling EC2 Subnet (%s) assign IPv6 address on creation: %s", d.Id(), err)
+		}
+	}
+
+	if d.Get("map_public_ip_on_launch").(bool) {
+		input := &ec2.ModifySubnetAttributeInput{
+			MapPublicIpOnLaunch: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(true),
+			},
+			SubnetId: aws.String(d.Id()),
+		}
+
+		if _, err := conn.ModifySubnetAttribute(input); err != nil {
+			return fmt.Errorf("error enabling EC2 Subnet (%s) map public IP on launch: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsSubnetRead(d, meta)
 }
 
 func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeSubnets(&ec2.DescribeSubnetsInput{
 		SubnetIds: []*string{aws.String(d.Id())},
@@ -170,6 +219,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	d.Set("outpost_arn", subnet.OutpostArn)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
 	d.Set("ipv6_cidr_block_association_id", "")
@@ -184,7 +234,11 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", subnet.SubnetArn)
-	d.Set("tags", tagsToMap(subnet.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("owner_id", subnet.OwnerId)
 
 	return nil
@@ -193,12 +247,12 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Subnet (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("map_public_ip_on_launch") {
@@ -215,14 +269,10 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return err
-		} else {
-			d.SetPartial("map_public_ip_on_launch")
 		}
 	}
 
-	// We have to be careful here to not go through a change of association if this is a new resource
-	// A New resource here would denote that the Update func is called by the Create func
-	if d.HasChange("ipv6_cidr_block") && !d.IsNewResource() {
+	if d.HasChange("ipv6_cidr_block") {
 		// We need to handle that we disassociate the IPv6 CIDR block before we try and associate the new one
 		// This could be an issue as, we could error out when we try and add the new one
 		// We may need to roll back the state and reattach the old one if this is the case
@@ -286,8 +336,6 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 				"Error waiting for IPv6 CIDR (%s) to become associated: %s",
 				d.Id(), err)
 		}
-
-		d.SetPartial("ipv6_cidr_block")
 	}
 
 	if d.HasChange("assign_ipv6_address_on_creation") {
@@ -304,12 +352,8 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return err
-		} else {
-			d.SetPartial("assign_ipv6_address_on_creation")
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsSubnetRead(d, meta)
 }
@@ -355,7 +399,7 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := wait.WaitForState(); err != nil {
-		return fmt.Errorf("Error deleting subnet: %s", err)
+		return fmt.Errorf("error deleting subnet (%s): %s", d.Id(), err)
 	}
 
 	return nil

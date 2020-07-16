@@ -13,6 +13,8 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
+	"go/format"
+	"go/parser"
 	"go/token"
 	"go/types"
 	"io/ioutil"
@@ -30,6 +32,8 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/internal/analysisflags"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/analysisinternal"
+	"golang.org/x/tools/internal/span"
 )
 
 var (
@@ -341,6 +345,7 @@ func applyFixes(roots []*action) {
 
 	visitAll(roots)
 
+	fset := token.NewFileSet() // Shared by parse calls below
 	// Now we've got a set of valid edits for each file. Get the new file contents.
 	for f, tree := range editsForFile {
 		contents, err := ioutil.ReadFile(f.Name())
@@ -373,6 +378,15 @@ func applyFixes(roots []*action) {
 		// Write out the rest of the file.
 		if cur < len(contents) {
 			out.Write(contents[cur:])
+		}
+
+		// Try to format the file.
+		ff, err := parser.ParseFile(fset, f.Name(), out.Bytes(), parser.ParseComments)
+		if err == nil {
+			var buf bytes.Buffer
+			if err = format.Node(&buf, fset, ff); err == nil {
+				out = buf
+			}
 		}
 
 		ioutil.WriteFile(f.Name(), out.Bytes(), 0644)
@@ -638,6 +652,36 @@ func (act *action) execOnce() {
 		AllPackageFacts:   act.allPackageFacts,
 	}
 	act.pass = pass
+
+	var errors []types.Error
+	// Get any type errors that are attributed to the pkg.
+	// This is necessary to test analyzers that provide
+	// suggested fixes for compiler/type errors.
+	for _, err := range act.pkg.Errors {
+		if err.Kind != packages.TypeError {
+			continue
+		}
+		// err.Pos is a string of form: "file:line:col" or "file:line" or "" or "-"
+		spn := span.Parse(err.Pos)
+		// Extract the token positions from the error string.
+		line, col, offset := spn.Start().Line(), spn.Start().Column(), -1
+		act.pkg.Fset.Iterate(func(f *token.File) bool {
+			if f.Name() != spn.URI().Filename() {
+				return true
+			}
+			offset = int(f.LineStart(line)) + col - 1
+			return false
+		})
+		if offset == -1 {
+			continue
+		}
+		errors = append(errors, types.Error{
+			Fset: act.pkg.Fset,
+			Msg:  err.Msg,
+			Pos:  token.Pos(offset),
+		})
+	}
+	analysisinternal.SetTypeErrors(pass, errors)
 
 	var err error
 	if act.pkg.IllTyped && !pass.Analyzer.RunDespiteErrors {

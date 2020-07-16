@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_snapshot_create_volume_permission"
 description: |-
@@ -31,11 +32,11 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 The following arguments are supported:
 
-  * `snapshot_id` - (required) A snapshot ID
-  * `account_id` - (required) An AWS Account ID to add create volume permissions
+* `snapshot_id` - (required) A snapshot ID
+* `account_id` - (required) An AWS Account ID to add create volume permissions
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-  * `id` - A combination of "`snapshot_id`-`account_id`".
+* `id` - A combination of "`snapshot_id`-`account_id`".

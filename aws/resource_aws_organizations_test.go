@@ -22,10 +22,16 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"basic": testAccAwsOrganizationsOrganizationalUnit_basic,
 			"Name":  testAccAwsOrganizationsOrganizationalUnit_Name,
 		},
+		"OrganizationalUnits": {
+			"DataSource": testAccDataSourceAwsOrganizationsOrganizationalUnits_basic,
+		},
 		"Policy": {
 			"basic":       testAccAwsOrganizationsPolicy_basic,
 			"concurrent":  testAccAwsOrganizationsPolicy_concurrent,
 			"Description": testAccAwsOrganizationsPolicy_description,
+			"Type_Backup": testAccAwsOrganizationsPolicy_type_Backup,
+			"Type_SCP":    testAccAwsOrganizationsPolicy_type_SCP,
+			"Type_Tag":    testAccAwsOrganizationsPolicy_type_Tag,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccAwsOrganizationsPolicyAttachment_Account,

@@ -87,7 +87,7 @@ func (c *CloudFront) CreateCloudFrontOriginAccessIdentityRequest(input *CreateCl
 //   access identities allowed.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -204,7 +204,7 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   One or more of your trusted signers don't exist.
 //
 //   * ErrCodeInvalidViewerCertificate "InvalidViewerCertificate"
-//   A viewer certificate specified in the response body is not valid.
+//   A viewer certificate specified is not valid.
 //
 //   * ErrCodeInvalidMinimumProtocolVersion "InvalidMinimumProtocolVersion"
 //   The minimum protocol version specified is not valid.
@@ -231,10 +231,10 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   An invalid error code was specified.
 //
 //   * ErrCodeInvalidResponseCode "InvalidResponseCode"
-//   A response code specified in the response body is not valid.
+//   A response code is not valid.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidRequiredProtocol "InvalidRequiredProtocol"
 //   This operation requires the HTTPS protocol. Ensure that you specify the HTTPS
@@ -287,10 +287,13 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   to support only clients that support Server Name Indication (SNI).
 //
 //   * ErrCodeInvalidTTLOrder "InvalidTTLOrder"
-//   TTL order specified in the response body is not valid.
+//   The TTL order specified is not valid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified is not valid. To specify a web ACL created using the
+//   latest version of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 //   * ErrCodeTooManyOriginCustomHeaders "TooManyOriginCustomHeaders"
 //   Your request contains too many origin custom headers.
@@ -299,7 +302,7 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   Your request contains too many query string parameters.
 //
 //   * ErrCodeInvalidQueryStringParameters "InvalidQueryStringParameters"
-//   Query string parameters specified in the response body are not valid.
+//   The query string parameters specified are not valid.
 //
 //   * ErrCodeTooManyDistributionsWithLambdaAssociations "TooManyDistributionsWithLambdaAssociations"
 //   Processing your request would cause the maximum number of distributions with
@@ -429,7 +432,7 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   One or more of your trusted signers don't exist.
 //
 //   * ErrCodeInvalidViewerCertificate "InvalidViewerCertificate"
-//   A viewer certificate specified in the response body is not valid.
+//   A viewer certificate specified is not valid.
 //
 //   * ErrCodeInvalidMinimumProtocolVersion "InvalidMinimumProtocolVersion"
 //   The minimum protocol version specified is not valid.
@@ -456,10 +459,10 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   An invalid error code was specified.
 //
 //   * ErrCodeInvalidResponseCode "InvalidResponseCode"
-//   A response code specified in the response body is not valid.
+//   A response code is not valid.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidRequiredProtocol "InvalidRequiredProtocol"
 //   This operation requires the HTTPS protocol. Ensure that you specify the HTTPS
@@ -512,22 +515,25 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   to support only clients that support Server Name Indication (SNI).
 //
 //   * ErrCodeInvalidTTLOrder "InvalidTTLOrder"
-//   TTL order specified in the response body is not valid.
+//   The TTL order specified is not valid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified is not valid. To specify a web ACL created using the
+//   latest version of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 //   * ErrCodeTooManyOriginCustomHeaders "TooManyOriginCustomHeaders"
 //   Your request contains too many origin custom headers.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
-//   Tagging specified in the response body is not valid.
+//   The tagging specified is not valid.
 //
 //   * ErrCodeTooManyQueryStringParameters "TooManyQueryStringParameters"
 //   Your request contains too many query string parameters.
 //
 //   * ErrCodeInvalidQueryStringParameters "InvalidQueryStringParameters"
-//   Query string parameters specified in the response body are not valid.
+//   The query string parameters specified are not valid.
 //
 //   * ErrCodeTooManyDistributionsWithLambdaAssociations "TooManyDistributionsWithLambdaAssociations"
 //   Processing your request would cause the maximum number of distributions with
@@ -637,7 +643,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionConfigRequest(input *CreateFieldL
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchFieldLevelEncryptionProfile "NoSuchFieldLevelEncryptionProfile"
 //   The specified profile for field-level encryption doesn't exist.
@@ -740,7 +746,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionProfileRequest(input *CreateField
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
@@ -846,7 +852,7 @@ func (c *CloudFront) CreateInvalidationRequest(input *CreateInvalidationInput) (
 //   header is set.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchDistribution "NoSuchDistribution"
 //   The specified distribution does not exist.
@@ -942,7 +948,7 @@ func (c *CloudFront) CreatePublicKeyRequest(input *CreatePublicKeyInput) (req *r
 //   The specified public key already exists.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeTooManyPublicKeys "TooManyPublicKeys"
 //   The maximum number of public keys for field-level encryption have been created.
@@ -1086,7 +1092,7 @@ func (c *CloudFront) CreateStreamingDistributionRequest(input *CreateStreamingDi
 //   distributions allowed.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -1202,13 +1208,13 @@ func (c *CloudFront) CreateStreamingDistributionWithTagsRequest(input *CreateStr
 //   distributions allowed.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
-//   Tagging specified in the response body is not valid.
+//   The tagging specified is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateStreamingDistributionWithTags
 func (c *CloudFront) CreateStreamingDistributionWithTags(input *CreateStreamingDistributionWithTagsInput) (*CreateStreamingDistributionWithTagsOutput, error) {
@@ -1297,7 +1303,7 @@ func (c *CloudFront) DeleteCloudFrontOriginAccessIdentityRequest(input *DeleteCl
 //   The specified origin access identity does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeOriginAccessIdentityInUse "CloudFrontOriginAccessIdentityInUse"
@@ -1394,7 +1400,7 @@ func (c *CloudFront) DeleteDistributionRequest(input *DeleteDistributionInput) (
 //   The specified distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteDistribution
@@ -1484,7 +1490,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionConfigRequest(input *DeleteFieldL
 //   The specified configuration for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeFieldLevelEncryptionConfigInUse "FieldLevelEncryptionConfigInUse"
@@ -1577,7 +1583,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionProfileRequest(input *DeleteField
 //   The specified profile for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeFieldLevelEncryptionProfileInUse "FieldLevelEncryptionProfileInUse"
@@ -1673,7 +1679,7 @@ func (c *CloudFront) DeletePublicKeyRequest(input *DeletePublicKeyInput) (req *r
 //   The specified public key doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeletePublicKey
@@ -1802,7 +1808,7 @@ func (c *CloudFront) DeleteStreamingDistributionRequest(input *DeleteStreamingDi
 //   The specified streaming distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteStreamingDistribution
@@ -2958,7 +2964,7 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesRequest(input *ListClou
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListCloudFrontOriginAccessIdentities
 func (c *CloudFront) ListCloudFrontOriginAccessIdentities(input *ListCloudFrontOriginAccessIdentitiesInput) (*ListCloudFrontOriginAccessIdentitiesOutput, error) {
@@ -3025,10 +3031,12 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCloudFrontOriginAccessIdentitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCloudFrontOriginAccessIdentitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3093,7 +3101,7 @@ func (c *CloudFront) ListDistributionsRequest(input *ListDistributionsInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributions
 func (c *CloudFront) ListDistributions(input *ListDistributionsInput) (*ListDistributionsOutput, error) {
@@ -3160,10 +3168,12 @@ func (c *CloudFront) ListDistributionsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDistributionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDistributionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3222,10 +3232,13 @@ func (c *CloudFront) ListDistributionsByWebACLIdRequest(input *ListDistributions
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified is not valid. To specify a web ACL created using the
+//   latest version of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributionsByWebACLId
 func (c *CloudFront) ListDistributionsByWebACLId(input *ListDistributionsByWebACLIdInput) (*ListDistributionsByWebACLIdOutput, error) {
@@ -3305,7 +3318,7 @@ func (c *CloudFront) ListFieldLevelEncryptionConfigsRequest(input *ListFieldLeve
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionConfigs
 func (c *CloudFront) ListFieldLevelEncryptionConfigs(input *ListFieldLevelEncryptionConfigsInput) (*ListFieldLevelEncryptionConfigsOutput, error) {
@@ -3385,7 +3398,7 @@ func (c *CloudFront) ListFieldLevelEncryptionProfilesRequest(input *ListFieldLev
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionProfiles
 func (c *CloudFront) ListFieldLevelEncryptionProfiles(input *ListFieldLevelEncryptionProfilesInput) (*ListFieldLevelEncryptionProfilesOutput, error) {
@@ -3470,7 +3483,7 @@ func (c *CloudFront) ListInvalidationsRequest(input *ListInvalidationsInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchDistribution "NoSuchDistribution"
 //   The specified distribution does not exist.
@@ -3543,10 +3556,12 @@ func (c *CloudFront) ListInvalidationsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInvalidationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInvalidationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3605,7 +3620,7 @@ func (c *CloudFront) ListPublicKeysRequest(input *ListPublicKeysInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListPublicKeys
 func (c *CloudFront) ListPublicKeys(input *ListPublicKeysInput) (*ListPublicKeysOutput, error) {
@@ -3690,7 +3705,7 @@ func (c *CloudFront) ListStreamingDistributionsRequest(input *ListStreamingDistr
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListStreamingDistributions
 func (c *CloudFront) ListStreamingDistributions(input *ListStreamingDistributionsInput) (*ListStreamingDistributionsOutput, error) {
@@ -3757,10 +3772,12 @@ func (c *CloudFront) ListStreamingDistributionsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListStreamingDistributionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListStreamingDistributionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3822,10 +3839,10 @@ func (c *CloudFront) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 //   Access denied.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
-//   Tagging specified in the response body is not valid.
+//   The tagging specified is not valid.
 //
 //   * ErrCodeNoSuchResource "NoSuchResource"
 //   A resource that was specified is not valid.
@@ -3911,10 +3928,10 @@ func (c *CloudFront) TagResourceRequest(input *TagResourceInput) (req *request.R
 //   Access denied.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
-//   Tagging specified in the response body is not valid.
+//   The tagging specified is not valid.
 //
 //   * ErrCodeNoSuchResource "NoSuchResource"
 //   A resource that was specified is not valid.
@@ -4000,10 +4017,10 @@ func (c *CloudFront) UntagResourceRequest(input *UntagResourceInput) (req *reque
 //   Access denied.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
-//   Tagging specified in the response body is not valid.
+//   The tagging specified is not valid.
 //
 //   * ErrCodeNoSuchResource "NoSuchResource"
 //   A resource that was specified is not valid.
@@ -4101,11 +4118,11 @@ func (c *CloudFront) UpdateCloudFrontOriginAccessIdentityRequest(input *UpdateCl
 //   The specified origin access identity does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -4269,7 +4286,7 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   The specified distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeTooManyDistributionCNAMEs "TooManyDistributionCNAMEs"
@@ -4286,10 +4303,10 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   An invalid error code was specified.
 //
 //   * ErrCodeInvalidResponseCode "InvalidResponseCode"
-//   A response code specified in the response body is not valid.
+//   A response code is not valid.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidOriginAccessIdentity "InvalidOriginAccessIdentity"
 //   The origin access identity is not valid or doesn't exist.
@@ -4301,7 +4318,7 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   One or more of your trusted signers don't exist.
 //
 //   * ErrCodeInvalidViewerCertificate "InvalidViewerCertificate"
-//   A viewer certificate specified in the response body is not valid.
+//   A viewer certificate specified is not valid.
 //
 //   * ErrCodeInvalidMinimumProtocolVersion "InvalidMinimumProtocolVersion"
 //   The minimum protocol version specified is not valid.
@@ -4353,10 +4370,13 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   The specified geo restriction parameter is not valid.
 //
 //   * ErrCodeInvalidTTLOrder "InvalidTTLOrder"
-//   TTL order specified in the response body is not valid.
+//   The TTL order specified is not valid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified is not valid. To specify a web ACL created using the
+//   latest version of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 //   * ErrCodeTooManyOriginCustomHeaders "TooManyOriginCustomHeaders"
 //   Your request contains too many origin custom headers.
@@ -4365,7 +4385,7 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   Your request contains too many query string parameters.
 //
 //   * ErrCodeInvalidQueryStringParameters "InvalidQueryStringParameters"
-//   Query string parameters specified in the response body are not valid.
+//   The query string parameters specified are not valid.
 //
 //   * ErrCodeTooManyDistributionsWithLambdaAssociations "TooManyDistributionsWithLambdaAssociations"
 //   Processing your request would cause the maximum number of distributions with
@@ -4481,7 +4501,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
 //   The If-Match version is missing or not valid for the distribution.
@@ -4493,7 +4513,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   The specified configuration for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeTooManyFieldLevelEncryptionQueryArgProfiles "TooManyFieldLevelEncryptionQueryArgProfiles"
@@ -4596,7 +4616,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
 //   The If-Match version is missing or not valid for the distribution.
@@ -4608,7 +4628,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   The specified profile for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeFieldLevelEncryptionProfileSizeExceeded "FieldLevelEncryptionProfileSizeExceeded"
@@ -4706,7 +4726,7 @@ func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *r
 //   You can't change the value of a public key.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
 //   The If-Match version is missing or not valid for the distribution.
@@ -4718,7 +4738,7 @@ func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *r
 //   The specified public key doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdatePublicKey
@@ -4817,14 +4837,14 @@ func (c *CloudFront) UpdateStreamingDistributionRequest(input *UpdateStreamingDi
 //   The specified streaming distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeTooManyStreamingDistributionCNAMEs "TooManyStreamingDistributionCNAMEs"
 //   Your request contains more CNAMEs than are allowed per distribution.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidOriginAccessIdentity "InvalidOriginAccessIdentity"
 //   The origin access identity is not valid or doesn't exist.
@@ -4950,8 +4970,11 @@ type AliasICPRecordal struct {
 	//    * SUSPENDED indicates that the associated CNAME does not have a valid
 	//    ICP recordal number.
 	//
-	//    * PENDING indicates that at least one CNAME associated with the distribution
-	//    does not have a valid ICP recordal number.
+	//    * PENDING indicates that CloudFront can't determine the ICP recordal status
+	//    of the CNAME associated with the distribution because there was an error
+	//    in trying to determine the status. You can try again to see if the error
+	//    is resolved in which case CloudFront returns an APPROVED or SUSPENDED
+	//    status.
 	ICPRecordalStatus *string `type:"string" enum:"ICPRecordalStatus"`
 }
 
@@ -5124,19 +5147,19 @@ func (s *AllowedMethods) SetQuantity(v int64) *AllowedMethods {
 // A complex type that describes how CloudFront processes requests.
 //
 // You must create at least as many cache behaviors (including the default cache
-// behavior) as you have origins if you want CloudFront to distribute objects
-// from all of the origins. Each cache behavior specifies the one origin from
-// which you want CloudFront to get objects. If you have two origins and only
-// the default cache behavior, the default cache behavior will cause CloudFront
+// behavior) as you have origins if you want CloudFront to serve objects from
+// all of the origins. Each cache behavior specifies the one origin from which
+// you want CloudFront to get objects. If you have two origins and only the
+// default cache behavior, the default cache behavior will cause CloudFront
 // to get objects from one of the origins, but the other origin is never used.
 //
-// For the current limit on the number of cache behaviors that you can add to
-// a distribution, see Amazon CloudFront Limits (https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_cloudfront)
-// in the AWS General Reference.
+// For the current quota (formerly known as limit) on the number of cache behaviors
+// that you can add to a distribution, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+// in the Amazon CloudFront Developer Guide.
 //
-// If you don't want to specify any cache behaviors, include only an empty CacheBehaviors
-// element. Don't include an empty CacheBehavior element, or CloudFront returns
-// a MalformedXML error.
+// If you don’t want to specify any cache behaviors, include only an empty
+// CacheBehaviors element. Don’t include an empty CacheBehavior element because
+// this is invalid.
 //
 // To delete all cache behaviors in an existing distribution, update the distribution
 // configuration and include only an empty CacheBehaviors element.
@@ -5145,7 +5168,7 @@ func (s *AllowedMethods) SetQuantity(v int64) *AllowedMethods {
 // configuration and specify all of the cache behaviors that you want to include
 // in the updated distribution.
 //
-// For more information about cache behaviors, see Cache Behaviors (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior)
+// For more information about cache behaviors, see Cache Behavior Settings (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior)
 // in the Amazon CloudFront Developer Guide.
 type CacheBehavior struct {
 	_ struct{} `type:"structure"`
@@ -5183,11 +5206,11 @@ type CacheBehavior struct {
 	DefaultTTL *int64 `type:"long"`
 
 	// The value of ID for the field-level encryption configuration that you want
-	// CloudFront to use for encrypting specific fields of data for a cache behavior
-	// or for the default cache behavior in your distribution.
+	// CloudFront to use for encrypting specific fields of data for this cache behavior.
 	FieldLevelEncryptionId *string `type:"string"`
 
-	// A complex type that specifies how CloudFront handles query strings and cookies.
+	// A complex type that specifies how CloudFront handles query strings, cookies,
+	// and HTTP headers.
 	//
 	// ForwardedValues is a required field
 	ForwardedValues *ForwardedValues `type:"structure" required:"true"`
@@ -5245,8 +5268,7 @@ type CacheBehavior struct {
 	SmoothStreaming *bool `type:"boolean"`
 
 	// The value of ID for the origin that you want CloudFront to route requests
-	// to when a request matches the path pattern either for a cache behavior or
-	// for the default cache behavior in your distribution.
+	// to when they match this cache behavior.
 	//
 	// TargetOriginId is a required field
 	TargetOriginId *string `type:"string" required:"true"`
@@ -5257,14 +5279,15 @@ type CacheBehavior struct {
 	// If you want to require signed URLs in requests for objects in the target
 	// origin that match the PathPattern for this cache behavior, specify true for
 	// Enabled, and specify the applicable values for Quantity and Items. For more
-	// information, see Serving Private Content through CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
+	// information, see Serving Private Content with Signed URLs and Signed Cookies
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
-	// If you don't want to require signed URLs in requests for objects that match
+	// If you don’t want to require signed URLs in requests for objects that match
 	// PathPattern, specify false for Enabled and 0 for Quantity. Omit Items.
 	//
 	// To add, change, or remove one or more trusted signers, change Enabled to
-	// true (if it's currently false), change Quantity as applicable, and specify
+	// true (if it’s currently false), change Quantity as applicable, and specify
 	// all of the trusted signers that you want to include in the updated distribution.
 	//
 	// TrustedSigners is a required field
@@ -5283,18 +5306,17 @@ type CacheBehavior struct {
 	//    * https-only: If a viewer sends an HTTP request, CloudFront returns an
 	//    HTTP status code of 403 (Forbidden).
 	//
-	// For more information about requiring the HTTPS protocol, see Using an HTTPS
-	// Connection to Access Your Objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/SecureConnections.html)
+	// For more information about requiring the HTTPS protocol, see Requiring HTTPS
+	// Between Viewers and CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// The only way to guarantee that viewers retrieve an object that was fetched
 	// from the origin using HTTPS is never to use any other protocol to fetch the
 	// object. If you have recently changed from HTTP to HTTPS, we recommend that
-	// you clear your objects' cache because cached objects are protocol agnostic.
+	// you clear your objects’ cache because cached objects are protocol agnostic.
 	// That means that an edge location will return an object from the cache regardless
 	// of whether the current request protocol matches the protocol used previously.
-	// For more information, see Managing How Long Content Stays in an Edge Cache
-	// (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// For more information, see Managing Cache Expiration (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// ViewerProtocolPolicy is a required field
@@ -5746,11 +5768,19 @@ type CookieNames struct {
 	_ struct{} `type:"structure"`
 
 	// A complex type that contains one Name element for each cookie that you want
-	// CloudFront to forward to the origin for this cache behavior.
+	// CloudFront to forward to the origin for this cache behavior. It must contain
+	// the same number of items that is specified in the Quantity field.
+	//
+	// When you set Forward = whitelist (in the CookiePreferences object), this
+	// field must contain at least one item.
 	Items []*string `locationNameList:"Name" type:"list"`
 
 	// The number of different cookies that you want CloudFront to forward to the
-	// origin for this cache behavior.
+	// origin for this cache behavior. The value must equal the number of items
+	// that are in the Items field.
+	//
+	// When you set Forward = whitelist (in the CookiePreferences object), this
+	// value must be 1 or higher.
 	//
 	// Quantity is a required field
 	Quantity *int64 `type:"integer" required:"true"`
@@ -5808,7 +5838,7 @@ type CookiePreference struct {
 	// Forward is a required field
 	Forward *string `type:"string" required:"true" enum:"ItemSelection"`
 
-	// Required if you specify whitelist for the value of Forward:. A complex type
+	// Required if you specify whitelist for the value of Forward. A complex type
 	// that specifies how many different cookies you want CloudFront to forward
 	// to the origin for this cache behavior and, if you want to forward selected
 	// cookies, the names of those cookies.
@@ -6673,9 +6703,6 @@ type CustomErrorResponse struct {
 	// CloudFront queries your origin to see whether the problem that caused the
 	// error has been resolved and the requested object is now available.
 	//
-	// If you don't want to specify a value, include an empty element, <ErrorCachingMinTTL>,
-	// in the XML document.
-	//
 	// For more information, see Customizing Error Responses (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/custom-error-pages.html)
 	// in the Amazon CloudFront Developer Guide.
 	ErrorCachingMinTTL *int64 `type:"long"`
@@ -6704,8 +6731,7 @@ type CustomErrorResponse struct {
 	//    your customers don't know that your website is down.
 	//
 	// If you specify a value for ResponseCode, you must also specify a value for
-	// ResponsePagePath. If you don't want to specify a value, include an empty
-	// element, <ResponseCode>, in the XML document.
+	// ResponsePagePath.
 	ResponseCode *string `type:"string"`
 
 	// The path to the custom error page that you want CloudFront to return to a
@@ -6724,8 +6750,7 @@ type CustomErrorResponse struct {
 	//    the origin that contains your custom error pages.
 	//
 	// If you specify a value for ResponsePagePath, you must also specify a value
-	// for ResponseCode. If you don't want to specify a value, include an empty
-	// element, <ResponsePagePath>, in the XML document.
+	// for ResponseCode.
 	//
 	// We recommend that you store custom error pages in an Amazon S3 bucket. If
 	// you store custom error pages on an HTTP server and the server starts to return
@@ -6911,45 +6936,61 @@ func (s *CustomHeaders) SetQuantity(v int64) *CustomHeaders {
 	return s
 }
 
-// A custom origin or an Amazon S3 bucket configured as a website endpoint.
+// A custom origin. A custom origin is any origin that is not an Amazon S3 bucket,
+// with one exception. An Amazon S3 bucket that is configured with static website
+// hosting (https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html)
+// is a custom origin.
 type CustomOriginConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The HTTP port the custom origin listens on.
+	// The HTTP port that CloudFront uses to connect to the origin. Specify the
+	// HTTP port that the origin listens on.
 	//
 	// HTTPPort is a required field
 	HTTPPort *int64 `type:"integer" required:"true"`
 
-	// The HTTPS port the custom origin listens on.
+	// The HTTPS port that CloudFront uses to connect to the origin. Specify the
+	// HTTPS port that the origin listens on.
 	//
 	// HTTPSPort is a required field
 	HTTPSPort *int64 `type:"integer" required:"true"`
 
-	// You can create a custom keep-alive timeout. All timeout units are in seconds.
-	// The default keep-alive timeout is 5 seconds, but you can configure custom
-	// timeout lengths using the CloudFront API. The minimum timeout length is 1
-	// second; the maximum is 60 seconds.
+	// Specifies how long, in seconds, CloudFront persists its connection to the
+	// origin. The minimum timeout is 1 second, the maximum is 60 seconds, and the
+	// default (if you don’t specify otherwise) is 5 seconds.
 	//
-	// If you need to increase the maximum time limit, contact the AWS Support Center
-	// (https://console.aws.amazon.com/support/home#/).
+	// For more information, see Origin Keep-alive Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginKeepaliveTimeout)
+	// in the Amazon CloudFront Developer Guide.
 	OriginKeepaliveTimeout *int64 `type:"integer"`
 
-	// The origin protocol policy to apply to your origin.
+	// Specifies the protocol (HTTP or HTTPS) that CloudFront uses to connect to
+	// the origin. Valid values are:
+	//
+	//    * http-only – CloudFront always uses HTTP to connect to the origin.
+	//
+	//    * match-viewer – CloudFront connects to the origin using the same protocol
+	//    that the viewer used to connect to CloudFront.
+	//
+	//    * https-only – CloudFront always uses HTTPS to connect to the origin.
 	//
 	// OriginProtocolPolicy is a required field
 	OriginProtocolPolicy *string `type:"string" required:"true" enum:"OriginProtocolPolicy"`
 
-	// You can create a custom origin read timeout. All timeout units are in seconds.
-	// The default origin read timeout is 30 seconds, but you can configure custom
-	// timeout lengths using the CloudFront API. The minimum timeout length is 4
-	// seconds; the maximum is 60 seconds.
+	// Specifies how long, in seconds, CloudFront waits for a response from the
+	// origin. This is also known as the origin response timeout. The minimum timeout
+	// is 1 second, the maximum is 60 seconds, and the default (if you don’t specify
+	// otherwise) is 30 seconds.
 	//
-	// If you need to increase the maximum time limit, contact the AWS Support Center
-	// (https://console.aws.amazon.com/support/home#/).
+	// For more information, see Origin Response Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginResponseTimeout)
+	// in the Amazon CloudFront Developer Guide.
 	OriginReadTimeout *int64 `type:"integer"`
 
-	// The SSL/TLS protocols that you want CloudFront to use when communicating
-	// with your origin over HTTPS.
+	// Specifies the minimum SSL/TLS protocol that CloudFront uses when connecting
+	// to your origin over HTTPS. Valid values include SSLv3, TLSv1, TLSv1.1, and
+	// TLSv1.2.
+	//
+	// For more information, see Minimum Origin SSL Protocol (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols)
+	// in the Amazon CloudFront Developer Guide.
 	OriginSslProtocols *OriginSslProtocols `type:"structure"`
 }
 
@@ -7023,9 +7064,10 @@ func (s *CustomOriginConfig) SetOriginSslProtocols(v *OriginSslProtocols) *Custo
 	return s
 }
 
-// A complex type that describes the default cache behavior if you don't specify
-// a CacheBehavior element or if files don't match any of the values of PathPattern
-// in CacheBehavior elements. You must create exactly one default cache behavior.
+// A complex type that describes the default cache behavior if you don’t specify
+// a CacheBehavior element or if request URLs don’t match any of the values
+// of PathPattern in CacheBehavior elements. You must create exactly one default
+// cache behavior.
 type DefaultCacheBehavior struct {
 	_ struct{} `type:"structure"`
 
@@ -7062,11 +7104,12 @@ type DefaultCacheBehavior struct {
 	DefaultTTL *int64 `type:"long"`
 
 	// The value of ID for the field-level encryption configuration that you want
-	// CloudFront to use for encrypting specific fields of data for a cache behavior
-	// or for the default cache behavior in your distribution.
+	// CloudFront to use for encrypting specific fields of data for the default
+	// cache behavior.
 	FieldLevelEncryptionId *string `type:"string"`
 
-	// A complex type that specifies how CloudFront handles query strings and cookies.
+	// A complex type that specifies how CloudFront handles query strings, cookies,
+	// and HTTP headers.
 	//
 	// ForwardedValues is a required field
 	ForwardedValues *ForwardedValues `type:"structure" required:"true"`
@@ -7105,8 +7148,7 @@ type DefaultCacheBehavior struct {
 	SmoothStreaming *bool `type:"boolean"`
 
 	// The value of ID for the origin that you want CloudFront to route requests
-	// to when a request matches the path pattern either for a cache behavior or
-	// for the default cache behavior in your distribution.
+	// to when they use the default cache behavior.
 	//
 	// TargetOriginId is a required field
 	TargetOriginId *string `type:"string" required:"true"`
@@ -7117,14 +7159,15 @@ type DefaultCacheBehavior struct {
 	// If you want to require signed URLs in requests for objects in the target
 	// origin that match the PathPattern for this cache behavior, specify true for
 	// Enabled, and specify the applicable values for Quantity and Items. For more
-	// information, see Serving Private Content through CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
+	// information, see Serving Private Content with Signed URLs and Signed Cookies
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
-	// If you don't want to require signed URLs in requests for objects that match
+	// If you don’t want to require signed URLs in requests for objects that match
 	// PathPattern, specify false for Enabled and 0 for Quantity. Omit Items.
 	//
 	// To add, change, or remove one or more trusted signers, change Enabled to
-	// true (if it's currently false), change Quantity as applicable, and specify
+	// true (if it’s currently false), change Quantity as applicable, and specify
 	// all of the trusted signers that you want to include in the updated distribution.
 	//
 	// TrustedSigners is a required field
@@ -7143,18 +7186,17 @@ type DefaultCacheBehavior struct {
 	//    * https-only: If a viewer sends an HTTP request, CloudFront returns an
 	//    HTTP status code of 403 (Forbidden).
 	//
-	// For more information about requiring the HTTPS protocol, see Using an HTTPS
-	// Connection to Access Your Objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/SecureConnections.html)
+	// For more information about requiring the HTTPS protocol, see Requiring HTTPS
+	// Between Viewers and CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// The only way to guarantee that viewers retrieve an object that was fetched
 	// from the origin using HTTPS is never to use any other protocol to fetch the
 	// object. If you have recently changed from HTTP to HTTPS, we recommend that
-	// you clear your objects' cache because cached objects are protocol agnostic.
+	// you clear your objects’ cache because cached objects are protocol agnostic.
 	// That means that an edge location will return an object from the cache regardless
 	// of whether the current request protocol matches the protocol used previously.
-	// For more information, see Managing How Long Content Stays in an Edge Cache
-	// (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// For more information, see Managing Cache Expiration (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// ViewerProtocolPolicy is a required field
@@ -8013,14 +8055,15 @@ type DistributionConfig struct {
 	// of your content.
 	Restrictions *Restrictions `type:"structure"`
 
-	// A complex type that specifies whether you want viewers to use HTTP or HTTPS
-	// to request your objects, whether you're using an alternate domain name with
-	// HTTPS, and if so, if you're using AWS Certificate Manager (ACM) or a third-party
-	// certificate authority.
+	// A complex type that determines the distribution’s SSL/TLS configuration
+	// for communicating with viewers.
 	ViewerCertificate *ViewerCertificate `type:"structure"`
 
 	// A unique identifier that specifies the AWS WAF web ACL, if any, to associate
-	// with this distribution.
+	// with this distribution. To specify a web ACL created using the latest version
+	// of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+	// To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+	// 473e64fd-f30b-4765-81a0-62ad96dd167a.
 	//
 	// AWS WAF is a web application firewall that lets you monitor the HTTP and
 	// HTTPS requests that are forwarded to CloudFront, and lets you control access
@@ -8029,7 +8072,7 @@ type DistributionConfig struct {
 	// to requests either with the requested content or with an HTTP 403 status
 	// code (Forbidden). You can also configure CloudFront to return a custom error
 	// page when a request is blocked. For more information about AWS WAF, see the
-	// AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html).
+	// AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html).
 	WebACLId *string `type:"string"`
 }
 
@@ -8464,10 +8507,8 @@ type DistributionSummary struct {
 	// Status is a required field
 	Status *string `type:"string" required:"true"`
 
-	// A complex type that specifies whether you want viewers to use HTTP or HTTPS
-	// to request your objects, whether you're using an alternate domain name with
-	// HTTPS, and if so, if you're using AWS Certificate Manager (ACM) or a third-party
-	// certificate authority.
+	// A complex type that determines the distribution’s SSL/TLS configuration
+	// for communicating with viewers.
 	//
 	// ViewerCertificate is a required field
 	ViewerCertificate *ViewerCertificate `type:"structure" required:"true"`
@@ -9313,7 +9354,8 @@ func (s *FieldPatterns) SetQuantity(v int64) *FieldPatterns {
 	return s
 }
 
-// A complex type that specifies how CloudFront handles query strings and cookies.
+// A complex type that specifies how CloudFront handles query strings, cookies,
+// and HTTP headers.
 type ForwardedValues struct {
 	_ struct{} `type:"structure"`
 
@@ -11752,96 +11794,89 @@ func (s *LoggingConfig) SetPrefix(v string) *LoggingConfig {
 	return s
 }
 
-// A complex type that describes the Amazon S3 bucket, HTTP server (for example,
-// a web server), Amazon MediaStore, or other server from which CloudFront gets
-// your files. This can also be an origin group, if you've created an origin
-// group. You must specify at least one origin or origin group.
+// An origin.
 //
-// For the current limit on the number of origins or origin groups that you
-// can specify for a distribution, see Amazon CloudFront Limits (https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_cloudfront)
-// in the AWS General Reference.
+// An origin is the location where content is stored, and from which CloudFront
+// gets content to serve to viewers. To specify an origin:
+//
+//    * Use the S3OriginConfig type to specify an Amazon S3 bucket that is not
+//    configured with static website hosting.
+//
+//    * Use the CustomOriginConfig type to specify various other kinds of content
+//    containers or HTTP servers, including: An Amazon S3 bucket that is configured
+//    with static website hosting An Elastic Load Balancing load balancer An
+//    AWS Elemental MediaPackage origin An AWS Elemental MediaStore container
+//    Any other HTTP server, running on an Amazon EC2 instance or any other
+//    kind of host
+//
+// For the current maximum number of origins that you can specify per distribution,
+// see General Quotas on Web Distributions (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-web-distributions)
+// in the Amazon CloudFront Developer Guide (quotas were formerly referred to
+// as limits).
 type Origin struct {
 	_ struct{} `type:"structure"`
 
-	// A complex type that contains names and values for the custom headers that
-	// you want.
+	// The number of times that CloudFront attempts to connect to the origin. The
+	// minimum number is 1, the maximum is 3, and the default (if you don’t specify
+	// otherwise) is 3.
+	//
+	// For a custom origin (including an Amazon S3 bucket that’s configured with
+	// static website hosting), this value also specifies the number of times that
+	// CloudFront attempts to get a response from the origin, in the case of an
+	// Origin Response Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginResponseTimeout).
+	//
+	// For more information, see Origin Connection Attempts (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#origin-connection-attempts)
+	// in the Amazon CloudFront Developer Guide.
+	ConnectionAttempts *int64 `type:"integer"`
+
+	// The number of seconds that CloudFront waits when trying to establish a connection
+	// to the origin. The minimum timeout is 1 second, the maximum is 10 seconds,
+	// and the default (if you don’t specify otherwise) is 10 seconds.
+	//
+	// For more information, see Origin Connection Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#origin-connection-timeout)
+	// in the Amazon CloudFront Developer Guide.
+	ConnectionTimeout *int64 `type:"integer"`
+
+	// A list of HTTP header names and values that CloudFront adds to requests it
+	// sends to the origin.
+	//
+	// For more information, see Adding Custom Headers to Origin Requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html)
+	// in the Amazon CloudFront Developer Guide.
 	CustomHeaders *CustomHeaders `type:"structure"`
 
-	// A complex type that contains information about a custom origin. If the origin
-	// is an Amazon S3 bucket, use the S3OriginConfig element instead.
+	// Use this type to specify an origin that is a content container or HTTP server,
+	// including an Amazon S3 bucket that is configured with static website hosting.
+	// To specify an Amazon S3 bucket that is not configured with static website
+	// hosting, use the S3OriginConfig type instead.
 	CustomOriginConfig *CustomOriginConfig `type:"structure"`
 
-	// Amazon S3 origins: The DNS name of the Amazon S3 bucket from which you want
-	// CloudFront to get objects for this origin, for example, myawsbucket.s3.amazonaws.com.
-	// If you set up your bucket to be configured as a website endpoint, enter the
-	// Amazon S3 static website hosting endpoint for the bucket.
+	// The domain name for the origin.
 	//
-	// For more information about specifying this value for different types of origins,
-	// see Origin Domain Name (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesDomainName)
+	// For more information, see Origin Domain Name (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesDomainName)
 	// in the Amazon CloudFront Developer Guide.
-	//
-	// Constraints for Amazon S3 origins:
-	//
-	//    * If you configured Amazon S3 Transfer Acceleration for your bucket, don't
-	//    specify the s3-accelerate endpoint for DomainName.
-	//
-	//    * The bucket name must be between 3 and 63 characters long (inclusive).
-	//
-	//    * The bucket name must contain only lowercase characters, numbers, periods,
-	//    underscores, and dashes.
-	//
-	//    * The bucket name must not contain adjacent periods.
-	//
-	// Custom Origins: The DNS domain name for the HTTP server from which you want
-	// CloudFront to get objects for this origin, for example, www.example.com.
-	//
-	// Constraints for custom origins:
-	//
-	//    * DomainName must be a valid DNS name that contains only a-z, A-Z, 0-9,
-	//    dot (.), hyphen (-), or underscore (_) characters.
-	//
-	//    * The name cannot exceed 128 characters.
 	//
 	// DomainName is a required field
 	DomainName *string `type:"string" required:"true"`
 
-	// A unique identifier for the origin or origin group. The value of Id must
-	// be unique within the distribution.
+	// A unique identifier for the origin. This value must be unique within the
+	// distribution.
 	//
-	// When you specify the value of TargetOriginId for the default cache behavior
-	// or for another cache behavior, you indicate the origin to which you want
-	// the cache behavior to route requests by specifying the value of the Id element
-	// for that origin. When a request matches the path pattern for that cache behavior,
-	// CloudFront routes the request to the specified origin. For more information,
-	// see Cache Behavior Settings (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior)
-	// in the Amazon CloudFront Developer Guide.
+	// Use this value to specify the TargetOriginId in a CacheBehavior or DefaultCacheBehavior.
 	//
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
 
-	// An optional element that causes CloudFront to request your content from a
-	// directory in your Amazon S3 bucket or your custom origin. When you include
-	// the OriginPath element, specify the directory name, beginning with a /. CloudFront
-	// appends the directory name to the value of DomainName, for example, example.com/production.
-	// Do not include a / at the end of the directory name.
+	// An optional path that CloudFront appends to the origin domain name when CloudFront
+	// requests content from the origin.
 	//
-	// For example, suppose you've specified the following values for your distribution:
-	//
-	//    * DomainName: An Amazon S3 bucket named myawsbucket.
-	//
-	//    * OriginPath: /production
-	//
-	//    * CNAME: example.com
-	//
-	// When a user enters example.com/index.html in a browser, CloudFront sends
-	// a request to Amazon S3 for myawsbucket/production/index.html.
-	//
-	// When a user enters example.com/acme/index.html in a browser, CloudFront sends
-	// a request to Amazon S3 for myawsbucket/production/acme/index.html.
+	// For more information, see Origin Path (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginPath)
+	// in the Amazon CloudFront Developer Guide.
 	OriginPath *string `type:"string"`
 
-	// A complex type that contains information about the Amazon S3 origin. If the
-	// origin is a custom origin, use the CustomOriginConfig element instead.
+	// Use this type to specify an origin that is an Amazon S3 bucket that is not
+	// configured with static website hosting. To specify any other type of origin,
+	// including an Amazon S3 bucket that is configured with static website hosting,
+	// use the CustomOriginConfig type instead.
 	S3OriginConfig *S3OriginConfig `type:"structure"`
 }
 
@@ -11884,6 +11919,18 @@ func (s *Origin) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetConnectionAttempts sets the ConnectionAttempts field's value.
+func (s *Origin) SetConnectionAttempts(v int64) *Origin {
+	s.ConnectionAttempts = &v
+	return s
+}
+
+// SetConnectionTimeout sets the ConnectionTimeout field's value.
+func (s *Origin) SetConnectionTimeout(v int64) *Origin {
+	s.ConnectionTimeout = &v
+	return s
 }
 
 // SetCustomHeaders sets the CustomHeaders field's value.
@@ -13298,7 +13345,8 @@ func (s *S3Origin) SetOriginAccessIdentity(v string) *S3Origin {
 }
 
 // A complex type that contains information about the Amazon S3 origin. If the
-// origin is a custom origin, use the CustomOriginConfig element instead.
+// origin is a custom origin or an S3 bucket that is configured as a website
+// endpoint, use the CustomOriginConfig element instead.
 type S3OriginConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -15066,141 +15114,144 @@ func (s *UpdateStreamingDistributionOutput) SetStreamingDistribution(v *Streamin
 	return s
 }
 
-// A complex type that specifies the following:
+// A complex type that determines the distribution’s SSL/TLS configuration
+// for communicating with viewers.
 //
-//    * Whether you want viewers to use HTTP or HTTPS to request your objects.
+// If the distribution doesn’t use Aliases (also known as alternate domain
+// names or CNAMEs)—that is, if the distribution uses the CloudFront domain
+// name such as d111111abcdef8.cloudfront.net—set CloudFrontDefaultCertificate
+// to true and leave all other fields empty.
 //
-//    * If you want viewers to use HTTPS, whether you're using an alternate
-//    domain name such as example.com or the CloudFront domain name for your
-//    distribution, such as d111111abcdef8.cloudfront.net.
+// If the distribution uses Aliases (alternate domain names or CNAMEs), use
+// the fields in this type to specify the following settings:
 //
-//    * If you're using an alternate domain name, whether AWS Certificate Manager
-//    (ACM) provided the certificate, or you purchased a certificate from a
-//    third-party certificate authority and imported it into ACM or uploaded
-//    it to the IAM certificate store.
+//    * Which viewers the distribution accepts HTTPS connections from: only
+//    viewers that support server name indication (SNI) (https://en.wikipedia.org/wiki/Server_Name_Indication)
+//    (recommended), or all viewers including those that don’t support SNI.
+//    To accept HTTPS connections from only viewers that support SNI, set SSLSupportMethod
+//    to sni-only. This is recommended. Most browsers and clients released after
+//    2010 support SNI. To accept HTTPS connections from all viewers, including
+//    those that don’t support SNI, set SSLSupportMethod to vip. This is not
+//    recommended, and results in additional monthly charges from CloudFront.
 //
-// Specify only one of the following values:
+//    * The minimum SSL/TLS protocol version that the distribution can use to
+//    communicate with viewers. To specify a minimum version, choose a value
+//    for MinimumProtocolVersion. For more information, see Security Policy
+//    (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValues-security-policy)
+//    in the Amazon CloudFront Developer Guide.
 //
-//    * ACMCertificateArn (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-ACMCertificateArn)
+//    * The location of the SSL/TLS certificate, AWS Certificate Manager (ACM)
+//    (https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) (recommended)
+//    or AWS Identity and Access Management (AWS IAM) (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html).
+//    You specify the location by setting a value in one of the following fields
+//    (not both): ACMCertificateArn IAMCertificateId
 //
-//    * IAMCertificateId (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-IAMCertificateId)
+// All distributions support HTTPS connections from viewers. To require viewers
+// to use HTTPS only, or to redirect them from HTTP to HTTPS, use ViewerProtocolPolicy
+// in the CacheBehavior or DefaultCacheBehavior. To specify how CloudFront should
+// use SSL/TLS to communicate with your custom origin, use CustomOriginConfig.
 //
-//    * CloudFrontDefaultCertificate (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-CloudFrontDefaultCertificate)
-//
-// For more information, see Using Alternate Domain Names and HTTPS (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/SecureConnections.html#CNAMEsAndHTTPS)
+// For more information, see Using HTTPS with CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https.html)
+// and Using Alternate Domain Names and HTTPS (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-alternate-domain-names.html)
 // in the Amazon CloudFront Developer Guide.
 type ViewerCertificate struct {
 	_ struct{} `type:"structure"`
 
-	// If you want viewers to use HTTPS to request your objects and you're using
-	// an alternate domain name, you must choose the type of certificate that you
-	// want to use. Specify the following value if ACM provided your certificate:
+	// If the distribution uses Aliases (alternate domain names or CNAMEs) and the
+	// SSL/TLS certificate is stored in AWS Certificate Manager (ACM) (https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html),
+	// provide the Amazon Resource Name (ARN) of the ACM certificate. CloudFront
+	// only supports ACM certificates in the US East (N. Virginia) Region (us-east-1).
 	//
-	//    * <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn>
-	//    where ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
-	//    that you want to use for this distribution.
-	//
-	// If you specify ACMCertificateArn, you must also specify a value for SSLSupportMethod.
+	// If you specify an ACM certificate ARN, you must also specify values for MinimumProtocolVerison
+	// and SSLSupportMethod.
 	ACMCertificateArn *string `type:"string"`
 
-	// This field is no longer used. Use one of the following fields instead:
+	// This field is deprecated. Use one of the following fields instead:
 	//
-	//    * ACMCertificateArn (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-ACMCertificateArn)
+	//    * ACMCertificateArn
 	//
-	//    * IAMCertificateId (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-IAMCertificateId)
+	//    * IAMCertificateId
 	//
-	//    * CloudFrontDefaultCertificate (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-CloudFrontDefaultCertificate)
+	//    * CloudFrontDefaultCertificate
 	//
 	// Deprecated: Certificate has been deprecated
 	Certificate *string `deprecated:"true" type:"string"`
 
-	// This field is no longer used. Use one of the following fields instead:
+	// This field is deprecated. Use one of the following fields instead:
 	//
-	//    * ACMCertificateArn (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-ACMCertificateArn)
+	//    * ACMCertificateArn
 	//
-	//    * IAMCertificateId (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-IAMCertificateId)
+	//    * IAMCertificateId
 	//
-	//    * CloudFrontDefaultCertificate (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-CloudFrontDefaultCertificate)
+	//    * CloudFrontDefaultCertificate
 	//
 	// Deprecated: CertificateSource has been deprecated
 	CertificateSource *string `deprecated:"true" type:"string" enum:"CertificateSource"`
 
-	// If you're using the CloudFront domain name for your distribution, such as
-	// d111111abcdef8.cloudfront.net, specify the following value:
+	// If the distribution uses the CloudFront domain name such as d111111abcdef8.cloudfront.net,
+	// set this field to true.
 	//
-	//    * <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
+	// If the distribution uses Aliases (alternate domain names or CNAMEs), set
+	// this field to false and specify values for the following fields:
+	//
+	//    * ACMCertificateArn or IAMCertificateId (specify a value for one, not
+	//    both)
+	//
+	//    * MinimumProtocolVersion
+	//
+	//    * SSLSupportMethod
 	CloudFrontDefaultCertificate *bool `type:"boolean"`
 
-	// If you want viewers to use HTTPS to request your objects and you're using
-	// an alternate domain name, you must choose the type of certificate that you
-	// want to use. Specify the following value if you purchased your certificate
-	// from a third-party certificate authority:
+	// If the distribution uses Aliases (alternate domain names or CNAMEs) and the
+	// SSL/TLS certificate is stored in AWS Identity and Access Management (AWS
+	// IAM) (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html),
+	// provide the ID of the IAM certificate.
 	//
-	//    * <IAMCertificateId>IAM certificate ID<IAMCertificateId> where IAM certificate
-	//    ID is the ID that IAM returned when you added the certificate to the IAM
-	//    certificate store.
-	//
-	// If you specify IAMCertificateId, you must also specify a value for SSLSupportMethod.
+	// If you specify an IAM certificate ID, you must also specify values for MinimumProtocolVerison
+	// and SSLSupportMethod.
 	IAMCertificateId *string `type:"string"`
 
-	// Specify the security policy that you want CloudFront to use for HTTPS connections.
-	// A security policy determines two settings:
+	// If the distribution uses Aliases (alternate domain names or CNAMEs), specify
+	// the security policy that you want CloudFront to use for HTTPS connections
+	// with viewers. The security policy determines two settings:
 	//
-	//    * The minimum SSL/TLS protocol that CloudFront uses to communicate with
-	//    viewers
+	//    * The minimum SSL/TLS protocol that CloudFront can use to communicate
+	//    with viewers.
 	//
-	//    * The cipher that CloudFront uses to encrypt the content that it returns
-	//    to viewers
+	//    * The ciphers that CloudFront can use to encrypt the content that it returns
+	//    to viewers.
 	//
-	// On the CloudFront console, this setting is called Security policy.
-	//
-	// We recommend that you specify TLSv1.1_2016 unless your users are using browsers
-	// or devices that do not support TLSv1.1 or later.
-	//
-	// When both of the following are true, you must specify TLSv1 or later for
-	// the security policy:
-	//
-	//    * You're using a custom certificate: you specified a value for ACMCertificateArn
-	//    or for IAMCertificateId
-	//
-	//    * You're using SNI: you specified sni-only for SSLSupportMethod
-	//
-	// If you specify true for CloudFrontDefaultCertificate, CloudFront automatically
-	// sets the security policy to TLSv1 regardless of the value that you specify
-	// for MinimumProtocolVersion.
-	//
-	// For information about the relationship between the security policy that you
-	// choose and the protocols and ciphers that CloudFront uses to communicate
-	// with viewers, see Supported SSL/TLS Protocols and Ciphers for Communication
-	// Between Viewers and CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html#secure-connections-supported-ciphers)
+	// For more information, see Security Policy (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValues-security-policy)
+	// and Supported Protocols and Ciphers Between Viewers and CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html#secure-connections-supported-ciphers)
 	// in the Amazon CloudFront Developer Guide.
+	//
+	// On the CloudFront console, this setting is called Security Policy.
+	//
+	// We recommend that you specify TLSv1.2_2018 unless your viewers are using
+	// browsers or devices that don’t support TLSv1.2.
+	//
+	// When you’re using SNI only (you set SSLSupportMethod to sni-only), you
+	// must specify TLSv1 or higher.
+	//
+	// If the distribution uses the CloudFront domain name such as d111111abcdef8.cloudfront.net
+	// (you set CloudFrontDefaultCertificate to true), CloudFront automatically
+	// sets the security policy to TLSv1 regardless of the value that you set here.
 	MinimumProtocolVersion *string `type:"string" enum:"MinimumProtocolVersion"`
 
-	// If you specify a value for ACMCertificateArn (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-ACMCertificateArn)
-	// or for IAMCertificateId (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-IAMCertificateId),
-	// you must also specify how you want CloudFront to serve HTTPS requests: using
-	// a method that works for browsers and clients released after 2010 or one that
-	// works for all clients.
+	// If the distribution uses Aliases (alternate domain names or CNAMEs), specify
+	// which viewers the distribution accepts HTTPS connections from.
 	//
-	//    * sni-only: CloudFront can respond to HTTPS requests from viewers that
-	//    support Server Name Indication (SNI). All modern browsers support SNI,
-	//    but there are a few that don't. For a current list of the browsers that
-	//    support SNI, see the Wikipedia entry Server Name Indication (http://en.wikipedia.org/wiki/Server_Name_Indication).
-	//    To learn about options to explore if you have users with browsers that
-	//    don't include SNI support, see Choosing How CloudFront Serves HTTPS Requests
-	//    (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-https-dedicated-ip-or-sni.html)
-	//    in the Amazon CloudFront Developer Guide.
+	//    * sni-only – The distribution accepts HTTPS connections from only viewers
+	//    that support server name indication (SNI) (https://en.wikipedia.org/wiki/Server_Name_Indication).
+	//    This is recommended. Most browsers and clients released after 2010 support
+	//    SNI.
 	//
-	//    * vip: CloudFront uses dedicated IP addresses for your content and can
-	//    respond to HTTPS requests from any viewer. However, there are additional
-	//    monthly charges. For details, including specific pricing information,
-	//    see Custom SSL options for Amazon CloudFront (http://aws.amazon.com/cloudfront/custom-ssl-domains/)
-	//    on the AWS marketing site.
+	//    * vip – The distribution accepts HTTPS connections from all viewers
+	//    including those that don’t support SNI. This is not recommended, and
+	//    results in additional monthly charges from CloudFront.
 	//
-	// Don't specify a value for SSLSupportMethod if you specified <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>.
-	//
-	// For more information, see Choosing How CloudFront Serves HTTPS Requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-https-dedicated-ip-or-sni.html)
-	// in the Amazon CloudFront Developer Guide.
+	// If the distribution uses the CloudFront domain name such as d111111abcdef8.cloudfront.net,
+	// don’t set a value for this field.
 	SSLSupportMethod *string `type:"string" enum:"SSLSupportMethod"`
 }
 

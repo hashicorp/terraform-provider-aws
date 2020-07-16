@@ -1,4 +1,5 @@
 ---
+subcategory: "Route53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule"
 description: |-
@@ -50,7 +51,7 @@ The following arguments are supported:
 This argument should only be specified for `FORWARD` type rules.
 * `target_ip` - (Optional) Configuration block(s) indicating the IPs that you want Resolver to forward DNS queries to (documented below).
 This argument should only be specified for `FORWARD` type rules.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `target_ip` object supports the following:
 

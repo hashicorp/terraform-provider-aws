@@ -78,7 +78,10 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
-		return resource.NonRetryableError(resourceAwsAcmCertificateValidationRead(d, meta))
+		if err := resourceAwsAcmCertificateValidationRead(d, meta); err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = acmconn.DescribeCertificate(params)
