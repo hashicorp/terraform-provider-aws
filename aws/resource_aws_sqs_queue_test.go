@@ -456,6 +456,36 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSSQSQueue_WithVisibilityTimeoutSecondsZero(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithVisibilityTimeoutZeroOnCreate(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueOverrideVisibilityTimeoutAttributesByZero(&queueAttributes),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sqsconn
 
@@ -485,6 +515,7 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 
 	return nil
 }
+
 func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var actualPolicyText string
@@ -590,6 +621,36 @@ func testAccCheckAWSSQSQueueOverrideAttributes(queueAttributes *map[string]*stri
 
 			if key == "ReceiveMessageWaitTimeSeconds" && value != "10" {
 				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 10", value)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSQSQueueOverrideVisibilityTimeoutAttributesByZero(queueAttributes *map[string]*string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// checking if attributes are defaults
+		for key, valuePointer := range *queueAttributes {
+			value := aws.StringValue(valuePointer)
+			if key == "VisibilityTimeout" && value != "0" {
+				return fmt.Errorf("VisibilityTimeout (%s) was not set to 0", value)
+			}
+
+			if key == "MessageRetentionPeriod" && value != "345600" {
+				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 345600", value)
+			}
+
+			if key == "MaximumMessageSize" && value != "262144" {
+				return fmt.Errorf("MaximumMessageSize (%s) was not set to 262144", value)
+			}
+
+			if key == "DelaySeconds" && value != "0" {
+				return fmt.Errorf("DelaySeconds (%s) was not set to 0", value)
+			}
+
+			if key == "ReceiveMessageWaitTimeSeconds" && value != "0" {
+				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 0", value)
 			}
 		}
 
@@ -777,6 +838,16 @@ resource "aws_sqs_queue" "queue" {
   tags = {
     Usage = "changed"
   }
+}
+`, r)
+}
+
+func testAccAWSSQSConfigWithVisibilityTimeoutZeroOnCreate(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name = "%s"
+
+  visibility_timeout_seconds = 0
 }
 `, r)
 }

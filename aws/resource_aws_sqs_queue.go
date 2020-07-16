@@ -124,8 +124,8 @@ func resourceAwsSqsQueue() *schema.Resource {
 			},
 			"kms_data_key_reuse_period_seconds": {
 				Type:     schema.TypeInt,
-				Computed: true,
 				Optional: true,
+				Default:  300,
 			},
 			"tags": tagsSchema(),
 		},
@@ -182,24 +182,31 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	queueResource := *resourceAwsSqsQueue()
 
 	for k, s := range queueResource.Schema {
+		log.Printf("schema k: %s", k)
 		if attrKey, ok := sqsQueueAttributeMap[k]; ok {
-			if value, ok := d.GetOk(k); ok {
-				switch s.Type {
-				case schema.TypeInt:
-					attributes[attrKey] = aws.String(strconv.Itoa(value.(int)))
-				case schema.TypeBool:
+			log.Printf("attrKey: %s", attrKey)
+			value, ok := d.GetOk(k)
+			log.Printf("value: %+v", value)
+			log.Printf("GetOk: %t", ok)
+			switch s.Type {
+			case schema.TypeInt:
+				attributes[attrKey] = aws.String(strconv.Itoa(value.(int)))
+			case schema.TypeBool:
+				if ok {
 					attributes[attrKey] = aws.String(strconv.FormatBool(value.(bool)))
-				default:
+				}
+			default:
+				if ok {
 					attributes[attrKey] = aws.String(value.(string))
 				}
 			}
-
 		}
 	}
 
 	if len(attributes) > 0 {
 		req.Attributes = attributes
 	}
+	log.Printf("req.Attributes: %+v", req.Attributes)
 
 	var output *sqs.CreateQueueOutput
 	err := resource.Retry(70*time.Second, func() *resource.RetryError {
@@ -224,8 +231,10 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tag-on-create is currently only supported in AWS Commercial
 	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		log.Println("next step: resourceAwsSqsQueueRead")
 		return resourceAwsSqsQueueRead(d, meta)
 	} else {
+		log.Println("next step: resourceAwsSqsQueueUpdate")
 		return resourceAwsSqsQueueUpdate(d, meta)
 	}
 }
