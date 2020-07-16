@@ -56,7 +56,7 @@ The following arguments are supported:
 * `name` - (Required) The name of your filter.
 * `description` - (Optional) Description of the filter.
 * `rank` - (Required) Specifies the position of the filter in the list of current filters. Also specifies the order in which this filter is applied to the findings.
-* `action` - (Required) Specifies the action that is to be applied to the findings that match the filter. Can be one of (ARCHIVE|NOOP).
+* `action` - (Required) Specifies the action that is to be applied to the findings that match the filter. Can be one of `ARCHIVE` or `NOOP`.
 * `tags` (Optional) - The tags that you want to add to the Filter resource. A tag consists of a key and a value.
 * `finding_criteria` (Required) - Represents the criteria to be used in the filter for querying findings. A list, consists of `criterion` structures, each having required `condition`, `field` and `values` fields. See the example for the structure and see the [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/create-filter.html) for the list of available fields for the `field` attribute.
 
