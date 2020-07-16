@@ -35,7 +35,7 @@ data "aws_route53_zone" "example" {
 
 resource "aws_route53_record" "example" {
   for_each = {
-    for dvo in aws_acm_certificate.example.domain_validation_options: dvo.domain_name => {
+    for dvo in aws_acm_certificate.example.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
@@ -52,7 +52,7 @@ resource "aws_route53_record" "example" {
 
 resource "aws_acm_certificate_validation" "example" {
   certificate_arn         = aws_acm_certificate.example.arn
-  validation_record_fqdns = [for record in aws_route53_record.example: record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.example : record.fqdn]
 }
 
 resource "aws_lb_listener" "example" {
@@ -83,7 +83,7 @@ data "aws_route53_zone" "example_org" {
 
 resource "aws_route53_record" "example" {
   for_each = {
-    for dvo in aws_acm_certificate.example.domain_validation_options: dvo.domain_name => {
+    for dvo in aws_acm_certificate.example.domain_validation_options : dvo.domain_name => {
       name    = dvo.resource_record_name
       record  = dvo.resource_record_value
       type    = dvo.resource_record_type
@@ -101,7 +101,7 @@ resource "aws_route53_record" "example" {
 
 resource "aws_acm_certificate_validation" "example" {
   certificate_arn         = aws_acm_certificate.example.arn
-  validation_record_fqdns = [for record in aws_route53_record.example: record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.example : record.fqdn]
 }
 
 resource "aws_lb_listener" "example" {
