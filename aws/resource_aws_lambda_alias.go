@@ -211,12 +211,12 @@ func resourceAwsLambdaAliasImport(d *schema.ResourceData, meta interface{}) ([]*
 
 	conn := meta.(*AWSClient).lambdaconn
 
-	getFunctionOutput, err := conn.GetFunction(&lambda.GetFunctionInput{FunctionName: &functionName})
+	_, err := conn.GetFunction(&lambda.GetFunctionInput{FunctionName: &functionName})
 	if err != nil {
 		return nil, err
 	}
 
-	d.Set("function_name", getFunctionOutput.Configuration.FunctionArn)
+	d.Set("function_name", functionName)
 	d.Set("name", alias)
 	return []*schema.ResourceData{d}, nil
 }
