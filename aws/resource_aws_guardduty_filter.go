@@ -226,7 +226,7 @@ func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := conn.DeleteFilter(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty Filter '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("error deleting GuardDuty Filter %s: %w", d.Id(), err)
 	}
 	return nil
 }
