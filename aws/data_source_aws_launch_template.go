@@ -400,13 +400,26 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	dlt, err := conn.DescribeLaunchTemplates(params)
 
 	if err != nil {
-		return fmt.Errorf("Error getting launch template: %s", err)
+		if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") ||
+			isAWSErr(err, "InvalidLaunchTemplateName.NotFoundException", "") {
+			return fmt.Errorf("Launch Template not found")
+		}
+		return fmt.Errorf("Error getting launch template: %w", err)
 	}
 
-	log.Printf("[DEBUG] Found launch template %s", d.Id())
+	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
+		return fmt.Errorf("error reading launch template: empty output")
+	}
+
+	if len(dlt.LaunchTemplates) > 1 {
+		return fmt.Errorf("Search returned %d result(s), please revise so only one is returned", len(dlt.LaunchTemplates))
+	}
 
 	lt := dlt.LaunchTemplates[0]
 	d.SetId(*lt.LaunchTemplateId)
+
+	log.Printf("[DEBUG] Found launch template %s", d.Id())
+
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
@@ -430,6 +443,10 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	})
 	if err != nil {
 		return err
+	}
+
+	if dltv == nil || len(dltv.LaunchTemplateVersions) == 0 {
+		return fmt.Errorf("error reading launch template version (%s) for launch template (%s): empty output", version, d.Id())
 	}
 
 	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
