@@ -207,14 +207,6 @@ func resourceAwsLambdaAliasImport(d *schema.ResourceData, meta interface{}) ([]*
 
 	functionName := idParts[0]
 	alias := idParts[1]
-	log.Printf("[DEBUG] Importing Lambda Alias %s for function name %s", alias, functionName)
-
-	conn := meta.(*AWSClient).lambdaconn
-
-	_, err := conn.GetFunction(&lambda.GetFunctionInput{FunctionName: &functionName})
-	if err != nil {
-		return nil, err
-	}
 
 	d.Set("function_name", functionName)
 	d.Set("name", alias)

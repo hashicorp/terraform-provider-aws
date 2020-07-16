@@ -27,6 +27,7 @@ Upgrade topics:
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
+- [Resource: aws_lambda_alias](#resource-aws_lambda_alias)
 - [Resource: aws_launch_template](#resource-aws_launch_template)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
@@ -376,6 +377,12 @@ resource "aws_emr_cluster" "example" {
   }
 }
 ```
+
+## Resource: aws_lambda_alias
+
+### Import No Longer Converts Function Name to ARN
+
+Previously the resource import would always convert the `function_name` portion of the import identifier into the ARN format. Configurations using the Lambda Function name would show this as an unexpected difference after import. Now this will passthrough the given value on import whether its a Lambda Function name or ARN.
 
 ## Resource: aws_launch_template
 
