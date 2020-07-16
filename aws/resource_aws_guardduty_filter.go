@@ -121,7 +121,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
 	output, err := conn.CreateFilter(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Filter %s failed: %s", input, err.Error())
+		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
 	d.SetId(strings.Join([]string{d.Get("detector_id").(string), *output.Name}, "_"))
