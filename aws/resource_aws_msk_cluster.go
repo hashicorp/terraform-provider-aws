@@ -166,7 +166,7 @@ func resourceAwsMskCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
-										Default:  kafka.ClientBrokerTlsPlaintext,
+										Default:  kafka.ClientBrokerTls,
 										ValidateFunc: validation.StringInSlice([]string{
 											kafka.ClientBrokerPlaintext,
 											kafka.ClientBrokerTlsPlaintext,

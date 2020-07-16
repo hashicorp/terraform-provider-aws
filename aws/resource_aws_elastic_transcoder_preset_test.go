@@ -133,6 +133,33 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/695
+func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsElasticTranscoderPresetConfigVideoFrameRate(rName, "29.97"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+					resource.TestCheckResourceAttr(resourceName, "video.0.frame_rate", "29.97"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
@@ -345,4 +372,43 @@ resource "aws_elastictranscoder_preset" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAwsElasticTranscoderPresetConfigVideoFrameRate(rName string, frameRate string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
+  container   = "mp4"
+  name        = %[1]q
+
+  thumbnails {
+    format         = "png"
+    interval       = 120
+    max_width      = "auto"
+    max_height     = "auto"
+    padding_policy = "Pad"
+    sizing_policy  = "Fit"
+  }
+
+  video {
+    bit_rate             = "auto"
+    codec                = "H.264"
+    display_aspect_ratio = "16:9"
+    fixed_gop            = "true"
+    frame_rate           = %[2]q
+    keyframes_max_dist   = 90
+    max_height           = 1080
+    max_width            = 1920
+    padding_policy       = "Pad"
+    sizing_policy        = "Fit"
+  }
+
+  video_codec_options = {
+    Profile                  = "main"
+    Level                    = "4.1"
+    MaxReferenceFrames       = 4
+    InterlacedMode           = "Auto"
+    ColorSpaceConversionMode = "None"
+  }
+}
+`, rName, frameRate)
 }

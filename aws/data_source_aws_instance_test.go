@@ -193,6 +193,27 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_secondaryPrivateIPs(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "secondary_private_ips", resourceName, "secondary_private_ips"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
@@ -657,6 +678,21 @@ resource "aws_instance" "test" {
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.test.id}"
   private_ip    = "10.1.1.42"
+}
+
+data "aws_instance" "test" {
+  instance_id = "${aws_instance.test.id}"
+}
+`)
+}
+
+func testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                   = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type         = "t2.micro"
+  subnet_id             = "${aws_subnet.test.id}"
+  secondary_private_ips = ["10.1.1.42"]
 }
 
 data "aws_instance" "test" {
