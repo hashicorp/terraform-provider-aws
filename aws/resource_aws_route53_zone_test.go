@@ -48,6 +48,23 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
+func TestNormalizeDomainName(t *testing.T) {
+	cases := []struct {
+		Input, Output string
+	}{
+		{"example.com", "example.com"},
+		{"www.example.com.", "www.example.com"},
+		{"www.Example.com.", "www.example.com"},
+	}
+
+	for _, tc := range cases {
+		actual := normalizeDomainName(tc.Input)
+		if actual != tc.Output {
+			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		}
+	}
+}
+
 func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
@@ -64,7 +81,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists(resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s.", zoneName)),
+					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),

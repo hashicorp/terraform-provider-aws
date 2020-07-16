@@ -29,10 +29,10 @@ func resourceAwsRoute53Zone() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressRoute53ZoneNameWithTrailingDot,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: normalizeDomainName,
 			},
 
 			"comment": {
@@ -179,7 +179,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("comment", "")
 	d.Set("delegation_set_id", "")
-	d.Set("name", output.HostedZone.Name)
+	d.Set("name", normalizeDomainName(aws.StringValue(output.HostedZone.Name)))
 	d.Set("zone_id", cleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	var nameServers []string
@@ -387,6 +387,12 @@ func cleanChangeID(ID string) string {
 // cleanZoneID is used to remove the leading /hostedzone/
 func cleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
+}
+
+// normalizeDomainName is used to remove the trailing period and enforce lowercase
+func normalizeDomainName(v interface{}) string {
+	lc := strings.ToLower(v.(string))
+	return strings.Trim(lc, ".")
 }
 
 func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]string, error) {

@@ -38,13 +38,10 @@ func resourceAwsRoute53Record() *schema.Resource {
 		MigrateState:  resourceAwsRoute53RecordMigrateState,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
-				},
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: normalizeDomainName,
 			},
 
 			"fqdn": {
