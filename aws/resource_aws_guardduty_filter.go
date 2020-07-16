@@ -205,7 +205,7 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 
 	_, err = conn.UpdateFilter(&input)
 	if err != nil {
-		return fmt.Errorf("Updating GuardDuty Filter with ID %s failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
 	}
 
 	return resourceAwsGuardDutyFilterRead(d, meta)
