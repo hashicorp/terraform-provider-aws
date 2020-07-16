@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,7 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -1271,23 +1274,16 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Add the region as an attribute
-
-	locationResponse, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.GetBucketLocation(
-			&s3.GetBucketLocationInput{
-				Bucket: aws.String(d.Id()),
-			},
-		)
+	discoveredRegion, err := retryOnAwsCode("NotFound", func() (interface{}, error) {
+		return s3manager.GetBucketRegionWithClient(context.Background(), s3conn, d.Id(), func(r *request.Request) {
+			r.Config.S3ForcePathStyle = aws.Bool(false)
+		})
 	})
 	if err != nil {
 		return fmt.Errorf("error getting S3 Bucket location: %s", err)
 	}
 
-	var region string
-	if location, ok := locationResponse.(*s3.GetBucketLocationOutput); ok && location.LocationConstraint != nil {
-		region = aws.StringValue(location.LocationConstraint)
-	}
-	region = normalizeRegion(region)
+	region := discoveredRegion.(string)
 	if err := d.Set("region", region); err != nil {
 		return err
 	}
