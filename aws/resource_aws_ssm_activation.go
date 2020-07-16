@@ -111,7 +111,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 			return resource.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {

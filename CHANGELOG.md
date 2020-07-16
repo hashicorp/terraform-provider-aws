@@ -1,24 +1,89 @@
-## 2.69.0 (Unreleased)
+## 3.0.0 (Unreleased)
 
-NOTES:
+BREAKING CHANGES
 
-* data-source/aws_availability_zones: The `blacklisted_names` and `blacklisted_zone_ids` arguments have been deprecated in preference for `exclude_names` and `exclude_zone_ids` respectively. [GH-13771]
+* provider: New versions of the provider can only be automatically installed on Terraform 0.12 and later [GH-14143]
+* provider: All "removed" attributes are cut, using them would result in a Terraform Core level error [GH-14001]
+* provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
+* provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
+* data-source/aws_availability_zones: Remove deprecated `blacklisted_names` and `blacklisted_zone_ids` arguments [GH-14134]
+* data-source/aws_directory_service_directory: Return an error when a single result is not found [GH-14006]
+* data-source/aws_efs_file_system: Return an error when a single result is not found [GH-14005]
+* resource/aws_acm_certificate: `certificate_body`, `certificate_chain`, and `private_key` attributes are no longer stored in the Terraform state with hash values [GH-9685]
+* resource/aws_autoscaling_group: `availability_zones` and `vpc_zone_identifier` argument conflict now reported at plan-time [GH-12927]
+* resource/aws_autoscaling_group: Remove `Computed` property from `load_balancers` and `target_group_arns` arguments, enabling drift detection [GH-14064]
+* resource/aws_dx_gateway: Remove automatic `aws_dx_gateway_association` resource import [GH-14124]
+* resource/aws_elastic_transcoder_preset: Remove `video` configuration block `max_frame_rate` argument default value [GH-7141]
+* resource/aws_emr_cluster: Remove deprecated `instance_group` configuration block, `core_instance_count`, `core_instance_type`, and `master_instance_type` arguments [GH-14137]
+* resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN [GH-12876]
+* resource/aws_launch_template: `network_interfaces` `delete_on_termination` argument changed from `bool` to `string` type [GH-8612]
+* resource/aws_msk_cluster: Update `encryption_info` `encryption_in_transit` `client_broker` argument default to match API default of `TLS` [GH-14132]
+* resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
+* resource/aws_s3_bucket: Convert `region` to read-only attribute [GH-14127]
+* resource/aws_security_group: Remove automatic `aws_security_group_rule` resource import [GH-12616]
+* resource/aws_sns_platform_application: `platform_credential` and `platform_principal` attributes are no longer stored in the Terraform state with hash values [GH-3894]
+* resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
+
+FEATURES
+
+* **New Data Source:** aws_workspaces_directory [GH-13529]
+
+ENHANCEMENTS
+
+* provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
+* provider: Add `assume_role` configuration block `duration_seconds`, `policy_arns`, `tags`, and `transitive_tag_keys` arguments [GH-14077]
+* data-source/aws_instance: Add `secondary_private_ips` attribute [GH-14079]
+* resource/aws_instance: Add `secondary_private_ips` argument (conflicts with `network_interface` configuration block) [GH-14079]
+
+BUG FIXES
+
+* provider: Ensure nil is not passed to RetryError helpers, may result in some bug fixes [GH-14104]
+* provider: Ensure configured STS endpoint is used during `AssumeRole` API calls [GH-14077]
+* provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
+* provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
+
+## 2.70.0 (July 10, 2020)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_client_vpn_authorization_rule` ([#13950](https://github.com/terraform-providers/terraform-provider-aws/issues/13950))
+* **New Resource:** `aws_ec2_client_vpn_route` ([#14103](https://github.com/terraform-providers/terraform-provider-aws/issues/14103))
 
 ENHANCEMENTS:
 
-* data-source/aws_availability_zones: Add `exclude_names` and `exclude_zone_ids` arguments [GH-13771]
-* data-source/aws_elasticsearch_domain: Add `advanced_security_options` attribute [GH-12183]
-* resource/aws_ecs_service: Increase delete retry timeout from 5 to 20 minutes [GH-10452]
-* resource/aws_ecs_service: Support configurable delete timeout [GH-10452]
-* resource/aws_elasticsearch_domain: Add `advanced_security_options` configuration block [GH-12183]
+* resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) ([#5225](https://github.com/terraform-providers/terraform-provider-aws/issues/5225))
+* resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update ([#5225](https://github.com/terraform-providers/terraform-provider-aws/issues/5225))
+* resource/aws_organizations_organization: Support `BACKUP_POLICY` value in `enabled_policy_types` plan-time validation (Support Backup policies) ([#14060](https://github.com/terraform-providers/terraform-provider-aws/issues/14060))
+* resource/aws_organizations_policy: Support `BACKUP_POLICY` value in `type` plan-time validation (Support Backup policies) ([#14060](https://github.com/terraform-providers/terraform-provider-aws/issues/14060))
+
+## 2.69.0 (July 02, 2020)
+
+NOTES:
+
+* data-source/aws_availability_zones: The `blacklisted_names` and `blacklisted_zone_ids` arguments have been deprecated in preference for `exclude_names` and `exclude_zone_ids` respectively. ([#13771](https://github.com/terraform-providers/terraform-provider-aws/issues/13771))
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zones: Add `exclude_names` and `exclude_zone_ids` arguments ([#13771](https://github.com/terraform-providers/terraform-provider-aws/issues/13771))
+* data-source/aws_elasticsearch_domain: Add `advanced_security_options` attribute ([#12183](https://github.com/terraform-providers/terraform-provider-aws/issues/12183))
+* resource/aws_ecs_service: Increase delete retry timeout from 5 to 20 minutes ([#10452](https://github.com/terraform-providers/terraform-provider-aws/issues/10452))
+* resource/aws_ecs_service: Support configurable delete timeout ([#10452](https://github.com/terraform-providers/terraform-provider-aws/issues/10452))
+* resource/aws_elasticsearch_domain: Add `advanced_security_options` configuration block ([#12183](https://github.com/terraform-providers/terraform-provider-aws/issues/12183))
+* resource/aws_sfn_state_machine: Add `arn` attribute ([#12005](https://github.com/terraform-providers/terraform-provider-aws/issues/12005))
 
 BUG FIXES:
 
-* resource/aws_autoscaling_group: Prevent unexpected differences in `tags` for Terraform 0.11 and earlier with boolean `propagate_at_launch` values [GH-13912]
-* resource/aws_backup_selection: Correctly handle the associated backup plan being deleted outside Terraform [GH-13945]
-* resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
-* resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support [GH-13958]
-* resource/aws_wafv2_web_acl: Support additional nested `and/or/not statement` in `rule` `statement` and `rule` `statement` `rate_based_statement` attributes [GH-13961]
+* resource/aws_autoscaling_group: Prevent unexpected differences in `tags` for Terraform 0.11 and earlier with boolean `propagate_at_launch` values ([#13912](https://github.com/terraform-providers/terraform-provider-aws/issues/13912))
+* resource/aws_backup_selection: Correctly handle the associated backup plan being deleted outside Terraform ([#13945](https://github.com/terraform-providers/terraform-provider-aws/issues/13945))
+* resource/aws_customer_gateway: Continue allowing 4-byte ASN values in `bgp_asn` argument ([#14030](https://github.com/terraform-providers/terraform-provider-aws/issues/14030))
+* resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state ([#13928](https://github.com/terraform-providers/terraform-provider-aws/issues/13928))
+* resource/aws_db_instance_role_association: Prevent immediate read after creation panic ([#13927](https://github.com/terraform-providers/terraform-provider-aws/issues/13927))
+* resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support ([#13958](https://github.com/terraform-providers/terraform-provider-aws/issues/13958))
+* resource/aws_route53_record: Ensure old Route53 record is deleted when updating `name` argument ([#11335](https://github.com/terraform-providers/terraform-provider-aws/issues/11335))
+* resource/aws_route53_record: Prevent errors when `health_check_id` argument is configured and updating `set_identifier` or `type` arguments ([#13012](https://github.com/terraform-providers/terraform-provider-aws/issues/13012))
+* resource/aws_sfn_state_machine: Handle IAM Role eventual consistency on creation and wait for state machine deletion ([#12005](https://github.com/terraform-providers/terraform-provider-aws/issues/12005))
+* resource/aws_spot_fleet_request: Increase default delete timeout to 15 minutes ([#13922](https://github.com/terraform-providers/terraform-provider-aws/issues/13922))
+* resource/aws_wafv2_web_acl: Support additional nested `and/or/not statement` in `rule` `statement` and `rule` `statement` `rate_based_statement` attributes ([#13961](https://github.com/terraform-providers/terraform-provider-aws/issues/13961))
 
 ## 2.68.0 (June 25, 2020)
 

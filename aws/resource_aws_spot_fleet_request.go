@@ -31,7 +31,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -906,9 +906,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidUntil = aws.Time(validUntil)
-	} else {
-		validUntil := time.Now().Add(24 * time.Hour)
 		spotFleetConfig.ValidUntil = aws.Time(validUntil)
 	}
 

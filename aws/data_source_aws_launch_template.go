@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -403,13 +402,13 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") ||
 			isAWSErr(err, "InvalidLaunchTemplateName.NotFoundException", "") {
-			return errors.New("Launch Template not found")
+			return fmt.Errorf("Launch Template not found")
 		}
-		return fmt.Errorf("error reading launch template: %w", err)
+		return fmt.Errorf("Error getting launch template: %w", err)
 	}
 
 	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
-		return errors.New("error reading launch template: empty output")
+		return fmt.Errorf("error reading launch template: empty output")
 	}
 
 	if len(dlt.LaunchTemplates) > 1 {

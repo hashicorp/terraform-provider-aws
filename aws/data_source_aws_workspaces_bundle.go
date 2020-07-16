@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func dataSourceAwsWorkspaceBundle() *schema.Resource {
+func dataSourceAwsWorkspacesBundle() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsWorkspaceBundleRead,
 

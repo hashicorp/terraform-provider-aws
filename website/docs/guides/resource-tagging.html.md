@@ -138,7 +138,7 @@ The provider ignore tags configuration applies to all Terraform AWS Provider res
 
 ## Managing Individual Resource Tags
 
-Certain Terraform AWS Provider services support a special resource for managing an individual tag on a resource without managing the resource itself. One example is the [`aws_ec2_tag` resource](/docs/provider/aws/r/ec2_tag.html). These resources enable tagging where resources are created outside Terraform such as EC2 Images (AMIs), shared across accounts via Resource Access Manager (RAM), or implicitly created by other means such as EC2 VPN Connections implicitly creating a taggable EC2 Transit Gateway VPN Attachment.
+Certain Terraform AWS Provider services support a special resource for managing an individual tag on a resource without managing the resource itself. One example is the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html). These resources enable tagging where resources are created outside Terraform such as EC2 Images (AMIs), shared across accounts via Resource Access Manager (RAM), or implicitly created by other means such as EC2 VPN Connections implicitly creating a taggable EC2 Transit Gateway VPN Attachment.
 
 ~> **NOTE:** This is an advanced use case and can cause conflicting management issues when improperly implemented. These individual tag resources should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_vpc` and `aws_ec2_tag` to manage tags of the same VPC will cause a perpetual difference where the `aws_vpc` resource will try to remove the tag being added by the `aws_ec2_tag` resource.
 

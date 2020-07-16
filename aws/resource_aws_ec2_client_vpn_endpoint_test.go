@@ -11,7 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/sync"
 )
+
+const clientVpnEndpointDefaultLimit = 5
+
+var testAccEc2ClientVpnEndpointSemaphore sync.Semaphore
+
+func init() {
+	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
+}
 
 func init() {
 	resource.AddTestSweepers("aws_ec2_client_vpn_endpoint", &resource.Sweeper{
@@ -27,7 +36,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).ec2conn
@@ -42,24 +51,15 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving Client VPN Endpoints: %s", err)
+			return fmt.Errorf("error retrieving Client VPN Endpoints: %w", err)
 		}
 
 		for _, clientVpnEndpoint := range output.ClientVpnEndpoints {
-			if clientVpnEndpoint.Status != nil && aws.StringValue(clientVpnEndpoint.Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
-				continue
-			}
-
 			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
-			input := &ec2.DeleteClientVpnEndpointInput{
-				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
-			}
-
 			log.Printf("[INFO] Deleting Client VPN Endpoint: %s", id)
-			_, err := conn.DeleteClientVpnEndpoint(input)
-
+			err := deleteClientVpnEndpoint(conn, id)
 			if err != nil {
-				return fmt.Errorf("error deleting Client VPN Endpoint (%s): %s", id, err)
+				return fmt.Errorf("error deleting Client VPN Endpoint (%s): %w", id, err)
 			}
 		}
 
@@ -73,26 +73,70 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	return nil
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
+// This is part of an experimental feature, do not use this as a starting point for tests
+//   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
+//   What is here was dangerous and repulsive to us. This message is a warning about danger."
+//   --  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
+func TestAccAwsEc2ClientVpn(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Endpoint": {
+			"basic":             testAccAwsEc2ClientVpnEndpoint_basic,
+			"disappears":        testAccAwsEc2ClientVpnEndpoint_disappears,
+			"msAD":              testAccAwsEc2ClientVpnEndpoint_msAD,
+			"mutualAuthAndMsAD": testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD,
+			"withLogGroup":      testAccAwsEc2ClientVpnEndpoint_withLogGroup,
+			"withDNSServers":    testAccAwsEc2ClientVpnEndpoint_withDNSServers,
+			"tags":              testAccAwsEc2ClientVpnEndpoint_tags,
+			"splitTunnel":       testAccAwsEc2ClientVpnEndpoint_splitTunnel,
+		},
+		"AuthorizationRule": {
+			"basic":      testAccAwsEc2ClientVpnAuthorizationRule_basic,
+			"groups":     testAccAwsEc2ClientVpnAuthorizationRule_groups,
+			"Subnets":    testAccAwsEc2ClientVpnAuthorizationRule_Subnets,
+			"disappears": testAccAwsEc2ClientVpnAuthorizationRule_disappears,
+		},
+		"NetworkAssociation": {
+			"basic":      testAccAwsEc2ClientVpnNetworkAssociation_basic,
+			"disappears": testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+		},
+		"Route": {
+			"basic":       testAccAwsEc2ClientVpnRoute_basic,
+			"description": testAccAwsEc2ClientVpnRoute_description,
+			"disappears":  testAccAwsEc2ClientVpnRoute_disappears,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		for name, tc := range m {
+			tc := tc
+			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				tc(t)
+			})
+		}
+	}
+}
+
+func testAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "certificate-authentication"),
 					resource.TestCheckResourceAttr(resourceName, "status", ec2.ClientVpnEndpointStatusCodePendingAssociate),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -102,19 +146,20 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -123,24 +168,24 @@ func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "directory-service-authentication"),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -150,25 +195,25 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
+	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "directory-service-authentication"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.1.type", "certificate-authentication"),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -178,29 +223,32 @@ func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
+	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
 				),
 			},
-
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithLogGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_group"),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_stream"),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -210,51 +258,46 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
+	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
 				),
 			},
-
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithDNSServers(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
 				),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
+	var v1, v2, v3 ec2.ClientVpnEndpoint
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	rStr := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfig_tags(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
@@ -267,7 +310,7 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig_tagsChanged(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
@@ -275,7 +318,7 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -283,19 +326,20 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
+	var v1, v2 ec2.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnEndpointConfigSplitTunnel(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "true"),
 				),
 			},
@@ -307,7 +351,7 @@ func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfigSplitTunnel(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
 				),
 			},
@@ -315,8 +359,14 @@ func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	})
 }
 
+func testAccPreCheckClientVPNSyncronize(t *testing.T) {
+	sync.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
+}
+
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
@@ -324,25 +374,41 @@ func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 		}
 
 		input := &ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: []*string{aws.String(rs.Primary.ID)},
+			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
 		}
 
 		resp, _ := conn.DescribeClientVpnEndpoints(input)
 		for _, v := range resp.ClientVpnEndpoints {
-			if *v.ClientVpnEndpointId == rs.Primary.ID && !(*v.Status.Code == ec2.ClientVpnEndpointStatusCodeDeleted) {
-				return fmt.Errorf("[DESTROY ERROR] Client VPN endpoint (%s) not deleted", rs.Primary.ID)
+			if aws.StringValue(v.ClientVpnEndpointId) == rs.Primary.ID {
+				return fmt.Errorf("Client VPN endpoint (%s) not deleted", rs.Primary.ID)
 			}
 		}
 	}
 	return nil
 }
 
-func testAccCheckAwsEc2ClientVpnEndpointExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsEc2ClientVpnEndpointExists(name string, endpoint *ec2.ClientVpnEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DescribeClientVpnEndpointsInput{
+			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
+		}
+		result, err := conn.DescribeClientVpnEndpoints(input)
+		if err != nil {
+			return err
+		}
+
+		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
+			return fmt.Errorf("EC2 Client VPN Endpoint (%s) not found", rs.Primary.ID)
+		}
+
+		*endpoint = *result.ClientVpnEndpoints[0]
 
 		return nil
 	}
@@ -388,7 +454,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = "vpn.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 

@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -36,20 +38,16 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				StateFunc: normalizeCert,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-
 			"certificate_chain": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				StateFunc: normalizeCert,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"private_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
-				StateFunc: normalizeCert,
 				Sensitive: true,
 			},
 			"certificate_authority_arn": {
@@ -70,11 +68,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				},
 			},
 			"subject_alternative_names": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					StateFunc: func(v interface{}) string {
@@ -83,6 +80,8 @@ func resourceAwsAcmCertificate() *schema.Resource {
 						return strings.TrimSuffix(v.(string), ".")
 					},
 				},
+				Set:           schema.HashString,
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
 			"validation_method": {
 				Type:          schema.TypeString,
@@ -210,8 +209,8 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	}
 
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
-		subjectAlternativeNames := make([]*string, len(sans.([]interface{})))
-		for i, sanRaw := range sans.([]interface{}) {
+		subjectAlternativeNames := make([]*string, len(sans.(*schema.Set).List()))
+		for i, sanRaw := range sans.(*schema.Set).List() {
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
@@ -310,9 +309,17 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 	acmconn := meta.(*AWSClient).acmconn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
-		_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
-		if err != nil {
-			return fmt.Errorf("Error updating certificate: %s", err)
+		// Prior to version 3.0.0 of the Terraform AWS Provider, these attributes were stored in state as hashes.
+		// If the changes to these attributes are only changes only match updating the state value, then skip the API call.
+		oCBRaw, nCBRaw := d.GetChange("certificate_body")
+		oCCRaw, nCCRaw := d.GetChange("certificate_chain")
+		oPKRaw, nPKRaw := d.GetChange("private_key")
+
+		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+			_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
+			if err != nil {
+				return fmt.Errorf("Error updating certificate: %s", err)
+			}
 		}
 	}
 
@@ -445,4 +452,21 @@ func flattenAcmCertificateOptions(co *acm.CertificateOptions) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
+	old, ok := oldRaw.(string)
+
+	if !ok {
+		return false
+	}
+
+	new, ok := newRaw.(string)
+
+	if !ok {
+		return false
+	}
+
+	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
+	return hex.EncodeToString(newCleanVal[:]) == old
 }

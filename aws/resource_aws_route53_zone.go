@@ -63,22 +63,6 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				Set: route53HostedZoneVPCHash,
 			},
 
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				Removed:  "use 'vpc' configuration block instead",
-			},
-
-			"vpc_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				Removed:  "use 'vpc' configuration block instead",
-			},
-
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,

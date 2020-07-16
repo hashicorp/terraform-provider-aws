@@ -211,7 +211,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "callback_urls.*", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", "https://www.example.com/redirect"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logout_urls.2102268273", "https://www.example.com/login"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "logout_urls.*", "https://www.example.com/login"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", "LEGACY"),
 				),
 			},
