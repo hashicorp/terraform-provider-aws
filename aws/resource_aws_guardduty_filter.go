@@ -5,7 +5,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -93,10 +92,6 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(60 * time.Second),
-			Update: schema.DefaultTimeout(60 * time.Second),
 		},
 	}
 }
