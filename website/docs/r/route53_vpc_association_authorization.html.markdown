@@ -1,7 +1,7 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_vpc_association_authorization"
-sidebar_current: "aws_route53_vpc_association_authorization"
 description: |-
   Authorizes a VPC in a peer account to be associated with a local Route53 Hosted Zone
 ---
@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 provider "aws" {
-  alias   = "alternate"
+  alias = "alternate"
 }
 
 resource "aws_vpc" "example" {

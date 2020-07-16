@@ -14,7 +14,6 @@ import (
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 	var providers []*schema.Provider
-	var zone route53.HostedZone
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -24,7 +23,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 			{
 				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53VPCAssociationAuthorizationExists("aws_route53_vpc_association_authorization.test", &zone),
+					testAccCheckRoute53VPCAssociationAuthorizationExists("aws_route53_vpc_association_authorization.test"),
 				),
 			},
 		},
@@ -65,7 +64,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 	return nil
 }
 
-func testAccCheckRoute53VPCAssociationAuthorizationExists(n string, zone *route53.HostedZone) resource.TestCheckFunc {
+func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
