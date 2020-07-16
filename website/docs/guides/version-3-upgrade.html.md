@@ -161,6 +161,337 @@ output "lambda_result" {
 
 ## Resource: aws_acm_certificate
 
+### domain_validation_options Changed from List to Set
+
+Previously, the `domain_validation_options` attribute was a list type and completely unknown until after an initial `terraform apply`. This generally required complicated configuration workarounds to properly create DNS validation records since referencing this attribute directly could produce errors similar to the below:
+
+```
+Error: Invalid for_each argument
+
+  on main.tf line 16, in resource "aws_route53_record" "existing":
+  16:   for_each = aws_acm_certificate.existing.domain_validation_options
+
+The "for_each" value depends on resource attributes that cannot be determined
+until apply, so Terraform cannot predict how many instances will be created.
+To work around this, use the -target argument to first apply only the
+resources that the for_each depends on.
+```
+
+The `domain_validation_options` attribute is now a set type and the resource will attempt to populate the information necessary during the planning phase to handle the above situation in most environments without workarounds. This change also prevents Terraform from showing unexpected differences if the API returns the results in varying order.
+
+Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g. `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors). If the `domain_validation_options` list previously contained only a single element like the two examples just shown, it may be possible to wrap these references using the [`tolist()` function](/docs/configuration/functions/tolist.html) (e.g. `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update, however given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation, different environments will require different configuration updates and migration steps. Below is a more advanced example. Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+
+For example, given this previous configuration using a `count` based resource approach that may have been used in certain environments:
+
+```hcl
+data "aws_route53_zone" "public_root_domain" {
+  name = var.public_root_domain
+}
+
+resource "aws_acm_certificate" "existing" {
+  domain_name               = "existing.${var.public_root_domain}"
+  subject_alternative_names = [
+    "existing1.${var.public_root_domain}",
+    "existing2.${var.public_root_domain}",
+    "existing3.${var.public_root_domain}",
+  ]
+  validation_method         = "DNS"
+}
+
+resource "aws_route53_record" "existing" {
+  count = length(aws_acm_certificate.existing.subject_alternative_names) + 1
+
+  allow_overwrite = true
+  name            = aws_acm_certificate.existing.domain_validation_options[count.index].resource_record_name
+  records         = [aws_acm_certificate.existing.domain_validation_options[count.index].resource_record_value]
+  ttl             = 60
+  type            = aws_acm_certificate.existing.domain_validation_options[count.index].resource_record_type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing[*].fqdn
+}
+
+```
+
+It will receive errors like the below after upgrading:
+
+```
+Error: Invalid index
+
+  on main.tf line 14, in resource "aws_route53_record" "existing":
+  14:   name    = aws_acm_certificate.existing.domain_validation_options[count.index].resource_record_name
+    |----------------
+    | aws_acm_certificate.existing.domain_validation_options is set of object with 4 elements
+    | count.index is 1
+
+This value does not have any indices.
+```
+
+Since the `domain_validation_options` attribute changed from a list to a set and sets cannot be indexed in Terraform, the recommendation is to update the configuration to use the more stable [resource `for_each` support](/docs/configuration/resources.html#for_each-multiple-resource-instances-defined-by-a-map-or-set-of-strings) instead of [`count`](/docs/configuration/resources.html#count-multiple-resource-instances-by-count). Note the slight change in the `validation_record_fqdns` syntax as well.
+
+```hcl
+resource "aws_route53_record" "existing" {
+  for_each = {
+    for dvo in aws_acm_certificate.existing.domain_validation_options: dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = [for record in aws_route53_record.existing: record.fqdn]
+}
+```
+
+After the configuration has been updated, a plan should no longer error and may look like the following:
+
+```
+------------------------------------------------------------------------
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+  - destroy
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # aws_acm_certificate_validation.existing must be replaced
+-/+ resource "aws_acm_certificate_validation" "existing" {
+        certificate_arn         = "arn:aws:acm:us-east-2:123456789012:certificate/ccbc58e8-061d-4443-9035-d3af0512e863"
+      ~ id                      = "2020-07-16 00:01:19 +0000 UTC" -> (known after apply)
+      ~ validation_record_fqdns = [
+          - "_40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com",
+          - "_812ddf11b781af1eec1643ec58f102d2.existing.example.com",
+          - "_8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com",
+          - "_d7112da809a40e848207c04399babcec.existing1.example.com",
+        ] -> (known after apply) # forces replacement
+    }
+
+  # aws_route53_record.existing will be destroyed
+  - resource "aws_route53_record" "existing" {
+      - fqdn    = "_812ddf11b781af1eec1643ec58f102d2.existing.example.com" -> null
+      - id      = "Z123456789012__812ddf11b781af1eec1643ec58f102d2.existing.example.com._CNAME" -> null
+      - name    = "_812ddf11b781af1eec1643ec58f102d2.existing.example.com" -> null
+      - records = [
+          - "_bdeba72164eec216c55a32374bcceafd.jfrzftwwjs.acm-validations.aws.",
+        ] -> null
+      - ttl     = 60 -> null
+      - type    = "CNAME" -> null
+      - zone_id = "Z123456789012" -> null
+    }
+
+  # aws_route53_record.existing[1] will be destroyed
+  - resource "aws_route53_record" "existing" {
+      - fqdn    = "_40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com" -> null
+      - id      = "Z123456789012__40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com._CNAME" -> null
+      - name    = "_40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com" -> null
+      - records = [
+          - "_638532db1fa6a1b71aaf063c8ea29d52.jfrzftwwjs.acm-validations.aws.",
+        ] -> null
+      - ttl     = 60 -> null
+      - type    = "CNAME" -> null
+      - zone_id = "Z123456789012" -> null
+    }
+
+  # aws_route53_record.existing[2] will be destroyed
+  - resource "aws_route53_record" "existing" {
+      - fqdn    = "_d7112da809a40e848207c04399babcec.existing1.example.com" -> null
+      - id      = "Z123456789012__d7112da809a40e848207c04399babcec.existing1.example.com._CNAME" -> null
+      - name    = "_d7112da809a40e848207c04399babcec.existing1.example.com" -> null
+      - records = [
+          - "_6e1da5574ab46a6c782ed73438274181.jfrzftwwjs.acm-validations.aws.",
+        ] -> null
+      - ttl     = 60 -> null
+      - type    = "CNAME" -> null
+      - zone_id = "Z123456789012" -> null
+    }
+
+  # aws_route53_record.existing[3] will be destroyed
+  - resource "aws_route53_record" "existing" {
+      - fqdn    = "_8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com" -> null
+      - id      = "Z123456789012__8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com._CNAME" -> null
+      - name    = "_8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com" -> null
+      - records = [
+          - "_a419f8410d2e0720528a96c3506f3841.jfrzftwwjs.acm-validations.aws.",
+        ] -> null
+      - ttl     = 60 -> null
+      - type    = "CNAME" -> null
+      - zone_id = "Z123456789012" -> null
+    }
+
+  # aws_route53_record.existing["existing.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_812ddf11b781af1eec1643ec58f102d2.existing.example.com"
+      + records         = [
+          + "_bdeba72164eec216c55a32374bcceafd.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+  # aws_route53_record.existing["existing1.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_d7112da809a40e848207c04399babcec.existing1.example.com"
+      + records         = [
+          + "_6e1da5574ab46a6c782ed73438274181.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+  # aws_route53_record.existing["existing2.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com"
+      + records         = [
+          + "_638532db1fa6a1b71aaf063c8ea29d52.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+  # aws_route53_record.existing["existing3.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com"
+      + records         = [
+          + "_a419f8410d2e0720528a96c3506f3841.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+Plan: 5 to add, 0 to change, 5 to destroy.
+```
+
+Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g. `[1]`) with the equivalent domain name index (e.g. `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. It is recommended to use this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
+
+If using `terraform state mv` to reduce the plan to show no changes, no additional steps are required.
+
+In larger or more complex environments though, this process can be tedius to match the old resource address to the new resource address and run all the necessary `terraform state mv` commands. Instead, since the `aws_route53_record` resource implements the `allow_overwrite = true` argument, it is possible to just remove the old `aws_route53_record` resources from the Terraform state using the [`terraform state rm` command](/docs/commands/state/rm.html). In this case, Terraform will leave the existing records in Route 53 and plan to just overwrite the existing validation records with the same exact (previous) values.
+
+-> This guide is showing the simpler `terraform state rm` option below as a potential shortcut in this specific situation, however in most other cases `terraform state mv` is required to change from `count` based resources to `for_each` based resources and properly match the existing Terraform state to the updated Terraform configuration.
+
+```console
+$ terraform state rm aws_route53_record.existing
+Removed aws_route53_record.existing[0]
+Removed aws_route53_record.existing[1]
+Removed aws_route53_record.existing[2]
+Removed aws_route53_record.existing[3]
+Successfully removed 4 resource instance(s).
+```
+
+Now the Terraform plan will show only the additions of new Route 53 records (which are exactly the same as before the upgrade) and the proposed recreation of the `aws_acm_certificate_validation` resource. The `aws_acm_certificate_validation` resource recreation will have no effect as the certificate is already validated and issued.
+
+```
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  + create
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # aws_acm_certificate_validation.existing must be replaced
+-/+ resource "aws_acm_certificate_validation" "existing" {
+        certificate_arn         = "arn:aws:acm:us-east-2:123456789012:certificate/ccbc58e8-061d-4443-9035-d3af0512e863"
+      ~ id                      = "2020-07-16 00:01:19 +0000 UTC" -> (known after apply)
+      ~ validation_record_fqdns = [
+          - "_40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com",
+          - "_812ddf11b781af1eec1643ec58f102d2.existing.example.com",
+          - "_8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com",
+          - "_d7112da809a40e848207c04399babcec.existing1.example.com",
+        ] -> (known after apply) # forces replacement
+    }
+
+  # aws_route53_record.existing["existing.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_812ddf11b781af1eec1643ec58f102d2.existing.example.com"
+      + records         = [
+          + "_bdeba72164eec216c55a32374bcceafd.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+  # aws_route53_record.existing["existing1.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_d7112da809a40e848207c04399babcec.existing1.example.com"
+      + records         = [
+          + "_6e1da5574ab46a6c782ed73438274181.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+  # aws_route53_record.existing["existing2.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_40b71647a8d88eb82d53fe988e8a3cc1.existing2.example.com"
+      + records         = [
+          + "_638532db1fa6a1b71aaf063c8ea29d52.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+  # aws_route53_record.existing["existing3.example.com"] will be created
+  + resource "aws_route53_record" "existing" {
+      + allow_overwrite = true
+      + fqdn            = (known after apply)
+      + id              = (known after apply)
+      + name            = "_8dc56b6e35f699b8754afcdd79e9748d.existing3.example.com"
+      + records         = [
+          + "_a419f8410d2e0720528a96c3506f3841.jfrzftwwjs.acm-validations.aws.",
+        ]
+      + ttl             = 60
+      + type            = "CNAME"
+      + zone_id         = "Z123456789012"
+    }
+
+Plan: 5 to add, 0 to change, 1 to destroy.
+```
+
+Once applied, no differences should be shown and no additional steps should be necessary.
+
 ### subject_alternative_names Changed from List to Set
 
 Previously the `subject_alternative_names` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g. `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subject_alternative_names` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
