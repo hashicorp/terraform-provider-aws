@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_endpoint"
 description: |-
@@ -45,6 +46,7 @@ The following arguments are supported:
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 
+
 ### `authentication_options` Argument Reference
 
 One of the following arguments must be supplied:
@@ -66,6 +68,7 @@ One of the following arguments must be supplied:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Client VPN endpoint.
+* `arn` - The ARN of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
 * `status` - The current state of the Client VPN endpoint.
 

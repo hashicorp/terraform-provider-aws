@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_rule"
 description: |-
@@ -16,13 +17,13 @@ resource "aws_cloudwatch_event_rule" "console" {
   name        = "capture-aws-sign-in"
   description = "Capture each AWS Console Sign In"
 
-  event_pattern = <<PATTERN
+  event_pattern = <<EOF
 {
   "detail-type": [
     "AWS Console Sign In via CloudTrail"
   ]
 }
-PATTERN
+EOF
 }
 
 resource "aws_cloudwatch_event_target" "sns" {
@@ -69,7 +70,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the rule.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
 * `is_enabled` - (Optional) Whether the rule should be enabled (defaults to `true`).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

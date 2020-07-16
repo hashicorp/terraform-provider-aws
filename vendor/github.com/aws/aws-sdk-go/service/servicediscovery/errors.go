@@ -2,6 +2,10 @@
 
 package servicediscovery
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCustomHealthNotFound for service response error code
@@ -50,6 +54,13 @@ const (
 	// No operation exists with the specified ID.
 	ErrCodeOperationNotFound = "OperationNotFound"
 
+	// ErrCodeRequestLimitExceeded for service response error code
+	// "RequestLimitExceeded".
+	//
+	// The operation can't be completed because you've reached the limit on the
+	// number of requests.
+	ErrCodeRequestLimitExceeded = "RequestLimitExceeded"
+
 	// ErrCodeResourceInUse for service response error code
 	// "ResourceInUse".
 	//
@@ -64,6 +75,12 @@ const (
 	// of resources.
 	ErrCodeResourceLimitExceeded = "ResourceLimitExceeded"
 
+	// ErrCodeResourceNotFoundException for service response error code
+	// "ResourceNotFoundException".
+	//
+	// The operation can't be completed because the resource was not found.
+	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
+
 	// ErrCodeServiceAlreadyExists for service response error code
 	// "ServiceAlreadyExists".
 	//
@@ -76,4 +93,28 @@ const (
 	//
 	// No service exists with the specified ID.
 	ErrCodeServiceNotFound = "ServiceNotFound"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// The list of tags on the resource is over the limit. The maximum number of
+	// tags that can be applied to a resource is 50.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CustomHealthNotFound":      newErrorCustomHealthNotFound,
+	"DuplicateRequest":          newErrorDuplicateRequest,
+	"InstanceNotFound":          newErrorInstanceNotFound,
+	"InvalidInput":              newErrorInvalidInput,
+	"NamespaceAlreadyExists":    newErrorNamespaceAlreadyExists,
+	"NamespaceNotFound":         newErrorNamespaceNotFound,
+	"OperationNotFound":         newErrorOperationNotFound,
+	"RequestLimitExceeded":      newErrorRequestLimitExceeded,
+	"ResourceInUse":             newErrorResourceInUse,
+	"ResourceLimitExceeded":     newErrorResourceLimitExceeded,
+	"ResourceNotFoundException": newErrorResourceNotFoundException,
+	"ServiceAlreadyExists":      newErrorServiceAlreadyExists,
+	"ServiceNotFound":           newErrorServiceNotFound,
+	"TooManyTagsException":      newErrorTooManyTagsException,
+}

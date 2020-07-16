@@ -66,26 +66,26 @@ func (c *Glue) BatchCreatePartitionRequest(input *BatchCreatePartitionInput) (re
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchCreatePartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchCreatePartition
@@ -163,11 +163,11 @@ func (c *Glue) BatchDeleteConnectionRequest(input *BatchDeleteConnectionInput) (
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchDeleteConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteConnection
@@ -245,17 +245,17 @@ func (c *Glue) BatchDeletePartitionRequest(input *BatchDeletePartitionInput) (re
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchDeletePartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeletePartition
@@ -342,17 +342,17 @@ func (c *Glue) BatchDeleteTableRequest(input *BatchDeleteTableInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchDeleteTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTable
@@ -430,17 +430,17 @@ func (c *Glue) BatchDeleteTableVersionRequest(input *BatchDeleteTableVersionInpu
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchDeleteTableVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchDeleteTableVersion
@@ -521,11 +521,11 @@ func (c *Glue) BatchGetCrawlersRequest(input *BatchGetCrawlersInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchGetCrawlers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetCrawlers
@@ -606,17 +606,17 @@ func (c *Glue) BatchGetDevEndpointsRequest(input *BatchGetDevEndpointsInput) (re
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchGetDevEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+// Returned Error Types:
+//   * AccessDeniedException
 //   Access to a resource was denied.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetDevEndpoints
@@ -697,14 +697,14 @@ func (c *Glue) BatchGetJobsRequest(input *BatchGetJobsInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchGetJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetJobs
@@ -782,20 +782,20 @@ func (c *Glue) BatchGetPartitionRequest(input *BatchGetPartitionInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchGetPartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetPartition
@@ -876,14 +876,14 @@ func (c *Glue) BatchGetTriggersRequest(input *BatchGetTriggersInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchGetTriggers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetTriggers
@@ -964,14 +964,14 @@ func (c *Glue) BatchGetWorkflowsRequest(input *BatchGetWorkflowsInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchGetWorkflows for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetWorkflows
@@ -1049,14 +1049,14 @@ func (c *Glue) BatchStopJobRunRequest(input *BatchStopJobRunInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation BatchStopJobRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchStopJobRun
@@ -1137,17 +1137,17 @@ func (c *Glue) CancelMLTaskRunRequest(input *CancelMLTaskRunInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation CancelMLTaskRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CancelMLTaskRun
@@ -1228,14 +1228,14 @@ func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateClassifier for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateClassifier
@@ -1314,20 +1314,20 @@ func (c *Glue) CreateConnectionRequest(input *CreateConnectionInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateConnection
@@ -1408,17 +1408,17 @@ func (c *Glue) CreateCrawlerRequest(input *CreateCrawlerInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateCrawler for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateCrawler
@@ -1497,23 +1497,23 @@ func (c *Glue) CreateDatabaseRequest(input *CreateDatabaseInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateDatabase for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDatabase
@@ -1591,29 +1591,29 @@ func (c *Glue) CreateDevEndpointRequest(input *CreateDevEndpointInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateDevEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+// Returned Error Types:
+//   * AccessDeniedException
 //   Access to a resource was denied.
 //
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   The same unique identifier was associated with two different records.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   A value could not be validated.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateDevEndpoint
@@ -1691,26 +1691,26 @@ func (c *Glue) CreateJobRequest(input *CreateJobInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   The same unique identifier was associated with two different records.
 //
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateJob
@@ -1800,26 +1800,26 @@ func (c *Glue) CreateMLTransformRequest(input *CreateMLTransformInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateMLTransform for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to a resource was denied.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   The same unique identifier was associated with two different records.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateMLTransform
@@ -1898,26 +1898,26 @@ func (c *Glue) CreatePartitionRequest(input *CreatePartitionInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation CreatePartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreatePartition
@@ -1995,14 +1995,14 @@ func (c *Glue) CreateScriptRequest(input *CreateScriptInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateScript for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateScript
@@ -2084,20 +2084,20 @@ func (c *Glue) CreateSecurityConfigurationRequest(input *CreateSecurityConfigura
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateSecurityConfiguration
@@ -2176,26 +2176,26 @@ func (c *Glue) CreateTableRequest(input *CreateTableInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTable
@@ -2273,29 +2273,29 @@ func (c *Glue) CreateTriggerRequest(input *CreateTriggerInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateTrigger for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   * IdempotentParameterMismatchException
 //   The same unique identifier was associated with two different records.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateTrigger
@@ -2374,26 +2374,26 @@ func (c *Glue) CreateUserDefinedFunctionRequest(input *CreateUserDefinedFunction
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateUserDefinedFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateUserDefinedFunction
@@ -2471,23 +2471,23 @@ func (c *Glue) CreateWorkflowRequest(input *CreateWorkflowInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation CreateWorkflow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/CreateWorkflow
@@ -2566,11 +2566,11 @@ func (c *Glue) DeleteClassifierRequest(input *DeleteClassifierInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteClassifier for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteClassifier
@@ -2590,6 +2590,190 @@ func (c *Glue) DeleteClassifier(input *DeleteClassifierInput) (*DeleteClassifier
 // for more information on using Contexts.
 func (c *Glue) DeleteClassifierWithContext(ctx aws.Context, input *DeleteClassifierInput, opts ...request.Option) (*DeleteClassifierOutput, error) {
 	req, out := c.DeleteClassifierRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteColumnStatisticsForPartition = "DeleteColumnStatisticsForPartition"
+
+// DeleteColumnStatisticsForPartitionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteColumnStatisticsForPartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteColumnStatisticsForPartition for more information on using the DeleteColumnStatisticsForPartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteColumnStatisticsForPartitionRequest method.
+//    req, resp := client.DeleteColumnStatisticsForPartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForPartition
+func (c *Glue) DeleteColumnStatisticsForPartitionRequest(input *DeleteColumnStatisticsForPartitionInput) (req *request.Request, output *DeleteColumnStatisticsForPartitionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteColumnStatisticsForPartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteColumnStatisticsForPartitionInput{}
+	}
+
+	output = &DeleteColumnStatisticsForPartitionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteColumnStatisticsForPartition API operation for AWS Glue.
+//
+// Delete the partition column statistics of a column.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation DeleteColumnStatisticsForPartition for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForPartition
+func (c *Glue) DeleteColumnStatisticsForPartition(input *DeleteColumnStatisticsForPartitionInput) (*DeleteColumnStatisticsForPartitionOutput, error) {
+	req, out := c.DeleteColumnStatisticsForPartitionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteColumnStatisticsForPartitionWithContext is the same as DeleteColumnStatisticsForPartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteColumnStatisticsForPartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) DeleteColumnStatisticsForPartitionWithContext(ctx aws.Context, input *DeleteColumnStatisticsForPartitionInput, opts ...request.Option) (*DeleteColumnStatisticsForPartitionOutput, error) {
+	req, out := c.DeleteColumnStatisticsForPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteColumnStatisticsForTable = "DeleteColumnStatisticsForTable"
+
+// DeleteColumnStatisticsForTableRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteColumnStatisticsForTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteColumnStatisticsForTable for more information on using the DeleteColumnStatisticsForTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteColumnStatisticsForTableRequest method.
+//    req, resp := client.DeleteColumnStatisticsForTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForTable
+func (c *Glue) DeleteColumnStatisticsForTableRequest(input *DeleteColumnStatisticsForTableInput) (req *request.Request, output *DeleteColumnStatisticsForTableOutput) {
+	op := &request.Operation{
+		Name:       opDeleteColumnStatisticsForTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteColumnStatisticsForTableInput{}
+	}
+
+	output = &DeleteColumnStatisticsForTableOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteColumnStatisticsForTable API operation for AWS Glue.
+//
+// Retrieves table statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation DeleteColumnStatisticsForTable for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForTable
+func (c *Glue) DeleteColumnStatisticsForTable(input *DeleteColumnStatisticsForTableInput) (*DeleteColumnStatisticsForTableOutput, error) {
+	req, out := c.DeleteColumnStatisticsForTableRequest(input)
+	return out, req.Send()
+}
+
+// DeleteColumnStatisticsForTableWithContext is the same as DeleteColumnStatisticsForTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteColumnStatisticsForTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) DeleteColumnStatisticsForTableWithContext(ctx aws.Context, input *DeleteColumnStatisticsForTableInput, opts ...request.Option) (*DeleteColumnStatisticsForTableOutput, error) {
+	req, out := c.DeleteColumnStatisticsForTableRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2649,11 +2833,11 @@ func (c *Glue) DeleteConnectionRequest(input *DeleteConnectionInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteConnection
@@ -2733,17 +2917,17 @@ func (c *Glue) DeleteCrawlerRequest(input *DeleteCrawlerInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteCrawler for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeCrawlerRunningException "CrawlerRunningException"
+//   * CrawlerRunningException
 //   The operation cannot be performed because the crawler is already running.
 //
-//   * ErrCodeSchedulerTransitioningException "SchedulerTransitioningException"
+//   * SchedulerTransitioningException
 //   The specified scheduler is transitioning.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteCrawler
@@ -2833,17 +3017,17 @@ func (c *Glue) DeleteDatabaseRequest(input *DeleteDatabaseInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteDatabase for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDatabase
@@ -2922,17 +3106,17 @@ func (c *Glue) DeleteDevEndpointRequest(input *DeleteDevEndpointInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteDevEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteDevEndpoint
@@ -3011,14 +3195,14 @@ func (c *Glue) DeleteJobRequest(input *DeleteJobInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteJob
@@ -3102,17 +3286,17 @@ func (c *Glue) DeleteMLTransformRequest(input *DeleteMLTransformInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteMLTransform for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteMLTransform
@@ -3191,17 +3375,17 @@ func (c *Glue) DeletePartitionRequest(input *DeletePartitionInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation DeletePartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeletePartition
@@ -3280,20 +3464,20 @@ func (c *Glue) DeleteResourcePolicyRequest(input *DeleteResourcePolicyInput) (re
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteResourcePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeConditionCheckFailureException "ConditionCheckFailureException"
+//   * ConditionCheckFailureException
 //   A specified condition was not satisfied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteResourcePolicy
@@ -3372,17 +3556,17 @@ func (c *Glue) DeleteSecurityConfigurationRequest(input *DeleteSecurityConfigura
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteSecurityConfiguration
@@ -3469,17 +3653,17 @@ func (c *Glue) DeleteTableRequest(input *DeleteTableInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTable
@@ -3558,17 +3742,17 @@ func (c *Glue) DeleteTableVersionRequest(input *DeleteTableVersionInput) (req *r
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteTableVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTableVersion
@@ -3647,17 +3831,17 @@ func (c *Glue) DeleteTriggerRequest(input *DeleteTriggerInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteTrigger for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteTrigger
@@ -3736,17 +3920,17 @@ func (c *Glue) DeleteUserDefinedFunctionRequest(input *DeleteUserDefinedFunction
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteUserDefinedFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteUserDefinedFunction
@@ -3824,17 +4008,17 @@ func (c *Glue) DeleteWorkflowRequest(input *DeleteWorkflowInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation DeleteWorkflow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteWorkflow
@@ -3912,11 +4096,11 @@ func (c *Glue) GetCatalogImportStatusRequest(input *GetCatalogImportStatusInput)
 // See the AWS API reference guide for AWS Glue's
 // API operation GetCatalogImportStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCatalogImportStatus
@@ -3994,11 +4178,11 @@ func (c *Glue) GetClassifierRequest(input *GetClassifierInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation GetClassifier for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifier
@@ -4082,8 +4266,8 @@ func (c *Glue) GetClassifiersRequest(input *GetClassifiersInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation GetClassifiers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+// Returned Error Types:
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetClassifiers
@@ -4151,11 +4335,195 @@ func (c *Glue) GetClassifiersPagesWithContext(ctx aws.Context, input *GetClassif
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetClassifiersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetClassifiersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opGetColumnStatisticsForPartition = "GetColumnStatisticsForPartition"
+
+// GetColumnStatisticsForPartitionRequest generates a "aws/request.Request" representing the
+// client's request for the GetColumnStatisticsForPartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetColumnStatisticsForPartition for more information on using the GetColumnStatisticsForPartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetColumnStatisticsForPartitionRequest method.
+//    req, resp := client.GetColumnStatisticsForPartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForPartition
+func (c *Glue) GetColumnStatisticsForPartitionRequest(input *GetColumnStatisticsForPartitionInput) (req *request.Request, output *GetColumnStatisticsForPartitionOutput) {
+	op := &request.Operation{
+		Name:       opGetColumnStatisticsForPartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetColumnStatisticsForPartitionInput{}
+	}
+
+	output = &GetColumnStatisticsForPartitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetColumnStatisticsForPartition API operation for AWS Glue.
+//
+// Retrieves partition statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetColumnStatisticsForPartition for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForPartition
+func (c *Glue) GetColumnStatisticsForPartition(input *GetColumnStatisticsForPartitionInput) (*GetColumnStatisticsForPartitionOutput, error) {
+	req, out := c.GetColumnStatisticsForPartitionRequest(input)
+	return out, req.Send()
+}
+
+// GetColumnStatisticsForPartitionWithContext is the same as GetColumnStatisticsForPartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetColumnStatisticsForPartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetColumnStatisticsForPartitionWithContext(ctx aws.Context, input *GetColumnStatisticsForPartitionInput, opts ...request.Option) (*GetColumnStatisticsForPartitionOutput, error) {
+	req, out := c.GetColumnStatisticsForPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetColumnStatisticsForTable = "GetColumnStatisticsForTable"
+
+// GetColumnStatisticsForTableRequest generates a "aws/request.Request" representing the
+// client's request for the GetColumnStatisticsForTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetColumnStatisticsForTable for more information on using the GetColumnStatisticsForTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetColumnStatisticsForTableRequest method.
+//    req, resp := client.GetColumnStatisticsForTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForTable
+func (c *Glue) GetColumnStatisticsForTableRequest(input *GetColumnStatisticsForTableInput) (req *request.Request, output *GetColumnStatisticsForTableOutput) {
+	op := &request.Operation{
+		Name:       opGetColumnStatisticsForTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetColumnStatisticsForTableInput{}
+	}
+
+	output = &GetColumnStatisticsForTableOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetColumnStatisticsForTable API operation for AWS Glue.
+//
+// Retrieves table statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetColumnStatisticsForTable for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForTable
+func (c *Glue) GetColumnStatisticsForTable(input *GetColumnStatisticsForTableInput) (*GetColumnStatisticsForTableOutput, error) {
+	req, out := c.GetColumnStatisticsForTableRequest(input)
+	return out, req.Send()
+}
+
+// GetColumnStatisticsForTableWithContext is the same as GetColumnStatisticsForTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetColumnStatisticsForTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetColumnStatisticsForTableWithContext(ctx aws.Context, input *GetColumnStatisticsForTableInput, opts ...request.Option) (*GetColumnStatisticsForTableOutput, error) {
+	req, out := c.GetColumnStatisticsForTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetConnection = "GetConnection"
@@ -4211,17 +4579,17 @@ func (c *Glue) GetConnectionRequest(input *GetConnectionInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation GetConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnection
@@ -4305,17 +4673,17 @@ func (c *Glue) GetConnectionsRequest(input *GetConnectionsInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation GetConnections for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetConnections
@@ -4383,10 +4751,12 @@ func (c *Glue) GetConnectionsPagesWithContext(ctx aws.Context, input *GetConnect
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4443,11 +4813,11 @@ func (c *Glue) GetCrawlerRequest(input *GetCrawlerInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Glue's
 // API operation GetCrawler for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawler
@@ -4531,8 +4901,8 @@ func (c *Glue) GetCrawlerMetricsRequest(input *GetCrawlerMetricsInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation GetCrawlerMetrics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+// Returned Error Types:
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlerMetrics
@@ -4600,10 +4970,12 @@ func (c *Glue) GetCrawlerMetricsPagesWithContext(ctx aws.Context, input *GetCraw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetCrawlerMetricsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetCrawlerMetricsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4666,8 +5038,8 @@ func (c *Glue) GetCrawlersRequest(input *GetCrawlersInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetCrawlers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+// Returned Error Types:
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetCrawlers
@@ -4735,10 +5107,12 @@ func (c *Glue) GetCrawlersPagesWithContext(ctx aws.Context, input *GetCrawlersIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetCrawlersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetCrawlersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4795,14 +5169,14 @@ func (c *Glue) GetDataCatalogEncryptionSettingsRequest(input *GetDataCatalogEncr
 // See the AWS API reference guide for AWS Glue's
 // API operation GetDataCatalogEncryptionSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
@@ -4880,20 +5254,20 @@ func (c *Glue) GetDatabaseRequest(input *GetDatabaseInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetDatabase for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabase
@@ -4977,17 +5351,17 @@ func (c *Glue) GetDatabasesRequest(input *GetDatabasesInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation GetDatabases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDatabases
@@ -5055,10 +5429,12 @@ func (c *Glue) GetDatabasesPagesWithContext(ctx aws.Context, input *GetDatabases
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDatabasesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDatabasesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5115,14 +5491,14 @@ func (c *Glue) GetDataflowGraphRequest(input *GetDataflowGraphInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation GetDataflowGraph for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataflowGraph
@@ -5205,17 +5581,17 @@ func (c *Glue) GetDevEndpointRequest(input *GetDevEndpointInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation GetDevEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoint
@@ -5304,17 +5680,17 @@ func (c *Glue) GetDevEndpointsRequest(input *GetDevEndpointsInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetDevEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDevEndpoints
@@ -5382,10 +5758,12 @@ func (c *Glue) GetDevEndpointsPagesWithContext(ctx aws.Context, input *GetDevEnd
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDevEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDevEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5442,17 +5820,17 @@ func (c *Glue) GetJobRequest(input *GetJobInput) (req *request.Request, output *
 // See the AWS API reference guide for AWS Glue's
 // API operation GetJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJob
@@ -5530,20 +5908,20 @@ func (c *Glue) GetJobBookmarkRequest(input *GetJobBookmarkInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation GetJobBookmark for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   A value could not be validated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmark
@@ -5621,17 +5999,17 @@ func (c *Glue) GetJobRunRequest(input *GetJobRunInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Glue's
 // API operation GetJobRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRun
@@ -5715,17 +6093,17 @@ func (c *Glue) GetJobRunsRequest(input *GetJobRunsInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Glue's
 // API operation GetJobRuns for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobRuns
@@ -5793,10 +6171,12 @@ func (c *Glue) GetJobRunsPagesWithContext(ctx aws.Context, input *GetJobRunsInpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetJobRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetJobRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5859,17 +6239,17 @@ func (c *Glue) GetJobsRequest(input *GetJobsInput) (req *request.Request, output
 // See the AWS API reference guide for AWS Glue's
 // API operation GetJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobs
@@ -5937,10 +6317,12 @@ func (c *Glue) GetJobsPagesWithContext(ctx aws.Context, input *GetJobsInput, fn 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6001,17 +6383,17 @@ func (c *Glue) GetMLTaskRunRequest(input *GetMLTaskRunInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation GetMLTaskRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMLTaskRun
@@ -6102,17 +6484,17 @@ func (c *Glue) GetMLTaskRunsRequest(input *GetMLTaskRunsInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation GetMLTaskRuns for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMLTaskRuns
@@ -6180,10 +6562,12 @@ func (c *Glue) GetMLTaskRunsPagesWithContext(ctx aws.Context, input *GetMLTaskRu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetMLTaskRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetMLTaskRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6244,17 +6628,17 @@ func (c *Glue) GetMLTransformRequest(input *GetMLTransformInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation GetMLTransform for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMLTransform
@@ -6342,17 +6726,17 @@ func (c *Glue) GetMLTransformsRequest(input *GetMLTransformsInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetMLTransforms for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMLTransforms
@@ -6420,10 +6804,12 @@ func (c *Glue) GetMLTransformsPagesWithContext(ctx aws.Context, input *GetMLTran
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetMLTransformsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetMLTransformsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6480,17 +6866,17 @@ func (c *Glue) GetMappingRequest(input *GetMappingInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Glue's
 // API operation GetMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetMapping
@@ -6568,20 +6954,20 @@ func (c *Glue) GetPartitionRequest(input *GetPartitionInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation GetPartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartition
@@ -6665,20 +7051,20 @@ func (c *Glue) GetPartitionsRequest(input *GetPartitionsInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation GetPartitions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitions
@@ -6746,10 +7132,12 @@ func (c *Glue) GetPartitionsPagesWithContext(ctx aws.Context, input *GetPartitio
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetPartitionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetPartitionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6806,14 +7194,14 @@ func (c *Glue) GetPlanRequest(input *GetPlanInput) (req *request.Request, output
 // See the AWS API reference guide for AWS Glue's
 // API operation GetPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPlan
@@ -6891,17 +7279,17 @@ func (c *Glue) GetResourcePolicyRequest(input *GetResourcePolicyInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation GetResourcePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetResourcePolicy
@@ -6979,17 +7367,17 @@ func (c *Glue) GetSecurityConfigurationRequest(input *GetSecurityConfigurationIn
 // See the AWS API reference guide for AWS Glue's
 // API operation GetSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetSecurityConfiguration
@@ -7073,17 +7461,17 @@ func (c *Glue) GetSecurityConfigurationsRequest(input *GetSecurityConfigurations
 // See the AWS API reference guide for AWS Glue's
 // API operation GetSecurityConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetSecurityConfigurations
@@ -7151,10 +7539,12 @@ func (c *Glue) GetSecurityConfigurationsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetSecurityConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetSecurityConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7211,20 +7601,20 @@ func (c *Glue) GetTableRequest(input *GetTableInput) (req *request.Request, outp
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
@@ -7302,20 +7692,20 @@ func (c *Glue) GetTableVersionRequest(input *GetTableVersionInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTableVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersion
@@ -7400,20 +7790,20 @@ func (c *Glue) GetTableVersionsRequest(input *GetTableVersionsInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTableVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
@@ -7481,10 +7871,12 @@ func (c *Glue) GetTableVersionsPagesWithContext(ctx aws.Context, input *GetTable
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTableVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTableVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7547,20 +7939,20 @@ func (c *Glue) GetTablesRequest(input *GetTablesInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTables
@@ -7628,10 +8020,12 @@ func (c *Glue) GetTablesPagesWithContext(ctx aws.Context, input *GetTablesInput,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7688,17 +8082,17 @@ func (c *Glue) GetTagsRequest(input *GetTagsInput) (req *request.Request, output
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTags
@@ -7776,17 +8170,17 @@ func (c *Glue) GetTriggerRequest(input *GetTriggerInput) (req *request.Request, 
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTrigger for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTrigger
@@ -7870,17 +8264,17 @@ func (c *Glue) GetTriggersRequest(input *GetTriggersInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetTriggers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTriggers
@@ -7948,10 +8342,12 @@ func (c *Glue) GetTriggersPagesWithContext(ctx aws.Context, input *GetTriggersIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTriggersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTriggersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8008,20 +8404,20 @@ func (c *Glue) GetUserDefinedFunctionRequest(input *GetUserDefinedFunctionInput)
 // See the AWS API reference guide for AWS Glue's
 // API operation GetUserDefinedFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunction
@@ -8105,20 +8501,20 @@ func (c *Glue) GetUserDefinedFunctionsRequest(input *GetUserDefinedFunctionsInpu
 // See the AWS API reference guide for AWS Glue's
 // API operation GetUserDefinedFunctions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetUserDefinedFunctions
@@ -8186,10 +8582,12 @@ func (c *Glue) GetUserDefinedFunctionsPagesWithContext(ctx aws.Context, input *G
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUserDefinedFunctionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUserDefinedFunctionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8246,17 +8644,17 @@ func (c *Glue) GetWorkflowRequest(input *GetWorkflowInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetWorkflow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetWorkflow
@@ -8334,17 +8732,17 @@ func (c *Glue) GetWorkflowRunRequest(input *GetWorkflowRunInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation GetWorkflowRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetWorkflowRun
@@ -8422,17 +8820,17 @@ func (c *Glue) GetWorkflowRunPropertiesRequest(input *GetWorkflowRunPropertiesIn
 // See the AWS API reference guide for AWS Glue's
 // API operation GetWorkflowRunProperties for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetWorkflowRunProperties
@@ -8516,17 +8914,17 @@ func (c *Glue) GetWorkflowRunsRequest(input *GetWorkflowRunsInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation GetWorkflowRuns for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetWorkflowRuns
@@ -8594,10 +8992,12 @@ func (c *Glue) GetWorkflowRunsPagesWithContext(ctx aws.Context, input *GetWorkfl
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetWorkflowRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetWorkflowRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8655,11 +9055,11 @@ func (c *Glue) ImportCatalogToGlueRequest(input *ImportCatalogToGlueInput) (req 
 // See the AWS API reference guide for AWS Glue's
 // API operation ImportCatalogToGlue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ImportCatalogToGlue
@@ -8749,8 +9149,8 @@ func (c *Glue) ListCrawlersRequest(input *ListCrawlersInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation ListCrawlers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+// Returned Error Types:
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListCrawlers
@@ -8818,10 +9218,12 @@ func (c *Glue) ListCrawlersPagesWithContext(ctx aws.Context, input *ListCrawlers
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCrawlersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCrawlersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8890,17 +9292,17 @@ func (c *Glue) ListDevEndpointsRequest(input *ListDevEndpointsInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation ListDevEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListDevEndpoints
@@ -8968,10 +9370,12 @@ func (c *Glue) ListDevEndpointsPagesWithContext(ctx aws.Context, input *ListDevE
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDevEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDevEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9040,17 +9444,17 @@ func (c *Glue) ListJobsRequest(input *ListJobsInput) (req *request.Request, outp
 // See the AWS API reference guide for AWS Glue's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListJobs
@@ -9118,10 +9522,162 @@ func (c *Glue) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, f
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListMLTransforms = "ListMLTransforms"
+
+// ListMLTransformsRequest generates a "aws/request.Request" representing the
+// client's request for the ListMLTransforms operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMLTransforms for more information on using the ListMLTransforms
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMLTransformsRequest method.
+//    req, resp := client.ListMLTransformsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListMLTransforms
+func (c *Glue) ListMLTransformsRequest(input *ListMLTransformsInput) (req *request.Request, output *ListMLTransformsOutput) {
+	op := &request.Operation{
+		Name:       opListMLTransforms,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListMLTransformsInput{}
+	}
+
+	output = &ListMLTransformsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMLTransforms API operation for AWS Glue.
+//
+// Retrieves a sortable, filterable list of existing AWS Glue machine learning
+// transforms in this AWS account, or the resources with the specified tag.
+// This operation takes the optional Tags field, which you can use as a filter
+// of the responses so that tagged resources can be retrieved as a group. If
+// you choose to use tag filtering, only resources with the tags are retrieved.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation ListMLTransforms for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListMLTransforms
+func (c *Glue) ListMLTransforms(input *ListMLTransformsInput) (*ListMLTransformsOutput, error) {
+	req, out := c.ListMLTransformsRequest(input)
+	return out, req.Send()
+}
+
+// ListMLTransformsWithContext is the same as ListMLTransforms with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMLTransforms for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListMLTransformsWithContext(ctx aws.Context, input *ListMLTransformsInput, opts ...request.Option) (*ListMLTransformsOutput, error) {
+	req, out := c.ListMLTransformsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListMLTransformsPages iterates over the pages of a ListMLTransforms operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListMLTransforms method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListMLTransforms operation.
+//    pageNum := 0
+//    err := client.ListMLTransformsPages(params,
+//        func(page *glue.ListMLTransformsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) ListMLTransformsPages(input *ListMLTransformsInput, fn func(*ListMLTransformsOutput, bool) bool) error {
+	return c.ListMLTransformsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMLTransformsPagesWithContext same as ListMLTransformsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListMLTransformsPagesWithContext(ctx aws.Context, input *ListMLTransformsInput, fn func(*ListMLTransformsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListMLTransformsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListMLTransformsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListMLTransformsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -9190,17 +9746,17 @@ func (c *Glue) ListTriggersRequest(input *ListTriggersInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation ListTriggers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListTriggers
@@ -9268,10 +9824,12 @@ func (c *Glue) ListTriggersPagesWithContext(ctx aws.Context, input *ListTriggers
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTriggersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTriggersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9334,14 +9892,14 @@ func (c *Glue) ListWorkflowsRequest(input *ListWorkflowsInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation ListWorkflows for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListWorkflows
@@ -9409,10 +9967,12 @@ func (c *Glue) ListWorkflowsPagesWithContext(ctx aws.Context, input *ListWorkflo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkflowsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkflowsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9472,14 +10032,14 @@ func (c *Glue) PutDataCatalogEncryptionSettingsRequest(input *PutDataCatalogEncr
 // See the AWS API reference guide for AWS Glue's
 // API operation PutDataCatalogEncryptionSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PutDataCatalogEncryptionSettings
@@ -9557,20 +10117,20 @@ func (c *Glue) PutResourcePolicyRequest(input *PutResourcePolicyInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation PutResourcePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeConditionCheckFailureException "ConditionCheckFailureException"
+//   * ConditionCheckFailureException
 //   A specified condition was not satisfied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PutResourcePolicy
@@ -9651,26 +10211,26 @@ func (c *Glue) PutWorkflowRunPropertiesRequest(input *PutWorkflowRunPropertiesIn
 // See the AWS API reference guide for AWS Glue's
 // API operation PutWorkflowRunProperties for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAlreadyExistsException "AlreadyExistsException"
+// Returned Error Types:
+//   * AlreadyExistsException
 //   A resource to be created or added already exists.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/PutWorkflowRunProperties
@@ -9748,17 +10308,17 @@ func (c *Glue) ResetJobBookmarkRequest(input *ResetJobBookmarkInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation ResetJobBookmark for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ResetJobBookmark
@@ -9851,14 +10411,14 @@ func (c *Glue) SearchTablesRequest(input *SearchTablesInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation SearchTables for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/SearchTables
@@ -9926,10 +10486,12 @@ func (c *Glue) SearchTablesPagesWithContext(ctx aws.Context, input *SearchTables
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*SearchTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*SearchTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9988,14 +10550,14 @@ func (c *Glue) StartCrawlerRequest(input *StartCrawlerInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation StartCrawler for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeCrawlerRunningException "CrawlerRunningException"
+//   * CrawlerRunningException
 //   The operation cannot be performed because the crawler is already running.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawler
@@ -10075,20 +10637,20 @@ func (c *Glue) StartCrawlerScheduleRequest(input *StartCrawlerScheduleInput) (re
 // See the AWS API reference guide for AWS Glue's
 // API operation StartCrawlerSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeSchedulerRunningException "SchedulerRunningException"
+//   * SchedulerRunningException
 //   The specified scheduler is already running.
 //
-//   * ErrCodeSchedulerTransitioningException "SchedulerTransitioningException"
+//   * SchedulerTransitioningException
 //   The specified scheduler is transitioning.
 //
-//   * ErrCodeNoScheduleException "NoScheduleException"
+//   * NoScheduleException
 //   There is no applicable schedule.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartCrawlerSchedule
@@ -10174,17 +10736,17 @@ func (c *Glue) StartExportLabelsTaskRunRequest(input *StartExportLabelsTaskRunIn
 // See the AWS API reference guide for AWS Glue's
 // API operation StartExportLabelsTaskRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartExportLabelsTaskRun
@@ -10287,20 +10849,20 @@ func (c *Glue) StartImportLabelsTaskRunRequest(input *StartImportLabelsTaskRunIn
 // See the AWS API reference guide for AWS Glue's
 // API operation StartImportLabelsTaskRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartImportLabelsTaskRun
@@ -10378,23 +10940,23 @@ func (c *Glue) StartJobRunRequest(input *StartJobRunInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation StartJobRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
+//   * ConcurrentRunsExceededException
 //   Too many jobs are being run concurrently.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartJobRun
@@ -10479,23 +11041,23 @@ func (c *Glue) StartMLEvaluationTaskRunRequest(input *StartMLEvaluationTaskRunIn
 // See the AWS API reference guide for AWS Glue's
 // API operation StartMLEvaluationTaskRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
+//   * ConcurrentRunsExceededException
 //   Too many jobs are being run concurrently.
 //
-//   * ErrCodeMLTransformNotReadyException "MLTransformNotReadyException"
+//   * MLTransformNotReadyException
 //   The machine learning transform is not ready to run.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartMLEvaluationTaskRun
@@ -10586,20 +11148,20 @@ func (c *Glue) StartMLLabelingSetGenerationTaskRunRequest(input *StartMLLabeling
 // See the AWS API reference guide for AWS Glue's
 // API operation StartMLLabelingSetGenerationTaskRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
+//   * ConcurrentRunsExceededException
 //   Too many jobs are being run concurrently.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartMLLabelingSetGenerationTaskRun
@@ -10678,23 +11240,23 @@ func (c *Glue) StartTriggerRequest(input *StartTriggerInput) (req *request.Reque
 // See the AWS API reference guide for AWS Glue's
 // API operation StartTrigger for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
+//   * ConcurrentRunsExceededException
 //   Too many jobs are being run concurrently.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartTrigger
@@ -10772,23 +11334,23 @@ func (c *Glue) StartWorkflowRunRequest(input *StartWorkflowRunInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation StartWorkflowRun for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeConcurrentRunsExceededException "ConcurrentRunsExceededException"
+//   * ConcurrentRunsExceededException
 //   Too many jobs are being run concurrently.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StartWorkflowRun
@@ -10867,17 +11429,17 @@ func (c *Glue) StopCrawlerRequest(input *StopCrawlerInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation StopCrawler for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeCrawlerNotRunningException "CrawlerNotRunningException"
+//   * CrawlerNotRunningException
 //   The specified crawler is not running.
 //
-//   * ErrCodeCrawlerStoppingException "CrawlerStoppingException"
+//   * CrawlerStoppingException
 //   The specified crawler is stopping.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawler
@@ -10957,17 +11519,17 @@ func (c *Glue) StopCrawlerScheduleRequest(input *StopCrawlerScheduleInput) (req 
 // See the AWS API reference guide for AWS Glue's
 // API operation StopCrawlerSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeSchedulerNotRunningException "SchedulerNotRunningException"
+//   * SchedulerNotRunningException
 //   The specified scheduler is not running.
 //
-//   * ErrCodeSchedulerTransitioningException "SchedulerTransitioningException"
+//   * SchedulerTransitioningException
 //   The specified scheduler is transitioning.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopCrawlerSchedule
@@ -11045,20 +11607,20 @@ func (c *Glue) StopTriggerRequest(input *StopTriggerInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation StopTrigger for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopTrigger
@@ -11078,6 +11640,98 @@ func (c *Glue) StopTrigger(input *StopTriggerInput) (*StopTriggerOutput, error) 
 // for more information on using Contexts.
 func (c *Glue) StopTriggerWithContext(ctx aws.Context, input *StopTriggerInput, opts ...request.Option) (*StopTriggerOutput, error) {
 	req, out := c.StopTriggerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopWorkflowRun = "StopWorkflowRun"
+
+// StopWorkflowRunRequest generates a "aws/request.Request" representing the
+// client's request for the StopWorkflowRun operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopWorkflowRun for more information on using the StopWorkflowRun
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopWorkflowRunRequest method.
+//    req, resp := client.StopWorkflowRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopWorkflowRun
+func (c *Glue) StopWorkflowRunRequest(input *StopWorkflowRunInput) (req *request.Request, output *StopWorkflowRunOutput) {
+	op := &request.Operation{
+		Name:       opStopWorkflowRun,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopWorkflowRunInput{}
+	}
+
+	output = &StopWorkflowRunOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopWorkflowRun API operation for AWS Glue.
+//
+// Stops the execution of the specified workflow run.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation StopWorkflowRun for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * IllegalWorkflowStateException
+//   The workflow is in an invalid state to perform a requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopWorkflowRun
+func (c *Glue) StopWorkflowRun(input *StopWorkflowRunInput) (*StopWorkflowRunOutput, error) {
+	req, out := c.StopWorkflowRunRequest(input)
+	return out, req.Send()
+}
+
+// StopWorkflowRunWithContext is the same as StopWorkflowRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopWorkflowRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) StopWorkflowRunWithContext(ctx aws.Context, input *StopWorkflowRunInput, opts ...request.Option) (*StopWorkflowRunOutput, error) {
+	req, out := c.StopWorkflowRunRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11139,17 +11793,17 @@ func (c *Glue) TagResourceRequest(input *TagResourceInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TagResource
@@ -11228,17 +11882,17 @@ func (c *Glue) UntagResourceRequest(input *UntagResourceInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UntagResource
@@ -11318,17 +11972,17 @@ func (c *Glue) UpdateClassifierRequest(input *UpdateClassifierInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateClassifier for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   There was a version conflict.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateClassifier
@@ -11348,6 +12002,188 @@ func (c *Glue) UpdateClassifier(input *UpdateClassifierInput) (*UpdateClassifier
 // for more information on using Contexts.
 func (c *Glue) UpdateClassifierWithContext(ctx aws.Context, input *UpdateClassifierInput, opts ...request.Option) (*UpdateClassifierOutput, error) {
 	req, out := c.UpdateClassifierRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateColumnStatisticsForPartition = "UpdateColumnStatisticsForPartition"
+
+// UpdateColumnStatisticsForPartitionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateColumnStatisticsForPartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateColumnStatisticsForPartition for more information on using the UpdateColumnStatisticsForPartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateColumnStatisticsForPartitionRequest method.
+//    req, resp := client.UpdateColumnStatisticsForPartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForPartition
+func (c *Glue) UpdateColumnStatisticsForPartitionRequest(input *UpdateColumnStatisticsForPartitionInput) (req *request.Request, output *UpdateColumnStatisticsForPartitionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateColumnStatisticsForPartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateColumnStatisticsForPartitionInput{}
+	}
+
+	output = &UpdateColumnStatisticsForPartitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateColumnStatisticsForPartition API operation for AWS Glue.
+//
+// Creates or updates partition statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation UpdateColumnStatisticsForPartition for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForPartition
+func (c *Glue) UpdateColumnStatisticsForPartition(input *UpdateColumnStatisticsForPartitionInput) (*UpdateColumnStatisticsForPartitionOutput, error) {
+	req, out := c.UpdateColumnStatisticsForPartitionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateColumnStatisticsForPartitionWithContext is the same as UpdateColumnStatisticsForPartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateColumnStatisticsForPartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) UpdateColumnStatisticsForPartitionWithContext(ctx aws.Context, input *UpdateColumnStatisticsForPartitionInput, opts ...request.Option) (*UpdateColumnStatisticsForPartitionOutput, error) {
+	req, out := c.UpdateColumnStatisticsForPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateColumnStatisticsForTable = "UpdateColumnStatisticsForTable"
+
+// UpdateColumnStatisticsForTableRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateColumnStatisticsForTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateColumnStatisticsForTable for more information on using the UpdateColumnStatisticsForTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateColumnStatisticsForTableRequest method.
+//    req, resp := client.UpdateColumnStatisticsForTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForTable
+func (c *Glue) UpdateColumnStatisticsForTableRequest(input *UpdateColumnStatisticsForTableInput) (req *request.Request, output *UpdateColumnStatisticsForTableOutput) {
+	op := &request.Operation{
+		Name:       opUpdateColumnStatisticsForTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateColumnStatisticsForTableInput{}
+	}
+
+	output = &UpdateColumnStatisticsForTableOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateColumnStatisticsForTable API operation for AWS Glue.
+//
+// Creates or updates table statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation UpdateColumnStatisticsForTable for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForTable
+func (c *Glue) UpdateColumnStatisticsForTable(input *UpdateColumnStatisticsForTableInput) (*UpdateColumnStatisticsForTableOutput, error) {
+	req, out := c.UpdateColumnStatisticsForTableRequest(input)
+	return out, req.Send()
+}
+
+// UpdateColumnStatisticsForTableWithContext is the same as UpdateColumnStatisticsForTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateColumnStatisticsForTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) UpdateColumnStatisticsForTableWithContext(ctx aws.Context, input *UpdateColumnStatisticsForTableInput, opts ...request.Option) (*UpdateColumnStatisticsForTableOutput, error) {
+	req, out := c.UpdateColumnStatisticsForTableRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11407,20 +12243,20 @@ func (c *Glue) UpdateConnectionRequest(input *UpdateConnectionInput) (req *reque
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateConnection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateConnection
@@ -11500,20 +12336,20 @@ func (c *Glue) UpdateCrawlerRequest(input *UpdateCrawlerInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateCrawler for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   There was a version conflict.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeCrawlerRunningException "CrawlerRunningException"
+//   * CrawlerRunningException
 //   The operation cannot be performed because the crawler is already running.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawler
@@ -11592,20 +12428,20 @@ func (c *Glue) UpdateCrawlerScheduleRequest(input *UpdateCrawlerScheduleInput) (
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateCrawlerSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   * VersionMismatchException
 //   There was a version conflict.
 //
-//   * ErrCodeSchedulerTransitioningException "SchedulerTransitioningException"
+//   * SchedulerTransitioningException
 //   The specified scheduler is transitioning.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateCrawlerSchedule
@@ -11684,20 +12520,20 @@ func (c *Glue) UpdateDatabaseRequest(input *UpdateDatabaseInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateDatabase for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDatabase
@@ -11776,20 +12612,20 @@ func (c *Glue) UpdateDevEndpointRequest(input *UpdateDevEndpointInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateDevEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   A value could not be validated.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateDevEndpoint
@@ -11867,20 +12703,20 @@ func (c *Glue) UpdateJobRequest(input *UpdateJobInput) (req *request.Request, ou
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateJob
@@ -11963,20 +12799,20 @@ func (c *Glue) UpdateMLTransformRequest(input *UpdateMLTransformInput) (req *req
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateMLTransform for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access to a resource was denied.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateMLTransform
@@ -12055,20 +12891,20 @@ func (c *Glue) UpdatePartitionRequest(input *UpdatePartitionInput) (req *request
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdatePartition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdatePartition
@@ -12147,26 +12983,26 @@ func (c *Glue) UpdateTableRequest(input *UpdateTableInput) (req *request.Request
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateTable for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
-//   * ErrCodeResourceNumberLimitExceededException "ResourceNumberLimitExceededException"
+//   * ResourceNumberLimitExceededException
 //   A resource numerical limit was exceeded.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTable
@@ -12244,20 +13080,20 @@ func (c *Glue) UpdateTriggerRequest(input *UpdateTriggerInput) (req *request.Req
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateTrigger for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateTrigger
@@ -12336,20 +13172,20 @@ func (c *Glue) UpdateUserDefinedFunctionRequest(input *UpdateUserDefinedFunction
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateUserDefinedFunction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+// Returned Error Types:
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   * EncryptionException
 //   An encryption operation failed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateUserDefinedFunction
@@ -12427,20 +13263,20 @@ func (c *Glue) UpdateWorkflowRequest(input *UpdateWorkflowInput) (req *request.R
 // See the AWS API reference guide for AWS Glue's
 // API operation UpdateWorkflow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input provided was not valid.
 //
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   * EntityNotFoundException
 //   A specified entity does not exist
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   An internal service error occurred.
 //
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   * OperationTimeoutException
 //   The operation timed out.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Two processes are trying to modify a resource simultaneously.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateWorkflow
@@ -12463,6 +13299,63 @@ func (c *Glue) UpdateWorkflowWithContext(ctx aws.Context, input *UpdateWorkflowI
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Access to a resource was denied.
+type AccessDeniedException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s *AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s *AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Defines an action to be initiated by a trigger.
@@ -12574,6 +13467,63 @@ func (s *Action) SetSecurityConfiguration(v string) *Action {
 func (s *Action) SetTimeout(v int64) *Action {
 	s.Timeout = &v
 	return s
+}
+
+// A resource to be created or added already exists.
+type AlreadyExistsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &AlreadyExistsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *AlreadyExistsException) Code() string {
+	return "AlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s *AlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *AlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s *AlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *AlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *AlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type BatchCreatePartitionInput struct {
@@ -13763,6 +14713,140 @@ func (s *BatchStopJobRunSuccessfulSubmission) SetJobRunId(v string) *BatchStopJo
 	return s
 }
 
+// Defines a binary column statistics data.
+type BinaryColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Average length of the column.
+	//
+	// AverageLength is a required field
+	AverageLength *float64 `type:"double" required:"true"`
+
+	// Maximum length of the column.
+	//
+	// MaximumLength is a required field
+	MaximumLength *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s BinaryColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BinaryColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BinaryColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BinaryColumnStatisticsData"}
+	if s.AverageLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("AverageLength"))
+	}
+	if s.MaximumLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaximumLength"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAverageLength sets the AverageLength field's value.
+func (s *BinaryColumnStatisticsData) SetAverageLength(v float64) *BinaryColumnStatisticsData {
+	s.AverageLength = &v
+	return s
+}
+
+// SetMaximumLength sets the MaximumLength field's value.
+func (s *BinaryColumnStatisticsData) SetMaximumLength(v int64) *BinaryColumnStatisticsData {
+	s.MaximumLength = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *BinaryColumnStatisticsData) SetNumberOfNulls(v int64) *BinaryColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// Defines a boolean column statistics.
+type BooleanColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Number of false value.
+	//
+	// NumberOfFalses is a required field
+	NumberOfFalses *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+
+	// Number of true value.
+	//
+	// NumberOfTrues is a required field
+	NumberOfTrues *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s BooleanColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BooleanColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BooleanColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BooleanColumnStatisticsData"}
+	if s.NumberOfFalses == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfFalses"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+	if s.NumberOfTrues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfTrues"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNumberOfFalses sets the NumberOfFalses field's value.
+func (s *BooleanColumnStatisticsData) SetNumberOfFalses(v int64) *BooleanColumnStatisticsData {
+	s.NumberOfFalses = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *BooleanColumnStatisticsData) SetNumberOfNulls(v int64) *BooleanColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// SetNumberOfTrues sets the NumberOfTrues field's value.
+func (s *BooleanColumnStatisticsData) SetNumberOfTrues(v int64) *BooleanColumnStatisticsData {
+	s.NumberOfTrues = &v
+	return s
+}
+
 type CancelMLTaskRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14402,6 +15486,412 @@ func (s *Column) SetType(v string) *Column {
 	return s
 }
 
+// Defines a column containing error.
+type ColumnError struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the column.
+	ColumnName *string `min:"1" type:"string"`
+
+	// The error message occurred during operation.
+	Error *ErrorDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s ColumnError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnError) GoString() string {
+	return s.String()
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *ColumnError) SetColumnName(v string) *ColumnError {
+	s.ColumnName = &v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *ColumnError) SetError(v *ErrorDetail) *ColumnError {
+	s.Error = v
+	return s
+}
+
+// Defines a column statistics.
+type ColumnStatistics struct {
+	_ struct{} `type:"structure"`
+
+	// The analyzed time of the column statistics.
+	//
+	// AnalyzedTime is a required field
+	AnalyzedTime *time.Time `type:"timestamp" required:"true"`
+
+	// The name of the column.
+	//
+	// ColumnName is a required field
+	ColumnName *string `min:"1" type:"string" required:"true"`
+
+	// The type of the column.
+	//
+	// ColumnType is a required field
+	ColumnType *string `type:"string" required:"true"`
+
+	// The statistics of the column.
+	//
+	// StatisticsData is a required field
+	StatisticsData *ColumnStatisticsData `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ColumnStatistics) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnStatistics) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ColumnStatistics) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ColumnStatistics"}
+	if s.AnalyzedTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalyzedTime"))
+	}
+	if s.ColumnName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnName"))
+	}
+	if s.ColumnName != nil && len(*s.ColumnName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ColumnName", 1))
+	}
+	if s.ColumnType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnType"))
+	}
+	if s.StatisticsData == nil {
+		invalidParams.Add(request.NewErrParamRequired("StatisticsData"))
+	}
+	if s.StatisticsData != nil {
+		if err := s.StatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("StatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalyzedTime sets the AnalyzedTime field's value.
+func (s *ColumnStatistics) SetAnalyzedTime(v time.Time) *ColumnStatistics {
+	s.AnalyzedTime = &v
+	return s
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *ColumnStatistics) SetColumnName(v string) *ColumnStatistics {
+	s.ColumnName = &v
+	return s
+}
+
+// SetColumnType sets the ColumnType field's value.
+func (s *ColumnStatistics) SetColumnType(v string) *ColumnStatistics {
+	s.ColumnType = &v
+	return s
+}
+
+// SetStatisticsData sets the StatisticsData field's value.
+func (s *ColumnStatistics) SetStatisticsData(v *ColumnStatisticsData) *ColumnStatistics {
+	s.StatisticsData = v
+	return s
+}
+
+// Defines a column statistics data.
+type ColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Binary Column Statistics Data.
+	BinaryColumnStatisticsData *BinaryColumnStatisticsData `type:"structure"`
+
+	// Boolean Column Statistics Data.
+	BooleanColumnStatisticsData *BooleanColumnStatisticsData `type:"structure"`
+
+	// Date Column Statistics Data.
+	DateColumnStatisticsData *DateColumnStatisticsData `type:"structure"`
+
+	// Decimal Column Statistics Data.
+	DecimalColumnStatisticsData *DecimalColumnStatisticsData `type:"structure"`
+
+	// Double Column Statistics Data.
+	DoubleColumnStatisticsData *DoubleColumnStatisticsData `type:"structure"`
+
+	// Long Column Statistics Data.
+	LongColumnStatisticsData *LongColumnStatisticsData `type:"structure"`
+
+	// String Column Statistics Data.
+	StringColumnStatisticsData *StringColumnStatisticsData `type:"structure"`
+
+	// The name of the column.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"ColumnStatisticsType"`
+}
+
+// String returns the string representation
+func (s ColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ColumnStatisticsData"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.BinaryColumnStatisticsData != nil {
+		if err := s.BinaryColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("BinaryColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.BooleanColumnStatisticsData != nil {
+		if err := s.BooleanColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("BooleanColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DateColumnStatisticsData != nil {
+		if err := s.DateColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("DateColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DecimalColumnStatisticsData != nil {
+		if err := s.DecimalColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("DecimalColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DoubleColumnStatisticsData != nil {
+		if err := s.DoubleColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("DoubleColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.LongColumnStatisticsData != nil {
+		if err := s.LongColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("LongColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StringColumnStatisticsData != nil {
+		if err := s.StringColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("StringColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBinaryColumnStatisticsData sets the BinaryColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetBinaryColumnStatisticsData(v *BinaryColumnStatisticsData) *ColumnStatisticsData {
+	s.BinaryColumnStatisticsData = v
+	return s
+}
+
+// SetBooleanColumnStatisticsData sets the BooleanColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetBooleanColumnStatisticsData(v *BooleanColumnStatisticsData) *ColumnStatisticsData {
+	s.BooleanColumnStatisticsData = v
+	return s
+}
+
+// SetDateColumnStatisticsData sets the DateColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetDateColumnStatisticsData(v *DateColumnStatisticsData) *ColumnStatisticsData {
+	s.DateColumnStatisticsData = v
+	return s
+}
+
+// SetDecimalColumnStatisticsData sets the DecimalColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetDecimalColumnStatisticsData(v *DecimalColumnStatisticsData) *ColumnStatisticsData {
+	s.DecimalColumnStatisticsData = v
+	return s
+}
+
+// SetDoubleColumnStatisticsData sets the DoubleColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetDoubleColumnStatisticsData(v *DoubleColumnStatisticsData) *ColumnStatisticsData {
+	s.DoubleColumnStatisticsData = v
+	return s
+}
+
+// SetLongColumnStatisticsData sets the LongColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetLongColumnStatisticsData(v *LongColumnStatisticsData) *ColumnStatisticsData {
+	s.LongColumnStatisticsData = v
+	return s
+}
+
+// SetStringColumnStatisticsData sets the StringColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetStringColumnStatisticsData(v *StringColumnStatisticsData) *ColumnStatisticsData {
+	s.StringColumnStatisticsData = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ColumnStatisticsData) SetType(v string) *ColumnStatisticsData {
+	s.Type = &v
+	return s
+}
+
+// Defines a column containing error.
+type ColumnStatisticsError struct {
+	_ struct{} `type:"structure"`
+
+	// The ColumnStatistics of the column.
+	ColumnStatistics *ColumnStatistics `type:"structure"`
+
+	// The error message occurred during operation.
+	Error *ErrorDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s ColumnStatisticsError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnStatisticsError) GoString() string {
+	return s.String()
+}
+
+// SetColumnStatistics sets the ColumnStatistics field's value.
+func (s *ColumnStatisticsError) SetColumnStatistics(v *ColumnStatistics) *ColumnStatisticsError {
+	s.ColumnStatistics = v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *ColumnStatisticsError) SetError(v *ErrorDetail) *ColumnStatisticsError {
+	s.Error = v
+	return s
+}
+
+// Two processes are trying to modify a resource simultaneously.
+type ConcurrentModificationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentModificationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentModificationException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentModificationException(v protocol.ResponseMetadata) error {
+	return &ConcurrentModificationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConcurrentModificationException) Code() string {
+	return "ConcurrentModificationException"
+}
+
+// Message returns the exception's message.
+func (s *ConcurrentModificationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConcurrentModificationException) OrigErr() error {
+	return nil
+}
+
+func (s *ConcurrentModificationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConcurrentModificationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConcurrentModificationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Too many jobs are being run concurrently.
+type ConcurrentRunsExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentRunsExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentRunsExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentRunsExceededException(v protocol.ResponseMetadata) error {
+	return &ConcurrentRunsExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConcurrentRunsExceededException) Code() string {
+	return "ConcurrentRunsExceededException"
+}
+
+// Message returns the exception's message.
+func (s *ConcurrentRunsExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConcurrentRunsExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *ConcurrentRunsExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConcurrentRunsExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConcurrentRunsExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Defines a condition under which a trigger fires.
 type Condition struct {
 	_ struct{} `type:"structure"`
@@ -14419,8 +15909,9 @@ type Condition struct {
 	// A logical operator.
 	LogicalOperator *string `type:"string" enum:"LogicalOperator"`
 
-	// The condition state. Currently, the values supported are SUCCEEDED, STOPPED,
-	// TIMEOUT, and FAILED.
+	// The condition state. Currently, the only job states that a trigger can listen
+	// for are SUCCEEDED, STOPPED, FAILED, and TIMEOUT. The only crawler states
+	// that a trigger can listen for are SUCCEEDED, FAILED, and CANCELLED.
 	State *string `type:"string" enum:"JobRunState"`
 }
 
@@ -14478,6 +15969,63 @@ func (s *Condition) SetLogicalOperator(v string) *Condition {
 func (s *Condition) SetState(v string) *Condition {
 	s.State = &v
 	return s
+}
+
+// A specified condition was not satisfied.
+type ConditionCheckFailureException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConditionCheckFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConditionCheckFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorConditionCheckFailureException(v protocol.ResponseMetadata) error {
+	return &ConditionCheckFailureException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConditionCheckFailureException) Code() string {
+	return "ConditionCheckFailureException"
+}
+
+// Message returns the exception's message.
+func (s *ConditionCheckFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConditionCheckFailureException) OrigErr() error {
+	return nil
+}
+
+func (s *ConditionCheckFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConditionCheckFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConditionCheckFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The confusion matrix shows you what your transform is predicting accurately
@@ -14573,7 +16121,7 @@ type Connection struct {
 	//
 	//    * INSTANCE_ID - The instance ID to use.
 	//
-	//    * JDBC_CONNECTION_URL - The URL for the JDBC connection.
+	//    * JDBC_CONNECTION_URL - The URL for connecting to a JDBC data source.
 	//
 	//    * JDBC_ENFORCE_SSL - A Boolean string (true, false) specifying whether
 	//    Secure Sockets Layer (SSL) with hostname matching is enforced for the
@@ -14597,6 +16145,13 @@ type Connection struct {
 	//    used for domain match or distinguished name match to prevent a man-in-the-middle
 	//    attack. In Oracle database, this is used as the SSL_SERVER_CERT_DN; in
 	//    Microsoft SQL Server, this is used as the hostNameInCertificate.
+	//
+	//    * CONNECTION_URL - The URL for connecting to a general (non-JDBC) data
+	//    source.
+	//
+	//    * KAFKA_BOOTSTRAP_SERVERS - A comma-separated list of host and port pairs
+	//    that are the addresses of the Apache Kafka brokers in a Kafka cluster
+	//    to which a Kafka client will connect to and bootstrap itself.
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
@@ -14699,8 +16254,16 @@ type ConnectionInput struct {
 	// ConnectionProperties is a required field
 	ConnectionProperties map[string]*string `type:"map" required:"true"`
 
-	// The type of the connection. Currently, only JDBC is supported; SFTP is not
-	// supported.
+	// The type of the connection. Currently, these types are supported:
+	//
+	//    * JDBC - Designates a connection to a database through Java Database Connectivity
+	//    (JDBC).
+	//
+	//    * KAFKA - Designates a connection to an Apache Kafka streaming platform.
+	//
+	//    * MONGODB - Designates a connection to a MongoDB document database.
+	//
+	// SFTP is not supported.
 	//
 	// ConnectionType is a required field
 	ConnectionType *string `type:"string" required:"true" enum:"ConnectionType"`
@@ -14971,7 +16534,7 @@ type Crawler struct {
 
 	// Crawler configuration information. This versioned JSON string allows users
 	// to specify aspects of a crawler's behavior. For more information, see Configuring
-	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// a Crawler (https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// If the crawler is running, contains the total time elapsed since the last
@@ -15247,6 +16810,177 @@ func (s *CrawlerNodeDetails) SetCrawls(v []*Crawl) *CrawlerNodeDetails {
 	return s
 }
 
+// The specified crawler is not running.
+type CrawlerNotRunningException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CrawlerNotRunningException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrawlerNotRunningException) GoString() string {
+	return s.String()
+}
+
+func newErrorCrawlerNotRunningException(v protocol.ResponseMetadata) error {
+	return &CrawlerNotRunningException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CrawlerNotRunningException) Code() string {
+	return "CrawlerNotRunningException"
+}
+
+// Message returns the exception's message.
+func (s *CrawlerNotRunningException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CrawlerNotRunningException) OrigErr() error {
+	return nil
+}
+
+func (s *CrawlerNotRunningException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CrawlerNotRunningException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CrawlerNotRunningException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The operation cannot be performed because the crawler is already running.
+type CrawlerRunningException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CrawlerRunningException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrawlerRunningException) GoString() string {
+	return s.String()
+}
+
+func newErrorCrawlerRunningException(v protocol.ResponseMetadata) error {
+	return &CrawlerRunningException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CrawlerRunningException) Code() string {
+	return "CrawlerRunningException"
+}
+
+// Message returns the exception's message.
+func (s *CrawlerRunningException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CrawlerRunningException) OrigErr() error {
+	return nil
+}
+
+func (s *CrawlerRunningException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CrawlerRunningException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CrawlerRunningException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The specified crawler is stopping.
+type CrawlerStoppingException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CrawlerStoppingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrawlerStoppingException) GoString() string {
+	return s.String()
+}
+
+func newErrorCrawlerStoppingException(v protocol.ResponseMetadata) error {
+	return &CrawlerStoppingException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CrawlerStoppingException) Code() string {
+	return "CrawlerStoppingException"
+}
+
+// Message returns the exception's message.
+func (s *CrawlerStoppingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CrawlerStoppingException) OrigErr() error {
+	return nil
+}
+
+func (s *CrawlerStoppingException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CrawlerStoppingException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CrawlerStoppingException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Specifies data stores to crawl.
 type CrawlerTargets struct {
 	_ struct{} `type:"structure"`
@@ -15490,9 +17224,9 @@ type CreateCrawlerInput struct {
 	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
-	// The crawler configuration information. This versioned JSON string allows
-	// users to specify aspects of a crawler's behavior. For more information, see
-	// Configuring a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// Crawler configuration information. This versioned JSON string allows users
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used by this crawler.
@@ -15515,10 +17249,10 @@ type CreateCrawlerInput struct {
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
 
-	// A cron expression used to specify the schedule. For more information, see
-	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// A cron expression used to specify the schedule (see Time-Based Schedules
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
 
 	// The policy for the crawler's update and deletion behavior.
@@ -15527,8 +17261,10 @@ type CreateCrawlerInput struct {
 	// The table prefix used for catalog tables that are created.
 	TablePrefix *string `type:"string"`
 
-	// The tags to use with this crawler request. You can use tags to limit access
-	// to the crawler. For more information, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html).
+	// The tags to use with this crawler request. You may use tags to limit access
+	// to the crawler. For more information about tags in AWS Glue, see AWS Tags
+	// in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
 	Tags map[string]*string `type:"map"`
 
 	// A list of collection of targets to crawl.
@@ -16430,6 +18166,9 @@ type CreateJobInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -16587,6 +18326,12 @@ func (s *CreateJobInput) SetName(v string) *CreateJobInput {
 	return s
 }
 
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *CreateJobInput) SetNonOverridableArguments(v map[string]*string) *CreateJobInput {
+	s.NonOverridableArguments = v
+	return s
+}
+
 // SetNotificationProperty sets the NotificationProperty field's value.
 func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *CreateJobInput {
 	s.NotificationProperty = v
@@ -16717,6 +18462,13 @@ type CreateMLTransformInput struct {
 	// default is an empty string.
 	Description *string `type:"string"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	//
 	// InputRecordTables is a required field
@@ -16727,6 +18479,21 @@ type CreateMLTransformInput struct {
 	// is 10. A DPU is a relative measure of processing power that consists of 4
 	// vCPUs of compute capacity and 16 GB of memory. For more information, see
 	// the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
+	//
+	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
+	// field is set automatically and becomes read-only.
 	//
 	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
 	// field is set automatically and becomes read-only.
@@ -16743,6 +18510,8 @@ type CreateMLTransformInput struct {
 
 	// The number of workers of a defined workerType that are allocated when this
 	// task runs.
+	//
+	// If WorkerType is set, then NumberOfWorkers is required (and vice versa).
 	NumberOfWorkers *int64 `type:"integer"`
 
 	// The algorithmic parameters that are specific to the transform type used.
@@ -16752,12 +18521,26 @@ type CreateMLTransformInput struct {
 	Parameters *TransformParameters `type:"structure" required:"true"`
 
 	// The name or Amazon Resource Name (ARN) of the IAM role with the required
-	// permissions. Ensure that this role has permission to your Amazon Simple Storage
-	// Service (Amazon S3) sources, targets, temporary directory, scripts, and any
-	// libraries that are used by the task run for this transform.
+	// permissions. The required permissions include both AWS Glue service role
+	// permissions to AWS Glue resources, and Amazon S3 permissions required by
+	// the transform.
+	//
+	//    * This role needs AWS Glue service role permissions to allow access to
+	//    resources in AWS Glue. See Attach a Policy to IAM Users That Access AWS
+	//    Glue (https://docs.aws.amazon.com/glue/latest/dg/attach-policy-iam-user.html).
+	//
+	//    * This role needs permission to your Amazon Simple Storage Service (Amazon
+	//    S3) sources, targets, temporary directory, scripts, and any libraries
+	//    used by the task run for this transform.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
+
+	// The tags to use with this machine learning transform. You may use tags to
+	// limit access to the machine learning transform. For more information about
+	// tags in AWS Glue, see AWS Tags in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
+	Tags map[string]*string `type:"map"`
 
 	// The timeout of the task run for this transform in minutes. This is the maximum
 	// time that a task run for this transform can consume resources before it is
@@ -16775,6 +18558,18 @@ type CreateMLTransformInput struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -16791,6 +18586,9 @@ func (s CreateMLTransformInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateMLTransformInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateMLTransformInput"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.InputRecordTables == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputRecordTables"))
 	}
@@ -16837,6 +18635,12 @@ func (s *CreateMLTransformInput) SetDescription(v string) *CreateMLTransformInpu
 	return s
 }
 
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *CreateMLTransformInput) SetGlueVersion(v string) *CreateMLTransformInput {
+	s.GlueVersion = &v
+	return s
+}
+
 // SetInputRecordTables sets the InputRecordTables field's value.
 func (s *CreateMLTransformInput) SetInputRecordTables(v []*Table) *CreateMLTransformInput {
 	s.InputRecordTables = v
@@ -16876,6 +18680,12 @@ func (s *CreateMLTransformInput) SetParameters(v *TransformParameters) *CreateML
 // SetRole sets the Role field's value.
 func (s *CreateMLTransformInput) SetRole(v string) *CreateMLTransformInput {
 	s.Role = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateMLTransformInput) SetTags(v map[string]*string) *CreateMLTransformInput {
+	s.Tags = v
 	return s
 }
 
@@ -18087,6 +19897,213 @@ func (s *DatabaseInput) SetParameters(v map[string]*string) *DatabaseInput {
 	return s
 }
 
+// Defines a date column statistics data.
+type DateColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *time.Time `type:"timestamp"`
+
+	// Minimum value of the column.
+	MinimumValue *time.Time `type:"timestamp"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DateColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DateColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DateColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DateColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *DateColumnStatisticsData) SetMaximumValue(v time.Time) *DateColumnStatisticsData {
+	s.MaximumValue = &v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *DateColumnStatisticsData) SetMinimumValue(v time.Time) *DateColumnStatisticsData {
+	s.MinimumValue = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *DateColumnStatisticsData) SetNumberOfDistinctValues(v int64) *DateColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *DateColumnStatisticsData) SetNumberOfNulls(v int64) *DateColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// Defines a decimal column statistics data.
+type DecimalColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *DecimalNumber `type:"structure"`
+
+	// Minimum value of the column.
+	MinimumValue *DecimalNumber `type:"structure"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DecimalColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DecimalColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DecimalColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DecimalColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+	if s.MaximumValue != nil {
+		if err := s.MaximumValue.Validate(); err != nil {
+			invalidParams.AddNested("MaximumValue", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.MinimumValue != nil {
+		if err := s.MinimumValue.Validate(); err != nil {
+			invalidParams.AddNested("MinimumValue", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *DecimalColumnStatisticsData) SetMaximumValue(v *DecimalNumber) *DecimalColumnStatisticsData {
+	s.MaximumValue = v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *DecimalColumnStatisticsData) SetMinimumValue(v *DecimalNumber) *DecimalColumnStatisticsData {
+	s.MinimumValue = v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *DecimalColumnStatisticsData) SetNumberOfDistinctValues(v int64) *DecimalColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *DecimalColumnStatisticsData) SetNumberOfNulls(v int64) *DecimalColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// Contains a numeric value in decimal format.
+type DecimalNumber struct {
+	_ struct{} `type:"structure"`
+
+	// The scale that determines where the decimal point falls in the unscaled value.
+	//
+	// Scale is a required field
+	Scale *int64 `type:"integer" required:"true"`
+
+	// The unscaled numeric value.
+	//
+	// UnscaledValue is automatically base64 encoded/decoded by the SDK.
+	//
+	// UnscaledValue is a required field
+	UnscaledValue []byte `type:"blob" required:"true"`
+}
+
+// String returns the string representation
+func (s DecimalNumber) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DecimalNumber) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DecimalNumber) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DecimalNumber"}
+	if s.Scale == nil {
+		invalidParams.Add(request.NewErrParamRequired("Scale"))
+	}
+	if s.UnscaledValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("UnscaledValue"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScale sets the Scale field's value.
+func (s *DecimalNumber) SetScale(v int64) *DecimalNumber {
+	s.Scale = &v
+	return s
+}
+
+// SetUnscaledValue sets the UnscaledValue field's value.
+func (s *DecimalNumber) SetUnscaledValue(v []byte) *DecimalNumber {
+	s.UnscaledValue = v
+	return s
+}
+
 type DeleteClassifierInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18139,6 +20156,224 @@ func (s DeleteClassifierOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteClassifierOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteColumnStatisticsForPartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// Name of the column.
+	//
+	// ColumnName is a required field
+	ColumnName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of partition values identifying the partition.
+	//
+	// PartitionValues is a required field
+	PartitionValues []*string `type:"list" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForPartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForPartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteColumnStatisticsForPartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteColumnStatisticsForPartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnName"))
+	}
+	if s.ColumnName != nil && len(*s.ColumnName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ColumnName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.PartitionValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValues"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetCatalogId(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetColumnName(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.ColumnName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetDatabaseName(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionValues sets the PartitionValues field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetPartitionValues(v []*string) *DeleteColumnStatisticsForPartitionInput {
+	s.PartitionValues = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetTableName(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type DeleteColumnStatisticsForPartitionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForPartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForPartitionOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteColumnStatisticsForTableInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The name of the column.
+	//
+	// ColumnName is a required field
+	ColumnName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForTableInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForTableInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteColumnStatisticsForTableInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteColumnStatisticsForTableInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnName"))
+	}
+	if s.ColumnName != nil && len(*s.ColumnName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ColumnName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetCatalogId(v string) *DeleteColumnStatisticsForTableInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetColumnName(v string) *DeleteColumnStatisticsForTableInput {
+	s.ColumnName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetDatabaseName(v string) *DeleteColumnStatisticsForTableInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetTableName(v string) *DeleteColumnStatisticsForTableInput {
+	s.TableName = &v
+	return s
+}
+
+type DeleteColumnStatisticsForTableOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForTableOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForTableOutput) GoString() string {
 	return s.String()
 }
 
@@ -19471,12 +21706,102 @@ func (s *DevEndpointCustomLibraries) SetExtraPythonLibsS3Path(v string) *DevEndp
 	return s
 }
 
+// Defines a double column statistics data.
+type DoubleColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *float64 `type:"double"`
+
+	// Minimum value of the column.
+	MinimumValue *float64 `type:"double"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DoubleColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DoubleColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DoubleColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DoubleColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *DoubleColumnStatisticsData) SetMaximumValue(v float64) *DoubleColumnStatisticsData {
+	s.MaximumValue = &v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *DoubleColumnStatisticsData) SetMinimumValue(v float64) *DoubleColumnStatisticsData {
+	s.MinimumValue = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *DoubleColumnStatisticsData) SetNumberOfDistinctValues(v int64) *DoubleColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *DoubleColumnStatisticsData) SetNumberOfNulls(v int64) *DoubleColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
 // Specifies an Amazon DynamoDB table to crawl.
 type DynamoDBTarget struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the DynamoDB table to crawl.
 	Path *string `type:"string"`
+
+	// Indicates whether to scan all the records, or to sample rows from the table.
+	// Scanning all the records can take a long time when the table is not a high
+	// throughput table.
+	//
+	// A value of true means to scan all records, while a value of false means to
+	// sample the records. If no value is specified, the value defaults to true.
+	ScanAll *bool `locationName:"scanAll" type:"boolean"`
+
+	// The percentage of the configured read capacity units to use by the AWS Glue
+	// crawler. Read capacity units is a term defined by DynamoDB, and is a numeric
+	// value that acts as rate limiter for the number of reads that can be performed
+	// on that table per second.
+	//
+	// The valid values are null or a value between 0.1 to 1.5. A null value is
+	// used when user does not provide a value, and defaults to 0.5 of the configured
+	// Read Capacity Unit (for provisioned tables), or 0.25 of the max configured
+	// Read Capacity Unit (for tables using on-demand mode).
+	ScanRate *float64 `locationName:"scanRate" type:"double"`
 }
 
 // String returns the string representation
@@ -19492,6 +21817,18 @@ func (s DynamoDBTarget) GoString() string {
 // SetPath sets the Path field's value.
 func (s *DynamoDBTarget) SetPath(v string) *DynamoDBTarget {
 	s.Path = &v
+	return s
+}
+
+// SetScanAll sets the ScanAll field's value.
+func (s *DynamoDBTarget) SetScanAll(v bool) *DynamoDBTarget {
+	s.ScanAll = &v
+	return s
+}
+
+// SetScanRate sets the ScanRate field's value.
+func (s *DynamoDBTarget) SetScanRate(v float64) *DynamoDBTarget {
+	s.ScanRate = &v
 	return s
 }
 
@@ -19621,6 +21958,120 @@ func (s *EncryptionConfiguration) SetJobBookmarksEncryption(v *JobBookmarksEncry
 func (s *EncryptionConfiguration) SetS3Encryption(v []*S3Encryption) *EncryptionConfiguration {
 	s.S3Encryption = v
 	return s
+}
+
+// An encryption operation failed.
+type EncryptionException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s EncryptionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionException) GoString() string {
+	return s.String()
+}
+
+func newErrorEncryptionException(v protocol.ResponseMetadata) error {
+	return &EncryptionException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *EncryptionException) Code() string {
+	return "GlueEncryptionException"
+}
+
+// Message returns the exception's message.
+func (s *EncryptionException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *EncryptionException) OrigErr() error {
+	return nil
+}
+
+func (s *EncryptionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *EncryptionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *EncryptionException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// A specified entity does not exist
+type EntityNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s EntityNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EntityNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorEntityNotFoundException(v protocol.ResponseMetadata) error {
+	return &EntityNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *EntityNotFoundException) Code() string {
+	return "EntityNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *EntityNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *EntityNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *EntityNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *EntityNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *EntityNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains details about an error.
@@ -20165,6 +22616,254 @@ func (s *GetClassifiersOutput) SetClassifiers(v []*Classifier) *GetClassifiersOu
 // SetNextToken sets the NextToken field's value.
 func (s *GetClassifiersOutput) SetNextToken(v string) *GetClassifiersOutput {
 	s.NextToken = &v
+	return s
+}
+
+type GetColumnStatisticsForPartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column names.
+	//
+	// ColumnNames is a required field
+	ColumnNames []*string `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of partition values identifying the partition.
+	//
+	// PartitionValues is a required field
+	PartitionValues []*string `type:"list" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForPartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForPartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetColumnStatisticsForPartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetColumnStatisticsForPartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnNames"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.PartitionValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValues"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetCatalogId(v string) *GetColumnStatisticsForPartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnNames sets the ColumnNames field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetColumnNames(v []*string) *GetColumnStatisticsForPartitionInput {
+	s.ColumnNames = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetDatabaseName(v string) *GetColumnStatisticsForPartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionValues sets the PartitionValues field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetPartitionValues(v []*string) *GetColumnStatisticsForPartitionInput {
+	s.PartitionValues = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetTableName(v string) *GetColumnStatisticsForPartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type GetColumnStatisticsForPartitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of ColumnStatistics that failed to be retrieved.
+	ColumnStatisticsList []*ColumnStatistics `type:"list"`
+
+	// Error occurred during retrieving column statistics data.
+	Errors []*ColumnError `type:"list"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForPartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForPartitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *GetColumnStatisticsForPartitionOutput) SetColumnStatisticsList(v []*ColumnStatistics) *GetColumnStatisticsForPartitionOutput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *GetColumnStatisticsForPartitionOutput) SetErrors(v []*ColumnError) *GetColumnStatisticsForPartitionOutput {
+	s.Errors = v
+	return s
+}
+
+type GetColumnStatisticsForTableInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column names.
+	//
+	// ColumnNames is a required field
+	ColumnNames []*string `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForTableInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForTableInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetColumnStatisticsForTableInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetColumnStatisticsForTableInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnNames"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetColumnStatisticsForTableInput) SetCatalogId(v string) *GetColumnStatisticsForTableInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnNames sets the ColumnNames field's value.
+func (s *GetColumnStatisticsForTableInput) SetColumnNames(v []*string) *GetColumnStatisticsForTableInput {
+	s.ColumnNames = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetColumnStatisticsForTableInput) SetDatabaseName(v string) *GetColumnStatisticsForTableInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetColumnStatisticsForTableInput) SetTableName(v string) *GetColumnStatisticsForTableInput {
+	s.TableName = &v
+	return s
+}
+
+type GetColumnStatisticsForTableOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of ColumnStatistics that failed to be retrieved.
+	ColumnStatisticsList []*ColumnStatistics `type:"list"`
+
+	// List of ColumnStatistics that failed to be retrieved.
+	Errors []*ColumnError `type:"list"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForTableOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForTableOutput) GoString() string {
+	return s.String()
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *GetColumnStatisticsForTableOutput) SetColumnStatisticsList(v []*ColumnStatistics) *GetColumnStatisticsForTableOutput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *GetColumnStatisticsForTableOutput) SetErrors(v []*ColumnError) *GetColumnStatisticsForTableOutput {
+	s.Errors = v
 	return s
 }
 
@@ -21790,6 +24489,13 @@ type GetMLTransformOutput struct {
 	// The latest evaluation metrics.
 	EvaluationMetrics *EvaluationMetrics `type:"structure"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	InputRecordTables []*Table `type:"list"`
 
@@ -21883,6 +24589,12 @@ func (s *GetMLTransformOutput) SetDescription(v string) *GetMLTransformOutput {
 // SetEvaluationMetrics sets the EvaluationMetrics field's value.
 func (s *GetMLTransformOutput) SetEvaluationMetrics(v *EvaluationMetrics) *GetMLTransformOutput {
 	s.EvaluationMetrics = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *GetMLTransformOutput) SetGlueVersion(v string) *GetMLTransformOutput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -23621,10 +26333,10 @@ type GetUserDefinedFunctionsInput struct {
 	// If none is provided, the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the catalog database where the functions are located.
-	//
-	// DatabaseName is a required field
-	DatabaseName *string `min:"1" type:"string" required:"true"`
+	// The name of the catalog database where the functions are located. If none
+	// is provided, functions from all the databases across the catalog will be
+	// returned.
+	DatabaseName *string `min:"1" type:"string"`
 
 	// The maximum number of functions to return in one response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -23654,9 +26366,6 @@ func (s *GetUserDefinedFunctionsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetUserDefinedFunctionsInput"}
 	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
-	}
-	if s.DatabaseName == nil {
-		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
 	}
 	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
@@ -24102,11 +26811,11 @@ type GrokClassifier struct {
 	CreationTime *time.Time `type:"timestamp"`
 
 	// Optional custom grok patterns defined by this classifier. For more information,
-	// see custom patterns in Writing Custom Classifiers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
+	// see custom patterns in Writing Custom Classifiers (https://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
 	CustomPatterns *string `type:"string"`
 
 	// The grok pattern applied to a data store by this classifier. For more information,
-	// see built-in patterns in Writing Custom Classifiers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
+	// see built-in patterns in Writing Custom Classifiers (https://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
 	//
 	// GrokPattern is a required field
 	GrokPattern *string `min:"1" type:"string" required:"true"`
@@ -24173,6 +26882,120 @@ func (s *GrokClassifier) SetName(v string) *GrokClassifier {
 func (s *GrokClassifier) SetVersion(v int64) *GrokClassifier {
 	s.Version = &v
 	return s
+}
+
+// The same unique identifier was associated with two different records.
+type IdempotentParameterMismatchException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s IdempotentParameterMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IdempotentParameterMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorIdempotentParameterMismatchException(v protocol.ResponseMetadata) error {
+	return &IdempotentParameterMismatchException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *IdempotentParameterMismatchException) Code() string {
+	return "IdempotentParameterMismatchException"
+}
+
+// Message returns the exception's message.
+func (s *IdempotentParameterMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *IdempotentParameterMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s *IdempotentParameterMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *IdempotentParameterMismatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *IdempotentParameterMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The workflow is in an invalid state to perform a requested operation.
+type IllegalWorkflowStateException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s IllegalWorkflowStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IllegalWorkflowStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorIllegalWorkflowStateException(v protocol.ResponseMetadata) error {
+	return &IllegalWorkflowStateException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *IllegalWorkflowStateException) Code() string {
+	return "IllegalWorkflowStateException"
+}
+
+// Message returns the exception's message.
+func (s *IllegalWorkflowStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *IllegalWorkflowStateException) OrigErr() error {
+	return nil
+}
+
+func (s *IllegalWorkflowStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *IllegalWorkflowStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *IllegalWorkflowStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ImportCatalogToGlueInput struct {
@@ -24260,6 +27083,120 @@ func (s *ImportLabelsTaskRunProperties) SetReplace(v bool) *ImportLabelsTaskRunP
 	return s
 }
 
+// An internal service error occurred.
+type InternalServiceException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceException(v protocol.ResponseMetadata) error {
+	return &InternalServiceException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServiceException) Code() string {
+	return "InternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The input provided was not valid.
+type InvalidInputException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidInputException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInputException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
+	return &InvalidInputException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidInputException) Code() string {
+	return "InvalidInputException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidInputException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidInputException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidInputException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Specifies a JDBC data store to crawl.
 type JdbcTarget struct {
 	_ struct{} `type:"structure"`
@@ -24268,7 +27205,7 @@ type JdbcTarget struct {
 	ConnectionName *string `type:"string"`
 
 	// A list of glob patterns used to exclude from the crawl. For more information,
-	// see Catalog Tables with a Crawler (http://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
+	// see Catalog Tables with a Crawler (https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
 	Exclusions []*string `type:"list"`
 
 	// The path of the JDBC target.
@@ -24388,6 +27325,9 @@ type Job struct {
 
 	// The name you assign to this job definition.
 	Name *string `min:"1" type:"string"`
+
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
 
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
@@ -24512,6 +27452,12 @@ func (s *Job) SetMaxRetries(v int64) *Job {
 // SetName sets the Name field's value.
 func (s *Job) SetName(v string) *Job {
 	s.Name = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *Job) SetNonOverridableArguments(v map[string]*string) *Job {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -24790,7 +27736,8 @@ type JobRun struct {
 	// The name of the job definition being used in this run.
 	JobName *string `min:"1" type:"string"`
 
-	// The current state of the job run.
+	// The current state of the job run. For more information about the statuses
+	// of jobs that have terminated abnormally, see AWS Glue Job Run Statuses (https://docs.aws.amazon.com/glue/latest/dg/job-run-statuses.html).
 	JobRunState *string `type:"string" enum:"JobRunState"`
 
 	// The last time that this job run was modified.
@@ -25086,6 +28033,9 @@ type JobUpdate struct {
 	// The maximum number of times to retry this job if it fails.
 	MaxRetries *int64 `type:"integer"`
 
+	// Non-overridable arguments for this job, specified as name-value pairs.
+	NonOverridableArguments map[string]*string `type:"map"`
+
 	// Specifies the configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
@@ -25215,6 +28165,12 @@ func (s *JobUpdate) SetMaxCapacity(v float64) *JobUpdate {
 // SetMaxRetries sets the MaxRetries field's value.
 func (s *JobUpdate) SetMaxRetries(v int64) *JobUpdate {
 	s.MaxRetries = &v
+	return s
+}
+
+// SetNonOverridableArguments sets the NonOverridableArguments field's value.
+func (s *JobUpdate) SetNonOverridableArguments(v map[string]*string) *JobUpdate {
+	s.NonOverridableArguments = v
 	return s
 }
 
@@ -25677,6 +28633,124 @@ func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 	return s
 }
 
+type ListMLTransformsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A TransformFilterCriteria used to filter the machine learning transforms.
+	Filter *TransformFilterCriteria `type:"structure"`
+
+	// The maximum size of a list to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation request.
+	NextToken *string `type:"string"`
+
+	// A TransformSortCriteria used to sort the machine learning transforms.
+	Sort *TransformSortCriteria `type:"structure"`
+
+	// Specifies to return only these tagged resources.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s ListMLTransformsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMLTransformsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMLTransformsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMLTransformsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Sort != nil {
+		if err := s.Sort.Validate(); err != nil {
+			invalidParams.AddNested("Sort", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilter sets the Filter field's value.
+func (s *ListMLTransformsInput) SetFilter(v *TransformFilterCriteria) *ListMLTransformsInput {
+	s.Filter = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMLTransformsInput) SetMaxResults(v int64) *ListMLTransformsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMLTransformsInput) SetNextToken(v string) *ListMLTransformsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSort sets the Sort field's value.
+func (s *ListMLTransformsInput) SetSort(v *TransformSortCriteria) *ListMLTransformsInput {
+	s.Sort = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListMLTransformsInput) SetTags(v map[string]*string) *ListMLTransformsInput {
+	s.Tags = v
+	return s
+}
+
+type ListMLTransformsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A continuation token, if the returned list does not contain the last metric
+	// available.
+	NextToken *string `type:"string"`
+
+	// The identifiers of all the machine learning transforms in the account, or
+	// the machine learning transforms with the specified tags.
+	//
+	// TransformIds is a required field
+	TransformIds []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ListMLTransformsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMLTransformsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMLTransformsOutput) SetNextToken(v string) *ListMLTransformsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTransformIds sets the TransformIds field's value.
+func (s *ListMLTransformsOutput) SetTransformIds(v []*string) *ListMLTransformsOutput {
+	s.TransformIds = v
+	return s
+}
+
 type ListTriggersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25938,6 +29012,77 @@ func (s *Location) SetS3(v []*CodeGenNodeArg) *Location {
 	return s
 }
 
+// Defines a long column statistics data.
+type LongColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *int64 `type:"long"`
+
+	// Minimum value of the column.
+	MinimumValue *int64 `type:"long"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s LongColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LongColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LongColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LongColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *LongColumnStatisticsData) SetMaximumValue(v int64) *LongColumnStatisticsData {
+	s.MaximumValue = &v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *LongColumnStatisticsData) SetMinimumValue(v int64) *LongColumnStatisticsData {
+	s.MinimumValue = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *LongColumnStatisticsData) SetNumberOfDistinctValues(v int64) *LongColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *LongColumnStatisticsData) SetNumberOfNulls(v int64) *LongColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
 // A structure for a machine learning transform.
 type MLTransform struct {
 	_ struct{} `type:"structure"`
@@ -25952,6 +29097,13 @@ type MLTransform struct {
 	// An EvaluationMetrics object. Evaluation metrics provide an estimate of the
 	// quality of your machine learning transform.
 	EvaluationMetrics *EvaluationMetrics `type:"structure"`
+
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
 
 	// A list of AWS Glue table definitions used by the transform.
 	InputRecordTables []*Table `type:"list"`
@@ -25969,7 +29121,19 @@ type MLTransform struct {
 	// task runs for this transform. You can allocate from 2 to 100 DPUs; the default
 	// is 10. A DPU is a relative measure of processing power that consists of 4
 	// vCPUs of compute capacity and 16 GB of memory. For more information, see
-	// the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	// the AWS Glue pricing page (http://aws.amazon.com/glue/pricing/).
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	//
 	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
 	// field is set automatically and becomes read-only.
@@ -25985,6 +29149,8 @@ type MLTransform struct {
 
 	// The number of workers of a defined workerType that are allocated when a task
 	// of the transform runs.
+	//
+	// If WorkerType is set, then NumberOfWorkers is required (and vice versa).
 	NumberOfWorkers *int64 `type:"integer"`
 
 	// A TransformParameters object. You can use parameters to tune (customize)
@@ -25994,9 +29160,17 @@ type MLTransform struct {
 	Parameters *TransformParameters `type:"structure"`
 
 	// The name or Amazon Resource Name (ARN) of the IAM role with the required
-	// permissions. This role needs permission to your Amazon Simple Storage Service
-	// (Amazon S3) sources, targets, temporary directory, scripts, and any libraries
-	// used by the task run for this transform.
+	// permissions. The required permissions include both AWS Glue service role
+	// permissions to AWS Glue resources, and Amazon S3 permissions required by
+	// the transform.
+	//
+	//    * This role needs AWS Glue service role permissions to allow access to
+	//    resources in AWS Glue. See Attach a Policy to IAM Users That Access AWS
+	//    Glue (https://docs.aws.amazon.com/glue/latest/dg/attach-policy-iam-user.html).
+	//
+	//    * This role needs permission to your Amazon Simple Storage Service (Amazon
+	//    S3) sources, targets, temporary directory, scripts, and any libraries
+	//    used by the task run for this transform.
 	Role *string `type:"string"`
 
 	// A map of key-value pairs representing the columns and data types that this
@@ -26024,6 +29198,18 @@ type MLTransform struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -26052,6 +29238,12 @@ func (s *MLTransform) SetDescription(v string) *MLTransform {
 // SetEvaluationMetrics sets the EvaluationMetrics field's value.
 func (s *MLTransform) SetEvaluationMetrics(v *EvaluationMetrics) *MLTransform {
 	s.EvaluationMetrics = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *MLTransform) SetGlueVersion(v string) *MLTransform {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -26139,6 +29331,63 @@ func (s *MLTransform) SetWorkerType(v string) *MLTransform {
 	return s
 }
 
+// The machine learning transform is not ready to run.
+type MLTransformNotReadyException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s MLTransformNotReadyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MLTransformNotReadyException) GoString() string {
+	return s.String()
+}
+
+func newErrorMLTransformNotReadyException(v protocol.ResponseMetadata) error {
+	return &MLTransformNotReadyException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *MLTransformNotReadyException) Code() string {
+	return "MLTransformNotReadyException"
+}
+
+// Message returns the exception's message.
+func (s *MLTransformNotReadyException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *MLTransformNotReadyException) OrigErr() error {
+	return nil
+}
+
+func (s *MLTransformNotReadyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *MLTransformNotReadyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *MLTransformNotReadyException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Defines a mapping.
 type MappingEntry struct {
 	_ struct{} `type:"structure"`
@@ -26206,6 +29455,63 @@ func (s *MappingEntry) SetTargetTable(v string) *MappingEntry {
 func (s *MappingEntry) SetTargetType(v string) *MappingEntry {
 	s.TargetType = &v
 	return s
+}
+
+// There is no applicable schedule.
+type NoScheduleException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s NoScheduleException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoScheduleException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoScheduleException(v protocol.ResponseMetadata) error {
+	return &NoScheduleException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *NoScheduleException) Code() string {
+	return "NoScheduleException"
+}
+
+// Message returns the exception's message.
+func (s *NoScheduleException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *NoScheduleException) OrigErr() error {
+	return nil
+}
+
+func (s *NoScheduleException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *NoScheduleException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *NoScheduleException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A node represents an AWS Glue component like Trigger, Job etc. which is part
@@ -26314,6 +29620,63 @@ func (s *NotificationProperty) Validate() error {
 func (s *NotificationProperty) SetNotifyDelayAfter(v int64) *NotificationProperty {
 	s.NotifyDelayAfter = &v
 	return s
+}
+
+// The operation timed out.
+type OperationTimeoutException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s OperationTimeoutException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OperationTimeoutException) GoString() string {
+	return s.String()
+}
+
+func newErrorOperationTimeoutException(v protocol.ResponseMetadata) error {
+	return &OperationTimeoutException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *OperationTimeoutException) Code() string {
+	return "OperationTimeoutException"
+}
+
+// Message returns the exception's message.
+func (s *OperationTimeoutException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *OperationTimeoutException) OrigErr() error {
+	return nil
+}
+
+func (s *OperationTimeoutException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *OperationTimeoutException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *OperationTimeoutException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies the sort order of a sorted column.
@@ -27167,6 +30530,63 @@ func (s *ResetJobBookmarkOutput) SetJobBookmarkEntry(v *JobBookmarkEntry) *Reset
 	return s
 }
 
+// A resource numerical limit was exceeded.
+type ResourceNumberLimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNumberLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNumberLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNumberLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ResourceNumberLimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNumberLimitExceededException) Code() string {
+	return "ResourceNumberLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNumberLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNumberLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNumberLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNumberLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNumberLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The URIs for function resources.
 type ResourceUri struct {
 	_ struct{} `type:"structure"`
@@ -27251,7 +30671,7 @@ type S3Target struct {
 	_ struct{} `type:"structure"`
 
 	// A list of glob patterns used to exclude from the crawl. For more information,
-	// see Catalog Tables with a Crawler (http://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
+	// see Catalog Tables with a Crawler (https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
 	Exclusions []*string `type:"list"`
 
 	// The path to the Amazon S3 target.
@@ -27284,10 +30704,10 @@ func (s *S3Target) SetPath(v string) *S3Target {
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
-	// A cron expression used to specify the schedule. For more information, see
-	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// A cron expression used to specify the schedule (see Time-Based Schedules
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	ScheduleExpression *string `type:"string"`
 
 	// The state of the schedule.
@@ -27314,6 +30734,177 @@ func (s *Schedule) SetScheduleExpression(v string) *Schedule {
 func (s *Schedule) SetState(v string) *Schedule {
 	s.State = &v
 	return s
+}
+
+// The specified scheduler is not running.
+type SchedulerNotRunningException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s SchedulerNotRunningException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SchedulerNotRunningException) GoString() string {
+	return s.String()
+}
+
+func newErrorSchedulerNotRunningException(v protocol.ResponseMetadata) error {
+	return &SchedulerNotRunningException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *SchedulerNotRunningException) Code() string {
+	return "SchedulerNotRunningException"
+}
+
+// Message returns the exception's message.
+func (s *SchedulerNotRunningException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *SchedulerNotRunningException) OrigErr() error {
+	return nil
+}
+
+func (s *SchedulerNotRunningException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *SchedulerNotRunningException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *SchedulerNotRunningException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The specified scheduler is already running.
+type SchedulerRunningException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s SchedulerRunningException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SchedulerRunningException) GoString() string {
+	return s.String()
+}
+
+func newErrorSchedulerRunningException(v protocol.ResponseMetadata) error {
+	return &SchedulerRunningException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *SchedulerRunningException) Code() string {
+	return "SchedulerRunningException"
+}
+
+// Message returns the exception's message.
+func (s *SchedulerRunningException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *SchedulerRunningException) OrigErr() error {
+	return nil
+}
+
+func (s *SchedulerRunningException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *SchedulerRunningException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *SchedulerRunningException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The specified scheduler is transitioning.
+type SchedulerTransitioningException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s SchedulerTransitioningException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SchedulerTransitioningException) GoString() string {
+	return s.String()
+}
+
+func newErrorSchedulerTransitioningException(v protocol.ResponseMetadata) error {
+	return &SchedulerTransitioningException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *SchedulerTransitioningException) Code() string {
+	return "SchedulerTransitioningException"
+}
+
+// Message returns the exception's message.
+func (s *SchedulerTransitioningException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *SchedulerTransitioningException) OrigErr() error {
+	return nil
+}
+
+func (s *SchedulerTransitioningException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *SchedulerTransitioningException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *SchedulerTransitioningException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A policy that specifies update and deletion behaviors for the crawler.
@@ -28686,6 +32277,78 @@ func (s *StopTriggerOutput) SetName(v string) *StopTriggerOutput {
 	return s
 }
 
+type StopWorkflowRunInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the workflow to stop.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The ID of the workflow run to stop.
+	//
+	// RunId is a required field
+	RunId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopWorkflowRunInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopWorkflowRunInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopWorkflowRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopWorkflowRunInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.RunId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RunId"))
+	}
+	if s.RunId != nil && len(*s.RunId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RunId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *StopWorkflowRunInput) SetName(v string) *StopWorkflowRunInput {
+	s.Name = &v
+	return s
+}
+
+// SetRunId sets the RunId field's value.
+func (s *StopWorkflowRunInput) SetRunId(v string) *StopWorkflowRunInput {
+	s.RunId = &v
+	return s
+}
+
+type StopWorkflowRunOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopWorkflowRunOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopWorkflowRunOutput) GoString() string {
+	return s.String()
+}
+
 // Describes the physical storage of table data.
 type StorageDescriptor struct {
 	_ struct{} `type:"structure"`
@@ -28846,6 +32509,87 @@ func (s *StorageDescriptor) SetSortColumns(v []*Order) *StorageDescriptor {
 // SetStoredAsSubDirectories sets the StoredAsSubDirectories field's value.
 func (s *StorageDescriptor) SetStoredAsSubDirectories(v bool) *StorageDescriptor {
 	s.StoredAsSubDirectories = &v
+	return s
+}
+
+// Defines a string column statistics data.
+type StringColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Average value of the column.
+	//
+	// AverageLength is a required field
+	AverageLength *float64 `type:"double" required:"true"`
+
+	// Maximum value of the column.
+	//
+	// MaximumLength is a required field
+	MaximumLength *int64 `type:"long" required:"true"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s StringColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StringColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StringColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StringColumnStatisticsData"}
+	if s.AverageLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("AverageLength"))
+	}
+	if s.MaximumLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaximumLength"))
+	}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAverageLength sets the AverageLength field's value.
+func (s *StringColumnStatisticsData) SetAverageLength(v float64) *StringColumnStatisticsData {
+	s.AverageLength = &v
+	return s
+}
+
+// SetMaximumLength sets the MaximumLength field's value.
+func (s *StringColumnStatisticsData) SetMaximumLength(v int64) *StringColumnStatisticsData {
+	s.MaximumLength = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *StringColumnStatisticsData) SetNumberOfDistinctValues(v int64) *StringColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *StringColumnStatisticsData) SetNumberOfNulls(v int64) *StringColumnStatisticsData {
+	s.NumberOfNulls = &v
 	return s
 }
 
@@ -29745,6 +33489,13 @@ type TransformFilterCriteria struct {
 	// The time and date before which the transforms were created.
 	CreatedBefore *time.Time `type:"timestamp"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// Filter on transforms last modified after this date.
 	LastModifiedAfter *time.Time `type:"timestamp"`
 
@@ -29783,6 +33534,9 @@ func (s TransformFilterCriteria) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *TransformFilterCriteria) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "TransformFilterCriteria"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -29812,6 +33566,12 @@ func (s *TransformFilterCriteria) SetCreatedAfter(v time.Time) *TransformFilterC
 // SetCreatedBefore sets the CreatedBefore field's value.
 func (s *TransformFilterCriteria) SetCreatedBefore(v time.Time) *TransformFilterCriteria {
 	s.CreatedBefore = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *TransformFilterCriteria) SetGlueVersion(v string) *TransformFilterCriteria {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -30341,6 +34101,256 @@ func (s UpdateClassifierOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateColumnStatisticsForPartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column statistics.
+	//
+	// ColumnStatisticsList is a required field
+	ColumnStatisticsList []*ColumnStatistics `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of partition values identifying the partition.
+	//
+	// PartitionValues is a required field
+	PartitionValues []*string `type:"list" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForPartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForPartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateColumnStatisticsForPartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateColumnStatisticsForPartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnStatisticsList == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnStatisticsList"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.PartitionValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValues"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.ColumnStatisticsList != nil {
+		for i, v := range s.ColumnStatisticsList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ColumnStatisticsList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetCatalogId(v string) *UpdateColumnStatisticsForPartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetColumnStatisticsList(v []*ColumnStatistics) *UpdateColumnStatisticsForPartitionInput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetDatabaseName(v string) *UpdateColumnStatisticsForPartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionValues sets the PartitionValues field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetPartitionValues(v []*string) *UpdateColumnStatisticsForPartitionInput {
+	s.PartitionValues = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetTableName(v string) *UpdateColumnStatisticsForPartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateColumnStatisticsForPartitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Error occurred during updating column statistics data.
+	Errors []*ColumnStatisticsError `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForPartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForPartitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetErrors sets the Errors field's value.
+func (s *UpdateColumnStatisticsForPartitionOutput) SetErrors(v []*ColumnStatisticsError) *UpdateColumnStatisticsForPartitionOutput {
+	s.Errors = v
+	return s
+}
+
+type UpdateColumnStatisticsForTableInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column statistics.
+	//
+	// ColumnStatisticsList is a required field
+	ColumnStatisticsList []*ColumnStatistics `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForTableInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForTableInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateColumnStatisticsForTableInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateColumnStatisticsForTableInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnStatisticsList == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnStatisticsList"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.ColumnStatisticsList != nil {
+		for i, v := range s.ColumnStatisticsList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ColumnStatisticsList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetCatalogId(v string) *UpdateColumnStatisticsForTableInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetColumnStatisticsList(v []*ColumnStatistics) *UpdateColumnStatisticsForTableInput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetDatabaseName(v string) *UpdateColumnStatisticsForTableInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetTableName(v string) *UpdateColumnStatisticsForTableInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateColumnStatisticsForTableOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of ColumnStatisticsErrors.
+	Errors []*ColumnStatisticsError `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForTableOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForTableOutput) GoString() string {
+	return s.String()
+}
+
+// SetErrors sets the Errors field's value.
+func (s *UpdateColumnStatisticsForTableOutput) SetErrors(v []*ColumnStatisticsError) *UpdateColumnStatisticsForTableOutput {
+	s.Errors = v
+	return s
+}
+
 type UpdateConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -30436,9 +34446,9 @@ type UpdateCrawlerInput struct {
 	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
-	// The crawler configuration information. This versioned JSON string allows
-	// users to specify aspects of a crawler's behavior. For more information, see
-	// Configuring a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// Crawler configuration information. This versioned JSON string allows users
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used by this crawler.
@@ -30459,10 +34469,10 @@ type UpdateCrawlerInput struct {
 	// the new crawler to access customer resources.
 	Role *string `type:"string"`
 
-	// A cron expression used to specify the schedule. For more information, see
-	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// A cron expression used to specify the schedule (see Time-Based Schedules
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
 
 	// The policy for the crawler's update and deletion behavior.
@@ -30594,10 +34604,10 @@ type UpdateCrawlerScheduleInput struct {
 	// CrawlerName is a required field
 	CrawlerName *string `min:"1" type:"string" required:"true"`
 
-	// The updated cron expression used to specify the schedule. For more information,
-	// see Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// The updated cron expression used to specify the schedule (see Time-Based
+	// Schedules for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
 }
 
@@ -31190,6 +35200,13 @@ type UpdateMLTransformInput struct {
 	// A description of the transform. The default is an empty string.
 	Description *string `type:"string"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// The number of AWS Glue data processing units (DPUs) that are allocated to
 	// task runs for this transform. You can allocate from 2 to 100 DPUs; the default
 	// is 10. A DPU is a relative measure of processing power that consists of 4
@@ -31256,6 +35273,9 @@ func (s UpdateMLTransformInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateMLTransformInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateMLTransformInput"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -31283,6 +35303,12 @@ func (s *UpdateMLTransformInput) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *UpdateMLTransformInput) SetDescription(v string) *UpdateMLTransformInput {
 	s.Description = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *UpdateMLTransformInput) SetGlueVersion(v string) *UpdateMLTransformInput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -31923,6 +35949,9 @@ type UserDefinedFunction struct {
 	// The time at which the function was created.
 	CreateTime *time.Time `type:"timestamp"`
 
+	// The name of the database where the function resides.
+	DatabaseName *string `min:"1" type:"string"`
+
 	// The name of the function.
 	FunctionName *string `min:"1" type:"string"`
 
@@ -31955,6 +35984,12 @@ func (s *UserDefinedFunction) SetClassName(v string) *UserDefinedFunction {
 // SetCreateTime sets the CreateTime field's value.
 func (s *UserDefinedFunction) SetCreateTime(v time.Time) *UserDefinedFunction {
 	s.CreateTime = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UserDefinedFunction) SetDatabaseName(v string) *UserDefinedFunction {
+	s.DatabaseName = &v
 	return s
 }
 
@@ -32069,6 +36104,120 @@ func (s *UserDefinedFunctionInput) SetOwnerType(v string) *UserDefinedFunctionIn
 func (s *UserDefinedFunctionInput) SetResourceUris(v []*ResourceUri) *UserDefinedFunctionInput {
 	s.ResourceUris = v
 	return s
+}
+
+// A value could not be validated.
+type ValidationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s *ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s *ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// There was a version conflict.
+type VersionMismatchException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s VersionMismatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VersionMismatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorVersionMismatchException(v protocol.ResponseMetadata) error {
+	return &VersionMismatchException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *VersionMismatchException) Code() string {
+	return "VersionMismatchException"
+}
+
+// Message returns the exception's message.
+func (s *VersionMismatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *VersionMismatchException) OrigErr() error {
+	return nil
+}
+
+func (s *VersionMismatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *VersionMismatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *VersionMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A workflow represents a flow in which AWS Glue components should be executed
@@ -32439,6 +36588,29 @@ const (
 )
 
 const (
+	// ColumnStatisticsTypeBoolean is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeBoolean = "BOOLEAN"
+
+	// ColumnStatisticsTypeDate is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeDate = "DATE"
+
+	// ColumnStatisticsTypeDecimal is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeDecimal = "DECIMAL"
+
+	// ColumnStatisticsTypeDouble is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeDouble = "DOUBLE"
+
+	// ColumnStatisticsTypeLong is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeLong = "LONG"
+
+	// ColumnStatisticsTypeString is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeString = "STRING"
+
+	// ColumnStatisticsTypeBinary is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeBinary = "BINARY"
+)
+
+const (
 	// ComparatorEquals is a Comparator enum value
 	ComparatorEquals = "EQUALS"
 
@@ -32503,6 +36675,12 @@ const (
 
 	// ConnectionPropertyKeyCustomJdbcCertString is a ConnectionPropertyKey enum value
 	ConnectionPropertyKeyCustomJdbcCertString = "CUSTOM_JDBC_CERT_STRING"
+
+	// ConnectionPropertyKeyConnectionUrl is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyConnectionUrl = "CONNECTION_URL"
+
+	// ConnectionPropertyKeyKafkaBootstrapServers is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyKafkaBootstrapServers = "KAFKA_BOOTSTRAP_SERVERS"
 )
 
 const (
@@ -32511,17 +36689,26 @@ const (
 
 	// ConnectionTypeSftp is a ConnectionType enum value
 	ConnectionTypeSftp = "SFTP"
+
+	// ConnectionTypeMongodb is a ConnectionType enum value
+	ConnectionTypeMongodb = "MONGODB"
+
+	// ConnectionTypeKafka is a ConnectionType enum value
+	ConnectionTypeKafka = "KAFKA"
 )
 
 const (
 	// CrawlStateRunning is a CrawlState enum value
 	CrawlStateRunning = "RUNNING"
 
-	// CrawlStateSucceeded is a CrawlState enum value
-	CrawlStateSucceeded = "SUCCEEDED"
+	// CrawlStateCancelling is a CrawlState enum value
+	CrawlStateCancelling = "CANCELLING"
 
 	// CrawlStateCancelled is a CrawlState enum value
 	CrawlStateCancelled = "CANCELLED"
+
+	// CrawlStateSucceeded is a CrawlState enum value
+	CrawlStateSucceeded = "SUCCEEDED"
 
 	// CrawlStateFailed is a CrawlState enum value
 	CrawlStateFailed = "FAILED"
@@ -32880,4 +37067,10 @@ const (
 
 	// WorkflowRunStatusCompleted is a WorkflowRunStatus enum value
 	WorkflowRunStatusCompleted = "COMPLETED"
+
+	// WorkflowRunStatusStopping is a WorkflowRunStatus enum value
+	WorkflowRunStatusStopping = "STOPPING"
+
+	// WorkflowRunStatusStopped is a WorkflowRunStatus enum value
+	WorkflowRunStatusStopped = "STOPPED"
 )

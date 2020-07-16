@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 // Serialized acceptance tests due to WAF account limits
@@ -46,8 +47,8 @@ func testAccAWSWafRegionalRegexPatternSet_basic(t *testing.T) {
 					testAccCheckAWSWafRegionalRegexPatternSetExists(resourceName, &patternSet),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
 					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.2848565413", "one"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.3351840846", "two"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "one"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
 				),
 			},
 			{
@@ -75,8 +76,8 @@ func testAccAWSWafRegionalRegexPatternSet_changePatterns(t *testing.T) {
 					testAccCheckAWSWafRegionalRegexPatternSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
 					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.2848565413", "one"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.3351840846", "two"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "one"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
 				),
 			},
 			{
@@ -85,9 +86,9 @@ func testAccAWSWafRegionalRegexPatternSet_changePatterns(t *testing.T) {
 					testAccCheckAWSWafRegionalRegexPatternSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", patternSetName),
 					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.3351840846", "two"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.2929247714", "three"),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.1294846542", "four"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "three"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "four"),
 				),
 			},
 			{

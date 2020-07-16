@@ -1,4 +1,5 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_resource_data_sync"
 description: |-
@@ -14,7 +15,6 @@ Provides a SSM resource data sync.
 ```hcl
 resource "aws_s3_bucket" "hoge" {
   bucket = "tf-test-bucket-1234"
-  region = "us-east-1"
 }
 
 resource "aws_s3_bucket_policy" "hoge" {

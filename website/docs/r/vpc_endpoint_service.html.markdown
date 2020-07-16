@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service"
 description: |-
@@ -47,7 +48,7 @@ The following arguments are supported:
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `network_load_balancer_arns` - (Required) The ARNs of one or more Network Load Balancers for the endpoint service.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
@@ -55,6 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint service.
 * `availability_zones` - The Availability Zones in which the service is available.
+* `arn` - The Amazon Resource Name (ARN) of the VPC endpoint service.
 * `base_endpoint_dns_names` - The DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `private_dns_name` - The private DNS name for the service.

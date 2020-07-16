@@ -63,38 +63,10 @@ func testSweepCloudWatchLogResourcePolicies(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchLogResourcePolicy_Basic(t *testing.T) {
+func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
 	name := acctest.RandString(5)
-	var resourcePolicy cloudwatchlogs.ResourcePolicy
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCloudWatchLogResourcePolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAWSCloudWatchLogResourcePolicyResourceConfigBasic1(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogResourcePolicy("aws_cloudwatch_log_resource_policy.test", &resourcePolicy),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_resource_policy.test", "policy_name", name),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_resource_policy.test", "policy_document", "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"route53.amazonaws.com\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:aws:logs:*:*:log-group:/aws/route53/*\"}]}"),
-				),
-			},
-			{
-				Config: testAccCheckAWSCloudWatchLogResourcePolicyResourceConfigBasic2(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogResourcePolicy("aws_cloudwatch_log_resource_policy.test", &resourcePolicy),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_resource_policy.test", "policy_name", name),
-					resource.TestCheckResourceAttr("aws_cloudwatch_log_resource_policy.test", "policy_document", "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"route53.amazonaws.com\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:aws:logs:*:*:log-group:/aws/route53/example.com\"}]}"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloudWatchLogResourcePolicy_Import(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
-
-	name := acctest.RandString(5)
+	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -103,12 +75,24 @@ func TestAccAWSCloudWatchLogResourcePolicy_Import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCloudWatchLogResourcePolicyResourceConfigBasic1(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"route53.amazonaws.com\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:aws:logs:*:*:log-group:/aws/route53/*\"}]}"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCheckAWSCloudWatchLogResourcePolicyResourceConfigBasic2(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"route53.amazonaws.com\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:aws:logs:*:*:log-group:/aws/route53/example.com\"}]}"),
+				),
 			},
 		},
 	})

@@ -1,4 +1,5 @@
 ---
+subcategory: "ACM"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
 description: |-
@@ -15,11 +16,11 @@ This resource does not deal with validation of a certificate but can provide inp
 for other resources implementing the validation. It does not wait for a certificate to be issued.
 Use a [`aws_acm_certificate_validation`](acm_certificate_validation.html) resource for this.
 
-Most commonly, this resource is used to together with [`aws_route53_record`](route53_record.html) and
+Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
-Domain validation through E-Mail is also supported but should be avoided as it requires a manual step outside
+Domain validation through email is also supported but should be avoided as it requires a manual step outside
 of Terraform.
 
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
@@ -44,7 +45,7 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
-### Importation of existing certificate
+### Importing an existing certificate
 
 ```hcl
 resource "tls_private_key" "example" {
@@ -80,19 +81,19 @@ resource "aws_acm_certificate" "cert" {
 The following arguments are supported:
 
 * Creating an amazon issued certificate
-  * `domain_name` - (Required) A domain name for which the certificate should be issued
-  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-  * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
-  * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
+    * `domain_name` - (Required) A domain name for which the certificate should be issued
+    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+    * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
 * Importing an existing certificate
-  * `private_key` - (Required) The certificate's PEM-formatted private key
-  * `certificate_body` - (Required) The certificate's PEM-formatted public key
-  * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
+    * `private_key` - (Required) The certificate's PEM-formatted private key
+    * `certificate_body` - (Required) The certificate's PEM-formatted public key
+    * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
 * Creating a private CA issued certificate
-  * `domain_name` - (Required) A domain name for which the certificate should be issued
-  * `certificate_authority_arn` - (Required) ARN of an ACMPCA
-  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+    * `domain_name` - (Required) A domain name for which the certificate should be issued
+    * `certificate_authority_arn` - (Required) ARN of an ACMPCA
+    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## options Configuration Block
 
@@ -108,6 +109,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the certificate
 * `domain_name` - The domain name for which the certificate is issued
 * `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
+* `status` - Status of the certificate.
 * `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
 
 Domain validation objects export the following attributes:
