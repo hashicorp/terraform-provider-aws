@@ -820,10 +820,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_datasync_task" "test" {
-  cloudwatch_log_group_arn = "${replace(aws_cloudwatch_log_group.test.arn, ":*", "")}"
-  destination_location_arn = "${aws_datasync_location_s3.destination.arn}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %q
-  source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
+  source_location_arn      = aws_datasync_location_nfs.source.arn
 }
 `, rName, rName)
 }
