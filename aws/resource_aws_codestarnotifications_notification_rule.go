@@ -142,6 +142,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceDa
 
 func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarnotificationsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	rule, err := conn.DescribeNotificationRule(&codestarnotifications.DescribeNotificationRuleInput{
 		Arn: aws.String(d.Id()),
@@ -168,7 +169,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
-	d.Set("tags", keyvaluetags.New(rule.Tags).IgnoreAws().Map())
+	d.Set("tags", keyvaluetags.New(rule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
@@ -220,7 +221,10 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 		}
 		targets = targets[:i]
 
-		return resource.RetryableError(reterr)
+		if reterr != nil {
+			return resource.RetryableError(reterr)
+		}
+		return nil
 	})
 
 	if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
@@ -232,8 +236,6 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 
 func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarnotificationsconn
-
-	d.Partial(true)
 
 	params := &codestarnotifications.UpdateNotificationRuleInput{
 		Arn:          aws.String(d.Id()),
@@ -248,11 +250,6 @@ func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceDa
 		return fmt.Errorf("error updating codestar notification rule: %s", err)
 	}
 
-	d.SetPartial("detail_type")
-	d.SetPartial("event_type_ids")
-	d.SetPartial("name")
-	d.SetPartial("target")
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.CodestarnotificationsUpdateTags(conn, d.Id(), o, n); err != nil {
@@ -266,8 +263,6 @@ func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceDa
 			return err
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsCodeStarNotificationsNotificationRuleRead(d, meta)
 }

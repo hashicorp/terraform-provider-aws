@@ -90,12 +90,6 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 				Optional: true,
 			},
 
-			"request_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `request_parameters` argument instead",
-			},
-
 			"request_validator_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -105,7 +99,7 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 }
 
 func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	input := apigateway.PutMethodInput{
 		AuthorizationType: aws.String(d.Get("authorization").(string)),
@@ -159,7 +153,7 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
 	out, err := conn.GetMethod(&apigateway.GetMethodInput{
@@ -200,7 +194,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -216,14 +210,6 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 		operations = append(operations, expandApiGatewayRequestResponseModelOperations(d, "request_models", "requestModels")...)
 	}
 
-	if d.HasChange("request_parameters_in_json") {
-		ops, err := deprecatedExpandApiGatewayMethodParametersJSONOperations(d, "request_parameters_in_json", "requestParameters")
-		if err != nil {
-			return err
-		}
-		operations = append(operations, ops...)
-	}
-
 	if d.HasChange("request_parameters") {
 		parameters := make(map[string]bool)
 		var ok bool
@@ -234,10 +220,7 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 				parameters[k] = value
 			}
 		}
-		ops, err := expandApiGatewayMethodParametersOperations(d, "request_parameters", "requestParameters")
-		if err != nil {
-			return err
-		}
+		ops := expandApiGatewayMethodParametersOperations(d, "request_parameters", "requestParameters")
 		operations = append(operations, ops...)
 	}
 
@@ -324,7 +307,7 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayMethodDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 
 	_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{

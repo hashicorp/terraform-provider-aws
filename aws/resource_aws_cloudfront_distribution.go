@@ -15,6 +15,7 @@ import (
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsCloudFrontDistributionCreate,
 		Read:   resourceAwsCloudFrontDistributionRead,
@@ -36,133 +37,6 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      aliasesHash,
-			},
-			"cache_behavior": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Removed:  "Use `ordered_cache_behavior` configuration block(s) instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_methods": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"cached_methods": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"compress": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"default_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  86400,
-						},
-						"field_level_encryption_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"forwarded_values": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookies": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"forward": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"whitelisted_names": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"headers": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"query_string": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"query_string_cache_keys": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"lambda_function_association": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 4,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"lambda_arn": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"include_body": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-								},
-							},
-						},
-						"max_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  31536000,
-						},
-						"min_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
-						},
-						"path_pattern": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"smooth_streaming": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"target_origin_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"trusted_signers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"viewer_protocol_policy": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
 			},
 			"ordered_cache_behavior": {
 				Type:     schema.TypeList,
@@ -704,6 +578,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 			"active_trusted_signers": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -801,6 +676,8 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	params := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
 	}
@@ -821,6 +698,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
+
 	// Update other attributes outside of DistributionConfig
 	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
 	if err != nil {
@@ -837,7 +715,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -332,6 +332,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
 			{
@@ -361,6 +362,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
 			{
@@ -370,6 +372,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
 			{
@@ -379,8 +382,50 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_LogConfig_ExcludeVerboseContent(t *testing.T) {
+	var api1, api2 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "true"),
+				),
+			},
+
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1045,6 +1090,47 @@ resource "aws_appsync_graphql_api" "test" {
   }
 }
 `, rName, rName, fieldLogLevel)
+}
+
+func testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName string, excludeVerboseContent bool) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "appsync.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
+  role       = "${aws_iam_role.test.name}"
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  log_config {
+    cloudwatch_logs_role_arn = "${aws_iam_role.test.arn}"
+	field_log_level          = "ALL"
+	exclude_verbose_content  = %t
+  }
+}
+`, rName, rName, excludeVerboseContent)
 }
 
 func testAccAppsyncGraphqlApiConfig_OpenIDConnectConfig_AuthTTL(rName string, authTTL int) string {

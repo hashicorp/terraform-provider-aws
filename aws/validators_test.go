@@ -425,9 +425,11 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 		CIDR              string
 		ExpectedErrSubstr string
 	}{
-		{"notacidr", `must contain a valid CIDR`},
-		{"10.0.1.0/16", `must contain a valid network CIDR`},
+		{"notacidr", `is not a valid CIDR block`},
+		{"10.0.1.0/16", `is not a valid CIDR block; did you mean`},
 		{"10.0.1.0/24", ``},
+		{"2001:db8::/122", ``},
+		{"2001::/15", `is not a valid CIDR block; did you mean`},
 	}
 
 	for i, tc := range cases {
@@ -446,6 +448,98 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 				t.Fatalf("%d/%d: Expected err: %q, to include %q",
 					i+1, len(cases), errs[0], tc.ExpectedErrSubstr)
 			}
+		}
+	}
+}
+
+func Test_validateCIDRBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr  string
+		valid bool
+	}{
+		{"10.2.2.0/24", true},
+		{"10.2.2.0/1234", false},
+		{"10.2.2.2/24", false},
+		{"::/0", true},
+		{"::0/0", true},
+		{"2000::/15", true},
+		{"2001::/15", false},
+		{"", false},
+	} {
+		err := validateCIDRBlock(ts.cidr)
+		if !ts.valid && err == nil {
+			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
+		}
+		if ts.valid && err != nil {
+			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
+		}
+	}
+}
+
+func Test_validateIpv4CIDRBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr  string
+		valid bool
+	}{
+		{"10.2.2.0/24", true},
+		{"10.2.2.0/1234", false},
+		{"10/24", false},
+		{"10.2.2.2/24", false},
+		{"::/0", false},
+		{"2000::/15", false},
+		{"", false},
+	} {
+		err := validateIpv4CIDRBlock(ts.cidr)
+		if !ts.valid && err == nil {
+			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
+		}
+		if ts.valid && err != nil {
+			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
+		}
+	}
+}
+
+func Test_validateIpv6CIDRBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr  string
+		valid bool
+	}{
+		{"10.2.2.0/24", false},
+		{"10.2.2.0/1234", false},
+		{"::/0", true},
+		{"::0/0", true},
+		{"2000::/15", true},
+		{"2001::/15", false},
+		{"2001:db8::/122", true},
+		{"", false},
+	} {
+		err := validateIpv6CIDRBlock(ts.cidr)
+		if !ts.valid && err == nil {
+			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
+		}
+		if ts.valid && err != nil {
+			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
+		}
+	}
+}
+
+func Test_cidrBlocksEqual(t *testing.T) {
+	for _, ts := range []struct {
+		cidr1 string
+		cidr2 string
+		equal bool
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24", true},
+		{"10.2.2.0/1234", "10.2.2.0/24", false},
+		{"10.2.2.0/24", "10.2.2.0/1234", false},
+		{"2001::/15", "2001::/15", true},
+		{"::/0", "2001::/15", false},
+		{"::/0", "::0/0", true},
+		{"", "", false},
+	} {
+		equal := cidrBlocksEqual(ts.cidr1, ts.cidr2)
+		if ts.equal != equal {
+			t.Fatalf("cidrBlocksEqual(%q, %q) should be: %t", ts.cidr1, ts.cidr2, ts.equal)
 		}
 	}
 }
@@ -1406,6 +1500,39 @@ func TestValidateApiGatewayUsagePlanQuotaSettings(t *testing.T) {
 		errors := validateApiGatewayUsagePlanQuotaSettings(m)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("API Gateway Usage Plan Quota Settings validation failed: %v", errors)
+		}
+	}
+}
+
+func TestValidateDocDBIdentifier(t *testing.T) {
+	validNames := []string{
+		"a",
+		"hello-world",
+		"hello-world-0123456789",
+		strings.Repeat("w", 63),
+	}
+	for _, v := range validNames {
+		_, errors := validateDocDBIdentifier(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid DocDB Identifier: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"",
+		"special@character",
+		"slash/in-the-middle",
+		"dot.in-the-middle",
+		"two-hyphen--in-the-middle",
+		"0-first-numeric",
+		"-first-hyphen",
+		"end-hyphen-",
+		strings.Repeat("W", 64),
+	}
+	for _, v := range invalidNames {
+		_, errors := validateDocDBIdentifier(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid DocDB Identifier", v)
 		}
 	}
 }
@@ -2600,6 +2727,37 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 	}
 }
 
+func TestValidate4ByteAsn(t *testing.T) {
+	validAsns := []string{
+		"0",
+		"1",
+		"65534",
+		"65535",
+		"4294967294",
+		"4294967295",
+	}
+	for _, v := range validAsns {
+		_, errors := validate4ByteAsn(v, "bgp_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"-1",
+		"ABCDEFG",
+		"",
+		"4294967296",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := validate4ByteAsn(v, "bgp_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
 func TestValidateLaunchTemplateName(t *testing.T) {
 	validNames := []string{
 		"fooBAR123",
@@ -2808,6 +2966,8 @@ func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
 func TestValidateDxConnectionBandWidth(t *testing.T) {
 	validBandwidths := []string{
 		"1Gbps",
+		"2Gbps",
+		"5Gbps",
 		"10Gbps",
 		"50Mbps",
 		"100Mbps",

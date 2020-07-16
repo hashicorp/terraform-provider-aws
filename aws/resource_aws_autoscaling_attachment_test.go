@@ -250,6 +250,10 @@ resource "aws_autoscaling_group" "asg" {
     value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
   }
+
+  lifecycle {
+    ignore_changes = [load_balancers, target_group_arns]
+  }
 }
 
 resource "aws_launch_configuration" "as_conf" {
@@ -312,6 +316,10 @@ resource "aws_autoscaling_group" "asg" {
     key                 = "Name"
     value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [load_balancers, target_group_arns]
   }
 }
 `, rInt, rInt)

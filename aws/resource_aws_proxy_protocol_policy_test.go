@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
@@ -25,8 +26,7 @@ func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
 						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr(
 						"aws_proxy_protocol_policy.smtp", "instance_ports.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.4196041389", "25"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
 				),
 			},
 			{
@@ -36,10 +36,8 @@ func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
 						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr(
 						"aws_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.4196041389", "25"),
-					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.1925441437", "587"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "587"),
 				),
 			},
 		},

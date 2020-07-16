@@ -18,10 +18,9 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
-	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
@@ -29,7 +28,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
+				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
@@ -38,7 +37,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 				),
 			},
@@ -105,7 +104,7 @@ func testAccPreCheckAWSCur(t *testing.T) {
 }
 
 // note: cur report definitions are currently only supported in us-east-1
-func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketRegion string) string {
+func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -115,7 +114,6 @@ resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
   force_destroy = true
-  region        = "%[3]s"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -163,5 +161,5 @@ resource "aws_cur_report_definition" "test" {
   s3_region                  = "${aws_s3_bucket.test.region}"
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, reportName, bucketName, bucketRegion)
+`, reportName, bucketName)
 }
