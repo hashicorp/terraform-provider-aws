@@ -3262,6 +3262,20 @@ func expandAwsSsmTargets(in []interface{}) []*ssm.Target {
 	return targets
 }
 
+func flattenAwsSsmParameters(parameters map[string][]*string) map[string]string {
+	result := make(map[string]string)
+	for p, values := range parameters {
+		var vs []string
+		for _, vPtr := range values {
+			if v := aws.StringValue(vPtr); v != "" {
+				vs = append(vs, v)
+			}
+		}
+		result[p] = strings.Join(vs, ",")
+	}
+	return result
+}
+
 func flattenAwsSsmTargets(targets []*ssm.Target) []map[string]interface{} {
 	if len(targets) == 0 {
 		return nil
