@@ -34,7 +34,7 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter. The `location` filter depends on the top-level `location_type` argument and if not specified, defaults to the current region.
+* `name` - (Required) Name of the filter.
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
