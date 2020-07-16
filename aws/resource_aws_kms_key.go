@@ -124,7 +124,10 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = conn.CreateKey(req)

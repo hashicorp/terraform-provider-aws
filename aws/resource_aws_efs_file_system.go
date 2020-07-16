@@ -40,13 +40,6 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 
-			"reference_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				Removed:  "Use `creation_token` argument instead",
-			},
-
 			"performance_mode": {
 				Type:     schema.TypeString,
 				Optional: true,

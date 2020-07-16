@@ -27,10 +27,10 @@ func resourceAwsCustomerGateway() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bgp_asn": {
-				Type:         schema.TypeInt,
+				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 65534),
+				ValidateFunc: validate4ByteAsn,
 			},
 
 			"ip_address": {
@@ -66,7 +66,7 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 
 	ipAddress := d.Get("ip_address").(string)
 	vpnType := d.Get("type").(string)
-	bgpAsn := d.Get("bgp_asn").(int)
+	bgpAsn := d.Get("bgp_asn").(string)
 
 	alreadyExists, err := resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, conn)
 	if err != nil {
@@ -74,11 +74,16 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if alreadyExists {
-		return fmt.Errorf("An existing customer gateway for IpAddress: %s, VpnType: %s, BGP ASN: %d has been found", ipAddress, vpnType, bgpAsn)
+		return fmt.Errorf("An existing customer gateway for IpAddress: %s, VpnType: %s, BGP ASN: %s has been found", ipAddress, vpnType, bgpAsn)
+	}
+
+	i64BgpAsn, err := strconv.ParseInt(bgpAsn, 10, 64)
+	if err != nil {
+		return err
 	}
 
 	createOpts := &ec2.CreateCustomerGatewayInput{
-		BgpAsn:   aws.Int64(int64(bgpAsn)),
+		BgpAsn:   aws.Int64(i64BgpAsn),
 		PublicIp: aws.String(ipAddress),
 		Type:     aws.String(vpnType),
 	}
@@ -150,7 +155,7 @@ func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateR
 	}
 }
 
-func resourceAwsCustomerGatewayExists(vpnType, ipAddress string, bgpAsn int, conn *ec2.EC2) (bool, error) {
+func resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn string, conn *ec2.EC2) (bool, error) {
 	ipAddressFilter := &ec2.Filter{
 		Name:   aws.String("ip-address"),
 		Values: []*string{aws.String(ipAddress)},
@@ -161,10 +166,9 @@ func resourceAwsCustomerGatewayExists(vpnType, ipAddress string, bgpAsn int, con
 		Values: []*string{aws.String(vpnType)},
 	}
 
-	bgp := strconv.Itoa(bgpAsn)
 	bgpAsnFilter := &ec2.Filter{
 		Name:   aws.String("bgp-asn"),
-		Values: []*string{aws.String(bgp)},
+		Values: []*string{aws.String(bgpAsn)},
 	}
 
 	resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
@@ -215,20 +219,12 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	customerGateway := resp.CustomerGateways[0]
+	d.Set("bgp_asn", customerGateway.BgpAsn)
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(customerGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	if aws.StringValue(customerGateway.BgpAsn) != "" {
-		val, err := strconv.ParseInt(aws.StringValue(customerGateway.BgpAsn), 0, 0)
-		if err != nil {
-			return fmt.Errorf("error parsing bgp_asn: %s", err)
-		}
-
-		d.Set("bgp_asn", int(val))
 	}
 
 	arn := arn.ARN{

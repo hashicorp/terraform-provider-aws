@@ -174,11 +174,6 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ecc_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Removed:  "Use `ecs_cluster_arn` attribute instead",
-			},
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,
 				Computed: true,

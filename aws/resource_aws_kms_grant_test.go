@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSKmsGrant_Basic(t *testing.T) {
@@ -16,10 +17,9 @@ func TestAccAWSKmsGrant_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSKmsGrantDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
@@ -27,8 +27,8 @@ func TestAccAWSKmsGrant_Basic(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "operations.2238845196", "Encrypt"),
-					resource.TestCheckResourceAttr(resourceName, "operations.1237510779", "Decrypt"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "grantee_principal"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 				),
@@ -48,10 +48,9 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSKmsGrantDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsGrant_withConstraints(rName, "encryption_context_equals", `foo = "bar"
@@ -60,9 +59,11 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "constraints.449762259.encryption_context_equals.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "constraints.449762259.encryption_context_equals.baz", "kaz"),
-					resource.TestCheckResourceAttr(resourceName, "constraints.449762259.encryption_context_equals.foo", "bar"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
+						"encryption_context_equals.%":   "2",
+						"encryption_context_equals.baz": "kaz",
+						"encryption_context_equals.foo": "bar",
+					}),
 				),
 			},
 			{
@@ -78,9 +79,11 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "constraints.2645649985.encryption_context_subset.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "constraints.2645649985.encryption_context_subset.baz", "kaz"),
-					resource.TestCheckResourceAttr(resourceName, "constraints.2645649985.encryption_context_subset.foo", "bar"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
+						"encryption_context_subset.%":   "2",
+						"encryption_context_subset.baz": "kaz",
+						"encryption_context_subset.foo": "bar",
+					}),
 				),
 			},
 		},
@@ -146,10 +149,9 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSKmsGrantDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsGrant_ARN(rName, "\"Encrypt\", \"Decrypt\""),
@@ -157,8 +159,8 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "operations.2238845196", "Encrypt"),
-					resource.TestCheckResourceAttr(resourceName, "operations.1237510779", "Decrypt"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "grantee_principal"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 				),

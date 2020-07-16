@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -357,16 +358,17 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSLaunchConfigurationDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1393547169.volume_size", "9"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "9",
+					}),
 				),
 			},
 			{
@@ -379,7 +381,9 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Config: testAccAWSLaunchConfigurationWithEncryptionUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.4131155854.volume_size", "10"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "10",
+					}),
 				),
 			},
 		},
@@ -392,18 +396,19 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSLaunchConfigurationDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3099842682.device_name", "/dev/sda2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3099842682.no_device", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sda2",
+						"no_device":   "true",
+					}),
 				),
 			},
 			{

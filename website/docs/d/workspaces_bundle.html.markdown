@@ -3,12 +3,12 @@ subcategory: "WorkSpaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_bundle"
 description: |-
-  Get information on a WorkSpaces Bundle.
+  Retrieve information about an AWS WorkSpaces bundle.
 ---
 
 # Data Source: aws_workspaces_bundle
 
-Use this data source to get information about a WorkSpaces Bundle.
+Retrieve information about an AWS WorkSpaces bundle.
 
 ## Example Usage
 
@@ -32,8 +32,6 @@ The following arguments are supported:
 * `name` – (Optional) The name of the bundle. You cannot combine this parameter with `bundle_id`.
 
 ## Attributes Reference
-
-The following attributes are exported:
 
 * `description` – The description of the bundle.
 * `bundle_id` – The ID of the bundle.

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -361,15 +362,17 @@ func TestAccAWSCloudFrontDistribution_noOptionalItemsConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_header.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.http_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.https_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_keepalive_timeout", "5"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_protocol_policy", "http-only"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_read_timeout", "30"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_ssl_protocols.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.domain_name", "www.example.com"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_header.#":                                 "0",
+						"custom_origin_config.#":                          "1",
+						"custom_origin_config.0.http_port":                "80",
+						"custom_origin_config.0.https_port":               "443",
+						"custom_origin_config.0.origin_keepalive_timeout": "5",
+						"custom_origin_config.0.origin_protocol_policy":   "http-only",
+						"custom_origin_config.0.origin_read_timeout":      "30",
+						"custom_origin_config.0.origin_ssl_protocols.#":   "2",
+						"domain_name": "www.example.com",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
 					resource.TestCheckResourceAttr(resourceName, "restrictions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", "1"),
@@ -1088,16 +1091,18 @@ func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.origin_id", "groupS3"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.#", "4"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.1057413486", "403"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.1883721641", "404"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.2661388106", "502"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.2895637960", "500"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.0.origin_id", "primaryS3"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.1.origin_id", "failoverS3"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
+						"origin_id":                                   "groupS3",
+						"failover_criteria.#":                         "1",
+						"failover_criteria.0.status_codes.#":          "4",
+						"failover_criteria.0.status_codes.1057413486": "403",
+						"failover_criteria.0.status_codes.1883721641": "404",
+						"failover_criteria.0.status_codes.2661388106": "502",
+						"failover_criteria.0.status_codes.2895637960": "500",
+						"member.#":           "2",
+						"member.0.origin_id": "primaryS3",
+						"member.1.origin_id": "failoverS3",
+					}),
 				),
 			},
 		},

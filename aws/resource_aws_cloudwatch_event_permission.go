@@ -111,7 +111,10 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 		}
 
 		policyStatement, err = getPolicyStatement(output, d.Id())
-		return resource.RetryableError(err)
+		if err != nil {
+			return resource.RetryableError(err)
+		}
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {

@@ -2126,6 +2126,21 @@ func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
+func validate4ByteAsn(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	asn, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
+		return
+	}
+
+	if asn < 0 || asn > 4294967295 {
+		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 0 to 4294967295", k, v))
+	}
+	return
+}
+
 func validateIotThingTypeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`[a-zA-Z0-9:_-]+`).MatchString(value) {

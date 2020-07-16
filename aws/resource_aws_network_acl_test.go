@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -258,40 +259,31 @@ func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSNetworkAclDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclEgressNIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1871939009.protocol", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1871939009.rule_no", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1871939009.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1871939009.to_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1871939009.action", "allow"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1871939009.cidr_block", "10.3.0.0/18"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3111164687.protocol", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3111164687.rule_no", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3111164687.from_port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3111164687.to_port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3111164687.cidr_block", "10.3.0.0/18"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3111164687.action", "allow"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":   "6",
+						"rule_no":    "1",
+						"from_port":  "80",
+						"to_port":    "80",
+						"action":     "allow",
+						"cidr_block": "10.3.0.0/18",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"protocol":   "6",
+						"rule_no":    "2",
+						"from_port":  "443",
+						"to_port":    "443",
+						"action":     "allow",
+						"cidr_block": "10.3.0.0/18",
+					}),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
@@ -309,28 +301,23 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSNetworkAclDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.protocol", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.rule_no", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.from_port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.to_port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.action", "deny"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.cidr_block", "10.2.0.0/18"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":   "6",
+						"rule_no":    "2",
+						"from_port":  "443",
+						"to_port":    "443",
+						"action":     "deny",
+						"cidr_block": "10.2.0.0/18",
+					}),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
@@ -348,33 +335,28 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSNetworkAclDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					testIngressRuleLength(&networkAcl, 2),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.protocol", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.rule_no", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.from_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.to_port", "22"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.action", "deny"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.cidr_block", "10.2.0.0/18"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.from_port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.4245812720.rule_no", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":  "6",
+						"rule_no":   "1",
+						"from_port": "0",
+						"to_port":   "22",
+						"action":    "deny",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_block": "10.2.0.0/18",
+						"from_port":  "443",
+						"rule_no":    "2",
+					}),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
@@ -388,18 +370,14 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					testIngressRuleLength(&networkAcl, 1),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.protocol", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.rule_no", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.from_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.to_port", "22"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.action", "deny"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.401088754.cidr_block", "10.2.0.0/18"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":   "6",
+						"rule_no":    "1",
+						"from_port":  "0",
+						"to_port":    "22",
+						"action":     "deny",
+						"cidr_block": "10.2.0.0/18",
+					}),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
@@ -594,11 +572,10 @@ func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSNetworkAclDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIpv6Config,
@@ -606,18 +583,14 @@ func TestAccAWSNetworkAcl_ipv6Rules(t *testing.T) {
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1976110835.protocol", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1976110835.rule_no", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1976110835.from_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1976110835.to_port", "22"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1976110835.action", "allow"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1976110835.ipv6_cidr_block", "::/0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":        "6",
+						"rule_no":         "1",
+						"from_port":       "0",
+						"to_port":         "22",
+						"action":          "allow",
+						"ipv6_cidr_block": "::/0",
+					}),
 				),
 			},
 			{
@@ -654,11 +627,10 @@ func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSNetworkAclDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSNetworkAclDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclIpv6VpcConfig,
@@ -666,8 +638,9 @@ func TestAccAWSNetworkAcl_ipv6VpcRules(t *testing.T) {
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
 					resource.TestCheckResourceAttr(
 						resourceName, "ingress.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.1296304962.ipv6_cidr_block", "2600:1f16:d1e:9a00::/56"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"ipv6_cidr_block": "2600:1f16:d1e:9a00::/56",
+					}),
 				),
 			},
 			{

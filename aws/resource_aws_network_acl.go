@@ -39,12 +39,6 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Removed:  "Use `subnet_ids` argument instead",
-			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
