@@ -18,11 +18,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_workspaces_workspace", &resource.Sweeper{
 		Name: "aws_workspaces_workspace",
-		F:    testSweepWorkspaces,
+		F:    testSweepWorkspacesWorkspace,
 	})
 }
 
-func testSweepWorkspaces(region string) error {
+func testSweepWorkspacesWorkspace(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)

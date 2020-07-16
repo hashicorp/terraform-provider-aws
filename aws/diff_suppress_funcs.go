@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func suppressEquivalentAwsPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
@@ -95,16 +95,6 @@ func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
 	oldUrl.Scheme = "https"
 
 	return oldUrl.String() == newUrl.String()
-}
-
-func suppressAutoscalingGroupAvailabilityZoneDiffs(k, old, new string, d *schema.ResourceData) bool {
-	// If VPC zone identifiers are provided then there is no need to explicitly
-	// specify availability zones.
-	if _, ok := d.GetOk("vpc_zone_identifier"); ok {
-		return true
-	}
-
-	return false
 }
 
 func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.ResourceData) bool {
