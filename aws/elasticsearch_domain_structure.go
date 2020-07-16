@@ -50,8 +50,8 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.Advan
 	}
 
 	m := map[string]interface{}{}
+	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
 	if aws.BoolValue(advancedSecurityOptions.Enabled) {
-		m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
 		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
@@ -69,4 +69,17 @@ func getMasterUserOptions(d *schema.ResourceData) []interface{} {
 		}
 	}
 	return []interface{}{}
+}
+
+func getUserDBEnabled(d *schema.ResourceData) bool {
+	if v, ok := d.GetOk("advanced_security_options"); ok {
+		options := v.([]interface{})
+		if len(options) > 0 && options[0] != nil {
+			m := options[0].(map[string]interface{})
+			if enabled, ok := m["internal_user_database_enabled"]; ok {
+				return enabled.(bool)
+			}
+		}
+	}
+	return false
 }

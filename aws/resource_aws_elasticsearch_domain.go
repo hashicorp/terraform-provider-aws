@@ -710,12 +710,19 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// Populate AdvancedSecurityOptions with values returned from
-	// DescribeElasticsearchDomainConfig and append MasterUserOptions
+	// DescribeElasticsearchDomainConfig, if enabled, else use
+	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
-	advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
-	advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
-	if err := d.Set("advanced_security_options", advSecOpts); err != nil {
-		return fmt.Errorf("error setting advanced_security_options: %w", err)
+	if ds.AdvancedSecurityOptions != nil {
+		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
+		if !aws.BoolValue(ds.AdvancedSecurityOptions.Enabled) {
+			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
+		}
+		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
+
+		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
+			return fmt.Errorf("error setting advanced_security_options: %w", err)
+		}
 	}
 
 	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
