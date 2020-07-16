@@ -84,8 +84,8 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"NOOP",
-					"ARCHIVE",
+					guardduty.FilterActionNoop,
+					guardduty.FilterActionArchive,
 				}, false),
 			},
 			"rank": {
