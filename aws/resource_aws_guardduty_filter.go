@@ -411,28 +411,7 @@ func parseImportedId(importedId string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func criterionResource() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"field": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"condition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"values": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-		},
-	}
-}
-
 func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []interface{} {
-	var result []interface{}
 	var flatCriteria []interface{}
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
@@ -456,11 +435,11 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 		}
 	}
 
-	criteria := make(map[string]*schema.Set)
-
-	criteria["criterion"] = schema.NewSet(schema.HashResource(criterionResource()), flatCriteria)
-	result = append(result, criteria)
-	return result
+	return []interface{}{
+		map[string][]interface{}{
+			"criterion": flatCriteria,
+		},
+	}
 }
 
 func flattenIntCondition(field string, conditionName string, conditionValue *int64) map[string]interface{} {
