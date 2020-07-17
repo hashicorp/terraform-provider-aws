@@ -191,7 +191,7 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_alb.lb_test"

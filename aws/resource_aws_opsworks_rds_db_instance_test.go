@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSOpsworksRdsDbInstance(t *testing.T) {
+func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
 	sName := fmt.Sprintf("test-db-instance-%d", acctest.RandInt())
 	var opsdb opsworks.RdsDbInstance
 	resource.ParallelTest(t, resource.TestCase{

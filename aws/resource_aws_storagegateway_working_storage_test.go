@@ -67,7 +67,7 @@ func TestDecodeStorageGatewayWorkingStorageID(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayWorkingStorage_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayWorkingStorage_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_working_storage.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"

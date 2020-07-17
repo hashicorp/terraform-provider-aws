@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSOrganizations(t *testing.T) {
+func TestAccAWSOrganizations_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
 			"basic":                      testAccAwsOrganizationsOrganization_basic,

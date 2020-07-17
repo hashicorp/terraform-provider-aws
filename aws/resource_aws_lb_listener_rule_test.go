@@ -181,7 +181,7 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))

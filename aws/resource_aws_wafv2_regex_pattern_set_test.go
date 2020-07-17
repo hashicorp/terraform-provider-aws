@@ -13,7 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccAwsWafv2RegexPatternSet_Basic(t *testing.T) {
+func TestAccAwsWafv2RegexPatternSet_basic(t *testing.T) {
 	var v wafv2.RegexPatternSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_regex_pattern_set.test"
