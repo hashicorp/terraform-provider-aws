@@ -404,8 +404,8 @@ func conditionValueToInt(untypedValues []interface{}) (interface{}, error) {
 }
 
 func parseImportedId(importedId string) (string, string, error) {
-	parts := strings.SplitN(importedId, "_", 2)
-	if len(parts) < 2 {
+	parts := strings.Split(importedId, "_")
+	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
 	}
 	return parts[0], parts[1], nil
