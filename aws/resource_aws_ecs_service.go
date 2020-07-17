@@ -353,6 +353,11 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+
+			"wait_until_stable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -527,6 +532,44 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(service.ServiceArn))
 	d.SetId(aws.StringValue(service.ServiceArn))
+
+	// Wait until it's stable
+	if d.Get("wait_until_stable").(bool) {
+		wait := resource.StateChangeConf{
+			Pending:    []string{"PENDING"},
+			Target:     []string{"STABLE"},
+			Timeout:    10 * time.Minute,
+			MinTimeout: 1 * time.Second,
+			Refresh: func() (interface{}, string, error) {
+				log.Printf("[DEBUG] Checking if ECS service %s is STABLE", d.Id())
+				resp, err := conn.DescribeServices(&ecs.DescribeServicesInput{
+					Services: []*string{aws.String(d.Id())},
+					Cluster:  aws.String(d.Get("cluster").(string)),
+				})
+				if err != nil {
+					return resp, "FAILED", err
+				}
+
+				status := "PENDING"
+
+				desiredMatchesRunning := aws.Int64Value(resp.Services[0].DesiredCount) == aws.Int64Value(resp.Services[0].RunningCount)
+				noPendingTasks := aws.Int64Value(resp.Services[0].PendingCount) == 0
+				isActive := aws.StringValue(resp.Services[0].Status) == "ACTIVE"
+
+				if desiredMatchesRunning && noPendingTasks && isActive {
+					status = "STABLE"
+				}
+
+				log.Printf("[DEBUG] ECS service (%s) is currently %q", d.Id(), status)
+				return resp, status, nil
+			},
+		}
+
+		_, err = wait.WaitForState()
+		if err != nil {
+			return err
+		}
+	}
 
 	return resourceAwsEcsServiceRead(d, meta)
 }
