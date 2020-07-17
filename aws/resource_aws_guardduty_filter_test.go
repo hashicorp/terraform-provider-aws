@@ -107,9 +107,7 @@ func testAccCheckAwsGuardDutyFilterExists(name string) resource.TestCheckFunc {
 }
 
 func testAccGuardDutyFilterConfig_full() string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
 	name        = "test-filter"
@@ -141,13 +139,15 @@ resource "aws_guardduty_filter" "test" {
       condition = "greater_than"
     }
   }
-}`, testAccGuardDutyDetectorConfig_basic3)
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}`
 }
 
 func testAccGuardDutyFilterConfigNoop_full() string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
 	name        = "test-filter"
@@ -179,5 +179,9 @@ resource "aws_guardduty_filter" "test" {
       condition = "greater_than"
     }
   }
-}`, testAccGuardDutyDetectorConfig_basic3)
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}`
 }
