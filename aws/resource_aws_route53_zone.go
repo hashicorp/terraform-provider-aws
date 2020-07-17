@@ -392,7 +392,7 @@ func cleanZoneID(ID string) string {
 // normalizeDomainName is used to remove the trailing period and enforce lowercase
 func normalizeDomainName(v interface{}) string {
 	lc := strings.ToLower(v.(string))
-	return strings.Trim(lc, ".")
+	return strings.TrimSuffix(lc, ".")
 }
 
 func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]string, error) {
