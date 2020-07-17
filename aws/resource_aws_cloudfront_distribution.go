@@ -22,7 +22,12 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 		Update: resourceAwsCloudFrontDistributionUpdate,
 		Delete: resourceAwsCloudFrontDistributionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				// Set non API attributes to their Default settings in the schema
+				d.Set("retain_on_delete", false)
+				d.Set("wait_for_deployment", true)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
 		SchemaVersion: 1,
