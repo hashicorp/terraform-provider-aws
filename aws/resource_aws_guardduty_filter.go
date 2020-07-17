@@ -416,22 +416,22 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
 		if len(conditions.Equals) > 0 {
-			flatCriteria = append(flatCriteria, flattenStringCondition(field, "equals", conditions.Equals))
+			flatCriteria = append(flatCriteria, flattenStringCondition(field, "equals", aws.StringValueSlice(conditions.Equals)))
 		}
 		if len(conditions.NotEquals) > 0 {
-			flatCriteria = append(flatCriteria, flattenStringCondition(field, "not_equals", conditions.NotEquals))
+			flatCriteria = append(flatCriteria, flattenStringCondition(field, "not_equals", aws.StringValueSlice(conditions.NotEquals)))
 		}
 		if conditions.GreaterThan != nil {
-			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than", conditions.GreaterThan))
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than", *conditions.GreaterThan))
 		}
 		if conditions.GreaterThanOrEqual != nil {
-			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than_or_equal", conditions.GreaterThanOrEqual))
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than_or_equal", *conditions.GreaterThanOrEqual))
 		}
 		if conditions.LessThan != nil {
-			flatCriteria = append(flatCriteria, flattenIntCondition(field, "less_than", conditions.LessThan))
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "less_than", *conditions.LessThan))
 		}
 		if conditions.LessThanOrEqual != nil {
-			flatCriteria = append(flatCriteria, flattenIntCondition(field, "less_than_or_equal", conditions.LessThanOrEqual))
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "less_than_or_equal", *conditions.LessThanOrEqual))
 		}
 	}
 
@@ -442,22 +442,22 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 	}
 }
 
-func flattenIntCondition(field string, conditionName string, conditionValue *int64) map[string]interface{} {
+func flattenIntCondition(field string, conditionName string, conditionValue int64) map[string]interface{} {
 	flatCriterion := make(map[string]interface{})
 	flatCriterion["field"] = field
 	flatCriterion["condition"] = conditionName
 	flatCriterion["values"] = make([]interface{}, 1)
-	flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(*conditionValue, 10)
+	flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(conditionValue, 10)
 	return flatCriterion
 }
 
-func flattenStringCondition(field string, conditionName string, conditionValues []*string) map[string]interface{} {
+func flattenStringCondition(field string, conditionName string, conditionValues []string) map[string]interface{} {
 	flatCriterion := make(map[string]interface{})
 	flatCriterion["field"] = field
 	flatCriterion["condition"] = conditionName
 	flatCriterion["values"] = make([]interface{}, len(conditionValues))
 	for i, value := range conditionValues {
-		flatCriterion["values"].([]interface{})[i] = *value
+		flatCriterion["values"].([]interface{})[i] = value
 	}
 	return flatCriterion
 }
