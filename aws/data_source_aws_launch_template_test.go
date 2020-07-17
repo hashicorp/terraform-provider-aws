@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -159,6 +160,21 @@ func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLaunchTemplateDataSourceConfig_NonExistent,
+				ExpectError: regexp.MustCompile(`not found`),
+			},
+		},
+	})
+}
+
 func testAccAWSLaunchTemplateDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -238,3 +254,9 @@ data "aws_launch_template" "test" {
 }
 `, rName, associatePublicIPAddress)
 }
+
+const testAccAWSLaunchTemplateDataSourceConfig_NonExistent = `
+data "aws_launch_template" "test" {
+  name = "tf-acc-test-nonexistent"
+}
+`
