@@ -354,7 +354,7 @@ func TestAccAWSCloudFormationStackSet_Parameters(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
-	t.Skip("this resource does not currently ignore unconfigured CloudFormation template parameters with the Default property")
+	TestAccSkip(t, "this resource does not currently ignore unconfigured CloudFormation template parameters with the Default property")
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform/issues/18863
 
@@ -405,7 +405,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
-	t.Skip("this resource does not currently ignore CloudFormation template parameters with the NoEcho property")
+	TestAccSkip(t, "this resource does not currently ignore CloudFormation template parameters with the NoEcho property")
 	// Additional references:
 	//  * https://github.com/terraform-providers/terraform-provider-aws/issues/55
 

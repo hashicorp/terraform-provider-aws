@@ -153,7 +153,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 }
 
 func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
-	t.Skip("Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
+	TestAccSkip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
 
 	var cluster1 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -187,7 +187,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 }
 
 func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
-	t.Skip("aws_msk_cluster is correctly calling UpdateClusterConfiguration however API is always returning 429 and 500 errors")
+	TestAccSkip(t, "aws_msk_cluster is correctly calling UpdateClusterConfiguration however API is always returning 429 and 500 errors")
 
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
