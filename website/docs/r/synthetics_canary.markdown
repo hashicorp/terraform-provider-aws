@@ -81,3 +81,7 @@ Synthetics Canaries can be imported using the `name`, e.g.
 ```
 $ terraform import aws_synthetics_canary.some some-canary
 ```
+
+**Note about leftover implicit resources** - When a canary is created a set of resources are created implicitly,
+ see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_DeleteCanary.html) for full list.
+Terraform will not delete these resources automatically and require manual deletion or by using shell commands in terraform.
