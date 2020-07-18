@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"log"
 	"regexp"
 	"testing"
 
@@ -91,7 +92,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
 				),
 			},
@@ -116,7 +117,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_config.0.vpc_id", regexp.MustCompile(`vpc-`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`vpc-`)),
 				),
 			},
 			{
@@ -277,26 +278,18 @@ func testAccCheckAwsSyntheticsCanaryDeleteLambda(n string) resource.TestCheckFun
 			return fmt.Errorf("synthetics Canary name not set")
 		}
 
-		name := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
-		lambdaConn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
-		input := &synthetics.GetCanaryInput{
-			Name: aws.String(name),
+		input := &lambda.DeleteFunctionInput{
+			FunctionName: aws.String(rs.Primary.Attributes["engine_arn"]),
 		}
 
-		res, err := conn.GetCanary(input)
+		log.Printf("delete sythetics Canary Lambda function request: %#v", input)
+
+		_, err := conn.DeleteFunction(input)
 		if err != nil {
-			return fmt.Errorf("syntherics Canary %s not found", name)
-		}
-
-		lambdaInput := &lambda.DeleteFunctionInput{
-			FunctionName: res.Canary.EngineArn,
-		}
-
-		_, err = lambdaConn.DeleteFunction(lambdaInput)
-		if err != nil {
-			return fmt.Errorf("syntherics Canary Lambda %s could not be deleted", name)
+			return fmt.Errorf("sythetics Canary Lambda (%s) could not be deleted: %w",
+				rs.Primary.Attributes["engine_arn"], err)
 		}
 
 		return nil

@@ -213,6 +213,8 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		input.SuccessRetentionPeriodInDays = aws.Int64(int64(v.(int)))
 	}
 
+	log.Printf("[DEBUG] creating Synthetics Canary: %#v", input)
+
 	resp, err := conn.CreateCanary(input)
 	if err != nil {
 		return fmt.Errorf("error creating Synthetics Canary: %w", err)
@@ -374,6 +376,9 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if _, err := waiter.CanaryDeleted(conn, d.Id()); err != nil {
+		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
 		return fmt.Errorf("error waiting for Synthetics Canary (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -457,8 +462,8 @@ func expandAwsSyntheticsCanaryRunConfig(l []interface{}) *synthetics.CanaryRunCo
 		TimeoutInSeconds: aws.Int64(int64(m["timeout_in_seconds"].(int))),
 	}
 
-	if v, ok := m["memory_in_mb"]; ok {
-		codeConfig.MemoryInMB = aws.Int64(int64(v.(int)))
+	if v, ok := m["memory_in_mb"].(int); ok && v > 0 {
+		codeConfig.MemoryInMB = aws.Int64(int64(v))
 	}
 
 	return codeConfig
