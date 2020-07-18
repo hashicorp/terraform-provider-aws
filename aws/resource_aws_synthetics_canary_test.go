@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"regexp"
 	"testing"
@@ -92,6 +93,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					testAccCheckAwsSyntheticsCanaryDeleteLambda(resourceName),
 				),
 			},
 		},
@@ -214,6 +216,43 @@ func testAccCheckAwsSyntheticsCanaryExists(n string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("syntherics Canary %s not found in AWS", name)
 		}
+		return nil
+	}
+}
+
+func testAccCheckAwsSyntheticsCanaryDeleteLambda(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("synthetics Canary not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("synthetics Canary name not set")
+		}
+
+		name := rs.Primary.ID
+		conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
+		lambdaConn := testAccProvider.Meta().(*AWSClient).lambdaconn
+
+		input := &synthetics.GetCanaryInput{
+			Name: aws.String(name),
+		}
+
+		res, err := conn.GetCanary(input)
+		if err != nil {
+			return fmt.Errorf("syntherics Canary %s not found", name)
+		}
+
+		lambdaInput := &lambda.DeleteFunctionInput{
+			FunctionName: res.Canary.EngineArn,
+		}
+
+		_, err = lambdaConn.DeleteFunction(lambdaInput)
+		if err != nil {
+			return fmt.Errorf("syntherics Canary Lambda %s could not be deleted", name)
+		}
+
 		return nil
 	}
 }
