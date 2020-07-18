@@ -34,7 +34,7 @@ The following arguments are supported:
 * `artifact_s3_location` - (Required) The location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `schedule` -  (Required) Information about how often the canary is to run and when these test runs are to stop. See [Schedule](#schedule) below.
 * `handler` - (Required) The domain description.
-* `execution_role_arn` - (Required) The ARN of the IAM role to be used to run the canary.
+* `execution_role_arn` - (Required) The ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role. 
 * `s3_bucket` - (Optional) If your canary script is located in S3, specify the full bucket name here. The bucket must already exist. Specify the full bucket name, including s3:// as the start of the bucket name. **Conflicts with `zip_file`**
 * `s3_key` - (Optional) The S3 key of your script. **Conflicts with `zip_file`**
 * `s3_version` - (Optional) The S3 version ID of your script. **Conflicts with `zip_file`**
