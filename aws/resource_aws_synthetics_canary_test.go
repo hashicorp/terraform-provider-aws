@@ -29,7 +29,17 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
+					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
+					resource.TestCheckResourceAttr(resourceName, "success_retention_period", "31"),
+					resource.TestCheckResourceAttr(resourceName, "handler", "exports.handler"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					//todo: add lambda arns, role arn, s3 validations
 				),
 			},
 			{
@@ -134,6 +144,29 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSyntheticsCanary(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
 
@@ -189,6 +222,10 @@ func testAccAWSSyntheticsCanaryConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -209,6 +246,10 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_partition" "current" {}
@@ -271,8 +312,8 @@ resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
-  handler  = "exports.handler"
-  zip_file = "test-fixtures/lambdatest.zip"
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
 
   schedule {
     expression = "rate(0 minute)"

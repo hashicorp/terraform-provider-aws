@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -64,10 +65,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_version"},
-			},
-			"source_location_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"execution_role_arn": {
 				Type:         schema.TypeString,
@@ -148,6 +145,10 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"source_location_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"runtime_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -204,13 +205,13 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 
 	resp, err := conn.CreateCanary(input)
 	if err != nil {
-		return fmt.Errorf("error creating Synthetics Canary: %s", err)
+		return fmt.Errorf("error creating Synthetics Canary: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Canary.Name))
 
 	if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceAwsSyntheticsCanaryRead(d, meta)
@@ -226,7 +227,12 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.GetCanary(input)
 	if err != nil {
-		return fmt.Errorf("error reading Synthetics Canary: %s", err)
+		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error reading Synthetics Canary: %w", err)
 	}
 
 	canary := resp.Canary
@@ -251,19 +257,19 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("arn", arn)
 
 	if err := d.Set("vpc_config", flattenAwsSyntheticsCanaryVpcConfig(canary.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc config: %s", err)
+		return fmt.Errorf("error setting vpc config: %w", err)
 	}
 
 	if err := d.Set("run_config", flattenAwsSyntheticsCanaryRunConfig(canary.RunConfig)); err != nil {
-		return fmt.Errorf("error setting run config: %s", err)
+		return fmt.Errorf("error setting run config: %w", err)
 	}
 
 	if err := d.Set("schedule", flattenAwsSyntheticsCanarySchedule(canary.Schedule)); err != nil {
-		return fmt.Errorf("error setting schedule: %s", err)
+		return fmt.Errorf("error setting schedule: %w", err)
 	}
 
 	if err := d.Set("tags", keyvaluetags.SyntheticsKeyValueTags(canary.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -323,11 +329,11 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 	if updateFlag {
 		_, err := conn.UpdateCanary(input)
 		if err != nil {
-			return fmt.Errorf("error updating Synthetics Canary: %s", err)
+			return fmt.Errorf("error updating Synthetics Canary: %w", err)
 		}
 
 		if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Synthetics Canary (%s) updating: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for Synthetics Canary (%s) updating: %w", d.Id(), err)
 		}
 	}
 
@@ -335,7 +341,7 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SyntheticsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Synthetics Canary (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating Synthetics Canary (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -354,7 +360,7 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Synthetics Canary: %s", err)
+		return fmt.Errorf("error deleting Synthetics Canary: %w", err)
 	}
 
 	return nil
@@ -376,7 +382,7 @@ func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCo
 		defer awsMutexKV.Unlock(awsMutexCanary)
 		file, err := loadFileContent(zipFile.(string))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to load %q: %s", zipFile.(string), err)
+			return nil, fmt.Errorf("unable to load %q: %w", zipFile.(string), err)
 		}
 		codeConfig.ZipFile = file
 	} else {
