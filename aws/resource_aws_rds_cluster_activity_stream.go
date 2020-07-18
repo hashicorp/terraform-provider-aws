@@ -146,7 +146,7 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRDSClusterActivityStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("arn") || d.HasChange("kms_key_id") || d.HasChange("mode") {
+	if d.HasChanges("arn", "kms_key_id", "mode") {
 		log.Printf("[DEBUG] Stopping RDS Cluster Activity Stream before updating")
 		if err := resourceAwsRDSClusterActivityStreamDelete(d, meta); err != nil {
 			return err

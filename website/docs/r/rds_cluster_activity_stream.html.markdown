@@ -25,13 +25,13 @@ references using the [resource `depends_on` meta-argument](/docs/configuration/r
 
 ```hcl
 resource "aws_rds_cluster" "default" {
-  cluster_identifier      = "aurora-cluster-demo"
-  availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name           = "mydb"
-  master_username         = "foo"
-  master_password         = "mustbeeightcharaters"
-  engine                  = "aurora-postgresql"
-  engine_version          = "10.11"
+  cluster_identifier = "aurora-cluster-demo"
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "mustbeeightcharaters"
+  engine             = "aurora-postgresql"
+  engine_version     = "10.11"
 }
 
 resource "aws_rds_cluster_instance" "default" {
