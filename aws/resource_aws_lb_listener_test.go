@@ -192,7 +192,7 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_alb_target_group.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_alb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
@@ -290,7 +290,7 @@ func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_iam_server_certificate.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_acm_certificate.test", "arn"),
 				),
 			},
 			{
