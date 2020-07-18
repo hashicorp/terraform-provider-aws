@@ -359,23 +359,23 @@ resource "aws_vpn_gateway" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_vpnGatewayId(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   vpn_gateway_id              = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   associated_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
@@ -407,23 +407,23 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfigAllowedPrefixes1(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/16"]
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   associated_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationProposalConfigAllowedPrefixes2(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/24", "10.0.1.0/24"]
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   associated_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }

@@ -271,11 +271,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_basic(rName string) string {
-	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + fmt.Sprintf(`
+	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + `
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
   transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tags(rName string) string {

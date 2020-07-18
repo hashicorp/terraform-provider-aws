@@ -427,13 +427,13 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 func testAccAWSAPIGatewayDeploymentConfigRequired() string {
-	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + fmt.Sprintf(`
+	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + `
 resource "aws_api_gateway_deployment" "test" {
   depends_on = ["aws_api_gateway_integration.test"]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayDeploymentConfigStageDescription(stageDescription string) string {

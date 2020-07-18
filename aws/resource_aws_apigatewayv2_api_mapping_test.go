@@ -264,13 +264,13 @@ resource "aws_apigatewayv2_domain_name" "test" {
 }
 
 func testAccAWSAPIGatewayV2ApiMappingConfig_basic(rName, certificateArn string) string {
-	return testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn) + testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn) + testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName) + `
 resource "aws_apigatewayv2_api_mapping" "test" {
   api_id      = "${aws_apigatewayv2_api.test.id}"
   domain_name = "${aws_apigatewayv2_domain_name.test.id}"
   stage       = "${aws_apigatewayv2_stage.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2ApiMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {

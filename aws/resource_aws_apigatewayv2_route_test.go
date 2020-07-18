@@ -422,16 +422,16 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$default"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_authorizer(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$connect"
@@ -439,22 +439,22 @@ resource "aws_apigatewayv2_route" "test" {
   authorization_type = "CUSTOM"
   authorizer_id      = "${aws_apigatewayv2_authorizer.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_authorizerUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$connect"
 
   authorization_type = "AWS_IAM"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_jwtAuthorization(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$connect"
@@ -464,11 +464,11 @@ resource "aws_apigatewayv2_route" "test" {
 
   authorization_scopes = ["user.id", "user.email"]
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_jwtAuthorizationUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$connect"
@@ -478,7 +478,7 @@ resource "aws_apigatewayv2_route" "test" {
 
   authorization_scopes = ["user.email"]
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_model(rName string) string {
@@ -495,7 +495,7 @@ func testAccAWSAPIGatewayV2RouteConfig_model(rName string) string {
 }
 `
 
-	return testAccAWSAPIGatewayV2ModelConfig_basic(rName, schema) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2ModelConfig_basic(rName, schema) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$default"
@@ -506,12 +506,12 @@ resource "aws_apigatewayv2_route" "test" {
     "test" = "${aws_apigatewayv2_model.test.name}"
   }
 }
-`)
+`
 }
 
 // Simple attributes - No authorization, models or targets.
 func testAccAWSAPIGatewayV2RouteConfig_simpleAttributes(rName string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$default"
@@ -520,16 +520,16 @@ resource "aws_apigatewayv2_route" "test" {
   operation_name                      = "GET"
   route_response_selection_expression = "$default"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_target(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = "${aws_apigatewayv2_api.test.id}"
   route_key = "$default"
 
   target = "integrations/${aws_apigatewayv2_integration.test.id}"
 }
-`)
+`
 }

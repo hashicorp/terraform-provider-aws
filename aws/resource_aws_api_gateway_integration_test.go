@@ -755,7 +755,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 }
 
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeVpcLink(rName string) string {
-	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   resource_id = "${aws_api_gateway_resource.test.id}"
@@ -770,11 +770,11 @@ resource "aws_api_gateway_integration" "test" {
   connection_type = "VPC_LINK"
   connection_id   = "${aws_api_gateway_vpc_link.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName string) string {
-	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   resource_id = "${aws_api_gateway_resource.test.id}"
@@ -786,5 +786,5 @@ resource "aws_api_gateway_integration" "test" {
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
 }
-`)
+`
 }

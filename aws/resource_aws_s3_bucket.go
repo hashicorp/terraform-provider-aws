@@ -1736,7 +1736,7 @@ func WebsiteDomainUrl(client *AWSClient, region string) string {
 	if isOldRegion(region) {
 		return fmt.Sprintf("s3-website-%s.amazonaws.com", region) //lintignore:AWSR001
 	}
-	return client.RegionalHostname(fmt.Sprintf("s3-website"))
+	return client.RegionalHostname("s3-website")
 }
 
 func isOldRegion(region string) bool {

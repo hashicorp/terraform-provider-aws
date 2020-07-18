@@ -312,16 +312,16 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "MOCK"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP"
@@ -339,11 +339,11 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/json" = ""
   }
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP"
@@ -362,7 +362,7 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_lambda(rName string) string {

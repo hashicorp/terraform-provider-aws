@@ -228,30 +228,30 @@ resource "aws_vpc_endpoint_service" "test" {
 }
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   service_name = "${aws_vpc_endpoint_service.test.service_name}"
 }
-`)
+`
 }
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   filter {
     name   = "service-name"
     values = ["${aws_vpc_endpoint_service.test.service_name}"]
   }
 }
-`)
+`
 }
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   tags = {
     Name  = "${aws_vpc_endpoint_service.test.tags["Name"]}"
   }
 }
-`)
+`
 }

@@ -774,12 +774,12 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_defaultHttpStage(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + `
 resource "aws_apigatewayv2_stage" "test" {
   api_id = "${aws_apigatewayv2_api.test.id}"
   name   = "$default"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, format string) string {

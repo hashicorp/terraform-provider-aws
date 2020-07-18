@@ -616,25 +616,25 @@ resource "aws_dx_gateway" "test" {
 }
 
 func testAccDxGatewayAssociationConfig_deprecatedSingleAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id  = "${aws_dx_gateway.test.id}"
   vpn_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = "${aws_dx_gateway.test.id}"
   associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
@@ -650,7 +650,7 @@ resource "aws_dx_gateway_association" "test" {
   dx_gateway_id                       = "${aws_dx_gateway.test.id}"
   associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName string, rBgpAsn int) string {
@@ -778,7 +778,7 @@ resource "aws_dx_gateway_association" "test2" {
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = "${aws_dx_gateway.test.id}"
   associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
@@ -788,11 +788,11 @@ resource "aws_dx_gateway_association" "test" {
     "10.255.255.8/30",
   ]
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccountUpdated(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
   dx_gateway_id         = "${aws_dx_gateway.test.id}"
   associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
@@ -801,11 +801,11 @@ resource "aws_dx_gateway_association" "test" {
     "10.255.255.8/29",
   ]
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
@@ -830,11 +830,11 @@ resource "aws_dx_gateway_association" "test" {
     "10.255.255.8/29",
   ]
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccountUpdated(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
@@ -855,5 +855,5 @@ resource "aws_dx_gateway_association" "test" {
     "10.255.255.8/30",
   ]
 }
-`)
+`
 }

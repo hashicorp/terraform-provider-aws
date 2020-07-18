@@ -392,19 +392,17 @@ func testAccCheckAWSS3AccountPublicAccessBlockDisappears() resource.TestCheckFun
 }
 
 func testAccAWSS3AccountPublicAccessBlockConfig() string {
-	return fmt.Sprintf(`
-resource "aws_s3_account_public_access_block" "test" {}
-`)
+	return `resource "aws_s3_account_public_access_block" "test" {}`
 }
 
 func testAccAWSS3AccountPublicAccessBlockConfigAccountId() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_caller_identity" "test" {}
 
 resource "aws_s3_account_public_access_block" "test" {
   account_id = "${data.aws_caller_identity.test.account_id}"
 }
-`)
+`
 }
 
 func testAccAWSS3AccountPublicAccessBlockConfigBlockPublicAcls(blockPublicAcls bool) string {

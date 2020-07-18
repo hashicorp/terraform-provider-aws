@@ -331,7 +331,7 @@ resource "aws_default_route_table" "test" {
 }
 
 func testAccDefaultRouteTableConfigRequired() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
@@ -339,7 +339,7 @@ resource "aws_vpc" "test" {
 resource "aws_default_route_table" "test" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 }
-`)
+`
 }
 
 const testAccDefaultRouteTableConfig = `
@@ -525,7 +525,7 @@ resource "aws_main_route_table_association" "a" {
 `
 
 func testAccAWSDefaultRouteTableConfigRouteTransitGatewayID() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -567,7 +567,7 @@ resource "aws_default_route_table" "test" {
     transit_gateway_id = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
   }
 }
-`)
+`
 }
 
 const testAccDefaultRouteTable_vpc_endpoint = `
