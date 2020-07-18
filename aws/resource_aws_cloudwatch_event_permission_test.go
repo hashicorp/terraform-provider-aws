@@ -67,7 +67,7 @@ func testSweepCloudWatchEventPermissions(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
+func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"
 	statementID := acctest.RandomWithPrefix(t.Name())

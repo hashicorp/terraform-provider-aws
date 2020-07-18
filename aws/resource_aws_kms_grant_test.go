@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccAWSKmsGrant_Basic(t *testing.T) {
+func TestAccAWSKmsGrant_basic(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 

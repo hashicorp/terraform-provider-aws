@@ -78,7 +78,7 @@ func testSweepWafRegexMatchSet(region string) error {
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
-func TestAccAWSWafRegexMatchSet(t *testing.T) {
+func TestAccAWSWafRegexMatchSet_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":          testAccAWSWafRegexMatchSet_basic,
 		"changePatterns": testAccAWSWafRegexMatchSet_changePatterns,

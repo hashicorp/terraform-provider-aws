@@ -459,7 +459,7 @@ func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	}
 }
 
-func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_InterruptStop(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -484,7 +484,7 @@ func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequestInterruptHibernate(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_InterruptHibernate(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
 	resource.ParallelTest(t, resource.TestCase{

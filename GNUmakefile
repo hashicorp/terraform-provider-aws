@@ -76,6 +76,7 @@ awsproviderlint:
 		-c 1 \
 		-AT001 \
 		-AT002 \
+		-AT003 \
 		-AT005 \
 		-AT006 \
 		-AT007 \

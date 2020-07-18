@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
+func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"

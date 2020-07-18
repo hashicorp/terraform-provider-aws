@@ -65,7 +65,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 	return nil
 }
 
-func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
+func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"

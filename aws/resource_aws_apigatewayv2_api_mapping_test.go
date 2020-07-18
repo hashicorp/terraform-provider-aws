@@ -15,7 +15,7 @@ import (
 )
 
 // These tests need to be serialized, else resources get orphaned after "TooManyRequests" errors.
-func TestAccAWSAPIGatewayV2ApiMapping(t *testing.T) {
+func TestAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T) {
 	var certificateArn string
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsWafv2WebACLAssociation_Basic(t *testing.T) {
+func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 	testName := fmt.Sprintf("web-acl-association-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_web_acl_association.test"
 
