@@ -53,6 +53,52 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file"},
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigConfig2(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
+				),
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -70,7 +116,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_config.0.vpc_id"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_config.0.vpc_id", regexp.MustCompile(`vpc-`)),
 				),
 			},
 			{
@@ -341,6 +387,47 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryRunConfigConfig1(rName string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+    timeout_in_seconds = 60
+  }
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryRunConfigConfig2(rName string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+    timeout_in_seconds = 120
+    memory_in_mb       = 960
+  }
 }
 `, rName)
 }

@@ -90,10 +90,20 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"timeout_in_seconds": {
+						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
+							ValidateFunc: validation.All(
+								validation.IntDivisibleBy(64),
+								validation.IntAtLeast(960),
+							),
+						},
+						"timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(60, 14*60),
+							Default:      840,
 						},
 					},
 				},
@@ -172,16 +182,16 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		RuntimeVersion:     aws.String("syn-1.0"),
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = keyvaluetags.New(v).IgnoreAws().SyntheticsTags()
-	}
-
 	code, err := expandAwsSyntheticsCanaryCode(d)
 	if err != nil {
 		return err
 	}
 
 	input.Code = code
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().SyntheticsTags()
+	}
 
 	if v, ok := d.GetOk("run_config"); ok {
 		input.RunConfig = expandAwsSyntheticsCanaryRunConfig(v.([]interface{}))
@@ -363,6 +373,10 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error deleting Synthetics Canary: %w", err)
 	}
 
+	if _, err := waiter.CanaryDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Synthetics Canary (%s) deletion: %w", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -443,6 +457,10 @@ func expandAwsSyntheticsCanaryRunConfig(l []interface{}) *synthetics.CanaryRunCo
 		TimeoutInSeconds: aws.Int64(int64(m["timeout_in_seconds"].(int))),
 	}
 
+	if v, ok := m["memory_in_mb"]; ok {
+		codeConfig.MemoryInMB = aws.Int64(int64(v.(int)))
+	}
+
 	return codeConfig
 }
 
@@ -453,6 +471,7 @@ func flattenAwsSyntheticsCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConf
 
 	m := map[string]interface{}{
 		"timeout_in_seconds": aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
+		"memory_in_mb":       aws.Int64Value(canaryCodeOut.MemoryInMB),
 	}
 
 	return []interface{}{m}
