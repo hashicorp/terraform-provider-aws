@@ -7,14 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-)
-
-const (
-	AWSRDSClusterActivityStreamRetryDelay      = 5 * time.Second
-	AWSRDSClusterActivityStreamRetryMinTimeout = 3 * time.Second
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
 )
 
 func resourceAwsRDSClusterActivityStream() *schema.Resource {
@@ -92,7 +87,7 @@ func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(resourceArn)
 
-	err = resourceAwsRDSClusterActivityStreamWaitForStarted(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
+	err = waiter.ActivityStreamStarted(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return err
 	}
@@ -179,78 +174,10 @@ func resourceAwsRDSClusterActivityStreamDelete(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] RDS Cluster stop activity stream response: %s", resp)
 
-	if err := resourceAwsRDSClusterActivityStreamWaitForStopped(d.Timeout(schema.TimeoutDelete), d.Id(), conn); err != nil {
+	err = waiter.ActivityStreamStopped(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func resourceAwsRDSClusterActivityStreamWaitForStarted(timeout time.Duration, id string, conn *rds.RDS) error {
-	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", id)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{rds.ActivityStreamStatusStarting},
-		Target:     []string{rds.ActivityStreamStatusStarted},
-		Refresh:    resourceAwsRDSClusterActivityStreamStateRefreshFunc(conn, id),
-		Timeout:    timeout,
-		Delay:      AWSRDSClusterActivityStreamRetryDelay,
-		MinTimeout: AWSRDSClusterActivityStreamRetryMinTimeout,
-	}
-
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be started: %v", id, err)
-	}
-	return nil
-}
-
-func resourceAwsRDSClusterActivityStreamWaitForStopped(timeout time.Duration, id string, conn *rds.RDS) error {
-	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", id)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{rds.ActivityStreamStatusStopping},
-		Target:     []string{rds.ActivityStreamStatusStopped},
-		Refresh:    resourceAwsRDSClusterActivityStreamStateRefreshFunc(conn, id),
-		Timeout:    timeout,
-		Delay:      AWSRDSClusterActivityStreamRetryDelay,
-		MinTimeout: AWSRDSClusterActivityStreamRetryMinTimeout,
-	}
-
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be stopped: %v", id, err)
-	}
-	return nil
-}
-
-func resourceAwsRDSClusterActivityStreamStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		emptyResp := &rds.DescribeDBClustersInput{}
-
-		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(dbClusterIdentifier),
-		})
-
-		if err != nil {
-			log.Printf("[DEBUG] Refreshing RDS Cluster Activity Stream State. Occur error: %s", err)
-			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
-				return emptyResp, rds.ActivityStreamStatusStopped, nil
-			} else if resp != nil && len(resp.DBClusters) == 0 {
-				return emptyResp, rds.ActivityStreamStatusStopped, nil
-			} else {
-				return emptyResp, "", fmt.Errorf("error on refresh: %+v", err)
-			}
-		}
-
-		if resp == nil || resp.DBClusters == nil || len(resp.DBClusters) == 0 {
-			log.Printf("[DEBUG] Refreshing RDS Cluster Activity Stream State. Invalid resp: %s", resp)
-			return emptyResp, rds.ActivityStreamStatusStopped, nil
-		}
-
-		cluster := resp.DBClusters[0]
-		status := aws.StringValue(cluster.ActivityStreamStatus)
-		log.Printf("[DEBUG] Refreshing RDS Cluster Activity Stream State... %s", status)
-		return cluster, status, nil
-	}
 }
