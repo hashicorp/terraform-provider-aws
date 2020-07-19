@@ -32,7 +32,7 @@ resource "aws_codeartifact_domain_permissions_policy" "test" {
             "Action": "codeartifact:CreateRepository",
             "Effect": "Allow",
             "Principal": "*",
-            "Resource": "*"
+            "Resource": "${aws_codeartifact_domain.example.arn}"
         }
     ]
 }
