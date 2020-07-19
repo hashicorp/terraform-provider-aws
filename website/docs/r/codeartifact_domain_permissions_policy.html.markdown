@@ -1,14 +1,14 @@
 ---
 subcategory: "CodeArtifact"
 layout: "aws"
-page_title: "AWS: aws_codeartifact_domain_permissions"
+page_title: "AWS: aws_codeartifact_domain_permissions_policy"
 description: |-
-  Provides a CodeArtifact Domain Permissions resource.
+  Provides a CodeArtifact Domain Permissions Policy resource.
 ---
 
-# Resource: aws_codeartifact_domain_permissions
+# Resource: aws_codeartifact_domain_permissions_policy
 
-Provides a CodeArtifact Domains Permissions Resource.
+Provides a CodeArtifact Domains Permissions Policy Resource.
 
 ## Example Usage
 
@@ -20,6 +20,23 @@ resource "aws_kms_key" "example" {
 resource "aws_codeartifact_domain" "example" {
   domain         = "example.com"
   encryption_key = "${aws_kms_key.example.arn}"
+}
+
+resource "aws_codeartifact_domain_permissions_policy" "test" {
+  domain          = "${aws_codeartifact_domain.example.id}"
+  policy_document = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "codeartifact:CreateRepository",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
 }
 ```
 
@@ -40,8 +57,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Domain Permissions can be imported using the CodeArtifact Domain name, e.g.
+CodeArtifact Domain Permissions Policies can be imported using the CodeArtifact Domain name, e.g.
 
 ```
-$ terraform import aws_codeartifact_domain_permissions.example example.com
+$ terraform import aws_codeartifact_domain_permissions_policy.example example.com
 ```
