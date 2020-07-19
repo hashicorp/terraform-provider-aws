@@ -2,9 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	"log"
 	"regexp"
 	"testing"
 
@@ -140,8 +138,10 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					testAccCheckAwsSyntheticsCanaryDeleteLambda(resourceName),
 				),
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 			},
 		},
 	})
@@ -267,34 +267,46 @@ func testAccCheckAwsSyntheticsCanaryExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsSyntheticsCanaryDeleteLambda(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("synthetics Canary not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("synthetics Canary name not set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
-
-		input := &lambda.DeleteFunctionInput{
-			FunctionName: aws.String(rs.Primary.Attributes["engine_arn"]),
-		}
-
-		log.Printf("delete sythetics Canary Lambda function request: %#v", input)
-
-		_, err := conn.DeleteFunction(input)
-		if err != nil {
-			return fmt.Errorf("sythetics Canary Lambda (%s) could not be deleted: %w",
-				rs.Primary.Attributes["engine_arn"], err)
-		}
-
-		return nil
-	}
-}
+//func testAccCheckAwsSyntheticsCanaryDeleteLambda(n string) resource.TestCheckFunc {
+//	return func(s *terraform.State) error {
+//		rs, ok := s.RootModule().Resources[n]
+//		if !ok {
+//			return fmt.Errorf("synthetics Canary not found: %s", n)
+//		}
+//
+//		if rs.Primary.ID == "" {
+//			return fmt.Errorf("synthetics Canary name not set")
+//		}
+//
+//		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+//		lambdaArn := fmt.Sprintf("%s:%s", rs.Primary.Attributes["engine_arn"], "3")
+//
+//		deleteInput := &lambda.DeleteFunctionInput{
+//			FunctionName: aws.String(lambdaArn),
+//		}
+//
+//		log.Printf("delete sythetics Canary Lambda function request: %#v", deleteInput)
+//
+//		_, err := conn.DeleteFunction(deleteInput)
+//		if err != nil {
+//			return fmt.Errorf("sythetics Canary Lambda (%s) could not be deleted: %w", lambdaArn, err)
+//		}
+//
+//		getInput := &lambda.GetFunctionInput{
+//			FunctionName: aws.String(lambdaArn),
+//		}
+//
+//		_, err = conn.GetFunction(getInput)
+//		if err != nil {
+//			if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+//				return nil
+//			}
+//			return fmt.Errorf("sythetics Canary Lambda (%s) could not be read: %w", lambdaArn, err)
+//		}
+//
+//		return fmt.Errorf("sythetics Canary Lambda (%s) still exists", lambdaArn)
+//	}
+//}
 
 func testAccAWSSyntheticsCanaryConfigBase(rName string) string {
 	return fmt.Sprintf(`
