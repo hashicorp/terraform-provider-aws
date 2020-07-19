@@ -124,7 +124,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
-	d.SetId(strings.Join([]string{d.Get("detector_id").(string), *output.Name}, "_"))
+	d.SetId(joinGuardDutyFilterID(d.Get("detector_id").(string), *output.Name))
 
 	return resourceAwsGuardDutyFilterRead(d, meta)
 }
@@ -175,7 +175,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("rank", filter.Rank)
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	d.Set("tags", keyvaluetags.GuarddutyKeyValueTags(filter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
-	d.SetId(strings.Join([]string{detectorId, name}, "_"))
+	d.SetId(joinGuardDutyFilterID(detectorId, name))
 
 	return nil
 }
@@ -401,6 +401,10 @@ func conditionValueToInt(untypedValues []interface{}) (interface{}, error) {
 	}
 
 	return typedValue, nil
+}
+
+func joinGuardDutyFilterID(detectorID, filterName string) string {
+	return detectorID + "_" + filterName
 }
 
 func parseImportedId(importedId string) (string, string, error) {
