@@ -65,7 +65,7 @@ func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{
 
 	domain, err := conn.CreateDomain(params)
 	if err != nil {
-		return fmt.Errorf("error creating CodeArtifact Domain: %s", err)
+		return fmt.Errorf("error creating CodeArtifact Domain: %w", err)
 	}
 
 	d.SetId(aws.StringValue(domain.Domain.Name))
@@ -87,7 +87,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading CodeArtifact Domain (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading CodeArtifact Domain (%s): %w", d.Id(), err)
 	}
 
 	d.Set("domain", sm.Domain.Name)
@@ -116,7 +116,7 @@ func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Domain (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting CodeArtifact Domain (%s): %w", d.Id(), err)
 	}
 
 	return nil
