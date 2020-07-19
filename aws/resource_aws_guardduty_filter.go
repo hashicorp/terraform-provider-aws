@@ -124,7 +124,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
-	d.SetId(joinGuardDutyFilterID(d.Get("detector_id").(string), *output.Name))
+	d.SetId(joinGuardDutyFilterID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
 	return resourceAwsGuardDutyFilterRead(d, meta)
 }
