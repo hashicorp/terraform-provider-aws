@@ -34,9 +34,10 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"resource_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"apply_immediately": {
 				Type:     schema.TypeBool,
