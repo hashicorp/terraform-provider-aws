@@ -33,7 +33,7 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			"resource_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -68,7 +68,7 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	resourceArn := d.Get("arn").(string)
+	resourceArn := d.Get("resource_arn").(string)
 	applyImmediately := d.Get("apply_immediately").(bool)
 	kmsKeyId := d.Get("kms_key_id").(string)
 	mode := d.Get("mode").(string)
@@ -137,7 +137,7 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	d.Set("arn", dbc.DBClusterArn)
+	d.Set("resource_arn", dbc.DBClusterArn)
 	d.Set("kms_key_id", dbc.ActivityStreamKmsKeyId)
 	d.Set("kinesis_stream_name", dbc.ActivityStreamKinesisStreamName)
 	d.Set("mode", dbc.ActivityStreamMode)
@@ -146,7 +146,7 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRDSClusterActivityStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChanges("arn", "kms_key_id", "mode") {
+	if d.HasChanges("resource_arn", "kms_key_id", "mode") {
 		log.Printf("[DEBUG] Stopping RDS Cluster Activity Stream before updating")
 		if err := resourceAwsRDSClusterActivityStreamDelete(d, meta); err != nil {
 			return err

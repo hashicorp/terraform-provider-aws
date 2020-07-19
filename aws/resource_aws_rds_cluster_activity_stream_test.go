@@ -42,7 +42,7 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 					resource.TestCheckResourceAttr(resourceName, "mode", "async"),
@@ -153,7 +153,7 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterActivityStream_arn(t *testing.T) {
+func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 	var dbCluster rds.DBCluster
 	rName := acctest.RandString(5)
 	resourceName := "aws_rds_cluster_activity_stream.test"
@@ -168,7 +168,7 @@ func TestAccAWSRDSClusterActivityStream_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
 				),
 			},
 			{
@@ -182,7 +182,7 @@ func TestAccAWSRDSClusterActivityStream_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-new-aurora-cluster-%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-new-aurora-cluster-%s$", rName))),
 				),
 			},
 		},
@@ -318,7 +318,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  arn  								= "${aws_rds_cluster.test.arn}"
+  resource_arn        = "${aws_rds_cluster.test.arn}"
   apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.test.key_id}"
   mode         				= "async"
@@ -407,7 +407,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  arn  								= "${aws_rds_cluster.test.arn}"
+  resource_arn        = "${aws_rds_cluster.test.arn}"
   apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.new_kms_key.key_id}"
   mode         				= "async"
@@ -449,7 +449,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  arn  								= "${aws_rds_cluster.test.arn}"
+  resource_arn        = "${aws_rds_cluster.test.arn}"
   apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.test.key_id}"
   mode         				= "sync"
@@ -491,7 +491,7 @@ resource "aws_rds_cluster_instance" "new_rds_instance_test" {
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  arn  								= "${aws_rds_cluster.new_rds_cluster_test.arn}"
+  resource_arn        = "${aws_rds_cluster.new_rds_cluster_test.arn}"
   apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.test.key_id}"
   mode         				= "async"
