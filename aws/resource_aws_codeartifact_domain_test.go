@@ -60,7 +60,7 @@ func testSweepCodeArtifactDomains(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing Kinesis Streams: %w", err)
+		return fmt.Errorf("error listing CodeArtifact Domains: %w", err)
 	}
 
 	return sweeperErrs.ErrorOrNil()
