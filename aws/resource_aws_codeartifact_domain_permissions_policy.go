@@ -85,7 +85,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyRead(d *schema.ResourceData, 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("domain", d.Id())
@@ -106,8 +106,12 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyDelete(d *schema.ResourceData
 
 	_, err := conn.DeleteDomainPermissionsPolicy(input)
 
+	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Domain Permissions Policy: %s", err)
+		return fmt.Errorf("error deleting CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
