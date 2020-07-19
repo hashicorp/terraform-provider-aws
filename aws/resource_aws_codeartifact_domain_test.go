@@ -28,6 +28,7 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
