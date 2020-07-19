@@ -54,8 +54,8 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"sync",
-					"async",
+					rds.ActivityStreamModeSync,
+					rds.ActivityStreamModeAsync,
 				}, false),
 			},
 			"kinesis_stream_name": {

@@ -45,7 +45,7 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
-					resource.TestCheckResourceAttr(resourceName, "mode", "async"),
+					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeAsync),
 					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "mode", "async"),
+					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeAsync),
 				),
 			},
 			{
@@ -146,7 +146,7 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "mode", "sync"),
+					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeSync),
 				),
 			},
 		},
@@ -242,7 +242,7 @@ func testAccCheckAWSRDSClusterActivityStreamAttributes(v *rds.DBCluster) resourc
 			return fmt.Errorf("incorrect activity stream status: expected: %s, got: %s", rds.ActivityStreamStatusStarted, aws.StringValue(v.ActivityStreamStatus))
 		}
 
-		if aws.StringValue(v.ActivityStreamMode) != "sync" && aws.StringValue(v.ActivityStreamMode) != "async" {
+		if aws.StringValue(v.ActivityStreamMode) != rds.ActivityStreamModeSync && aws.StringValue(v.ActivityStreamMode) != rds.ActivityStreamModeAsync {
 			return fmt.Errorf("incorrect activity stream mode: expected: sync or async, got: %s", aws.StringValue(v.ActivityStreamMode))
 		}
 
