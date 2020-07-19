@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -74,14 +73,17 @@ func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		parts := strings.SplitN(rs.Primary.ID, "_", 2)
-
-		input := &guardduty.GetFilterInput{
-			DetectorId: aws.String(parts[0]),
-			FilterName: aws.String(parts[1]),
+		detectorID, filterName, err := parseImportedId(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
-		_, err := conn.GetFilter(input)
+		input := &guardduty.GetFilterInput{
+			DetectorId: aws.String(detectorID),
+			FilterName: aws.String(filterName),
+		}
+
+		_, err = conn.GetFilter(input)
 		if err != nil {
 			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 				return nil
