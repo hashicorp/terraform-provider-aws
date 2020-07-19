@@ -2,13 +2,69 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_codeartifact_domain", &resource.Sweeper{
+		Name: "aws_codeartifact_domain",
+		F:    testSweepCodeArtifactDomains,
+	})
+}
+
+func testSweepCodeArtifactDomains(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).codeartifactconn
+	input := &codeartifact.ListDomainsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListDomainsPages(input, func(page *codeartifact.ListDomainsOutput, lastPage bool) bool {
+		for _, domainPtr := range page.Domains {
+			if domainPtr == nil {
+				continue
+			}
+
+			domain := aws.StringValue(domainPtr.Name)
+			input := &codeartifact.DeleteDomainInput{
+				Domain: domainPtr.Name,
+			}
+
+			log.Printf("[INFO] Deleting CodeArtifact Domain: %s", domain)
+
+			_, err := conn.DeleteDomain(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting CodeArtifact Domain (%s): %w", domain, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CodeArtifact Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Kinesis Streams: %w", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
