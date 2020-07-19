@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,15 +25,25 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "resource_arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy_document"),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeArtifactDomainPermissionsPolicyUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:ListRepositoriesInDomain")),
+				),
 			},
 		},
 	})
@@ -52,6 +63,27 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomainPermissionsPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears_domain(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codeartifact_domain_permissions_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +161,41 @@ resource "aws_codeartifact_domain_permissions_policy" "test" {
             "Action": "codeartifact:CreateRepository",
             "Effect": "Allow",
             "Principal": "*",
-            "Resource": "*"
+            "Resource": "${aws_codeartifact_domain.test.arn}"
+        }
+    ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccAWSCodeArtifactDomainPermissionsPolicyUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = "${aws_kms_key.test.arn}"
+}
+
+resource "aws_codeartifact_domain_permissions_policy" "test" {
+  domain          = "${aws_codeartifact_domain.test.id}"
+  policy_document = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+ 				"codeartifact:CreateRepository",
+				"codeartifact:ListRepositoriesInDomain"
+			],
+            "Effect": "Allow",
+            "Principal": "*",
+            "Resource": "${aws_codeartifact_domain.test.arn}"
         }
     ]
 }
