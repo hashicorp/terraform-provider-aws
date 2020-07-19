@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSCodeArtifactDomainPermissions_basic(t *testing.T) {
+func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_codeartifact_domain_permissions.test"
+	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +21,7 @@ func TestAccAWSCodeArtifactDomainPermissions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainPermissionsBasicConfig(rName),
+				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "resource_arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
@@ -38,9 +38,9 @@ func TestAccAWSCodeArtifactDomainPermissions_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactDomainPermissions_disappears(t *testing.T) {
+func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_codeartifact_domain_permissions.test"
+	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -48,10 +48,10 @@ func TestAccAWSCodeArtifactDomainPermissions_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainPermissionsBasicConfig(rName),
+				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomainPermissions(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomainPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func testAccCheckAWSCodeArtifactDomainPermissionsExists(n string) resource.TestC
 
 func testAccCheckAWSCodeArtifactDomainPermissionsDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codeartifact_domain_permissions" {
+		if rs.Type != "aws_codeartifact_domain_permissions_policy" {
 			continue
 		}
 
@@ -107,7 +107,7 @@ func testAccCheckAWSCodeArtifactDomainPermissionsDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccAWSCodeArtifactDomainPermissionsBasicConfig(rName string) string {
+func testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -119,7 +119,7 @@ resource "aws_codeartifact_domain" "test" {
   encryption_key = "${aws_kms_key.test.arn}"
 }
 
-resource "aws_codeartifact_domain_permissions" "test" {
+resource "aws_codeartifact_domain_permissions_policy" "test" {
   domain          = "${aws_codeartifact_domain.test.id}"
   policy_document = <<EOF
 {

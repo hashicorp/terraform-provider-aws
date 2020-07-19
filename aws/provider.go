@@ -491,7 +491,7 @@ func Provider() *schema.Provider {
 			"aws_codecommit_repository":                               resourceAwsCodeCommitRepository(),
 			"aws_codecommit_trigger":                                  resourceAwsCodeCommitTrigger(),
 			"aws_codeartifact_domain":                                 resourceAwsCodeArtifactDomain(),
-			"aws_codeartifact_domain_permissions":                     resourceAwsCodeArtifactDomainPermissions(),
+			"aws_codeartifact_domain_permissions_policy":              resourceAwsCodeArtifactDomainPermissionsPolicy(),
 			"aws_codebuild_project":                                   resourceAwsCodeBuildProject(),
 			"aws_codebuild_report_group":                              resourceAwsCodeBuildReportGroup(),
 			"aws_codebuild_source_credential":                         resourceAwsCodeBuildSourceCredential(),
