@@ -2,10 +2,8 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -73,7 +71,7 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 				Config: testAccAWSClusterActivityStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
-					testAccCheckAWSRDSClusterActivityStreamDisappears(&dbCluster),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSClusterActivityStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -326,53 +324,6 @@ resource "aws_rds_cluster_activity_stream" "test" {
 	depends_on = [aws_rds_cluster_instance.test]
 }
 `, rName)
-}
-
-func testAccCheckAWSRDSClusterActivityStreamDisappears(v *rds.DBCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
-
-		// delete db instances
-		for _, dbi := range v.DBClusterMembers {
-			log.Printf("[DEBUG] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
-
-			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
-				DBInstanceIdentifier: dbi.DBInstanceIdentifier,
-				SkipFinalSnapshot:    aws.Bool(true),
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB instance %s: %s", *dbi.DBInstanceIdentifier, err)
-				return err
-			}
-
-			if err := waitUntilAwsDbInstanceIsDeleted(*dbi.DBInstanceIdentifier, conn, 40*time.Minute); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DB instance %s to be deleted: %s", *dbi.DBInstanceIdentifier, err)
-				return err
-			}
-		}
-
-		// delete db cluster
-		clusterId := aws.StringValue(v.DBClusterIdentifier)
-		log.Printf("[DEBUG] Deleting RDS DB Cluster: %s", clusterId)
-
-		_, err := conn.DeleteDBCluster(&rds.DeleteDBClusterInput{
-			DBClusterIdentifier: v.DBClusterIdentifier,
-			SkipFinalSnapshot:   aws.Bool(true),
-		})
-
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete RDS DB Cluster (%s): %s", clusterId, err)
-			return err
-		}
-
-		if err := waitForRDSClusterDeletion(conn, clusterId, 40*time.Minute); err != nil {
-			log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", clusterId, err)
-			return err
-		}
-
-		return nil
-	}
 }
 
 func testAccAWSClusterActivityStreamConfig_kmsKeyId(rName string) string {
