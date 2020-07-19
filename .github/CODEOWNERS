@@ -1,2 +1,17 @@
 # Default owner for all pull requests
 *    @terraform-providers/aws-provider
+
+/aws/*apigatewayv2*    @ewbankkit
+/website/**/apigatewayv2*    @ewbankkit
+
+/aws/*appmesh*    @ewbankkit
+/website/**/appmesh*    @ewbankkit
+
+/aws/*backup*    @ewbankkit
+/website/**/backup*    @ewbankkit
+
+/aws/*globalaccelerator*    @ewbankkit
+/website/**/globalaccelerator*    @ewbankkit
+
+/aws/*route53_resolver*    @ewbankkit
+/website/**/route53_resolver*    @ewbankkit
