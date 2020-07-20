@@ -2606,11 +2606,7 @@ resource "aws_iam_role_policy" "firehose-elasticsearch" {
 	{
 	  "Effect": "Allow",
 	  "Action": [
-         "ec2:DescribeVpcs",
-         "ec2:DescribeVpcAttribute",
-         "ec2:DescribeSubnets",
-         "ec2:DescribeSecurityGroups",
-         "ec2:DescribeNetworkInterfaces",
+         "ec2:Describe*",
          "ec2:CreateNetworkInterface",
          "ec2:CreateNetworkInterfacePermission",
          "ec2:DeleteNetworkInterface"
