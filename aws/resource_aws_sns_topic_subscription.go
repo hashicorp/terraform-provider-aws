@@ -408,29 +408,38 @@ type snsTopicSubscriptionRedrivePolicy struct {
 }
 
 func suppressEquivalentSnsTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
+	ob, err := normalizeSnsTopicSubscriptionDeliveryPolicy(old)
+	if err != nil {
+		log.Print(err)
+		return false
+	}
+
+	nb, err := normalizeSnsTopicSubscriptionDeliveryPolicy(new)
+	if err != nil {
+		log.Print(err)
+		return false
+	}
+
+	return jsonBytesEqual(ob, nb)
+}
+
+func normalizeSnsTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy snsTopicSubscriptionDeliveryPolicy
 
-	if err := json.Unmarshal([]byte(old), &deliveryPolicy); err != nil {
-		log.Printf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)
-		return false
+	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {
+		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)
 	}
 
 	normalizedDeliveryPolicy, err := json.Marshal(deliveryPolicy)
 
 	if err != nil {
-		log.Printf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
-		return false
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
 	}
 
-	ob := bytes.NewBufferString("")
-	if err := json.Compact(ob, normalizedDeliveryPolicy); err != nil {
-		return false
+	b := bytes.NewBufferString("")
+	if err := json.Compact(b, normalizedDeliveryPolicy); err != nil {
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
 	}
 
-	nb := bytes.NewBufferString("")
-	if err := json.Compact(nb, []byte(new)); err != nil {
-		return false
-	}
-
-	return jsonBytesEqual(ob.Bytes(), nb.Bytes())
+	return b.Bytes(), nil
 }
