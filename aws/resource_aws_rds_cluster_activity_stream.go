@@ -133,6 +133,12 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
+	if aws.StringValue(dbc.ActivityStreamStatus) == rds.ActivityStreamStatusStopped {
+		log.Printf("[WARN] RDS Cluster (%s) Activity Stream already stopped, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("resource_arn", dbc.DBClusterArn)
 	d.Set("kms_key_id", dbc.ActivityStreamKmsKeyId)
 	d.Set("kinesis_stream_name", dbc.ActivityStreamKinesisStreamName)
