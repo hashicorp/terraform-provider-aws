@@ -10,8 +10,6 @@ To make contribution easier, we’ll be using the [`Help Wanted`](https://github
 
 This quarter (May-July ‘20) we will be prioritizing the following areas of work: 
 
-## Currently In Progress
-
 ### 3.0.0 
 
 Milestone: [v3.0.0](https://github.com/terraform-providers/terraform-provider-aws/milestone/70)
