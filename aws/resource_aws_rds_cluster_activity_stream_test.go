@@ -30,6 +30,8 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
 	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
+	rdsClusterResourceName := "aws_rds_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -42,7 +44,8 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", rdsClusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeAsync),
 					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
@@ -86,6 +89,8 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
 	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	newKmsKeyResourceName := "aws_kms_key.new_kms_key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -97,7 +102,7 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "key_id"),
 				),
 			},
 			{
@@ -111,7 +116,7 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", newKmsKeyResourceName, "key_id"),
 				),
 			},
 		},
@@ -161,7 +166,10 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	newClusterName := acctest.RandomWithPrefix("tf-testacc-new-aurora-cluster")
 	newInstanceName := acctest.RandomWithPrefix("tf-testacc-new-aurora-instance")
+
 	resourceName := "aws_rds_cluster_activity_stream.test"
+	rdsClusterResourceName := "aws_rds_cluster.test"
+	newRdsClusterResourceName := "aws_rds_cluster.new_rds_cluster_test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -174,6 +182,7 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", rdsClusterResourceName, "arn"),
 				),
 			},
 			{
@@ -188,6 +197,7 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+newClusterName)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", newRdsClusterResourceName, "arn"),
 				),
 			},
 		},
