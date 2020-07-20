@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net"
 	"reflect"
 	"regexp"
 	"sort"
@@ -159,6 +158,27 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 
 			if v, ok := config["root_directory"].(string); ok && v != "" {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
+			}
+			if v, ok := config["transit_encryption"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
+			}
+
+			if v, ok := config["transit_encryption_port"].(int); ok && v > 0 {
+				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(int64(v))
+			}
+			authConfig, ok := config["authorization_config"].([]interface{})
+			if ok && len(authConfig) > 0 {
+				authconfig := authConfig[0].(map[string]interface{})
+				l.EfsVolumeConfiguration.RootDirectory = nil
+				l.EfsVolumeConfiguration.AuthorizationConfig = &ecs.EFSAuthorizationConfig{}
+
+				if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(v)
+				}
+
+				if v, ok := authconfig["iam"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(v)
+				}
 			}
 		}
 
@@ -454,7 +474,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.ParameterNameValue, error) {
+func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
 	parameters := make([]*elasticache.ParameterNameValue, 0, len(configured))
 
 	// Loop over our configured parameters and create
@@ -470,7 +490,7 @@ func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.Param
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and
@@ -747,6 +767,33 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 
 		if v := config.RootDirectory; v != nil {
 			m["root_directory"] = aws.StringValue(v)
+		}
+		if v := config.TransitEncryption; v != nil {
+			m["transit_encryption"] = aws.StringValue(v)
+		}
+
+		if v := config.TransitEncryptionPort; v != nil {
+			m["transit_encryption_port"] = int(aws.Int64Value(v))
+		}
+
+		if v := config.AuthorizationConfig; v != nil {
+			m["authorization_config"] = flattenEFSVolumeAuthorizationConfig(v)
+		}
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.AccessPointId; v != nil {
+			m["access_point_id"] = aws.StringValue(v)
+		}
+		if v := config.Iam; v != nil {
+			m["iam"] = aws.StringValue(v)
 		}
 	}
 
@@ -1238,98 +1285,6 @@ func expandTxtEntry(s string) string {
 	}
 	return s
 }
-
-func expandESClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
-	config := elasticsearch.ElasticsearchClusterConfig{}
-
-	if v, ok := m["dedicated_master_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["dedicated_master_count"]; ok && v.(int) > 0 {
-				config.DedicatedMasterCount = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["dedicated_master_type"]; ok && v.(string) != "" {
-				config.DedicatedMasterType = aws.String(v.(string))
-			}
-		}
-	}
-
-	if v, ok := m["instance_count"]; ok {
-		config.InstanceCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["instance_type"]; ok {
-		config.InstanceType = aws.String(v.(string))
-	}
-
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandElasticsearchZoneAwarenessConfig(v.([]interface{}))
-			}
-		}
-	}
-
-	return &config
-}
-
-func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	zoneAwarenessConfig := &elasticsearch.ZoneAwarenessConfig{}
-
-	if v, ok := m["availability_zone_count"]; ok && v.(int) > 0 {
-		zoneAwarenessConfig.AvailabilityZoneCount = aws.Int64(int64(v.(int)))
-	}
-
-	return zoneAwarenessConfig
-}
-
-func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{
-		"zone_awareness_config":  flattenElasticsearchZoneAwarenessConfig(c.ZoneAwarenessConfig),
-		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
-	}
-
-	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = *c.DedicatedMasterCount
-	}
-	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = *c.DedicatedMasterEnabled
-	}
-	if c.DedicatedMasterType != nil {
-		m["dedicated_master_type"] = *c.DedicatedMasterType
-	}
-	if c.InstanceCount != nil {
-		m["instance_count"] = *c.InstanceCount
-	}
-	if c.InstanceType != nil {
-		m["instance_type"] = *c.InstanceType
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
-	if zoneAwarenessConfig == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
-	}
-
-	return []interface{}{m}
-}
-
 func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 	options := &elasticsearch.CognitoOptions{
 		Enabled: aws.Bool(false),
@@ -1862,58 +1817,6 @@ func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key 
 	}
 
 	return operations
-}
-
-func deprecatedExpandApiGatewayMethodParametersJSONOperations(d *schema.ResourceData, key string, prefix string) ([]*apigateway.PatchOperation, error) {
-	operations := make([]*apigateway.PatchOperation, 0)
-	oldParameters, newParameters := d.GetChange(key)
-	oldParametersMap := make(map[string]interface{})
-	newParametersMap := make(map[string]interface{})
-
-	if err := json.Unmarshal([]byte(oldParameters.(string)), &oldParametersMap); err != nil {
-		err := fmt.Errorf("Error unmarshaling old %s: %s", key, err)
-		return operations, err
-	}
-
-	if err := json.Unmarshal([]byte(newParameters.(string)), &newParametersMap); err != nil {
-		err := fmt.Errorf("Error unmarshaling new %s: %s", key, err)
-		return operations, err
-	}
-
-	for k := range oldParametersMap {
-		operation := apigateway.PatchOperation{
-			Op:   aws.String("remove"),
-			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
-		}
-
-		for nK, nV := range newParametersMap {
-			if nK == k {
-				operation.Op = aws.String("replace")
-				operation.Value = aws.String(strconv.FormatBool(nV.(bool)))
-			}
-		}
-
-		operations = append(operations, &operation)
-	}
-
-	for nK, nV := range newParametersMap {
-		exists := false
-		for k := range oldParametersMap {
-			if k == nK {
-				exists = true
-			}
-		}
-		if !exists {
-			operation := apigateway.PatchOperation{
-				Op:    aws.String("add"),
-				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, nK)),
-				Value: aws.String(strconv.FormatBool(nV.(bool))),
-			}
-			operations = append(operations, &operation)
-		}
-	}
-
-	return operations, nil
 }
 
 func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key string, prefix string) []*apigateway.PatchOperation {
@@ -5458,14 +5361,4 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	}
 
 	return vTargetIps
-}
-
-func isIpv6CidrsEquals(first, second string) bool {
-	if first == "" || second == "" {
-		return false
-	}
-	_, firstMask, _ := net.ParseCIDR(first)
-	_, secondMask, _ := net.ParseCIDR(second)
-
-	return firstMask.String() == secondMask.String()
 }

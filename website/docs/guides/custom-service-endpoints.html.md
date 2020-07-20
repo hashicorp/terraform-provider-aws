@@ -153,6 +153,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>networkmanager</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>outposts</code></li>
   <li><code>personalize</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pricing</code></li>
@@ -163,6 +164,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>rds</code></li>
   <li><code>redshift</code></li>
   <li><code>resourcegroups</code></li>
+  <li><code>resourcegroupstaggingapi</code></li>  
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
   <li><code>route53resolver</code></li>

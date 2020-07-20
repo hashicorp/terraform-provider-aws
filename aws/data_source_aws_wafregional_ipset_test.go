@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsWafRegionalIPSet_Basic(t *testing.T) {
+func TestAccDataSourceAwsWafRegionalIPSet_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafregional_ipset.ipset"
 	datasourceName := "data.aws_wafregional_ipset.ipset"

@@ -47,6 +47,24 @@ resource "aws_lb_listener_rule" "static" {
 
 # Forward action
 
+resource "aws_lb_listener_rule" "host_based_weighted_routing" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority     = 99
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
+  }
+
+  condition {
+    host_header {
+      values = ["my-service.*.terraform.io"]
+    }
+  }
+}
+
+# Weighted Forward action
+
 resource "aws_lb_listener_rule" "host_based_routing" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 99
@@ -79,23 +97,6 @@ resource "aws_lb_listener_rule" "host_based_routing" {
   }
 }
 
-# Weighted Forward action
-
-resource "aws_lb_listener_rule" "host_based_weighted_routing" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 99
-
-  action {
-    type             = "forward"
-    target_group_arn = "${aws_lb_target_group.static.arn}"
-  }
-
-  condition {
-    host_header {
-      values = ["my-service.*.terraform.io"]
-    }
-  }
-}
 
 # Redirect action
 

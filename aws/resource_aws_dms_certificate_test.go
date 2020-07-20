@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSDmsCertificateBasic(t *testing.T) {
+func TestAccAWSDmsCertificate_basic(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := acctest.RandString(8)
 

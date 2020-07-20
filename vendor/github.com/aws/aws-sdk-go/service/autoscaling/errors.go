@@ -4,12 +4,26 @@ package autoscaling
 
 const (
 
+	// ErrCodeActiveInstanceRefreshNotFoundFault for service response error code
+	// "ActiveInstanceRefreshNotFound".
+	//
+	// The request failed because an active instance refresh for the specified Auto
+	// Scaling group was not found.
+	ErrCodeActiveInstanceRefreshNotFoundFault = "ActiveInstanceRefreshNotFound"
+
 	// ErrCodeAlreadyExistsFault for service response error code
 	// "AlreadyExists".
 	//
 	// You already have an Auto Scaling group or launch configuration with this
 	// name.
 	ErrCodeAlreadyExistsFault = "AlreadyExists"
+
+	// ErrCodeInstanceRefreshInProgressFault for service response error code
+	// "InstanceRefreshInProgress".
+	//
+	// The request failed because an active instance refresh operation already exists
+	// for the specified Auto Scaling group.
+	ErrCodeInstanceRefreshInProgressFault = "InstanceRefreshInProgress"
 
 	// ErrCodeInvalidNextToken for service response error code
 	// "InvalidNextToken".

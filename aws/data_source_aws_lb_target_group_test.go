@@ -68,7 +68,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
+func TestAccDataSourceAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"

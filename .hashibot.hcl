@@ -250,7 +250,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_eks_",
     ],
     "service/elastic-transcoder" = [
-      "aws_elastic_transcoder_",
+      "aws_elastictranscoder_",
     ],
     "service/elasticache" = [
       "aws_elasticache_",
@@ -398,6 +398,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/organizations" = [
       "aws_organizations_",
     ],
+    "service/outposts" = [
+      "aws_outposts_",
+    ],
     "service/personalize" = [
       "aws_personalize_",
     ],
@@ -428,6 +431,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/resourcegroups" = [
       "aws_resourcegroups_",
+    ],
+    "service/resourcegroupstaggingapi" = [
+      "aws_resourcegroupstaggingapi_",
     ],
     "service/robomaker" = [
       "aws_robomaker_",
@@ -1077,6 +1083,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_organizations_*",
       "**/organizations_*"
     ]
+    "service/outposts" = [
+      "**/*_outposts_*",
+      "**/outposts_*"
+    ]
     "service/pinpoint" = [
       "**/*_pinpoint_*",
       "**/pinpoint_*"
@@ -1114,6 +1124,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/resourcegroups" = [
       "**/*_resourcegroups_*",
       "**/resourcegroups_*"
+    ]
+    "service/resourcegroupstaggingapi" = [
+      "**/*_resourcegroupstaggingapi_*",
+      "**/resourcegroupstaggingapi_*"
     ]
     "service/robomaker" = [
       "**/*_robomaker_*",

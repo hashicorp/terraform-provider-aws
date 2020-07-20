@@ -52,6 +52,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 The following arguments are supported:
 
+
   * `snapshot_id` - (Required) A snapshot ID.
   * `account_id` - (Optional) An AWS Account ID to add create volume permissions. Conflicts with `group`.
   * `group` - (Optional) Only takes the value `all`. Conflicts with `account_id`.
@@ -59,5 +60,6 @@ The following arguments are supported:
 ## Attributes Reference
 
 In addition to all arguments above, the following attribute is exported:
+
 
   * `id` - A combination of "`snapshot_id`-`account_id`-`group`".

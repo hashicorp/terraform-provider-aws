@@ -26,6 +26,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 					// deep inspection is not included, simply the count is checked.
 					// Tags and product codes may need more testing, but I'm having a hard time finding images with
 					// these attributes set.
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),

@@ -47,7 +47,7 @@ func resourceAwsIamUser() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringMatch(
 					regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
-					fmt.Sprintf("must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs"),
+					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
 			"path": {
@@ -142,7 +142,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	if d.HasChange("name") || d.HasChange("path") {
+	if d.HasChanges("name", "path") {
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 

@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSServiceCatalogPortfolio_Basic(t *testing.T) {
+func TestAccAWSServiceCatalogPortfolio_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio.test"
 	name := acctest.RandString(5)
 	var dpo servicecatalog.DescribePortfolioOutput

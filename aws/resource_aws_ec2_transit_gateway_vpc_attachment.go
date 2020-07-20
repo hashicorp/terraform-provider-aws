@@ -211,7 +211,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta 
 func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("dns_support") || d.HasChange("ipv6_support") || d.HasChange("subnet_ids") {
+	if d.HasChanges("dns_support", "ipv6_support", "subnet_ids") {
 		input := &ec2.ModifyTransitGatewayVpcAttachmentInput{
 			Options: &ec2.ModifyTransitGatewayVpcAttachmentRequestOptions{
 				DnsSupport:  aws.String(d.Get("dns_support").(string)),
@@ -241,7 +241,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("transit_gateway_default_route_table_association") || d.HasChange("transit_gateway_default_route_table_propagation") {
+	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
 
 		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)

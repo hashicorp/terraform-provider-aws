@@ -387,7 +387,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipelineWithNamespace(t *testing.T) {
+func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 	if os.Getenv("GITHUB_TOKEN") == "" {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
 	}

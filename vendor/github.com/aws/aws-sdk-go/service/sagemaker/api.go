@@ -19341,6 +19341,10 @@ type CreateTransformJobInput struct {
 	// do not support HTTP chunked encoding.
 	MaxPayloadInMB *int64 `type:"integer"`
 
+	// Configures the timeout and maximum number of retries for processing a transform
+	// job invocation.
+	ModelClientConfig *ModelClientConfig `type:"structure"`
+
 	// The name of the model that you want to use for the transform job. ModelName
 	// must be the name of an existing Amazon SageMaker model within an AWS Region
 	// in an AWS account.
@@ -19412,6 +19416,11 @@ func (s *CreateTransformJobInput) Validate() error {
 			invalidParams.AddNested("ExperimentConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.ModelClientConfig != nil {
+		if err := s.ModelClientConfig.Validate(); err != nil {
+			invalidParams.AddNested("ModelClientConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -19477,6 +19486,12 @@ func (s *CreateTransformJobInput) SetMaxConcurrentTransforms(v int64) *CreateTra
 // SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
 func (s *CreateTransformJobInput) SetMaxPayloadInMB(v int64) *CreateTransformJobInput {
 	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelClientConfig sets the ModelClientConfig field's value.
+func (s *CreateTransformJobInput) SetModelClientConfig(v *ModelClientConfig) *CreateTransformJobInput {
+	s.ModelClientConfig = v
 	return s
 }
 
@@ -25271,6 +25286,7 @@ type DescribeTrainingJobOutput struct {
 	// AlgorithmSpecification is a required field
 	AlgorithmSpecification *AlgorithmSpecification `type:"structure" required:"true"`
 
+	// The Amazon Resource Name (ARN) of an AutoML job.
 	AutoMLJobArn *string `min:"1" type:"string"`
 
 	// The billable time in seconds.
@@ -25756,6 +25772,7 @@ func (s *DescribeTransformJobInput) SetTransformJobName(v string) *DescribeTrans
 type DescribeTransformJobOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the AutoML transform job.
 	AutoMLJobArn *string `min:"1" type:"string"`
 
 	// Specifies the number of records to include in a mini-batch for an HTTP inference
@@ -25803,6 +25820,10 @@ type DescribeTransformJobOutput struct {
 
 	// The maximum payload size, in MB, used in the transform job.
 	MaxPayloadInMB *int64 `type:"integer"`
+
+	// The timeout and maximum number of retries for processing a transform job
+	// invocation.
+	ModelClientConfig *ModelClientConfig `type:"structure"`
 
 	// The name of the model used in the transform job.
 	//
@@ -25917,6 +25938,12 @@ func (s *DescribeTransformJobOutput) SetMaxConcurrentTransforms(v int64) *Descri
 // SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
 func (s *DescribeTransformJobOutput) SetMaxPayloadInMB(v int64) *DescribeTransformJobOutput {
 	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelClientConfig sets the ModelClientConfig field's value.
+func (s *DescribeTransformJobOutput) SetModelClientConfig(v *ModelClientConfig) *DescribeTransformJobOutput {
+	s.ModelClientConfig = v
 	return s
 }
 
@@ -27489,6 +27516,14 @@ type Filter struct {
 	//
 	// The value of Name doesn't equal Value.
 	//
+	// Exists
+	//
+	// The Name property exists.
+	//
+	// NotExists
+	//
+	// The Name property does not exist.
+	//
 	// GreaterThan
 	//
 	// The value of Name is greater than Value. Not supported for text properties.
@@ -27507,23 +27542,44 @@ type Filter struct {
 	// The value of Name is less than or equal to Value. Not supported for text
 	// properties.
 	//
-	// Contains
-	//
-	// The value of Name contains the string Value. A SearchExpression can include
-	// only one Contains operator. Only supported for text properties.
-	//
-	// Exists
-	//
-	// The Name property exists.
-	//
-	// NotExists
-	//
-	// The Name property does not exist.
-	//
 	// In
 	//
 	// The value of Name is one of the comma delimited strings in Value. Only supported
 	// for text properties.
+	//
+	// Contains
+	//
+	// The value of Name contains the string Value. Only supported for text properties.
+	//
+	// A SearchExpression can include the Contains operator multiple times when
+	// the value of Name is one of the following:
+	//
+	//    * Experiment.DisplayName
+	//
+	//    * Experiment.ExperimentName
+	//
+	//    * Experiment.Tags
+	//
+	//    * Trial.DisplayName
+	//
+	//    * Trial.TrialName
+	//
+	//    * Trial.Tags
+	//
+	//    * TrialComponent.DisplayName
+	//
+	//    * TrialComponent.TrialComponentName
+	//
+	//    * TrialComponent.Tags
+	//
+	//    * TrialComponent.InputArtifacts
+	//
+	//    * TrialComponent.OutputArtifacts
+	//
+	// A SearchExpression can include only one Contains operator for all other values
+	// of Name. In these cases, if you include multiple Contains operators in the
+	// SearchExpression, the result is the following error message: "'CONTAINS'
+	// operator usage limit of 1 exceeded."
 	Operator *string `type:"string" enum:"Operator"`
 
 	// A value used with Name and Operator to determine which resources satisfy
@@ -35741,6 +35797,53 @@ func (s *ModelArtifacts) SetS3ModelArtifacts(v string) *ModelArtifacts {
 	return s
 }
 
+// Configures the timeout and maximum number of retries for processing a transform
+// job invocation.
+type ModelClientConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of retries when invocation requests are failing.
+	InvocationsMaxRetries *int64 `type:"integer"`
+
+	// The timeout value in seconds for an invocation request.
+	InvocationsTimeoutInSeconds *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ModelClientConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModelClientConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModelClientConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModelClientConfig"}
+	if s.InvocationsTimeoutInSeconds != nil && *s.InvocationsTimeoutInSeconds < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("InvocationsTimeoutInSeconds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInvocationsMaxRetries sets the InvocationsMaxRetries field's value.
+func (s *ModelClientConfig) SetInvocationsMaxRetries(v int64) *ModelClientConfig {
+	s.InvocationsMaxRetries = &v
+	return s
+}
+
+// SetInvocationsTimeoutInSeconds sets the InvocationsTimeoutInSeconds field's value.
+func (s *ModelClientConfig) SetInvocationsTimeoutInSeconds(v int64) *ModelClientConfig {
+	s.InvocationsTimeoutInSeconds = &v
+	return s
+}
+
 // Describes the Docker container for the model package.
 type ModelPackageContainerDefinition struct {
 	_ struct{} `type:"structure"`
@@ -40155,8 +40258,7 @@ func (s *ScheduleConfig) SetScheduleExpression(v string) *ScheduleConfig {
 // A SearchExpression contains the following components:
 //
 //    * A list of Filter objects. Each filter defines a simple Boolean expression
-//    comprised of a resource property name, Boolean operator, and value. A
-//    SearchExpression can include only one Contains operator.
+//    comprised of a resource property name, Boolean operator, and value.
 //
 //    * A list of NestedFilter objects. Each nested filter defines a list of
 //    Boolean expressions using a list of resource properties. A nested filter

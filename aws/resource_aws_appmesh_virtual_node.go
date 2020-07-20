@@ -51,14 +51,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"backends": {
-							Type:     schema.TypeSet,
-							Removed:  "Use `backend` configuration blocks instead",
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
 						"backend": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -256,13 +248,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"service_name": {
-													Type:     schema.TypeString,
-													Removed:  "Use `hostname` argument instead",
-													Optional: true,
-													Computed: true,
-												},
-
 												"hostname": {
 													Type:         schema.TypeString,
 													Required:     true,

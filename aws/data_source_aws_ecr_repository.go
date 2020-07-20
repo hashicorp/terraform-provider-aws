@@ -40,18 +40,17 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).ecrconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	name := d.Get("name").(string)
 	params := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: aws.StringSlice([]string{d.Get("name").(string)}),
+		RepositoryNames: aws.StringSlice([]string{name}),
 	}
 	log.Printf("[DEBUG] Reading ECR repository: %s", params)
 	out, err := conn.DescribeRepositories(params)
 	if err != nil {
 		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
-			log.Printf("[WARN] ECR Repository %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+			return fmt.Errorf("ECR Repository (%s) not found", name)
 		}
-		return fmt.Errorf("error reading ECR repository: %s", err)
+		return fmt.Errorf("error reading ECR repository: %w", err)
 	}
 
 	repository := out.Repositories[0]
@@ -66,11 +65,11 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	tags, err := keyvaluetags.EcrListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

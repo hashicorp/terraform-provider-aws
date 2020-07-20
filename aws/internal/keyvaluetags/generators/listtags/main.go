@@ -51,6 +51,7 @@ var serviceNames = []string{
 	"dlm",
 	"docdb",
 	"dynamodb",
+	"ec2",
 	"ecr",
 	"ecs",
 	"efs",
@@ -129,6 +130,7 @@ func main() {
 	templateFuncMap := template.FuncMap{
 		"ClientType":                           keyvaluetags.ServiceClientType,
 		"ListTagsFunction":                     keyvaluetags.ServiceListTagsFunction,
+		"ListTagsInputFilterIdentifierName":    keyvaluetags.ServiceListTagsInputFilterIdentifierName,
 		"ListTagsInputIdentifierField":         keyvaluetags.ServiceListTagsInputIdentifierField,
 		"ListTagsInputIdentifierRequiresSlice": keyvaluetags.ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsInputResourceTypeField":       keyvaluetags.ServiceListTagsInputResourceTypeField,
@@ -189,6 +191,14 @@ import (
 // it may also be a different identifier depending on the service.
 func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
 	input := &{{ . | TagPackage  }}.{{ . | ListTagsFunction }}Input{
+		{{- if . | ListTagsInputFilterIdentifierName }}
+		Filters: []*{{ . | TagPackage  }}.Filter{
+			{
+				Name:   aws.String("{{ . | ListTagsInputFilterIdentifierName }}"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+		{{- else }}
 		{{- if . | ListTagsInputIdentifierRequiresSlice }}
 		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 		{{- else }}
@@ -196,6 +206,7 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 		{{- end }}
 		{{- if . | ListTagsInputResourceTypeField }}
 		{{ . | ListTagsInputResourceTypeField }}: aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 	}
 

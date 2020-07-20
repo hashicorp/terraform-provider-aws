@@ -194,11 +194,11 @@ data "aws_route" "by_instance_id"{
 `
 
 func testAccAWSRouteDataSourceConfigTransitGatewayID() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -242,5 +242,5 @@ data "aws_route" "test" {
   route_table_id     = "${aws_route.test.route_table_id}"
   transit_gateway_id = "${aws_route.test.transit_gateway_id}"
 }
-`)
+`
 }

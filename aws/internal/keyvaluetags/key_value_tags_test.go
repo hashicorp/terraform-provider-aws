@@ -533,6 +533,102 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsKeyExists(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		key  string
+		want bool
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]*string{}),
+			key:  "key1",
+			want: false,
+		},
+		{
+			name: "non-existent",
+			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			key:  "key2",
+			want: false,
+		},
+		{
+			name: "matching with string value",
+			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			key:  "key1",
+			want: true,
+		},
+		{
+			name: "matching with nil value",
+			tags: New(map[string]*string{"key1": nil}),
+			key:  "key1",
+			want: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.KeyExists(testCase.key)
+
+			if got != testCase.want {
+				t.Fatalf("expected: %t, got: %t", testCase.want, got)
+			}
+		})
+	}
+}
+
+func TestKeyValueTagsKeyValues(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		key  string
+		want *string
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]*string{}),
+			key:  "key1",
+			want: nil,
+		},
+		{
+			name: "non-existent",
+			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			key:  "key2",
+			want: nil,
+		},
+		{
+			name: "matching with string value",
+			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			key:  "key1",
+			want: testStringPtr("value1"),
+		},
+		{
+			name: "matching with nil value",
+			tags: New(map[string]*string{"key1": nil}),
+			key:  "key1",
+			want: nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.KeyValue(testCase.key)
+
+			if testCase.want == nil && got != nil {
+				t.Fatalf("expected: nil, got: %s", *got)
+			}
+
+			if testCase.want != nil && got == nil {
+				t.Fatalf("expected: %s, got: nil", *testCase.want)
+			}
+
+			if testCase.want != nil && got != nil && *testCase.want != *got {
+				t.Fatalf("expected: %s, got: %s", *testCase.want, *got)
+			}
+		})
+	}
+}
+
 func TestKeyValueTagsKeys(t *testing.T) {
 	testCases := []struct {
 		name string
