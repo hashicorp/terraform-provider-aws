@@ -307,13 +307,13 @@ resource "aws_kms_grant" "test" {
 }
 
 func testAccAWSKmsGrant_bare(rName string) string {
-	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
+	return testAccAWSKmsGrantConfigBase(rName) + `
 resource "aws_kms_grant" "test" {
   key_id            = "${aws_kms_key.test.key_id}"
   grantee_principal = "${aws_iam_role.test.arn}"
   operations        = ["ReEncryptTo", "CreateGrant"]
 }
-`)
+`
 }
 
 func testAccAWSKmsGrant_ARN(rName string, operations string) string {

@@ -204,7 +204,7 @@ func testAccCheckAWSEc2TransitGatewayRouteDisappears(transitGateway *ec2.Transit
 }
 
 func testAccAWSEc2TransitGatewayRouteConfigDestinationCidrBlock() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -253,5 +253,5 @@ resource "aws_ec2_transit_gateway_route" "test_blackhole" {
   blackhole                      = true
   transit_gateway_route_table_id = "${aws_ec2_transit_gateway.test.association_default_route_table_id}"
 }
-`)
+`
 }

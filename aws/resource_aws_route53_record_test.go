@@ -1768,7 +1768,7 @@ resource "aws_route53_zone" "test" {
 }
 
 func testAccRoute53RecordConfigAliasCustomVpcEndpointSwappedAliasAttributes(rName string) string {
-	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+	return testAccRoute53CustomVpcEndpointBase(rName) + `
 resource "aws_route53_record" "test" {
   name    = "test"
   type    = "A"
@@ -1780,11 +1780,11 @@ resource "aws_route53_record" "test" {
     zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")}"
   }
 }
-`)
+`
 }
 
 func testAccRoute53RecordConfigCustomVpcEndpoint(rName string) string {
-	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+	return testAccRoute53CustomVpcEndpointBase(rName) + `
 resource "aws_route53_record" "test" {
   name    = "test"
   type    = "A"
@@ -1796,7 +1796,7 @@ resource "aws_route53_record" "test" {
     zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")}"
   }
 }
-`)
+`
 }
 
 const testAccRoute53WeightedElbAliasRecord = `

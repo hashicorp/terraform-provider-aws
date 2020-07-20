@@ -1109,26 +1109,26 @@ func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
 	})
 }
 
-var originBucket = fmt.Sprintf(`
+var originBucket = `
 resource "aws_s3_bucket" "s3_bucket_origin" {
 	bucket = "mybucket.${var.rand_id}"
 	acl = "public-read"
 }
-`)
+`
 
-var backupBucket = fmt.Sprintf(`
+var backupBucket = `
 resource "aws_s3_bucket" "s3_backup_bucket_origin" {
 	bucket = "mybucket-backup.${var.rand_id}"
 	acl = "public-read"
 }
-`)
+`
 
-var logBucket = fmt.Sprintf(`
+var logBucket = `
 resource "aws_s3_bucket" "s3_bucket_logs" {
 	bucket = "mylogs.${var.rand_id}"
 	acl = "public-read"
 }
-`)
+`
 
 var testAccAWSCloudFrontDistributionS3Config = `
 variable rand_id {

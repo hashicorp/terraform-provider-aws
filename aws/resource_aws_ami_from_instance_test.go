@@ -130,7 +130,7 @@ func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccAWSAMIFromInstanceConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ec2_instance_type_offering" "available" {
   filter {
     name   = "instance-type"
@@ -163,7 +163,7 @@ resource "aws_instance" "test" {
     Name = "testAccAWSAMIFromInstanceConfig_TestAMI"
   }
 }
-`)
+`
 }
 
 func testAccAWSAMIFromInstanceConfig(rName string) string {

@@ -427,7 +427,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccEc2ClientVpnEndpointMsADBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -463,7 +463,7 @@ resource "aws_directory_service_directory" "test" {
     subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
   }
 }
-`)
+`
 }
 
 func testAccEc2ClientVpnEndpointConfig(rName string) string {

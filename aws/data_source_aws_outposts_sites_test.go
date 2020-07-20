@@ -64,7 +64,7 @@ func testAccPreCheckAWSOutpostsSites(t *testing.T) {
 }
 
 func testAccAWSOutpostsSitesDataSourceConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_outposts_sites" "test" {}
-`)
+`
 }
