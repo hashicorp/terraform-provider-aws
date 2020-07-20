@@ -11,5 +11,5 @@ terraform {
 }
 
 provider "github" {
-  owner = "terraform-providers"
+  organization = "terraform-providers"
 }
