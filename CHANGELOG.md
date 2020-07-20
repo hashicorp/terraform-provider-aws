@@ -10,6 +10,7 @@ BREAKING CHANGES
 * data-source/aws_directory_service_directory: Return an error when a single result is not found [GH-14006]
 * data-source/aws_efs_file_system: Return an error when a single result is not found [GH-14005]
 * resource/aws_acm_certificate: `certificate_body`, `certificate_chain`, and `private_key` attributes are no longer stored in the Terraform state with hash values [GH-9685]
+* resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
 * resource/aws_autoscaling_group: `availability_zones` and `vpc_zone_identifier` argument conflict now reported at plan-time [GH-12927]
 * resource/aws_autoscaling_group: Remove `Computed` property from `load_balancers` and `target_group_arns` arguments, enabling drift detection [GH-14064]
 * resource/aws_dx_gateway: Remove automatic `aws_dx_gateway_association` resource import [GH-14124]
