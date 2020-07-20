@@ -31,15 +31,15 @@ _[EC2 Image Builder](https://aws.amazon.com/image-builder/) simplifies the creat
 Support for EC2 Image Builder will include: 
  
 New Resource(s): 
-aws_imagebuilder_component
-aws_imagebuilder_distribution_configuration
-aws_imagebuilder_image
-aws_imagebuilder_image_pipeline
-aws_imagebuilder_image_recipe
-aws_imagebuilder_infrastructure_configuration
+- aws_imagebuilder_component
+- aws_imagebuilder_distribution_configuration
+- aws_imagebuilder_image
+- aws_imagebuilder_image_pipeline
+- aws_imagebuilder_image_recipe
+- aws_imagebuilder_infrastructure_configuration
  
 New Data Source(s): 
-aws_imagebuilder_image
+- aws_imagebuilder_image
  
 ### AWS Lake Formation
  
@@ -51,9 +51,9 @@ Support for AWS Lake Formation will include:
  
 New Resource(s): 
  
-aws_lakeformation_resource
-aws_lakeformation_datalake_settings
-aws_lakeformation_permissions
+- aws_lakeformation_resource
+- aws_lakeformation_datalake_settings
+- aws_lakeformation_permissions
  
 ### AWS Serverless Application Repository
  
@@ -64,10 +64,10 @@ _The [AWS Serverless Application Repository](https://aws.amazon.com/serverless/s
 Support for AWS Serverless Application Repository will include: 
  
 New Resource(s):
-aws_serverlessrepository_stack
+- aws_serverlessrepository_stack
  
 New Data Source(s): 
-aws_serverlessrepository_application
+- aws_serverlessrepository_application
  
 ## Issues and Enhancements
  
