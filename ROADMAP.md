@@ -1,4 +1,4 @@
-# Roadmap: Aug - Oct 2020
+# Roadmap: August - October 2020
  
 Every few months, the team will highlight areas of focus for our work and upcoming research.
  
@@ -8,7 +8,9 @@ Each weekly release will include necessary tasks that lead to the completion of 
  
 Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist we will create the resources and implementation ourselves.
  
-From August-Oct ‘20, we will be prioritizing the following areas of work:  
+From [May through July](docs/roadmaps/2020_May_to_July.md), we committed to adding support for WAFv2 and Lex. We are happy to report that WAFv2 support is now complete and we will be finishing support for Lex immediately following the release of v3.0.0. Additionally, we planned to refactor ACM and will include the redesigned resource as part of the 3.0.0 package. Lastly, we spent some time researching Default Tags and want to extend a thank you to all the folks that volunteered to assist. We’ve written a proposal for the feature that is being reviewed internally and we hope to include the functionality in the product in the future.
+ 
+From August-October ‘20, we will be prioritizing the following areas of work:  
  
 ## New Services
  
