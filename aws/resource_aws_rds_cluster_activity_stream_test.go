@@ -27,7 +27,8 @@ func init() {
 
 func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
-	rName := acctest.RandString(5)
+	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -36,11 +37,11 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(rName),
+				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeAsync),
@@ -59,7 +60,8 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 
 func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 	var dbCluster rds.DBCluster
-	rName := acctest.RandString(5)
+	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -68,7 +70,7 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(rName),
+				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRDSClusterActivityStream(), resourceName),
@@ -81,7 +83,8 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 
 func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 	var dbCluster rds.DBCluster
-	rName := acctest.RandString(5)
+	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +93,7 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(rName),
+				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
@@ -104,7 +107,7 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccAWSClusterActivityStreamConfig_kmsKeyId(rName),
+				Config: testAccAWSClusterActivityStreamConfig_kmsKeyId(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
@@ -117,7 +120,8 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 
 func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 	var dbCluster rds.DBCluster
-	rName := acctest.RandString(5)
+	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +130,7 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(rName),
+				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
@@ -140,7 +144,7 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccAWSClusterActivityStreamConfig_modeSync(rName),
+				Config: testAccAWSClusterActivityStreamConfig_modeSync(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
@@ -153,7 +157,10 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 
 func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 	var dbCluster rds.DBCluster
-	rName := acctest.RandString(5)
+	clusterName := acctest.RandomWithPrefix("tf-testacc-aurora-cluster")
+	instanceName := acctest.RandomWithPrefix("tf-testacc-aurora-instance")
+	newClusterName := acctest.RandomWithPrefix("tf-testacc-new-aurora-cluster")
+	newInstanceName := acctest.RandomWithPrefix("tf-testacc-new-aurora-instance")
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,11 +169,11 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(rName),
+				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-aurora-cluster-%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
 				),
 			},
 			{
@@ -176,11 +183,11 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccAWSClusterActivityStreamConfig_arn(rName),
+				Config: testAccAWSClusterActivityStreamConfig_resourceArn(newClusterName, newInstanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster:tf-testacc-new-aurora-cluster-%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+newClusterName)),
 				),
 			},
 		},
@@ -284,19 +291,19 @@ func testAccCheckAWSClusterActivityStreamDestroyWithProvider(s *terraform.State,
 	return nil
 }
 
-func testAccAWSClusterActivityStreamConfig(rName string) string {
+func testAccAWSClusterActivityStreamConfig(clusterName, instanceName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 resource "aws_kms_key" "test" {
-	description             = "tf-testacc-kms-key-%[1]s"
+	description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-testacc-aurora-cluster-%[1]s"
+  cluster_identifier              = "%[1]s"
   engine                  				= "aurora-postgresql"
   engine_version                  = "10.11"
 	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -309,7 +316,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-	identifier         = "tf-testacc-aurora-instance-%[1]s"
+	identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r5.large"
@@ -323,22 +330,22 @@ resource "aws_rds_cluster_activity_stream" "test" {
 	
 	depends_on = [aws_rds_cluster_instance.test]
 }
-`, rName)
+`, clusterName, instanceName)
 }
 
-func testAccAWSClusterActivityStreamConfig_kmsKeyId(rName string) string {
+func testAccAWSClusterActivityStreamConfig_kmsKeyId(clusterName, instanceName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 resource "aws_kms_key" "new_kms_key" {
-	description             = "tf-testacc-new-kms-key-%[1]s"
+	description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-testacc-aurora-cluster-%[1]s"
+  cluster_identifier              = "%[1]s"
   engine                  				= "aurora-postgresql"
   engine_version                  = "10.11"
 	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -351,7 +358,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-	identifier         = "tf-testacc-aurora-instance-%[1]s"
+	identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r5.large"
@@ -365,22 +372,22 @@ resource "aws_rds_cluster_activity_stream" "test" {
 	
 	depends_on = [aws_rds_cluster_instance.test]
 }
-`, rName)
+`, clusterName, instanceName)
 }
 
-func testAccAWSClusterActivityStreamConfig_modeSync(rName string) string {
+func testAccAWSClusterActivityStreamConfig_modeSync(clusterName, instanceName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 resource "aws_kms_key" "test" {
-	description             = "tf-testacc-kms-key-%[1]s"
+	description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-testacc-aurora-cluster-%[1]s"
+  cluster_identifier              = "%[1]s"
   engine                  				= "aurora-postgresql"
   engine_version                  = "10.11"
 	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -393,7 +400,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-	identifier         = "tf-testacc-aurora-instance-%[1]s"
+	identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r5.large"
@@ -407,22 +414,22 @@ resource "aws_rds_cluster_activity_stream" "test" {
 	
 	depends_on = [aws_rds_cluster_instance.test]
 }
-`, rName)
+`, clusterName, instanceName)
 }
 
-func testAccAWSClusterActivityStreamConfig_arn(rName string) string {
+func testAccAWSClusterActivityStreamConfig_resourceArn(clusterName, instanceName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 resource "aws_kms_key" "test" {
-	description             = "tf-testacc-kms-key-%[1]s"
+	description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "new_rds_cluster_test" {
-  cluster_identifier              = "tf-testacc-new-aurora-cluster-%[1]s"
+  cluster_identifier              = "%[1]s"
   engine                  				= "aurora-postgresql"
   engine_version                  = "10.11"
 	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -435,7 +442,7 @@ resource "aws_rds_cluster" "new_rds_cluster_test" {
 }
 
 resource "aws_rds_cluster_instance" "new_rds_instance_test" {
-	identifier         = "tf-testacc-new-aurora-instance-%[1]s"
+	identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.new_rds_cluster_test.cluster_identifier}"
   engine             = "${aws_rds_cluster.new_rds_cluster_test.engine}"
   instance_class     = "db.r5.large"
@@ -449,5 +456,5 @@ resource "aws_rds_cluster_activity_stream" "test" {
 	
 	depends_on = [aws_rds_cluster_instance.new_rds_instance_test]
 }
-`, rName)
+`, clusterName, instanceName)
 }
