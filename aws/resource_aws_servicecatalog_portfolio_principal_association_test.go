@@ -166,7 +166,7 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioS
 			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSaltedName)
 		}
 
-		rsPrincipal, ok2 := s.RootModule().Resources["aws_servicecatalog_principal.test"+principalSuffix]
+		rsPrincipal, ok2 := s.RootModule().Resources["aws_iam_role.test"+principalSuffix]
 		if !ok2 {
 			return fmt.Errorf("principal %s not found", principalSaltedName)
 		}
