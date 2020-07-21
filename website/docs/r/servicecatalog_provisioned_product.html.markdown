@@ -19,9 +19,9 @@ parameters, launch paths, and provisioning artifacts (e.g. versions).
 
 ```hcl
 resource "aws_servicecatalog_provisioned_product" "test" {
-    provisioned_product_name = "my-new-product"
-    product_id = "prod-abcdefghijklm"
-    provisioning_artifact_id = "pa-0123456789abc"
+  provisioned_product_name = "my-new-product"
+  product_id               = "prod-abcdefghijklm"
+  provisioning_artifact_id = "pa-0123456789abc"
 }
 ```
 
