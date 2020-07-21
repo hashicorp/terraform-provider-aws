@@ -64,6 +64,10 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 512000),
 			},
+			"mount_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_interface_ids": {
 				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
 				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
@@ -304,6 +308,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	if lustreConfig.PerUnitStorageThroughput != nil {
 		d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
 	}
+	d.Set("mount_name", filesystem.LustreConfiguration.MountName)
 
 	if filesystem.KmsKeyId != nil {
 		d.Set("kms_key_id", filesystem.KmsKeyId)

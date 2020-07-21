@@ -86,6 +86,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "import_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "mount_name", "fsx"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
@@ -447,6 +448,8 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
+					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
+					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 				),
 			},
 			{
@@ -511,6 +514,8 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch2),
+					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
+					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 				),
 			},
 			{
