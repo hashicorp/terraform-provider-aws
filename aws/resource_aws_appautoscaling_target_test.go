@@ -53,6 +53,28 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
+	var target applicationautoscaling.ScalableTarget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appautoscaling_target.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingTargetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppautoscalingTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
