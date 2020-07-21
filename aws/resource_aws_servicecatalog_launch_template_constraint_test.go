@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSServiceCatalogLaunchTemplateConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_launch_template_constraint.test"
-    saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var dco servicecatalog.DescribeConstraintOutput
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -44,8 +44,8 @@ func TestAccAWSServiceCatalogLaunchTemplateConstraint_basic(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogLaunchTemplateConstraint_disappears(t *testing.T) {
-    resourceName := "aws_servicecatalog_launch_template_constraint.test"
-    saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resourceName := "aws_servicecatalog_launch_template_constraint.test"
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var describeConstraintOutput servicecatalog.DescribeConstraintOutput
 	var providers []*schema.Provider
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,38 +66,38 @@ func TestAccAWSServiceCatalogLaunchTemplateConstraint_disappears(t *testing.T) {
 }
 
 func testAccCheckServiceCatalogLaunchTemplateConstraintDestroy(s *terraform.State) error {
-    conn := testAccProvider.Meta().(*AWSClient).scconn
-    for _, rs := range s.RootModule().Resources {
-        if rs.Type != "aws_servicecatalog_launch_template_constraint" {
-            continue // not our monkey
-        }
-        input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
-        _, err := conn.DescribeConstraint(&input)
-        if err == nil {
-            return fmt.Errorf("constraint still exists: %s", rs.Primary.ID)
-        }
-    }
-    return nil
+	conn := testAccProvider.Meta().(*AWSClient).scconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_servicecatalog_launch_template_constraint" {
+			continue // not our monkey
+		}
+		input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
+		_, err := conn.DescribeConstraint(&input)
+		if err == nil {
+			return fmt.Errorf("constraint still exists: %s", rs.Primary.ID)
+		}
+	}
+	return nil
 }
 
 func testAccCheckServiceCatalogLaunchTemplateConstraintExists(resourceName string, describeConstraintOutput *servicecatalog.DescribeConstraintOutput) resource.TestCheckFunc {
-    return func(s *terraform.State) error {
-        rs, ok := s.RootModule().Resources[resourceName]
-        if !ok {
-            return fmt.Errorf("not found: %s", resourceName)
-        }
-        if rs.Primary.ID == "" {
-            return fmt.Errorf("no ID is set")
-        }
-        input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
-        conn := testAccProvider.Meta().(*AWSClient).scconn
-        constraint, err := conn.DescribeConstraint(&input)
-        if err != nil {
-            return err
-        }
-        *describeConstraintOutput = *constraint
-        return nil
-    }
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no ID is set")
+		}
+		input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
+		conn := testAccProvider.Meta().(*AWSClient).scconn
+		constraint, err := conn.DescribeConstraint(&input)
+		if err != nil {
+			return err
+		}
+		*describeConstraintOutput = *constraint
+		return nil
+	}
 }
 
 func testAccAWSServiceCatalogLaunchTemplateConstraintConfig(saltedName string) string {

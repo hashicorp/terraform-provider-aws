@@ -220,9 +220,9 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintRead(d *schema.ResourceDat
 		return err
 	}
 	if err := d.Set("rule", rule); err != nil {
-        return fmt.Errorf("error setting rule: %s", err)
-    }
-	
+		return fmt.Errorf("error setting rule: %s", err)
+	}
+
 	return nil
 }
 
