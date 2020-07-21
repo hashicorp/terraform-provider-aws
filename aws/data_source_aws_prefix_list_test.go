@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -95,6 +96,50 @@ data "aws_prefix_list" "s3_by_id" {
   filter {
     name   = "prefix-list-id"
     values = ["pl-68a54001"]
+  }
+}
+`
+
+func TestAccDataSourceAwsPrefixList_matchesTooMany(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceAwsPrefixListConfig_matchesTooMany,
+				ExpectError: regexp.MustCompile(`more than one prefix list matched the given set of criteria`),
+			},
+		},
+	})
+}
+
+const testAccDataSourceAwsPrefixListConfig_matchesTooMany = `
+data "aws_prefix_list" "test" {}
+`
+
+func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// The vanilla DescribePrefixLists API only supports filtering by
+				// id and name. In this case, the `name` attribute and `prefix-list-id`
+				// filter have been set up such that they conflict, thus proving
+				// that both criteria took effect.
+				Config:      testAccDataSourceAwsPrefixListConfig_nameDoesNotOverrideFilter,
+				ExpectError: regexp.MustCompile(`no matching prefix list found`),
+			},
+		},
+	})
+}
+
+const testAccDataSourceAwsPrefixListConfig_nameDoesNotOverrideFilter = `
+data "aws_prefix_list" "test" {
+  name = "com.amazonaws.us-west-2.s3" 
+  filter {
+    name = "prefix-list-id"
+    values = ["pl-00a54069"]  # com.amazonaws.us-west-2.dynamodb
   }
 }
 `
