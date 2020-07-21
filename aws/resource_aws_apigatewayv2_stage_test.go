@@ -388,7 +388,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "INFO"), // No drift detection if not configured
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
@@ -612,7 +612,6 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
-						"logging_level":            "OFF",
 						"route_key":                "$default",
 						"throttling_burst_limit":   "1111",
 						"throttling_rate_limit":    "9999",
@@ -628,7 +627,6 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
-						"logging_level":            "OFF",
 						"route_key":                "$disconnect",
 						"throttling_burst_limit":   "0",
 						"throttling_rate_limit":    "0",
@@ -733,7 +731,6 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
-						"logging_level":            "OFF",
 						"route_key":                "$default",
 						"throttling_burst_limit":   "1111",
 						"throttling_rate_limit":    "9999",
