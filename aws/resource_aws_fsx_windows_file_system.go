@@ -184,6 +184,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					fsx.WindowsDeploymentTypeMultiAz1,
 					fsx.WindowsDeploymentTypeSingleAz1,
+					fsx.WindowsDeploymentTypeSingleAz2,
 				}, false),
 			},
 			"preferred_subnet_id": {
