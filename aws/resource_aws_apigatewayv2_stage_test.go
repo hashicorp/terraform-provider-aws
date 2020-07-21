@@ -573,10 +573,6 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
-<<<<<<< HEAD
-=======
-						"logging_level":            "OFF",
->>>>>>> r/aws_apigatewayv2_stage: No need for diff-suppression for new resources.
 						"route_key":                "$default",
 						"throttling_burst_limit":   "0",
 						"throttling_rate_limit":    "0",
@@ -706,10 +702,6 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "true",
-<<<<<<< HEAD
-=======
-						"logging_level":            "OFF",
->>>>>>> r/aws_apigatewayv2_stage: No need for diff-suppression for new resources.
 						"route_key":                "$default",
 						"throttling_burst_limit":   "2222",
 						"throttling_rate_limit":    "8888",
