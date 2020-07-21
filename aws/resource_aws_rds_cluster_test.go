@@ -2265,11 +2265,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_region" "current" {}
-
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
-  region = "${data.aws_region.current.name}"
 }
 
 resource "aws_s3_bucket_object" "xtrabackup_db" {
