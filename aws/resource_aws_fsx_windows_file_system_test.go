@@ -89,7 +89,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexp.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(`fs-.+\..+`)),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_id", regexp.MustCompile(`^arn:`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
@@ -648,7 +648,7 @@ func testAccCheckFsxWindowsFileSystemRecreated(i, j *fsx.FileSystem) resource.Te
 }
 
 func testAccAwsFsxWindowsFileSystemConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -685,7 +685,7 @@ resource "aws_directory_service_directory" "test" {
     vpc_id     = "${aws_vpc.test.id}"
   }
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(automaticBackupRetentionDays int) string {
@@ -728,7 +728,7 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 
 func testAccAwsFsxWindowsFileSystemConfigKmsKeyId1() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
@@ -742,11 +742,11 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigKmsKeyId2() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
@@ -760,11 +760,11 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = "${aws_vpc.test.id}"
@@ -792,11 +792,11 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids           = ["${aws_subnet.test1.id}"]
   throughput_capacity  = 8
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds2() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = "${aws_vpc.test.id}"
@@ -843,11 +843,11 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids           = ["${aws_subnet.test1.id}"]
   throughput_capacity  = 8
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectory() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
 resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
   storage_capacity    = 32
@@ -861,7 +861,7 @@ resource "aws_fsx_windows_file_system" "test" {
     username    = "Admin"
   }
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername(username string) string {
@@ -894,7 +894,7 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 
 func testAccAwsFsxWindowsFileSystemConfigSubnetIds1() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   skip_final_backup   = true
@@ -902,7 +902,7 @@ resource "aws_fsx_windows_file_system" "test" {
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
 }
-`)
+`
 }
 
 func testAccAwsFsxWindowsFileSystemConfigTags1(tagKey1, tagValue1 string) string {

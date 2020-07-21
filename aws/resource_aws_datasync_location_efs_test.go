@@ -285,7 +285,7 @@ func testAccCheckAWSDataSyncLocationEfsNotRecreated(i, j *datasync.DescribeLocat
 }
 
 func testAccAWSDataSyncLocationEfsConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -317,11 +317,11 @@ resource "aws_efs_mount_target" "test" {
   file_system_id = "${aws_efs_file_system.test.id}"
   subnet_id      = "${aws_subnet.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSDataSyncLocationEfsConfig() string {
-	return testAccAWSDataSyncLocationEfsConfigBase() + fmt.Sprintf(`
+	return testAccAWSDataSyncLocationEfsConfigBase() + `
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = "${aws_efs_mount_target.test.file_system_arn}"
 
@@ -330,7 +330,7 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = "${aws_subnet.test.arn}"
   }
 }
-`)
+`
 }
 
 func testAccAWSDataSyncLocationEfsConfigSubdirectory(subdirectory string) string {

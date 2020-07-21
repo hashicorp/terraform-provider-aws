@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAWSStepFunctionsActivityDataSource(t *testing.T) {
+func TestAccAWSStepFunctionsActivityDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sfn_activity.test"
 	dataName := "data.aws_sfn_activity.test"

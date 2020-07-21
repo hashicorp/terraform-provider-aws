@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsDxTransitVirtualInterface(t *testing.T) {
+func TestAccAwsDxTransitVirtualInterface_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic": testAccAwsDxTransitVirtualInterface_basic,
 		"tags":  testAccAwsDxTransitVirtualInterface_Tags,

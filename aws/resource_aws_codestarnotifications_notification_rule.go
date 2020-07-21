@@ -221,7 +221,10 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 		}
 		targets = targets[:i]
 
-		return resource.RetryableError(reterr)
+		if reterr != nil {
+			return resource.RetryableError(reterr)
+		}
+		return nil
 	})
 
 	if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {

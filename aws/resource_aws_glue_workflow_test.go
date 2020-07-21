@@ -44,7 +44,7 @@ func testSweepGlueWorkflow(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueWorkflow_Basic(t *testing.T) {
+func TestAccAWSGlueWorkflow_basic(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))

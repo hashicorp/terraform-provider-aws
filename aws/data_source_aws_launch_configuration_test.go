@@ -52,10 +52,10 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foo" {
   name                        = "terraform-test-%d"
-  image_id                    = "ami-21f78e11"
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "m1.small"
   associate_public_ip_address = true
   user_data                   = "foobar-user-data"
@@ -90,7 +90,7 @@ data "aws_launch_configuration" "foo" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
@@ -102,7 +102,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name            = "terraform-test-%d"
-  image_id        = "ami-21f78e11"
+  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "m1.small"
   security_groups = ["${aws_security_group.test.id}"]
 }

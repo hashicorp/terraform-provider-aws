@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -61,6 +62,20 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_ClusterMode(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsElasticacheReplicationGroup_NonExistent(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceAwsElasticacheReplicationGroupConfig_NonExistent,
+				ExpectError: regexp.MustCompile(`not found`),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -109,3 +124,9 @@ data "aws_elasticache_replication_group" "test" {
 }
 `, rName)
 }
+
+const testAccDataSourceAwsElasticacheReplicationGroupConfig_NonExistent = `
+data "aws_elasticache_replication_group" "test" {
+  replication_group_id = "tf-acc-test-nonexistent"
+}
+`

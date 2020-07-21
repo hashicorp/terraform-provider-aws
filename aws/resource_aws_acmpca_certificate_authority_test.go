@@ -60,7 +60,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 	return nil
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
+func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 

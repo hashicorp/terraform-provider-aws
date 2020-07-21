@@ -32,7 +32,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 		Update: resourceAwsS3BucketUpdate,
 		Delete: resourceAwsS3BucketDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsS3BucketImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -205,7 +205,6 @@ func resourceAwsS3Bucket() *schema.Resource {
 
 			"region": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"website_endpoint": {
@@ -666,12 +665,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] S3 bucket %s has canned ACL %s", bucket, acl)
 	}
 
-	var awsRegion string
-	if region, ok := d.GetOk("region"); ok {
-		awsRegion = region.(string)
-	} else {
-		awsRegion = meta.(*AWSClient).region
-	}
+	awsRegion := meta.(*AWSClient).region
 	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
@@ -1742,7 +1736,7 @@ func WebsiteDomainUrl(client *AWSClient, region string) string {
 	if isOldRegion(region) {
 		return fmt.Sprintf("s3-website-%s.amazonaws.com", region) //lintignore:AWSR001
 	}
-	return client.RegionalHostname(fmt.Sprintf("s3-website"))
+	return client.RegionalHostname("s3-website")
 }
 
 func isOldRegion(region string) bool {

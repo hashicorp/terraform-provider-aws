@@ -59,9 +59,11 @@ func resourceAwsEcrRepositoryPolicyCreate(d *schema.ResourceData, meta interface
 
 		if isAWSErr(err, "InvalidParameterException", "Invalid repository policy provided") {
 			return resource.RetryableError(err)
-
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		out, err = conn.SetRepositoryPolicy(&input)
@@ -135,9 +137,11 @@ func resourceAwsEcrRepositoryPolicyUpdate(d *schema.ResourceData, meta interface
 
 		if isAWSErr(err, "InvalidParameterException", "Invalid repository policy provided") {
 			return resource.RetryableError(err)
-
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		out, err = conn.SetRepositoryPolicy(&input)

@@ -62,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -2041,6 +2042,33 @@ func (tags KeyValueTags) RedshiftTags() []*redshift.Tag {
 
 // RedshiftKeyValueTags creates KeyValueTags from redshift service tags.
 func RedshiftKeyValueTags(tags []*redshift.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// ResourcegroupstaggingapiTags returns resourcegroupstaggingapi service tags.
+func (tags KeyValueTags) ResourcegroupstaggingapiTags() []*resourcegroupstaggingapi.Tag {
+	result := make([]*resourcegroupstaggingapi.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &resourcegroupstaggingapi.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ResourcegroupstaggingapiKeyValueTags creates KeyValueTags from resourcegroupstaggingapi service tags.
+func ResourcegroupstaggingapiKeyValueTags(tags []*resourcegroupstaggingapi.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

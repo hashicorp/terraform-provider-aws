@@ -20,7 +20,6 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
-	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
@@ -28,7 +27,7 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
+				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
@@ -60,7 +59,7 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 }
 
 // note: cur report definitions are currently only supported in us-east-1
-func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketRegion string) string {
+func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -72,7 +71,6 @@ resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
   force_destroy = true
-  region        = "%[3]s"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -124,5 +122,5 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = "${aws_cur_report_definition.test.report_name}"
 }
-`, reportName, bucketName, bucketRegion)
+`, reportName, bucketName)
 }
