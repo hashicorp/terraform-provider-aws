@@ -18,9 +18,9 @@ Constraints are active as soon as you create them, and they're applied to all cu
 
 ```hcl
 resource "aws_servicecatalog_launch_notification_constraint" "constraint" {
-  description       = "Notify Teams Alpha and Gamma"
-  portfolio_id      = aws_servicecatalog_portfolio.portfolio.id
-  product_id        = aws_servicecatalog_product.product.id
+  description  = "Notify Teams Alpha and Gamma"
+  portfolio_id = aws_servicecatalog_portfolio.portfolio.id
+  product_id   = aws_servicecatalog_product.product.id
   notification_arns = [
     aws_sns_topic.team-alpah.arn,
     aws_sns_topic.team-gamma.arn
