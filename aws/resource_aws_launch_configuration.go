@@ -503,24 +503,8 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(lcName)
-	log.Printf("[INFO] launch configuration ID: %s", d.Id())
 
-	// We put a Retry here since sometimes eventual consistency bites
-	// us and we need to retry a few times to get the LC to load properly
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
-		err := resourceAwsLaunchConfigurationRead(d, meta)
-		if err != nil {
-			return resource.RetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		err = resourceAwsLaunchConfigurationRead(d, meta)
-	}
-	if err != nil {
-		return fmt.Errorf("Error reading launch configuration: %s", err)
-	}
-	return nil
+	return resourceAwsLaunchConfigurationRead(d, meta)
 }
 
 func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
