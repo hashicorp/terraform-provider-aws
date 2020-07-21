@@ -32,7 +32,6 @@ func resourceAwsServiceCatalogLaunchNotificationConstraint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			//  {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 			"notification_arns": {
 				Type:     schema.TypeList,
 				Required: true,
