@@ -13,11 +13,11 @@ import (
 )
 
 func TestAccAWSServiceCatalogLaunchRoleConstraint_basic(t *testing.T) {
-    saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
-    resourceNameA := "aws_servicecatalog_launch_role_constraint.test_a_role_arn"
-    resourceNameB := "aws_servicecatalog_launch_role_constraint.test_b_local_role_name"
-    var describeConstraintOutputA servicecatalog.DescribeConstraintOutput
-    var describeConstraintOutputB servicecatalog.DescribeConstraintOutput
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resourceNameA := "aws_servicecatalog_launch_role_constraint.test_a_role_arn"
+	resourceNameB := "aws_servicecatalog_launch_role_constraint.test_b_local_role_name"
+	var describeConstraintOutputA servicecatalog.DescribeConstraintOutput
+	var describeConstraintOutputB servicecatalog.DescribeConstraintOutput
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -84,9 +84,9 @@ func TestAccAWSServiceCatalogLaunchRoleConstraint_disappears(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogLaunchRoleConstraint_updateParameters(t *testing.T) {
-    saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
-    resourceNameA := "aws_servicecatalog_launch_role_constraint.test_a_role_arn"
-    resourceNameB := "aws_servicecatalog_launch_role_constraint.test_b_local_role_name"
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resourceNameA := "aws_servicecatalog_launch_role_constraint.test_a_role_arn"
+	resourceNameB := "aws_servicecatalog_launch_role_constraint.test_b_local_role_name"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -140,18 +140,18 @@ func testAccCheckServiceCatalogLaunchRoleConstraintExists(resourceName string, d
 }
 
 func testAccCheckServiceCatalogLaunchRoleConstraintDestroy(s *terraform.State) error {
-    conn := testAccProvider.Meta().(*AWSClient).scconn
-    for _, rs := range s.RootModule().Resources {
-        if rs.Type != "aws_servicecatalog_launch_role_constraint" {
-            continue // not our monkey
-        }
-        input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
-        _, err := conn.DescribeConstraint(&input)
-        if err == nil {
-            return fmt.Errorf("constraint still exists: %s", rs.Primary.ID)
-        }
-    }
-    return nil
+	conn := testAccProvider.Meta().(*AWSClient).scconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_servicecatalog_launch_role_constraint" {
+			continue // not our monkey
+		}
+		input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
+		_, err := conn.DescribeConstraint(&input)
+		if err == nil {
+			return fmt.Errorf("constraint still exists: %s", rs.Primary.ID)
+		}
+	}
+	return nil
 }
 
 func testAccAWSServiceCatalogLaunchRoleConstraintConfig(saltedName string) string {
@@ -170,7 +170,7 @@ resource "aws_servicecatalog_launch_role_constraint" "test_b_local_role_name" {
   portfolio_id = aws_servicecatalog_portfolio.test_b.id
   product_id = aws_servicecatalog_product.test.id
 }
-`, 
+`,
 			saltedName))
 }
 

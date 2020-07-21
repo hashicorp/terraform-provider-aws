@@ -16,10 +16,10 @@ If you specify the `local_role_name` property, when an account uses the launch c
 
 ```hcl
 resource "aws_servicecatalog_launch_role_constraint" "launch_role_constraint" {
-  description = "Only Team Alpha Admins may launch"
-  local_role_name=  "teams/alpha/Admin"
-  portfolio_id = aws_servicecatalog_portfolio.myportfolio.id
-  product_id = aws_servicecatalog_product.myproduct.id
+  description     = "Only Team Alpha Admins may launch"
+  local_role_name = "teams/alpha/Admin"
+  portfolio_id    = aws_servicecatalog_portfolio.myportfolio.id
+  product_id      = aws_servicecatalog_product.myproduct.id
 }
 ```
 
