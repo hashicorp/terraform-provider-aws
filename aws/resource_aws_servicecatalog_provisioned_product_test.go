@@ -3,9 +3,7 @@ package aws
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -19,7 +17,7 @@ import (
 // run with `go test -timeout 20m ./aws -run ServiceCatalogProvisionedProduct`
 
 func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	var describeProvisionedProductOutput servicecatalog.DescribeProvisionedProductOutput
 	var providers []*schema.Provider
@@ -31,7 +29,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAwsServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(salt),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName),
 			},
 			{
 				// provisioning a product needs to be run in a second step,
@@ -42,13 +40,13 @@ func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
 				// but a provider can only assume a role existing before its definition - https://github.com/hashicorp/terraform/issues/2430 -
 				// hence the need to do it in two steps.
 
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, ""),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(saltedName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput),
-					testAccCheckAwsServiceCatalogProvisionedProductStandardFields(resourceName, &describeProvisionedProductOutput, salt),
+					testAccCheckAwsServiceCatalogProvisionedProductStandardFields(resourceName, &describeProvisionedProductOutput, saltedName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexp.MustCompile(`stack/.+/pp-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", "tfm-sc-test-pp-"+salt),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", saltedName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -69,7 +67,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	var describeProvisionedProductOutput servicecatalog.DescribeProvisionedProductOutput
 	var providers []*schema.Provider
@@ -80,13 +78,13 @@ func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAwsServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(salt),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, ""),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(saltedName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput),
-					testAccCheckAwsServiceCatalogProvisionedProductDisappears(&describeProvisionedProductOutput),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +93,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	var describeProvisionedProductOutput1, describeProvisionedProductOutput2, describeProvisionedProductOutput3 servicecatalog.DescribeProvisionedProductOutput
 	var providers []*schema.Provider
@@ -106,10 +104,10 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAwsServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(salt),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, "key1=\"value1\""),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(saltedName, "key1=\"value1\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -117,7 +115,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, "key1=\"value1updated\" \n key2=\"value2\""),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(saltedName, "key1=\"value1updated\" \n key2=\"value2\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -132,7 +130,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, "key2=\"value2\""),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(saltedName, "key2=\"value2\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -150,7 +148,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogProvisionedProduct_ProvisioningParameters(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	resourceName := "aws_servicecatalog_provisioned_product.test_params"
 	var describeProvisionedProductOutput1, describeProvisionedProductOutput2 servicecatalog.DescribeProvisionedProductOutput
 	var providers []*schema.Provider
@@ -161,17 +159,17 @@ func TestAccAWSServiceCatalogProvisionedProduct_ProvisioningParameters(t *testin
 		CheckDestroy:      testAccCheckAwsServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(salt),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2_params(salt, 42),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2_params(saltedName, 42),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput1),
 					resource.TestCheckResourceAttr(resourceName, "outputs.NumberWithRange", "42"),
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2_params(salt, 60),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2_params(saltedName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput2),
 					resource.TestCheckResourceAttr(resourceName, "outputs.NumberWithRange", "60"),
@@ -212,47 +210,17 @@ func testAccCheckAwsServiceCatalogProvisionedProductExists(pr string, describePr
 	}
 }
 
-func testAccCheckAwsServiceCatalogProvisionedProductStandardFields(resourceName string, describeProvisionedProductOutput *servicecatalog.DescribeProvisionedProductOutput, salt string) resource.TestCheckFunc {
-	expectedPPName := "tfm-sc-test-pp-" + salt
+func testAccCheckAwsServiceCatalogProvisionedProductStandardFields(resourceName string, describeProvisionedProductOutput *servicecatalog.DescribeProvisionedProductOutput, saltedName string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", expectedPPName),
+		resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", saltedName),
 		resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
 		func(s *terraform.State) error {
-			if *describeProvisionedProductOutput.ProvisionedProductDetail.Name != expectedPPName {
-				return fmt.Errorf("resource '%s' does not have expected name: '%s' vs '%s'", resourceName, *describeProvisionedProductOutput.ProvisionedProductDetail.Name, expectedPPName)
+			if aws.StringValue(describeProvisionedProductOutput.ProvisionedProductDetail.Name) != saltedName {
+				return fmt.Errorf("resource '%s' does not have expected name: '%s' vs '%s'", resourceName, *describeProvisionedProductOutput.ProvisionedProductDetail.Name, saltedName)
 			}
 			return nil
 		},
 	)
-}
-
-func testAccCheckAwsServiceCatalogProvisionedProductDisappears(describeProvisionedProductOutput *servicecatalog.DescribeProvisionedProductOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).scconn
-		input := servicecatalog.TerminateProvisionedProductInput{
-			ProvisionedProductId: describeProvisionedProductOutput.ProvisionedProductDetail.Id,
-		}
-		// not available on servicecatalog, but returned here if under change
-		errCodeValidationException := "ValidationException"
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.TerminateProvisionedProduct(&input)
-			if err != nil {
-				if isAWSErr(err, servicecatalog.ErrCodeResourceInUseException, "") || isAWSErr(err, errCodeValidationException, "") {
-					// delay and retry, other things eg associations might still be getting deleted
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("could not terminate provisioned product: %s", err)
-		}
-		if err := waitForServiceCatalogProvisionedProductDeletion(conn, aws.StringValue(describeProvisionedProductOutput.ProvisionedProductDetail.Id)); err != nil {
-			return err
-		}
-		return nil
-	}
 }
 
 func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) error {
@@ -278,7 +246,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_portfolio(salt string) string {
+func testAccAWSServiceCatalogProvisionedProductConfig_portfolio(saltedName string) string {
 	// based on testAccAWSServiceCatalogPortfolioConfig_basic
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
@@ -286,11 +254,10 @@ resource "aws_servicecatalog_portfolio" "test" {
   description   = "test-2"
   provider_name = "test-3"
 }
-`, "tfm-test-"+salt)
+`, saltedName)
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_role(salt string) string {
-	roleName := "tfm-sc-tester-" + salt
+func testAccAWSServiceCatalogProvisionedProductConfig_role(saltedName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "%s"
@@ -308,7 +275,7 @@ resource "aws_iam_role" "test" {
 }
 EOF
 }
-`, roleName)
+`, saltedName)
 }
 
 func testAccAWSServiceCatalogProvisionedProductConfig_portfolio_principal_association() string {
@@ -357,17 +324,11 @@ resource "aws_servicecatalog_portfolio_product_association" "test" {
 `
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_product(salt string) string {
+func testAccAWSServiceCatalogProvisionedProductConfig_product(saltedName string) string {
 	// based on testAccAWSServiceCatalogProductConfig_basic
-	resourceName := "aws_servicecatalog_product.test"
-
-	thisResourceParts := strings.Split(resourceName, ".")
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "bucket-%[3]s"
-  region        = data.aws_region.current.name
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
@@ -388,10 +349,10 @@ resource "aws_s3_bucket_object" "template1" {
 EOF
 }
 
-resource "%[1]s" "%[2]s" {
+resource "aws_servicecatalog_product" "test" {
   description         = "arbitrary product description"
   distributor         = "arbitrary distributor"
-  name                = "product-%[3]s"
+  name                = %[1]q
   owner               = "arbitrary owner"
   product_type        = "CLOUD_FORMATION_TEMPLATE"
   support_description = "arbitrary support description"
@@ -400,23 +361,23 @@ resource "%[1]s" "%[2]s" {
 
   provisioning_artifact {
     description = "arbitrary description"
-    name        = "pa-%[3]s"
+    name        = %[1]q
     info = {
       LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template1.key}"
     }
   }
 
 }
-`, thisResourceParts[0], thisResourceParts[1], salt)
+`, saltedName)
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_step1(salt string) string {
+func testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName string) string {
 	return composeConfig(
-		testAccAWSServiceCatalogProvisionedProductConfig_portfolio(salt),
-		testAccAWSServiceCatalogProvisionedProductConfig_role(salt),
+		testAccAWSServiceCatalogProvisionedProductConfig_portfolio(saltedName),
+		testAccAWSServiceCatalogProvisionedProductConfig_role(saltedName),
 		testAccAWSServiceCatalogProvisionedProductConfig_portfolio_principal_association(),
 		testAccAWSServiceCatalogProvisionedProductConfig_policy(),
-		testAccAWSServiceCatalogProvisionedProductConfig_product(salt),
+		testAccAWSServiceCatalogProvisionedProductConfig_product(saltedName),
 		testAccAWSServiceCatalogProvisionedProductConfig_portfolio_product_association(),
 	)
 }
@@ -435,16 +396,15 @@ provider "aws" {
 `
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_step2(salt string, tags string) string {
-	provisionedProductName := "tfm-sc-test-pp-" + salt
+func testAccAWSServiceCatalogProvisionedProductConfig_step2(saltedName string, tags string) string {
 	return composeConfig(
-		testAccAWSServiceCatalogProvisionedProductConfig_step1(salt),
+		testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName),
 		testAccAWSServiceCatalogProvisionedProductConfig_provider(),
 		fmt.Sprintf(`
 
 resource "aws_servicecatalog_provisioned_product" "test" {
-    provider = aws.product-allowed-role
-    provisioned_product_name = "%s"
+    provider                 = aws.product-allowed-role
+    provisioned_product_name = %[1]q
     product_id               = aws_servicecatalog_product.test.id
     provisioning_artifact_id = aws_servicecatalog_product.test.provisioning_artifact[0].id
     depends_on = [
@@ -453,16 +413,15 @@ resource "aws_servicecatalog_provisioned_product" "test" {
       aws_servicecatalog_portfolio_principal_association.test,
     ]
     tags = {
-      %s
+      %[2]s
     }
 }
-`, provisionedProductName, tags))
+`, saltedName, tags))
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_step2_params(salt string, paramValue int) string {
-	provisionedProductName := "tfm-sc-test-params-pp-" + salt
+func testAccAWSServiceCatalogProvisionedProductConfig_step2_params(saltedName string, paramValue int) string {
 	return composeConfig(
-		testAccAWSServiceCatalogProvisionedProductConfig_step1(salt),
+		testAccAWSServiceCatalogProvisionedProductConfig_step1(saltedName),
 		testAccAWSServiceCatalogProvisionedProductConfig_provider(),
 		fmt.Sprintf(`
 
@@ -499,13 +458,13 @@ EOF
 }
 
 resource "aws_servicecatalog_product" "test_params" {
-  name                = "product-params-%[2]s"
+  name                = %[1]q
   owner               = "arbitrary owner"
   product_type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact {
     description = "arbitrary description"
-    name        = "pa-params-%[2]s"
+    name        = %[1]q
     info = {
       LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template_params.key}"
     }
@@ -519,11 +478,11 @@ resource "aws_servicecatalog_portfolio_product_association" "test_params" {
 
 resource "aws_servicecatalog_provisioned_product" "test_params" {
     provider = aws.product-allowed-role
-    provisioned_product_name = "%[1]s"
+    provisioned_product_name = %[1]q
     product_id               = aws_servicecatalog_product.test_params.id
     provisioning_artifact_id = aws_servicecatalog_product.test_params.provisioning_artifact[0].id
     provisioning_parameters = {
-        NumberWithRange = %[3]d
+        NumberWithRange = %[2]d
         Secret = "s3cr3t"
     }
     depends_on = [
@@ -532,5 +491,5 @@ resource "aws_servicecatalog_provisioned_product" "test_params" {
       aws_servicecatalog_portfolio_principal_association.test,
     ]
 }
-`, provisionedProductName, salt, paramValue))
+`, saltedName, paramValue))
 }

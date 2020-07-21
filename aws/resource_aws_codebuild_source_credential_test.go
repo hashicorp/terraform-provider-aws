@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSCodeBuildSourceCredential_Basic(t *testing.T) {
+func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
 	token := acctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"

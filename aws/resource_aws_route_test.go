@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -438,6 +439,42 @@ func TestAccAWSRoute_TransitGatewayID_DestinationCidrBlock(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigConditionalIpv4Ipv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigConditionalIpv4Ipv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", "::/0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -501,15 +538,15 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 		}
 
 		destination := rs.Primary.Attributes["destination_cidr_block"]
-		if _, ok := rs.Primary.Attributes["destination_ipv6_cidr_block"]; ok {
-			destination = rs.Primary.Attributes["destination_ipv6_cidr_block"]
+		if v, ok := rs.Primary.Attributes["destination_ipv6_cidr_block"]; ok && v != "" {
+			destination = v
 		}
 
 		return fmt.Sprintf("%s_%s", rs.Primary.Attributes["route_table_id"], destination), nil
 	}
 }
 
-var testAccAWSRouteBasicConfig = fmt.Sprint(`
+var testAccAWSRouteBasicConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -534,9 +571,9 @@ resource "aws_route" "bar" {
 	destination_cidr_block = "10.3.0.0/16"
 	gateway_id = "${aws_internet_gateway.foo.id}"
 }
-`)
+`
 
-var testAccAWSRouteConfigIpv6InternetGateway = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6InternetGateway = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -567,9 +604,9 @@ resource "aws_route" "igw" {
   gateway_id = "${aws_internet_gateway.foo.id}"
 }
 
-`)
+`
 
-var testAccAWSRouteConfigIpv6NetworkInterface = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6NetworkInterface = `
 resource "aws_vpc" "examplevpc" {
   cidr_block = "10.100.0.0/16"
   enable_dns_hostnames = true
@@ -683,9 +720,9 @@ resource "aws_route" "internal-default-route-ipv6" {
   network_interface_id = "${aws_network_interface.router-internal.id}"
 }
 
-`)
+`
 
-var testAccAWSRouteConfigIpv6Instance = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6Instance = `
 resource "aws_vpc" "examplevpc" {
   cidr_block = "10.100.0.0/16"
   enable_dns_hostnames = true
@@ -787,9 +824,9 @@ resource "aws_route" "internal-default-route-ipv6" {
   destination_ipv6_cidr_block = "::/0"
   instance_id = "${aws_instance.test-router.id}"
 }
-`)
+`
 
-var testAccAWSRouteConfigIpv6InstanceExpanded = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6InstanceExpanded = `
 resource "aws_vpc" "examplevpc" {
   cidr_block = "10.100.0.0/16"
   enable_dns_hostnames = true
@@ -891,9 +928,9 @@ resource "aws_route" "internal-default-route-ipv6" {
   destination_ipv6_cidr_block = "::0/0"
   instance_id = "${aws_instance.test-router.id}"
 }
-`)
+`
 
-var testAccAWSRouteConfigIpv6PeeringConnection = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6PeeringConnection = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.0.0.0/16"
 	assign_generated_ipv6_cidr_block = true
@@ -923,9 +960,9 @@ resource "aws_route" "pc" {
   vpc_peering_connection_id = "${aws_vpc_peering_connection.foo.id}"
 }
 
-`)
+`
 
-var testAccAWSRouteConfigIpv6 = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6 = `
 resource "aws_vpc" "foo" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -948,9 +985,9 @@ resource "aws_route" "bar" {
   destination_ipv6_cidr_block = "::/0"
   egress_only_gateway_id      = "${aws_egress_only_internet_gateway.foo.id}"
 }
-`)
+`
 
-var testAccAWSRouteConfigIpv6Expanded = fmt.Sprintf(`
+var testAccAWSRouteConfigIpv6Expanded = `
 resource "aws_vpc" "foo" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -973,9 +1010,9 @@ resource "aws_route" "bar" {
   destination_ipv6_cidr_block = "::0/0"
   egress_only_gateway_id      = "${aws_egress_only_internet_gateway.foo.id}"
 }
-`)
+`
 
-var testAccAWSRouteBasicConfigChangeCidr = fmt.Sprint(`
+var testAccAWSRouteBasicConfigChangeCidr = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -1000,13 +1037,13 @@ resource "aws_route" "bar" {
 	destination_cidr_block = "10.2.0.0/16"
 	gateway_id = "${aws_internet_gateway.foo.id}"
 }
-`)
+`
 
-var testAccAWSRouteNoopChange = fmt.Sprint(`
+var testAccAWSRouteNoopChange = `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1045,9 +1082,9 @@ resource "aws_instance" "nat" {
   instance_type = "t2.nano"
   subnet_id = "${aws_subnet.test.id}"
 }
-`)
+`
 
-var testAccAWSRouteWithVPCEndpoint = fmt.Sprint(`
+var testAccAWSRouteWithVPCEndpoint = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -1081,9 +1118,9 @@ resource "aws_vpc_endpoint" "baz" {
   service_name    = "com.amazonaws.us-west-2.s3"
   route_table_ids = ["${aws_route_table.foo.id}"]
 }
-`)
+`
 
-var testAccAWSRouteNewRouteTable = fmt.Sprint(`
+var testAccAWSRouteNewRouteTable = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -1135,14 +1172,14 @@ resource "aws_route" "bar" {
 	destination_cidr_block = "10.4.0.0/16"
 	gateway_id = "${aws_internet_gateway.bar.id}"
 }
-`)
+`
 
 func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1181,5 +1218,57 @@ resource "aws_route" "test" {
   route_table_id         = "${aws_vpc.test.default_route_table_id}"
   transit_gateway_id     = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
 }
-`)
+`
+}
+
+func testAccAWSRouteConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+locals {
+  ipv6             = %[2]t
+  destination      = "0.0.0.0/0"
+  destination_ipv6 = "::/0"
+}
+
+resource "aws_route" "test" {
+  route_table_id = "${aws_route_table.test.id}"
+  gateway_id     = "${aws_internet_gateway.test.id}"
+
+  destination_cidr_block      = "${local.ipv6 ? "" : local.destination}"
+  destination_ipv6_cidr_block = "${local.ipv6 ? local.destination_ipv6 : ""}"
+}
+`, rName, ipv6Route)
 }

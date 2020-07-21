@@ -661,12 +661,12 @@ provider "aws" {
 // Cost and Usage Reporting and Pricing services.
 func testAccUsEast1RegionProviderConfig() string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return `
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
 }
-`)
+`
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
@@ -1418,7 +1418,7 @@ data "aws_arn" "test" {
 
 func testAccAWSProviderConfigIgnoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return `
 provider "aws" {
   ignore_tags {}
 
@@ -1432,12 +1432,12 @@ provider "aws" {
 data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
-`)
+`
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeyPrefixes0() string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return `
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -1449,7 +1449,7 @@ provider "aws" {
 data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
-`)
+`
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeyPrefixes1(tagPrefix1 string) string {
@@ -1496,7 +1496,7 @@ data "aws_arn" "test" {
 
 func testAccAWSProviderConfigIgnoreTagsKeys0() string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return `
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -1508,7 +1508,7 @@ provider "aws" {
 data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
-`)
+`
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeys1(tag1 string) string {

@@ -57,7 +57,7 @@ func testSweepSagemakerEndpointConfigurations(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_Basic(t *testing.T) {
+func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.foo"
 

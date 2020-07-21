@@ -85,6 +85,7 @@ RAM
 RDS
 Redshift
 Resource Groups
+Resource Groups Tagging API
 Route53 Domains
 Route53 Resolver
 Route53

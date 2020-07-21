@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
+func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
 	var snapshotId string
 	accountId := "111122223333"
 

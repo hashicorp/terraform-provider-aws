@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
@@ -21,10 +22,9 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsOpsworksCustomLayerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
@@ -37,14 +37,16 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.1368285564", "git"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.2937857443", "golang"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "git"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "golang"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.encrypted", "false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
+						"type":            "gp2",
+						"number_of_disks": "2",
+						"mount_point":     "/home",
+						"size":            "100",
+						"encrypted":       "false",
+					}),
 				),
 			},
 			{
@@ -106,10 +108,9 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsOpsworksCustomLayerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigNoVpcCreate(stackName),
@@ -123,14 +124,16 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.1368285564", "git"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.2937857443", "golang"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "git"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "golang"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.encrypted", "false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
+						"type":            "gp2",
+						"number_of_disks": "2",
+						"mount_point":     "/home",
+						"size":            "100",
+						"encrypted":       "false",
+					}),
 				),
 			},
 			{
@@ -141,21 +144,25 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
 					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.1368285564", "git"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.2937857443", "golang"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.4101929740", "subversion"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "git"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "golang"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "subversion"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.type", "io1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.number_of_disks", "4"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.mount_point", "/var"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.raid_level", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.encrypted", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
+						"type":            "gp2",
+						"number_of_disks": "2",
+						"mount_point":     "/home",
+						"size":            "100",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
+						"type":            "io1",
+						"number_of_disks": "4",
+						"mount_point":     "/var",
+						"size":            "100",
+						"raid_level":      "1",
+						"iops":            "3000",
+						"encrypted":       "true",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "custom_json", `{"layer_key":"layer_value2"}`),
 				),
 			},

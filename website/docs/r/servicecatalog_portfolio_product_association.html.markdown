@@ -26,7 +26,7 @@ the association be absent in AWS until the remaining Terraform instance is re-ap
 ```hcl
 resource "aws_servicecatalog_portfolio_product_association" "test" {
   portfolio_id = "port-01234567890abc"
-  product_id = "prod-abcdefghijklm"
+  product_id   = "prod-abcdefghijklm"
 }
 ```
 

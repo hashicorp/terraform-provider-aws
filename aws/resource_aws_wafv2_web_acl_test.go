@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -13,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
+func TestAccAwsWafv2WebACL_basic(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -59,29 +61,37 @@ func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.name", "rule-2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.priority", "10"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.action.0.allow.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.action.0.count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.comparison_operator", "LT"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.field_to_match.0.query_string.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.size", "50"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.text_transformation.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.text_transformation.2212084700.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.text_transformation.2212084700.type", "CMD_LINE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.text_transformation.4292479961.priority", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.statement.0.size_constraint_statement.0.text_transformation.4292479961.type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "rule.479520631.name", "rule-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.479520631.priority", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.479520631.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.479520631.action.0.allow.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.479520631.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.479520631.action.0.count.#", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":             "rule-2",
+						"priority":         "10",
+						"action.#":         "1",
+						"action.0.allow.#": "0",
+						"action.0.block.#": "0",
+						"action.0.count.#": "1",
+						"statement.#":      "1",
+						"statement.0.size_constraint_statement.#":                                 "1",
+						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
+						"statement.0.size_constraint_statement.0.size":                            "50",
+						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
+						"priority": "2",
+						"type":     "CMD_LINE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
+						"priority": "5",
+						"type":     "NONE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":             "rule-1",
+						"priority":         "1",
+						"action.#":         "1",
+						"action.0.allow.#": "1",
+						"action.0.block.#": "0",
+						"action.0.count.#": "0",
+					}),
 				),
 			},
 			{
@@ -184,16 +194,18 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.name", "rule-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.action.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.override_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.override_action.0.count.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.override_action.0.none.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2578204250.statement.0.managed_rule_group_statement.0.excluded_rule.#", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                 "1",
+						"statement.0.managed_rule_group_statement.0.name":            "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":     "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#": "0",
+					}),
 				),
 			},
 			{
@@ -203,18 +215,20 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.name", "rule-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.action.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.override_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.override_action.0.count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.override_action.0.none.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.excluded_rule.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.excluded_rule.0.name", "SizeRestrictions_QUERYSTRING"),
-					resource.TestCheckResourceAttr(resourceName, "rule.2461626547.statement.0.managed_rule_group_statement.0.excluded_rule.1.name", "NoUserAgent_HEADER"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "1",
+						"override_action.0.none.#":  "0",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                      "1",
+						"statement.0.managed_rule_group_statement.0.name":                 "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":          "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":      "2",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.0.name": "SizeRestrictions_QUERYSTRING",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.1.name": "NoUserAgent_HEADER",
+					}),
 				),
 			},
 			{
@@ -276,16 +290,18 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.name", "rule-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.0.allow.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.action.0.count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.0.limit", "50000"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3775861267.statement.0.rate_based_statement.0.scope_down_statement.#", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                               "rule-1",
+						"action.#":                           "1",
+						"action.0.allow.#":                   "0",
+						"action.0.block.#":                   "0",
+						"action.0.count.#":                   "1",
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
+						"statement.0.rate_based_statement.0.limit":                  "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
+					}),
 				),
 			},
 			{
@@ -295,20 +311,22 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.name", "rule-1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.0.allow.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.action.0.count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.limit", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0", "US"),
-					resource.TestCheckResourceAttr(resourceName, "rule.3061118601.statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1", "NL"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                               "rule-1",
+						"action.#":                           "1",
+						"action.0.allow.#":                   "0",
+						"action.0.block.#":                   "0",
+						"action.0.count.#":                   "1",
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
+						"statement.0.rate_based_statement.0.limit":                                                        "10000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+					}),
 				),
 			},
 			{
@@ -348,14 +366,17 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2RuleGroupRefStatementIndex(&v, &idx, []interface{}{}),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.name", &idx, "rule-1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.count.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.none.#", &idx, "0"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.#", &idx, "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "1",
+						"override_action.0.none.#":  "0",
+						"statement.#":               "1",
+						"statement.0.rule_group_reference_statement.#":                 "1",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.#": "0",
+					}),
+					// TODO: TypeSet check need helper for regex
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.excluded_rule.#", &idx, "0"),
 				),
 			},
 			{
@@ -366,16 +387,19 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2RuleGroupRefStatementIndex(&v, &idx, excludedRules),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.name", &idx, "rule-1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.count.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.none.#", &idx, "0"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.#", &idx, "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "1",
+						"override_action.0.none.#":  "0",
+						"statement.#":               "1",
+						"statement.0.rule_group_reference_statement.#":                      "1",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.#":      "2",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.0.name": "rule-to-exclude-b",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.1.name": "rule-to-exclude-a",
+					}),
+					// TODO: TypeSet check need helper for regex
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.#", &idx, "2"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.0.name", &idx, "rule-to-exclude-b"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.1.name", &idx, "rule-to-exclude-a"),
 				),
 			},
 			{
@@ -431,6 +455,91 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13862
+func TestAccAwsWafv2WebACL_MaxNestedRateBasedStatements(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                                                      "1",
+						"statement.0.rate_based_statement.#":                                                                               "1",
+						"statement.0.rate_based_statement.0.limit":                                                                         "300",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                                                            "IP",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                                        "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                        "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                            "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":             "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#":            "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACL_MaxNestedOperatorStatements(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                                    "1",
+						"statement.0.and_statement.#":                                                                    "1",
+						"statement.0.and_statement.0.statement.#":                                                        "2",
+						"statement.0.and_statement.0.statement.0.not_statement.#":                                        "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.#":                            "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.#":             "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "2",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#":            "1",
+						"statement.0.and_statement.0.statement.1.geo_match_statement.#":                                                                          "1",
+						"statement.0.and_statement.0.statement.1.geo_match_statement.0.country_codes.0":                                                          "NL",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1106,6 +1215,174 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test" {
+  name  = "%[1]s"
+  scope = "REGIONAL"
+  regular_expression {
+    regex_string = "one"
+  }
+}
+
+resource "aws_wafv2_ip_set" "test" {
+  name               = "%[1]s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule"
+    priority = 0
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 300
+        aggregate_key_type = "IP"
+
+        scope_down_statement {
+          not_statement {
+            statement {
+              or_statement {
+                statement {
+                  regex_pattern_set_reference_statement {
+                    arn = aws_wafv2_regex_pattern_set.test.arn
+                    field_to_match {
+                      uri_path {}
+                    }
+                    text_transformation {
+                      type     = "LOWERCASE"
+                      priority = 1
+                    }
+                  }
+                }
+                statement {
+                  ip_set_reference_statement {
+                    arn = aws_wafv2_ip_set.test.arn
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "waf"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test" {
+  name  = "%[1]s"
+  scope = "REGIONAL"
+  regular_expression {
+    regex_string = "one"
+  }
+}
+
+resource "aws_wafv2_ip_set" "test" {
+  name               = "%[1]s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule"
+    priority = 0
+
+    action {
+      block {}
+    }
+
+    statement {
+      and_statement {
+        statement {
+          not_statement {
+            statement {
+              or_statement {
+                statement {
+                  regex_pattern_set_reference_statement {
+                    arn = aws_wafv2_regex_pattern_set.test.arn
+                    field_to_match {
+                      uri_path {}
+                    }
+                    text_transformation {
+                      type     = "LOWERCASE"
+                      priority = 1
+                    }
+                  }
+                }
+                statement {
+                  ip_set_reference_statement {
+                    arn = aws_wafv2_ip_set.test.arn
+                  }
+                }
+              }
+            }
+          }
+        }
+        statement {
+          geo_match_statement {
+            country_codes = ["NL"]
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "waf"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
 }
 
 func testAccAwsWafv2WebACLImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

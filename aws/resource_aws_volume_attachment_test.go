@@ -315,13 +315,13 @@ resource "aws_ebs_volume" "test" {
 }
 
 func testAccVolumeAttachmentConfig(rName string) string {
-	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
+	return testAccVolumeAttachmentConfigBase(rName) + `
 resource "aws_volume_attachment" "test" {
   device_name = "/dev/sdh"
   volume_id   = "${aws_ebs_volume.test.id}"
   instance_id = "${aws_instance.test.id}"
 }
-`)
+`
 }
 
 func testAccVolumeAttachmentConfigSkipDestroy(rName string) string {

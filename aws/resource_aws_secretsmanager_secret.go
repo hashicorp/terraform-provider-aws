@@ -77,17 +77,22 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				},
 			},
 			"rotation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
+				Type:       schema.TypeBool,
+				Computed:   true,
 			},
 			"rotation_lambda_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
+				Type:       schema.TypeString,
+				Optional:   true,
+				Computed:   true,
 			},
 			"rotation_rules": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
+				Type:       schema.TypeList,
+				Computed:   true,
+				Optional:   true,
+				MaxItems:   1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
@@ -379,30 +384,4 @@ func resourceAwsSecretsManagerSecretDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return nil
-}
-
-func expandSecretsManagerRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	rules := &secretsmanager.RotationRulesType{
-		AutomaticallyAfterDays: aws.Int64(int64(m["automatically_after_days"].(int))),
-	}
-
-	return rules
-}
-
-func flattenSecretsManagerRotationRules(rules *secretsmanager.RotationRulesType) []interface{} {
-	if rules == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"automatically_after_days": int(aws.Int64Value(rules.AutomaticallyAfterDays)),
-	}
-
-	return []interface{}{m}
 }

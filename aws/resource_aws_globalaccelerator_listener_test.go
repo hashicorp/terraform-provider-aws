@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
@@ -14,10 +15,9 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckGlobalAcceleratorListenerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorListener_basic(rInt),
@@ -26,8 +26,10 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.3309144275.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.3309144275.to_port", "81"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
+						"from_port": "80",
+						"to_port":   "81",
+					}),
 				),
 			},
 			{
@@ -44,10 +46,9 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckGlobalAcceleratorListenerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorListener_basic(rInt),
@@ -59,8 +60,10 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.3922064764.from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.3922064764.to_port", "444"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
+						"from_port": "443",
+						"to_port":   "444",
+					}),
 				),
 			},
 			{

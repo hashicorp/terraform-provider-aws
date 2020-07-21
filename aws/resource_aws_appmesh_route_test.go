@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -336,10 +337,9 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAppmeshRouteDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAppmeshRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name, rName),
@@ -354,9 +354,11 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2366200004.invert", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2366200004.match.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2366200004.name", "X-Testing1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http_route.0.match.0.header.*", map[string]string{
+						"invert":  "false",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", "http"),
@@ -380,19 +382,23 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2971741486.invert", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2971741486.match.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2971741486.name", "X-Testing1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.invert", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.exact", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.range.0.end", "7"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.range.0.start", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.regex", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.suffix", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.name", "X-Testing2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http_route.0.match.0.header.*", map[string]string{
+						"invert":  "true",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http_route.0.match.0.header.*", map[string]string{
+						"invert":              "false",
+						"match.#":             "1",
+						"match.0.exact":       "",
+						"match.0.prefix":      "",
+						"match.0.range.#":     "1",
+						"match.0.range.0.end": "7",
+						"range.0.start":       "2",
+						"match.0.regex":       "",
+						"match.0.suffix":      "",
+						"name":                "X-Testing2",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", "PUT"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", "https"),

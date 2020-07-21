@@ -250,7 +250,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_eks_",
     ],
     "service/elastic-transcoder" = [
-      "aws_elastic_transcoder_",
+      "aws_elastictranscoder_",
     ],
     "service/elasticache" = [
       "aws_elasticache_",
@@ -431,6 +431,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/resourcegroups" = [
       "aws_resourcegroups_",
+    ],
+    "service/resourcegroupstaggingapi" = [
+      "aws_resourcegroupstaggingapi_",
     ],
     "service/robomaker" = [
       "aws_robomaker_",
@@ -1121,6 +1124,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/resourcegroups" = [
       "**/*_resourcegroups_*",
       "**/resourcegroups_*"
+    ]
+    "service/resourcegroupstaggingapi" = [
+      "**/*_resourcegroupstaggingapi_*",
+      "**/resourcegroupstaggingapi_*"
     ]
     "service/robomaker" = [
       "**/*_robomaker_*",

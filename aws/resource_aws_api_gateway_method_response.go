@@ -76,12 +76,6 @@ func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 				Optional: true,
 			},
-
-			"response_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `response_parameters` argument instead",
-			},
 		},
 	}
 }

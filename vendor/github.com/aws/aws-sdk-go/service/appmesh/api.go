@@ -5574,6 +5574,8 @@ type GrpcRoute struct {
 	// at least one of the types of RetryEvents, a value for maxRetries, and a value
 	// for perRetryTimeout.
 	RetryPolicy *GrpcRetryPolicy `locationName:"retryPolicy" type:"structure"`
+
+	Timeout *GrpcTimeout `locationName:"timeout" type:"structure"`
 }
 
 // String returns the string representation
@@ -5632,6 +5634,12 @@ func (s *GrpcRoute) SetMatch(v *GrpcRouteMatch) *GrpcRoute {
 // SetRetryPolicy sets the RetryPolicy field's value.
 func (s *GrpcRoute) SetRetryPolicy(v *GrpcRetryPolicy) *GrpcRoute {
 	s.RetryPolicy = v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *GrpcRoute) SetTimeout(v *GrpcTimeout) *GrpcRoute {
+	s.Timeout = v
 	return s
 }
 
@@ -5895,6 +5903,38 @@ func (s *GrpcRouteMetadataMatchMethod) SetRegex(v string) *GrpcRouteMetadataMatc
 // SetSuffix sets the Suffix field's value.
 func (s *GrpcRouteMetadataMatchMethod) SetSuffix(v string) *GrpcRouteMetadataMatchMethod {
 	s.Suffix = &v
+	return s
+}
+
+type GrpcTimeout struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a duration of time.
+	Idle *Duration `locationName:"idle" type:"structure"`
+
+	// An object that represents a duration of time.
+	PerRequest *Duration `locationName:"perRequest" type:"structure"`
+}
+
+// String returns the string representation
+func (s GrpcTimeout) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GrpcTimeout) GoString() string {
+	return s.String()
+}
+
+// SetIdle sets the Idle field's value.
+func (s *GrpcTimeout) SetIdle(v *Duration) *GrpcTimeout {
+	s.Idle = v
+	return s
+}
+
+// SetPerRequest sets the PerRequest field's value.
+func (s *GrpcTimeout) SetPerRequest(v *Duration) *GrpcTimeout {
+	s.PerRequest = v
 	return s
 }
 
@@ -6195,6 +6235,8 @@ type HttpRoute struct {
 	// at least one of the types of RetryEvents, a value for maxRetries, and a value
 	// for perRetryTimeout.
 	RetryPolicy *HttpRetryPolicy `locationName:"retryPolicy" type:"structure"`
+
+	Timeout *HttpTimeout `locationName:"timeout" type:"structure"`
 }
 
 // String returns the string representation
@@ -6253,6 +6295,12 @@ func (s *HttpRoute) SetMatch(v *HttpRouteMatch) *HttpRoute {
 // SetRetryPolicy sets the RetryPolicy field's value.
 func (s *HttpRoute) SetRetryPolicy(v *HttpRetryPolicy) *HttpRoute {
 	s.RetryPolicy = v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *HttpRoute) SetTimeout(v *HttpTimeout) *HttpRoute {
+	s.Timeout = v
 	return s
 }
 
@@ -6441,6 +6489,38 @@ func (s *HttpRouteMatch) SetPrefix(v string) *HttpRouteMatch {
 // SetScheme sets the Scheme field's value.
 func (s *HttpRouteMatch) SetScheme(v string) *HttpRouteMatch {
 	s.Scheme = &v
+	return s
+}
+
+type HttpTimeout struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a duration of time.
+	Idle *Duration `locationName:"idle" type:"structure"`
+
+	// An object that represents a duration of time.
+	PerRequest *Duration `locationName:"perRequest" type:"structure"`
+}
+
+// String returns the string representation
+func (s HttpTimeout) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpTimeout) GoString() string {
+	return s.String()
+}
+
+// SetIdle sets the Idle field's value.
+func (s *HttpTimeout) SetIdle(v *Duration) *HttpTimeout {
+	s.Idle = v
+	return s
+}
+
+// SetPerRequest sets the PerRequest field's value.
+func (s *HttpTimeout) SetPerRequest(v *Duration) *HttpTimeout {
+	s.PerRequest = v
 	return s
 }
 
@@ -7146,6 +7226,8 @@ type Listener struct {
 	// PortMapping is a required field
 	PortMapping *PortMapping `locationName:"portMapping" type:"structure" required:"true"`
 
+	Timeout *ListenerTimeout `locationName:"timeout" type:"structure"`
+
 	// An object that represents the Transport Layer Security (TLS) properties for
 	// a listener.
 	Tls *ListenerTls `locationName:"tls" type:"structure"`
@@ -7201,9 +7283,61 @@ func (s *Listener) SetPortMapping(v *PortMapping) *Listener {
 	return s
 }
 
+// SetTimeout sets the Timeout field's value.
+func (s *Listener) SetTimeout(v *ListenerTimeout) *Listener {
+	s.Timeout = v
+	return s
+}
+
 // SetTls sets the Tls field's value.
 func (s *Listener) SetTls(v *ListenerTls) *Listener {
 	s.Tls = v
+	return s
+}
+
+type ListenerTimeout struct {
+	_ struct{} `type:"structure"`
+
+	Grpc *GrpcTimeout `locationName:"grpc" type:"structure"`
+
+	Http *HttpTimeout `locationName:"http" type:"structure"`
+
+	Http2 *HttpTimeout `locationName:"http2" type:"structure"`
+
+	Tcp *TcpTimeout `locationName:"tcp" type:"structure"`
+}
+
+// String returns the string representation
+func (s ListenerTimeout) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTimeout) GoString() string {
+	return s.String()
+}
+
+// SetGrpc sets the Grpc field's value.
+func (s *ListenerTimeout) SetGrpc(v *GrpcTimeout) *ListenerTimeout {
+	s.Grpc = v
+	return s
+}
+
+// SetHttp sets the Http field's value.
+func (s *ListenerTimeout) SetHttp(v *HttpTimeout) *ListenerTimeout {
+	s.Http = v
+	return s
+}
+
+// SetHttp2 sets the Http2 field's value.
+func (s *ListenerTimeout) SetHttp2(v *HttpTimeout) *ListenerTimeout {
+	s.Http2 = v
+	return s
+}
+
+// SetTcp sets the Tcp field's value.
+func (s *ListenerTimeout) SetTcp(v *TcpTimeout) *ListenerTimeout {
+	s.Tcp = v
 	return s
 }
 
@@ -8471,6 +8605,8 @@ type TcpRoute struct {
 	//
 	// Action is a required field
 	Action *TcpRouteAction `locationName:"action" type:"structure" required:"true"`
+
+	Timeout *TcpTimeout `locationName:"timeout" type:"structure"`
 }
 
 // String returns the string representation
@@ -8504,6 +8640,12 @@ func (s *TcpRoute) Validate() error {
 // SetAction sets the Action field's value.
 func (s *TcpRoute) SetAction(v *TcpRouteAction) *TcpRoute {
 	s.Action = v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *TcpRoute) SetTimeout(v *TcpTimeout) *TcpRoute {
+	s.Timeout = v
 	return s
 }
 
@@ -8554,6 +8696,29 @@ func (s *TcpRouteAction) Validate() error {
 // SetWeightedTargets sets the WeightedTargets field's value.
 func (s *TcpRouteAction) SetWeightedTargets(v []*WeightedTarget) *TcpRouteAction {
 	s.WeightedTargets = v
+	return s
+}
+
+type TcpTimeout struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a duration of time.
+	Idle *Duration `locationName:"idle" type:"structure"`
+}
+
+// String returns the string representation
+func (s TcpTimeout) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TcpTimeout) GoString() string {
+	return s.String()
+}
+
+// SetIdle sets the Idle field's value.
+func (s *TcpTimeout) SetIdle(v *Duration) *TcpTimeout {
+	s.Idle = v
 	return s
 }
 

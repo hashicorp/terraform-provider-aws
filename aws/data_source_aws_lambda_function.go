@@ -40,6 +40,22 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 			},
+			"file_system_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"local_mount_path": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"handler": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -259,6 +275,10 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("vpc_config", flattenLambdaVpcConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %s", err)
+	}
+
+	if err := d.Set("file_system_config", flattenLambdaFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+		return fmt.Errorf("error setting file_system_config: %s", err)
 	}
 
 	d.SetId(aws.StringValue(function.FunctionName))

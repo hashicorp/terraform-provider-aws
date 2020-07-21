@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -52,7 +51,7 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_ID(t *testing.T) {
 }
 
 func testAccAWSEc2TransitGatewayRouteTableDataSourceConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
@@ -65,11 +64,11 @@ data "aws_ec2_transit_gateway_route_table" "test" {
     values = ["${aws_ec2_transit_gateway_route_table.test.id}"]
   }
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayRouteTableDataSourceConfigID() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
@@ -79,5 +78,5 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
 data "aws_ec2_transit_gateway_route_table" "test" {
   id = "${aws_ec2_transit_gateway_route_table.test.id}"
 }
-`)
+`
 }

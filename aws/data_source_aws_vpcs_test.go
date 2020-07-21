@@ -103,13 +103,13 @@ func testAccCheckAwsVpcsDataSourceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccDataSourceAwsVpcsConfig() string {
-	return fmt.Sprintf(`
+	return `
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "10.0.0.0/24"
 	}
 
 	data "aws_vpcs" "all" {}
-	`)
+	`
 }
 
 func testAccDataSourceAwsVpcsConfig_tags(rName string) string {

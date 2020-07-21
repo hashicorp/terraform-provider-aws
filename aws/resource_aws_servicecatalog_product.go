@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -58,6 +59,10 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					servicecatalog.ProductTypeCloudFormationTemplate,
+					servicecatalog.ProductTypeMarketplace,
+				}, false),
 			},
 			"support_description": {
 				Type:     schema.TypeString,
@@ -96,7 +101,12 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							Default:  servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate,
-						}, // CLOUD_FORMATION_TEMPLATE  | MARKETPLACE_AMI | MARKETPLACE_CAR
+							ValidateFunc: validation.StringInSlice([]string{
+								servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate,
+								servicecatalog.ProvisioningArtifactTypeMarketplaceAmi,
+								servicecatalog.ProvisioningArtifactTypeMarketplaceCar,
+							}, false),
+						},
 						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -158,33 +168,18 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapServiceCatalog(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ServicecatalogTags()
 	}
 
-	pa := d.Get("provisioning_artifact")
-	paList := pa.([]interface{})
-	paParameters := paList[0].(map[string]interface{})
-	artifactProperties := servicecatalog.ProvisioningArtifactProperties{}
-	artifactProperties.Description = aws.String(paParameters["description"].(string))
-	artifactProperties.Name = aws.String(paParameters["name"].(string))
-	if v, ok := paParameters["type"]; ok && v != "" {
-		artifactProperties.Type = aws.String(v.(string))
-	} else {
-		artifactProperties.Type = aws.String(servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate)
-	}
-	artifactProperties.Info = make(map[string]*string)
-	for k, v := range paParameters["info"].(map[string]interface{}) {
-		artifactProperties.Info[k] = aws.String(v.(string))
-	}
 	input.IdempotencyToken = aws.String(resource.UniqueId())
-	input.SetProvisioningArtifactParameters(&artifactProperties)
-	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
+	input.SetProvisioningArtifactParameters(expandFirstProvisioningArtifactProperties(d.Get("provisioning_artifact").([]interface{})))
+	log.Printf("[DEBUG] Creating Service Catalog Product: %s", input)
 
 	resp, err := conn.CreateProduct(&input)
 	if err != nil {
 		return fmt.Errorf("creating ServiceCatalog product failed: %s", err)
 	}
-	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
+	d.SetId(aws.StringValue(resp.ProductViewDetail.ProductViewSummary.ProductId))
 	if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
 		return err
 	}
@@ -253,7 +248,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 
 	d.Set("product_arn", resp.ProductViewDetail.ProductARN)
 
-	err = d.Set("tags", tagsToMapServiceCatalog(keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map()))
+	err = d.Set("tags", keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("invalid tags read on ServiceCatalog product '%s': %s", d.Id(), err)
 	}
@@ -269,33 +264,10 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	d.Set("support_email", aws.StringValue(product.SupportEmail))
 	d.Set("support_url", aws.StringValue(product.SupportUrl))
 
-	provisioningArtifactList := make([]map[string]interface{}, 0)
-	for _, pas := range resp.ProvisioningArtifactSummaries {
-		artifact := make(map[string]interface{})
-		artifact["description"] = *pas.Description
-		artifact["id"] = *pas.Id
-		artifact["name"] = *pas.Name
-
-		paOutput, err := conn.DescribeProvisioningArtifact(&servicecatalog.DescribeProvisioningArtifactInput{
-			ProductId:              aws.String(d.Id()),
-			ProvisioningArtifactId: pas.Id,
-		})
-		if err != nil {
-			return fmt.Errorf("reading ProvisioningArtifact '%s' for product '%s' failed: %s", *pas.Id, d.Id(), err)
-		}
-		artifact["type"] = aws.StringValue(paOutput.ProvisioningArtifactDetail.Type)
-		artifact["active"] = aws.BoolValue(paOutput.ProvisioningArtifactDetail.Active)
-		artifact["created_time"] = paOutput.ProvisioningArtifactDetail.CreatedTime.Format(time.RFC3339)
-		replaceProvisioningArtifactParametersKeys(paOutput.Info)
-		log.Printf("[DEBUG] Info map coming from READ: %v", paOutput.Info)
-		info := make(map[string]string)
-		for k, v := range paOutput.Info {
-			info[k] = aws.StringValue(v)
-		}
-		artifact["info"] = info
-		provisioningArtifactList = append(provisioningArtifactList, artifact)
+	provisioningArtifactList, err := flattenProvisioningArtifactSummaries(d.Id(), conn, resp.ProvisioningArtifactSummaries)
+	if err != nil {
+		return err
 	}
-
 	if err := d.Set("provisioning_artifact", provisioningArtifactList); err != nil {
 		return fmt.Errorf("setting ProvisioningArtifact for product '%s' failed: %s", d.Id(), err)
 	}
@@ -367,7 +339,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 				addTags[k] = v
 			}
 		}
-		input.AddTags = tagsFromMapServiceCatalog(addTags)
+		input.AddTags = keyvaluetags.New(addTags).IgnoreAws().ServicecatalogTags()
 		input.RemoveTags = removeTags
 	}
 
@@ -426,25 +398,49 @@ func replaceProvisioningArtifactParametersKey(m map[string]*string, replacedKey,
 	delete(m, replacedKey)
 }
 
-// tagsFromMap returns the tags for the given map of data.
-func tagsFromMapServiceCatalog(m map[string]interface{}) []*servicecatalog.Tag {
-	result := make([]*servicecatalog.Tag, 0, len(m))
-	for k, v := range m {
-		t := &servicecatalog.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v.(string)),
-		}
-		result = append(result, t)
+func expandFirstProvisioningArtifactProperties(paParametersList []interface{}) *servicecatalog.ProvisioningArtifactProperties {
+	artifactProperties := &servicecatalog.ProvisioningArtifactProperties{}
+	paParameters := paParametersList[0].(map[string]interface{})
+	artifactProperties.Description = aws.String(paParameters["description"].(string))
+	artifactProperties.Name = aws.String(paParameters["name"].(string))
+	if v, ok := paParameters["type"]; ok && v != "" {
+		artifactProperties.Type = aws.String(v.(string))
+	} else {
+		artifactProperties.Type = aws.String(servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate)
 	}
-
-	return result
+	artifactProperties.Info = make(map[string]*string)
+	for k, v := range paParameters["info"].(map[string]interface{}) {
+		artifactProperties.Info[k] = aws.String(v.(string))
+	}
+	return artifactProperties
 }
 
-// tagsToMap turns the list of tags into a map.
-func tagsToMapServiceCatalog(ts map[string]string) map[string]string {
-	result := make(map[string]string)
-	for k, v := range ts {
-		result[aws.StringValue(&k)] = aws.StringValue(&v)
+func flattenProvisioningArtifactSummaries(id string, conn *servicecatalog.ServiceCatalog, paSummaries []*servicecatalog.ProvisioningArtifactSummary) ([]map[string]interface{}, error) {
+	provisioningArtifactList := make([]map[string]interface{}, 0)
+	for _, pas := range paSummaries {
+		artifact := map[string]interface{}{}
+		artifact["description"] = aws.StringValue(pas.Description)
+		artifact["id"] = aws.StringValue(pas.Id)
+		artifact["name"] = aws.StringValue(pas.Name)
+
+		paOutput, err := conn.DescribeProvisioningArtifact(&servicecatalog.DescribeProvisioningArtifactInput{
+			ProductId:              aws.String(id),
+			ProvisioningArtifactId: pas.Id,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("reading ProvisioningArtifact '%s' for product '%s' failed: %s", aws.StringValue(pas.Id), id, err)
+		}
+		artifact["type"] = aws.StringValue(paOutput.ProvisioningArtifactDetail.Type)
+		artifact["active"] = aws.BoolValue(paOutput.ProvisioningArtifactDetail.Active)
+		artifact["created_time"] = paOutput.ProvisioningArtifactDetail.CreatedTime.Format(time.RFC3339)
+		replaceProvisioningArtifactParametersKeys(paOutput.Info)
+		log.Printf("[DEBUG] Info map coming from READ: %v", paOutput.Info)
+		info := make(map[string]string)
+		for k, v := range paOutput.Info {
+			info[k] = aws.StringValue(v)
+		}
+		artifact["info"] = info
+		provisioningArtifactList = append(provisioningArtifactList, artifact)
 	}
-	return result
+	return provisioningArtifactList, nil
 }
