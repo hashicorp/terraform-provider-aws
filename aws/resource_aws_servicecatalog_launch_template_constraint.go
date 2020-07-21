@@ -35,7 +35,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraint() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"rule": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -48,7 +48,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraint() *schema.Resource {
 							Optional: true,
 						},
 						"assertion": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -152,7 +152,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintJsonParameters(d *schema.R
 func resourceAwsServiceCatalogLaunchTemplateConstraintParseRules(d *schema.ResourceData, constraint *awsServiceCatalogLaunchTemplateConstraint) error {
 	constraint.Rules = map[string]awsServiceCatalogLaunchTemplateConstraintRule{}
 	if rules, ok := d.GetOk("rule"); ok {
-		for _, ruleMap := range rules.([]interface{}) {
+		for _, ruleMap := range rules.(*schema.Set).List() {
 			name, rule, err := resourceAwsServiceCatalogLaunchTemplateConstraintParseRule(ruleMap.(map[string]interface{}))
 			if err != nil {
 				return err
@@ -176,7 +176,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintParseRule(m map[string]int
 				return "", nil, err
 			}
 		} else if k == "assertion" {
-			for _, assertMap := range v.([]interface{}) {
+			for _, assertMap := range v.(*schema.Set).List() {
 				assert, err := resourceAwsServiceCatalogLaunchTemplateConstraintParseRuleAsserts(assertMap.(map[string]interface{}))
 				if err != nil {
 					return "", nil, err

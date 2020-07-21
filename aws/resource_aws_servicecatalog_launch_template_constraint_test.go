@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSServiceCatalogLaunchTemplateConstraint_basic(t *testing.T) {
@@ -31,9 +31,12 @@ func TestAccAWSServiceCatalogLaunchTemplateConstraint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 					resource.TestCheckResourceAttr(resourceName, "type", "TEMPLATE"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
-					// rules can come back set in any order
-					resource.TestMatchResourceAttr(resourceName, "rule.0.name", regexp.MustCompile("^rule0.$")),
-					resource.TestMatchResourceAttr(resourceName, "rule.1.name", regexp.MustCompile("^rule0.$")),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name": "rule01",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name": "rule02",
+					}),
 				),
 			},
 			{
