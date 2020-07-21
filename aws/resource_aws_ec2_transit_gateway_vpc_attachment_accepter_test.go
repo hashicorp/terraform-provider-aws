@@ -193,8 +193,8 @@ func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName string) s
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -271,11 +271,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_basic(rName string) string {
-	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + fmt.Sprintf(`
+	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + `
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
   transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tags(rName string) string {

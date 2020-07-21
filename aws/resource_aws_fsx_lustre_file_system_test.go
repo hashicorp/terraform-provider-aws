@@ -471,7 +471,7 @@ func testAccCheckFsxLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.Tes
 }
 
 func testAccAwsFsxLustreFileSystemConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -490,7 +490,7 @@ resource "aws_subnet" "test1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigExportPath(rName, exportPrefix string) string {
@@ -541,7 +541,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = "${aws_vpc.test.id}"
@@ -566,11 +566,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
   subnet_ids         = ["${aws_subnet.test1.id}"]
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds2() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = "${aws_vpc.test.id}"
@@ -614,7 +614,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
   subnet_ids         = ["${aws_subnet.test1.id}"]
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigStorageCapacity(storageCapacity int) string {
@@ -627,12 +627,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccAwsFsxLustreFileSystemConfigSubnetIds1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string {

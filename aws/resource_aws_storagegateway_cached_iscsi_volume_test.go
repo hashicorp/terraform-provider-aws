@@ -68,7 +68,7 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"

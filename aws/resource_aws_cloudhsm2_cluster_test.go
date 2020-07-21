@@ -157,7 +157,7 @@ func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 }
 
 func testAccAWSCloudHsmV2ClusterConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
@@ -191,16 +191,16 @@ resource "aws_subnet" "cloudhsm_v2_test_subnets" {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-resource-basic"
   }
 }
-`)
+`
 }
 
 func testAccAWSCloudHsmV2ClusterConfig() string {
-	return testAccAWSCloudHsmV2ClusterConfigBase() + fmt.Sprintf(`
+	return testAccAWSCloudHsmV2ClusterConfigBase() + `
 resource "aws_cloudhsm_v2_cluster" "cluster" {
   hsm_type   = "hsm1.medium"
   subnet_ids = ["${aws_subnet.cloudhsm_v2_test_subnets.*.id[0]}", "${aws_subnet.cloudhsm_v2_test_subnets.*.id[1]}"]
 }
-`)
+`
 }
 
 func testAccAWSCloudHsmV2ClusterConfigTags1(tagKey1, tagValue1 string) string {

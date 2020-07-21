@@ -54,7 +54,7 @@ func testSweepGlueTriggers(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueTrigger_Basic(t *testing.T) {
+func TestAccAWSGlueTrigger_basic(t *testing.T) {
 	var trigger glue.Trigger
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))

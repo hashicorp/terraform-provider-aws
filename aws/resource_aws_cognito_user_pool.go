@@ -722,8 +722,10 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
-
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = conn.CreateUserPool(params)
@@ -1145,8 +1147,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 				params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
 				return resource.RetryableError(err)
 			}
-
-			return resource.NonRetryableError(err)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
 		})
 		if isResourceTimeoutError(err) {
 			_, err = conn.UpdateUserPool(params)

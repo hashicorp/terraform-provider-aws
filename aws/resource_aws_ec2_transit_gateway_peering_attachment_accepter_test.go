@@ -171,11 +171,11 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentAccepterConfig_basic_sameAccoun
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSEc2TransitGatewayPeeringAttachmentAccepterConfigBase(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.test.id
 }
-`))
+`)
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentAccepterConfig_tags_sameAccount(rName string) string {

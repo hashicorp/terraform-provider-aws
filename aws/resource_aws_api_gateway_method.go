@@ -90,12 +90,6 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 				Optional: true,
 			},
 
-			"request_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `request_parameters` argument instead",
-			},
-
 			"request_validator_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -214,14 +208,6 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("request_models") {
 		operations = append(operations, expandApiGatewayRequestResponseModelOperations(d, "request_models", "requestModels")...)
-	}
-
-	if d.HasChange("request_parameters_in_json") {
-		ops, err := deprecatedExpandApiGatewayMethodParametersJSONOperations(d, "request_parameters_in_json", "requestParameters")
-		if err != nil {
-			return err
-		}
-		operations = append(operations, ops...)
 	}
 
 	if d.HasChange("request_parameters") {

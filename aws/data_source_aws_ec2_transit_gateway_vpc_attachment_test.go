@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -58,11 +57,11 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -102,15 +101,15 @@ data "aws_ec2_transit_gateway_vpc_attachment" "test" {
     values = ["${aws_ec2_transit_gateway_vpc_attachment.test.id}"]
   }
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -147,5 +146,5 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 data "aws_ec2_transit_gateway_vpc_attachment" "test" {
   id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
 }
-`)
+`
 }

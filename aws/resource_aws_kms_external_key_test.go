@@ -511,9 +511,9 @@ func testAccCheckAWSKmsExternalKeyRecreated(i, j *kms.KeyMetadata) resource.Test
 }
 
 func testAccAWSKmsExternalKeyConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_kms_external_key" "test" {}
-`)
+`
 }
 
 func testAccAWSKmsExternalKeyConfigDeletionWindowInDays(deletionWindowInDays int) string {

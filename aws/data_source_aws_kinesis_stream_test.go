@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAWSKinesisStreamDataSource(t *testing.T) {
+func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 
 	sn := fmt.Sprintf("terraform-kinesis-test-%d", acctest.RandInt())

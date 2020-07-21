@@ -356,7 +356,10 @@ func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) err
 				fmt.Errorf("Grant still exists while expected to be revoked, retyring revocation check: %s", *grant.GrantId))
 		}
 
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)

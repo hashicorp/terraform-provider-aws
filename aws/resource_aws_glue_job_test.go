@@ -55,7 +55,7 @@ func testSweepGlueJobs(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueJob_Basic(t *testing.T) {
+func TestAccAWSGlueJob_basic(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
