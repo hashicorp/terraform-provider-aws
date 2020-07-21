@@ -3,3 +3,15 @@
 # Service specific owners
 /aws/*_aws_fsx_*.go     @drfaust92
 /website/**/fsx*        @drfaust92
+
+/aws/*_aws_codeartifact_*.go     @drfaust92
+/website/**/codeartifact*        @drfaust92
+
+/aws/*_aws_storagegateway_*.go     @drfaust92
+/website/**/storagegateway*        @drfaust92
+
+/aws/*_aws_sagemaker_*.go     @drfaust92
+/website/**/sagemaker*        @drfaust92
+
+/aws/*_aws_glue_*.go     @drfaust92
+/website/**/glue*        @drfaust92
