@@ -171,7 +171,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 * `max_retries` - (Optional) This is the maximum number of times an API
   call is retried, in the case where requests are being throttled or
   experiencing transient failures. The delay between the subsequent API
-  calls increases exponentially.
+  calls increases exponentially. If omitted, default value is `25`.
 
 * `allowed_account_ids` - (Optional) List of allowed AWS
   account IDs to prevent you from mistakenly using an incorrect one (and
