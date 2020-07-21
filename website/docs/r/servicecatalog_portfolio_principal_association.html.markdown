@@ -26,7 +26,7 @@ the association be absent in AWS until the remaining Terraform instance is re-ap
 
 ```hcl
 resource "aws_servicecatalog_portfolio_principal_association" "test" {
-  portfolio_id = "port-01234567890abc"
+  portfolio_id  = "port-01234567890abc"
   principal_arn = "arn:aws:iam::0123456789ab:root"
 }
 ```
