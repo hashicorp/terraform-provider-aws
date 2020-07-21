@@ -16,15 +16,15 @@ When the end users launches the product, they will see the rules you have applie
 
 ```hcl
 resource "aws_servicecatalog_constraint" "constraint" {
-    description = "Only Team Alpha Admins may launch"
-  parameters = <<EOF
+  description  = "Only Team Alpha Admins may launch"
+  parameters   = <<EOF
 {
   "LocalRoleName": "teams/alpha/Admin"
 }
 EOF
   portfolio_id = aws_servicecatalog_portfolio.myportfolio.id
-  product_id = aws_servicecatalog_product.myproduct.id
-  type = "LAUNCH"
+  product_id   = aws_servicecatalog_product.myproduct.id
+  type         = "LAUNCH"
 }
 ```
 
