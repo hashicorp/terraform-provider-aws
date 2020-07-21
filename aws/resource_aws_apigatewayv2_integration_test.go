@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSAPIGatewayV2Integration_basic(t *testing.T) {
+func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -36,6 +36,47 @@ func TestAccAWSAPIGatewayV2Integration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "MOCK"),
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
+					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
+					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_uri", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
@@ -311,17 +352,26 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
+func testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apigatewayv2_api" "test" {
+  name                       = %[1]q
+  protocol_type              = "HTTP"
+}
+`, rName)
+}
+
 func testAccAWSAPIGatewayV2IntegrationConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "MOCK"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP"
@@ -339,11 +389,11 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/json" = ""
   }
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "HTTP"
@@ -362,7 +412,7 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_lambda(rName string) string {
@@ -390,6 +440,18 @@ resource "aws_apigatewayv2_integration" "test" {
   passthrough_behavior          = "WHEN_NO_MATCH"
 }
 `, rName)
+}
+
+func testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName string) string {
+	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_integration" "test" {
+	api_id           = "${aws_apigatewayv2_api.test.id}"
+	integration_type = "HTTP_PROXY"
+
+	integration_method = "GET"
+	integration_uri    = "https://example.com"
+}
+`)
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLink(rName string) string {

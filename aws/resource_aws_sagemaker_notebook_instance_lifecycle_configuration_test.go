@@ -68,7 +68,7 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 	return nil
 }
 
-func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Basic(t *testing.T) {
+func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
 	rName := acctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"

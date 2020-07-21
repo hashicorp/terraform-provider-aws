@@ -158,7 +158,10 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		if isAWSErr(err, "MalformedPolicyDocument", "Invalid principal in policy") {
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		createResp, err = iamconn.CreateRole(request)

@@ -109,14 +109,14 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The unique ID that Amazon MQ generates for the broker.
 * `arn` - The ARN of the broker.
 * `instances` - A list of information about allocated brokers (both active & standby).
-  * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
-  * `instances.0.ip_address` - The IP Address of the broker.
-  * `instances.0.endpoints` - The broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
-     * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
-     * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
-     * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
-     * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
-     * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
+    * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
+    * `instances.0.ip_address` - The IP Address of the broker.
+    * `instances.0.endpoints` - The broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
+        * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
+        * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
+        * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
+        * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
+        * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
 
 ## Import
 

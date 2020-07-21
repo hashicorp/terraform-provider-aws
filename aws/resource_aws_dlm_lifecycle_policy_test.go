@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSDlmLifecyclePolicy_Basic(t *testing.T) {
+func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.basic"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 

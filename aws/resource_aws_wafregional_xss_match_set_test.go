@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
@@ -18,10 +19,9 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSWafRegionalXssMatchSetDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalXssMatchSetConfig(rName),
@@ -29,14 +29,18 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.field_to_match.0.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.field_to_match.0.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.field_to_match.0.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.field_to_match.0.type", "URI"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.text_transformation", "NONE"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "QUERY_STRING",
+						"text_transformation":   "NONE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "URI",
+						"text_transformation":   "NONE",
+					}),
 				),
 			},
 			{
@@ -112,10 +116,9 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSWafRegionalXssMatchSetDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalXssMatchSetConfig(rName),
@@ -123,14 +126,18 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.field_to_match.0.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.field_to_match.0.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.599421078.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.field_to_match.0.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.field_to_match.0.type", "URI"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.41660541.text_transformation", "NONE"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "QUERY_STRING",
+						"text_transformation":   "NONE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "URI",
+						"text_transformation":   "NONE",
+					}),
 				),
 			},
 			{
@@ -144,14 +151,18 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.42378128.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.42378128.field_to_match.0.data", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.42378128.field_to_match.0.type", "METHOD"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.42378128.text_transformation", "HTML_ENTITY_DECODE"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.3815294338.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.3815294338.field_to_match.0.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.3815294338.field_to_match.0.type", "BODY"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.3815294338.text_transformation", "CMD_LINE"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "GET",
+						"field_to_match.0.type": "METHOD",
+						"text_transformation":   "HTML_ENTITY_DECODE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "BODY",
+						"text_transformation":   "CMD_LINE",
+					}),
 				),
 			},
 		},

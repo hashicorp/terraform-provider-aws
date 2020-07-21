@@ -521,6 +521,41 @@ func TestTestCheckTypeSetElemNestedAttrs(t *testing.T) {
 			},
 		},
 		{
+			Description:       "value map has no non-empty values",
+			ResourceAddress:   "example_thing.test",
+			ResourceAttribute: "test.*",
+			Values:            map[string]string{"key": ""},
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"example_thing.test": {
+								Type:     "example_thing",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":  "1",
+										"id": "11111",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "has no non-empty values")
+			},
+		},
+		{
 			Description:       "attribute path does not end with sentinel value",
 			ResourceAddress:   "example_thing.test",
 			ResourceAttribute: "test",
@@ -559,7 +594,7 @@ func TestTestCheckTypeSetElemNestedAttrs(t *testing.T) {
 			Description:       "attribute not found",
 			ResourceAddress:   "example_thing.test",
 			ResourceAttribute: "test.*",
-			Values:            map[string]string{},
+			Values:            map[string]string{"key": "value"},
 			TerraformState: &terraform.State{
 				Version: 3,
 				Modules: []*terraform.ModuleState{
@@ -769,6 +804,46 @@ func TestTestCheckTypeSetElemNestedAttrs(t *testing.T) {
 										"test.%":          "1",
 										"test.12345.key1": "value1",
 										"test.12345.key2": "value2",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+		},
+		{
+			Description:       "single root TypeSet attribute unset/empty value match",
+			ResourceAddress:   "example_thing.test",
+			ResourceAttribute: "test.*",
+			Values: map[string]string{
+				"key1": "value1",
+				"key2": "",
+				"key3": "",
+			},
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"example_thing.test": {
+								Type:     "example_thing",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":               "4",
+										"id":              "11111",
+										"test.%":          "1",
+										"test.12345.key1": "value1",
+										"test.12345.key2": "",
+										// key3 is unset
 									},
 								},
 							},

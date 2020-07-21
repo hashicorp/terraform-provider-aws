@@ -43,7 +43,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the traffic mirror target.
+* `id` - The ID of the Traffic Mirror target.
+* `arn` - The ARN of the traffic mirror target.
 
 ## Import
 

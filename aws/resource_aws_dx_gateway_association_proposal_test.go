@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -163,9 +164,8 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories:   testAccProviderFactories(&providers),
-		CheckDestroy:        testAccCheckAwsDxGatewayAssociationProposalDestroy,
-		DisableBinaryDriver: true,
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn),
@@ -177,8 +177,8 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.2173830893", "10.255.255.0/30"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.2984398124", "10.255.255.8/30"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 				),
 			},
 			{
@@ -359,23 +359,23 @@ resource "aws_vpn_gateway" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfig_vpnGatewayId(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   vpn_gateway_id              = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   associated_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
@@ -407,23 +407,23 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccDxGatewayAssociationProposalConfigAllowedPrefixes1(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/16"]
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   associated_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationProposalConfigAllowedPrefixes2(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/24", "10.0.1.0/24"]
   dx_gateway_id               = "${aws_dx_gateway.test.id}"
   dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
   associated_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }

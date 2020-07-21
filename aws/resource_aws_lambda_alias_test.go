@@ -42,12 +42,43 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s/%s", funcName, aliasName),
+				ImportStateIdFunc: testAccAwsLambdaAliasImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
 				Config:   testAccAwsLambdaAliasConfigUsingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaAlias_FunctionName_Name(t *testing.T) {
+	var conf lambda.AliasConfiguration
+
+	resourceName := "aws_lambda_alias.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLambdaAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsLambdaAliasConfigUsingFunctionName(rName, rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaAliasExists(resourceName, &conf),
+					testAccCheckAwsLambdaAliasAttributes(&conf),
+					testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(&conf),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
+					testAccCheckAwsLambdaAliasInvokeArn(resourceName, &conf),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsLambdaAliasImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -80,6 +111,12 @@ func TestAccAWSLambdaAlias_nameupdate(t *testing.T) {
 					testAccCheckAwsLambdaAliasAttributes(&conf),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsLambdaAliasImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasNameUpdate),
@@ -118,6 +155,12 @@ func TestAccAWSLambdaAlias_routingconfig(t *testing.T) {
 					testAccCheckAwsLambdaAliasAttributes(&conf),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsLambdaAliasImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName),
@@ -234,6 +277,17 @@ func testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(mapping *lambda.AliasCo
 			return fmt.Errorf("Lambda alias routing config still exists after removal")
 		}
 		return nil
+	}
+}
+
+func testAccAwsLambdaAliasImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes["name"]), nil
 	}
 }
 

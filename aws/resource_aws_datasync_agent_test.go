@@ -285,7 +285,7 @@ func testAccCheckAWSDataSyncAgentNotRecreated(i, j *datasync.DescribeAgentOutput
 
 // testAccAWSDataSyncAgentConfigAgentBase uses the "thinstaller" AMI
 func testAccAWSDataSyncAgentConfigAgentBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
   owners      = ["amazon"]
@@ -376,15 +376,15 @@ resource "aws_instance" "test" {
     Name = "tf-acc-test-datasync-agent"
   }
 }
-`)
+`
 }
 
 func testAccAWSDataSyncAgentConfig() string {
-	return testAccAWSDataSyncAgentConfigAgentBase() + fmt.Sprintf(`
+	return testAccAWSDataSyncAgentConfigAgentBase() + `
 resource "aws_datasync_agent" "test" {
   ip_address = "${aws_instance.test.public_ip}"
 }
-`)
+`
 }
 
 func testAccAWSDataSyncAgentConfigName(rName string) string {
