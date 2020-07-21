@@ -23,7 +23,7 @@ though in most cases the more specific aws_servicecatalog_*_constraint will be m
 (in line with how AWS CloudFormation models this, as opposed to the AWS API).
 */
 func resourceAwsServiceCatalogConstraint() *schema.Resource {
-	var awsResourceIdPattern = regexp.MustCompile("^[a-zA-Z0-9_\\-]*")
+	var awsResourceIdPattern = regexp.MustCompile(`^[a-zA-Z0-9_\-]*`)
 	return &schema.Resource{
 		Create: resourceAwsServiceCatalogConstraintCreate,
 		Read:   resourceAwsServiceCatalogConstraintRead,

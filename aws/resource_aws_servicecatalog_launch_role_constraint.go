@@ -13,7 +13,7 @@ import (
 )
 
 func resourceAwsServiceCatalogLaunchRoleConstraint() *schema.Resource {
-	var awsResourceIdPattern = regexp.MustCompile("^[a-zA-Z0-9_\\-]*")
+	var awsResourceIdPattern = regexp.MustCompile(`^[a-zA-Z0-9_\-]*`)
 	return &schema.Resource{
 		Create: resourceAwsServiceCatalogLaunchRoleConstraintCreate,
 		Read:   resourceAwsServiceCatalogLaunchRoleConstraintRead,
