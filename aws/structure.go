@@ -4532,17 +4532,9 @@ func flattenDaxEncryptAtRestOptions(options *dax.SSEDescription) []map[string]in
 	return []map[string]interface{}{m}
 }
 
-func expandRdsClusterScalingConfiguration(l []interface{}, engineMode string) *rds.ScalingConfiguration {
+func expandRdsClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
 	if len(l) == 0 || l[0] == nil {
-		// Our default value for MinCapacity is different from AWS's.
-		// We need to override it here to avoid a non-empty plan with an empty ScalingConfiguration.
-		if engineMode == "serverless" {
-			return &rds.ScalingConfiguration{
-				MinCapacity: aws.Int64(int64(rdsClusterScalingConfiguration_DefaultMinCapacity)),
-			}
-		} else {
-			return nil
-		}
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
