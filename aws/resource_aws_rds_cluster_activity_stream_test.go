@@ -48,14 +48,12 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeAsync),
-					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -106,10 +104,9 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSClusterActivityStreamConfig_kmsKeyId(clusterName, instanceName),
@@ -143,10 +140,9 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSClusterActivityStreamConfig_modeSync(clusterName, instanceName),
@@ -186,10 +182,9 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSClusterActivityStreamConfig_resourceArn(newClusterName, newInstanceName),
@@ -334,7 +329,6 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn        = "${aws_rds_cluster.test.arn}"
-  apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.test.key_id}"
   mode         				= "async"
 	
@@ -376,7 +370,6 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn        = "${aws_rds_cluster.test.arn}"
-  apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.new_kms_key.key_id}"
   mode         				= "async"
 	
@@ -418,7 +411,6 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn        = "${aws_rds_cluster.test.arn}"
-  apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.test.key_id}"
   mode         				= "sync"
 	
@@ -460,7 +452,6 @@ resource "aws_rds_cluster_instance" "new_rds_instance_test" {
 
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn        = "${aws_rds_cluster.new_rds_cluster_test.arn}"
-  apply_immediately  	= true
   kms_key_id 					= "${aws_kms_key.test.key_id}"
   mode         				= "async"
 	

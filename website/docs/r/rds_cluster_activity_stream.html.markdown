@@ -12,9 +12,8 @@ Manages RDS Aurora Cluster Database Activity Streams.
 
 Database Activity Streams have some limits and requirements, You can refer to the [User Guide][1].
 
-~> **Note:** using `apply_immediately` can result in a
-brief downtime as the server reboots. See the AWS Docs on [RDS Maintenance][2]
-for more information.
+~> **Note:** `apply_immediately` always is true, cannot be modified. 
+Because when apply_immediately=false, terraform cannot get activity stream associated attributes.
 
 ~> **Note:** This resource depends on having one `aws_rds_cluster_instance` created.
 To avoid race conditions when all resources are being created together, you need to add explicit resource
@@ -66,7 +65,6 @@ The following arguments are supported:
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
 * `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. One of: `sync` , `async` .
 * `kms_key_id` - (Required, Forces new resources) The AWS KMS key identifier used for encrypting messages in the database activity stream.
-* `apply_immediately` - (Optional) Specifies whether or not the database activity stream is to start immediately, or during the next maintenance window. Default is `false`.
 
 
 ## Attributes Reference

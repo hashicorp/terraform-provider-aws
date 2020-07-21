@@ -16,7 +16,6 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsRDSClusterActivityStreamCreate,
 		Read:   resourceAwsRDSClusterActivityStreamRead,
-		Update: resourceAwsRDSClusterActivityStreamUpdate,
 		Delete: resourceAwsRDSClusterActivityStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -33,11 +32,6 @@ func resourceAwsRDSClusterActivityStream() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
-			},
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -65,13 +59,12 @@ func resourceAwsRDSClusterActivityStreamCreate(d *schema.ResourceData, meta inte
 	conn := meta.(*AWSClient).rdsconn
 
 	resourceArn := d.Get("resource_arn").(string)
-	applyImmediately := d.Get("apply_immediately").(bool)
 	kmsKeyId := d.Get("kms_key_id").(string)
 	mode := d.Get("mode").(string)
 
 	startActivityStreamInput := &rds.StartActivityStreamInput{
 		ResourceArn:      aws.String(resourceArn),
-		ApplyImmediately: aws.Bool(applyImmediately),
+		ApplyImmediately: aws.Bool(true),
 		KmsKeyId:         aws.String(kmsKeyId),
 		Mode:             aws.String(mode),
 	}
@@ -145,22 +138,6 @@ func resourceAwsRDSClusterActivityStreamRead(d *schema.ResourceData, meta interf
 	d.Set("mode", dbc.ActivityStreamMode)
 
 	return nil
-}
-
-func resourceAwsRDSClusterActivityStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChanges("resource_arn", "kms_key_id", "mode") {
-		log.Printf("[DEBUG] Stopping RDS Cluster Activity Stream before updating")
-		if err := resourceAwsRDSClusterActivityStreamDelete(d, meta); err != nil {
-			return err
-		}
-
-		log.Printf("[DEBUG] Starting RDS Cluster Activity Stream")
-		if err := resourceAwsRDSClusterActivityStreamCreate(d, meta); err != nil {
-			return err
-		}
-	}
-
-	return resourceAwsRDSClusterActivityStreamRead(d, meta)
 }
 
 func resourceAwsRDSClusterActivityStreamDelete(d *schema.ResourceData, meta interface{}) error {
