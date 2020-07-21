@@ -12,6 +12,8 @@ BREAKING CHANGES
 * data-source/aws_efs_file_system: Return an error when a single result is not found [GH-14005]
 * data-source/aws_launch_template: Return an error when a single result is not found [GH-10521]
 * resource/aws_acm_certificate: `certificate_body`, `certificate_chain`, and `private_key` attributes are no longer stored in the Terraform state with hash values [GH-9685]
+* resource/aws_api_gateway_method_settings: Remove `Computed` property from `throttling_burst_limit` and `throttling_rate_limit` arguments, enabling drift detection [GH-14266]
+* resource/aws_api_gateway_method_settings: Update `throttling_burst_limit` and `throttling_rate_limit` argument defaults to match API default of `-1` to keep throttling disabled [GH-14266]
 * resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
 * resource/aws_autoscaling_group: `availability_zones` and `vpc_zone_identifier` argument conflict now reported at plan-time [GH-12927]
 * resource/aws_autoscaling_group: Remove `Computed` property from `load_balancers` and `target_group_arns` arguments, enabling drift detection [GH-14064]
@@ -37,6 +39,7 @@ ENHANCEMENTS
 * provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
 * provider: Add `assume_role` configuration block `duration_seconds`, `policy_arns`, `tags`, and `transitive_tag_keys` arguments [GH-14077]
 * data-source/aws_instance: Add `secondary_private_ips` attribute [GH-14079]
+* resource/aws_api_gateway_method_settings: Add import support [GH-14266]
 * resource/aws_instance: Add `secondary_private_ips` argument (conflicts with `network_interface` configuration block) [GH-14079]
 
 BUG FIXES
