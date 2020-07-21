@@ -145,7 +145,7 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_update_all(t *testing
 	})
 }
 
-func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioSuffix, _principalSuffix, portfolioSaltedName, principalSaltedName string, portfolioIdToSet *string) resource.TestCheckFunc {
+func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioSuffix, principalSuffix, portfolioSaltedName, principalSaltedName string, portfolioIdToSet *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 		rs, ok := s.RootModule().Resources["aws_servicecatalog_portfolio_principal_association.test"]
@@ -158,13 +158,21 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioS
 			return err
 		}
 
-		rsPortfolio, ok := s.RootModule().Resources["aws_servicecatalog_portfolio.test"+portfolioSuffix]
-		if !ok {
-			return fmt.Errorf("portfolio %s not found", portfolioSaltedName)
-		}
-		if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSaltedName) {
-			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSaltedName)
-		}
+        rsPortfolio, ok := s.RootModule().Resources["aws_servicecatalog_portfolio.test"+portfolioSuffix]
+        if !ok {
+            return fmt.Errorf("portfolio %s not found", portfolioSaltedName)
+        }
+        if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSaltedName) {
+            return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSaltedName)
+        }
+
+        rsPrincipal, ok2 := s.RootModule().Resources["aws_servicecatalog_principal.test"+principalSuffix]
+        if !ok2 {
+            return fmt.Errorf("principal %s not found", principalSaltedName)
+        }
+        if !strings.Contains(rsPrincipal.Primary.Attributes["name"], principalSaltedName) {
+            return fmt.Errorf("principal from association ID %s did not contain expected salt '%s'", rs.Primary.ID, principalSaltedName)
+        }
 
 		if !strings.Contains(principalArn, principalSaltedName) {
 			return fmt.Errorf("principal ARN from ID %s did not contain expected salt '%s'", rs.Primary.ID, principalSaltedName)
