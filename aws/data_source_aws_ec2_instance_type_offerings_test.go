@@ -80,18 +80,18 @@ func testAccPreCheckAWSEc2InstanceTypeOfferings(t *testing.T) {
 }
 
 func testAccAWSEc2InstanceTypeOfferingsDataSourceConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
     name   = "instance-type"
     values = ["t2.micro", "t3.micro"]
   }
 }
-`)
+`
 }
 
 func testAccAWSEc2InstanceTypeOfferingsDataSourceConfigLocationType() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -109,5 +109,5 @@ data "aws_ec2_instance_type_offerings" "test" {
 
   location_type = "availability-zone"
 }
-`)
+`
 }

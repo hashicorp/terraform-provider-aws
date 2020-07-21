@@ -378,6 +378,11 @@ func resourceAwsDbInstanceResourceV0() *schema.Resource {
 }
 
 func resourceAwsDbInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if rawState == nil {
+		return nil, nil
+	}
+
 	rawState["delete_automated_backups"] = true
+
 	return rawState, nil
 }

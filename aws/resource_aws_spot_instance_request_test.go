@@ -459,7 +459,7 @@ func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	}
 }
 
-func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_InterruptStop(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -484,7 +484,7 @@ func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequestInterruptHibernate(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_InterruptHibernate(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -653,8 +653,8 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -709,8 +709,8 @@ tags = {
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"

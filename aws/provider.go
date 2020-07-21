@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -219,6 +218,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_local_gateways":                         dataSourceAwsEc2LocalGateways(),
 			"aws_ec2_local_gateway_route_table":              dataSourceAwsEc2LocalGatewayRouteTable(),
 			"aws_ec2_local_gateway_route_tables":             dataSourceAwsEc2LocalGatewayRouteTables(),
+			"aws_ec2_local_gateway_virtual_interface":        dataSourceAwsEc2LocalGatewayVirtualInterface(),
 			"aws_ec2_local_gateway_virtual_interface_group":  dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup(),
 			"aws_ec2_local_gateway_virtual_interface_groups": dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups(),
 			"aws_ec2_transit_gateway":                        dataSourceAwsEc2TransitGateway(),
@@ -227,6 +227,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_transit_gateway_route_table":            dataSourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_vpc_attachment":         dataSourceAwsEc2TransitGatewayVpcAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment":         dataSourceAwsEc2TransitGatewayVpnAttachment(),
+			"aws_ecr_authorization_token":                    dataSourceAwsEcrAuthorizationToken(),
 			"aws_ecr_image":                                  dataSourceAwsEcrImage(),
 			"aws_ecr_repository":                             dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                                dataSourceAwsEcsCluster(),
@@ -235,6 +236,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_task_definition":                        dataSourceAwsEcsTaskDefinition(),
 			"aws_customer_gateway":                           dataSourceAwsCustomerGateway(),
 			"aws_efs_access_point":                           dataSourceAwsEfsAccessPoint(),
+			"aws_efs_access_points":                          dataSourceAwsEfsAccessPoints(),
 			"aws_efs_file_system":                            dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                           dataSourceAwsEfsMountTarget(),
 			"aws_eip":                                        dataSourceAwsEip(),
@@ -286,6 +288,12 @@ func Provider() terraform.ResourceProvider {
 			"aws_network_interfaces":                         dataSourceAwsNetworkInterfaces(),
 			"aws_organizations_organization":                 dataSourceAwsOrganizationsOrganization(),
 			"aws_organizations_organizational_units":         dataSourceAwsOrganizationsOrganizationalUnits(),
+			"aws_outposts_outpost":                           dataSourceAwsOutpostsOutpost(),
+			"aws_outposts_outpost_instance_type":             dataSourceAwsOutpostsOutpostInstanceType(),
+			"aws_outposts_outpost_instance_types":            dataSourceAwsOutpostsOutpostInstanceTypes(),
+			"aws_outposts_outposts":                          dataSourceAwsOutpostsOutposts(),
+			"aws_outposts_site":                              dataSourceAwsOutpostsSite(),
+			"aws_outposts_sites":                             dataSourceAwsOutpostsSites(),
 			"aws_partition":                                  dataSourceAwsPartition(),
 			"aws_prefix_list":                                dataSourceAwsPrefixList(),
 			"aws_pricing_product":                            dataSourceAwsPricingProduct(),
@@ -307,6 +315,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_s3_bucket_object":                           dataSourceAwsS3BucketObject(),
 			"aws_s3_bucket_objects":                          dataSourceAwsS3BucketObjects(),
 			"aws_secretsmanager_secret":                      dataSourceAwsSecretsManagerSecret(),
+			"aws_secretsmanager_secret_rotation":             dataSourceAwsSecretsManagerSecretRotation(),
 			"aws_secretsmanager_secret_version":              dataSourceAwsSecretsManagerSecretVersion(),
 			"aws_servicequotas_service":                      dataSourceAwsServiceQuotasService(),
 			"aws_servicequotas_service_quota":                dataSourceAwsServiceQuotasServiceQuota(),
@@ -342,7 +351,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafv2_regex_pattern_set":                    dataSourceAwsWafv2RegexPatternSet(),
 			"aws_wafv2_rule_group":                           dataSourceAwsWafv2RuleGroup(),
 			"aws_wafv2_web_acl":                              dataSourceAwsWafv2WebACL(),
-			"aws_workspaces_bundle":                          dataSourceAwsWorkspaceBundle(),
+			"aws_workspaces_bundle":                          dataSourceAwsWorkspacesBundle(),
+			"aws_workspaces_directory":                       dataSourceAwsWorkspacesDirectory(),
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
@@ -536,9 +546,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_ebs_volume":                                          resourceAwsEbsVolume(),
 			"aws_ec2_availability_zone_group":                         resourceAwsEc2AvailabilityZoneGroup(),
 			"aws_ec2_capacity_reservation":                            resourceAwsEc2CapacityReservation(),
+			"aws_ec2_client_vpn_authorization_rule":                   resourceAwsEc2ClientVpnAuthorizationRule(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
+			"aws_ec2_client_vpn_route":                                resourceAwsEc2ClientVpnRoute(),
 			"aws_ec2_fleet":                                           resourceAwsEc2Fleet(),
+			"aws_ec2_local_gateway_route":                             resourceAwsEc2LocalGatewayRoute(),
+			"aws_ec2_local_gateway_route_table_vpc_association":       resourceAwsEc2LocalGatewayRouteTableVpcAssociation(),
 			"aws_ec2_tag":                                             resourceAwsEc2Tag(),
 			"aws_ec2_traffic_mirror_filter":                           resourceAwsEc2TrafficMirrorFilter(),
 			"aws_ec2_traffic_mirror_filter_rule":                      resourceAwsEc2TrafficMirrorFilterRule(),
@@ -772,6 +786,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_sagemaker_notebook_instance":                         resourceAwsSagemakerNotebookInstance(),
 			"aws_secretsmanager_secret":                               resourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":                       resourceAwsSecretsManagerSecretVersion(),
+			"aws_secretsmanager_secret_rotation":                      resourceAwsSecretsManagerSecretRotation(),
 			"aws_ses_active_receipt_rule_set":                         resourceAwsSesActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":                                 resourceAwsSesDomainIdentity(),
 			"aws_ses_domain_identity_verification":                    resourceAwsSesDomainIdentityVerification(),
@@ -900,6 +915,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafv2_regex_pattern_set":                             resourceAwsWafv2RegexPatternSet(),
 			"aws_wafv2_rule_group":                                    resourceAwsWafv2RuleGroup(),
 			"aws_wafv2_web_acl":                                       resourceAwsWafv2WebACL(),
+			"aws_wafv2_web_acl_association":                           resourceAwsWafv2WebACLAssociation(),
+			"aws_wafv2_web_acl_logging_configuration":                 resourceAwsWafv2WebACLLoggingConfiguration(),
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
 			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_workspaces_directory":                                resourceAwsWorkspacesDirectory(),
@@ -1004,18 +1021,6 @@ func init() {
 			"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 			"use virtual hosted bucket addressing when possible\n" +
 			"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-
-		"assume_role_role_arn": "The ARN of an IAM role to assume prior to making API calls.",
-
-		"assume_role_session_name": "The session name to use when assuming the role. If omitted," +
-			" no session name is passed to the AssumeRole call.",
-
-		"assume_role_external_id": "The external ID to use when assuming the role. If omitted," +
-			" no external ID is passed to the AssumeRole call.",
-
-		"assume_role_policy": "The permissions applied when assuming a role. You cannot use," +
-			" this policy to grant further permissions that are in excess to those of the, " +
-			" role that is being assumed.",
 	}
 
 	endpointServiceNames = []string{
@@ -1128,6 +1133,7 @@ func init() {
 		"rds",
 		"redshift",
 		"resourcegroups",
+		"resourcegroupstaggingapi",
 		"route53",
 		"route53domains",
 		"route53resolver",
@@ -1169,6 +1175,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
+		CredsFilename:           d.Get("shared_credentials_file").(string),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
@@ -1182,32 +1189,68 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		terraformVersion:        terraformVersion,
 	}
 
-	// Set CredsFilename, expanding home directory
-	credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
-	if err != nil {
-		return nil, err
-	}
-	config.CredsFilename = credsPath
+	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
+		m := l[0].(map[string]interface{})
 
-	assumeRoleList := d.Get("assume_role").([]interface{})
-	if len(assumeRoleList) == 1 {
-		if assumeRoleList[0] != nil {
-			assumeRole := assumeRoleList[0].(map[string]interface{})
-			config.AssumeRoleARN = assumeRole["role_arn"].(string)
-			config.AssumeRoleSessionName = assumeRole["session_name"].(string)
-			config.AssumeRoleExternalID = assumeRole["external_id"].(string)
-
-			if v := assumeRole["policy"].(string); v != "" {
-				config.AssumeRolePolicy = v
-			}
-
-			log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
-				config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
-		} else {
-			log.Printf("[INFO] Empty assume_role block read from configuration")
+		if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+			config.AssumeRoleDurationSeconds = v
 		}
-	} else {
-		log.Printf("[INFO] No assume_role block read from configuration")
+
+		if v, ok := m["external_id"].(string); ok && v != "" {
+			config.AssumeRoleExternalID = v
+		}
+
+		if v, ok := m["policy"].(string); ok && v != "" {
+			config.AssumeRolePolicy = v
+		}
+
+		if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+			for _, policyARNRaw := range policyARNSet.List() {
+				policyARN, ok := policyARNRaw.(string)
+
+				if !ok {
+					continue
+				}
+
+				config.AssumeRolePolicyARNs = append(config.AssumeRolePolicyARNs, policyARN)
+			}
+		}
+
+		if v, ok := m["role_arn"].(string); ok && v != "" {
+			config.AssumeRoleARN = v
+		}
+
+		if v, ok := m["session_name"].(string); ok && v != "" {
+			config.AssumeRoleSessionName = v
+		}
+
+		if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
+			config.AssumeRoleTags = make(map[string]string)
+
+			for k, vRaw := range tagMapRaw {
+				v, ok := vRaw.(string)
+
+				if !ok {
+					continue
+				}
+
+				config.AssumeRoleTags[k] = v
+			}
+		}
+
+		if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
+			for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
+				transitiveTagKey, ok := transitiveTagKeyRaw.(string)
+
+				if !ok {
+					continue
+				}
+
+				config.AssumeRoleTransitiveTagKeys = append(config.AssumeRoleTransitiveTagKeys, transitiveTagKey)
+			}
+		}
+
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID)
 	}
 
 	endpointsSet := d.Get("endpoints").(*schema.Set)
@@ -1244,28 +1287,48 @@ func assumeRoleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"role_arn": {
-					Type:        schema.TypeString,
+				"duration_seconds": {
+					Type:        schema.TypeInt,
 					Optional:    true,
-					Description: descriptions["assume_role_role_arn"],
+					Description: "Seconds to restrict the assume role session duration.",
 				},
-
-				"session_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: descriptions["assume_role_session_name"],
-				},
-
 				"external_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: descriptions["assume_role_external_id"],
+					Description: "Unique identifier that might be required for assuming a role in another account.",
 				},
-
 				"policy": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: descriptions["assume_role_policy"],
+					Description: "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+				},
+				"policy_arns": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				"role_arn": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+				},
+				"session_name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Identifier for the assumed role session.",
+				},
+				"tags": {
+					Type:        schema.TypeMap,
+					Optional:    true,
+					Description: "Assume role session tags.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				"transitive_tag_keys": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Assume role session tag keys to pass to any subsequent sessions.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
 		},

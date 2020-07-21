@@ -51,18 +51,45 @@ func testSweepIamRoles(region string) error {
 	}
 	conn := client.(*AWSClient).iamconn
 	prefixes := []string{
+		"another_rds",
+		"batch_tf_acc_test",
+		"codepipeline-",
+		"cognito_authenticated_",
+		"cognito_unauthenticated_",
+		"CWLtoKinesisRole_",
 		"ecs_instance_role",
 		"ecs_tf",
 		"EMR_AutoScaling_DefaultRole_",
+		"enhanced-monitoring-role-",
+		"es-domain-role-",
+		"event_",
+		"firehose",
+		"foo_role",
+		"foo-role",
+		"foobar",
 		"iam_emr",
+		"iam_for_lambda",
+		"iam_for_sfn",
+		"rds",
+		"role",
+		"sns-delivery-status",
+		"ssm_role",
+		"ssm-role",
 		"terraform-",
 		"test",
 		"tf",
 	}
+	// Some acceptance tests use acctest.RandString(10) rather than acctest.RandomWithPrefix()
+	regex := regexp.MustCompile(`^[a-zA-Z0-9]{10}$`)
 	roles := make([]*iam.Role, 0)
 
 	err = conn.ListRolesPages(&iam.ListRolesInput{}, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		for _, role := range page.Roles {
+			if regex.MatchString(aws.StringValue(role.RoleName)) {
+				roles = append(roles, role)
+				continue
+			}
+
 			for _, prefix := range prefixes {
 				if strings.HasPrefix(aws.StringValue(role.RoleName), prefix) {
 					roles = append(roles, role)

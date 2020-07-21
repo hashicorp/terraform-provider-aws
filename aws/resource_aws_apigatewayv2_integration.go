@@ -92,6 +92,14 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 					apigatewayv2.PassthroughBehaviorNever,
 					apigatewayv2.PassthroughBehaviorWhenNoTemplates,
 				}, false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// PassthroughBehavior not set for HTTP APIs
+					if old == "" && new == apigatewayv2.PassthroughBehaviorWhenNoMatch {
+						return true
+					}
+
+					return false
+				},
 			},
 			"payload_format_version": {
 				Type:     schema.TypeString,

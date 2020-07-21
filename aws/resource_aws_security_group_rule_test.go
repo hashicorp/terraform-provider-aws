@@ -1640,7 +1640,7 @@ resource "aws_security_group_rule" "%[2]s_rule_3" {
 `, rInt, rType))
 
 	if rType == "egress" {
-		b.WriteString(fmt.Sprintf(`
+		b.WriteString(`
 resource "aws_security_group_rule" "egress_rule_4" {
     security_group_id = "${aws_security_group.worker.id}"
     description = "Prefix List Description"
@@ -1650,7 +1650,7 @@ resource "aws_security_group_rule" "egress_rule_4" {
     to_port = 22
     prefix_list_ids = ["${aws_vpc_endpoint.s3-us-west-2.prefix_list_id}"]
 }
-        `))
+        `)
 	}
 
 	return b.String()

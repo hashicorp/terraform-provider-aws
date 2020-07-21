@@ -2350,13 +2350,13 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccAWSClusterConfig_generatedName() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_rds_cluster" "test" {
   master_username      = "root"
   master_password      = "password"
   skip_final_snapshot  = true
 }
-`)
+`
 }
 
 func testAccAWSClusterConfigWithFinalSnapshot(n int) string {

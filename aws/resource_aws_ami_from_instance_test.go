@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,6 +26,7 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 				),
 			},
@@ -128,7 +130,7 @@ func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccAWSAMIFromInstanceConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ec2_instance_type_offering" "available" {
   filter {
     name   = "instance-type"
@@ -161,7 +163,7 @@ resource "aws_instance" "test" {
     Name = "testAccAWSAMIFromInstanceConfig_TestAMI"
   }
 }
-`)
+`
 }
 
 func testAccAWSAMIFromInstanceConfig(rName string) string {

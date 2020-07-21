@@ -303,13 +303,13 @@ data "aws_s3_bucket_objects" "yesh" {
 }
 
 func testAccAWSDataSourceS3ObjectsConfigBasicViaAccessPoint(randInt int) string {
-	return testAccAWSDataSourceS3ObjectsConfigResourcesPlusAccessPoint(randInt) + fmt.Sprintf(`
+	return testAccAWSDataSourceS3ObjectsConfigResourcesPlusAccessPoint(randInt) + `
 data "aws_s3_bucket_objects" "yesh" {
   bucket    = "${aws_s3_access_point.test.arn}"
   prefix    = "arch/navajo/"
   delimiter = "/"
 }
-`)
+`
 }
 
 func testAccAWSDataSourceS3ObjectsConfigAll(randInt int) string {

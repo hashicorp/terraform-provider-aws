@@ -198,8 +198,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return resource.RetryableError(err)
 		}
-
-		return resource.NonRetryableError(err)
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = conn.CreatePipeline(params)

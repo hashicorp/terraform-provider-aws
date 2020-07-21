@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
@@ -205,10 +206,9 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayIntegrationDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayIntegrationConfigCacheKeyParameters(rName),
@@ -225,7 +225,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.path.param", "method.request.path.param"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_key_parameters.#", "1"),
-					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_key_parameters.550492954", "method.request.path.param"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_api_gateway_integration.test", "cache_key_parameters.*", "method.request.path.param"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "cache_namespace", "foobar"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/json", ""),
@@ -755,7 +755,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 }
 
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeVpcLink(rName string) string {
-	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   resource_id = "${aws_api_gateway_resource.test.id}"
@@ -770,11 +770,11 @@ resource "aws_api_gateway_integration" "test" {
   connection_type = "VPC_LINK"
   connection_id   = "${aws_api_gateway_vpc_link.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName string) string {
-	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   resource_id = "${aws_api_gateway_resource.test.id}"
@@ -786,5 +786,5 @@ resource "aws_api_gateway_integration" "test" {
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
 }
-`)
+`
 }

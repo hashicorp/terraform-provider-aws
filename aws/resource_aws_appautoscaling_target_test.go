@@ -322,8 +322,8 @@ func testAccAWSAppautoscalingTargetEmrClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type m3.xlarge is not supported in the requested availability zone.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -345,9 +345,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
-  core_instance_count  = 2
+  master_instance_group {
+    instance_type = "m3.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 2
+    instance_type  = "m3.xlarge"
+  }
 
   tags = {
     role     = "rolename"

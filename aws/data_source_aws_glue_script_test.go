@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -43,7 +42,7 @@ func TestAccDataSourceAWSGlueScript_Language_Scala(t *testing.T) {
 }
 
 func testAccDataSourceAWSGlueScriptConfigPython() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_glue_script" "test" {
   language = "PYTHON"
 
@@ -137,11 +136,11 @@ data "aws_glue_script" "test" {
     }
   }
 }
-`)
+`
 }
 
 func testAccDataSourceAWSGlueScriptConfigScala() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_glue_script" "test" {
   language = "SCALA"
 
@@ -235,5 +234,5 @@ data "aws_glue_script" "test" {
     }
   }
 }
-`)
+`
 }

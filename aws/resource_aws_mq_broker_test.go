@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -240,10 +241,9 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsMqBrokerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig(sgName, brokerName),
@@ -271,10 +271,12 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.console_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.username", "Test"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.password", "TestTest1234"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "0",
+						"username":       "Test",
+						"password":       "TestTest1234",
+					}),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
@@ -320,10 +322,9 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 </broker>`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsMqBrokerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig_allFieldsDefaultVpc(sgName, cfgNameBefore, cfgBodyBefore, brokerName),
@@ -349,17 +350,21 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.console_access", "true"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.2456940119", "first"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.3055489385", "second"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.607264868", "third"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.password", "SecondTestTest1234"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.username", "SecondTest"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.console_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.password", "TestTest1234"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.username", "Test"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "true",
+						"groups.#":       "3",
+						"username":       "SecondTest",
+						"password":       "SecondTestTest1234",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "first"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "second"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "third"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "0",
+						"username":       "Test",
+						"password":       "TestTest1234",
+					}),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
@@ -437,10 +442,9 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 </broker>`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsMqBrokerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig_allFieldsCustomVpc(sgName, cfgNameBefore, cfgBodyBefore, brokerName),
@@ -466,17 +470,21 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.console_access", "true"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.2456940119", "first"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.3055489385", "second"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.groups.607264868", "third"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.password", "SecondTestTest1234"),
-					resource.TestCheckResourceAttr(resourceName, "user.1344916805.username", "SecondTest"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.console_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.password", "TestTest1234"),
-					resource.TestCheckResourceAttr(resourceName, "user.3793764891.username", "Test"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "true",
+						"groups.#":       "3",
+						"username":       "SecondTest",
+						"password":       "SecondTestTest1234",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "first"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "second"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "third"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "0",
+						"username":       "Test",
+						"password":       "TestTest1234",
+					}),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
@@ -626,20 +634,21 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsMqBrokerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig_updateUsers1(sgName, brokerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user.3400735725.console_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user.3400735725.groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user.3400735725.password", "TestTest1111"),
-					resource.TestCheckResourceAttr(resourceName, "user.3400735725.username", "first"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "0",
+						"username":       "first",
+						"password":       "TestTest1111",
+					}),
 				),
 			},
 			{
@@ -654,14 +663,18 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "user.1074486012.console_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user.1074486012.groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user.1074486012.password", "TestTest2222"),
-					resource.TestCheckResourceAttr(resourceName, "user.1074486012.username", "second"),
-					resource.TestCheckResourceAttr(resourceName, "user.1166726986.console_access", "true"),
-					resource.TestCheckResourceAttr(resourceName, "user.1166726986.groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user.1166726986.password", "TestTest1111updated"),
-					resource.TestCheckResourceAttr(resourceName, "user.1166726986.username", "first"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "0",
+						"username":       "second",
+						"password":       "TestTest2222",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "true",
+						"groups.#":       "0",
+						"username":       "first",
+						"password":       "TestTest1111updated",
+					}),
 				),
 			},
 			// Deleting user + modify existing
@@ -670,11 +683,13 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user.2244717082.console_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user.2244717082.groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user.2244717082.groups.2282622326", "admin"),
-					resource.TestCheckResourceAttr(resourceName, "user.2244717082.password", "TestTest2222"),
-					resource.TestCheckResourceAttr(resourceName, "user.2244717082.username", "second"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "1",
+						"username":       "second",
+						"password":       "TestTest2222",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "admin"),
 				),
 			},
 		},
@@ -736,10 +751,9 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsMqBrokerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMqBrokerConfig(sgName, brokerName),
@@ -769,8 +783,10 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user.2209734970.username", "Test"),
-					resource.TestCheckResourceAttr(resourceName, "user.2209734970.password", "TestTest9999"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"username": "Test",
+						"password": "TestTest9999",
+					}),
 				),
 			},
 		},
