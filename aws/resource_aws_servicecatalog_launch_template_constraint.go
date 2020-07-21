@@ -14,7 +14,7 @@ import (
 )
 
 func resourceAwsServiceCatalogLaunchTemplateConstraint() *schema.Resource {
-	var awsResourceIdPattern = regexp.MustCompile("^[a-zA-Z0-9_\\-]*")
+	var awsResourceIdPattern = regexp.MustCompile(`^[a-zA-Z0-9_\-]*`)
 	return &schema.Resource{
 		Create: resourceAwsServiceCatalogLaunchTemplateConstraintCreate,
 		Read:   resourceAwsServiceCatalogLaunchTemplateConstraintRead,
