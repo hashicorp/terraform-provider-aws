@@ -175,7 +175,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.*\"")
 			},
 		},
 		{
@@ -246,7 +246,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.*\"")
 			},
 		},
 		{
@@ -319,7 +319,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.*\"")
 			},
 		},
 		{
@@ -390,7 +390,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.0.nested_test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.0.nested_test.*\"")
 			},
 		},
 	}
