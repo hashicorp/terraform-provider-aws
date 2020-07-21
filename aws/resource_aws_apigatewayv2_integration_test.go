@@ -305,6 +305,12 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
