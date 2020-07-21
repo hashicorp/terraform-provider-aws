@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,8 +31,9 @@ func TestAccAWSServiceCatalogLaunchTemplateConstraint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 					resource.TestCheckResourceAttr(resourceName, "type", "TEMPLATE"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.name", "rule01"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1.name", "rule02"),
+					// rules can come back set in any order
+					resource.TestMatchResourceAttr(resourceName, "rule.0.name", regexp.MustCompile("^rule0.$")),
+					resource.TestMatchResourceAttr(resourceName, "rule.1.name", regexp.MustCompile("^rule0.$")),
 				),
 			},
 			{
