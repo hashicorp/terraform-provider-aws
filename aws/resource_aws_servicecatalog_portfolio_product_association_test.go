@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_basic(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId, productId string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,8 +21,8 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId, &productId),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("", "", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("", "", saltedName, saltedName, &portfolioId, &productId),
 			},
 			{
 				ResourceName:      "aws_servicecatalog_portfolio_product_association.test",
@@ -34,7 +34,8 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_disappears(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resourceName := "aws_servicecatalog_portfolio_product_association.test"
 	var portfolioId, productId string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -42,10 +43,10 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_disappears(t *testing.T
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("", "", saltedName, saltedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId, &productId),
-					testAccCheckAwsServiceCatalogPortfolioProductAssociationDisappears(),
+					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("", "", saltedName, saltedName, &portfolioId, &productId),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogPortfolioProductAssociation(), resourceName),
 					func(s *terraform.State) error {
 						return testAccCheckAwsServiceCatalogPortfolioProductAssociationNotPresentInAws(&portfolioId, &productId)
 					},
@@ -57,8 +58,8 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_disappears(t *testing.T
 }
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_Portfolio_update(t *testing.T) {
-	salt := acctest.RandString(5)
-	salt2 := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5)   // RandomWithPrefix exceeds max length 20
+	saltedName2 := "tf-acc-test2-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId1, portfolioId2, productId1, productId2 string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -66,13 +67,13 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Portfolio_update(t *tes
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId1, &productId1),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("1", "1", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("1", "1", saltedName, saltedName, &portfolioId1, &productId1),
 			},
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt2, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("2", "1", saltedName2, saltedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt2, salt, &portfolioId2, &productId2),
+					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("2", "1", saltedName2, saltedName, &portfolioId2, &productId2),
 					func(s *terraform.State) error {
 						if portfolioId1 == portfolioId2 {
 							return fmt.Errorf("Portfolio ID should have changed")
@@ -89,8 +90,8 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Portfolio_update(t *tes
 }
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_Product_update(t *testing.T) {
-	salt := acctest.RandString(5)
-	salt2 := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5)   // RandomWithPrefix exceeds max length 20
+	saltedName2 := "tf-acc-test2-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId1, portfolioId2, productId1, productId2 string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -98,13 +99,13 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Product_update(t *testi
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId1, &productId1),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("1", "1", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("1", "1", saltedName, saltedName, &portfolioId1, &productId1),
 			},
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt2),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("1", "2", saltedName, saltedName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt2, &portfolioId2, &productId2),
+					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("1", "2", saltedName, saltedName2, &portfolioId2, &productId2),
 					func(s *terraform.State) error {
 						if portfolioId1 != portfolioId2 {
 							return fmt.Errorf("Portfolio ID should not have changed")
@@ -121,8 +122,8 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Product_update(t *testi
 }
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_update_all(t *testing.T) {
-	salt := acctest.RandString(5)
-	salt2 := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5)   // RandomWithPrefix exceeds max length 20
+	saltedName2 := "tf-acc-test2-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId1, portfolioId2, productId1, productId2 string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -130,13 +131,13 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_update_all(t *testing.T
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId1, &productId1),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("1", "1", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("1", "1", saltedName, saltedName, &portfolioId1, &productId1),
 			},
 			{
-				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt2, salt2),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic("2", "2", saltedName2, saltedName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt2, salt2, &portfolioId2, &productId2),
+					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists("2", "2", saltedName2, saltedName2, &portfolioId2, &productId2),
 					func(s *terraform.State) error {
 						if portfolioId1 == portfolioId2 {
 							return fmt.Errorf("Portfolio ID should have changed")
@@ -152,7 +153,7 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_update_all(t *testing.T
 	})
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(portfolioSalt, productSalt string, portfolioIdToSet, productIdToSet *string) resource.TestCheckFunc {
+func testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(portfolioResourceSuffix, productResourceSuffix, portfolioSaltedName, productSaltedName string, portfolioIdToSet, productIdToSet *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 		rs, ok := s.RootModule().Resources["aws_servicecatalog_portfolio_product_association.test"]
@@ -165,20 +166,20 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(portfolioSal
 			return err
 		}
 
-		rsPortfolio, ok := s.RootModule().Resources["aws_servicecatalog_portfolio.test-"+portfolioSalt]
+		rsPortfolio, ok := s.RootModule().Resources["aws_servicecatalog_portfolio.test"+portfolioResourceSuffix]
 		if !ok {
-			return fmt.Errorf("portfolio %s not found", portfolioSalt)
+			return fmt.Errorf("portfolio %s not found", portfolioSaltedName)
 		}
-		if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSalt) {
-			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSalt)
+		if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSaltedName) {
+			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSaltedName)
 		}
 
-		rsProduct, ok := s.RootModule().Resources["aws_servicecatalog_product.test-"+productSalt]
+		rsProduct, ok := s.RootModule().Resources["aws_servicecatalog_product.test"+productResourceSuffix]
 		if !ok {
-			return fmt.Errorf("product %s not found", productSalt)
+			return fmt.Errorf("product %s not found", productSaltedName)
 		}
-		if !strings.Contains(rsProduct.Primary.Attributes["name"], productSalt) {
-			return fmt.Errorf("product from association ID %s did not contain expected salt '%s'", rs.Primary.ID, productSalt)
+		if !strings.Contains(rsProduct.Primary.Attributes["name"], productSaltedName) {
+			return fmt.Errorf("product from association ID %s did not contain expected salt '%s'", rs.Primary.ID, productSaltedName)
 		}
 
 		*portfolioIdToSet = portfolioId
@@ -196,32 +197,6 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(portfolioSal
 			}
 		}
 		return fmt.Errorf("association not found between portfolio %s and product %s; portfolios were: %v", portfolioId, productId, page.PortfolioDetails)
-	}
-}
-
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationDisappears() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_servicecatalog_portfolio_product_association" {
-				continue // not our monkey
-			}
-			_, portfolioId, productId, err := parseServiceCatalogPortfolioProductAssociationResourceId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-			conn := testAccProvider.Meta().(*AWSClient).scconn
-			input := servicecatalog.DisassociateProductFromPortfolioInput{
-				PortfolioId: aws.String(portfolioId),
-				ProductId:   aws.String(productId),
-			}
-			_, err = conn.DisassociateProductFromPortfolio(&input)
-			if err != nil {
-				return fmt.Errorf("deleting Service Catalog Product(%s)/Portfolio(%s) Association failed: %s",
-					productId, portfolioId, err.Error())
-			}
-			return nil
-		}
-		return fmt.Errorf("no matching resource found to make disappear")
 	}
 }
 
@@ -265,40 +240,37 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociationNotPresentInAws(por
 	}
 }
 
-func testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(portfolioSalt, productSalt string) string {
+func testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(portfolioResourceSuffix, productResourceSuffix, portfolioSaltedName, productSaltedName string) string {
 	return composeConfig(
-		testAccAWSServiceCatalogPortfolioProductAssociationConfig_portfolio(portfolioSalt),
-		testAccAWSServiceCatalogPortfolioProductAssociationConfig_product(productSalt),
+		testAccAWSServiceCatalogPortfolioProductAssociationConfig_portfolio(portfolioResourceSuffix, portfolioSaltedName),
+		testAccAWSServiceCatalogPortfolioProductAssociationConfig_product(productResourceSuffix, productSaltedName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio_product_association" "test" {
-    portfolio_id = aws_servicecatalog_portfolio.test-%s.id
-    product_id = aws_servicecatalog_product.test-%s.id
+    portfolio_id = aws_servicecatalog_portfolio.test%[1]s.id
+    product_id = aws_servicecatalog_product.test%[2]s.id
 }
-`, portfolioSalt, productSalt))
+`, portfolioResourceSuffix, productResourceSuffix))
 }
 
-func testAccAWSServiceCatalogPortfolioProductAssociationConfig_portfolio(salt string) string {
+func testAccAWSServiceCatalogPortfolioProductAssociationConfig_portfolio(suffix, saltedName string) string {
 	// based on testAccAWSServiceCatalogPortfolioConfig_basic
 	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test-%s" {
-  name          = "%s"
+resource "aws_servicecatalog_portfolio" "test%[2]s" {
+  name          = "%[1]s"
   description   = "test-2"
   provider_name = "test-3"
 }
-`, salt, "tfm-test-"+salt)
+`, saltedName, suffix)
 }
 
-func testAccAWSServiceCatalogPortfolioProductAssociationConfig_product(salt string) string {
-	// based on testAccAWSServiceCatalogProductResourceConfig_basic
-	resourceName := "aws_servicecatalog_product.test-" + salt
-
-	thisResourceParts := strings.Split(resourceName, ".")
+func testAccAWSServiceCatalogPortfolioProductAssociationConfig_product(suffix, saltedName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+# TODO region is recommended but not required, and breaks it with: config is invalid: "region": this field cannot be set
+# data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "bucket-%[3]s"
-  region        = data.aws_region.current.name
+  bucket        = "%[1]s"
+#  region        = data.aws_region.current.name
   acl           = "private"
   force_destroy = true
 }
@@ -319,10 +291,10 @@ resource "aws_s3_bucket_object" "template1" {
 EOF
 }
 
-resource "%[1]s" "%[2]s" {
+resource "aws_servicecatalog_product" "test%[2]s" {
   description         = "arbitrary product description"
   distributor         = "arbitrary distributor"
-  name                = "product-%[3]s"
+  name                = "%[1]s"
   owner               = "arbitrary owner"
   product_type        = "CLOUD_FORMATION_TEMPLATE"
   support_description = "arbitrary support description"
@@ -331,12 +303,12 @@ resource "%[1]s" "%[2]s" {
 
   provisioning_artifact {
     description = "arbitrary description"
-    name        = "pa-%[3]s"
+    name        = "%[1]s"
     info = {
       LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template1.key}"
     }
   }
 
 }
-`, thisResourceParts[0], thisResourceParts[1], salt)
+`, saltedName, suffix)
 }
