@@ -68,6 +68,7 @@ func resourceAwsServiceCatalogConstraint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
+					// not available on AWS SDK API
 					"LAUNCH",
 					"NOTIFICATION",
 					"RESOURCE_UPDATE",
@@ -117,7 +118,7 @@ func resourceAwsServiceCatalogConstraintCreateFromJson(d *schema.ResourceData, m
 					fmt.Errorf("creating constraint failed: %s", err.Error()))
 			}
 		} else {
-			d.SetId(*result.ConstraintDetail.ConstraintId)
+			d.SetId(aws.StringValue(result.ConstraintDetail.ConstraintId))
 			err := resourceAwsServiceCatalogConstraintRead(d, meta)
 			if err != nil {
 				return resource.NonRetryableError(err)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -16,7 +15,7 @@ import (
 
 func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var dco servicecatalog.DescribeConstraintOutput
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,9 +23,9 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig(salt, ""),
+				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConstraint(resourceName, &dco),
+					testAccCheckServiceCatalogConstraintExists(resourceName, &dco),
 					resource.TestCheckResourceAttrSet(resourceName, "portfolio_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "product_id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
@@ -45,19 +44,19 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var describeConstraintOutput servicecatalog.DescribeConstraintOutput
 	var providers []*schema.Provider
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig(salt, ""),
+				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogConstraintExists(resourceName, &describeConstraintOutput),
-					testAccCheckServiceCatalogConstraintDisappears(&describeConstraintOutput),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,20 +65,21 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogConstraint_updateDescription(t *testing.T) {
-	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_servicecatalog_constraint.test"
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig(salt, ""),
+				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_constraint.test", "description", "description")),
+					resource.TestCheckResourceAttr(resourceName, "description", "description")),
 			},
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig(salt, "_updated"),
+				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, "-2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_servicecatalog_constraint.test", "description", "description_updated")),
+					resource.TestCheckResourceAttr(resourceName, "description", "description-2")),
 			},
 		},
 	})
@@ -87,29 +87,29 @@ func TestAccAWSServiceCatalogConstraint_updateDescription(t *testing.T) {
 
 func TestAccAWSServiceCatalogConstraint_updateParameters(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var dco servicecatalog.DescribeConstraintOutput
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig(salt, ""),
+				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConstraint(resourceName, &dco),
-					testAccCheckConstraintParametersLocalRoleName(&dco, "testpath/"+salt)),
+					testAccCheckServiceCatalogConstraintExists(resourceName, &dco),
+					testAccCheckServiceCatalogConstraintParametersLocalRoleName(&dco, "testpath/"+saltedName)),
 			},
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig(salt, "_updated"),
+				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, "-2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConstraint(resourceName, &dco),
-					testAccCheckConstraintParametersLocalRoleName(&dco, "testpath/"+salt+"_updated")),
+					testAccCheckServiceCatalogConstraintExists(resourceName, &dco),
+					testAccCheckServiceCatalogConstraintParametersLocalRoleName(&dco, "testpath/"+saltedName+"-2")),
 			},
 		},
 	})
 }
 
-func testAccCheckConstraintParametersLocalRoleName(dco *servicecatalog.DescribeConstraintOutput, expectedLocalRoleName string) resource.TestCheckFunc {
+func testAccCheckServiceCatalogConstraintParametersLocalRoleName(dco *servicecatalog.DescribeConstraintOutput, expectedLocalRoleName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		parameters := dco.ConstraintParameters
 		var bytes []byte = []byte(*parameters)
@@ -136,7 +136,7 @@ func testAccCheckConstraintParametersLocalRoleName(dco *servicecatalog.DescribeC
 	}
 }
 
-func testAccCheckConstraint(resourceName string, dco *servicecatalog.DescribeConstraintOutput) resource.TestCheckFunc {
+func testAccCheckServiceCatalogConstraintExists(resourceName string, dco *servicecatalog.DescribeConstraintOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -158,9 +158,24 @@ func testAccCheckConstraint(resourceName string, dco *servicecatalog.DescribeCon
 	}
 }
 
-func testAccAWSServiceCatalogConstraintConfig(salt string, tag string) string {
+func testAccCheckServiceCatalogConstraintDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).scconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_servicecatalog_constraint" {
+			continue // not our monkey
+		}
+		input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
+		_, err := conn.DescribeConstraint(&input)
+		if err == nil {
+			return fmt.Errorf("constraint still exists")
+		}
+	}
+	return nil
+}
+
+func testAccAWSServiceCatalogConstraintConfig(saltedName string, suffix string) string {
 	return composeConfig(
-		testAccAWSServiceCatalogConstraintConfigRequirements(salt),
+		testAccAWSServiceCatalogConstraintConfigRequirements(saltedName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_constraint" "test" {
   description = "description%[2]s"
@@ -173,14 +188,14 @@ EOF
   product_id = aws_servicecatalog_product.test.id
   type = "LAUNCH"
 }
-`, salt, tag))
+`, saltedName, suffix))
 }
 
-func testAccAWSServiceCatalogConstraintConfigRequirements(salt string) string {
+func testAccAWSServiceCatalogConstraintConfigRequirements(saltedName string) string {
 	return composeConfig(
-		testAccAWSServiceCatalogConstraintConfig_role(salt),
-		testAccAWSServiceCatalogConstraintConfig_portfolio(salt),
-		testAccAWSServiceCatalogConstraintConfig_product(salt),
+		testAccAWSServiceCatalogConstraintConfig_role(saltedName),
+		testAccAWSServiceCatalogConstraintConfig_portfolio(saltedName),
+		testAccAWSServiceCatalogConstraintConfig_product(saltedName),
 		testAccAWSServiceCatalogConstraintConfig_portfolioProductAssociation(),
 	)
 }
@@ -193,13 +208,10 @@ resource "aws_servicecatalog_portfolio_product_association" "test" {
 }`
 }
 
-func testAccAWSServiceCatalogConstraintConfig_product(salt string) string {
+func testAccAWSServiceCatalogConstraintConfig_product(saltedName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" { }
-
 resource "aws_s3_bucket" "test" {
-  bucket        = "terraform-test-%[1]s"
-  region        = data.aws_region.current.name
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
@@ -237,20 +249,20 @@ resource "aws_servicecatalog_product" "test" {
       LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
     }
   }
-}`, salt)
+}`, saltedName)
 }
 
-func testAccAWSServiceCatalogConstraintConfig_portfolio(salt string) string {
+func testAccAWSServiceCatalogConstraintConfig_portfolio(saltedName string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
   name          = %[1]q
   description   = "test-2"
   provider_name = "test-3"
 }
-`, salt)
+`, saltedName)
 }
 
-func testAccAWSServiceCatalogConstraintConfig_role(salt string) string {
+func testAccAWSServiceCatalogConstraintConfig_role(saltedName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -274,8 +286,8 @@ EOF
   force_detach_policies = false
   max_session_duration = 3600
 }
-resource "aws_iam_role" "test_alternate" {
-  name = "%[1]s_updated"
+resource "aws_iam_role" "test-2" {
+  name = "%[1]s-2"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -291,94 +303,10 @@ resource "aws_iam_role" "test_alternate" {
   ]
 }
 EOF
-  description = "%[1]s_updated"
+  description = "%[1]s-2"
   path = "/testpath/"
   force_detach_policies = false
   max_session_duration = 3600
 }
-`, salt)
-}
-
-func testAccCheckServiceCatalogConstraintDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_constraint" {
-			continue // not our monkey
-		}
-		input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
-		_, err := conn.DescribeConstraint(&input)
-		if err == nil {
-			return fmt.Errorf("constraint still exists")
-		}
-	}
-	return nil
-}
-
-func testAccCheckServiceCatalogConstraintExists(resourceName string, describeConstraintOutput *servicecatalog.DescribeConstraintOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ID is set")
-		}
-		input := servicecatalog.DescribeConstraintInput{Id: aws.String(rs.Primary.ID)}
-		conn := testAccProvider.Meta().(*AWSClient).scconn
-		constraint, err := conn.DescribeConstraint(&input)
-		if err != nil {
-			return err
-		}
-		*describeConstraintOutput = *constraint
-		return nil
-	}
-}
-
-func testAccCheckServiceCatalogConstraintDisappears(describeConstraintOutput *servicecatalog.DescribeConstraintOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).scconn
-		constraintId := describeConstraintOutput.ConstraintDetail.ConstraintId
-		input := servicecatalog.DeleteConstraintInput{Id: constraintId}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteConstraint(&input)
-			if err != nil {
-				if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") ||
-					isAWSErr(err, servicecatalog.ErrCodeInvalidParametersException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("could not delete constraint: #{err}")
-		}
-		if err := waitForServiceCatalogConstraintDeletion(conn, aws.StringValue(constraintId)); err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-func waitForServiceCatalogConstraintDeletion(conn *servicecatalog.ServiceCatalog, id string) error {
-	input := servicecatalog.DescribeConstraintInput{Id: aws.String(id)}
-	stateConf := resource.StateChangeConf{
-		Pending:      []string{servicecatalog.StatusAvailable},
-		Target:       []string{""},
-		Timeout:      5 * time.Minute,
-		PollInterval: 20 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.DescribeConstraint(&input)
-			if err != nil {
-				if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException,
-					fmt.Sprintf("Constraint %s not found.", id)) {
-					return 42, "", nil
-				}
-				return 42, "", err
-			}
-			return resp, aws.StringValue(resp.Status), nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
+`, saltedName)
 }
