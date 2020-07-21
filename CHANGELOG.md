@@ -21,6 +21,7 @@ BREAKING CHANGES
 * resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN [GH-12876]
 * resource/aws_launch_template: `network_interfaces` `delete_on_termination` argument changed from `bool` to `string` type [GH-8612]
 * resource/aws_msk_cluster: Update `encryption_info` `encryption_in_transit` `client_broker` argument default to match API default of `TLS` [GH-14132]
+* resource/aws_rds_cluster: Update `scaling_configuration` `min_capacity` argument default to match API default of `1` [GH-14268]
 * resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
 * resource/aws_s3_bucket: Convert `region` to read-only attribute [GH-14127]
 * resource/aws_security_group: Remove automatic `aws_security_group_rule` resource import [GH-12616]
