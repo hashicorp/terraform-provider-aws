@@ -198,8 +198,13 @@ func resourceAwsServiceCatalogConstraintDelete(d *schema.ResourceData, meta inte
 	input := servicecatalog.DeleteConstraintInput{Id: aws.String(constraintId)}
 	_, err := conn.DeleteConstraint(&input)
 	if err != nil {
+		if scErr, ok := err.(awserr.Error); ok &&
+			(scErr.Code() == servicecatalog.ErrCodeResourceNotFoundException) {
+			log.Printf("[DEBUG] Constraint not found (likely already deleted, possibly if product already disassociated): %s\n", constraintId)
+			return nil
+		}
 		return fmt.Errorf("deleting Service Catalog Constraint '%s' failed: %s", *input.Id, err.Error())
 	}
-	log.Printf("Deleted constraint: %s\n", constraintId)
+	log.Printf("[DEBUG] Deleted constraint: %s\n", constraintId)
 	return nil
 }
