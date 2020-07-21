@@ -3732,7 +3732,8 @@ type Av1Settings struct {
 	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"Av1FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use duplicate drop conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"Av1FramerateConversionAlgorithm"`
 
 	// When you use the API for transcode jobs that use frame rate conversion, specify
@@ -8994,16 +8995,27 @@ type H264Settings struct {
 
 	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
 	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-	// uses the PAR from your input video for your output. To use a different PAR,
-	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-	// than Follow source. When you choose SPECIFIED for this setting, you must
-	// also specify values for the parNumerator and parDenominator settings.
+	// uses the PAR from your input video for your output. To specify a different
+	// PAR in the console, choose any value other than Follow source. To specify
+	// a different PAR by editing the JSON job specification, choose SPECIFIED.
+	// When you choose SPECIFIED for this setting, you must also specify values
+	// for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"H264ParControl"`
 
-	// Pixel Aspect Ratio denominator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parDenominator is 33.
 	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
-	// Pixel Aspect Ratio numerator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parNumerator is 40.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
 	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
@@ -9477,7 +9489,8 @@ type H265Settings struct {
 	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"H265FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use duplicate drop conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"H265FramerateConversionAlgorithm"`
 
 	// Frame rate denominator.
@@ -9547,16 +9560,27 @@ type H265Settings struct {
 
 	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
 	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-	// uses the PAR from your input video for your output. To use a different PAR,
-	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-	// than Follow source. When you choose SPECIFIED for this setting, you must
-	// also specify values for the parNumerator and parDenominator settings.
+	// uses the PAR from your input video for your output. To specify a different
+	// PAR in the console, choose any value other than Follow source. To specify
+	// a different PAR by editing the JSON job specification, choose SPECIFIED.
+	// When you choose SPECIFIED for this setting, you must also specify values
+	// for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"H265ParControl"`
 
-	// Pixel Aspect Ratio denominator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parDenominator is 33.
 	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
-	// Pixel Aspect Ratio numerator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parNumerator is 40.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
 	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
@@ -10905,9 +10929,8 @@ type Input struct {
 	// selectors per input.
 	AudioSelectors map[string]*AudioSelector `locationName:"audioSelectors" type:"map"`
 
-	// Use Captions selectors (CaptionSelectors) to specify the captions data from
-	// the input that you will use in your outputs. You can use multiple captions
-	// selectors per input.
+	// Use captions selectors to specify the captions data from your input that
+	// you use in your outputs. You can use up to 20 captions selectors per input.
 	CaptionSelectors map[string]*CaptionSelector `locationName:"captionSelectors" type:"map"`
 
 	// Use Cropping selection (crop) to specify the video area that the service
@@ -11353,9 +11376,8 @@ type InputTemplate struct {
 	// selectors per input.
 	AudioSelectors map[string]*AudioSelector `locationName:"audioSelectors" type:"map"`
 
-	// Use Captions selectors (CaptionSelectors) to specify the captions data from
-	// the input that you will use in your outputs. You can use multiple captions
-	// selectors per input.
+	// Use captions selectors to specify the captions data from your input that
+	// you use in your outputs. You can use up to 20 captions selectors per input.
 	CaptionSelectors map[string]*CaptionSelector `locationName:"captionSelectors" type:"map"`
 
 	// Use Cropping selection (crop) to specify the video area that the service
@@ -14487,16 +14509,27 @@ type Mpeg2Settings struct {
 
 	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
 	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-	// uses the PAR from your input video for your output. To use a different PAR,
-	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-	// than Follow source. When you choose SPECIFIED for this setting, you must
-	// also specify values for the parNumerator and parDenominator settings.
+	// uses the PAR from your input video for your output. To specify a different
+	// PAR in the console, choose any value other than Follow source. To specify
+	// a different PAR by editing the JSON job specification, choose SPECIFIED.
+	// When you choose SPECIFIED for this setting, you must also specify values
+	// for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"Mpeg2ParControl"`
 
-	// Pixel Aspect Ratio denominator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parDenominator is 33.
 	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
-	// Pixel Aspect Ratio numerator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parNumerator is 40.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
 	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
@@ -14985,6 +15018,92 @@ func (s MxfSettings) GoString() string {
 // SetAfdSignaling sets the AfdSignaling field's value.
 func (s *MxfSettings) SetAfdSignaling(v string) *MxfSettings {
 	s.AfdSignaling = &v
+	return s
+}
+
+// For forensic video watermarking, MediaConvert supports Nagra NexGuard File
+// Marker watermarking. MediaConvert supports both PreRelease Content (NGPR/G2)
+// and OTT Streaming workflows.
+type NexGuardFileMarkerSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use the base64 license string that Nagra provides you. Enter it directly
+	// in your JSON job specification or in the console. Required when you include
+	// Nagra NexGuard File Marker watermarking (NexGuardWatermarkingSettings) in
+	// your job.
+	License *string `locationName:"license" min:"1" type:"string"`
+
+	// Specify the payload ID that you want associated with this output. Valid values
+	// vary depending on your Nagra NexGuard forensic watermarking workflow. Required
+	// when you include Nagra NexGuard File Marker watermarking (NexGuardWatermarkingSettings)
+	// in your job. For PreRelease Content (NGPR/G2), specify an integer from 1
+	// through 4,194,303. You must generate a unique ID for each asset you watermark,
+	// and keep a record of which ID you have assigned to each asset. Neither Nagra
+	// nor MediaConvert keep track of the relationship between output files and
+	// your IDs. For OTT Streaming, create two adaptive bitrate (ABR) stacks for
+	// each asset. Do this by setting up two output groups. For one output group,
+	// set the value of Payload ID (payload) to 0 in every output. For the other
+	// output group, set Payload ID (payload) to 1 in every output.
+	Payload *int64 `locationName:"payload" type:"integer"`
+
+	// Enter one of the watermarking preset strings that Nagra provides you. Required
+	// when you include Nagra NexGuard File Marker watermarking (NexGuardWatermarkingSettings)
+	// in your job.
+	Preset *string `locationName:"preset" min:"1" type:"string"`
+
+	// Optional. Ignore this setting unless Nagra support directs you to specify
+	// a value. When you don't specify a value here, the Nagra NexGuard library
+	// uses its default value.
+	Strength *string `locationName:"strength" type:"string" enum:"WatermarkingStrength"`
+}
+
+// String returns the string representation
+func (s NexGuardFileMarkerSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NexGuardFileMarkerSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NexGuardFileMarkerSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NexGuardFileMarkerSettings"}
+	if s.License != nil && len(*s.License) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("License", 1))
+	}
+	if s.Preset != nil && len(*s.Preset) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Preset", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLicense sets the License field's value.
+func (s *NexGuardFileMarkerSettings) SetLicense(v string) *NexGuardFileMarkerSettings {
+	s.License = &v
+	return s
+}
+
+// SetPayload sets the Payload field's value.
+func (s *NexGuardFileMarkerSettings) SetPayload(v int64) *NexGuardFileMarkerSettings {
+	s.Payload = &v
+	return s
+}
+
+// SetPreset sets the Preset field's value.
+func (s *NexGuardFileMarkerSettings) SetPreset(v string) *NexGuardFileMarkerSettings {
+	s.Preset = &v
+	return s
+}
+
+// SetStrength sets the Strength field's value.
+func (s *NexGuardFileMarkerSettings) SetStrength(v string) *NexGuardFileMarkerSettings {
+	s.Strength = &v
 	return s
 }
 
@@ -15832,6 +15951,49 @@ func (s *OutputSettings) SetHlsSettings(v *HlsSettings) *OutputSettings {
 	return s
 }
 
+// If you work with a third party video watermarking partner, use the group
+// of settings that correspond with your watermarking partner to include watermarks
+// in your output.
+type PartnerWatermarking struct {
+	_ struct{} `type:"structure"`
+
+	// For forensic video watermarking, MediaConvert supports Nagra NexGuard File
+	// Marker watermarking. MediaConvert supports both PreRelease Content (NGPR/G2)
+	// and OTT Streaming workflows.
+	NexguardFileMarkerSettings *NexGuardFileMarkerSettings `locationName:"nexguardFileMarkerSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s PartnerWatermarking) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PartnerWatermarking) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PartnerWatermarking) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PartnerWatermarking"}
+	if s.NexguardFileMarkerSettings != nil {
+		if err := s.NexguardFileMarkerSettings.Validate(); err != nil {
+			invalidParams.AddNested("NexguardFileMarkerSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNexguardFileMarkerSettings sets the NexguardFileMarkerSettings field's value.
+func (s *PartnerWatermarking) SetNexguardFileMarkerSettings(v *NexGuardFileMarkerSettings) *PartnerWatermarking {
+	s.NexguardFileMarkerSettings = v
+	return s
+}
+
 // A preset is a collection of preconfigured media conversion settings that
 // you want MediaConvert to apply to the output during the conversion process.
 type Preset struct {
@@ -16072,16 +16234,27 @@ type ProresSettings struct {
 
 	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
 	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-	// uses the PAR from your input video for your output. To use a different PAR,
-	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-	// than Follow source. When you choose SPECIFIED for this setting, you must
-	// also specify values for the parNumerator and parDenominator settings.
+	// uses the PAR from your input video for your output. To specify a different
+	// PAR in the console, choose any value other than Follow source. To specify
+	// a different PAR by editing the JSON job specification, choose SPECIFIED.
+	// When you choose SPECIFIED for this setting, you must also specify values
+	// for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"ProresParControl"`
 
-	// Pixel Aspect Ratio denominator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parDenominator is 33.
 	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
-	// Pixel Aspect Ratio numerator.
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parNumerator is 40.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
 	// Enables Slow PAL rate conversion. 23.976fps and 24fps input is relabeled
@@ -18437,6 +18610,11 @@ type VideoPreprocessor struct {
 	// individually. This setting is disabled by default.
 	NoiseReducer *NoiseReducer `locationName:"noiseReducer" type:"structure"`
 
+	// If you work with a third party video watermarking partner, use the group
+	// of settings that correspond with your watermarking partner to include watermarks
+	// in your output.
+	PartnerWatermarking *PartnerWatermarking `locationName:"partnerWatermarking" type:"structure"`
+
 	// Timecode burn-in (TimecodeBurnIn)--Burns the output timecode and specified
 	// prefix into the output.
 	TimecodeBurnin *TimecodeBurnin `locationName:"timecodeBurnin" type:"structure"`
@@ -18468,6 +18646,11 @@ func (s *VideoPreprocessor) Validate() error {
 	if s.NoiseReducer != nil {
 		if err := s.NoiseReducer.Validate(); err != nil {
 			invalidParams.AddNested("NoiseReducer", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.PartnerWatermarking != nil {
+		if err := s.PartnerWatermarking.Validate(); err != nil {
+			invalidParams.AddNested("PartnerWatermarking", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.TimecodeBurnin != nil {
@@ -18509,6 +18692,12 @@ func (s *VideoPreprocessor) SetImageInserter(v *ImageInserter) *VideoPreprocesso
 // SetNoiseReducer sets the NoiseReducer field's value.
 func (s *VideoPreprocessor) SetNoiseReducer(v *NoiseReducer) *VideoPreprocessor {
 	s.NoiseReducer = v
+	return s
+}
+
+// SetPartnerWatermarking sets the PartnerWatermarking field's value.
+func (s *VideoPreprocessor) SetPartnerWatermarking(v *PartnerWatermarking) *VideoPreprocessor {
+	s.PartnerWatermarking = v
 	return s
 }
 
@@ -19667,7 +19856,8 @@ const (
 	Av1FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use duplicate drop conversion.
 const (
 	// Av1FramerateConversionAlgorithmDuplicateDrop is a Av1FramerateConversionAlgorithm enum value
 	Av1FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -21040,10 +21230,11 @@ const (
 
 // Optional. Specify how the service determines the pixel aspect ratio (PAR)
 // for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-// uses the PAR from your input video for your output. To use a different PAR,
-// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-// than Follow source. When you choose SPECIFIED for this setting, you must
-// also specify values for the parNumerator and parDenominator settings.
+// uses the PAR from your input video for your output. To specify a different
+// PAR in the console, choose any value other than Follow source. To specify
+// a different PAR by editing the JSON job specification, choose SPECIFIED.
+// When you choose SPECIFIED for this setting, you must also specify values
+// for the parNumerator and parDenominator settings.
 const (
 	// H264ParControlInitializeFromSource is a H264ParControl enum value
 	H264ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -21317,7 +21508,8 @@ const (
 	H265FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use duplicate drop conversion.
 const (
 	// H265FramerateConversionAlgorithmDuplicateDrop is a H265FramerateConversionAlgorithm enum value
 	H265FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -21377,10 +21569,11 @@ const (
 
 // Optional. Specify how the service determines the pixel aspect ratio (PAR)
 // for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-// uses the PAR from your input video for your output. To use a different PAR,
-// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-// than Follow source. When you choose SPECIFIED for this setting, you must
-// also specify values for the parNumerator and parDenominator settings.
+// uses the PAR from your input video for your output. To specify a different
+// PAR in the console, choose any value other than Follow source. To specify
+// a different PAR by editing the JSON job specification, choose SPECIFIED.
+// When you choose SPECIFIED for this setting, you must also specify values
+// for the parNumerator and parDenominator settings.
 const (
 	// H265ParControlInitializeFromSource is a H265ParControl enum value
 	H265ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -22989,10 +23182,11 @@ const (
 
 // Optional. Specify how the service determines the pixel aspect ratio (PAR)
 // for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-// uses the PAR from your input video for your output. To use a different PAR,
-// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-// than Follow source. When you choose SPECIFIED for this setting, you must
-// also specify values for the parNumerator and parDenominator settings.
+// uses the PAR from your input video for your output. To specify a different
+// PAR in the console, choose any value other than Follow source. To specify
+// a different PAR by editing the JSON job specification, choose SPECIFIED.
+// When you choose SPECIFIED for this setting, you must also specify values
+// for the parNumerator and parDenominator settings.
 const (
 	// Mpeg2ParControlInitializeFromSource is a Mpeg2ParControl enum value
 	Mpeg2ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -23322,10 +23516,11 @@ const (
 
 // Optional. Specify how the service determines the pixel aspect ratio (PAR)
 // for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
-// uses the PAR from your input video for your output. To use a different PAR,
-// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
-// than Follow source. When you choose SPECIFIED for this setting, you must
-// also specify values for the parNumerator and parDenominator settings.
+// uses the PAR from your input video for your output. To specify a different
+// PAR in the console, choose any value other than Follow source. To specify
+// a different PAR by editing the JSON job specification, choose SPECIFIED.
+// When you choose SPECIFIED for this setting, you must also specify values
+// for the parNumerator and parDenominator settings.
 const (
 	// ProresParControlInitializeFromSource is a ProresParControl enum value
 	ProresParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -23820,6 +24015,26 @@ const (
 const (
 	// Vp9RateControlModeVbr is a Vp9RateControlMode enum value
 	Vp9RateControlModeVbr = "VBR"
+)
+
+// Optional. Ignore this setting unless Nagra support directs you to specify
+// a value. When you don't specify a value here, the Nagra NexGuard library
+// uses its default value.
+const (
+	// WatermarkingStrengthLightest is a WatermarkingStrength enum value
+	WatermarkingStrengthLightest = "LIGHTEST"
+
+	// WatermarkingStrengthLighter is a WatermarkingStrength enum value
+	WatermarkingStrengthLighter = "LIGHTER"
+
+	// WatermarkingStrengthDefault is a WatermarkingStrength enum value
+	WatermarkingStrengthDefault = "DEFAULT"
+
+	// WatermarkingStrengthStronger is a WatermarkingStrength enum value
+	WatermarkingStrengthStronger = "STRONGER"
+
+	// WatermarkingStrengthStrongest is a WatermarkingStrength enum value
+	WatermarkingStrengthStrongest = "STRONGEST"
 )
 
 // The service defaults to using RIFF for WAV outputs. If your output audio

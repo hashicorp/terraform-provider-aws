@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -233,10 +234,9 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 	rName := fmt.Sprintf("option-group-test-terraform-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSDBOptionGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBOptionGroupOptionSettings(rName),
@@ -246,8 +246,9 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_db_option_group.bar", "option.961211605.option_settings.129825347.value", "UTC"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_db_option_group.bar", "option.*.option_settings.*", map[string]string{
+						"value": "UTC",
+					}),
 				),
 			},
 			{
@@ -266,8 +267,9 @@ func TestAccAWSDBOptionGroup_Option_OptionSettings(t *testing.T) {
 						"aws_db_option_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
 						"aws_db_option_group.bar", "option.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_db_option_group.bar", "option.2422743510.option_settings.1350509764.value", "US/Pacific"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_db_option_group.bar", "option.*.option_settings.*", map[string]string{
+						"value": "US/Pacific",
+					}),
 				),
 			},
 			// Ensure we can import non-default value option settings

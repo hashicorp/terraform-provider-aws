@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsApiGatewayResource(t *testing.T) {
+func TestAccDataSourceAwsApiGatewayResource_basic(t *testing.T) {
 	rName := acctest.RandString(8)
 	resourceName1 := "aws_api_gateway_resource.example_v1"
 	dataSourceName1 := "data.aws_api_gateway_resource.example_v1"

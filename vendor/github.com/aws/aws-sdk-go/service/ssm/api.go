@@ -449,13 +449,18 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 
 // CreateAssociation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Associates the specified Systems Manager document with the specified instances
-// or targets.
-//
-// When you associate a document with one or more instances, SSM Agent running
-// on the instance processes the document and configures the instance as specified.
-// If you associate a document with an instance that already has an associated
-// document, the system returns the AssociationAlreadyExists exception.
+// A State Manager association defines the state that you want to maintain on
+// your instances. For example, an association can specify that anti-virus software
+// must be installed and running on your instances, or that certain ports must
+// be closed. For static targets, the association specifies a schedule for when
+// the configuration is reapplied. For dynamic targets, such as an AWS Resource
+// Group or an AWS Autoscaling Group, State Manager applies the configuration
+// when new instances are added to the group. The association also specifies
+// actions to take when applying the configuration. For example, an association
+// for anti-virus software might run once a day. If the software is not installed,
+// then State Manager installs it. If the software is installed, but the service
+// is not running, then the association might instruct State Manager to start
+// the service.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -17136,6 +17141,18 @@ type CreateMaintenanceWindowInput struct {
 	// Schedule is a required field
 	Schedule *string `min:"1" type:"string" required:"true"`
 
+	// The number of days to wait after the date and time specified by a CRON expression
+	// before running the maintenance window.
+	//
+	// For example, the following cron expression schedules a maintenance window
+	// to run on the third Tuesday of every month at 11:30 PM.
+	//
+	// cron(0 30 23 ? * TUE#3 *)
+	//
+	// If the schedule offset is 2, the maintenance window won't run until two days
+	// later.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
@@ -17207,6 +17224,9 @@ func (s *CreateMaintenanceWindowInput) Validate() error {
 	if s.Schedule != nil && len(*s.Schedule) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Schedule", 1))
 	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -17269,6 +17289,12 @@ func (s *CreateMaintenanceWindowInput) SetName(v string) *CreateMaintenanceWindo
 // SetSchedule sets the Schedule field's value.
 func (s *CreateMaintenanceWindowInput) SetSchedule(v string) *CreateMaintenanceWindowInput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *CreateMaintenanceWindowInput) SetScheduleOffset(v int64) *CreateMaintenanceWindowInput {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -25638,6 +25664,10 @@ type GetMaintenanceWindowOutput struct {
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
+	// The number of days to wait to run a maintenance window after the scheduled
+	// CRON expression date and time.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
@@ -25726,6 +25756,12 @@ func (s *GetMaintenanceWindowOutput) SetNextExecutionTime(v string) *GetMaintena
 // SetSchedule sets the Schedule field's value.
 func (s *GetMaintenanceWindowOutput) SetSchedule(v string) *GetMaintenanceWindowOutput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *GetMaintenanceWindowOutput) SetScheduleOffset(v int64) *GetMaintenanceWindowOutput {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -33641,6 +33677,10 @@ type MaintenanceWindowIdentity struct {
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
+	// The number of days to wait to run a maintenance window after the scheduled
+	// CRON expression date and time.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format.
 	ScheduleTimezone *string `type:"string"`
@@ -33708,6 +33748,12 @@ func (s *MaintenanceWindowIdentity) SetNextExecutionTime(v string) *MaintenanceW
 // SetSchedule sets the Schedule field's value.
 func (s *MaintenanceWindowIdentity) SetSchedule(v string) *MaintenanceWindowIdentity {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *MaintenanceWindowIdentity) SetScheduleOffset(v int64) *MaintenanceWindowIdentity {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -37925,12 +37971,15 @@ type PutParameterInput struct {
 
 	// The type of parameter that you want to add to the system.
 	//
+	// SecureString is not currently supported for AWS CloudFormation templates
+	// or in the China Regions.
+	//
 	// Items in a StringList must be separated by a comma (,). You can't use other
 	// punctuation or special character to escape items in the list. If you have
 	// a parameter value that requires a comma, then use the String data type.
 	//
-	// SecureString is not currently supported for AWS CloudFormation templates
-	// or in the China Regions.
+	// Specifying a parameter type is not required when updating a parameter. You
+	// must specify a parameter type when creating a parameter.
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value that you want to add to the system. Standard parameters
@@ -41347,8 +41396,10 @@ type StartSessionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the SSM document to define the parameters and plugin settings
-	// for the session. For example, SSM-SessionManagerRunShell. If no document
-	// name is provided, a shell to the instance is launched by default.
+	// for the session. For example, SSM-SessionManagerRunShell. You can call the
+	// GetDocument API to verify the document exists before attempting to start
+	// a session. If no document name is provided, a shell to the instance is launched
+	// by default.
 	DocumentName *string `type:"string"`
 
 	// Reserved for future use.
@@ -43527,6 +43578,18 @@ type UpdateMaintenanceWindowInput struct {
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
+	// The number of days to wait after the date and time specified by a CRON expression
+	// before running the maintenance window.
+	//
+	// For example, the following cron expression schedules a maintenance window
+	// to run the third Tuesday of every month at 11:30 PM.
+	//
+	// cron(0 30 23 ? * TUE#3 *)
+	//
+	// If the schedule offset is 2, the maintenance window won't run until two days
+	// later.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
@@ -43569,6 +43632,9 @@ func (s *UpdateMaintenanceWindowInput) Validate() error {
 	}
 	if s.Schedule != nil && len(*s.Schedule) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Schedule", 1))
+	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
 	}
 	if s.WindowId == nil {
 		invalidParams.Add(request.NewErrParamRequired("WindowId"))
@@ -43637,6 +43703,12 @@ func (s *UpdateMaintenanceWindowInput) SetSchedule(v string) *UpdateMaintenanceW
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *UpdateMaintenanceWindowInput) SetScheduleOffset(v int64) *UpdateMaintenanceWindowInput {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetScheduleTimezone sets the ScheduleTimezone field's value.
 func (s *UpdateMaintenanceWindowInput) SetScheduleTimezone(v string) *UpdateMaintenanceWindowInput {
 	s.ScheduleTimezone = &v
@@ -43685,6 +43757,10 @@ type UpdateMaintenanceWindowOutput struct {
 
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
+
+	// The number of days to wait to run a maintenance window after the scheduled
+	// CRON expression date and time.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
@@ -43756,6 +43832,12 @@ func (s *UpdateMaintenanceWindowOutput) SetName(v string) *UpdateMaintenanceWind
 // SetSchedule sets the Schedule field's value.
 func (s *UpdateMaintenanceWindowOutput) SetSchedule(v string) *UpdateMaintenanceWindowOutput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *UpdateMaintenanceWindowOutput) SetScheduleOffset(v int64) *UpdateMaintenanceWindowOutput {
+	s.ScheduleOffset = &v
 	return s
 }
 

@@ -52,7 +52,7 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBBackwardsCompatibility(t *testing.T) {
+func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"

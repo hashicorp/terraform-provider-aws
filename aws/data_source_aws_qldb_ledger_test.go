@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsQLDBLedger(t *testing.T) {
+func TestAccDataSourceAwsQLDBLedger_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(7)) // QLDB name cannot be longer than 32 characters
 
 	resource.ParallelTest(t, resource.TestCase{

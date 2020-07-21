@@ -3526,7 +3526,7 @@ func (c *CloudFormation) ListStackInstancesRequest(input *ListStackInstancesInpu
 //
 // Returns summary information about stack instances that are associated with
 // the specified stack set. You can filter for stack instances that are associated
-// with a specific AWS account name or Region.
+// with a specific AWS account name or Region, or that have a specific status.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10577,6 +10577,9 @@ func (s *ListImportsOutput) SetNextToken(v string) *ListImportsOutput {
 type ListStackInstancesInput struct {
 	_ struct{} `type:"structure"`
 
+	// The status that stack instances are filtered by.
+	Filters []*StackInstanceFilter `type:"list"`
+
 	// The maximum number of results to be returned with a single call. If the number
 	// of available results exceeds this maximum, the response includes a NextToken
 	// value that you can assign to the NextToken request parameter to get the next
@@ -10625,11 +10628,27 @@ func (s *ListStackInstancesInput) Validate() error {
 	if s.StackSetName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StackSetName"))
 	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *ListStackInstancesInput) SetFilters(v []*StackInstanceFilter) *ListStackInstancesInput {
+	s.Filters = v
+	return s
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -12619,6 +12638,9 @@ type ResourceToImport struct {
 	ResourceIdentifier map[string]*string `min:"1" type:"map" required:"true"`
 
 	// The type of resource to import into your stack, such as AWS::S3::Bucket.
+	// For a list of supported resource types, see Resources that support import
+	// operations (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resource-import-supported-resources.html)
+	// in the AWS CloudFormation User Guide.
 	//
 	// ResourceType is a required field
 	ResourceType *string `min:"1" type:"string" required:"true"`
@@ -13650,6 +13672,9 @@ type StackInstance struct {
 	// The ID of the stack instance.
 	StackId *string `type:"string"`
 
+	// The detailed status of the stack instance.
+	StackInstanceStatus *StackInstanceComprehensiveStatus `type:"structure"`
+
 	// The name or unique ID of the stack set that the stack instance is associated
 	// with.
 	StackSetId *string `type:"string"`
@@ -13728,6 +13753,12 @@ func (s *StackInstance) SetStackId(v string) *StackInstance {
 	return s
 }
 
+// SetStackInstanceStatus sets the StackInstanceStatus field's value.
+func (s *StackInstance) SetStackInstanceStatus(v *StackInstanceComprehensiveStatus) *StackInstance {
+	s.StackInstanceStatus = v
+	return s
+}
+
 // SetStackSetId sets the StackSetId field's value.
 func (s *StackInstance) SetStackSetId(v string) *StackInstance {
 	s.StackSetId = &v
@@ -13743,6 +13774,97 @@ func (s *StackInstance) SetStatus(v string) *StackInstance {
 // SetStatusReason sets the StatusReason field's value.
 func (s *StackInstance) SetStatusReason(v string) *StackInstance {
 	s.StatusReason = &v
+	return s
+}
+
+// The detailed status of the stack instance.
+type StackInstanceComprehensiveStatus struct {
+	_ struct{} `type:"structure"`
+
+	//    * CANCELLED: The operation in the specified account and Region has been
+	//    cancelled. This is either because a user has stopped the stack set operation,
+	//    or because the failure tolerance of the stack set operation has been exceeded.
+	//
+	//    * FAILED: The operation in the specified account and Region failed. If
+	//    the stack set operation fails in enough accounts within a Region, the
+	//    failure tolerance for the stack set operation as a whole might be exceeded.
+	//
+	//    * INOPERABLE: A DeleteStackInstances operation has failed and left the
+	//    stack in an unstable state. Stacks in this state are excluded from further
+	//    UpdateStackSet operations. You might need to perform a DeleteStackInstances
+	//    operation, with RetainStacks set to true, to delete the stack instance,
+	//    and then delete the stack manually.
+	//
+	//    * PENDING: The operation in the specified account and Region has yet to
+	//    start.
+	//
+	//    * RUNNING: The operation in the specified account and Region is currently
+	//    in progress.
+	//
+	//    * SUCCEEDED: The operation in the specified account and Region completed
+	//    successfully.
+	DetailedStatus *string `type:"string" enum:"StackInstanceDetailedStatus"`
+}
+
+// String returns the string representation
+func (s StackInstanceComprehensiveStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StackInstanceComprehensiveStatus) GoString() string {
+	return s.String()
+}
+
+// SetDetailedStatus sets the DetailedStatus field's value.
+func (s *StackInstanceComprehensiveStatus) SetDetailedStatus(v string) *StackInstanceComprehensiveStatus {
+	s.DetailedStatus = &v
+	return s
+}
+
+// The status that stack instances are filtered by.
+type StackInstanceFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The type of filter to apply.
+	Name *string `type:"string" enum:"StackInstanceFilterName"`
+
+	// The status to filter by.
+	Values *string `min:"6" type:"string"`
+}
+
+// String returns the string representation
+func (s StackInstanceFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StackInstanceFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StackInstanceFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StackInstanceFilter"}
+	if s.Values != nil && len(*s.Values) < 6 {
+		invalidParams.Add(request.NewErrParamMinLen("Values", 6))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *StackInstanceFilter) SetName(v string) *StackInstanceFilter {
+	s.Name = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *StackInstanceFilter) SetValues(v string) *StackInstanceFilter {
+	s.Values = &v
 	return s
 }
 
@@ -13785,6 +13907,9 @@ type StackInstanceSummary struct {
 
 	// The ID of the stack instance.
 	StackId *string `type:"string"`
+
+	// The detailed status of the stack instance.
+	StackInstanceStatus *StackInstanceComprehensiveStatus `type:"structure"`
 
 	// The name or unique ID of the stack set that the stack instance is associated
 	// with.
@@ -13854,6 +13979,12 @@ func (s *StackInstanceSummary) SetRegion(v string) *StackInstanceSummary {
 // SetStackId sets the StackId field's value.
 func (s *StackInstanceSummary) SetStackId(v string) *StackInstanceSummary {
 	s.StackId = &v
+	return s
+}
+
+// SetStackInstanceStatus sets the StackInstanceStatus field's value.
+func (s *StackInstanceSummary) SetStackInstanceStatus(v *StackInstanceComprehensiveStatus) *StackInstanceSummary {
+	s.StackInstanceStatus = v
 	return s
 }
 
@@ -17372,6 +17503,31 @@ const (
 
 	// StackDriftStatusNotChecked is a StackDriftStatus enum value
 	StackDriftStatusNotChecked = "NOT_CHECKED"
+)
+
+const (
+	// StackInstanceDetailedStatusPending is a StackInstanceDetailedStatus enum value
+	StackInstanceDetailedStatusPending = "PENDING"
+
+	// StackInstanceDetailedStatusRunning is a StackInstanceDetailedStatus enum value
+	StackInstanceDetailedStatusRunning = "RUNNING"
+
+	// StackInstanceDetailedStatusSucceeded is a StackInstanceDetailedStatus enum value
+	StackInstanceDetailedStatusSucceeded = "SUCCEEDED"
+
+	// StackInstanceDetailedStatusFailed is a StackInstanceDetailedStatus enum value
+	StackInstanceDetailedStatusFailed = "FAILED"
+
+	// StackInstanceDetailedStatusCancelled is a StackInstanceDetailedStatus enum value
+	StackInstanceDetailedStatusCancelled = "CANCELLED"
+
+	// StackInstanceDetailedStatusInoperable is a StackInstanceDetailedStatus enum value
+	StackInstanceDetailedStatusInoperable = "INOPERABLE"
+)
+
+const (
+	// StackInstanceFilterNameDetailedStatus is a StackInstanceFilterName enum value
+	StackInstanceFilterNameDetailedStatus = "DETAILED_STATUS"
 )
 
 const (

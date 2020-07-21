@@ -421,7 +421,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_alb_target_group.test"

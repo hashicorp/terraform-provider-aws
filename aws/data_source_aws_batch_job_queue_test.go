@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceAwsBatchJobQueue(t *testing.T) {
+func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_job_queue.test"
 	datasourceName := "data.aws_batch_job_queue.by_name"

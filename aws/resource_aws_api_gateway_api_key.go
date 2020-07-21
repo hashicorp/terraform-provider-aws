@@ -42,25 +42,6 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 				Default:  true,
 			},
 
-			"stage_key": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Removed:  "Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"rest_api_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"stage_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-
 			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -4632,7 +4632,7 @@ func (c *ElastiCache) FailoverGlobalReplicationGroupRequest(input *FailoverGloba
 // FailoverGlobalReplicationGroup API operation for Amazon ElastiCache.
 //
 // Used to failover the primary region to a selected secondary region. The selected
-// secondary region will be come primary, and all other clusters will become
+// secondary region will become primary, and all other clusters will become
 // secondary.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -8309,9 +8309,9 @@ type CreateCacheClusterInput struct {
 
 	// The EC2 Availability Zone in which the cluster is created.
 	//
-	// All nodes belonging to this Memcached cluster are placed in the preferred
-	// Availability Zone. If you want to create your nodes across multiple Availability
-	// Zones, use PreferredAvailabilityZones.
+	// All nodes belonging to this cluster are placed in the preferred Availability
+	// Zone. If you want to create your nodes across multiple Availability Zones,
+	// use PreferredAvailabilityZones.
 	//
 	// Default: System chosen Availability Zone.
 	PreferredAvailabilityZone *string `type:"string"`
@@ -9021,9 +9021,6 @@ type CreateReplicationGroupInput struct {
 	// Specifies whether a read-only replica is automatically promoted to read/write
 	// primary if the existing primary fails.
 	//
-	// If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ
-	// is disabled for this replication group.
-	//
 	// AutomaticFailoverEnabled must be enabled for Redis (cluster mode enabled)
 	// replication groups.
 	//
@@ -9125,6 +9122,8 @@ type CreateReplicationGroupInput struct {
 	// The ID of the KMS key used to encrypt the disk in the cluster.
 	KmsKeyId *string `type:"string"`
 
+	// A flag indicating if you have Multi-AZ enabled to enhance fault tolerance.
+	// For more information, see Minimizing Downtime: Multi-AZ (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html).
 	MultiAZEnabled *bool `type:"boolean"`
 
 	// A list of node group (shard) configuration options. Each node group (shard)
@@ -9145,7 +9144,7 @@ type CreateReplicationGroupInput struct {
 	// The Amazon SNS topic owner must be the same as the cluster owner.
 	NotificationTopicArn *string `type:"string"`
 
-	// The number of nodes in the cluster.
+	// The number of clusters this replication group initially has.
 	//
 	// This parameter is not used if there is more than one node group (shard).
 	// You should use ReplicasPerNodeGroup instead.
@@ -13856,6 +13855,8 @@ type ModifyReplicationGroupInput struct {
 	// and create it anew with the earlier engine version.
 	EngineVersion *string `type:"string"`
 
+	// A flag indicating if you have Multi-AZ enabled to enhance fault tolerance.
+	// For more information, see Minimizing Downtime: Multi-AZ (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html).
 	MultiAZEnabled *bool `type:"boolean"`
 
 	// Deprecated. This parameter is not used.
@@ -14290,7 +14291,8 @@ type NodeGroup struct {
 	// The keyspace for this node group (shard).
 	Slots *string `type:"string"`
 
-	// The current state of this replication group - creating, available, etc.
+	// The current state of this replication group - creating, available, modifying,
+	// deleting.
 	Status *string `type:"string"`
 }
 
@@ -15467,6 +15469,8 @@ type ReplicationGroup struct {
 	// The names of all the cache clusters that are part of this replication group.
 	MemberClusters []*string `locationNameList:"ClusterId" type:"list"`
 
+	// A flag indicating if you have Multi-AZ enabled to enhance fault tolerance.
+	// For more information, see Minimizing Downtime: Multi-AZ (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html)
 	MultiAZ *string `type:"string" enum:"MultiAZStatus"`
 
 	// A list of node groups in this replication group. For Redis (cluster mode

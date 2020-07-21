@@ -1,13 +1,16 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -247,12 +250,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			},
 
 			"availability_zones": {
-				Type:             schema.TypeSet,
-				Optional:         true,
-				Computed:         true,
-				Elem:             &schema.Schema{Type: schema.TypeString},
-				Set:              schema.HashString,
-				DiffSuppressFunc: suppressAutoscalingGroupAvailabilityZoneDiffs,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_zone_identifier"},
 			},
 
 			"placement_group": {
@@ -260,22 +262,20 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Optional: true,
 			},
 
-			// DEPRECATED: Computed: true should be removed in a major version release
-			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"load_balancers": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
 
 			"vpc_zone_identifier": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"availability_zones"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
 			},
 
 			"termination_policies": {
@@ -334,12 +334,9 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Default:  false,
 			},
 
-			// DEPRECATED: Computed: true should be removed in a major version release
-			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -397,6 +394,41 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 				ConflictsWith: []string{"tag"},
+				// Terraform 0.11 and earlier can provide incorrect type
+				// information during difference handling, in which boolean
+				// values are represented as "0" and "1". This Set function
+				// normalizes these hashing variations, while the Terraform
+				// Plugin SDK automatically suppresses the boolean/string
+				// difference in the value itself.
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+
+					m, ok := v.(map[string]interface{})
+
+					if !ok {
+						return 0
+					}
+
+					if v, ok := m["key"].(string); ok {
+						buf.WriteString(fmt.Sprintf("%s-", v))
+					}
+
+					if v, ok := m["value"].(string); ok {
+						buf.WriteString(fmt.Sprintf("%s-", v))
+					}
+
+					if v, ok := m["propagate_at_launch"].(bool); ok {
+						buf.WriteString(fmt.Sprintf("%t-", v))
+					} else if v, ok := m["propagate_at_launch"].(string); ok {
+						if b, err := strconv.ParseBool(v); err == nil {
+							buf.WriteString(fmt.Sprintf("%t-", b))
+						} else {
+							buf.WriteString(fmt.Sprintf("%s-", v))
+						}
+					}
+
+					return hashcode.String(buf.String())
+				},
 			},
 
 			"service_linked_role_arn": {
