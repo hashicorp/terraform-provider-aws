@@ -84,7 +84,7 @@ The `ingress` block supports:
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
-* `prefix_list_ids` - (Optional) List of prefix list IDs.
+* `prefix_list_ids` - (Optional) List of Prefix List IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp" or "icmpv6")
 * `protocol` - (Required) The protocol. If you select a protocol of
 "-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, icmpv6, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
@@ -99,7 +99,7 @@ The `egress` block supports:
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
-* `prefix_list_ids` - (Optional) List of prefix list IDs (for allowing access to VPC endpoints)
+* `prefix_list_ids` - (Optional) List of Prefix List IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp")
 * `protocol` - (Required) The protocol. If you select a protocol of
 "-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
@@ -128,8 +128,9 @@ egress {
 
 ## Usage with prefix list IDs
 
-Prefix list IDs are managed by AWS internally. Prefix list IDs
-are associated with a prefix list name, or service name, that is linked to a specific region.
+Prefix Lists are either managed by AWS internally, or created by the customer using a 
+[Prefix List resource](prefix_list.html). Prefix Lists provided by
+AWS are associated with a prefix list name, or service name, that is linked to a specific region.
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ```hcl
@@ -146,6 +147,8 @@ resource "aws_vpc_endpoint" "my_endpoint" {
   # ...
 }
 ```
+
+You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
 ## Attributes Reference
 
