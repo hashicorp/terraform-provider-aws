@@ -145,7 +145,7 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_update_all(t *testing
 	})
 }
 
-func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioSuffix, _principalSuffix, portfolioSaltedName, principalSaltedName string, portfolioIdToSet *string) resource.TestCheckFunc {
+func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioSuffix, principalSuffix, portfolioSaltedName, principalSaltedName string, portfolioIdToSet *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 		rs, ok := s.RootModule().Resources["aws_servicecatalog_portfolio_principal_association.test"]
@@ -164,6 +164,14 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioS
 		}
 		if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSaltedName) {
 			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSaltedName)
+		}
+
+		rsPrincipal, ok2 := s.RootModule().Resources["aws_iam_role.test"+principalSuffix]
+		if !ok2 {
+			return fmt.Errorf("principal %s not found", principalSaltedName)
+		}
+		if !strings.Contains(rsPrincipal.Primary.Attributes["name"], principalSaltedName) {
+			return fmt.Errorf("principal from association ID %s did not contain expected salt '%s'", rs.Primary.ID, principalSaltedName)
 		}
 
 		if !strings.Contains(principalArn, principalSaltedName) {
