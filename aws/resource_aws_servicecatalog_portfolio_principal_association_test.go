@@ -13,7 +13,8 @@ import (
 )
 
 func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_basic(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resourceName := "aws_servicecatalog_portfolio_principal_association.test"
 	var portfolioId string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,11 +22,11 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt, salt, &portfolioId),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("", "", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("", "", saltedName, saltedName, &portfolioId),
 			},
 			{
-				ResourceName:      "aws_servicecatalog_portfolio_principal_association.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -34,7 +35,8 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_disappears(t *testing.T) {
-	salt := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
+	resourceName := "aws_servicecatalog_portfolio_principal_association.test"
 	var portfolioId string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -42,10 +44,10 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_disappears(t *testing
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("", "", saltedName, saltedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt, salt, &portfolioId),
-					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDisappears(),
+					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("", "", saltedName, saltedName, &portfolioId),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogPortfolioPrincipalAssociation(), resourceName),
 					func(s *terraform.State) error {
 						return testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId, "*")
 					},
@@ -57,8 +59,8 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_disappears(t *testing
 }
 
 func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Portfolio_update(t *testing.T) {
-	salt := acctest.RandString(5)
-	salt2 := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5)   // RandomWithPrefix exceeds max length 20
+	saltedName2 := "tf-acc-test2-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId1, portfolioId2 string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -66,13 +68,13 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Portfolio_update(t *t
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt, salt, &portfolioId1),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("1", "1", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("1", "1", saltedName, saltedName, &portfolioId1),
 			},
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt2, salt),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("2", "1", saltedName2, saltedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt2, salt, &portfolioId2),
+					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("2", "1", saltedName2, saltedName, &portfolioId2),
 					func(s *terraform.State) error {
 						if portfolioId1 == portfolioId2 {
 							return fmt.Errorf("Portfolio ID should have changed")
@@ -86,8 +88,8 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Portfolio_update(t *t
 }
 
 func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Principal_update(t *testing.T) {
-	salt := acctest.RandString(5)
-	salt2 := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5)   // RandomWithPrefix exceeds max length 20
+	saltedName2 := "tf-acc-test2-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId1, portfolioId2 string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -95,18 +97,18 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Principal_update(t *t
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt, salt, &portfolioId1),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("1", "1", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("1", "1", saltedName, saltedName, &portfolioId1),
 			},
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt, salt2),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("1", "2", saltedName, saltedName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt, salt2, &portfolioId2),
+					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("1", "2", saltedName, saltedName2, &portfolioId2),
 					func(s *terraform.State) error {
 						if portfolioId1 != portfolioId2 {
 							return fmt.Errorf("Portfolio should not have changed")
 						}
-						return testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId2, salt)
+						return testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId2, saltedName)
 					},
 				),
 			},
@@ -115,8 +117,8 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Principal_update(t *t
 }
 
 func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_update_all(t *testing.T) {
-	salt := acctest.RandString(5)
-	salt2 := acctest.RandString(5)
+	saltedName := "tf-acc-test-" + acctest.RandString(5)   // RandomWithPrefix exceeds max length 20
+	saltedName2 := "tf-acc-test2-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var portfolioId1, portfolioId2 string
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -124,18 +126,18 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_update_all(t *testing
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt, salt),
-				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt, salt, &portfolioId1),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("1", "1", saltedName, saltedName),
+				Check:  testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("1", "1", saltedName, saltedName, &portfolioId1),
 			},
 			{
-				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(salt2, salt2),
+				Config: testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic("2", "2", saltedName2, saltedName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(salt2, salt2, &portfolioId2),
+					testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists("2", "2", saltedName2, saltedName2, &portfolioId2),
 					func(s *terraform.State) error {
 						if portfolioId1 == portfolioId2 {
 							return fmt.Errorf("Portfolio should have changed")
 						}
-						return testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId2, salt)
+						return testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId2, saltedName)
 					},
 				),
 			},
@@ -143,7 +145,7 @@ func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_update_all(t *testing
 	})
 }
 
-func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioSalt, principalSalt string, portfolioIdToSet *string) resource.TestCheckFunc {
+func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioSuffix, _principalSuffix, portfolioSaltedName, principalSaltedName string, portfolioIdToSet *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 		rs, ok := s.RootModule().Resources["aws_servicecatalog_portfolio_principal_association.test"]
@@ -156,16 +158,16 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioS
 			return err
 		}
 
-		rsPortfolio, ok := s.RootModule().Resources["aws_servicecatalog_portfolio.test-"+portfolioSalt]
+		rsPortfolio, ok := s.RootModule().Resources["aws_servicecatalog_portfolio.test"+portfolioSuffix]
 		if !ok {
-			return fmt.Errorf("portfolio %s not found", portfolioSalt)
+			return fmt.Errorf("portfolio %s not found", portfolioSaltedName)
 		}
-		if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSalt) {
-			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSalt)
+		if !strings.Contains(rsPortfolio.Primary.Attributes["name"], portfolioSaltedName) {
+			return fmt.Errorf("portfolio from association ID %s did not contain expected salt '%s'", rs.Primary.ID, portfolioSaltedName)
 		}
 
-		if !strings.Contains(principalArn, principalSalt) {
-			return fmt.Errorf("principal ARN from ID %s did not contain expected salt '%s'", rs.Primary.ID, principalSalt)
+		if !strings.Contains(principalArn, principalSaltedName) {
+			return fmt.Errorf("principal ARN from ID %s did not contain expected salt '%s'", rs.Primary.ID, principalSaltedName)
 		}
 
 		*portfolioIdToSet = portfolioId
@@ -182,32 +184,6 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationExists(portfolioS
 			}
 		}
 		return fmt.Errorf("association not found between portfolio %s and principal %s; principals were: %v", portfolioId, principalArn, page.Principals)
-	}
-}
-
-func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationDisappears() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_servicecatalog_portfolio_principal_association" {
-				continue // not our monkey
-			}
-			_, portfolioId, principalArn, err := parseServiceCatalogPortfolioPrincipalAssociationResourceId(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-			conn := testAccProvider.Meta().(*AWSClient).scconn
-			input := servicecatalog.DisassociatePrincipalFromPortfolioInput{
-				PortfolioId:  aws.String(portfolioId),
-				PrincipalARN: aws.String(principalArn),
-			}
-			_, err = conn.DisassociatePrincipalFromPortfolio(&input)
-			if err != nil {
-				return fmt.Errorf("deleting Service Catalog Principal(%s)/Portfolio(%s) Association failed: %s",
-					principalArn, portfolioId, err.Error())
-			}
-			return nil
-		}
-		return fmt.Errorf("no matching resource found to make disappear")
 	}
 }
 
@@ -251,30 +227,29 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(p
 	}
 }
 
-func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(portfolioSalt, principalSalt string) string {
+func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_basic(portfolioSuffix, principalSuffix, portfolioSaltedName, principalSaltedName string) string {
 	return composeConfig(
-		testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_portfolio(portfolioSalt),
-		testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_role(principalSalt),
-		testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_association(portfolioSalt, principalSalt))
+		testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_portfolio(portfolioSuffix, portfolioSaltedName),
+		testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_role(principalSuffix, principalSaltedName),
+		testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_association(portfolioSuffix, principalSuffix))
 }
 
-func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_portfolio(salt string) string {
+func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_portfolio(suffix, saltedName string) string {
 	// based on testAccAWSServiceCatalogPortfolioConfig_basic
 	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test-%s" {
-  name          = "%s"
+resource "aws_servicecatalog_portfolio" "test%[2]s" {
+  name          = "%[1]s"
   description   = "test-2"
   provider_name = "test-3"
 }
-`, salt, "tfm-test-"+salt)
+`, saltedName, suffix)
 }
 
-func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_role(salt string) string {
-	roleName := "tfm-sc-tester-" + salt
+func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_role(suffix, saltedName string) string {
 	return fmt.Sprintf(`
 # IAM
-resource "aws_iam_role" "test-%s" {
-  name = "%s"
+resource "aws_iam_role" "test%[2]s" {
+  name = "%[1]s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -289,14 +264,14 @@ resource "aws_iam_role" "test-%s" {
 }
 EOF
 }
-`, salt, roleName)
+`, saltedName, suffix)
 }
 
-func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_association(portfolioSalt, principalSalt string) string {
+func testAccAWSServiceCatalogPortfolioPrincipalAssociationConfig_association(portfolioSuffix, principalSuffix string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio_principal_association" "test" {
-    portfolio_id = aws_servicecatalog_portfolio.test-%s.id
-    principal_arn = aws_iam_role.test-%s.arn
+    portfolio_id = aws_servicecatalog_portfolio.test%[1]s.id
+    principal_arn = aws_iam_role.test%[2]s.arn
 }
-`, portfolioSalt, principalSalt)
+`, portfolioSuffix, principalSuffix)
 }
