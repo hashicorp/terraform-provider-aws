@@ -264,11 +264,8 @@ func testAccCheckAwsServiceCatalogProductDestroy(s *terraform.State) error {
 
 func testAccAWSServiceCatalogProductConfig_basic(productSaltedName, bucketSaltedName, paSaltedName, tags string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}	
-
 resource "aws_s3_bucket" "bucket" {
   bucket        = "%[2]s"
-  region        = data.aws_region.current.name
   acl           = "private"
   force_destroy = true
 }
