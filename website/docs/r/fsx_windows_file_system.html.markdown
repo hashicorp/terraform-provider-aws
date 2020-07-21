@@ -89,7 +89,7 @@ In addition to all arguments above, the following attributes are exported:
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
 * `owner_id` - AWS account identifier that created the file system.
 * `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
-* `preferred_file_server_ip` - the IP address of the primary, or preferred, file server.
+* `preferred_file_server_ip` - The IP address of the primary, or preferred, file server.
 * `remote_administration_endpoint` - For `MULTI_AZ_1` deployment types, use this endpoint when performing administrative tasks on the file system using Amazon FSx Remote PowerShell. For `SINGLE_AZ_1` deployment types, this is the DNS name of the file system.
 
 ## Timeouts
