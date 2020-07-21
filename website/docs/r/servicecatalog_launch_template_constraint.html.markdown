@@ -18,41 +18,41 @@ resource "aws_servicecatalog_launch_template_constraint" "sample_constraint" {
   rule {
     name = "rule01"
     rule_condition = jsonencode({
-     "Fn::Equals" = [
-       {"Ref" = "Environment"},
-       "test"
+      "Fn::Equals" = [
+        { "Ref" = "Environment" },
+        "test"
       ]
     })
     assertion {
-     assert = jsonencode({
-       "Fn::Contains" = [
-         ["m1.small"],
-         {"Ref" = "InstanceType"}
-       ]
-     })
-     assert_description = "For the test environment, the instance type must be m1.small"
+      assert = jsonencode({
+        "Fn::Contains" = [
+          ["m1.small"],
+          { "Ref" = "InstanceType" }
+        ]
+      })
+      assert_description = "For the test environment, the instance type must be m1.small"
     }
   }
   rule {
-   name = "rule02"
-   rule_condition = jsonencode({
-     "Fn::Equals" = [
-       {"Ref" = "Environment"}, 
-       "prod"
-     ]
-   })
-   assertion {
-     assert = jsonencode({
-       "Fn::Contains" = [
-         ["m1.large"],
-         {"Ref" = "InstanceType"} 
-       ]
-     })
-     assert_description = "For the prod environment, the instance type must be m1.large"
-   }
+    name = "rule02"
+    rule_condition = jsonencode({
+      "Fn::Equals" = [
+        { "Ref" = "Environment" },
+        "prod"
+      ]
+    })
+    assertion {
+      assert = jsonencode({
+        "Fn::Contains" = [
+          ["m1.large"],
+          { "Ref" = "InstanceType" }
+        ]
+      })
+      assert_description = "For the prod environment, the instance type must be m1.large"
+    }
   }
   portfolio_id = aws_servicecatalog_portfolio.myportfolio.id
-  product_id = aws_servicecatalog_product.myproduct.id
+  product_id   = aws_servicecatalog_product.myproduct.id
 }
 ```
 
