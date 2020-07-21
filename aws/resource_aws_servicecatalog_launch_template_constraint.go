@@ -3,6 +3,7 @@ package aws
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
@@ -106,7 +107,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintCreate(d *schema.ResourceD
 	if errJson != nil {
 		return errJson
 	}
-	fmt.Printf("[INFO] constraint Parameters (JSON): %s\n", jsonDoc)
+	log.Printf("[DEBUG] constraint Parameters (JSON): %s\n", jsonDoc)
 	errCreate := resourceAwsServiceCatalogConstraintCreateFromJson(d, meta, jsonDoc, "TEMPLATE")
 	if errCreate != nil {
 		return errCreate
@@ -171,7 +172,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintParseRule(m map[string]int
 		} else if k == "rule_condition" {
 			err := json.Unmarshal([]byte(v.(string)), &rule.RuleCondition)
 			if err != nil {
-				fmt.Printf("[ERROR] rule.RuleCondition Unmarshal error: %s\n%s\n", err.Error(), rule.RuleCondition)
+				log.Printf("[ERROR] rule.RuleCondition Unmarshal error: %s\n%s\n", err.Error(), rule.RuleCondition)
 				return "", nil, err
 			}
 		} else if k == "assertion" {
@@ -196,7 +197,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintParseRuleAsserts(m map[str
 		if k == "assert" {
 			err := json.Unmarshal([]byte(v.(string)), &assert.Assert)
 			if err != nil {
-				fmt.Printf("[ERROR] assert.Assert Unmarshal error: %s\n%s\n", err.Error(), assert.Assert)
+				log.Printf("[ERROR] assert.Assert Unmarshal error: %s\n%s\n", err.Error(), assert.Assert)
 				return nil, err
 			}
 		} else if k == "assert_description" {
@@ -214,14 +215,14 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintRead(d *schema.ResourceDat
 	if constraint == nil {
 		return nil
 	}
-	d.Set("description", constraint.ConstraintDetail.Description)
-	d.Set("portfolio_id", constraint.ConstraintDetail.PortfolioId)
-	d.Set("product_id", constraint.ConstraintDetail.ProductId)
 	rule, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadParameters(constraint.ConstraintParameters)
-	d.Set("rule", rule)
 	if err != nil {
 		return err
 	}
+	if err := d.Set("rule", rule); err != nil {
+        return fmt.Errorf("error setting rule: %s", err)
+    }
+	
 	return nil
 }
 
@@ -231,7 +232,7 @@ func flattenAwsServiceCatalogLaunchTemplateConstraintReadParameters(configured *
 	var constraint awsServiceCatalogLaunchTemplateConstraint
 	err := json.Unmarshal(bytes, &constraint)
 	if err != nil {
-		fmt.Printf("[ERROR] parameters Unmarshal error: %s\n%s\n", err.Error(), constraint)
+		log.Printf("[ERROR] parameters Unmarshal error: %s\n%s\n", err.Error(), constraint)
 		return nil, err
 	}
 	rules, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadRules(constraint.Rules)
@@ -261,8 +262,7 @@ func flattenAwsServiceCatalogLaunchTemplateConstraintReadRule(name string, confi
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("Marshalled rule_condition as: %s\n", jsonDoc)
-		m["rule_condition"] = jsonDoc
+		m["rule_condition"] = string(jsonDoc)
 	}
 	assertions, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertions(configured.Assertions)
 	if err != nil {
@@ -293,8 +293,7 @@ func flattenAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertion(assertion
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Marshalled assert as: %s\n", jsonDoc)
-	m["assert"] = jsonDoc
+	m["assert"] = string(jsonDoc)
 	return m, nil
 }
 

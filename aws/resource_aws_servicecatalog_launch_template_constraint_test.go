@@ -29,6 +29,9 @@ func TestAccAWSServiceCatalogLaunchTemplateConstraint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "product_id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 					resource.TestCheckResourceAttr(resourceName, "type", "TEMPLATE"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.name", "rule01"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1.name", "rule02"),
 				),
 			},
 			{
@@ -45,7 +48,7 @@ func TestAccAWSServiceCatalogLaunchTemplateConstraint_disappears(t *testing.T) {
     saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var describeConstraintOutput servicecatalog.DescribeConstraintOutput
 	var providers []*schema.Provider
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckServiceCatalogLaunchTemplateConstraintDestroy,
