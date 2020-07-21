@@ -23,6 +23,7 @@ Upgrade topics:
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
+- [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
@@ -171,6 +172,12 @@ Previously the `subject_alternative_names` argument was stored in the Terraform 
 ### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
 
 Previously when the `certificate_body`, `certificate_chain`, and `private_key` arguments were stored in state, they were stored as a hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the `private_key` attribute is marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only updates and they all match the hash removal, the apply will occur without submitting API calls.
+
+## Resource: aws_api_gateway_method_settings
+
+### throttling_burst_limit and throttling_rate_limit Arguments Now Default to -1
+
+Previously when the `throttling_burst_limit` or `throttling_rate_limit` argument was not configured, the resource would enable throttling and set the limit value to the AWS API Gateway default. In addition, as these arguments were marked as `Computed`, Terraform ignored any subsequent changes made to these arguments in the resource. These behaviors have been removed and, by default, the `throttling_burst_limit` and `throttling_rate_limit` arguments will be disabled in the resource with a value of `-1`.
 
 ## Resource: aws_autoscaling_group
 
