@@ -273,9 +273,9 @@ func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsApiGatewayMethodSettingsImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), ":")
+	idParts := strings.SplitN(d.Id(), "/", 3)
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID:STAGE-NAME:METHOD-PATH", d.Id())
+		return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME/METHOD-PATH", d.Id())
 	}
 	restApiID := idParts[0]
 	stageName := idParts[1]

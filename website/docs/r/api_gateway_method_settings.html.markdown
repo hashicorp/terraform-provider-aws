@@ -94,8 +94,8 @@ The following arguments are supported:
 
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID:STAGE-NAME:METHOD-PATH`, e.g.
+`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.
 
 ```
-$ terraform import aws_api_gateway_method_settings.example 12345abcde:example:test/GET
+$ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
 ```

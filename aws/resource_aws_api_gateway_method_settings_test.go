@@ -621,7 +621,7 @@ func testAccAWSAPIGatewayMethodSettingsImportStateIdFunc(resourceName string) re
 		stageName := rs.Primary.Attributes["stage_name"]
 		methodPath := rs.Primary.Attributes["method_path"]
 
-		return fmt.Sprintf("%s:%s:%s", restApiID, stageName, methodPath), nil
+		return fmt.Sprintf("%s/%s/%s", restApiID, stageName, methodPath), nil
 	}
 }
 
