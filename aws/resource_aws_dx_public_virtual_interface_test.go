@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
@@ -44,6 +45,7 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 					testAccCheckAwsDxPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
@@ -52,8 +54,8 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.1752038751", "210.52.109.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.4290081960", "175.45.176.0/22"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "210.52.109.0/24"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "175.45.176.0/22"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
@@ -94,6 +96,7 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 					testAccCheckAwsDxPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
@@ -102,8 +105,8 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.1752038751", "210.52.109.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.4290081960", "175.45.176.0/22"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "210.52.109.0/24"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "175.45.176.0/22"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
@@ -117,6 +120,7 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 					testAccCheckAwsDxPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
@@ -125,8 +129,8 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.1752038751", "210.52.109.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.4290081960", "175.45.176.0/22"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "210.52.109.0/24"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "175.45.176.0/22"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),

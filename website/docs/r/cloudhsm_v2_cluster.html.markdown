@@ -30,7 +30,7 @@ provider "aws" {
 
 data "aws_availability_zones" "available" {}
 
-resource "aws_vpc" "cloudhsm2_vpc" {
+resource "aws_vpc" "cloudhsm_v2_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -38,9 +38,9 @@ resource "aws_vpc" "cloudhsm2_vpc" {
   }
 }
 
-resource "aws_subnet" "cloudhsm2_subnets" {
+resource "aws_subnet" "cloudhsm_v2_subnets" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.cloudhsm2_vpc.id}"
+  vpc_id                  = "${aws_vpc.cloudhsm_v2_vpc.id}"
   cidr_block              = "${element(var.subnets, count.index)}"
   map_public_ip_on_launch = false
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
@@ -52,7 +52,7 @@ resource "aws_subnet" "cloudhsm2_subnets" {
 
 resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
   hsm_type   = "hsm1.medium"
-  subnet_ids = ["${aws_subnet.cloudhsm2_subnets.*.id}"]
+  subnet_ids = ["${aws_subnet.cloudhsm_v2_subnets.*.id}"]
 
   tags = {
     Name = "example-aws_cloudhsm_v2_cluster"
@@ -67,7 +67,7 @@ The following arguments are supported:
 * `source_backup_identifier` - (Optional) The id of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only hsm1.medium is supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
@@ -78,11 +78,11 @@ The following attributes are exported:
 * `vpc_id` - The id of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - The ID of the security group associated with the CloudHSM cluster.
 * `cluster_certificates` - The list of cluster certificates.
-  * `cluster_certificates.0.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
-  * `cluster_certificates.0.cluster_csr` - The certificate signing request (CSR). Available only in UNINITIALIZED state after an hsm instance is added to the cluster.
-  * `cluster_certificates.0.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
-  * `cluster_certificates.0.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
-  * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
+    * `cluster_certificates.0.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
+    * `cluster_certificates.0.cluster_csr` - The certificate signing request (CSR). Available only in UNINITIALIZED state after an hsm instance is added to the cluster.
+    * `cluster_certificates.0.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
+    * `cluster_certificates.0.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
+    * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
 
 [1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
 [2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html

@@ -1205,6 +1205,12 @@ func (c *CodeBuild) DescribeTestCasesRequest(input *DescribeTestCasesInput) (req
 		Name:       opDescribeTestCases,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1254,6 +1260,58 @@ func (c *CodeBuild) DescribeTestCasesWithContext(ctx aws.Context, input *Describ
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeTestCasesPages iterates over the pages of a DescribeTestCases operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeTestCases method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeTestCases operation.
+//    pageNum := 0
+//    err := client.DescribeTestCasesPages(params,
+//        func(page *codebuild.DescribeTestCasesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) DescribeTestCasesPages(input *DescribeTestCasesInput, fn func(*DescribeTestCasesOutput, bool) bool) error {
+	return c.DescribeTestCasesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeTestCasesPagesWithContext same as DescribeTestCasesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) DescribeTestCasesPagesWithContext(ctx aws.Context, input *DescribeTestCasesInput, fn func(*DescribeTestCasesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeTestCasesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeTestCasesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTestCasesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opGetResourcePolicy = "GetResourcePolicy"
@@ -1539,6 +1597,12 @@ func (c *CodeBuild) ListBuildsRequest(input *ListBuildsInput) (req *request.Requ
 		Name:       opListBuilds,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1587,6 +1651,58 @@ func (c *CodeBuild) ListBuildsWithContext(ctx aws.Context, input *ListBuildsInpu
 	return out, req.Send()
 }
 
+// ListBuildsPages iterates over the pages of a ListBuilds operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBuilds method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBuilds operation.
+//    pageNum := 0
+//    err := client.ListBuildsPages(params,
+//        func(page *codebuild.ListBuildsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListBuildsPages(input *ListBuildsInput, fn func(*ListBuildsOutput, bool) bool) error {
+	return c.ListBuildsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBuildsPagesWithContext same as ListBuildsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListBuildsPagesWithContext(ctx aws.Context, input *ListBuildsInput, fn func(*ListBuildsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBuildsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBuildsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListBuildsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListBuildsForProject = "ListBuildsForProject"
 
 // ListBuildsForProjectRequest generates a "aws/request.Request" representing the
@@ -1618,6 +1734,12 @@ func (c *CodeBuild) ListBuildsForProjectRequest(input *ListBuildsForProjectInput
 		Name:       opListBuildsForProject,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1668,6 +1790,58 @@ func (c *CodeBuild) ListBuildsForProjectWithContext(ctx aws.Context, input *List
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListBuildsForProjectPages iterates over the pages of a ListBuildsForProject operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBuildsForProject method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBuildsForProject operation.
+//    pageNum := 0
+//    err := client.ListBuildsForProjectPages(params,
+//        func(page *codebuild.ListBuildsForProjectOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListBuildsForProjectPages(input *ListBuildsForProjectInput, fn func(*ListBuildsForProjectOutput, bool) bool) error {
+	return c.ListBuildsForProjectPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBuildsForProjectPagesWithContext same as ListBuildsForProjectPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListBuildsForProjectPagesWithContext(ctx aws.Context, input *ListBuildsForProjectInput, fn func(*ListBuildsForProjectOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBuildsForProjectInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBuildsForProjectRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListBuildsForProjectOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListCuratedEnvironmentImages = "ListCuratedEnvironmentImages"
@@ -1775,6 +1949,12 @@ func (c *CodeBuild) ListProjectsRequest(input *ListProjectsInput) (req *request.
 		Name:       opListProjects,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1824,6 +2004,58 @@ func (c *CodeBuild) ListProjectsWithContext(ctx aws.Context, input *ListProjects
 	return out, req.Send()
 }
 
+// ListProjectsPages iterates over the pages of a ListProjects operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProjects method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProjects operation.
+//    pageNum := 0
+//    err := client.ListProjectsPages(params,
+//        func(page *codebuild.ListProjectsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListProjectsPages(input *ListProjectsInput, fn func(*ListProjectsOutput, bool) bool) error {
+	return c.ListProjectsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProjectsPagesWithContext same as ListProjectsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListProjectsPagesWithContext(ctx aws.Context, input *ListProjectsInput, fn func(*ListProjectsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListProjectsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListProjectsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListProjectsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListReportGroups = "ListReportGroups"
 
 // ListReportGroupsRequest generates a "aws/request.Request" representing the
@@ -1855,6 +2087,12 @@ func (c *CodeBuild) ListReportGroupsRequest(input *ListReportGroupsInput) (req *
 		Name:       opListReportGroups,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1903,6 +2141,58 @@ func (c *CodeBuild) ListReportGroupsWithContext(ctx aws.Context, input *ListRepo
 	return out, req.Send()
 }
 
+// ListReportGroupsPages iterates over the pages of a ListReportGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListReportGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListReportGroups operation.
+//    pageNum := 0
+//    err := client.ListReportGroupsPages(params,
+//        func(page *codebuild.ListReportGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListReportGroupsPages(input *ListReportGroupsInput, fn func(*ListReportGroupsOutput, bool) bool) error {
+	return c.ListReportGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListReportGroupsPagesWithContext same as ListReportGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListReportGroupsPagesWithContext(ctx aws.Context, input *ListReportGroupsInput, fn func(*ListReportGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListReportGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListReportGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListReportGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListReports = "ListReports"
 
 // ListReportsRequest generates a "aws/request.Request" representing the
@@ -1934,6 +2224,12 @@ func (c *CodeBuild) ListReportsRequest(input *ListReportsInput) (req *request.Re
 		Name:       opListReports,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1982,6 +2278,58 @@ func (c *CodeBuild) ListReportsWithContext(ctx aws.Context, input *ListReportsIn
 	return out, req.Send()
 }
 
+// ListReportsPages iterates over the pages of a ListReports operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListReports method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListReports operation.
+//    pageNum := 0
+//    err := client.ListReportsPages(params,
+//        func(page *codebuild.ListReportsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListReportsPages(input *ListReportsInput, fn func(*ListReportsOutput, bool) bool) error {
+	return c.ListReportsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListReportsPagesWithContext same as ListReportsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListReportsPagesWithContext(ctx aws.Context, input *ListReportsInput, fn func(*ListReportsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListReportsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListReportsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListReportsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListReportsForReportGroup = "ListReportsForReportGroup"
 
 // ListReportsForReportGroupRequest generates a "aws/request.Request" representing the
@@ -2013,6 +2361,12 @@ func (c *CodeBuild) ListReportsForReportGroupRequest(input *ListReportsForReport
 		Name:       opListReportsForReportGroup,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2064,6 +2418,58 @@ func (c *CodeBuild) ListReportsForReportGroupWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+// ListReportsForReportGroupPages iterates over the pages of a ListReportsForReportGroup operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListReportsForReportGroup method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListReportsForReportGroup operation.
+//    pageNum := 0
+//    err := client.ListReportsForReportGroupPages(params,
+//        func(page *codebuild.ListReportsForReportGroupOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListReportsForReportGroupPages(input *ListReportsForReportGroupInput, fn func(*ListReportsForReportGroupOutput, bool) bool) error {
+	return c.ListReportsForReportGroupPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListReportsForReportGroupPagesWithContext same as ListReportsForReportGroupPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListReportsForReportGroupPagesWithContext(ctx aws.Context, input *ListReportsForReportGroupInput, fn func(*ListReportsForReportGroupOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListReportsForReportGroupInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListReportsForReportGroupRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListReportsForReportGroupOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListSharedProjects = "ListSharedProjects"
 
 // ListSharedProjectsRequest generates a "aws/request.Request" representing the
@@ -2095,6 +2501,12 @@ func (c *CodeBuild) ListSharedProjectsRequest(input *ListSharedProjectsInput) (r
 		Name:       opListSharedProjects,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2143,6 +2555,58 @@ func (c *CodeBuild) ListSharedProjectsWithContext(ctx aws.Context, input *ListSh
 	return out, req.Send()
 }
 
+// ListSharedProjectsPages iterates over the pages of a ListSharedProjects operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSharedProjects method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSharedProjects operation.
+//    pageNum := 0
+//    err := client.ListSharedProjectsPages(params,
+//        func(page *codebuild.ListSharedProjectsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListSharedProjectsPages(input *ListSharedProjectsInput, fn func(*ListSharedProjectsOutput, bool) bool) error {
+	return c.ListSharedProjectsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSharedProjectsPagesWithContext same as ListSharedProjectsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListSharedProjectsPagesWithContext(ctx aws.Context, input *ListSharedProjectsInput, fn func(*ListSharedProjectsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListSharedProjectsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListSharedProjectsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListSharedProjectsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListSharedReportGroups = "ListSharedReportGroups"
 
 // ListSharedReportGroupsRequest generates a "aws/request.Request" representing the
@@ -2174,6 +2638,12 @@ func (c *CodeBuild) ListSharedReportGroupsRequest(input *ListSharedReportGroupsI
 		Name:       opListSharedReportGroups,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2220,6 +2690,58 @@ func (c *CodeBuild) ListSharedReportGroupsWithContext(ctx aws.Context, input *Li
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListSharedReportGroupsPages iterates over the pages of a ListSharedReportGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSharedReportGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSharedReportGroups operation.
+//    pageNum := 0
+//    err := client.ListSharedReportGroupsPages(params,
+//        func(page *codebuild.ListSharedReportGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeBuild) ListSharedReportGroupsPages(input *ListSharedReportGroupsInput, fn func(*ListSharedReportGroupsOutput, bool) bool) error {
+	return c.ListSharedReportGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSharedReportGroupsPagesWithContext same as ListSharedReportGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListSharedReportGroupsPagesWithContext(ctx aws.Context, input *ListSharedReportGroupsInput, fn func(*ListSharedReportGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListSharedReportGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListSharedReportGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListSharedReportGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListSourceCredentials = "ListSourceCredentials"
@@ -2798,8 +3320,8 @@ func (c *CodeBuild) UpdateWebhookWithContext(ctx aws.Context, input *UpdateWebho
 
 // An AWS service limit was exceeded for the calling AWS account.
 type AccountLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -2816,17 +3338,17 @@ func (s AccountLimitExceededException) GoString() string {
 
 func newErrorAccountLimitExceededException(v protocol.ResponseMetadata) error {
 	return &AccountLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccountLimitExceededException) Code() string {
+func (s *AccountLimitExceededException) Code() string {
 	return "AccountLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s AccountLimitExceededException) Message() string {
+func (s *AccountLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2834,22 +3356,22 @@ func (s AccountLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccountLimitExceededException) OrigErr() error {
+func (s *AccountLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s AccountLimitExceededException) Error() string {
+func (s *AccountLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccountLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccountLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccountLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccountLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type BatchDeleteBuildsInput struct {
@@ -3965,7 +4487,7 @@ type CreateProjectInput struct {
 	// in the AWS CodeBuild User Guide.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
-	// A set of tags for this build project.
+	// A list of tag key and value pairs associated with this build project.
 	//
 	// These tags are available for use by AWS services that support AWS CodeBuild
 	// build project tags.
@@ -4251,6 +4773,12 @@ type CreateReportGroupInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" min:"2" type:"string" required:"true"`
 
+	// A list of tag key and value pairs associated with this report group.
+	//
+	// These tags are available for use by AWS services that support AWS CodeBuild
+	// report group tags.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The type of report group.
 	//
 	// Type is a required field
@@ -4287,6 +4815,16 @@ func (s *CreateReportGroupInput) Validate() error {
 			invalidParams.AddNested("ExportConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4303,6 +4841,12 @@ func (s *CreateReportGroupInput) SetExportConfig(v *ReportExportConfig) *CreateR
 // SetName sets the Name field's value.
 func (s *CreateReportGroupInput) SetName(v string) *CreateReportGroupInput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateReportGroupInput) SetTags(v []*Tag) *CreateReportGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -5003,12 +5547,15 @@ type EnvironmentVariable struct {
 	// The type of environment variable. Valid values include:
 	//
 	//    * PARAMETER_STORE: An environment variable stored in Amazon EC2 Systems
-	//    Manager Parameter Store.
+	//    Manager Parameter Store. To learn how to specify a parameter store environment
+	//    variable, see parameter store reference-key in the buildspec file (https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#parameter-store-build-spec).
 	//
 	//    * PLAINTEXT: An environment variable in plain text format. This is the
 	//    default value.
 	//
 	//    * SECRETS_MANAGER: An environment variable stored in AWS Secrets Manager.
+	//    To learn how to specify a secrets manager environment variable, see secrets
+	//    manager reference-key in the buildspec file (https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#secrets-manager-build-spec).
 	Type *string `locationName:"type" type:"string" enum:"EnvironmentVariableType"`
 
 	// The value of the environment variable.
@@ -5333,8 +5880,8 @@ func (s *ImportSourceCredentialsOutput) SetArn(v string) *ImportSourceCredential
 
 // The input value that was provided is not valid.
 type InvalidInputException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5351,17 +5898,17 @@ func (s InvalidInputException) GoString() string {
 
 func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
 	return &InvalidInputException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInputException) Code() string {
+func (s *InvalidInputException) Code() string {
 	return "InvalidInputException"
 }
 
 // Message returns the exception's message.
-func (s InvalidInputException) Message() string {
+func (s *InvalidInputException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5369,22 +5916,22 @@ func (s InvalidInputException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInputException) OrigErr() error {
+func (s *InvalidInputException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInputException) Error() string {
+func (s *InvalidInputException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInputException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInputException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type InvalidateProjectCacheInput struct {
@@ -6588,8 +7135,8 @@ func (s *NetworkInterface) SetSubnetId(v string) *NetworkInterface {
 
 // There was a problem with the underlying OAuth provider.
 type OAuthProviderException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6606,17 +7153,17 @@ func (s OAuthProviderException) GoString() string {
 
 func newErrorOAuthProviderException(v protocol.ResponseMetadata) error {
 	return &OAuthProviderException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OAuthProviderException) Code() string {
+func (s *OAuthProviderException) Code() string {
 	return "OAuthProviderException"
 }
 
 // Message returns the exception's message.
-func (s OAuthProviderException) Message() string {
+func (s *OAuthProviderException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6624,22 +7171,22 @@ func (s OAuthProviderException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OAuthProviderException) OrigErr() error {
+func (s *OAuthProviderException) OrigErr() error {
 	return nil
 }
 
-func (s OAuthProviderException) Error() string {
+func (s *OAuthProviderException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OAuthProviderException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OAuthProviderException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OAuthProviderException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OAuthProviderException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Additional information about a build phase that has an error. You can use
@@ -6777,7 +7324,7 @@ type Project struct {
 	// in the AWS CodeBuild User Guide.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
-	// The tags for this build project.
+	// A list of tag key and value pairs associated with this build project.
 	//
 	// These tags are available for use by AWS services that support AWS CodeBuild
 	// build project tags.
@@ -7379,16 +7926,16 @@ type ProjectEnvironment struct {
 	//    (Mumbai), Asia Pacific (Tokyo), Asia Pacific (Sydney), and EU (Frankfurt).
 	//
 	//    * The environment type LINUX_CONTAINER with compute type build.general1.2xlarge
-	//    is available only in regions US East (N. Virginia), US East (N. Virginia),
-	//    US West (Oregon), Canada (Central), EU (Ireland), EU (London), EU (Frankfurt),
+	//    is available only in regions US East (N. Virginia), US East (Ohio), US
+	//    West (Oregon), Canada (Central), EU (Ireland), EU (London), EU (Frankfurt),
 	//    Asia Pacific (Tokyo), Asia Pacific (Seoul), Asia Pacific (Singapore),
 	//    Asia Pacific (Sydney), China (Beijing), and China (Ningxia).
 	//
 	//    * The environment type LINUX_GPU_CONTAINER is available only in regions
-	//    US East (N. Virginia), US East (N. Virginia), US West (Oregon), Canada
-	//    (Central), EU (Ireland), EU (London), EU (Frankfurt), Asia Pacific (Tokyo),
-	//    Asia Pacific (Seoul), Asia Pacific (Singapore), Asia Pacific (Sydney)
-	//    , China (Beijing), and China (Ningxia).
+	//    US East (N. Virginia), US East (Ohio), US West (Oregon), Canada (Central),
+	//    EU (Ireland), EU (London), EU (Frankfurt), Asia Pacific (Tokyo), Asia
+	//    Pacific (Seoul), Asia Pacific (Singapore), Asia Pacific (Sydney) , China
+	//    (Beijing), and China (Ningxia).
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"EnvironmentType"`
@@ -8213,6 +8760,12 @@ type ReportGroup struct {
 	// The name of a ReportGroup.
 	Name *string `locationName:"name" min:"2" type:"string"`
 
+	// A list of tag key and value pairs associated with this report group.
+	//
+	// These tags are available for use by AWS services that support AWS CodeBuild
+	// report group tags.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The type of the ReportGroup. The one valid value is TEST.
 	Type *string `locationName:"type" type:"string" enum:"ReportType"`
 }
@@ -8257,6 +8810,12 @@ func (s *ReportGroup) SetName(v string) *ReportGroup {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *ReportGroup) SetTags(v []*Tag) *ReportGroup {
+	s.Tags = v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ReportGroup) SetType(v string) *ReportGroup {
 	s.Type = &v
@@ -8266,8 +8825,8 @@ func (s *ReportGroup) SetType(v string) *ReportGroup {
 // The specified AWS resource cannot be created, because an AWS resource with
 // the same settings already exists.
 type ResourceAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -8284,17 +8843,17 @@ func (s ResourceAlreadyExistsException) GoString() string {
 
 func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ResourceAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceAlreadyExistsException) Code() string {
+func (s *ResourceAlreadyExistsException) Code() string {
 	return "ResourceAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ResourceAlreadyExistsException) Message() string {
+func (s *ResourceAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8302,28 +8861,28 @@ func (s ResourceAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceAlreadyExistsException) OrigErr() error {
+func (s *ResourceAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceAlreadyExistsException) Error() string {
+func (s *ResourceAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified AWS resource cannot be found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -8340,17 +8899,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8358,22 +8917,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about S3 logs for a build project.
@@ -9181,7 +9740,7 @@ type Tag struct {
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The tag's value.
-	Value *string `locationName:"value" min:"1" type:"string"`
+	Value *string `locationName:"value" type:"string"`
 }
 
 // String returns the string representation
@@ -9199,9 +9758,6 @@ func (s *Tag) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Tag"}
 	if s.Key != nil && len(*s.Key) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
-	}
-	if s.Value != nil && len(*s.Value) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9486,7 +10042,7 @@ type UpdateProjectInput struct {
 	// in the AWS CodeBuild User Guide.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
-	// The replacement set of tags for this build project.
+	// An updated list of tag key and value pairs associated with this build project.
 	//
 	// These tags are available for use by AWS services that support AWS CodeBuild
 	// build project tags.
@@ -9759,6 +10315,12 @@ type UpdateReportGroupInput struct {
 	//
 	//    * NO_EXPORT: The report results are not exported.
 	ExportConfig *ReportExportConfig `locationName:"exportConfig" type:"structure"`
+
+	// An updated list of tag key and value pairs associated with this report group.
+	//
+	// These tags are available for use by AWS services that support AWS CodeBuild
+	// report group tags.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -9785,6 +10347,16 @@ func (s *UpdateReportGroupInput) Validate() error {
 			invalidParams.AddNested("ExportConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9801,6 +10373,12 @@ func (s *UpdateReportGroupInput) SetArn(v string) *UpdateReportGroupInput {
 // SetExportConfig sets the ExportConfig field's value.
 func (s *UpdateReportGroupInput) SetExportConfig(v *ReportExportConfig) *UpdateReportGroupInput {
 	s.ExportConfig = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateReportGroupInput) SetTags(v []*Tag) *UpdateReportGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -10095,10 +10673,10 @@ type WebhookFilter struct {
 	// EVENT
 	//
 	// A webhook event triggers a build when the provided pattern matches one of
-	// four event types: PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, and PULL_REQUEST_REOPENED.
-	// The EVENT patterns are specified as a comma-separated string. For example,
-	// PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED filters all push, pull request
-	// created, and pull request updated events.
+	// five event types: PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_REOPENED,
+	// and PULL_REQUEST_MERGED. The EVENT patterns are specified as a comma-separated
+	// string. For example, PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED filters
+	// all push, pull request created, and pull request updated events.
 	//
 	// The PULL_REQUEST_REOPENED works with GitHub and GitHub Enterprise only.
 	//
@@ -10517,4 +11095,7 @@ const (
 
 	// WebhookFilterTypeFilePath is a WebhookFilterType enum value
 	WebhookFilterTypeFilePath = "FILE_PATH"
+
+	// WebhookFilterTypeCommitMessage is a WebhookFilterType enum value
+	WebhookFilterTypeCommitMessage = "COMMIT_MESSAGE"
 )

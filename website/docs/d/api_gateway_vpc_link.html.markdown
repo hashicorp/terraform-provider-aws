@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway"
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_vpc_link"
 description: |-
@@ -23,14 +23,14 @@ data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
 
 ## Argument Reference
 
- * `name` - (Required) The name of the API Gateway VPC Link to look up. If no API Gateway VPC Link is found with this name, an error will be returned. 
+* `name` - (Required) The name of the API Gateway VPC Link to look up. If no API Gateway VPC Link is found with this name, an error will be returned. 
  If multiple API Gateway VPC Links are found with this name, an error will be returned.
 
 ## Attributes Reference
 
- * `id` - Set to the ID of the found API Gateway VPC Link.
- * `description` - The description of the VPC link.
- * `status` - The status of the VPC link.
- * `status_message` - The status message of the VPC link.
- * `target_arns` - The list of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
- * `tags` - Key-value mapping of resource tags
+* `id` - Set to the ID of the found API Gateway VPC Link.
+* `description` - The description of the VPC link.
+* `status` - The status of the VPC link.
+* `status_message` - The status message of the VPC link.
+* `target_arns` - The list of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
+* `tags` - Key-value map of resource tags

@@ -224,6 +224,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -277,7 +278,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -315,7 +316,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("s3_key_prefix") {
 		input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
 	}
-	if d.HasChange("cloud_watch_logs_role_arn") || d.HasChange("cloud_watch_logs_group_arn") {
+	if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
 		// Both of these need to be provided together
 		// in the update call otherwise API complains
 		input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
@@ -450,6 +451,15 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	}
 
 	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
+	// If no defined selectors revert to the single default selector
+	if len(eventSelectors) == 0 {
+		es := &cloudtrail.EventSelector{
+			IncludeManagementEvents: aws.Bool(true),
+			ReadWriteType:           aws.String("All"),
+			DataResources:           make([]*cloudtrail.DataResource, 0),
+		}
+		eventSelectors = append(eventSelectors, es)
+	}
 	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
@@ -509,7 +519,7 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
 		return eventSelectors
 	}
 

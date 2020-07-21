@@ -1409,10 +1409,7 @@ func (c *DocDB) DescribeCertificatesRequest(input *DescribeCertificatesInput) (r
 // DescribeCertificates API operation for Amazon DocumentDB with MongoDB compatibility.
 //
 // Returns a list of certificate authority (CA) certificates provided by Amazon
-// DocumentDB for this AWS account. For certain management features such as
-// cluster and instance lifecycle management, Amazon DocumentDB leverages operational
-// technology that is shared with Amazon RDS and Amazon Neptune. Use the filterName=engine,Values=docdb
-// filter parameter to return only Amazon DocumentDB clusters.
+// DocumentDB for this AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1824,7 +1821,10 @@ func (c *DocDB) DescribeDBClustersRequest(input *DescribeDBClustersInput) (req *
 // DescribeDBClusters API operation for Amazon DocumentDB with MongoDB compatibility.
 //
 // Returns information about provisioned Amazon DocumentDB clusters. This API
-// operation supports pagination.
+// operation supports pagination. For certain management features such as cluster
+// and instance lifecycle management, Amazon DocumentDB leverages operational
+// technology that is shared with Amazon RDS and Amazon Neptune. Use the filterName=engine,Values=docdb
+// filter parameter to return only Amazon DocumentDB clusters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5177,7 +5177,7 @@ type CreateDBClusterParameterGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must match the name of an existing DBClusterParameterGroup.
+	//    * Must not match the name of an existing DBClusterParameterGroup.
 	//
 	// This value is stored as a lowercase string.
 	//

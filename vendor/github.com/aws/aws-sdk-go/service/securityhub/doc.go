@@ -4,12 +4,12 @@
 // requests to AWS SecurityHub.
 //
 // Security Hub provides you with a comprehensive view of the security state
-// of your AWS environment and resources. It also provides you with the compliance
-// status of your environment based on controls from supported standards. Security
-// Hub collects security data from AWS accounts, services, and integrated third-party
-// products and helps you analyze security trends in your environment to identify
-// the highest priority security issues. For more information about Security
-// Hub, see the AWS Security Hub User Guide (https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html) .
+// of your AWS environment and resources. It also provides you with the readiness
+// status of your environment based on controls from supported security standards.
+// Security Hub collects security data from AWS accounts, services, and integrated
+// third-party products and helps you analyze security trends in your environment
+// to identify the highest priority security issues. For more information about
+// Security Hub, see the AWS Security Hub User Guide (https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html) .
 //
 // When you use operations in the Security Hub API, the requests are executed
 // only in the AWS Region that is currently active or in the specific AWS Region

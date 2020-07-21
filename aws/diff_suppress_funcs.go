@@ -139,3 +139,9 @@ func suppressEmptyToDefault(def string) func(k, old, new string, d *schema.Resou
 		return old == "" && new == def
 	}
 }
+
+// suppressEqualCIDRBlockDiffs provides custom difference suppression for CIDR blocks
+// that have different string values but represent the same CIDR.
+func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {
+	return cidrBlocksEqual(old, new)
+}
