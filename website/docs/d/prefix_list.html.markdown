@@ -8,8 +8,8 @@ description: |-
 
 # Data Source: aws_prefix_list
 
-`aws_prefix_list` provides details about a specific prefix list (PL)
-in the current region.
+`aws_prefix_list` provides details about a specific AWS prefix list (PL)
+or a customer-managed prefix list in the current region.
 
 This can be used both to validate a prefix list given in a variable
 and to obtain the CIDR blocks (IP address ranges) for the associated
@@ -64,6 +64,30 @@ data "aws_prefix_list" "test" {
 }
 ```
 
+### Find a managed prefix list
+
+```hcl
+resource "aws_prefix_list" "example" {
+  name           = "example"
+  max_entries    = 5
+  address_family = "IPv4"
+  entry {
+    cidr_block = "1.0.0.0/8"
+  }
+  entry {
+    cidr_block = "2.0.0.0/8"
+  }
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+  }
+}
+
+data "aws_prefix_list" "example" {
+  prefix_list_id = aws_prefix_list.example.id
+}
+```
+
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available
@@ -78,7 +102,7 @@ whose data will be exported as attributes.
 
 The following arguments are supported by the `filter` configuration block:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribePrefixLists API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribePrefixLists.html).
+* `name` - (Required) The name of the filter field. Valid values can be found in the EC2 [DescribeManagedPrefixLists](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeManagedPrefixLists.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference
@@ -86,5 +110,10 @@ The following arguments are supported by the `filter` configuration block:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the selected prefix list.
+* `arn` - The ARN of the selected prefix list.
 * `name` - The name of the selected prefix list.
 * `cidr_blocks` - The list of CIDR blocks for the AWS service associated with the prefix list.
+* `owner_id` - The Account ID of the owner of a customer-managed prefix list, or `AWS` otherwise.
+* `address_family` - The address family of the prefix list. Valid values are `IPv4` and `IPv6`.
+* `max_entries` - When then prefix list is managed, the maximum number of entries it supports, or null otherwise.
+* `tags` - A map of tags assigned to the resource.

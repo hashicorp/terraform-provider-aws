@@ -70,6 +70,26 @@ func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 			return fmt.Errorf("cidr_blocks seem suspiciously low: %d", cidrBlockSize)
 		}
 
+		if actual := attr["owner_id"]; actual != "AWS" {
+			return fmt.Errorf("bad owner_id %s", actual)
+		}
+
+		if actual := attr["address_family"]; actual != "IPv4" {
+			return fmt.Errorf("bad address_family %s", actual)
+		}
+
+		if actual := attr["arn"]; actual != "arn:aws:ec2:us-west-2:aws:prefix-list/pl-68a54001" {
+			return fmt.Errorf("bad arn %s", actual)
+		}
+
+		if actual := attr["max_entries"]; actual != "" {
+			return fmt.Errorf("unexpected max_entries %s", actual)
+		}
+
+		if attr["tags.%"] != "0" {
+			return fmt.Errorf("expected 0 tags")
+		}
+
 		return nil
 	}
 }
@@ -141,5 +161,59 @@ data "aws_prefix_list" "test" {
     name = "prefix-list-id"
     values = ["pl-00a54069"]  # com.amazonaws.us-west-2.dynamodb
   }
+}
+`
+
+func TestAccDataSourceAwsPrefixList_managedPrefixList(t *testing.T) {
+	resourceName := "aws_prefix_list.test"
+	dataSourceName := "data.aws_prefix_list.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPrefixListDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsPrefixListConfig_managedPrefixList,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
+					testAccCheckResourceAttrAccountID(dataSourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "address_family", dataSourceName, "address_family"),
+					resource.TestCheckResourceAttrPair(resourceName, "max_entries", dataSourceName, "max_entries"),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.0", "1.0.0.0/8"),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.1", "2.0.0.0/8"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Key2", "Value2"),
+				),
+			},
+		},
+	})
+}
+
+const testAccDataSourceAwsPrefixListConfig_managedPrefixList = `
+resource "aws_prefix_list" "test" {
+  name           = "tf-test-acc"
+  max_entries    = 5
+  address_family = "IPv4"
+  entry {
+    cidr_block = "1.0.0.0/8"
+  }
+  entry {
+    cidr_block = "2.0.0.0/8"
+  }
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+  }
+}
+
+data "aws_prefix_list" "test" {
+  prefix_list_id = aws_prefix_list.test.id
 }
 `

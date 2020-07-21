@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsPrefixList() *schema.Resource {
@@ -30,16 +32,34 @@ func dataSourceAwsPrefixList() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": dataSourceFiltersSchema(),
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"address_family": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"max_entries": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 
-	req := &ec2.DescribePrefixListsInput{}
+	req := &ec2.DescribeManagedPrefixListsInput{}
 	if filtersOk {
 		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
 	}
@@ -54,7 +74,7 @@ func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Reading Prefix List: %s", req)
-	resp, err := conn.DescribePrefixLists(req)
+	resp, err := conn.DescribeManagedPrefixLists(req)
 	switch {
 	case err != nil:
 		return err
@@ -69,10 +89,39 @@ func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(*pl.PrefixListId)
 	d.Set("name", pl.PrefixListName)
 
-	cidrs := aws.StringValueSlice(pl.Cidrs)
+	getEntriesInput := ec2.GetManagedPrefixListEntriesInput{
+		PrefixListId: pl.PrefixListId,
+	}
+
+	cidrs := []string(nil)
+
+	err = conn.GetManagedPrefixListEntriesPages(
+		&getEntriesInput, func(output *ec2.GetManagedPrefixListEntriesOutput, last bool) bool {
+			for _, entry := range output.Entries {
+				cidrs = append(cidrs, aws.StringValue(entry.Cidr))
+			}
+			return true
+		})
+	if err != nil {
+		return fmt.Errorf("failed to get entries of prefix list %s: %s", *pl.PrefixListId, err)
+	}
+
 	sort.Strings(cidrs)
+
 	if err := d.Set("cidr_blocks", cidrs); err != nil {
 		return fmt.Errorf("failed to set cidr blocks of prefix list %s: %s", d.Id(), err)
+	}
+
+	d.Set("owner_id", pl.OwnerId)
+	d.Set("address_family", pl.AddressFamily)
+	d.Set("arn", pl.PrefixListArn)
+
+	if actual := aws.Int64Value(pl.MaxEntries); actual > 0 {
+		d.Set("max_entries", actual)
+	}
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("failed to set tags of prefix list %s: %s", d.Id(), err)
 	}
 
 	return nil
