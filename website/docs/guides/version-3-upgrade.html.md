@@ -31,6 +31,7 @@ Upgrade topics:
 - [Resource: aws_launch_template](#resource-aws_launch_template)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
+- [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_security_group](#resource-aws_security_group)
 - [Resource: aws_sns_platform_application](#resource-aws_sns_platform_application)
@@ -474,6 +475,12 @@ resource "aws_msk_cluster" "example" {
   }
 }
 ```
+
+## Resource: aws_rds_cluster
+
+### scaling_configuration.min_capacity Now Defaults to 1
+
+Previously when the `min_capacity` argument in a `scaling_configuration` block was not configured, the resource would default to 2. This behavior has been updated to align with the AWS RDS Cluster API default of 1. 
 
 ## Resource: aws_s3_bucket
 
