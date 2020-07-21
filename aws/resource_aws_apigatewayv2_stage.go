@@ -81,10 +81,9 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_trace_enabled": {
-							Type:             schema.TypeBool,
-							Optional:         true,
-							Default:          false,
-							DiffSuppressFunc: suppressIfApigatewayv2ProtocolType(apigatewayv2.ProtocolTypeHttp),
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"detailed_metrics_enabled": {
 							Type:     schema.TypeBool,
@@ -143,10 +142,9 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_trace_enabled": {
-							Type:             schema.TypeBool,
-							Optional:         true,
-							Default:          false,
-							DiffSuppressFunc: suppressIfApigatewayv2ProtocolType(apigatewayv2.ProtocolTypeHttp),
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"detailed_metrics_enabled": {
 							Type:     schema.TypeBool,
@@ -247,8 +245,6 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).apigatewayv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	protocolType := d.Get("api_protocol_type").(string)
-
 	apiId := d.Get("api_id").(string)
 	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),
@@ -285,7 +281,7 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
 	d.Set("name", stageName)
-	err = d.Set("route_settings", flattenApiGatewayV2RouteSettings(resp.RouteSettings, protocolType))
+	err = d.Set("route_settings", flattenApiGatewayV2RouteSettings(resp.RouteSettings))
 	if err != nil {
 		return fmt.Errorf("error setting route_settings: %s", err)
 	}
@@ -297,7 +293,7 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	switch protocolType {
+	switch d.Get("api_protocol_type").(string) {
 	case apigatewayv2.ProtocolTypeWebsocket:
 		executionArn := arn.ARN{
 			Partition: meta.(*AWSClient).partition,
@@ -476,13 +472,13 @@ func expandApiGatewayV2DefaultRouteSettings(vSettings []interface{}, protocolTyp
 	}
 	mSettings := vSettings[0].(map[string]interface{})
 
-	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType != apigatewayv2.ProtocolTypeHttp {
+	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 		routeSettings.DataTraceEnabled = aws.Bool(vDataTraceEnabled)
 	}
 	if vDetailedMetricsEnabled, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
 		routeSettings.DetailedMetricsEnabled = aws.Bool(vDetailedMetricsEnabled)
 	}
-	if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType != apigatewayv2.ProtocolTypeHttp {
+	if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 		routeSettings.LoggingLevel = aws.String(vLoggingLevel)
 	}
 	if vThrottlingBurstLimit, ok := mSettings["throttling_burst_limit"].(int); ok {
@@ -517,15 +513,13 @@ func expandApiGatewayV2RouteSettings(vSettings *schema.Set, protocolType string)
 
 		mSettings := v.(map[string]interface{})
 
-		routeKey := mSettings["route_key"].(string)
-
-		if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType != apigatewayv2.ProtocolTypeHttp {
+		if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 			routeSettings.DataTraceEnabled = aws.Bool(vDataTraceEnabled)
 		}
 		if vDetailedMetricsEnabled, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
 			routeSettings.DetailedMetricsEnabled = aws.Bool(vDetailedMetricsEnabled)
 		}
-		if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType != apigatewayv2.ProtocolTypeHttp {
+		if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 			routeSettings.LoggingLevel = aws.String(vLoggingLevel)
 		}
 		if vThrottlingBurstLimit, ok := mSettings["throttling_burst_limit"].(int); ok {
@@ -535,28 +529,20 @@ func expandApiGatewayV2RouteSettings(vSettings *schema.Set, protocolType string)
 			routeSettings.ThrottlingRateLimit = aws.Float64(vThrottlingRateLimit)
 		}
 
-		settings[routeKey] = routeSettings
+		settings[mSettings["route_key"].(string)] = routeSettings
 	}
 
 	return settings
 }
 
-func flattenApiGatewayV2RouteSettings(settings map[string]*apigatewayv2.RouteSettings, protocolType string) []interface{} {
+func flattenApiGatewayV2RouteSettings(settings map[string]*apigatewayv2.RouteSettings) []interface{} {
 	vSettings := []interface{}{}
 
 	for k, routeSetting := range settings {
-		// Schema defaults.
-		dataTraceEnabled := false
-		loggingLevel := apigatewayv2.LoggingLevelOff
-		if protocolType != apigatewayv2.ProtocolTypeHttp {
-			dataTraceEnabled = aws.BoolValue(routeSetting.DataTraceEnabled)
-			loggingLevel = aws.StringValue(routeSetting.LoggingLevel)
-		}
-
 		vSettings = append(vSettings, map[string]interface{}{
-			"data_trace_enabled":       dataTraceEnabled,
+			"data_trace_enabled":       aws.BoolValue(routeSetting.DataTraceEnabled),
 			"detailed_metrics_enabled": aws.BoolValue(routeSetting.DetailedMetricsEnabled),
-			"logging_level":            loggingLevel,
+			"logging_level":            aws.StringValue(routeSetting.LoggingLevel),
 			"route_key":                k,
 			"throttling_burst_limit":   int(aws.Int64Value(routeSetting.ThrottlingBurstLimit)),
 			"throttling_rate_limit":    aws.Float64Value(routeSetting.ThrottlingRateLimit),
