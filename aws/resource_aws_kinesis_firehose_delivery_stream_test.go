@@ -1147,9 +1147,12 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 			{
 				Config: preConfigWithVpc,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
-					resource.TestMatchResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
 				),
 			},
 			{
@@ -1160,9 +1163,12 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 			{
 				Config: postConfigWithVpc,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
-					resource.TestMatchResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
 				),
 			},
 		},

@@ -444,7 +444,7 @@ The `vpc_config` object supports the following:
 
 * `subnet_ids` - (Required) A list of subnet IDs to associate with Kinesis Firehose.
 * `security_group_ids` - (Required) A list of security group IDs to associate with Kinesis Firehose.
-* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon EC2 configuration API and for creating network interfaces.  Make sure role has permissions of `ec2:CreateNetworkInterface`, `ec2:CreateNetworkInterfacePermission`, `ec2:Describe*` and `ec2:DeleteNetworkInterface`
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon EC2 configuration API and for creating network interfaces. Make sure role has necessary [IAM permissions](https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-es-vpc)
 
 ### data_format_conversion_configuration
 
