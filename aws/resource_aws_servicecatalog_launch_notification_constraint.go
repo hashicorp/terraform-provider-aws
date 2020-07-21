@@ -12,7 +12,7 @@ import (
 )
 
 func resourceAwsServiceCatalogLaunchNotificationConstraint() *schema.Resource {
-	var awsResourceIdPattern = regexp.MustCompile("^[a-zA-Z0-9_\\-]*")
+	var awsResourceIdPattern = regexp.MustCompile(`^[a-zA-Z0-9_\-]*`)
 	return &schema.Resource{
 		Create: resourceAwsServiceCatalogLaunchNotificationConstraintCreate,
 		Read:   resourceAwsServiceCatalogLaunchNotificationConstraintRead,
@@ -99,9 +99,7 @@ func resourceAwsServiceCatalogLaunchNotificationConstraintJsonParameters(d *sche
 	}
 	constraint.PortfolioId = d.Get("portfolio_id").(string)
 	constraint.ProductId = d.Get("product_id").(string)
-	if err := resourceAwsServiceCatalogLaunchNotificationConstraintParseArns(d, &constraint); err != nil {
-		return "", err
-	}
+	resourceAwsServiceCatalogLaunchNotificationConstraintParseArns(d, &constraint)
 	marshal, err := json.Marshal(constraint)
 	if err != nil {
 		return "", err
@@ -109,14 +107,13 @@ func resourceAwsServiceCatalogLaunchNotificationConstraintJsonParameters(d *sche
 	return string(marshal), nil
 }
 
-func resourceAwsServiceCatalogLaunchNotificationConstraintParseArns(d *schema.ResourceData, constraint *awsServiceCatalogLaunchNotificationConstraint) error {
+func resourceAwsServiceCatalogLaunchNotificationConstraintParseArns(d *schema.ResourceData, constraint *awsServiceCatalogLaunchNotificationConstraint) {
 	constraint.NotificationArns = []string{}
 	if arns, ok := d.GetOk("notification_arns"); ok {
 		for _, arn := range arns.([]interface{}) {
 			constraint.NotificationArns = append(constraint.NotificationArns, arn.(string))
 		}
 	}
-	return nil
 }
 
 func resourceAwsServiceCatalogLaunchNotificationConstraintRead(d *schema.ResourceData, meta interface{}) error {
