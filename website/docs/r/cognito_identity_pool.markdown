@@ -60,9 +60,9 @@ backend and the Cognito service to communicate about the developer provider.
 
 #### Cognito Identity Providers
 
-  * `client_id` (Optional) - The client ID for the Amazon Cognito Identity User Pool.
-  * `provider_name` (Optional) - The provider name for an Amazon Cognito Identity User Pool.
-  * `server_side_token_check` (Optional) - Whether server-side token validation is enabled for the identity provider’s token or not.
+* `client_id` (Optional) - The client ID for the Amazon Cognito Identity User Pool.
+* `provider_name` (Optional) - The provider name for an Amazon Cognito Identity User Pool.
+* `server_side_token_check` (Optional) - Whether server-side token validation is enabled for the identity provider’s token or not.
 
 ## Attributes Reference
 

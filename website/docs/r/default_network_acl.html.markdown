@@ -182,6 +182,7 @@ can resume managing them via the AWS Console.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Default Network ACL
+* `arn` - The ARN of the Default Network ACL
 * `vpc_id` -  The ID of the associated VPC
 * `ingress` - Set of ingress rules
 * `egress` - Set of egress rules

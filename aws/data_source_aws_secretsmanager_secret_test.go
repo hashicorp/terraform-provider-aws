@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceAwsSecretsManagerSecret_Basic(t *testing.T) {
+func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,

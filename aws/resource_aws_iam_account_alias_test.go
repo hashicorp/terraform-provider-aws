@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSIAMAccountAlias(t *testing.T) {
+func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Basic": {
 			"basic": testAccAWSIAMAccountAlias_basic_with_datasource,

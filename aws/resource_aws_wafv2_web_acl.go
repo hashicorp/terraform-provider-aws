@@ -246,42 +246,42 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Updating WAFv2 WebACL %s", d.Id())
+	if d.HasChanges("default_action", "description", "rule", "visibility_config") {
+		u := &wafv2.UpdateWebACLInput{
+			Id:               aws.String(d.Id()),
+			Name:             aws.String(d.Get("name").(string)),
+			Scope:            aws.String(d.Get("scope").(string)),
+			LockToken:        aws.String(d.Get("lock_token").(string)),
+			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
+			Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+		}
 
-	u := &wafv2.UpdateWebACLInput{
-		Id:               aws.String(d.Id()),
-		Name:             aws.String(d.Get("name").(string)),
-		Scope:            aws.String(d.Get("scope").(string)),
-		LockToken:        aws.String(d.Get("lock_token").(string)),
-		DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
-		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
-	}
+		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+			u.Description = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
-		u.Description = aws.String(v.(string))
-	}
-
-	err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
-		_, err := conn.UpdateWebACL(u)
-		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
-				return resource.RetryableError(err)
+		err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateWebACL(u)
+			if err != nil {
+				if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
 			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+			return nil
+		})
 
-	if isResourceTimeoutError(err) {
-		_, err = conn.UpdateWebACL(u)
-	}
-
-	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
-			return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateWebACL(u)
 		}
-		return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
+
+		if err != nil {
+			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+				return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
+			}
+			return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -338,14 +338,14 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         wafv2StatementSchema(level - 1),
+				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(),
-				"not_statement":                         wafv2StatementSchema(level - 1),
-				"or_statement":                          wafv2StatementSchema(level - 1),
-				"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
+				"not_statement":                         wafv2StatementSchema(level),
+				"or_statement":                          wafv2StatementSchema(level),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
@@ -429,12 +429,12 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         wafv2StatementSchema(level - 1),
+				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
-				"not_statement":                         wafv2StatementSchema(level - 1),
-				"or_statement":                          wafv2StatementSchema(level - 1),
+				"not_statement":                         wafv2StatementSchema(level),
+				"or_statement":                          wafv2StatementSchema(level),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),

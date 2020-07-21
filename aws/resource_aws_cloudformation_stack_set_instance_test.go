@@ -495,13 +495,13 @@ TEMPLATE
 }
 
 func testAccAWSCloudFormationStackSetInstanceConfig(rName string) string {
-	return testAccAWSCloudFormationStackSetInstanceConfigBase(rName) + fmt.Sprintf(`
+	return testAccAWSCloudFormationStackSetInstanceConfigBase(rName) + `
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = ["aws_iam_role_policy.Administration", "aws_iam_role_policy.Execution"]
 
   stack_set_name = "${aws_cloudformation_stack_set.test.name}"
 }
-`)
+`
 }
 
 func testAccAWSCloudFormationStackSetInstanceConfigParameterOverrides1(rName, value1 string) string {

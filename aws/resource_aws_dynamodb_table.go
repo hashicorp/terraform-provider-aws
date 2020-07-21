@@ -399,14 +399,20 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		output, err = conn.CreateTable(req)
 	}
+
 	if err != nil {
 		return fmt.Errorf("error creating DynamoDB Table: %s", err)
 	}
 
-	d.SetId(*output.TableDescription.TableName)
+	if output == nil || output.TableDescription == nil {
+		return fmt.Errorf("error creating DynamoDB Table: empty response")
+	}
+
+	d.SetId(aws.StringValue(output.TableDescription.TableName))
 	d.Set("arn", output.TableDescription.TableArn)
 
 	if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutCreate), conn); err != nil {

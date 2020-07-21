@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsSfnStateMachine(t *testing.T) {
+func TestAccDataSourceAwsSfnStateMachine_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	dataSourceName := "data.aws_sfn_state_machine.test"
 	resourceName := "aws_sfn_state_machine.test"

@@ -31,7 +31,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -907,9 +907,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		spotFleetConfig.ValidUntil = aws.Time(validUntil)
-	} else {
-		validUntil := time.Now().Add(24 * time.Hour)
-		spotFleetConfig.ValidUntil = aws.Time(validUntil)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -1604,11 +1601,11 @@ func hashLaunchSpecification(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
-	if m["availability_zone"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
+	if v, ok := m["availability_zone"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if m["subnet_id"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+	if v, ok := m["subnet_id"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))

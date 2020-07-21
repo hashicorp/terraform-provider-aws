@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSDmsReplicationTaskBasic(t *testing.T) {
+func TestAccAWSDmsReplicationTask_basic(t *testing.T) {
 	resourceName := "aws_dms_replication_task.dms_replication_task"
 	randId := acctest.RandString(8)
 

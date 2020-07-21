@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSCodeStarNotificationsNotificationRule_Basic(t *testing.T) {
+func TestAccAWSCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 

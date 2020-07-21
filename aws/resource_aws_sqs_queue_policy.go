@@ -81,7 +81,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[DEBUG] SQS attribute %s not found - retrying", sqs.QueueAttributeNamePolicy)
 			return resource.RetryableError(notUpdatedError)
 		}
-		equivalent, err := awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+		equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -100,7 +100,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			}
 
 			var equivalent bool
-			equivalent, err = awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+			equivalent, err = awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
 			if !equivalent {
 				return notUpdatedError
 			}
@@ -123,7 +123,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	})
 	if err != nil {
-		if isAWSErr(err, "AWS.SimpleQueueService.NonExistentQueue", "") {
+		if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
 			log.Printf("[WARN] SQS Queue (%s) not found", d.Id())
 			d.SetId("")
 			return nil

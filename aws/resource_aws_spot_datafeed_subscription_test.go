@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSSpotDatafeedSubscription(t *testing.T) {
+func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
 	cases := map[string]func(t *testing.T){
 		"basic":      testAccAWSSpotDatafeedSubscription_basic,
 		"disappears": testAccAWSSpotDatafeedSubscription_disappears,
