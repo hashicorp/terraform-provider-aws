@@ -49,14 +49,6 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"service_names": {
-							Type:     schema.TypeSet,
-							Removed:  "Use `aws_appmesh_virtual_service` resources instead",
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
 						"listener": {
 							Type:     schema.TypeList,
 							Required: true,

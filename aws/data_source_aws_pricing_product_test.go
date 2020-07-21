@@ -91,7 +91,7 @@ func testAccDataSourceAwsPricingProductConfigEc2(dataName string, instanceType s
 }
 
 func testAccDataSourceAwsPricingProductConfigRedshift() string {
-	return fmt.Sprintf(`data "aws_pricing_product" "test" {
+	return `data "aws_pricing_product" "test" {
 		service_code = "AmazonRedshift"
 	  
 		filters {
@@ -104,7 +104,7 @@ func testAccDataSourceAwsPricingProductConfigRedshift() string {
 			value = "US East (N. Virginia)"
 		}
 }
-`)
+`
 }
 
 func testAccPricingCheckValueIsJSON(data string) resource.TestCheckFunc {

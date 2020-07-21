@@ -193,6 +193,27 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_secondaryPrivateIPs(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "secondary_private_ips", resourceName, "secondary_private_ips"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
@@ -651,7 +672,7 @@ data "aws_instance" "test" {
 `
 
 func testAccInstanceDataSourceConfig_privateIP(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -662,7 +683,22 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`)
+`
+}
+
+func testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
+resource "aws_instance" "test" {
+  ami                   = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type         = "t2.micro"
+  subnet_id             = "${aws_subnet.test.id}"
+  secondary_private_ips = ["10.1.1.42"]
+}
+
+data "aws_instance" "test" {
+  instance_id = "${aws_instance.test.id}"
+}
+`
 }
 
 func testAccInstanceDataSourceConfig_keyPair(rName string) string {
@@ -697,7 +733,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_VPC(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type               = "m1.small"
@@ -711,7 +747,7 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`)
+`
 }
 
 func testAccInstanceDataSourceConfig_PlacementGroup(rName string) string {
@@ -774,7 +810,7 @@ func testAccInstanceDataSourceConfig_VPCSecurityGroups(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
 		testAccAwsInstanceVpcConfig(rName, false) +
 		testAccAwsInstanceVpcSecurityGroupConfig(rName) +
-		fmt.Sprintf(`
+		`
 resource "aws_instance" "test" {
   ami                    = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type          = "t1.micro"
@@ -786,7 +822,7 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`)
+`
 }
 
 func testAccInstanceDataSourceConfig_getPasswordData(rName string, val bool) string {
@@ -847,7 +883,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -861,7 +897,7 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`)
+`
 }
 
 func testAccInstanceDataSourceConfig_metadataOptions(rName string) string {

@@ -48,7 +48,7 @@ The following arguments are supported:
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that
   instances in the DB cluster can be created in.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
-* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
+* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSDmsReplicationSubnetGroupBasic(t *testing.T) {
+func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
 	randId := acctest.RandString(8)
 

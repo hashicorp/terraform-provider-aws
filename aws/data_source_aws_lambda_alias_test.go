@@ -106,10 +106,10 @@ resource "aws_lambda_alias" "test" {
 }
 
 func testAccDataSourceAWSLambdaAliasConfigBasic(rName string) string {
-	return testAccDataSourceAWSLambdaAliasConfigBase(rName) + fmt.Sprintf(`
+	return testAccDataSourceAWSLambdaAliasConfigBase(rName) + `
 data "aws_lambda_alias" "test" {
   name          = aws_lambda_alias.test.name
   function_name = aws_lambda_alias.test.function_name
 }
-  `)
+  `
 }

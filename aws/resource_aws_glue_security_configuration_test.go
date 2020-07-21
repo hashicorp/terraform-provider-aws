@@ -60,7 +60,7 @@ func testSweepGlueSecurityConfigurations(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueSecurityConfiguration_Basic(t *testing.T) {
+func TestAccAWSGlueSecurityConfiguration_basic(t *testing.T) {
 	var securityConfiguration glue.SecurityConfiguration
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")

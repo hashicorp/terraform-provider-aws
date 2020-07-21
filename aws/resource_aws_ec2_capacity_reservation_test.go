@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
@@ -77,6 +78,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 				Config: testAccEc2CapacityReservationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`capacity-reservation/cr-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
@@ -353,6 +355,27 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2CapacityReservation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

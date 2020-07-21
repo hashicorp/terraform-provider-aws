@@ -43,13 +43,6 @@ func resourceAwsDxLag() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"number_of_connections": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Removed:  "Use `aws_dx_connection` and `aws_dx_connection_association` resources instead",
-			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
