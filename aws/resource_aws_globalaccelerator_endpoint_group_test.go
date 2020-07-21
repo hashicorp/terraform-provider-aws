@@ -2,12 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
@@ -42,8 +42,8 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 }
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
-	resourceName := "aws_globalaccelerator_endpoint_group.example"
-	rInt := acctest.RandInt()
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -51,7 +51,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorEndpointGroup_alb_clientip(rInt),
+				Config: testAccGlobalAcceleratorEndpointGroup_alb_clientip(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -61,8 +61,9 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					testAccCheckGlobalAcceleratorEndpointGroupConfig(resourceName, "client_ip_preservation_enabled",
-						"false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"client_ip_preservation_enabled": "true",
+					}),
 				),
 			},
 			{
@@ -195,19 +196,19 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
 `, rInt)
 }
 
-func testAccGlobalAcceleratorEndpointGroup_alb_clientip(rInt int) string {
+func testAccGlobalAcceleratorEndpointGroup_alb_clientip(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
-  name            = "%d"
+resource "aws_lb" "test" {
+  name            = %[1]q
   internal        = false
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = ["${aws_security_group.test.id}"]
+  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
@@ -216,32 +217,37 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
 
-resource "aws_vpc" "alb_test" {
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-lb-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+resource "aws_subnet" "test" {
+  count             = 2
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "${element(var.subnets, count.index)}"
+  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags = {
-    Name = "tf-acc-lb-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = "${aws_vpc.test.id}"
 
   ingress {
     from_port   = 0
@@ -258,22 +264,26 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "example" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "tf-%d"
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
   ip_address_type = "IPV4"
   enabled         = false
 }
 
-resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+resource "aws_globalaccelerator_listener" "test" {
+  accelerator_arn = "${aws_globalaccelerator_accelerator.test.id}"
   protocol        = "TCP"
 
   port_range {
@@ -282,13 +292,13 @@ resource "aws_globalaccelerator_listener" "example" {
   }
 }
 
-resource "aws_globalaccelerator_endpoint_group" "example" {
-  listener_arn = "${aws_globalaccelerator_listener.example.id}"
+resource "aws_globalaccelerator_endpoint_group" "test" {
+  listener_arn = "${aws_globalaccelerator_listener.test.id}"
 
   endpoint_configuration {
-    endpoint_id = "${aws_lb.lb_test.id}"
+    endpoint_id = "${aws_lb.test.id}"
     weight      = 20
-	client_ip_preservation_enabled = false
+    client_ip_preservation_enabled = true
   }
 
   health_check_interval_seconds = 30
@@ -298,7 +308,7 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
   threshold_count               = 3
   traffic_dial_percentage       = 100
 }
-`, rInt, rInt)
+`, rName)
 }
 
 func testAccGlobalAcceleratorEndpointGroup_update(rInt int) string {
@@ -340,32 +350,4 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
   traffic_dial_percentage       = 0
 }
 `, rInt)
-}
-
-func testAccCheckGlobalAcceleratorEndpointGroupConfig(n, k, v string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		r := fmt.Sprintf(`endpoint_configuration.\d+.%s`, k)
-		reg, err := regexp.Compile(r)
-		if err != nil {
-			return fmt.Errorf("Regular Express not correct err: %+v", err)
-		}
-		for configKey, configValue := range rs.Primary.Attributes {
-			if reg.MatchString(configKey) {
-				if configValue == v {
-					return nil
-				} else {
-					return fmt.Errorf("endpoint_configuration key: %s value does not match.  Expected: %s,"+
-						" Got: %s", configKey, v, configValue)
-				}
-			}
-		}
-
-		// Failed to find value
-		return fmt.Errorf("endpoint_configuration is missing key: %s", k)
-	}
 }
