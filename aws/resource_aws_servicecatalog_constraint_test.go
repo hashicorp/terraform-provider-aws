@@ -68,8 +68,9 @@ func TestAccAWSServiceCatalogConstraint_updateDescription(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, ""),
@@ -90,8 +91,9 @@ func TestAccAWSServiceCatalogConstraint_updateParameters(t *testing.T) {
 	saltedName := "tf-acc-test-" + acctest.RandString(5) // RandomWithPrefix exceeds max length 20
 	var dco servicecatalog.DescribeConstraintOutput
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogConstraintConfig(saltedName, ""),
