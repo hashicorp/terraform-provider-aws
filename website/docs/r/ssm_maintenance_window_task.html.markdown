@@ -98,6 +98,11 @@ resource "aws_ssm_maintenance_window_task" "example" {
         notification_type   = "Command"
       }
 
+      cloudwatch_output_config {
+        cloudwatch_log_group_name = "${aws_cloudwatch_log_group.example.name}"
+        cloudwatch_output_enabled = true
+      }
+
       parameter {
         name   = "commands"
         values = ["date"]
@@ -191,6 +196,8 @@ The following arguments are supported:
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
 * `service_role_arn` - (Optional) The IAM service role to assume during task execution.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
+* `cloudwatch_output_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
+
 
 `step_functions_parameters` supports the following:
 
@@ -202,6 +209,11 @@ The following arguments are supported:
 * `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
 * `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
 * `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
+
+`cloudwatch_output_config` supports the following:
+
+* `cloudwatch_log_group_name` - (Optional) The name of the CloudWatch log group where you want to send command output. If you don't specify a group name, Systems Manager automatically creates a log group for you. The log group uses the following naming format: _aws/ssm/SystemsManagerDocumentName_.
+* `cloudwatch_output_enabled` - (Required) Enables Systems Manager to send command output to CloudWatch Logs.
 
 `parameter` supports the following:
 

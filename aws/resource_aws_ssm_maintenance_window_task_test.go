@@ -359,6 +359,34 @@ func testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName string) re
 	}
 }
 
+func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudWatchOutputConfig(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchOutputConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_output_config.0.cloudwatch_log_group_name", cloudwatchLogGroupResourceName, "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSSSMMaintenanceWindowTaskConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
@@ -853,4 +881,40 @@ resource "aws_ssm_maintenance_window_task" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchOutputConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+
+resource "aws_cloudwatch_log_group" "test" {
+    name = "cw_test"
+}
+
+resource "aws_ssm_maintenance_window_task" "test" {
+    window_id = "${aws_ssm_maintenance_window.test.id}"
+    task_type = "RUN_COMMAND"
+    task_arn = "AWS-RunShellScript"
+    priority = 1
+    service_role_arn = "${aws_iam_role.test.arn}"
+    max_concurrency = "2"
+    max_errors = "1"
+    targets {
+      key    = "WindowTargetIds"
+      values = ["${aws_ssm_maintenance_window_target.test.id}"]
+    }
+    task_invocation_parameters {
+      run_command_parameters {
+        timeout_seconds = 600
+        cloudwatch_output_config {
+          cloudwatch_output_enabled = true
+          cloudwatch_log_group_name = "${aws_cloudwatch_log_group.test.name}"
+        }
+        parameter {
+          name = "commands"
+          values = ["date"]
+        }
+      }
+    }
+  }
+`)
 }
