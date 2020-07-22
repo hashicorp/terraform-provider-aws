@@ -119,6 +119,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 			"deployment_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
