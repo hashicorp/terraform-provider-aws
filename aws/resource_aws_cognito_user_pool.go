@@ -308,6 +308,90 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				},
 			},
 
+			"schema": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 1,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attribute_data_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AttributeDataTypeString,
+								cognitoidentityprovider.AttributeDataTypeNumber,
+								cognitoidentityprovider.AttributeDataTypeDateTime,
+								cognitoidentityprovider.AttributeDataTypeBoolean,
+							}, false),
+						},
+						"developer_only_attribute": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"mutable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateCognitoUserPoolSchemaName,
+						},
+						"number_attribute_constraints": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"max_value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"required": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"string_attribute_constraints": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_length": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"max_length": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
