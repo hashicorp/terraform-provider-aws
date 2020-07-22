@@ -745,9 +745,9 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name  = "role_update_test_%s"
-  path  = "/test/"
-  roles = ["${aws_iam_role.test.name}"]
+  name = "role_update_test_%s"
+  path = "/test/"
+  role = aws_iam_role.test.name
 }
 `, rName, rName, rName)
 }
@@ -799,9 +799,9 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name  = "role_update_test_%s"
-  path  = "/test/"
-  roles = ["${aws_iam_role.test.name}"]
+  name = "role_update_test_%s"
+  path = "/test/"
+  role = aws_iam_role.test.name
 }
 `, rName, rName, rName)
 }
