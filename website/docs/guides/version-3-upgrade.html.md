@@ -22,6 +22,7 @@ Upgrade topics:
 - [Provider Authentication Updates](#provider-authentication-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
+- [Data Source: aws_route53_resolver_rule](#data-source-aws_route53_resolver_rule)
 - [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
@@ -34,6 +35,7 @@ Upgrade topics:
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
+- [Resource: aws_route53_resolver_rule](#resource-aws_route53_resolver_rule)
 - [Resource: aws_route53_zone](#resource-aws_route53_zone)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_security_group](#resource-aws_security_group)
@@ -164,6 +166,13 @@ output "lambda_result" {
   value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
+
+## Data Source: aws_route53_resolver_rule
+
+### Removal of domain_name trailing period
+
+Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `www.example.com.`, the attribute now will be returned as `www.example.com`.
+When providing a `domain_name` to the data-source, this too should be given without the trailing period to match the updated naming convention.
 
 ## Data Source: aws_route53_zone
 
@@ -497,6 +506,12 @@ resource "aws_msk_cluster" "example" {
 ### scaling_configuration.min_capacity Now Defaults to 1
 
 Previously when the `min_capacity` argument in a `scaling_configuration` block was not configured, the resource would default to 2. This behavior has been updated to align with the AWS RDS Cluster API default of 1. 
+
+## Resource: aws_route53_resolver_rule
+
+### Removal of domain_name trailing period
+
+Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `www.example.com.`, the attribute now will be returned as `www.example.com`
 
 ## Resource: aws_route53_zone
 
