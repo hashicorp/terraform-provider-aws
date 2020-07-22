@@ -37,6 +37,7 @@ func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
@@ -142,6 +143,8 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.stage", "'value1'"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", "$request.body.name"),
@@ -163,6 +166,9 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.org"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_TEMPLATES"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.x-userid", "'value2'"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.op", "'value3'"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", "#set($number=42)"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/xml", "#set($percent=$number/100)"),
@@ -207,6 +213,7 @@ func TestAccAWSAPIGatewayV2Integration_Lambda(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
@@ -249,6 +256,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLink(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.net"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "NEVER"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "12345"),
@@ -385,6 +393,10 @@ resource "aws_apigatewayv2_integration" "test" {
   template_selection_expression = "$request.body.name"
   timeout_milliseconds          = 28999
 
+  request_parameters = {
+    "integration.request.querystring.stage" = "'value1'"
+  }
+
   request_templates = {
     "application/json" = ""
   }
@@ -406,6 +418,11 @@ resource "aws_apigatewayv2_integration" "test" {
   passthrough_behavior          = "WHEN_NO_TEMPLATES"
   template_selection_expression = "$request.body.id"
   timeout_milliseconds          = 51
+
+  request_parameters = {
+	"integration.request.header.x-userid" = "'value2'"
+	"integration.request.path.op"         = "'value3'"
+  }
 
   request_templates = {
     "application/json" = "#set($number=42)"
