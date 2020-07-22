@@ -175,7 +175,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.*\"")
 			},
 		},
 		{
@@ -246,7 +246,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.*\"")
 			},
 		},
 		{
@@ -319,7 +319,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.*\"")
 			},
 		},
 		{
@@ -390,7 +390,7 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "\"example_thing.test\" no TypeSet element \"test.0.nested_test.*\"")
+				return strings.Contains(err.Error(), "\"example_thing.test\" error: no TypeSet element \"test.0.nested_test.*\"")
 			},
 		},
 	}
@@ -398,6 +398,562 @@ func TestTestCheckTypeSetElemAttr(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.Description, func(t *testing.T) {
 			err := TestCheckTypeSetElemAttr(testCase.ResourceAddress, testCase.ResourceAttribute, testCase.Value)(testCase.TerraformState)
+
+			if err != nil {
+				if testCase.ExpectedError == nil {
+					t.Fatalf("expected no error, got error: %s", err)
+				}
+
+				if !testCase.ExpectedError(err) {
+					t.Fatalf("unexpected error: %s", err)
+				}
+
+				t.Logf("received expected error: %s", err)
+				return
+			}
+
+			if err == nil && testCase.ExpectedError != nil {
+				t.Fatalf("expected error, got no error")
+			}
+		})
+	}
+}
+
+func TestTestCheckTypeSetElemAttrPair(t *testing.T) {
+	testCases := []struct {
+		Description             string
+		FirstResourceAddress    string
+		FirstResourceAttribute  string
+		SecondResourceAddress   string
+		SecondResourceAttribute string
+		TerraformState          *terraform.State
+		ExpectedError           func(err error) bool
+	}{
+		{
+			Description:             "first resource no primary instance",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.3": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "No primary instance")
+			},
+		},
+		{
+			Description:             "second resource no primary instance",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst2",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "No primary instance")
+			},
+		},
+		{
+			Description:             "no resources",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:         []string{"root"},
+						Outputs:      map[string]*terraform.OutputState{},
+						Resources:    map[string]*terraform.ResourceState{},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "Not found: asg.bar")
+			},
+		},
+		{
+			Description:             "first resource not found",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.3": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "Not found: asg.bar")
+			},
+		},
+		{
+			Description:             "second resource not found",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst2",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "Not found")
+			},
+		},
+		{
+			Description:             "first resource attribute not found",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":  "1",
+										"id": "11111",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.3": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "no TypeSet element \"az.*\", with value \"uswst3\" in state")
+			},
+		},
+		{
+			Description:             "second resource attribute not found",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst2",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":  "1",
+										"id": "3579",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), `Attribute "names.0" not set`)
+			},
+		},
+		{
+			Description:             "first resource attribute does not end with sentinel",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.34812",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst2",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.3": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), "does not end with the special value")
+			},
+		},
+		{
+			Description:             "second resource attribute ends with sentinel",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.*",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst2",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.3": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+			ExpectedError: func(err error) bool {
+				return strings.Contains(err.Error(), `data.az.available: Attribute "names.*" not set`)
+			},
+		},
+		{
+			Description:             "match zero attribute",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.0",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst2",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.3": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+		},
+		{
+			Description:             "match non-zero attribute",
+			FirstResourceAddress:    "asg.bar",
+			FirstResourceAttribute:  "az.*",
+			SecondResourceAddress:   "data.az.available",
+			SecondResourceAttribute: "names.2",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"asg.bar": {
+								Type:     "asg",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":        "1",
+										"id":       "11111",
+										"az.%":     "2",
+										"az.12345": "uswst1",
+										"az.23456": "uswst3",
+									},
+								},
+							},
+							"data.az.available": {
+								Type:     "data.az",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":       "1",
+										"id":      "3579",
+										"names.#": "3",
+										"names.0": "uswst3",
+										"names.1": "uswst2",
+										"names.2": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Description, func(t *testing.T) {
+			err := TestCheckTypeSetElemAttrPair(
+				testCase.FirstResourceAddress,
+				testCase.FirstResourceAttribute,
+				testCase.SecondResourceAddress,
+				testCase.SecondResourceAttribute)(testCase.TerraformState)
 
 			if err != nil {
 				if testCase.ExpectedError == nil {
