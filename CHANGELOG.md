@@ -58,6 +58,11 @@ BUG FIXES
 * resource/aws_network_acl_rule: Immediately return `DescribeNetworkAcls` errors on creation [GH-14261]
 * resource/aws_spot_fleet_request: Only retry `RequestSpotFleet` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14265]
 * resource/aws_ssm_activation: Only retry `CreateActivation` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14263]
+* data-source/lb: `enable_http2` now properly set [GH-14167]
+* resource/lb_cookie_stickiness_policy: `lb_port` now properly set [GH-14167]
+* resource/spot_instance_request: `primary_network_interface_id` now properly set [GH-14167]
+* resource/ssm_association: `parameters` now properly set [GH-14167]
+* resource/elasticsearch_domain: update method to set advanced_security_options [GH-14167]
 
 ## Previous Releases
 
