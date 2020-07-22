@@ -56,30 +56,24 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				ForceNew: true,
 			},
 			"domain_name": {
+				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+				// trailing period, no longer requiring a custom StateFunc to
+				// prevent ACM API error
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-				StateFunc: func(v interface{}) string {
-					// AWS Provider 1.42.0+ aws_route53_zone references may contain a
-					// trailing period, which generates an ACM API error
-					return strings.TrimSuffix(v.(string), ".")
-				},
 			},
 			"subject_alternative_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					StateFunc: func(v interface{}) string {
-						// AWS Provider 1.42.0+ aws_route53_zone references may contain a
-						// trailing period, which generates an ACM API error
-						return strings.TrimSuffix(v.(string), ".")
-					},
-				},
+				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+				// trailing period, no longer requiring a custom StateFunc to
+				// prevent ACM API error
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
@@ -195,7 +189,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
-		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
+		DomainName:       aws.String(d.Get("domain_name").(string)),
 		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
 		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
 	}
@@ -211,7 +205,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
 		subjectAlternativeNames := make([]*string, len(sans.(*schema.Set).List()))
 		for i, sanRaw := range sans.(*schema.Set).List() {
-			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
+			subjectAlternativeNames[i] = aws.String(sanRaw.(string))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
 	}

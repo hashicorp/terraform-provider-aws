@@ -29,7 +29,7 @@ resource "aws_acm_certificate" "cert" {
 }
 
 data "aws_route53_zone" "zone" {
-  name         = "example.com."
+  name         = "example.com"
   private_zone = false
 }
 
@@ -62,12 +62,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 data "aws_route53_zone" "zone" {
-  name         = "example.com."
+  name         = "example.com"
   private_zone = false
 }
 
 data "aws_route53_zone" "zone_alt" {
-  name         = "example.org."
+  name         = "example.org"
   private_zone = false
 }
 

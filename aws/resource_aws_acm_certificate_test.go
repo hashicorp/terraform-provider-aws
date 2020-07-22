@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"os"
@@ -263,9 +262,9 @@ func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", strings.TrimSuffix(domain, ".")),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", strings.TrimSuffix(domain, ".")),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", domain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
@@ -412,46 +411,9 @@ func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_san_TrailingPeriod(t *testing.T) {
-	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
-	sanDomain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
-	resourceName := "aws_acm_certificate.cert"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
-				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", domain),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", strings.TrimSuffix(sanDomain, ".")),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_name"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.resource_record_type", "CNAME"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", strings.TrimSuffix(sanDomain, ".")),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
+// TestAccAWSAcmCertificate_san_TrailingPeriod removed in v3.0.0
+// as aws_route53_zone references no longer contain a trailing period
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
 
 func TestAccAWSAcmCertificate_wildcard(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
