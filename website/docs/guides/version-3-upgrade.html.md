@@ -25,6 +25,7 @@ Upgrade topics:
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
+- [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
@@ -236,6 +237,40 @@ resource "aws_autoscaling_group" "example"{
 
   lifecycle {
     ignore_changes = [load_balancers, target_group_arns]
+  }
+}
+```
+
+## Resource: aws_cognito_user_pool
+
+### Removal of admin_create_user_config.unused_account_validity_days Argument
+
+The Cognito API previously deprecated the `admin_create_user_config` configuration block `unused_account_validity_days` argument in preference of the `password_policy` configuration block `temporary_password_validity_days` argument. Configurations will need to be updated to use the API supported configuration.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_cognito_user_pool" "example" {
+  # ... other configuration ...
+
+  admin_create_user_config {
+    # ... potentially other configuration ...
+
+    unused_account_validity_days = 7
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_cognito_user_pool" "example" {
+  # ... other configuration ...
+
+  password_policy {
+    # ... potentially other configuration ...
+
+    temporary_password_validity_days = 7
   }
 }
 ```
