@@ -48,17 +48,17 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
-func TestNormalizeDomainName(t *testing.T) {
+func TestCleanDomainName(t *testing.T) {
 	cases := []struct {
 		Input, Output string
 	}{
 		{"example.com", "example.com"},
+		{"example.com.", "example.com"},
 		{"www.example.com.", "www.example.com"},
-		{"www.Example.com.", "www.example.com"},
 	}
 
 	for _, tc := range cases {
-		actual := normalizeDomainName(tc.Input)
+		actual := cleanDomainName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -133,15 +133,15 @@ func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 				Config: testAccRoute53ZoneConfigMultiple(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.0", &zone0),
-					testAccCheckDomainName(&zone0, "subdomain0.terraformtest.com."),
+					testAccCheckDomainName(&zone0, "subdomain0.terraformtest.com"),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.1", &zone1),
-					testAccCheckDomainName(&zone1, "subdomain1.terraformtest.com."),
+					testAccCheckDomainName(&zone1, "subdomain1.terraformtest.com"),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.2", &zone2),
-					testAccCheckDomainName(&zone2, "subdomain2.terraformtest.com."),
+					testAccCheckDomainName(&zone2, "subdomain2.terraformtest.com"),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.3", &zone3),
-					testAccCheckDomainName(&zone3, "subdomain3.terraformtest.com."),
+					testAccCheckDomainName(&zone3, "subdomain3.terraformtest.com"),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.4", &zone4),
-					testAccCheckDomainName(&zone4, "subdomain4.terraformtest.com."),
+					testAccCheckDomainName(&zone4, "subdomain4.terraformtest.com"),
 				),
 			},
 		},
@@ -239,30 +239,9 @@ func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
-	var zone route53.GetHostedZoneOutput
-
-	rString := acctest.RandString(8)
-	resourceName := "aws_route53_zone.test"
-	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoute53ZoneConfigForceDestroyTrailingPeriod(zoneName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneExists(resourceName, &zone),
-					// Add >100 records to verify pagination works ok
-					testAccCreateRandomRoute53RecordsInZoneId(&zone, 100),
-					testAccCreateRandomRoute53RecordsInZoneId(&zone, 5),
-				),
-			},
-		},
-	})
-}
+// TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod removed in v3.0.0
+// as the name attribute in the resource is no longer stored with a trailing period
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
 
 func TestAccAWSRoute53Zone_Tags(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
@@ -571,7 +550,10 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 			return fmt.Errorf("Empty name in HostedZone for domain %s", domain)
 		}
 
-		if *zone.HostedZone.Name == domain {
+		// To compare the Hosted Zone Domain Name returned from the API
+		// and that stored in the resource, it too must by cleaned of
+		// the trailing period
+		if cleanDomainName(aws.StringValue(zone.HostedZone.Name)) == domain {
 			return nil
 		}
 
@@ -581,26 +563,26 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 func testAccRoute53ZoneConfig(zoneName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "%s."
+  name = "%s"
 }
 `, zoneName)
 }
 
 func testAccRoute53ZoneConfigMultiple() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_route53_zone" "test" {
   count = 5
 
   name = "subdomain${count.index}.terraformtest.com"
 }
-`)
+`
 }
 
 func testAccRoute53ZoneConfigComment(zoneName, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   comment = %q
-  name    = "%s."
+  name    = "%s"
 }
 `, comment, zoneName)
 }
@@ -611,7 +593,7 @@ resource "aws_route53_delegation_set" "test" {}
 
 resource "aws_route53_zone" "test" {
   delegation_set_id = "${aws_route53_delegation_set.test.id}"
-  name              = "%s."
+  name              = "%s"
 }
 `, zoneName)
 }
@@ -625,19 +607,10 @@ resource "aws_route53_zone" "test" {
 `, zoneName)
 }
 
-func testAccRoute53ZoneConfigForceDestroyTrailingPeriod(zoneName string) string {
-	return fmt.Sprintf(`
-resource "aws_route53_zone" "test" {
-  force_destroy = true
-  name          = "%s."
-}
-`, zoneName)
-}
-
 func testAccRoute53ZoneConfigTagsSingle(zoneName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "%s."
+  name = "%s"
 
   tags = {
     %q = %q
@@ -649,7 +622,7 @@ resource "aws_route53_zone" "test" {
 func testAccRoute53ZoneConfigTagsMultiple(zoneName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "%s."
+  name = "%s"
 
   tags = {
     %q = %q
@@ -670,7 +643,7 @@ resource "aws_vpc" "test1" {
 }
 
 resource "aws_route53_zone" "test" {
-  name = "%s."
+  name = "%s"
 
   vpc {
     vpc_id = "${aws_vpc.test1.id}"
@@ -698,7 +671,7 @@ resource "aws_vpc" "test2" {
 }
 
 resource "aws_route53_zone" "test" {
-  name = "%s."
+  name = "%s"
 
   vpc {
     vpc_id = "${aws_vpc.test1.id}"

@@ -29,10 +29,11 @@ func resourceAwsRoute53Zone() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: normalizeDomainName,
+				// AWS Provider 3.0.0 - trailing period removed from name
+				// returned from API, no longer requiring custom DiffSuppressFunc
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"comment": {
@@ -179,7 +180,9 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("comment", "")
 	d.Set("delegation_set_id", "")
-	d.Set("name", normalizeDomainName(aws.StringValue(output.HostedZone.Name)))
+	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
+	// we remove the suffix from the Hosted Zone Name returned from the API
+	d.Set("name", cleanDomainName(aws.StringValue(output.HostedZone.Name)))
 	d.Set("zone_id", cleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	var nameServers []string
@@ -389,10 +392,9 @@ func cleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
-// normalizeDomainName is used to remove the trailing period and enforce lowercase
-func normalizeDomainName(v interface{}) string {
-	lc := strings.ToLower(v.(string))
-	return strings.TrimSuffix(lc, ".")
+// cleanDomainName is used to remove the trailing period
+func cleanDomainName(v interface{}) string {
+	return strings.TrimSuffix(v.(string), ".")
 }
 
 func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]string, error) {
