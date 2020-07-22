@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -52,19 +51,19 @@ func resourceAwsRouteTable() *schema.Resource {
 						"cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								// validateIpv4CIDRNetworkAddress,
-							),
+							// ValidateFunc: validation.Any(
+							// 	validation.StringIsEmpty,
+							// 	// validateIpv4CIDRNetworkAddress,
+							// ),
 						},
 
 						"ipv6_cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								// validateIpv6CIDRNetworkAddress,
-							),
+							// ValidateFunc: validation.Any(
+							// 	validation.StringIsEmpty,
+							// 	// validateIpv6CIDRNetworkAddress,
+							// ),
 						},
 
 						"egress_only_gateway_id": {
