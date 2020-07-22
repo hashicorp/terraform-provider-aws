@@ -52,6 +52,7 @@ BUG FIXES
 * provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
 * provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
 * resource/aws_codepipeline: Only retry `CreatePipeline` errors for IAM eventual consistency errors [GH-14264]
+* resource/aws_network_acl_rule: Immediately return `DescribeNetworkAcls` errors on creation [GH-14261]
 * resource/aws_spot_fleet_request: Only retry `RequestSpotFleet` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14265]
 * resource/aws_ssm_activation: Only retry `CreateActivation` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14263]
 
