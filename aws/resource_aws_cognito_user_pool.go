@@ -792,6 +792,14 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
+	// Set mfa_configuration the existing way if available
+	if resp.UserPool.MfaConfiguration != nil {
+		d.Set("mfa_configuration", *resp.UserPool.MfaConfiguration)
+	}
+
+	// Try to fetch it via the new operation and set mfa_configuration / software_token_mfa_configuration
+	// This requires new permissions to succeed
+
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
 		UserPoolId: aws.String(d.Id()),
 	}
@@ -804,14 +812,12 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error getting Cognito User Pool (%s) MFA Configuration: %w", d.Id(), err)
-	}
+	if err == nil {
+		d.Set("mfa_configuration", output.MfaConfiguration)
 
-	d.Set("mfa_configuration", output.MfaConfiguration)
-
-	if err := d.Set("software_token_mfa_configuration", flattenCognitoSoftwareTokenMfaConfiguration(output.SoftwareTokenMfaConfiguration)); err != nil {
-		return fmt.Errorf("error setting software_token_mfa_configuration: %s", err)
+		if err := d.Set("software_token_mfa_configuration", flattenCognitoSoftwareTokenMfaConfiguration(output.SoftwareTokenMfaConfiguration)); err != nil {
+			return fmt.Errorf("error setting software_token_mfa_configuration: %s", err)
+		}
 	}
 
 	return nil
