@@ -1346,7 +1346,7 @@ resource "aws_network_acl" "test" {
 `
 
 func testAccAWSNetworkAclConfigEgressConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1380,11 +1380,11 @@ resource "aws_network_acl" "test" {
     to_port    = 0
   }
 }
-`)
+`
 }
 
 func testAccAWSNetworkAclConfigEgressConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1400,11 +1400,11 @@ resource "aws_network_acl" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSNetworkAclConfigEgressConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1422,11 +1422,11 @@ resource "aws_network_acl" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSNetworkAclConfigIngressConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1460,11 +1460,11 @@ resource "aws_network_acl" "test" {
     to_port    = 0
   }
 }
-`)
+`
 }
 
 func testAccAWSNetworkAclConfigIngressConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1480,11 +1480,11 @@ resource "aws_network_acl" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSNetworkAclConfigIngressConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1502,5 +1502,5 @@ resource "aws_network_acl" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }

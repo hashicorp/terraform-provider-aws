@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - 'release/**'
   pull_request:
     paths:
       - go.mod
@@ -15,7 +16,7 @@ env:
 
 jobs:
   comment:
-    if: github.event_name == 'pull_request' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "renovate[bot]"]'), github.actor)
+    if: github.event_name == 'pull_request' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
     name: Comment
     runs-on: ubuntu-latest
     steps:

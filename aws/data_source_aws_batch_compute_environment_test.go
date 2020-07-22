@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceAwsBatchComputeEnvironment(t *testing.T) {
+func TestAccDataSourceAwsBatchComputeEnvironment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
 	datasourceName := "data.aws_batch_compute_environment.by_name"

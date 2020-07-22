@@ -205,16 +205,16 @@ resource "aws_mq_broker" "acctest" {
 }
 
 func testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix string) string {
-	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + fmt.Sprintf(`
+	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + `
 data "aws_mq_broker" "by_id" {
   broker_id = "${aws_mq_broker.acctest.id}"
 }
-`)
+`
 }
 
 func testAccDataSourceAWSMqBrokerConfig_byName(brokerName, prefix string) string {
-	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + fmt.Sprintf(`
+	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + `
 data "aws_mq_broker" "by_name" {
   broker_name = "${aws_mq_broker.acctest.broker_name}"
-}`)
+}`
 }

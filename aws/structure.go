@@ -3262,6 +3262,20 @@ func expandAwsSsmTargets(in []interface{}) []*ssm.Target {
 	return targets
 }
 
+func flattenAwsSsmParameters(parameters map[string][]*string) map[string]string {
+	result := make(map[string]string)
+	for p, values := range parameters {
+		var vs []string
+		for _, vPtr := range values {
+			if v := aws.StringValue(vPtr); v != "" {
+				vs = append(vs, v)
+			}
+		}
+		result[p] = strings.Join(vs, ",")
+	}
+	return result
+}
+
 func flattenAwsSsmTargets(targets []*ssm.Target) []map[string]interface{} {
 	if len(targets) == 0 {
 		return nil
@@ -4532,17 +4546,9 @@ func flattenDaxEncryptAtRestOptions(options *dax.SSEDescription) []map[string]in
 	return []map[string]interface{}{m}
 }
 
-func expandRdsClusterScalingConfiguration(l []interface{}, engineMode string) *rds.ScalingConfiguration {
+func expandRdsClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
 	if len(l) == 0 || l[0] == nil {
-		// Our default value for MinCapacity is different from AWS's.
-		// We need to override it here to avoid a non-empty plan with an empty ScalingConfiguration.
-		if engineMode == "serverless" {
-			return &rds.ScalingConfiguration{
-				MinCapacity: aws.Int64(int64(rdsClusterScalingConfiguration_DefaultMinCapacity)),
-			}
-		} else {
-			return nil
-		}
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})

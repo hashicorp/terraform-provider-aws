@@ -485,7 +485,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAWSDataSyncLocationSmbConfig() string {
-	return testAccAWSDataSyncLocationSmbConfigBase() + fmt.Sprintf(`
+	return testAccAWSDataSyncLocationSmbConfigBase() + `
 resource "aws_datasync_location_smb" "test" {
 	user               = "Guest"
 	password           = "ZaphodBeeblebroxPW"
@@ -494,7 +494,7 @@ resource "aws_datasync_location_smb" "test" {
 	server_hostname  = "${aws_instance.test_datasync.public_ip}"
 	agent_arns       = ["${aws_datasync_agent.test.arn}"]
 }
-`)
+`
 }
 
 func testAccAWSDataSyncLocationSmbConfigTags1(key1, value1 string) string {

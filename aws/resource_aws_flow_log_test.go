@@ -468,14 +468,14 @@ resource "aws_flow_log" "test" {
 }
 
 func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return testAccFlowLogConfigBase(rName) + `
 resource "aws_flow_log" "test" {
   log_destination      = "arn:aws:s3:::does-not-exist"
   log_destination_type = "s3"
   traffic_type         = "ALL"
   vpc_id               = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccFlowLogConfig_SubnetID(rName string) string {

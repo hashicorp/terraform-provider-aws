@@ -68,7 +68,7 @@ func testSweepRoute53QueryLogs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53QueryLog_Basic(t *testing.T) {
+func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 	// The underlying resources are sensitive to where they are located
 	// Use us-east-1 for testing
 	oldRegion := os.Getenv("AWS_DEFAULT_REGION")

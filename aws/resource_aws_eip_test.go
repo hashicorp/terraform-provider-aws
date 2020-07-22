@@ -1024,7 +1024,7 @@ resource "aws_eip" "test2" {
 `
 
 func testAccAWSEIP_Instance() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -1109,7 +1109,7 @@ resource "aws_route_table_association" "test" {
   subnet_id      = aws_subnet.test.id
   route_table_id = aws_route_table.test.id
 }
-`)
+`
 }
 
 const testAccAWSEIPAssociate_not_associated = `

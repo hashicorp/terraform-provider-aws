@@ -666,7 +666,7 @@ func testAccPreCheckAWSMsk(t *testing.T) {
 }
 
 func testAccMskClusterBaseConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/22"
 
@@ -717,7 +717,7 @@ resource "aws_subnet" "example_subnet_az3" {
 resource "aws_security_group" "example_sg" {
   vpc_id = "${aws_vpc.example_vpc.id}"
 }
-`)
+`
 
 }
 func testAccMskClusterConfig_basic(rName string) string {
