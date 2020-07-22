@@ -67,6 +67,7 @@ The following arguments are supported:
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 * `deployment_type` - (Optional) Specifies the file system deployment type, valid values are `MULTI_AZ_1` and `SINGLE_AZ_1`. Default value is `SINGLE_AZ_1`.
 * `preferred_subnet_id` - (Optional) Specifies the subnet in which you want the preferred file server to be located. Required for when deployment type is `MULTI_AZ_1`.
+* `storage_type` - (Optional) Specifies the storage type, Valid values are `SSD` and `HDD`. `HDD` is supported on `SINGLE_AZ_1` and `MULTI_AZ_1` Windows file system deployment types. Default value is `SSD`.
 
 ### self_managed_active_directory
 
