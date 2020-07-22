@@ -82,6 +82,7 @@ awsproviderlint:
 		-AT007 \
 		-AT008 \
 		-AWSAT001 \
+		-AWSAT004 \
 		-AWSR001 \
 		-AWSR002 \
 		-R002 \
