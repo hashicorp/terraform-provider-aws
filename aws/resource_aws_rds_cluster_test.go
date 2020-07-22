@@ -1026,7 +1026,7 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.6"),
-				ExpectError: regexp.MustCompile(`Cannot modify engine version without a primary instance in DB cluster`),
+				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
 	})
