@@ -187,6 +187,9 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("request_models") {
 		req.RequestModels = stringMapToPointers(d.Get("request_models").(map[string]interface{}))
 	}
+	if d.HasChange("route_key") {
+		req.RouteKey = aws.String(d.Get("route_key").(string))
+	}
 	if d.HasChange("route_response_selection_expression") {
 		req.RouteResponseSelectionExpression = aws.String(d.Get("route_response_selection_expression").(string))
 	}
