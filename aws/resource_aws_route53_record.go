@@ -42,8 +42,10 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
+					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+					// trailing period, no longer requiring this custom StateFunc to trim
+					// the suffix when storing in state
+					return strings.ToLower(v.(string))
 				},
 			},
 
@@ -273,7 +275,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// Build the to be deleted record
-	en := expandRecordName(d.Get("name").(string), *zoneRecord.HostedZone.Name)
+	en := expandRecordName(d.Get("name").(string), aws.StringValue(zoneRecord.HostedZone.Name))
 	typeo, _ := d.GetChange("type")
 
 	oldRec := &route53.ResourceRecordSet{
@@ -328,7 +330,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// Build the to be created record
-	rec, err := resourceAwsRoute53RecordBuildSet(d, *zoneRecord.HostedZone.Name)
+	rec, err := resourceAwsRoute53RecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
 	if err != nil {
 		return err
 	}
@@ -400,7 +402,7 @@ func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// Build the record
-	rec, err := resourceAwsRoute53RecordBuildSet(d, *zoneRecord.HostedZone.Name)
+	rec, err := resourceAwsRoute53RecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
 	if err != nil {
 		return err
 	}
@@ -640,7 +642,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 		name = d.Get("name").(string)
 	}
 
-	en := expandRecordName(name, *zoneRecord.HostedZone.Name)
+	en := expandRecordName(name, aws.StringValue(zoneRecord.HostedZone.Name))
 	log.Printf("[DEBUG] Expanded record name: %s", en)
 	d.Set("fqdn", en)
 
@@ -919,7 +921,7 @@ func cleanRecordName(name string) string {
 // If it does not, add the zone name to form a fully qualified name
 // and keep AWS happy.
 func expandRecordName(name, zone string) string {
-	rn := strings.ToLower(strings.TrimSuffix(name, "."))
+	rn := strings.ToLower(name)
 	zone = strings.TrimSuffix(zone, ".")
 	if !strings.HasSuffix(rn, zone) {
 		if len(name) == 0 {
@@ -974,6 +976,5 @@ func parseRecordId(id string) [4]string {
 			}
 		}
 	}
-	recName = strings.TrimSuffix(recName, ".")
 	return [4]string{recZone, recName, recType, recSet}
 }
