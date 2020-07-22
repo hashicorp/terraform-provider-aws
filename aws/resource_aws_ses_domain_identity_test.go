@@ -109,26 +109,9 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com.",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsSESDomainIdentityConfig(domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESDomainIdentityExists("aws_ses_domain_identity.test"),
-					testAccCheckAwsSESDomainIdentityArn("aws_ses_domain_identity.test", domain),
-				),
-			},
-		},
-	})
-}
+// TestAccAWSSESDomainIdentity_trailingPeriod removed in v3.0.0
+// as the domain attribute in the resource no longer cleans strings provided with a trailing period
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
 
 func testAccCheckAwsSESDomainIdentityDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sesconn
