@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         go_version: ["1.14"]
-        terraform_version: ["0.11.14", "0.12.24"]
+        terraform_version: ["0.12.29"]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -43,34 +43,19 @@ jobs:
     - name: terraform
       run: |
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
-          if [ ${{ matrix.terraform_version }} = 0.11.14 ]; then
-            if [ $DIR = ./examples/count ]; then
-              # Skip example already converted to Terraform 0.12 and later syntax
-              continue
-            elif [ $DIR = ./examples/eks-getting-started ]; then
-              # Skip example already converted to Terraform 0.12 and later syntax
-              continue
-            elif [ $DIR = ./examples/sagemaker ]; then
-              # Skip example already converted to Terraform 0.12 and later syntax
-              continue
-            elif [ $DIR = ./examples/two-tier ]; then
-              # 0.11 validation requires file path to exist
-              mkdir -p ~/.ssh
-              touch ~/.ssh/terraform-provider-aws-example.pub
-            fi
-          fi
           pushd $DIR
           if [ -f terraform.template.tfvars ]; then
             cp terraform.template.tfvars terraform.tfvars
           fi
           echo; echo -e "\e[1;35m===> Initializing Example: $DIR <===\e[0m"; echo
           terraform init
-          # Prefer Terraform 0.12 and later format checking to prevent conflicts
-          if [ ${{ matrix.terraform_version }} != 0.11.14 ]; then
-            echo; echo -e "\e[1;35m===> Format Checking Example: $DIR <===\e[0m"; echo
-            terraform fmt -check
-          fi
+          echo; echo -e "\e[1;35m===> Format Checking Example: $DIR <===\e[0m"; echo
+          terraform fmt -check
           echo; echo -e "\e[1;35m===> Validating Example: $DIR <===\e[0m"; echo
-          terraform validate
+          JSON=$(terraform validate -json)
+          if [ $(echo $JSON | jq -r '.warning_count') = '1' ]
+            then
+              exit 1
+          fi
           popd
         done
