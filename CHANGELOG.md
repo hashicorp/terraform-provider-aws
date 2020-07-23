@@ -25,6 +25,7 @@ BREAKING CHANGES
 * resource/aws_rds_cluster: Update `scaling_configuration` `min_capacity` argument default to match API default of `1` [GH-14268]
 * resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
 * resource/aws_s3_bucket: Convert `region` to read-only attribute [GH-14127]
+* resource/aws_s3_bucket_metric: Update `filter` argument to require at least one of the `prefix` or `tags` nested arguments [GH-14230]
 * resource/aws_security_group: Remove automatic `aws_security_group_rule` resource import [GH-12616]
 * resource/aws_sns_platform_application: `platform_credential` and `platform_principal` attributes are no longer stored in the Terraform state with hash values [GH-3894]
 * resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
