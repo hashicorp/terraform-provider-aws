@@ -26,8 +26,10 @@ Upgrade topics:
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
+- [Resource: aws_ebs_volume](#resource-aws_ebs_volume)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
+- [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_lambda_alias](#resource-aws_lambda_alias)
 - [Resource: aws_launch_template](#resource-aws_launch_template)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
@@ -247,6 +249,13 @@ resource "aws_autoscaling_group" "example"{
 
 Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
 
+## Resource: aws_ebs_volume
+
+### iops Argument Apply-Time Validation
+
+Previously when the `iops` argument was configured with a `type` other than `io1` (either explicitly or omitted, indicating the default type `gp2`), the Terraform AWS Provider would automatically disregard the value provided to `iops` as it is only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for types other than `io1`. 
+Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`. 
+
 ## Resource: aws_elastic_transcoder_preset
 
 ### video Configuration Block max_frame_rate Argument No Longer Uses 30 Default
@@ -386,6 +395,13 @@ resource "aws_emr_cluster" "example" {
   }
 }
 ```
+
+## Resource: aws_instance
+
+### ebs_block_device.iops and root_block_device.iops Argument Apply-Time Validations
+
+Previously when the `iops` argument was configured in either the `ebs_block_device` or `root_block_device` configuration block, the Terraform AWS Provider would automatically disregard the value provided to `iops` if the `type` argument was also configured with a value other than `io1` (either explicitly or omitted, indicating the default type `gp2`) as `iops` are only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for volume types other than `io1`.
+Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`. 
 
 ## Resource: aws_lambda_alias
 
