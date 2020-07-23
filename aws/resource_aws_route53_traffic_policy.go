@@ -77,7 +77,7 @@ func resourceAwsRoute53TrafficPolicyCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(*response.TrafficPolicy.Id)
 
-	err = d.Set("latest_version", *response.TrafficPolicy.Version)
+	err = d.Set("latest_version", response.TrafficPolicy.Version)
 	if err != nil {
 		return fmt.Errorf("Error assigning Id for Route53 Traffic Policy %s: %s", d.Get("name").(string), err)
 	}
@@ -109,17 +109,17 @@ func resourceAwsRoute53TrafficPolicyRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error getting Route53 Traffic Policy %s, version %d: %s", d.Get("name").(string), d.Get("latest_version").(int), err)
 	}
 
-	err = d.Set("document", *response.TrafficPolicy.Document)
+	err = d.Set("document", response.TrafficPolicy.Document)
 	if err != nil {
 		return fmt.Errorf("Error setting document for: %s, error: %#v", d.Id(), err)
 	}
 
-	err = d.Set("name", *response.TrafficPolicy.Name)
+	err = d.Set("name", response.TrafficPolicy.Name)
 	if err != nil {
 		return fmt.Errorf("Error setting name for: %s, error: %#v", d.Id(), err)
 	}
 
-	err = d.Set("comment", *response.TrafficPolicy.Comment)
+	err = d.Set("comment", response.TrafficPolicy.Comment)
 	if err != nil {
 		return fmt.Errorf("Error setting comment for: %s, error: %#v", d.Id(), err)
 	}
@@ -171,7 +171,7 @@ func resourceAwsRoute53TrafficPolicyUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error updating Route53 Traffic Policy: %s. %#v", d.Get("name").(string), err)
 	}
 
-	err = d.Set("latest_version", *response.TrafficPolicy.Version)
+	err = d.Set("latest_version", response.TrafficPolicy.Version)
 	if err != nil {
 		return fmt.Errorf("Error updating Route53 Traffic Policy %s and setting new policy version. %#v", d.Get("name").(string), err)
 	}
