@@ -1,5 +1,8 @@
 ## 3.0.0 (Unreleased)
 
+NOTES:
+* provider: This version is built using Go 1.14.5, including security fixes to the crypto/x509 and net/http packages.
+
 BREAKING CHANGES
 
 * provider: New versions of the provider can only be automatically installed on Terraform 0.12 and later [GH-14143]
