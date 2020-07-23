@@ -77,6 +77,12 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.security_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.default_ou", ""),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.internet_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.maintenance_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.local_admin", "true"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "directory_type", "SIMPLE_AD"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
@@ -98,6 +104,12 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_properties.0.security_group"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.default_ou", "OU=Workspaces,DC=tf-acctest,DC=neverland,DC=com"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.internet_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.maintenance_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.local_admin", "false"),
 				),
 			},
 			{
@@ -110,6 +122,12 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.security_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.default_ou", ""),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.internet_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.maintenance_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "creation_properties.0.local_admin", "true"),
 				),
 			},
 			{
@@ -335,7 +353,6 @@ func TestExpandSelfServicePermissions(t *testing.T) {
 		}
 	}
 }
-
 func TestFlattenSelfServicePermissions(t *testing.T) {
 	cases := []struct {
 		input    *workspaces.SelfservicePermissions
@@ -369,6 +386,84 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 
 	for _, c := range cases {
 		actual := flattenSelfServicePermissions(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestExpandCreationProperties(t *testing.T) {
+	cases := []struct {
+		input    []interface{}
+		expected *workspaces.WorkspaceCreationProperties
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"security_group":   "sg-deadbeef",
+					"default_ou":       "CN=org",
+					"internet_access":  true,
+					"maintenance_mode": false,
+					"local_admin":      true,
+				},
+			},
+			expected: &workspaces.WorkspaceCreationProperties{
+				CustomSecurityGroupId:           aws.String("sg-deadbeef"),
+				DefaultOu:                       aws.String("CN=org"),
+				EnableInternetAccess:            aws.Bool(true),
+				EnableMaintenanceMode:           aws.Bool(false),
+				UserEnabledAsLocalAdministrator: aws.Bool(true),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := expandCreationProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestFlattenCreationProperties(t *testing.T) {
+	cases := []struct {
+		input    *workspaces.DefaultWorkspaceCreationProperties
+		expected []interface{}
+	}{
+		// Empty
+		{
+			input:    nil,
+			expected: []interface{}{},
+		},
+		// Full
+		{
+			input: &workspaces.DefaultWorkspaceCreationProperties{
+				CustomSecurityGroupId:           aws.String("sg-deadbeef"),
+				DefaultOu:                       aws.String("CN=org"),
+				EnableInternetAccess:            aws.Bool(true),
+				EnableMaintenanceMode:           aws.Bool(false),
+				UserEnabledAsLocalAdministrator: aws.Bool(true),
+			},
+			expected: []interface{}{
+				map[string]interface{}{
+					"security_group":   aws.String("sg-deadbeef"),
+					"default_ou":       aws.String("CN=org"),
+					"internet_access":  aws.Bool(true),
+					"maintenance_mode": aws.Bool(false),
+					"local_admin":      aws.Bool(true),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := flattenCreationProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -456,6 +551,26 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccWorkspacesDirectoryConfigB(rName string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
+resource "aws_security_group" "outbound" {
+  name        = "outbound"
+  description = "Allow outbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -465,6 +580,13 @@ resource "aws_workspaces_directory" "main" {
     rebuild_workspace    = true
     restart_workspace    = false
     switch_running_mode  = true
+  }
+  creation_properties {
+    security_group   = "${aws_security_group.outbound.id}"
+    default_ou       = "OU=Workspaces,DC=tf-acctest,DC=neverland,DC=com"
+    internet_access  = false
+    maintenance_mode = true
+    local_admin      = false
   }
 }
 `
@@ -478,6 +600,10 @@ resource "aws_workspaces_directory" "main" {
   self_service_permissions {
     change_compute_type = true
     switch_running_mode = true
+  }
+  creation_properties {
+    internet_access  = true
+    maintenance_mode = false
   }
 }
 `

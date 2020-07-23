@@ -62,6 +62,41 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 					},
 				},
 			},
+			"creation_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  nil,
+						},
+						"default_ou": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"internet_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"maintenance_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"local_admin": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
+			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -156,6 +191,18 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", directoryId)
 
+	log.Printf("[DEBUG] Modifying workspaces directory %q creation properties...", d.Id())
+	if v, ok := d.GetOk("creation_properties"); ok {
+		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
+			ResourceId:                  aws.String(directoryId),
+			WorkspaceCreationProperties: expandCreationProperties(v.([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("error setting workspace creation properties: %s", err)
+		}
+	}
+	log.Printf("[DEBUG] Workspaces directory %q creation properties are set", d.Id())
+
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
 
@@ -196,6 +243,10 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting dns_ip_addresses: %s", err)
 	}
 
+	if err := d.Set("creation_properties", flattenCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+		return fmt.Errorf("error setting creation_properties: %s", err)
+	}
+
 	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %s", err)
@@ -223,6 +274,20 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating self service permissions: %s", err)
 		}
 		log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", d.Id())
+	}
+
+	if d.HasChange("creation_properties") {
+		log.Printf("[DEBUG] Modifying workspaces directory %q creation properties...", d.Id())
+		permissions := d.Get("creation_properties").([]interface{})
+
+		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
+			ResourceId:                  aws.String(d.Id()),
+			WorkspaceCreationProperties: expandCreationProperties(permissions),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating workspace creation properties: %s", err)
+		}
+		log.Printf("[DEBUG] Workspaces directory %q workspace creation properties are set", d.Id())
 	}
 
 	if d.HasChange("tags") {
@@ -358,6 +423,44 @@ func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermission
 	default:
 		result["switch_running_mode"] = nil
 	}
+
+	return []interface{}{result}
+}
+
+func expandCreationProperties(permissions []interface{}) *workspaces.WorkspaceCreationProperties {
+	if len(permissions) == 0 || permissions[0] == nil {
+		return nil
+	}
+
+	result := &workspaces.WorkspaceCreationProperties{}
+
+	p := permissions[0].(map[string]interface{})
+
+	if len(p["security_group"].(string)) > 0 {
+		result.CustomSecurityGroupId = aws.String(p["security_group"].(string))
+	}
+	if len(p["default_ou"].(string)) > 0 {
+		result.DefaultOu = aws.String(p["default_ou"].(string))
+	}
+	result.EnableInternetAccess = aws.Bool(p["internet_access"].(bool))
+	result.EnableMaintenanceMode = aws.Bool(p["maintenance_mode"].(bool))
+	result.UserEnabledAsLocalAdministrator = aws.Bool(p["local_admin"].(bool))
+
+	return result
+}
+
+func flattenCreationProperties(permissions *workspaces.DefaultWorkspaceCreationProperties) []interface{} {
+	if permissions == nil {
+		return []interface{}{}
+	}
+
+	result := map[string]interface{}{}
+
+	result["security_group"] = permissions.CustomSecurityGroupId
+	result["default_ou"] = permissions.DefaultOu
+	result["internet_access"] = permissions.EnableInternetAccess
+	result["maintenance_mode"] = permissions.EnableMaintenanceMode
+	result["local_admin"] = permissions.UserEnabledAsLocalAdministrator
 
 	return []interface{}{result}
 }

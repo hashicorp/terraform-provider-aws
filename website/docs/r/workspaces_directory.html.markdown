@@ -57,6 +57,7 @@ The following arguments are supported:
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory.
 * `self_service_permissions` – (Optional) The permissions to enable or disable self-service capabilities.
+* `creation_properties` - (Optional) Default attributes to set upon the creation of a WorkSpaces WorkSpace.
 
 `self_service_permissions` supports the following:
 
@@ -65,6 +66,14 @@ The following arguments are supported:
 * `rebuild_workspace` – (Optional) Whether WorkSpaces directory users can rebuild the operating system of a workspace to its original state. Default `false`.
 * `restart_workspace` – (Optional) Whether WorkSpaces directory users can restart their workspace. Default `true`.
 * `switch_running_mode` – (Optional) Whether WorkSpaces directory users can switch the running mode of their workspace. Default `false`.
+
+`creation_properties` supports the following:
+
+* `security_group` – (Optional) The id of the security group to associate with a newly created WorkSpace. Defaults to the empty string.
+* `default_ou` – (Optional) The OU in the associated Directory under which newly created workspaces are registered. Defaults to the empty string.
+* `internet_access` – (Optional) Indicates whether internet access is enabled for the WorkSpace. Default `false`.
+* `maintenance_mode` – (Optional) Controls if maintenance windows are enabled for workspaces in the directory. Default `true`.
+* `local_admin` – (Optional) Controls if the workspace owner is given local administrator permissions on their workspace. Default `false`.
 
 ## Attributes Reference
 
