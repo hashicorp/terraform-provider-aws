@@ -43,7 +43,7 @@ jobs:
     - name: terraform
       run: |
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
-          pushd $DIR
+          pushd "$DIR"
           if [ -f terraform.template.tfvars ]; then
             cp terraform.template.tfvars terraform.tfvars
           fi
@@ -55,7 +55,10 @@ jobs:
           # Catch errors
           terraform validate
           # Check for warnings. For simplicity, assume warnings are related to pre-0.12 syntax
-          if [ $? -eq 0 ] && [ "$(terraform validate -json | jq -r '.warning_count')" -ne '0' ]; then
+          # The call to `terraform validate` is not inlined to allow the failure to terminate execution
+          # shellcheck disable=SC2181
+          if [ $? -eq 0 ] && [ "$(terraform validate -json | jq -r '.warning_count')" -ne 0 ]; then
+            echo -e "\e[1;31mError:\e[0m Configuration contains warnings."
             exit 1
           fi
           popd
