@@ -331,7 +331,7 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   tags = {
     Name = %[1]q

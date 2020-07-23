@@ -860,7 +860,7 @@ resource "aws_backup_vault" "test" {
 }
 
 resource "aws_backup_vault" "test2" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
   name     = "%[1]s-2"
 }
 

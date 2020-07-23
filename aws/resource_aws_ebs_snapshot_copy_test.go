@@ -372,7 +372,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 
 var testAccAwsEbsSnapshotCopyConfigWithRegions = testAccAlternateRegionProviderConfig() + `
 data "aws_availability_zones" "alternate_available" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
   state    = "available"
 
   filter {
@@ -382,11 +382,11 @@ data "aws_availability_zones" "alternate_available" {
 }
 
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_ebs_volume" "test" {
-  provider          = "aws.alternate"
+  provider          = "awsalternate"
   availability_zone = "${data.aws_availability_zones.alternate_available.names[0]}"
   size              = 1
 
@@ -396,7 +396,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  provider  = "aws.alternate"
+  provider  = "awsalternate"
   volume_id = "${aws_ebs_volume.test.id}"
 
   tags = {

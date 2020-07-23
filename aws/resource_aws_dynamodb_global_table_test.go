@@ -186,7 +186,7 @@ resource "aws_dynamodb_global_table" "test" {
 func testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName string) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 data "aws_region" "current" {}
@@ -206,7 +206,7 @@ resource "aws_dynamodb_table" "test" {
 }
 
 resource "aws_dynamodb_table" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   hash_key         = "myAttribute"
   name             = %[1]q

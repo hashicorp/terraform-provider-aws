@@ -3813,25 +3813,23 @@ resource "aws_instance" "test" {
 }
 
 const testAccInstanceConfigMultipleRegions = `
-provider "aws" {
-	alias = "west"
+provider "awswest" {
 	region = "us-west-2"
 }
 
-provider "aws" {
-	alias = "east"
+provider "awseast" {
 	region = "us-east-1"
 }
 resource "aws_instance" "test" {
 	# us-west-2
-	provider = "aws.west"
+	provider = "awswest"
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 }
 
 resource "aws_instance" "test2" {
 	# us-east-1
-	provider = "aws.east"
+	provider = "awseast"
 	ami = "ami-8c6ea9e4"
 	instance_type = "m1.small"
 }

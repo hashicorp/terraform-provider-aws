@@ -684,24 +684,24 @@ data "aws_availability_zones" "available" {
 data "aws_organizations_organization" "test" {}
 
 resource "aws_ec2_transit_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_ram_resource_share" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name = %[1]q
 }
 
 resource "aws_ram_resource_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   resource_arn       = "${aws_ec2_transit_gateway.test.arn}"
   resource_share_arn = "${aws_ram_resource_share.test.id}"
 }
 
 resource "aws_ram_principal_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   principal          = "${data.aws_organizations_organization.test.arn}"
   resource_share_arn = "${aws_ram_resource_share.test.id}"

@@ -2400,7 +2400,7 @@ func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBas
 
 	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  provider = "aws.us-east-1"
+  provider = "awsus-east-1"
 
   certificate_body = "%[1]s"
   private_key      = "%[2]s"

@@ -272,7 +272,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
-					// dx_gateway_owner_account_id is the "aws.alternate" provider's account ID.
+					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
 					// testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
@@ -351,7 +351,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
-					// dx_gateway_owner_account_id is the "aws.alternate" provider's account ID.
+					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
 					// testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
@@ -593,7 +593,7 @@ resource "aws_vpn_gateway_attachment" "test" {
 
 # Accepter
 resource "aws_dx_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   amazon_side_asn = %[2]d
   name            = %[1]q
@@ -621,7 +621,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
   dx_gateway_id                       = "${aws_dx_gateway.test.id}"
@@ -662,7 +662,7 @@ data "aws_caller_identity" "creator" {}
 
 # Accepter
 resource "aws_dx_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   amazon_side_asn = %[2]d
   name            = %[1]q
@@ -688,7 +688,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
   dx_gateway_id                       = "${aws_dx_gateway.test.id}"
@@ -797,7 +797,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
   dx_gateway_id                       = "${aws_dx_gateway.test.id}"
@@ -821,7 +821,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
   dx_gateway_id                       = "${aws_dx_gateway.test.id}"

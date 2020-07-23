@@ -188,7 +188,7 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
 
 # Accepter
 data "aws_caller_identity" "accepter" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
 }
@@ -196,7 +196,7 @@ data "aws_caller_identity" "accepter" {
 func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + `
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
 }
@@ -206,7 +206,7 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 func testAccDxHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
 
@@ -222,7 +222,7 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 func testAccDxHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
 

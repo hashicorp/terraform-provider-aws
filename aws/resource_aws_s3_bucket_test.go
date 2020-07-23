@@ -3653,7 +3653,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "destination" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
   bucket   = "tf-test-bucket-destination-%[1]d"
 
   versioning {
@@ -3706,7 +3706,7 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_kms_key" "replica" {
-  provider                = "aws.alternate"
+  provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
@@ -3813,7 +3813,7 @@ func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjectsAndAccessContr
 data "aws_caller_identity" "current" {}
 
 resource "aws_kms_key" "replica" {
-  provider                = "aws.alternate"
+  provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
