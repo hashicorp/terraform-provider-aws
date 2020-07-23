@@ -252,7 +252,8 @@ Previously when importing the `aws_dx_gateway` resource with the [`terraform imp
 
 ### iops Argument Apply-Time Validation
 
-Previously when the `iops` argument was configured with a `type` other than `io1` (either explicitly or omitted, indicating the default type `gp2`), the Terraform AWS Provider would automatically disregard the value provided to `iops` as it is only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for types other than `io1`.
+Previously when the `iops` argument was configured with a `type` other than `io1` (either explicitly or omitted, indicating the default type `gp2`), the Terraform AWS Provider would automatically disregard the value provided to `iops` as it is only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for types other than `io1`. 
+Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`. 
 
 ## Resource: aws_elastic_transcoder_preset
 
@@ -399,6 +400,7 @@ resource "aws_emr_cluster" "example" {
 ### ebs_block_device.iops and root_block_device.iops Argument Apply-Time Validations
 
 Previously when the `iops` argument was configured in either the `ebs_block_device` or `root_block_device` configuration block, the Terraform AWS Provider would automatically disregard the value provided to `iops` if the `type` argument was also configured with a value other than `io1` (either explicitly or omitted, indicating the default type `gp2`) as `iops` are only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for volume types other than `io1`.
+Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`. 
 
 ## Resource: aws_lambda_alias
 
