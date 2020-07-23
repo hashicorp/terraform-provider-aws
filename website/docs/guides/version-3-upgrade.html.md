@@ -34,6 +34,7 @@ Upgrade topics:
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
+- [Resource: aws_s3_bucket_metric](#resource-aws_s3_bucket_metric)
 - [Resource: aws_security_group](#resource-aws_security_group)
 - [Resource: aws_sns_platform_application](#resource-aws_sns_platform_application)
 - [Resource: aws_spot_fleet_request](#resource-aws_spot_fleet_request)
@@ -513,6 +514,30 @@ An updated configuration:
 
 ```hcl
 resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+```
+
+## Resource: aws_s3_bucket_metric
+
+### filter configuration block Plan-Time Validation Change
+
+The `filter` configuration block no longer supports the empty block `{}` and requires at least one of the `prefix` or `tags` attributes to be specified.   
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_s3_bucket_metric" "example" {
+  # ... other configuration ...
+
+  filter {}
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_s3_bucket_metric" "example" {
   # ... other configuration ...
 }
 ```
