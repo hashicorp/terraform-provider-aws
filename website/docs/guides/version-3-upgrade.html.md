@@ -502,7 +502,7 @@ Previously when the `min_capacity` argument in a `scaling_configuration` block w
 
 ### Removal of name trailing period
 
-Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `www.example.com.`, the attribute now will be returned as `www.example.com`
+Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`
 
 ## Resource: aws_s3_bucket
 
