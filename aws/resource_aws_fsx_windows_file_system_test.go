@@ -179,7 +179,7 @@ func TestAccAWSFsxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleTypeWithStorage("SINGLE_AZ_2", "HDD"),
+				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithStorageType("SINGLE_AZ_2", "HDD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
@@ -1029,12 +1029,12 @@ resource "aws_fsx_windows_file_system" "test" {
 `, azType)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleTypeWithStorage(azType, storageType string) string {
+func testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithStorageType(azType, storageType string) string {
 	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = "${aws_directory_service_directory.test.id}"
   skip_final_backup   = true
-  storage_capacity    = 32
+  storage_capacity    = 2000
   deployment_type     = %[1]q
   subnet_ids          = ["${aws_subnet.test1.id}"]
   throughput_capacity = 8
