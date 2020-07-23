@@ -125,10 +125,10 @@ func testAccAWSAutoscalingLifecycleHookImportStateIdFunc(resourceName string) re
 }
 
 func testAccAWSAutoscalingLifecycleHookConfig(name string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
-  image_id      = "ami-21f78e11"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
@@ -177,8 +177,17 @@ resource "aws_iam_role_policy" "foobar" {
 EOF
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "%s"
   max_size                  = 5
   min_size                  = 2
@@ -215,10 +224,10 @@ EOF
 }
 
 func testAccAWSAutoscalingLifecycleHookConfig_omitDefaultResult(name string, rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
-  image_id      = "ami-21f78e11"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
@@ -267,8 +276,17 @@ resource "aws_iam_role_policy" "foobar" {
 EOF
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "%s"
   max_size                  = 5
   min_size                  = 2
