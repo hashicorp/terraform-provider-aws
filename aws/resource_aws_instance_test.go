@@ -4134,8 +4134,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name  = %[1]q
-  roles = ["${aws_iam_role.test.name}"]
+  name = %[1]q
+  role = aws_iam_role.test.name
 }
 
 resource "aws_instance" "test" {
