@@ -257,7 +257,7 @@ Authentication Request Extra Params Blocks (for `authentication_request_extra_pa
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `id` - The ARN of the listener (matches `arn`)
+* `id` - The id of the listener (matches `arn`)
 * `arn` - The ARN of the listener (matches `id`)
 
 ## Import
