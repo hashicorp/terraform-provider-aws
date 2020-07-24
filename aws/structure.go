@@ -2474,8 +2474,6 @@ func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *
 		}
 	}
 
-	configs.UnusedAccountValidityDays = aws.Int64(int64(config["unused_account_validity_days"].(int)))
-
 	return configs
 }
 
@@ -2509,8 +2507,6 @@ func flattenCognitoUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.Admi
 			config["invite_message_template"] = []map[string]interface{}{subconfig}
 		}
 	}
-
-	config["unused_account_validity_days"] = *s.UnusedAccountValidityDays
 
 	return []map[string]interface{}{config}
 }
