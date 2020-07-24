@@ -26,7 +26,7 @@ jobs:
       - name: goreleaser release
         uses: goreleaser/goreleaser-action@v2
         with:
-          args: release --rm-dist --skip-sign --snapshot --timeout 1h
+          args: release --rm-dist --skip-sign --snapshot --timeout 2h
       - name: artifact naming
         id: naming
         run: |
