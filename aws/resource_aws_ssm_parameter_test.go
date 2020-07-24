@@ -31,7 +31,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
-					resource.TestCheckResourceAttr(resourceName, "data_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 				),
 			},
 			{
