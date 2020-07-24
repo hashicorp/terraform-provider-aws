@@ -25,9 +25,10 @@ func resourceAwsCloudTrail() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"enable_logging": {
 				Type:     schema.TypeBool,
@@ -212,12 +213,12 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		t, err = conn.CreateTrail(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CloudTrail: %s", err)
+		return fmt.Errorf("error creating CloudTrail: %w", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
 
-	d.SetId(*t.Name)
+	d.SetId(aws.StringValue(t.Name))
 
 	// AWS CloudTrail sets newly-created trails to false.
 	if v, ok := d.GetOk("enable_logging"); ok && v.(bool) {
@@ -255,7 +256,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	// you're looking for is not found. Instead, it's simply not in the list.
 	var trail *cloudtrail.Trail
 	for _, c := range resp.TrailList {
-		if d.Id() == *c.Name {
+		if d.Id() == aws.StringValue(c.Name) {
 			trail = c
 		}
 	}
@@ -288,14 +289,14 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", trail.TrailARN)
 	d.Set("home_region", trail.HomeRegion)
 
-	tags, err := keyvaluetags.CloudtrailListTags(conn, *trail.TrailARN)
+	tags, err := keyvaluetags.CloudtrailListTags(conn, aws.StringValue(trail.TrailARN))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
+		return fmt.Errorf("error listing tags for Cloudtrail (%s): %w", aws.StringValue(trail.TrailARN), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	logstatus, err := cloudTrailGetLoggingStatus(conn, trail.Name)
@@ -377,20 +378,20 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		t, err = conn.UpdateTrail(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating CloudTrail: %s", err)
+		return fmt.Errorf("error updating CloudTrail: %w", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Cloudtrail (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating Cloudtrail (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
 	if d.HasChange("enable_logging") {
 		log.Printf("[DEBUG] Updating logging on CloudTrail: %s", input)
-		err := cloudTrailSetLogging(conn, d.Get("enable_logging").(bool), *input.Name)
+		err := cloudTrailSetLogging(conn, d.Get("enable_logging").(bool), aws.StringValue(input.Name))
 		if err != nil {
 			return err
 		}
@@ -425,10 +426,10 @@ func cloudTrailGetLoggingStatus(conn *cloudtrail.CloudTrail, id *string) (bool, 
 	}
 	resp, err := conn.GetTrailStatus(GetTrailStatusOpts)
 	if err != nil {
-		return false, fmt.Errorf("Error retrieving logging status of CloudTrail (%s): %s", *id, err)
+		return false, fmt.Errorf("error retrieving logging status of CloudTrail (%s): %w", aws.StringValue(id), err)
 	}
 
-	return *resp.IsLogging, err
+	return aws.BoolValue(resp.IsLogging), err
 }
 
 func cloudTrailSetLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) error {
@@ -440,9 +441,7 @@ func cloudTrailSetLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) 
 			Name: aws.String(id),
 		}
 		if _, err := conn.StartLogging(StartLoggingOpts); err != nil {
-			return fmt.Errorf(
-				"Error starting logging on CloudTrail (%s): %s",
-				id, err)
+			return fmt.Errorf("error starting logging on CloudTrail (%s): %w", id, err)
 		}
 	} else {
 		log.Printf(
@@ -452,9 +451,7 @@ func cloudTrailSetLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) 
 			Name: aws.String(id),
 		}
 		if _, err := conn.StopLogging(StopLoggingOpts); err != nil {
-			return fmt.Errorf(
-				"Error stopping logging on CloudTrail (%s): %s",
-				id, err)
+			return fmt.Errorf("error stopping logging on CloudTrail (%s): %w", id, err)
 		}
 	}
 
@@ -479,12 +476,12 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
-		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("error validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	_, err := conn.PutEventSelectors(input)
 	if err != nil {
-		return fmt.Errorf("Error set event selector on CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("error set event selector on CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -540,14 +537,15 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 &&
+		aws.StringValue(configured[0].ReadWriteType) == cloudtrail.ReadWriteTypeAll {
 		return eventSelectors
 	}
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["read_write_type"] = *raw.ReadWriteType
-		item["include_management_events"] = *raw.IncludeManagementEvents
+		item["read_write_type"] = aws.StringValue(raw.ReadWriteType)
+		item["include_management_events"] = aws.BoolValue(raw.IncludeManagementEvents)
 		item["data_resource"] = flattenAwsCloudTrailEventSelectorDataResource(raw.DataResources)
 		item["exclude_management_event_sources"] = flattenStringList(raw.ExcludeManagementEventSources)
 
@@ -562,7 +560,7 @@ func flattenAwsCloudTrailEventSelectorDataResource(configured []*cloudtrail.Data
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["type"] = *raw.Type
+		item["type"] = aws.StringValue(raw.Type)
 		item["values"] = flattenStringList(raw.Values)
 
 		dataResources = append(dataResources, item)
