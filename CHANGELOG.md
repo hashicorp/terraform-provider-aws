@@ -61,6 +61,7 @@ BUG FIXES
 * provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
 * provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
 * resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
+* resource/aws_apigatewayv2_stage: Correctly handle `default_route_setting` and `route_setting` `data_trace_enabled` and `logging_level` for HTTP APIs. `logging_level` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-13809]
 * resource/aws_codepipeline: Only retry `CreatePipeline` errors for IAM eventual consistency errors [GH-14264]
 * resource/aws_lambda_function: Increase IAM retry timeout for creation to standard 2 minute timeout [GH-14291]
 * resource/aws_network_acl_rule: Immediately return `DescribeNetworkAcls` errors on creation [GH-14261]
