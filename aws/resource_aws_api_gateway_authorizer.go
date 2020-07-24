@@ -36,8 +36,9 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"authorizer_uri": {
-				Type:     schema.TypeString,
-				Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
+				Type:         schema.TypeString,
+				Optional:     true, // authorizer_uri is required for authorizer TOKEN/REQUEST
+				ValidateFunc: validateArn,
 			},
 			"identity_source": {
 				Type:     schema.TypeString,
@@ -64,8 +65,9 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				}, false),
 			},
 			"authorizer_credentials": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"authorizer_result_ttl_in_seconds": {
 				Type:         schema.TypeInt,
@@ -93,10 +95,11 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigatewayconn
 
 	input := apigateway.CreateAuthorizerInput{
-		IdentitySource: aws.String(d.Get("identity_source").(string)),
-		Name:           aws.String(d.Get("name").(string)),
-		RestApiId:      aws.String(d.Get("rest_api_id").(string)),
-		Type:           aws.String(d.Get("type").(string)),
+		IdentitySource:               aws.String(d.Get("identity_source").(string)),
+		Name:                         aws.String(d.Get("name").(string)),
+		RestApiId:                    aws.String(d.Get("rest_api_id").(string)),
+		Type:                         aws.String(d.Get("type").(string)),
+		AuthorizerResultTtlInSeconds: aws.Int64(int64(d.Get("authorizer_result_ttl_in_seconds").(int))),
 	}
 
 	if err := validateAuthorizerType(d); err != nil {
@@ -108,23 +111,21 @@ func resourceAwsApiGatewayAuthorizerCreate(d *schema.ResourceData, meta interfac
 	if v, ok := d.GetOk("authorizer_credentials"); ok {
 		input.AuthorizerCredentials = aws.String(v.(string))
 	}
-	if v, ok := d.GetOkExists("authorizer_result_ttl_in_seconds"); ok {
-		input.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
-	}
+
 	if v, ok := d.GetOk("identity_validation_expression"); ok {
 		input.IdentityValidationExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("provider_arns"); ok {
-		input.ProviderARNs = expandStringList(v.(*schema.Set).List())
+		input.ProviderARNs = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[INFO] Creating API Gateway Authorizer: %s", input)
 	out, err := conn.CreateAuthorizer(&input)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Authorizer: %s", err)
+		return fmt.Errorf("error creating API Gateway Authorizer: %w", err)
 	}
 
-	d.SetId(*out.Id)
+	d.SetId(aws.StringValue(out.Id))
 
 	return resourceAwsApiGatewayAuthorizerRead(d, meta)
 }
@@ -162,7 +163,7 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
 	d.Set("name", authorizer.Name)
 	d.Set("type", authorizer.Type)
-	d.Set("provider_arns", flattenStringList(authorizer.ProviderARNs))
+	d.Set("provider_arns", flattenStringSet(authorizer.ProviderARNs))
 
 	return nil
 }
@@ -254,7 +255,7 @@ func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interfac
 	log.Printf("[INFO] Updating API Gateway Authorizer: %s", input)
 	_, err := conn.UpdateAuthorizer(&input)
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Authorizer failed: %s", err)
+		return fmt.Errorf("updating API Gateway Authorizer failed: %w", err)
 	}
 
 	return resourceAwsApiGatewayAuthorizerRead(d, meta)
@@ -272,7 +273,7 @@ func resourceAwsApiGatewayAuthorizerDelete(d *schema.ResourceData, meta interfac
 		// XXX: Figure out a way to delete the method that depends on the authorizer first
 		// otherwise the authorizer will be dangling until the API is deleted
 		if !strings.Contains(err.Error(), apigateway.ErrCodeConflictException) {
-			return fmt.Errorf("Deleting API Gateway Authorizer failed: %s", err)
+			return fmt.Errorf("deleting API Gateway Authorizer failed: %w", err)
 		}
 	}
 
