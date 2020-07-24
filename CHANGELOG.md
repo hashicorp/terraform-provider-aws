@@ -35,6 +35,7 @@ BREAKING CHANGES
 * resource/aws_security_group: Remove automatic `aws_security_group_rule` resource import [GH-12616]
 * resource/aws_sns_platform_application: `platform_credential` and `platform_principal` attributes are no longer stored in the Terraform state with hash values [GH-3894]
 * resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
+* resource/aws_ssm_maintenance_window_task: Remove deprecated `logging_info` and `task_parameters` configuration blocks [GH-14311]
 
 FEATURES
 
