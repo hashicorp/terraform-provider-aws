@@ -60,7 +60,7 @@ jobs:
           #   exit 1
           # fi
           JSON=$(terraform validate -json)
-          echo $JSON
+          echo "JSON = \"$JSON\""
           echo "$JSON" | jq -r '.warning_count'
           popd
         done
