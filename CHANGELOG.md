@@ -75,6 +75,7 @@ BUG FIXES
 * resource/aws_codepipeline: Only retry `CreatePipeline` errors for IAM eventual consistency errors [GH-14264]
 * resource/aws_lambda_function: Increase IAM retry timeout for creation to standard 2 minute timeout [GH-14291]
 * resource/aws_network_acl_rule: Immediately return `DescribeNetworkAcls` errors on creation [GH-14261]
+* resource/aws_sns_topic_subscription: Immediately return `ListSubscriptionsByTopic` errors [GH-14262]
 * resource/aws_spot_fleet_request: Only retry `RequestSpotFleet` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14265]
 * resource/aws_ssm_activation: Only retry `CreateActivation` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14263]
 * data-source/lb: `enable_http2` now properly set [GH-14167]
