@@ -54,15 +54,5 @@ jobs:
           echo; echo -e "\e[1;35m===> Validating Example: $DIR <===\e[0m"; echo
           # Catch errors
           terraform validate
-          # # Check for warnings. For simplicity, assume warnings are related to pre-0.12 syntax
-          # if [ "$(terraform validate -json | jq -r '.warning_count')" != '0' ]; then
-          #   echo -e "\e[1;31mError:\e[0m Configuration contains warnings."
-          #   exit 1
-          # fi
-          JSON=$(terraform validate -json)
-          echo; echo -e "\e[1;35m===>\e[0m"
-          echo "==========>JSON = \"$JSON\""
-          echo -e "\e[1;35m===>\e[0m"; echo
-          # echo "$JSON" | jq -r '.warning_count'
           popd
         done
