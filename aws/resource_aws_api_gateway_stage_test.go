@@ -104,6 +104,28 @@ func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayStage_disappears(t *testing.T) {
+	var stage apigateway.Stage
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_stage.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayStageConfigReferencingDeployment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayStageExists(resourceName, &stage),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayStage(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 	var conf apigateway.Stage
 	rName := acctest.RandString(5)
