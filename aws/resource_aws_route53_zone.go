@@ -30,10 +30,13 @@ func resourceAwsRoute53Zone() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				// AWS Provider 3.0.0 - trailing period removed from name
-				// returned from API, no longer requiring custom DiffSuppressFunc
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				// returned from API, no longer requiring custom DiffSuppressFunc;
+				// instead a StateFunc allows input to be provided
+				// with or without the trailing period
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: trimTrailingPeriod,
 			},
 
 			"comment": {
@@ -182,7 +185,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", cleanDomainName(aws.StringValue(output.HostedZone.Name)))
+	d.Set("name", trimTrailingPeriod(aws.StringValue(output.HostedZone.Name)))
 	d.Set("zone_id", cleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	var nameServers []string
@@ -392,8 +395,10 @@ func cleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
-// cleanDomainName is used to remove the trailing period
-func cleanDomainName(v interface{}) string {
+// trimTrailingPeriod is used to remove the trailing period
+// of "name" or "domain name" attributes often returned from
+// the Route53 API or provided as user input
+func trimTrailingPeriod(v interface{}) string {
 	return strings.TrimSuffix(v.(string), ".")
 }
 
