@@ -125,7 +125,7 @@ func TestAccDataSourceAwsRoute53Zone_serviceDiscovery(t *testing.T) {
 func testAccDataSourceAwsRoute53ZoneConfigId(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "terraformtestacchz-%[1]d.com"
+  name = "terraformtestacchz-%[1]d.com."
 }
 
 data "aws_route53_zone" "test" {
@@ -137,7 +137,7 @@ data "aws_route53_zone" "test" {
 func testAccDataSourceAwsRoute53ZoneConfigName(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "terraformtestacchz-%[1]d.com"
+  name = "terraformtestacchz-%[1]d.com."
 }
 
 data "aws_route53_zone" "test" {
@@ -157,7 +157,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route53_zone" "test" {
-  name = "terraformtestacchz-%[1]d.com"
+  name = "terraformtestacchz-%[1]d.com."
   vpc {
     vpc_id = "${aws_vpc.test.id}"
   }
@@ -191,7 +191,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route53_zone" "test" {
-  name = "test.acc-%[1]d"
+  name = "test.acc-%[1]d."
 
   vpc {
     vpc_id = "${aws_vpc.test.id}"
