@@ -36,9 +36,8 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"authorizer_uri": {
-				Type:         schema.TypeString,
-				Optional:     true, // authorizer_uri is required for authorizer TOKEN/REQUEST
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
 			},
 			"identity_source": {
 				Type:     schema.TypeString,
