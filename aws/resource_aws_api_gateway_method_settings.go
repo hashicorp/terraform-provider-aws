@@ -57,7 +57,7 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 								"OFF",
 								"ERROR",
 								"INFO",
-							}, false),              
+							}, false),
 						},
 						"data_trace_enabled": {
 							Type:     schema.TypeBool,
@@ -156,7 +156,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("settings", flattenAwsApiGatewayMethodSettings(settings)); err != nil {
-		return fmt.Errorf("error setting settings: %s", err)
+		return fmt.Errorf("error setting settings: %w", err)
 	}
 
 	return nil
@@ -253,7 +253,7 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
 	_, err := conn.UpdateStage(&input)
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
+		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
 
 	d.SetId(restApiId + "-" + stageName + "-" + methodPath)
@@ -278,7 +278,7 @@ func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
 	_, err := conn.UpdateStage(&input)
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
+		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
 
 	return nil
