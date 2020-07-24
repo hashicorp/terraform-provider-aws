@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -217,7 +218,6 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	providerName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -226,7 +226,7 @@ func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsClusterCapacityProvidersFargate(rName, providerName),
+				Config: testAccAWSEcsClusterCapacityProvidersFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
@@ -238,13 +238,13 @@ func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcsClusterCapacityProvidersFargateSpot(rName, providerName),
+				Config: testAccAWSEcsClusterCapacityProvidersFargateSpot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
 			},
 			{
-				Config: testAccAWSEcsClusterCapacityProvidersFargateBoth(rName, providerName),
+				Config: testAccAWSEcsClusterCapacityProvidersFargateBoth(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
@@ -256,7 +256,6 @@ func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	providerName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -265,7 +264,7 @@ func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName, providerName),
+				Config: testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
@@ -277,7 +276,7 @@ func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName, providerName),
+				Config: testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
@@ -292,10 +291,9 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSEcsClusterDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsClusterConfig(rName),
@@ -311,8 +309,10 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "setting.4047805881.name", "containerInsights"),
-					resource.TestCheckResourceAttr(resourceName, "setting.4047805881.value", "enabled"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
+						"name":  "containerInsights",
+						"value": "enabled",
+					}),
 				),
 			},
 			{
@@ -320,8 +320,10 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "setting.1157067080.name", "containerInsights"),
-					resource.TestCheckResourceAttr(resourceName, "setting.1157067080.value", "disabled"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
+						"name":  "containerInsights",
+						"value": "disabled",
+					}),
 				),
 			},
 		},
@@ -491,7 +493,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEcsClusterCapacityProvidersFargate(rName, providerName string) string {
+func testAccAWSEcsClusterCapacityProvidersFargate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q
@@ -507,7 +509,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEcsClusterCapacityProvidersFargateSpot(rName, providerName string) string {
+func testAccAWSEcsClusterCapacityProvidersFargateSpot(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q
@@ -523,7 +525,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEcsClusterCapacityProvidersFargateBoth(rName, providerName string) string {
+func testAccAWSEcsClusterCapacityProvidersFargateBoth(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q
@@ -539,7 +541,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName, providerName string) string {
+func testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q
@@ -549,7 +551,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName, providerName string) string {
+func testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q

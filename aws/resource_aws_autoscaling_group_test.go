@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -86,10 +87,9 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfig(randName),
@@ -98,7 +98,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupHealthyCapacity(&group, 2),
 					testAccCheckAWSAutoScalingGroupAttributes(&group, randName),
 					testAccMatchResourceAttrRegionalARN("aws_autoscaling_group.bar", "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "default_cooldown", "300"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "4"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
@@ -381,10 +381,9 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithAZ,
@@ -392,8 +391,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
 				),
@@ -419,8 +417,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(&group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "1"),
 				),
@@ -464,6 +461,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 
 func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -473,13 +471,13 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithLoadBalancer,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "0"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -495,14 +493,13 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithTargetGroup,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "1"),
-					// DEPRECATED: This value will be 0 when Computed: true is removed
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -518,14 +515,13 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithLoadBalancer,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
-					// DEPRECATED: This value will be 0 when Computed: true is removed
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "1"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -934,8 +930,8 @@ data "aws_ami" "test" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -995,10 +991,9 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupWithHookConfig(randName),
@@ -1007,10 +1002,11 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupHealthyCapacity(&group, 2),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "initial_lifecycle_hook.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.default_result", "CONTINUE"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name", "launching"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_autoscaling_group.bar", "initial_lifecycle_hook.*", map[string]string{
+						"default_result": "CONTINUE",
+						"name":           "launching",
+					}),
+					// TODO: TypeSet check rewrite check to avoid hash reference
 					testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(
 						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name"),
 				),
@@ -1325,39 +1321,6 @@ func TestAccAWSAutoScalingGroup_classicVpcZoneIdentifier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.test", &group),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.test", "vpc_zone_identifier.#", "0"),
-				),
-			},
-			{
-				ResourceName:      "aws_autoscaling_group.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_delete",
-					"initial_lifecycle_hook",
-					"name_prefix",
-					"tag",
-					"tags",
-					"wait_for_capacity_timeout",
-					"wait_for_elb_capacity",
-				},
-			},
-		},
-	})
-}
-
-func TestAccAWSAutoScalingGroup_emptyAvailabilityZones(t *testing.T) {
-	var group autoscaling.Group
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.test", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.test", "availability_zones.#", "1"),
 				),
 			},
 			{
@@ -1703,6 +1666,67 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_OnDem
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.instances_distribution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.instances_distribution.0.on_demand_base_capacity", "0"),
 				),
+			},
+		},
+	})
+}
+
+// Test to verify fix for behavior in GH-ISSUE 7368
+func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_InstancesDistribution_UpdateToZeroOnDemandBaseCapacity(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_InstancesDistribution_OnDemandBaseCapacity(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.instances_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.instances_distribution.0.on_demand_base_capacity", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_InstancesDistribution_OnDemandBaseCapacity(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.instances_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.instances_distribution.0.on_demand_base_capacity", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
 			},
 		},
 	})
@@ -2069,6 +2093,40 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Wei
 	})
 }
 
+func TestAccAWSAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
+	var group autoscaling.Group
+
+	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupPartitionConfig(randName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.test", &group),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+		},
+	})
+}
+
 const testAccAWSAutoScalingGroupConfig_autoGeneratedName = `
 data "aws_ami" "test_ami" {
   most_recent = true
@@ -2202,6 +2260,16 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfig(name string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -2223,7 +2291,7 @@ resource "aws_placement_group" "test" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones   = ["us-west-2a"]
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
   name                 = "%s"
   max_size             = 5
   min_size             = 2
@@ -2241,13 +2309,13 @@ resource "aws_autoscaling_group" "bar" {
       propagate_at_launch = true
     },
     {
-      key                 = "FromTags2"
-      value               = "value2"
+      key                 = "FromTags3"
+      value               = "value3"
       propagate_at_launch = true
     },
     {
-      key                 = "FromTags3"
-      value               = "value3"
+      key                 = "FromTags2"
+      value               = "value2"
       propagate_at_launch = true
     },
   ]
@@ -2326,8 +2394,8 @@ resource "aws_internet_gateway" "gw" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -2431,8 +2499,8 @@ resource "aws_internet_gateway" "gw" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -2514,7 +2582,6 @@ resource "aws_launch_configuration" "foobar" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${aws_subnet.foo.availability_zone}"]
   vpc_zone_identifier = ["${aws_subnet.foo.id}"]
   max_size = 2
   min_size = 2
@@ -2529,6 +2596,16 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfigWithAZ = `
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -2539,7 +2616,7 @@ resource "aws_vpc" "default" {
 resource "aws_subnet" "main" {
   vpc_id = "${aws_vpc.default.id}"
   cidr_block = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-autoscaling-group-with-az"
   }
@@ -2562,7 +2639,7 @@ resource "aws_launch_configuration" "foobar" {
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = [
-	  "us-west-2a"
+	data.aws_availability_zones.available.names[0]
   ]
   desired_capacity = 0
   max_size = 0
@@ -2572,6 +2649,16 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfigWithVPCIdent = `
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -2582,7 +2669,7 @@ resource "aws_vpc" "default" {
 resource "aws_subnet" "main" {
   vpc_id = "${aws_vpc.default.id}"
   cidr_block = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-autoscaling-group-with-vpc-id"
   }
@@ -3370,7 +3457,6 @@ resource "aws_autoscaling_group" "test" {
 
   availability_zones   = ["us-west-2a"]
   launch_configuration = "${aws_launch_configuration.test.name}"
-  vpc_zone_identifier  = []
 }
 
 data "aws_ami" "test_ami" {
@@ -3386,59 +3472,6 @@ data "aws_ami" "test_ami" {
 resource "aws_launch_configuration" "test" {
   image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t1.micro"
-}
-`
-
-const testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "terraform-testacc-autoscaling-group-empty-azs"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-  
-resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  vpc_id     = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "tf-acc-autoscaling-group-empty-availability-zones"
-  }
-}
-
-resource "aws_autoscaling_group" "test" {
-  min_size = 0
-  max_size = 0
-
-  availability_zones   = []
-  launch_configuration = "${aws_launch_configuration.test.name}"
-  vpc_zone_identifier  = ["${aws_subnet.test.id}"]
-}
-
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_configuration" "test" {
-  image_id      = "${data.aws_ami.test_ami.id}"
-  instance_type = "t2.micro"
 }
 `
 
@@ -3686,8 +3719,8 @@ data "aws_ami" "test" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -4101,6 +4134,59 @@ resource "aws_autoscaling_group" "test" {
         weighted_capacity = "4"
       }
     }
+  }
+}
+`, rName)
+}
+
+func testAccAWSAutoScalingGroupPartitionConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # t2.micro is not supported in us-west-2d
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "this" {
+  name          = %[1]q
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "m5.large"
+
+  placement {
+    tenancy    = "default"
+    group_name = aws_placement_group.test.id
+  }
+}
+
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_autoscaling_group" "test" {
+  name_prefix        = "test"
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  min_size           = 0
+  max_size           = 0
+
+  launch_template {
+    id      = aws_launch_template.this.id
+    version = "$Latest"
   }
 }
 `, rName)

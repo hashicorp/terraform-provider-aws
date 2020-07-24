@@ -32,6 +32,7 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "dns_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "ip_address_type"),
 					resource.TestCheckResourceAttr(dataSourceName2, "name", lbName),
 					resource.TestCheckResourceAttr(dataSourceName2, "internal", "true"),
 					resource.TestCheckResourceAttr(dataSourceName2, "subnets.#", "2"),
@@ -44,13 +45,14 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName2, "zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName2, "dns_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName2, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName2, "ip_address_type"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAWSLBBackwardsCompatibility(t *testing.T) {
+func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"

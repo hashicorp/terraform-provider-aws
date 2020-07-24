@@ -191,7 +191,7 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_alb.lb_test"
@@ -1923,7 +1923,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_generatedName() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -2001,11 +2001,11 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`)
+}`
 }
 
 func testAccAWSLBConfig_zeroValueName() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
@@ -2089,11 +2089,11 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`)
+}`
 }
 
 func testAccAWSLBConfig_namePrefix() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
@@ -2164,7 +2164,7 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`)
+}`
 }
 func testAccAWSLBConfig_updatedTags(lbName string) string {
 	return fmt.Sprintf(`

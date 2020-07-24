@@ -169,7 +169,8 @@ func TestAccAWSDBInstance_generatedName(t *testing.T) {
 
 func TestAccAWSDBInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+	kmsKeyResourceName := "aws_kms_key.foo"
+	resourceName := "aws_db_instance.bar"
 
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAWSDBInstanceConfigKmsKeyId, ri)
@@ -182,11 +183,22 @@ func TestAccAWSDBInstance_kmsKey(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
 					testAccCheckAWSDBInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(
-						"aws_db_instance.bar", "kms_key_id", keyRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"delete_automated_backups",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -3191,8 +3203,8 @@ resource "aws_s3_bucket" "xtrabackup" {
 resource "aws_s3_bucket_object" "xtrabackup_db" {
   bucket = "${aws_s3_bucket.xtrabackup.id}"
   key    = "%s/mysql-5-6-xtrabackup.tar.gz"
-  source = "../files/mysql-5-6-xtrabackup.tar.gz"
-  etag   = "${filemd5("../files/mysql-5-6-xtrabackup.tar.gz")}"
+  source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
+  etag   = "${filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")}"
 }
 
 resource "aws_iam_role" "rds_s3_access_role" {

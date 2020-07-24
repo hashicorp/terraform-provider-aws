@@ -84,10 +84,18 @@ The following arguments are supported:
 * `metrics_enabled` - (Optional) Specifies whether Amazon CloudWatch metrics are enabled for this method.
 * `logging_level` - (Optional) Specifies the logging level for this method, which effects the log entries pushed to Amazon CloudWatch Logs. The available levels are `OFF`, `ERROR`, and `INFO`.
 * `data_trace_enabled` - (Optional) Specifies whether data trace logging is enabled for this method, which effects the log entries pushed to Amazon CloudWatch Logs.
-* `throttling_burst_limit` - (Optional) Specifies the throttling burst limit.
-* `throttling_rate_limit` - (Optional) Specifies the throttling rate limit.
+* `throttling_burst_limit` - (Optional) Specifies the throttling burst limit. Default: `-1` (throttling disabled).
+* `throttling_rate_limit` - (Optional) Specifies the throttling rate limit. Default: `-1` (throttling disabled).
 * `caching_enabled` - (Optional) Specifies whether responses should be cached and returned for requests. A cache cluster must be enabled on the stage for responses to be cached. 
 * `cache_ttl_in_seconds` - (Optional) Specifies the time to live (TTL), in seconds, for cached responses. The higher the TTL, the longer the response will be cached.
 * `cache_data_encrypted` - (Optional) Specifies whether the cached responses are encrypted.
 * `require_authorization_for_cache_control` - (Optional) Specifies whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) Specifies how to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
+
+## Import
+
+`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.
+
+```
+$ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
+```

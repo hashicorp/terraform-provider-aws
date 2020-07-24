@@ -22,13 +22,14 @@ import (
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSecurityGroupCreate,
 		Read:   resourceAwsSecurityGroupRead,
 		Update: resourceAwsSecurityGroupUpdate,
 		Delete: resourceAwsSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsSecurityGroupImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -382,8 +383,9 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", sgArn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
-	d.Set("vpc_id", sg.VpcId)
+	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(sg.GroupName))))
 	d.Set("owner_id", sg.OwnerId)
+	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
 		log.Printf("[WARN] Error setting Ingress rule set for (%s): %s", d.Id(), err)

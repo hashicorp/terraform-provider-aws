@@ -12,6 +12,7 @@ import (
 )
 
 func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create:        resourceAwsCloudWatchMetricAlarmCreate,
 		Read:          resourceAwsCloudWatchMetricAlarmRead,

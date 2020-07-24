@@ -91,21 +91,21 @@ resource "aws_vpn_connection" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigTransitGatewayIdAndVpnConnectionId(rBgpAsn int) string {
-	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + fmt.Sprintf(`
+	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + `
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
   vpn_connection_id  = "${aws_vpn_connection.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilter(rBgpAsn int) string {
-	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + fmt.Sprintf(`
+	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + `
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   filter {
     name   = "resource-id"
     values = ["${aws_vpn_connection.test.id}"]
   }
 }
-`)
+`
 }

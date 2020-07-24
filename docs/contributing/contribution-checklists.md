@@ -11,11 +11,12 @@ each type of contribution.
     - [Resource Name Generation Code Implementation](#resource-name-generation-code-implementation)
     - [Resource Name Generation Testing Implementation](#resource-name-generation-testing-implementation)
     - [Resource Code Generation Documentation Implementation](#resource-code-generation-documentation-implementation)
+- [Adding Resource Policy Support](#adding-resource-policy-support)
 - [Adding Resource Tagging Support](#adding-resource-tagging-support)
     - [Adding Service to Tag Generating Code](#adding-service-to-tag-generating-code)
     - [Resource Tagging Code Implementation](#resource-tagging-code-implementation)
     - [Resource Tagging Acceptance Testing Implementation](#resource-tagging-acceptance-testing-implementation)
-- [Resource Tagging Documentation Implementation](#resource-tagging-documentation-implementation)
+    - [Resource Tagging Documentation Implementation](#resource-tagging-documentation-implementation)
 - [New Resource](#new-resource)
 - [New Service](#new-service)
 - [New Region](#new-region)
@@ -38,7 +39,7 @@ contributor because you can work within existing code and tests to get a feel
 for what to do.
 
 In addition to the below checklist, please see the [Common Review
-Items](#common-review-items) sections for more specific coding and testing
+Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing
 guidelines.
 
  - [ ] __Acceptance test coverage of new behavior__: Existing resources each
@@ -57,8 +58,7 @@ guidelines.
    instructions for getting a local copy of the site up and running if you'd
    like to preview your changes.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
+   see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
@@ -71,7 +71,7 @@ Adding import support for Terraform resources will allow existing infrastructure
 
 Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
 
-In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing guidelines.
 
 - [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
 - [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
@@ -206,6 +206,17 @@ resource "aws_service_thing" "test" {
 ```markdown
 * `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 ```
+
+## Adding Resource Policy Support
+
+Some AWS components support [resource-based IAM policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_identity-vs-resource.html) to control permissions. When implementing this support in the Terraform AWS Provider, we typically prefer creating a separate resource, `aws_{SERVICE}_{THING}_policy` (e.g. `aws_s3_bucket_policy`) for a few reasons:
+
+- Many of these policies require the Amazon Resource Name (ARN) of the resource in the policy itself. It is difficult to workaround this requirement with custom difference handling within a self-contained resource.
+- Sometimes policies between two resources need to be written where they cross-reference each other resource's ARN within each policy. Without a separate resource, this introduces a configuration cycle.
+- Splitting the resources allows operators to logically split their infrastructure on purely operational and security boundaries with separate configurations/modules.
+- Splitting the resources prevents any separate policy API calls from needing to be permitted in the main resource in environments with restrictive IAM permissions, which can be undesirable.
+
+Follow the [New Resource section][#new-resource] for more information about implementing the separate resource.
 
 ## Adding Resource Tagging Support
 
@@ -419,7 +430,7 @@ More details about this code generation, including fixes for potential error mes
 
 - Verify all acceptance testing passes for the resource (e.g. `make testacc TESTARGS='-run=TestAccAWSEksCluster_'`)
 
-## Resource Tagging Documentation Implementation
+### Resource Tagging Documentation Implementation
 
 - In the resource documentation (e.g. `website/docs/r/eks_cluster.html.markdown`), add the following to the arguments reference:
 
@@ -434,7 +445,7 @@ interacts with upstream APIs. There are plenty of examples to draw from in the
 existing resources, but you still get to implement something completely new.
 
 In addition to the below checklist, please see the [Common Review
-Items](#common-review-items) sections for more specific coding and testing
+Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing
 guidelines.
 
  - [ ] __Minimal LOC__: It's difficult for both the reviewer and author to go
@@ -470,8 +481,7 @@ guidelines.
    to add a new file in the appropriate place and add a link to the sidebar for
    that page.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
+   see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
