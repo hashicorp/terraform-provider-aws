@@ -20,6 +20,7 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Authentication Updates](#provider-authentication-updates)
+- [Provider Custom Service Endpoint Updates](#provider-custom-service-endpoint-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
@@ -99,6 +100,42 @@ The `AWS_SDK_LOAD_CONFIG` environment variable is no longer necessary for the pr
 ### Removal of AWS_METADATA_TIMEOUT Environment Variable Usage
 
 The provider now relies on the default AWS Go SDK timeouts for interacting with the EC2 Instance Metadata Service.
+
+## Provider Custom Service Endpoint Updates
+
+### Removal of kinesis_analytics and r53 Arguments
+
+The [custom service endpoints](custom-service-endpoints.html) for Kinesis Analytics and Route 53 now use the `kinesisanalytics` and `route53` argument names in the provider configuration.
+
+For example, given this previous configuration:
+
+```hcl
+provider "aws" {
+  # ... potentially other configuration ...
+
+  endpoints {
+    # ... potentially other configuration ...
+
+    kinesis_analytics = "https://example.com"
+    r53               = "https://example.com"
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+provider "aws" {
+  # ... potentially other configuration ...
+
+  endpoints {
+    # ... potentially other configuration ...
+
+    kinesisanalytics = "https://example.com"
+    route53          = "https://example.com"
+  }
+}
+```
 
 ## Data Source: aws_availability_zones
 

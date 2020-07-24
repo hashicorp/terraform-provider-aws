@@ -1095,7 +1095,6 @@ func init() {
 		"iotanalytics",
 		"iotevents",
 		"kafka",
-		"kinesis_analytics",
 		"kinesis",
 		"kinesisanalytics",
 		"kinesisanalyticsv2",
@@ -1126,7 +1125,6 @@ func init() {
 		"pricing",
 		"qldb",
 		"quicksight",
-		"r53",
 		"ram",
 		"rds",
 		"redshift",
@@ -1344,10 +1342,6 @@ func endpointsSchema() *schema.Schema {
 			Description: descriptions["endpoint"],
 		}
 	}
-
-	// Since the endpoints attribute is a TypeSet we cannot use ConflictsWith
-	endpointsAttributes["kinesis_analytics"].Deprecated = "use `endpoints` configuration block `kinesisanalytics` argument instead"
-	endpointsAttributes["r53"].Deprecated = "use `endpoints` configuration block `route53` argument instead"
 
 	return &schema.Schema{
 		Type:     schema.TypeSet,
