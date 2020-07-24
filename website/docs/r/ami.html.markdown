@@ -52,7 +52,7 @@ The following arguments are supported:
   attached to created instances. The structure of this block is described below.
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 
@@ -108,6 +108,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the AMI.
 * `id` - The ID of the created AMI.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
 

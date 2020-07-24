@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	rdsClusterScalingConfiguration_DefaultMinCapacity = 2
+	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
 	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
 )
 
@@ -299,7 +299,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"port": {
@@ -453,7 +452,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}), d.Get("engine_mode").(string)),
+			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                 tags,
 		}
@@ -549,7 +548,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Engine:                      aws.String(d.Get("engine").(string)),
 			EngineMode:                  aws.String(d.Get("engine_mode").(string)),
 			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
-			ScalingConfiguration:        expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}), d.Get("engine_mode").(string)),
+			ScalingConfiguration:        expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			Tags:                        tags,
 		}
 
@@ -768,7 +767,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}), d.Get("engine_mode").(string)),
+			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			Tags:                 tags,
 		}
 
@@ -928,6 +927,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -1042,17 +1042,19 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
 
-	if aws.StringValue(dbc.EngineMode) == "global" {
+	if aws.StringValue(dbc.EngineMode) == "global" || aws.StringValue(dbc.EngineMode) == "provisioned" {
 		globalCluster, err := rdsDescribeGlobalClusterFromDbClusterARN(conn, aws.StringValue(dbc.DBClusterArn))
 
-		if err != nil {
+		// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
+		// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+		if err != nil && !isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 			return fmt.Errorf("error reading RDS Global Cluster information for DB Cluster (%s): %s", d.Id(), err)
 		}
 
@@ -1138,7 +1140,7 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("scaling_configuration") {
-		req.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}), d.Get("engine_mode").(string))
+		req.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 		requestUpdate = true
 	}
 

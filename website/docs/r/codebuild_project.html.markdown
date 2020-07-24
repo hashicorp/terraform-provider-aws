@@ -235,7 +235,7 @@ The following arguments are supported:
 * `logs_config` - (Optional) Configuration for the builds to store log data to CloudWatch or S3.
 * `service_role` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source_version` - (Optional) A version of the build input to be built for this project. If not specified, the latest version is used.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
 * `secondary_artifacts` - (Optional) A set of secondary artifacts to be used inside the build. Secondary artifacts blocks are documented below.
 * `secondary_sources` - (Optional) A set of secondary sources to be used inside the build. Secondary sources blocks are documented below.
@@ -273,7 +273,7 @@ The following arguments are supported:
 
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
-* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
+* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`, and `SECRETS_MANAGER`.
 
 `logs_config` supports the following:
 
@@ -298,7 +298,7 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
-* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`.
+* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_ENTERPRISE`.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
@@ -343,7 +343,7 @@ The following arguments are supported:
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
-* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`.
+* `git_submodules_config` - (Optional) Information about the Git submodules configuration for an AWS CodeBuild build project. Git submodules config blocks are documented below. This option is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_ENTERPRISE`.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is `GITHUB`, `BITBUCKET`, or `GITHUB_ENTERPRISE`.

@@ -725,8 +725,8 @@ data "aws_availability_zones" "available" {
   # Default instance type of t2.micro is not available in this Availability Zone
   # The failure will occur during Elastic Beanstalk CloudFormation Template handling
   # after waiting upwards of one hour to initialize the Auto Scaling Group.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -927,8 +927,8 @@ resource "aws_elastic_beanstalk_environment" "test" {
 func testAccBeanstalkWorkerEnvConfig(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
-  name  = %[1]q
-  roles = [aws_iam_role.test.name]
+  name = %[1]q
+  role = aws_iam_role.test.name
 }
 
 resource "aws_iam_role" "test" {

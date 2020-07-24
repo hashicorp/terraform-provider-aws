@@ -142,6 +142,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceDa
 
 func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarnotificationsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	rule, err := conn.DescribeNotificationRule(&codestarnotifications.DescribeNotificationRuleInput{
 		Arn: aws.String(d.Id()),
@@ -168,7 +169,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
-	d.Set("tags", keyvaluetags.New(rule.Tags).IgnoreAws().Map())
+	d.Set("tags", keyvaluetags.New(rule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
@@ -220,7 +221,10 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 		}
 		targets = targets[:i]
 
-		return resource.RetryableError(reterr)
+		if reterr != nil {
+			return resource.RetryableError(reterr)
+		}
+		return nil
 	})
 
 	if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {

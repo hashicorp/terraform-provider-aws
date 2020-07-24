@@ -1,0 +1,65 @@
+name: Examples Checks
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    paths:
+      - examples/**
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+  TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go_version: ["1.14"]
+        terraform_version: ["0.12.29"]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go_version }}
+    - name: go build
+      run: |
+        GOOS=$(go env GOOS)
+        GOARCH=$(go env GOARCH)
+        # Substitute as latest release
+        VERSION=$(git describe --abbrev=0 --match='v*.*.*' --tags || echo -n "v99.99.99")
+        go build -o ${TF_PLUGIN_CACHE_DIR}/${GOOS}_${GOARCH}/terraform-provider-aws_${VERSION}_x4 .
+    - uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ matrix.terraform_version }}
+        # Needed to use the output of `terraform validate -json`
+        terraform_wrapper: false
+    - name: terraform
+      run: |
+        for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
+          pushd "$DIR"
+          if [ -f terraform.template.tfvars ]; then
+            cp terraform.template.tfvars terraform.tfvars
+          fi
+          echo; echo -e "\e[1;35m===> Initializing Example: $DIR <===\e[0m"; echo
+          terraform init
+          echo; echo -e "\e[1;35m===> Format Checking Example: $DIR <===\e[0m"; echo
+          terraform fmt -check
+          echo; echo -e "\e[1;35m===> Validating Example: $DIR <===\e[0m"; echo
+          # Catch errors
+          terraform validate
+          # Check for warnings. For simplicity, assume warnings are related to pre-0.12 syntax
+          if [ "$(terraform validate -json | jq -r '.warning_count')" != '0' ]; then
+            echo -e "\e[1;31mError:\e[0m Configuration contains warnings."
+            exit 1
+          fi
+          popd
+        done

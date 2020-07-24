@@ -183,6 +183,28 @@ func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayApiKey_disappears(t *testing.T) {
+	var apiKey1 apigateway.ApiKey
+	resourceName := "aws_api_gateway_api_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayApiKeyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayApiKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayApiKeyExists(n string, res *apigateway.ApiKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

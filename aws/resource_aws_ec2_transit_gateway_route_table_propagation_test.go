@@ -109,7 +109,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTablePropagationDestroy(s *terraform.S
 }
 
 func testAccAWSEc2TransitGatewayRouteTablePropagationConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -143,5 +143,5 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
   transit_gateway_attachment_id  = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
   transit_gateway_route_table_id = "${aws_ec2_transit_gateway_route_table.test.id}"
 }
-`)
+`
 }

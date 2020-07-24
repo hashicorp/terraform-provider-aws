@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsSubnetIDs(t *testing.T) {
+func TestAccDataSourceAwsSubnetIDs_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

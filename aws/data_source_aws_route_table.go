@@ -131,6 +131,8 @@ func dataSourceAwsRouteTable() *schema.Resource {
 
 func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &ec2.DescribeRouteTablesInput{}
 	vpcId, vpcIdOk := d.GetOk("vpc_id")
 	subnetId, subnetIdOk := d.GetOk("subnet_id")
@@ -175,7 +177,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set("vpc_id", rt.VpcId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

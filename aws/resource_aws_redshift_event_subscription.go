@@ -108,6 +108,7 @@ func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta int
 
 func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -156,7 +157,7 @@ func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta inter
 	if err := d.Set("customer_aws_id", sub.CustomerAwsId); err != nil {
 		return err
 	}
-	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(sub.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(sub.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -176,7 +176,16 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 }
 
 func testAccAWSAutoscalingAttachment_alb(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+	state            = "available"
+	
+	filter {
+		name   = "opt-in-status"
+		values = ["opt-in-not-required"]
+	}
+}	
+	
 resource "aws_lb_target_group" "test" {
   name     = "test-alb-%d"
   port     = 443
@@ -236,7 +245,7 @@ resource "aws_lb_target_group" "another_test" {
 }
 
 resource "aws_autoscaling_group" "asg" {
-  availability_zones        = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones        = data.aws_availability_zones.available.names
   name                      = "asg-lb-assoc-terraform-test_%d"
   max_size                  = 1
   min_size                  = 0
@@ -250,11 +259,15 @@ resource "aws_autoscaling_group" "asg" {
     value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
   }
+
+  lifecycle {
+    ignore_changes = [load_balancers, target_group_arns]
+  }
 }
 
 resource "aws_launch_configuration" "as_conf" {
   name          = "test_config_%d"
-  image_id      = "ami-f34032c3"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
@@ -269,9 +282,18 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSAutoscalingAttachment_elb(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+	state            = "available"
+	
+	filter {
+		name   = "opt-in-status"
+		values = ["opt-in-not-required"]
+	}
+}	
+
 resource "aws_elb" "foo" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = data.aws_availability_zones.available.names
 
   listener {
     instance_port     = 8000
@@ -282,7 +304,7 @@ resource "aws_elb" "foo" {
 }
 
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = data.aws_availability_zones.available.names
 
   listener {
     instance_port     = 8000
@@ -294,12 +316,12 @@ resource "aws_elb" "bar" {
 
 resource "aws_launch_configuration" "as_conf" {
   name          = "test_config_%d"
-  image_id      = "ami-f34032c3"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "asg" {
-  availability_zones        = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones        = data.aws_availability_zones.available.names
   name                      = "asg-lb-assoc-terraform-test_%d"
   max_size                  = 1
   min_size                  = 0
@@ -312,6 +334,10 @@ resource "aws_autoscaling_group" "asg" {
     key                 = "Name"
     value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [load_balancers, target_group_arns]
   }
 }
 `, rInt, rInt)

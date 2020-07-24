@@ -5,22 +5,30 @@ import (
 	"testing"
 )
 
-func TestAccAWSGuardDuty(t *testing.T) {
+func TestAccAWSGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":  testAccAwsGuardDutyDetector_basic,
-			"import": testAccAwsGuardDutyDetector_import,
+			"basic":            testAccAwsGuardDutyDetector_basic,
+			"tags":             testAccAwsGuardDutyDetector_tags,
+			"datasource_basic": testAccAWSGuarddutyDetectorDataSource_basic,
+			"datasource_id":    testAccAWSGuarddutyDetectorDataSource_Id,
 		},
 		"InviteAccepter": {
 			"basic": testAccAwsGuardDutyInviteAccepter_basic,
 		},
 		"IPSet": {
-			"basic":  testAccAwsGuardDutyIpset_basic,
-			"import": testAccAwsGuardDutyIpset_import,
+			"basic": testAccAwsGuardDutyIpset_basic,
+			"tags":  testAccAwsGuardDutyIpset_tags,
+		},
+		"OrganizationAdminAccount": {
+			"basic": testAccAwsGuardDutyOrganizationAdminAccount_basic,
+		},
+		"OrganizationConfiguration": {
+			"basic": testAccAwsGuardDutyOrganizationConfiguration_basic,
 		},
 		"ThreatIntelSet": {
-			"basic":  testAccAwsGuardDutyThreatintelset_basic,
-			"import": testAccAwsGuardDutyThreatintelset_import,
+			"basic": testAccAwsGuardDutyThreatintelset_basic,
+			"tags":  testAccAwsGuardDutyThreatintelset_tags,
 		},
 		"Member": {
 			"basic":              testAccAwsGuardDutyMember_basic,

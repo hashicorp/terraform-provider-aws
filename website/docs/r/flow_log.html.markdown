@@ -106,13 +106,14 @@ The following arguments are supported:
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
   minutes). Default: `600`.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Flow Log ID
+* `arn` - The ARN of the Flow Log.
 
 ## Import
 

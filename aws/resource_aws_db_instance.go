@@ -380,7 +380,6 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"auto_minor_version_upgrade": {
@@ -642,8 +641,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			modifyDbInstanceInput.VpcSecurityGroupIds = expandStringSet(attr)
-			requiresModifyDbInstance = true
+			opts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1259,7 +1257,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	v, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
+	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
 
 	if err != nil {
 		return err
@@ -1340,10 +1341,6 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
 	}
 
-	// list tags for resource
-	// set tags
-	conn := meta.(*AWSClient).rdsconn
-
 	arn := aws.StringValue(v.DBInstanceArn)
 	d.Set("arn", arn)
 
@@ -1353,7 +1350,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -1463,7 +1460,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	requestUpdate := false
-	if d.HasChange("allocated_storage") || d.HasChange("iops") {
+	if d.HasChanges("allocated_storage", "iops") {
 		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		requestUpdate = true
@@ -1596,13 +1593,13 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
-	if d.HasChange("domain") || d.HasChange("domain_iam_role_name") {
+	if d.HasChanges("domain", "domain_iam_role_name") {
 		req.Domain = aws.String(d.Get("domain").(string))
 		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		requestUpdate = true
 	}
 
-	if d.HasChange("performance_insights_enabled") || d.HasChange("performance_insights_kms_key_id") || d.HasChange("performance_insights_retention_period") {
+	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
 		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {

@@ -86,6 +86,28 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayResource_disappears(t *testing.T) {
+	var conf apigateway.Resource
+	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	resourceName := "aws_api_gateway_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayResourceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayResourceExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayResource(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayResourceAttributes(conf *apigateway.Resource, path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Path != path {

@@ -4545,8 +4545,8 @@ func (c *LexModelBuildingService) UntagResourceWithContext(ctx aws.Context, inpu
 // The request is not well formed. For example, a value is invalid or a required
 // field is missing. Check the field values, and try again.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4563,17 +4563,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4581,22 +4581,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides information about a bot alias.
@@ -5025,8 +5025,8 @@ func (s *CodeHook) SetUri(v string) *CodeHook {
 
 // There was a conflict processing the request. Try your request again.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5043,17 +5043,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5061,22 +5061,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides the settings needed for conversation logs.
@@ -5513,6 +5513,10 @@ type CreateIntentVersionOutput struct {
 	// Describes how the intent is fulfilled.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information, if any, for connectin an Amazon Kendra index with
+	// the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The date that the intent was updated.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
@@ -5592,6 +5596,12 @@ func (s *CreateIntentVersionOutput) SetFollowUpPrompt(v *FollowUpPrompt) *Create
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *CreateIntentVersionOutput) SetFulfillmentActivity(v *FulfillmentActivity) *CreateIntentVersionOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *CreateIntentVersionOutput) SetKendraConfiguration(v *KendraConfiguration) *CreateIntentVersionOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -8325,6 +8335,10 @@ type GetIntentOutput struct {
 	// Describes how the intent is fulfilled. For more information, see PutIntent.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information, if any, to connect to an Amazon Kendra index with
+	// the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and the last updated date are the same.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
@@ -8404,6 +8418,12 @@ func (s *GetIntentOutput) SetFollowUpPrompt(v *FollowUpPrompt) *GetIntentOutput 
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *GetIntentOutput) SetFulfillmentActivity(v *FulfillmentActivity) *GetIntentOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *GetIntentOutput) SetKendraConfiguration(v *KendraConfiguration) *GetIntentOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -9242,8 +9262,8 @@ func (s *IntentMetadata) SetVersion(v string) *IntentMetadata {
 
 // An internal Amazon Lex error occurred. Try your request again.
 type InternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9260,17 +9280,17 @@ func (s InternalFailureException) GoString() string {
 
 func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
 	return &InternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalFailureException) Code() string {
+func (s *InternalFailureException) Code() string {
 	return "InternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s InternalFailureException) Message() string {
+func (s *InternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9278,28 +9298,109 @@ func (s InternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalFailureException) OrigErr() error {
+func (s *InternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s InternalFailureException) Error() string {
+func (s *InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Provides configuration information for the AMAZON.KendraSearchIntent intent.
+// When you use this intent, Amazon Lex searches the specified Amazon Kendra
+// index and returns documents from the index that match the user's utterance.
+// For more information, see AMAZON.KendraSearchIntent (http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html).
+type KendraConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Amazon Kendra index that you want the
+	// AMAZON.KendraSearchIntent intent to search. The index must be in the same
+	// account and Region as the Amazon Lex bot. If the Amazon Kendra index does
+	// not exist, you get an exception when you call the PutIntent operation.
+	//
+	// KendraIndex is a required field
+	KendraIndex *string `locationName:"kendraIndex" min:"20" type:"string" required:"true"`
+
+	// A query filter that Amazon Lex sends to Amazon Kendra to filter the response
+	// from the query. The filter is in the format defined by Amazon Kendra. For
+	// more information, see Filtering queries (http://docs.aws.amazon.com/kendra/latest/dg/filtering.html).
+	//
+	// You can override this filter string with a new filter string at runtime.
+	QueryFilterString *string `locationName:"queryFilterString" type:"string"`
+
+	// The Amazon Resource Name (ARN) of an IAM role that has permission to search
+	// the Amazon Kendra index. The role must be in the same account and Region
+	// as the Amazon Lex bot. If the role does not exist, you get an exception when
+	// you call the PutIntent operation.
+	//
+	// Role is a required field
+	Role *string `locationName:"role" min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s KendraConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KendraConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *KendraConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "KendraConfiguration"}
+	if s.KendraIndex == nil {
+		invalidParams.Add(request.NewErrParamRequired("KendraIndex"))
+	}
+	if s.KendraIndex != nil && len(*s.KendraIndex) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("KendraIndex", 20))
+	}
+	if s.Role == nil {
+		invalidParams.Add(request.NewErrParamRequired("Role"))
+	}
+	if s.Role != nil && len(*s.Role) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Role", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKendraIndex sets the KendraIndex field's value.
+func (s *KendraConfiguration) SetKendraIndex(v string) *KendraConfiguration {
+	s.KendraIndex = &v
+	return s
+}
+
+// SetQueryFilterString sets the QueryFilterString field's value.
+func (s *KendraConfiguration) SetQueryFilterString(v string) *KendraConfiguration {
+	s.QueryFilterString = &v
+	return s
+}
+
+// SetRole sets the Role field's value.
+func (s *KendraConfiguration) SetRole(v string) *KendraConfiguration {
+	s.Role = &v
+	return s
 }
 
 // The request exceeded a limit. Try your request again.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -9318,17 +9419,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9336,22 +9437,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListTagsForResourceInput struct {
@@ -9643,8 +9744,8 @@ func (s *Message) SetGroupNumber(v int64) *Message {
 // The resource specified in the request was not found. Check the resource and
 // try again.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9661,17 +9762,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9679,29 +9780,29 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The checksum of the resource that you are trying to change does not match
 // the checksum in the request. Check the resource's checksum and try again.
 type PreconditionFailedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9718,17 +9819,17 @@ func (s PreconditionFailedException) GoString() string {
 
 func newErrorPreconditionFailedException(v protocol.ResponseMetadata) error {
 	return &PreconditionFailedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PreconditionFailedException) Code() string {
+func (s *PreconditionFailedException) Code() string {
 	return "PreconditionFailedException"
 }
 
 // Message returns the exception's message.
-func (s PreconditionFailedException) Message() string {
+func (s *PreconditionFailedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9736,22 +9837,22 @@ func (s PreconditionFailedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PreconditionFailedException) OrigErr() error {
+func (s *PreconditionFailedException) OrigErr() error {
 	return nil
 }
 
-func (s PreconditionFailedException) Error() string {
+func (s *PreconditionFailedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PreconditionFailedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PreconditionFailedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PreconditionFailedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PreconditionFailedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Obtains information from the user. To define a prompt, provide one or more
@@ -10693,6 +10794,11 @@ type PutIntentInput struct {
 	// process the intent (for example, place an order with a pizzeria).
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information required to use the AMAZON.KendraSearchIntent intent
+	// to connect to an Amazon Kendra index. For more information, see AMAZON.KendraSearchIntent
+	// (http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html).
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The name of the intent. The name is not case sensitive.
 	//
 	// The name can't match a built-in intent name, or a built-in intent name with
@@ -10774,6 +10880,11 @@ func (s *PutIntentInput) Validate() error {
 			invalidParams.AddNested("FulfillmentActivity", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.KendraConfiguration != nil {
+		if err := s.KendraConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("KendraConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.RejectionStatement != nil {
 		if err := s.RejectionStatement.Validate(); err != nil {
 			invalidParams.AddNested("RejectionStatement", err.(request.ErrInvalidParams))
@@ -10844,6 +10955,12 @@ func (s *PutIntentInput) SetFulfillmentActivity(v *FulfillmentActivity) *PutInte
 	return s
 }
 
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *PutIntentInput) SetKendraConfiguration(v *KendraConfiguration) *PutIntentInput {
+	s.KendraConfiguration = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *PutIntentInput) SetName(v string) *PutIntentInput {
 	s.Name = &v
@@ -10911,6 +11028,10 @@ type PutIntentOutput struct {
 	// the intent after the user provides all of the information required by the
 	// intent.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
+
+	// Configuration information, if any, required to connect to an Amazon Kendra
+	// index and use the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
 
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and last update dates are the same.
@@ -10997,6 +11118,12 @@ func (s *PutIntentOutput) SetFollowUpPrompt(v *FollowUpPrompt) *PutIntentOutput 
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *PutIntentOutput) SetFulfillmentActivity(v *FulfillmentActivity) *PutIntentOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *PutIntentOutput) SetKendraConfiguration(v *KendraConfiguration) *PutIntentOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -11342,8 +11469,8 @@ func (s *PutSlotTypeOutput) SetVersion(v string) *PutSlotTypeOutput {
 //
 // "name": string, "version": string } }
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the resource that refers to the resource that you are attempting
 	// to delete. This object is returned as part of the ResourceInUseException
@@ -11367,17 +11494,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11385,22 +11512,22 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes the resource that refers to the resource that you are attempting
@@ -11459,12 +11586,12 @@ type Slot struct {
 	// (https://docs.aws.amazon.com/lex/latest/dg/how-obfuscate.html).
 	ObfuscationSetting *string `locationName:"obfuscationSetting" type:"string" enum:"ObfuscationSetting"`
 
-	// Directs Lex the order in which to elicit this slot value from the user. For
-	// example, if the intent has two slots with priorities 1 and 2, AWS Lex first
-	// elicits a value for the slot with priority 1.
+	// Directs Amazon Lex the order in which to elicit this slot value from the
+	// user. For example, if the intent has two slots with priorities 1 and 2, AWS
+	// Amazon Lex first elicits a value for the slot with priority 1.
 	//
-	// If multiple slots share the same priority, the order in which Lex elicits
-	// values is arbitrary.
+	// If multiple slots share the same priority, the order in which Amazon Lex
+	// elicits values is arbitrary.
 	Priority *int64 `locationName:"priority" type:"integer"`
 
 	// A set of possible responses for the slot type used by text-based clients.

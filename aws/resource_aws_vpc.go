@@ -16,6 +16,7 @@ import (
 )
 
 func resourceAwsVpc() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsVpcCreate,
 		Read:   resourceAwsVpcRead,
@@ -221,26 +222,7 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		// Handle EC2 eventual consistency on creation
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-
-			if isAWSErr(err, "InvalidVpcID.NotFound", "") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if isResourceTimeoutError(err) {
-			err = keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-		}
-
-		if err != nil {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
@@ -250,8 +232,7 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	ignoreTags := meta.(*AWSClient).ignoreTags
-	ignoreTagPrefixes := meta.(*AWSClient).ignoreTagPrefixes
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Refresh the VPC state
 	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
@@ -280,7 +261,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

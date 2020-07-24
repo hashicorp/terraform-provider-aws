@@ -14,6 +14,7 @@ import (
 )
 
 func resourceAwsSubnet() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSubnetCreate,
 		Read:   resourceAwsSubnetRead,
@@ -72,6 +73,13 @@ func resourceAwsSubnet() *schema.Resource {
 				Default:  false,
 			},
 
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
+
 			"assign_ipv6_address_on_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -112,6 +120,10 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts.Ipv6CidrBlock = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		createOpts.OutpostArn = aws.String(v.(string))
+	}
+
 	var err error
 	resp, err := conn.CreateSubnet(createOpts)
 
@@ -142,26 +154,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		// Handle EC2 eventual consistency on creation
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-
-			if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if isResourceTimeoutError(err) {
-			err = keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-		}
-
-		if err != nil {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
@@ -200,8 +193,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	ignoreTags := meta.(*AWSClient).ignoreTags
-	ignoreTagPrefixes := meta.(*AWSClient).ignoreTagPrefixes
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeSubnets(&ec2.DescribeSubnetsInput{
 		SubnetIds: []*string{aws.String(d.Id())},
@@ -227,6 +219,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	d.Set("outpost_arn", subnet.OutpostArn)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
 	d.Set("ipv6_cidr_block_association_id", "")
@@ -242,7 +235,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", subnet.SubnetArn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -406,7 +399,7 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := wait.WaitForState(); err != nil {
-		return fmt.Errorf("Error deleting subnet: %s", err)
+		return fmt.Errorf("error deleting subnet (%s): %s", d.Id(), err)
 	}
 
 	return nil

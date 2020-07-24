@@ -40,8 +40,7 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", tableName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
 				),
 			},
 			{
@@ -225,7 +224,7 @@ resource "aws_dynamodb_table" "alternate" {
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
-	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + fmt.Sprintf(`
+	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + `
 resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
@@ -233,11 +232,11 @@ resource "aws_dynamodb_global_table" "test" {
     region_name = data.aws_region.current.name
   }
 }
-`)
+`
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
-	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + fmt.Sprintf(`
+	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + `
 resource "aws_dynamodb_global_table" "test" {
   depends_on = [aws_dynamodb_table.alternate]
 
@@ -251,7 +250,7 @@ resource "aws_dynamodb_global_table" "test" {
     region_name = data.aws_region.current.name
   }
 }
-`)
+`
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {

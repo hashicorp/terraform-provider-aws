@@ -97,6 +97,7 @@ func resourceAwsRedshiftSnapshotScheduleCreate(d *schema.ResourceData, meta inte
 
 func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	descOpts := &redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(d.Id()),
@@ -120,7 +121,7 @@ func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error setting definitions: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(snapshotSchedule.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(snapshotSchedule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
