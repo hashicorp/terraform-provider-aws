@@ -477,7 +477,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
 resource "aws_cognito_user_pool" "test" {
   count = 3
-  name  = "%[1]s-${count.index}-update"
+  name  = "%[1]s-${count.index}"
 }
 
 resource "aws_api_gateway_authorizer" "test" {
