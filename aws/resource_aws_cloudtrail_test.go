@@ -458,7 +458,7 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	var trail cloudtrail.Trail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.test"
-	kmsResourceName := "aws_kms_key.foo"
+	kmsResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
