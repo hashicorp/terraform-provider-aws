@@ -9,6 +9,7 @@ BREAKING CHANGES
 * provider: All "removed" attributes are cut, using them would result in a Terraform Core level error [GH-14001]
 * provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
 * provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
+* provider: Remove deprecated `kinesis_analytics` and `r53` custom service endpoint arguments [GH-14238]
 * data-source/aws_availability_zones: Remove deprecated `blacklisted_names` and `blacklisted_zone_ids` arguments [GH-14134]
 * data-source/aws_directory_service_directory: Return an error when a single result is not found [GH-14006]
 * data-source/aws_ecr_repository: Return an error when a single result is not found [GH-10520]
