@@ -15,6 +15,7 @@ BREAKING CHANGES
 * data-source/aws_efs_file_system: Return an error when a single result is not found [GH-14005]
 * data-source/aws_launch_template: Return an error when a single result is not found [GH-10521]
 * resource/aws_acm_certificate: `certificate_body`, `certificate_chain`, and `private_key` attributes are no longer stored in the Terraform state with hash values [GH-9685]
+* resource/aws_acm_certificate: `domain_validation_options` attribute changed from list to set [GH-14199]
 * resource/aws_api_gateway_method_settings: Remove `Computed` property from `throttling_burst_limit` and `throttling_rate_limit` arguments, enabling drift detection [GH-14266]
 * resource/aws_api_gateway_method_settings: Update `throttling_burst_limit` and `throttling_rate_limit` argument defaults to match API default of `-1` to keep throttling disabled [GH-14266]
 * resource/aws_autoscaling_group: `availability_zones` and `vpc_zone_identifier` argument conflict now reported at plan-time [GH-12927]
@@ -43,6 +44,7 @@ ENHANCEMENTS
 
 * provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
 * provider: Add `assume_role` configuration block `duration_seconds`, `policy_arns`, `tags`, and `transitive_tag_keys` arguments [GH-14077]
+* resource/aws_acm_certificate: Enable `domain_validation_options` usage in downstream resource `count` and `for_each` references [GH-14199]
 * resource/aws_api_gateway_method_settings: Add import support [GH-14266]
 * resource/aws_apigatewayv2_integration: Add `request_parameters` attribute [GH-14080]
 * resource/aws_apigatewayv2_integration: Add `tls_config` attribute [GH-13013]
@@ -60,6 +62,7 @@ BUG FIXES
 * provider: Ensure configured STS endpoint is used during `AssumeRole` API calls [GH-14077]
 * provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
 * provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
+* resource/aws_acm_certificate: Prevent unexpected ordering differences with `domain_validation_options` attribute [GH-14199]
 * resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
 * resource/aws_apigatewayv2_stage: Correctly handle `default_route_setting` and `route_setting` `data_trace_enabled` and `logging_level` for HTTP APIs. `logging_level` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-13809]
 * resource/aws_codepipeline: Only retry `CreatePipeline` errors for IAM eventual consistency errors [GH-14264]
