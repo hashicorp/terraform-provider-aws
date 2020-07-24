@@ -19,7 +19,7 @@ The following example shows how to get a Hosted Zone from its name and from this
 
 ```hcl
 data "aws_route53_zone" "selected" {
-  name         = "test.com"
+  name         = "test.com."
   private_zone = true
 }
 
