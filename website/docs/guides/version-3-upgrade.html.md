@@ -906,3 +906,79 @@ Previously when the `platform_credential` and `platform_principal` arguments wer
 ### valid_until Argument No Longer Uses 24 Hour Default
 
 Previously when the `valid_until` argument was not configured, the resource would default to a 24 hour request. This behavior has been removed and allows for non-expiring requests. To recreate the old behavior, the [`time_offset` resource](/docs/providers/time/r/offset.html) can potentially be used.
+
+## Resource: aws_ssm_maintenance_window_task
+
+### logging_info Configuration Block Removal
+
+Switch your Terraform configuration to the `task_invocation_parameters` configuration block `run_command_parameters` configuration block `output_s3_bucket` and `output_s3_key_prefix` arguments instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  # ... other configuration ...
+
+  logging_info {
+    s3_bucket_name       = aws_s3_bucket.example.id
+    s3_bucket_key_prefix = "example"
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  # ... other configuration ...
+
+  task_invocation_parameters {
+    # ... potentially other configuration ...
+
+    run_command_parameters {
+      # ... potentially other configuration ...
+
+      output_s3_bucket     = aws_s3_bucket.example.id
+      output_s3_key_prefix = "example"
+    }
+  }
+}
+```
+
+### task_parameters Configuration Block Removal
+
+Switch your Terraform configuration to the `task_invocation_parameters` configuration block `run_command_parameters` configuration block `parameter` configuration blocks instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  # ... other configuration ...
+
+  task_parameters {
+    name   = "commands"
+    values = ["date"]
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  # ... other configuration ...
+
+  task_invocation_parameters {
+    # ... potentially other configuration ...
+
+    run_command_parameters {
+      # ... potentially other configuration ...
+
+      parameter {
+        name   = "commands"
+        values = ["date"]
+      }
+    }
+  }
+}
+```
