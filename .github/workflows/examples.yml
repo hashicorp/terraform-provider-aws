@@ -59,6 +59,7 @@ jobs:
           #   echo -e "\e[1;31mError:\e[0m Configuration contains warnings."
           #   exit 1
           # fi
-          terraform validate -json | jq -r '.warning_count'
+          WARN=$(terraform validate -json | jq -r '.warning_count')
+          echo $WARN
           popd
         done
