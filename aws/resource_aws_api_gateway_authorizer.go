@@ -304,7 +304,7 @@ func validateAuthorizerType(d *schema.ResourceData) error {
 	}
 	// provider_arns is required for authorizer COGNITO_USER_POOLS.
 	if authType == apigateway.AuthorizerTypeCognitoUserPools {
-		if v, ok := d.GetOk("provider_arns"); !ok || len(v.(*schema.Set).List()) == 0 {
+		if v, ok := d.GetOk("provider_arns"); !ok || v.(*schema.Set).Len() == 0 {
 			return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
 		}
 	}
