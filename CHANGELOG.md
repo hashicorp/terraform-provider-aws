@@ -25,6 +25,7 @@ BREAKING CHANGES
 * resource/aws_ebs_volume: Return an error when `iops` argument set to a value greater than 0 for volume types other than `io1` [GH-14310]
 * resource/aws_elastic_transcoder_preset: Remove `video` configuration block `max_frame_rate` argument default value [GH-7141]
 * resource/aws_emr_cluster: Remove deprecated `instance_group` configuration block, `core_instance_count`, `core_instance_type`, and `master_instance_type` arguments [GH-14137]
+* resource/aws_iam_access_key: Remove deprecated `ses_smtp_password` attribute [GH-14299]
 * resource/aws_instance: Return an error when `ebs_block_device` `iops` or `root_block_device` `iops` argument set to a value greater than `0` for volume types other than `io1` [GH-14310]
 * resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN [GH-12876]
 * resource/aws_launch_template: `network_interfaces` `delete_on_termination` argument changed from `bool` to `string` type [GH-8612]
