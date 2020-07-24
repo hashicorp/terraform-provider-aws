@@ -796,7 +796,7 @@ func (c *QuickSight) CreateIngestionRequest(input *CreateIngestionInput) (req *r
 //
 // Any ingestions operating on tagged datasets inherit the same tags automatically
 // for use in access control. For an example, see How do I create an IAM policy
-// to control access to Amazon EC2 resources using tags? (https://aws.example.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/)
+// to control access to Amazon EC2 resources using tags? (https://aws.amazon.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/)
 // in the AWS Knowledge Center. Tags are visible on the tagged dataset, but
 // not on the ingestion resource.
 //
@@ -3367,15 +3367,26 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 
 // GetDashboardEmbedUrl API operation for Amazon QuickSight.
 //
-// Generates a server-side embeddable URL and authorization code. For this process
-// to work properly, first configure the dashboards and user permissions. For
-// more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
+// Generates a URL and authorization code that you can embed in your web server
+// code. Before you use this command, make sure that you have configured the
+// dashboards and permissions.
+//
+// Currently, you can use GetDashboardEmbedURL only from the server, not from
+// the user's browser. The following rules apply to the combination of URL and
+// authorization code:
+//
+//    * They must be used together.
+//
+//    * They can be used one time only.
+//
+//    * They are valid for 5 minutes after you run this command.
+//
+//    * The resulting user session is valid for 10 hours.
+//
+// For more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
 // in the Amazon QuickSight User Guide or Embedding Amazon QuickSight Dashboards
 // (https://docs.aws.amazon.com/quicksight/latest/APIReference/qs-dev-embedded-dashboards.html)
 // in the Amazon QuickSight API Reference.
-//
-// Currently, you can use GetDashboardEmbedURL only from the server, not from
-// the user’s browser.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7168,8 +7179,8 @@ func (c *QuickSight) UpdateUserWithContext(ctx aws.Context, input *UpdateUserInp
 // your policies have the correct permissions, and that you are using the correct
 // access keys.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -7189,17 +7200,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7207,22 +7218,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The active AWS Identity and Access Management (IAM) policy assignment.
@@ -7993,8 +8004,8 @@ func (s *ColumnTag) SetColumnGeographicRole(v string) *ColumnTag {
 // A resource is already in a state that indicates an action is happening that
 // must complete before a new update can be applied.
 type ConcurrentUpdatingException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -8013,17 +8024,17 @@ func (s ConcurrentUpdatingException) GoString() string {
 
 func newErrorConcurrentUpdatingException(v protocol.ResponseMetadata) error {
 	return &ConcurrentUpdatingException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConcurrentUpdatingException) Code() string {
+func (s *ConcurrentUpdatingException) Code() string {
 	return "ConcurrentUpdatingException"
 }
 
 // Message returns the exception's message.
-func (s ConcurrentUpdatingException) Message() string {
+func (s *ConcurrentUpdatingException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8031,28 +8042,28 @@ func (s ConcurrentUpdatingException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConcurrentUpdatingException) OrigErr() error {
+func (s *ConcurrentUpdatingException) OrigErr() error {
 	return nil
 }
 
-func (s ConcurrentUpdatingException) Error() string {
+func (s *ConcurrentUpdatingException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConcurrentUpdatingException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConcurrentUpdatingException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConcurrentUpdatingException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConcurrentUpdatingException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Updating or deleting a resource can cause an inconsistent state.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -8072,17 +8083,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8090,22 +8101,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A transform operation that creates calculated columns. Columns created in
@@ -8186,8 +8197,7 @@ type CreateDashboardInput struct {
 	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
 	//    * VisibilityState for SheetControlsOption - This visibility state can
-	//    be either COLLAPSED or EXPANDED. The sheet controls pane is collapsed
-	//    by default when set to true. This option is COLLAPSED by default.
+	//    be either COLLAPSED or EXPANDED. This option is COLLAPSED by default.
 	DashboardPublishOptions *DashboardPublishOptions `type:"structure"`
 
 	// The display name of the dashboard.
@@ -8197,23 +8207,25 @@ type CreateDashboardInput struct {
 
 	// A structure that contains the parameters of the dashboard. These are parameter
 	// overrides for a dashboard. A dashboard can have any type of parameters, and
-	// some parameters might accept multiple values. You can use the dashboard permissions
-	// structure described following to override two string parameters that accept
-	// multiple values.
+	// some parameters might accept multiple values.
 	Parameters *Parameters `type:"structure"`
 
 	// A structure that contains the permissions of the dashboard. You can use this
 	// structure for granting permissions with principal and action information.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// The source entity from which the dashboard is created. The source entity
-	// accepts the Amazon Resource Name (ARN) of the source template or analysis
-	// and also references the replacement datasets for the placeholders set when
-	// creating the template. The replacement datasets need to follow the same schema
-	// as the datasets for which placeholders were created when creating the template.
+	// The entity that you are using as a source when you create the dashboard.
+	// In SourceEntity, you specify the type of object you're using as source. You
+	// can only create a dashboard from a template, so you use a SourceTemplate
+	// entity. If you need to create a dashboard from an analysis, first convert
+	// the analysis to a template by using the CreateTemplate API operation. For
+	// SourceTemplate, specify the Amazon Resource Name (ARN) of the source template.
+	// The SourceTemplateARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
 	//
-	// If you are creating a dashboard from a source entity in a different AWS account,
-	// use the ARN of the source template.
+	// Use the DataSetReferences entity within SourceTemplate to list the replacement
+	// datasets for the placeholders listed in the original. The schema in each
+	// dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *DashboardSourceEntity `type:"structure" required:"true"`
@@ -9722,9 +9734,17 @@ type CreateTemplateInput struct {
 	// A list of resource permissions to be set on the template.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// The Amazon Resource Name (ARN) of the source entity from which this template
-	// is being created. Currently, you can create a template from an analysis or
-	// another template. If the ARN is for an analysis, include its dataset references.
+	// The entity that you are using as a source when you create the template. In
+	// SourceEntity, you specify the type of object you're using as source: SourceTemplate
+	// for a template or SourceAnalysis for an analysis. Both of these require an
+	// Amazon Resource Name (ARN). For SourceTemplate, specify the ARN of the source
+	// template. For SourceAnalysis, specify the ARN of the source analysis. The
+	// SourceTemplate ARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
+	//
+	// Use the DataSetReferences entity within SourceTemplate or SourceAnalysis
+	// to list the replacement datasets for the placeholders listed in the original.
+	// The schema in each dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *TemplateSourceEntity `type:"structure" required:"true"`
@@ -9933,6 +9953,17 @@ func (s *CreateTemplateOutput) SetVersionArn(v string) *CreateTemplateOutput {
 type CredentialPair struct {
 	_ struct{} `type:"structure"`
 
+	// A set of alternate data source parameters that you want to share for these
+	// credentials. The credentials are applied in tandem with the data source parameters
+	// when you copy a data source by using a create or update request. The API
+	// compares the DataSourceParameters structure that's in the request with the
+	// structures in the AlternateDataSourceParameters allowlist. If the structures
+	// are an exact match, the request is allowed to use the new data source with
+	// the existing credentials. If the AlternateDataSourceParameters list is null,
+	// the DataSourceParameters originally used with these Credentials is automatically
+	// allowed.
+	AlternateDataSourceParameters []*DataSourceParameters `min:"1" type:"list"`
+
 	// Password.
 	//
 	// Password is a required field
@@ -9957,6 +9988,9 @@ func (s CredentialPair) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CredentialPair) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CredentialPair"}
+	if s.AlternateDataSourceParameters != nil && len(s.AlternateDataSourceParameters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AlternateDataSourceParameters", 1))
+	}
 	if s.Password == nil {
 		invalidParams.Add(request.NewErrParamRequired("Password"))
 	}
@@ -9969,11 +10003,27 @@ func (s *CredentialPair) Validate() error {
 	if s.Username != nil && len(*s.Username) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
 	}
+	if s.AlternateDataSourceParameters != nil {
+		for i, v := range s.AlternateDataSourceParameters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AlternateDataSourceParameters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlternateDataSourceParameters sets the AlternateDataSourceParameters field's value.
+func (s *CredentialPair) SetAlternateDataSourceParameters(v []*DataSourceParameters) *CredentialPair {
+	s.AlternateDataSourceParameters = v
+	return s
 }
 
 // SetPassword sets the Password field's value.
@@ -10102,7 +10152,7 @@ type Dashboard struct {
 	// The last time that this dataset was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
-	// A display name for the dataset.
+	// A display name for the dashboard.
 	Name *string `min:"1" type:"string"`
 
 	// Version.
@@ -10240,18 +10290,18 @@ func (s *DashboardPublishOptions) SetSheetControlsOption(v *SheetControlsOption)
 type DashboardSearchFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the value that you want to use as a filter. For example, "Name":
+	// The name of the value that you want to use as a filter, for example, "Name":
 	// "QUICKSIGHT_USER".
 	Name *string `type:"string" enum:"DashboardFilterAttribute"`
 
-	// The comparison operator that you want to use as a filter. For example, "Operator":
+	// The comparison operator that you want to use as a filter, for example, "Operator":
 	// "StringEquals".
 	//
 	// Operator is a required field
 	Operator *string `type:"string" required:"true" enum:"FilterOperator"`
 
 	// The value of the named item, in this case QUICKSIGHT_USER, that you want
-	// to use as a filter. For example, "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1".
+	// to use as a filter, for example, "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1".
 	Value *string `type:"string"`
 }
 
@@ -10489,6 +10539,10 @@ type DashboardVersion struct {
 	// The time that this dashboard version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
+	// The Amazon Resource Numbers (ARNs) for the datasets that are associated with
+	// a version of the dashboard.
+	DataSetArns []*string `type:"list"`
+
 	// Description.
 	Description *string `min:"1" type:"string"`
 
@@ -10524,6 +10578,12 @@ func (s *DashboardVersion) SetArn(v string) *DashboardVersion {
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *DashboardVersion) SetCreatedTime(v time.Time) *DashboardVersion {
 	s.CreatedTime = &v
+	return s
+}
+
+// SetDataSetArns sets the DataSetArns field's value.
+func (s *DashboardVersion) SetDataSetArns(v []*string) *DashboardVersion {
+	s.DataSetArns = v
 	return s
 }
 
@@ -10954,6 +11014,17 @@ func (s *DataSetSummary) SetRowLevelPermissionDataSet(v *RowLevelPermissionDataS
 type DataSource struct {
 	_ struct{} `type:"structure"`
 
+	// A set of alternate data source parameters that you want to share for the
+	// credentials stored with this data source. The credentials are applied in
+	// tandem with the data source parameters when you copy a data source by using
+	// a create or update request. The API compares the DataSourceParameters structure
+	// that's in the request with the structures in the AlternateDataSourceParameters
+	// allowlist. If the structures are an exact match, the request is allowed to
+	// use the credentials from this existing data source. If the AlternateDataSourceParameters
+	// list is null, the Credentials originally used with this DataSourceParameters
+	// are automatically allowed.
+	AlternateDataSourceParameters []*DataSourceParameters `min:"1" type:"list"`
+
 	// The Amazon Resource Name (ARN) of the data source.
 	Arn *string `type:"string"`
 
@@ -11003,6 +11074,12 @@ func (s DataSource) String() string {
 // GoString returns the string representation
 func (s DataSource) GoString() string {
 	return s.String()
+}
+
+// SetAlternateDataSourceParameters sets the AlternateDataSourceParameters field's value.
+func (s *DataSource) SetAlternateDataSourceParameters(v []*DataSourceParameters) *DataSource {
+	s.AlternateDataSourceParameters = v
+	return s
 }
 
 // SetArn sets the Arn field's value.
@@ -11071,11 +11148,18 @@ func (s *DataSource) SetVpcConnectionProperties(v *VpcConnectionProperties) *Dat
 	return s
 }
 
-// Data source credentials.
+// Data source credentials. This is a variant type structure. For this structure
+// to be valid, only one of the attributes can be non-null.
 type DataSourceCredentials struct {
 	_ struct{} `type:"structure" sensitive:"true"`
 
-	// Credential pair.
+	// The Amazon Resource Name (ARN) of a data source that has the credential pair
+	// that you want to use. When CopySourceArn is not null, the credential pair
+	// from the data source in the ARN is used as the credentials for the DataSourceCredentials
+	// structure.
+	CopySourceArn *string `type:"string"`
+
+	// Credential pair. For more information, see CredentialPair.
 	CredentialPair *CredentialPair `type:"structure"`
 }
 
@@ -11102,6 +11186,12 @@ func (s *DataSourceCredentials) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCopySourceArn sets the CopySourceArn field's value.
+func (s *DataSourceCredentials) SetCopySourceArn(v string) *DataSourceCredentials {
+	s.CopySourceArn = &v
+	return s
 }
 
 // SetCredentialPair sets the CredentialPair field's value.
@@ -12235,9 +12325,10 @@ func (s *DeleteIAMPolicyAssignmentOutput) SetStatus(v int64) *DeleteIAMPolicyAss
 type DeleteTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name for the template alias. If you name a specific alias, you delete
-	// the version that the alias points to. You can specify the latest version
-	// of the template by providing the keyword $LATEST in the AliasName parameter.
+	// The name for the template alias. To delete a specific alias, you delete the
+	// version that the alias points to. You can specify the alias name, or specify
+	// the latest version of the template by providing the keyword $LATEST in the
+	// AliasName parameter.
 	//
 	// AliasName is a required field
 	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
@@ -12315,7 +12406,7 @@ type DeleteTemplateAliasOutput struct {
 	// The name for the template alias.
 	AliasName *string `min:"1" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the template you want to delete.
 	Arn *string `type:"string"`
 
 	// The AWS request ID for this operation.
@@ -14208,8 +14299,8 @@ func (s *DescribeUserOutput) SetUser(v *User) *DescribeUserOutput {
 // The domain specified isn't on the allow list. All domains for embedded dashboards
 // must be added to the approved list by an Amazon QuickSight admin.
 type DomainNotWhitelistedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -14229,17 +14320,17 @@ func (s DomainNotWhitelistedException) GoString() string {
 
 func newErrorDomainNotWhitelistedException(v protocol.ResponseMetadata) error {
 	return &DomainNotWhitelistedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DomainNotWhitelistedException) Code() string {
+func (s *DomainNotWhitelistedException) Code() string {
 	return "DomainNotWhitelistedException"
 }
 
 // Message returns the exception's message.
-func (s DomainNotWhitelistedException) Message() string {
+func (s *DomainNotWhitelistedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14247,22 +14338,22 @@ func (s DomainNotWhitelistedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DomainNotWhitelistedException) OrigErr() error {
+func (s *DomainNotWhitelistedException) OrigErr() error {
 	return nil
 }
 
-func (s DomainNotWhitelistedException) Error() string {
+func (s *DomainNotWhitelistedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DomainNotWhitelistedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DomainNotWhitelistedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DomainNotWhitelistedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DomainNotWhitelistedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Error information for the SPICE ingestion of a dataset.
@@ -14564,10 +14655,10 @@ func (s *GetDashboardEmbedUrlInput) SetUserArn(v string) *GetDashboardEmbedUrlIn
 type GetDashboardEmbedUrlOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An URL that you can put into your server-side webpage to embed your dashboard.
-	// This URL is valid for 5 minutes, and the resulting session is valid for 10
-	// hours. The API provides the URL with an auth_code value that enables a single
-	// sign-on session.
+	// A single-use URL that you can put into your server-side webpage to embed
+	// your dashboard. This URL is valid for 5 minutes. The API provides the URL
+	// with an auth_code value that enables one (and only one) sign-on to a user
+	// session that is valid for 10 hours.
 	EmbedUrl *string `type:"string" sensitive:"true"`
 
 	// The AWS request ID for this operation.
@@ -14797,8 +14888,8 @@ func (s *IAMPolicyAssignmentSummary) SetAssignmentStatus(v string) *IAMPolicyAss
 // The identity type specified isn't supported. Supported identity types include
 // IAM and QUICKSIGHT.
 type IdentityTypeNotSupportedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -14818,17 +14909,17 @@ func (s IdentityTypeNotSupportedException) GoString() string {
 
 func newErrorIdentityTypeNotSupportedException(v protocol.ResponseMetadata) error {
 	return &IdentityTypeNotSupportedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IdentityTypeNotSupportedException) Code() string {
+func (s *IdentityTypeNotSupportedException) Code() string {
 	return "IdentityTypeNotSupportedException"
 }
 
 // Message returns the exception's message.
-func (s IdentityTypeNotSupportedException) Message() string {
+func (s *IdentityTypeNotSupportedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14836,22 +14927,22 @@ func (s IdentityTypeNotSupportedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IdentityTypeNotSupportedException) OrigErr() error {
+func (s *IdentityTypeNotSupportedException) OrigErr() error {
 	return nil
 }
 
-func (s IdentityTypeNotSupportedException) Error() string {
+func (s *IdentityTypeNotSupportedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IdentityTypeNotSupportedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IdentityTypeNotSupportedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IdentityTypeNotSupportedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IdentityTypeNotSupportedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about the SPICE ingestion for a dataset.
@@ -15085,8 +15176,8 @@ func (s *IntegerParameter) SetValues(v []*int64) *IntegerParameter {
 
 // An internal failure occurred.
 type InternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -15106,17 +15197,17 @@ func (s InternalFailureException) GoString() string {
 
 func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
 	return &InternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalFailureException) Code() string {
+func (s *InternalFailureException) Code() string {
 	return "InternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s InternalFailureException) Message() string {
+func (s *InternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15124,28 +15215,28 @@ func (s InternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalFailureException) OrigErr() error {
+func (s *InternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s InternalFailureException) Error() string {
+func (s *InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The NextToken value isn't valid.
 type InvalidNextTokenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -15165,17 +15256,17 @@ func (s InvalidNextTokenException) GoString() string {
 
 func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
 	return &InvalidNextTokenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidNextTokenException) Code() string {
+func (s *InvalidNextTokenException) Code() string {
 	return "InvalidNextTokenException"
 }
 
 // Message returns the exception's message.
-func (s InvalidNextTokenException) Message() string {
+func (s *InvalidNextTokenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15183,28 +15274,28 @@ func (s InvalidNextTokenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidNextTokenException) OrigErr() error {
+func (s *InvalidNextTokenException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidNextTokenException) Error() string {
+func (s *InvalidNextTokenException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidNextTokenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidNextTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidNextTokenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidNextTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more parameters has a value that isn't valid.
 type InvalidParameterValueException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -15224,17 +15315,17 @@ func (s InvalidParameterValueException) GoString() string {
 
 func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterValueException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterValueException) Code() string {
+func (s *InvalidParameterValueException) Code() string {
 	return "InvalidParameterValueException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterValueException) Message() string {
+func (s *InvalidParameterValueException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15242,22 +15333,22 @@ func (s InvalidParameterValueException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterValueException) OrigErr() error {
+func (s *InvalidParameterValueException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterValueException) Error() string {
+func (s *InvalidParameterValueException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterValueException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterValueException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterValueException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterValueException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Jira parameters.
@@ -15394,8 +15485,8 @@ func (s *JoinInstruction) SetType(v string) *JoinInstruction {
 
 // A limit is exceeded.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -15418,17 +15509,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15436,22 +15527,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListDashboardVersionsInput struct {
@@ -15649,7 +15740,7 @@ func (s *ListDashboardsInput) SetNextToken(v string) *ListDashboardsInput {
 type ListDashboardsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A structure that contains all of the dashboards shared with the user. This
+	// A structure that contains all of the dashboards in your AWS account. This
 	// structure provides basic information about the dashboards.
 	DashboardSummaryList []*DashboardSummary `type:"list"`
 
@@ -17973,8 +18064,8 @@ func (s *PostgreSqlParameters) SetPort(v int64) *PostgreSqlParameters {
 
 // One or more preconditions aren't met.
 type PreconditionNotMetException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -17994,17 +18085,17 @@ func (s PreconditionNotMetException) GoString() string {
 
 func newErrorPreconditionNotMetException(v protocol.ResponseMetadata) error {
 	return &PreconditionNotMetException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PreconditionNotMetException) Code() string {
+func (s *PreconditionNotMetException) Code() string {
 	return "PreconditionNotMetException"
 }
 
 // Message returns the exception's message.
-func (s PreconditionNotMetException) Message() string {
+func (s *PreconditionNotMetException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18012,22 +18103,22 @@ func (s PreconditionNotMetException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PreconditionNotMetException) OrigErr() error {
+func (s *PreconditionNotMetException) OrigErr() error {
 	return nil
 }
 
-func (s PreconditionNotMetException) Error() string {
+func (s *PreconditionNotMetException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PreconditionNotMetException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PreconditionNotMetException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PreconditionNotMetException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PreconditionNotMetException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Presto parameters.
@@ -18358,7 +18449,7 @@ type RegisterUserInput struct {
 	// scenarios, for example when you are registering an IAM user or an Amazon
 	// QuickSight user. You can register multiple users using the same IAM role
 	// if each user has a different session name. For more information on assuming
-	// IAM roles, see assume-role (https://docs.aws.example.com/cli/latest/reference/sts/assume-role.html)
+	// IAM roles, see assume-role (https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html)
 	// in the AWS CLI Reference.
 	SessionName *string `min:"2" type:"string"`
 
@@ -18684,15 +18775,15 @@ func (s *RenameColumnOperation) SetNewColumnName(v string) *RenameColumnOperatio
 
 // The resource specified already exists.
 type ResourceExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
 	// The AWS request ID for this request.
 	RequestId *string `type:"string"`
 
-	// The AWS request ID for this request.
+	// The resource type for this request.
 	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
 }
 
@@ -18708,17 +18799,17 @@ func (s ResourceExistsException) GoString() string {
 
 func newErrorResourceExistsException(v protocol.ResponseMetadata) error {
 	return &ResourceExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceExistsException) Code() string {
+func (s *ResourceExistsException) Code() string {
 	return "ResourceExistsException"
 }
 
 // Message returns the exception's message.
-func (s ResourceExistsException) Message() string {
+func (s *ResourceExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18726,35 +18817,35 @@ func (s ResourceExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceExistsException) OrigErr() error {
+func (s *ResourceExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceExistsException) Error() string {
+func (s *ResourceExistsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more resources can't be found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
 	// The AWS request ID for this request.
 	RequestId *string `type:"string"`
 
-	// The AWS request ID for this request.
+	// The resource type for this request.
 	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
 }
 
@@ -18770,17 +18861,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18788,22 +18879,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Permission for the resource.
@@ -18870,8 +18961,8 @@ func (s *ResourcePermission) SetPrincipal(v string) *ResourcePermission {
 
 // This resource is currently unavailable.
 type ResourceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -18894,17 +18985,17 @@ func (s ResourceUnavailableException) GoString() string {
 
 func newErrorResourceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ResourceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceUnavailableException) Code() string {
+func (s *ResourceUnavailableException) Code() string {
 	return "ResourceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ResourceUnavailableException) Message() string {
+func (s *ResourceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18912,22 +19003,22 @@ func (s ResourceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceUnavailableException) OrigErr() error {
+func (s *ResourceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceUnavailableException) Error() string {
+func (s *ResourceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about rows for a data set SPICE ingestion.
@@ -19151,7 +19242,7 @@ type SearchDashboardsInput struct {
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
 	// The filters to apply to the search. Currently, you can search only by user
-	// name. For example, "Filters": [ { "Name": "QUICKSIGHT_USER", "Operator":
+	// name, for example, "Filters": [ { "Name": "QUICKSIGHT_USER", "Operator":
 	// "StringEquals", "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1"
 	// } ]
 	//
@@ -19326,8 +19417,8 @@ func (s *ServiceNowParameters) SetSiteBaseUrl(v string) *ServiceNowParameters {
 // The number of minutes specified for the lifetime of a session isn't valid.
 // The session lifetime must be 15-600 minutes.
 type SessionLifetimeInMinutesInvalidException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -19347,17 +19438,17 @@ func (s SessionLifetimeInMinutesInvalidException) GoString() string {
 
 func newErrorSessionLifetimeInMinutesInvalidException(v protocol.ResponseMetadata) error {
 	return &SessionLifetimeInMinutesInvalidException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s SessionLifetimeInMinutesInvalidException) Code() string {
+func (s *SessionLifetimeInMinutesInvalidException) Code() string {
 	return "SessionLifetimeInMinutesInvalidException"
 }
 
 // Message returns the exception's message.
-func (s SessionLifetimeInMinutesInvalidException) Message() string {
+func (s *SessionLifetimeInMinutesInvalidException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -19365,22 +19456,22 @@ func (s SessionLifetimeInMinutesInvalidException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s SessionLifetimeInMinutesInvalidException) OrigErr() error {
+func (s *SessionLifetimeInMinutesInvalidException) OrigErr() error {
 	return nil
 }
 
-func (s SessionLifetimeInMinutesInvalidException) Error() string {
+func (s *SessionLifetimeInMinutesInvalidException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s SessionLifetimeInMinutesInvalidException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *SessionLifetimeInMinutesInvalidException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s SessionLifetimeInMinutesInvalidException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *SessionLifetimeInMinutesInvalidException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Sheet controls option.
@@ -20380,7 +20471,7 @@ func (s *TemplateVersion) SetVersionNumber(v int64) *TemplateVersion {
 type TemplateVersionSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the template version.
+	// The Amazon Resource Name (ARN) of the template version.
 	Arn *string `type:"string"`
 
 	// The time that this template version was created.
@@ -20514,8 +20605,8 @@ func (s *TeradataParameters) SetPort(v int64) *TeradataParameters {
 
 // Access is throttled.
 type ThrottlingException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -20535,17 +20626,17 @@ func (s ThrottlingException) GoString() string {
 
 func newErrorThrottlingException(v protocol.ResponseMetadata) error {
 	return &ThrottlingException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ThrottlingException) Code() string {
+func (s *ThrottlingException) Code() string {
 	return "ThrottlingException"
 }
 
 // Message returns the exception's message.
-func (s ThrottlingException) Message() string {
+func (s *ThrottlingException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -20553,22 +20644,22 @@ func (s ThrottlingException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ThrottlingException) OrigErr() error {
+func (s *ThrottlingException) OrigErr() error {
 	return nil
 }
 
-func (s ThrottlingException) Error() string {
+func (s *ThrottlingException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ThrottlingException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ThrottlingException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ThrottlingException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ThrottlingException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A data transformation on a logical table. This is a variant type structure.
@@ -20747,8 +20838,8 @@ func (s *TwitterParameters) SetQuery(v string) *TwitterParameters {
 // Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 // Not every operation and capability is available in every edition.
 type UnsupportedUserEditionException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -20768,17 +20859,17 @@ func (s UnsupportedUserEditionException) GoString() string {
 
 func newErrorUnsupportedUserEditionException(v protocol.ResponseMetadata) error {
 	return &UnsupportedUserEditionException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedUserEditionException) Code() string {
+func (s *UnsupportedUserEditionException) Code() string {
 	return "UnsupportedUserEditionException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedUserEditionException) Message() string {
+func (s *UnsupportedUserEditionException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -20786,22 +20877,22 @@ func (s UnsupportedUserEditionException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedUserEditionException) OrigErr() error {
+func (s *UnsupportedUserEditionException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedUserEditionException) Error() string {
+func (s *UnsupportedUserEditionException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedUserEditionException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedUserEditionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedUserEditionException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedUserEditionException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -20920,8 +21011,7 @@ type UpdateDashboardInput struct {
 	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
 	//    * VisibilityState for SheetControlsOption - This visibility state can
-	//    be either COLLAPSED or EXPANDED. The sheet controls pane is collapsed
-	//    by default when set to true. This option is COLLAPSED by default.
+	//    be either COLLAPSED or EXPANDED. This option is COLLAPSED by default.
 	DashboardPublishOptions *DashboardPublishOptions `type:"structure"`
 
 	// The display name of the dashboard.
@@ -20929,14 +21019,23 @@ type UpdateDashboardInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// A structure that contains the parameters of the dashboard.
+	// A structure that contains the parameters of the dashboard. These are parameter
+	// overrides for a dashboard. A dashboard can have any type of parameters, and
+	// some parameters might accept multiple values.
 	Parameters *Parameters `type:"structure"`
 
-	// The template or analysis from which the dashboard is created. The SouceTemplate
-	// entity accepts the Amazon Resource Name (ARN) of the template and also references
-	// to replacement datasets for the placeholders set when creating the template.
-	// The replacement datasets need to follow the same schema as the datasets for
-	// which placeholders were created when creating the template.
+	// The entity that you are using as a source when you update the dashboard.
+	// In SourceEntity, you specify the type of object you're using as source. You
+	// can only update a dashboard from a template, so you use a SourceTemplate
+	// entity. If you need to update a dashboard from an analysis, first convert
+	// the analysis to a template by using the CreateTemplate API operation. For
+	// SourceTemplate, specify the Amazon Resource Name (ARN) of the source template.
+	// The SourceTemplate ARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
+	//
+	// Use the DataSetReferences entity within SourceTemplate to list the replacement
+	// datasets for the placeholders listed in the original. The schema in each
+	// dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *DashboardSourceEntity `type:"structure" required:"true"`
@@ -22616,8 +22715,17 @@ type UpdateTemplateInput struct {
 	// The name for the template.
 	Name *string `min:"1" type:"string"`
 
-	// The source QuickSight entity from which this template is being updated. You
-	// can currently update templates from an Analysis or another template.
+	// The entity that you are using as a source when you update the template. In
+	// SourceEntity, you specify the type of object you're using as source: SourceTemplate
+	// for a template or SourceAnalysis for an analysis. Both of these require an
+	// Amazon Resource Name (ARN). For SourceTemplate, specify the ARN of the source
+	// template. For SourceAnalysis, specify the ARN of the source analysis. The
+	// SourceTemplate ARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
+	//
+	// Use the DataSetReferences entity within SourceTemplate or SourceAnalysis
+	// to list the replacement datasets for the placeholders listed in the original.
+	// The schema in each dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *TemplateSourceEntity `type:"structure" required:"true"`
@@ -23267,8 +23375,8 @@ func (s *User) SetUserName(v string) *User {
 // operation that requires finding a user based on a provided user name, such
 // as DeleteUser, DescribeUser, and so on.
 type UserNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -23288,17 +23396,17 @@ func (s UserNotFoundException) GoString() string {
 
 func newErrorUserNotFoundException(v protocol.ResponseMetadata) error {
 	return &UserNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UserNotFoundException) Code() string {
+func (s *UserNotFoundException) Code() string {
 	return "QuickSightUserNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s UserNotFoundException) Message() string {
+func (s *UserNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23306,22 +23414,22 @@ func (s UserNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UserNotFoundException) OrigErr() error {
+func (s *UserNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s UserNotFoundException) Error() string {
+func (s *UserNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UserNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UserNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UserNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UserNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // VPC connection properties.
@@ -23397,6 +23505,12 @@ const (
 )
 
 const (
+	// DashboardErrorTypeAccessDenied is a DashboardErrorType enum value
+	DashboardErrorTypeAccessDenied = "ACCESS_DENIED"
+
+	// DashboardErrorTypeSourceNotFound is a DashboardErrorType enum value
+	DashboardErrorTypeSourceNotFound = "SOURCE_NOT_FOUND"
+
 	// DashboardErrorTypeDataSetNotFound is a DashboardErrorType enum value
 	DashboardErrorTypeDataSetNotFound = "DATA_SET_NOT_FOUND"
 
@@ -23444,6 +23558,12 @@ const (
 )
 
 const (
+	// DataSourceErrorInfoTypeAccessDenied is a DataSourceErrorInfoType enum value
+	DataSourceErrorInfoTypeAccessDenied = "ACCESS_DENIED"
+
+	// DataSourceErrorInfoTypeCopySourceNotFound is a DataSourceErrorInfoType enum value
+	DataSourceErrorInfoTypeCopySourceNotFound = "COPY_SOURCE_NOT_FOUND"
+
 	// DataSourceErrorInfoTypeTimeout is a DataSourceErrorInfoType enum value
 	DataSourceErrorInfoTypeTimeout = "TIMEOUT"
 
@@ -23848,6 +23968,9 @@ const (
 )
 
 const (
+	// TemplateErrorTypeSourceNotFound is a TemplateErrorType enum value
+	TemplateErrorTypeSourceNotFound = "SOURCE_NOT_FOUND"
+
 	// TemplateErrorTypeDataSetNotFound is a TemplateErrorType enum value
 	TemplateErrorTypeDataSetNotFound = "DATA_SET_NOT_FOUND"
 

@@ -235,7 +235,7 @@ func resourceAwsOpsworksStackCustomCookbooksSource(d *schema.ResourceData) *opsw
 	}
 }
 
-func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) {
+func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
 	if v != nil && v.Type != nil && *v.Type != "" {
 		m := make(map[string]interface{})
@@ -264,12 +264,15 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 	err := d.Set("custom_cookbooks_source", nv)
 	if err != nil {
 		// should never happen
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).opsworksconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
 		client, conErr = opsworksConnForRegion(v, meta)
@@ -366,7 +369,10 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
 		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
 	}
-	resourceAwsOpsworksSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
+	err := resourceAwsOpsworksSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
+	if err != nil {
+		return err
+	}
 
 	tags, err := keyvaluetags.OpsworksListTags(client, arn)
 
@@ -374,7 +380,7 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

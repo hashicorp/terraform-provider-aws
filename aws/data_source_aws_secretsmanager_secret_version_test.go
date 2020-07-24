@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceAwsSecretsManagerSecretVersion_Basic(t *testing.T) {
+func TestAccDataSourceAwsSecretsManagerSecretVersion_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 	datasourceName := "data.aws_secretsmanager_secret_version.test"

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsWafRateBasedRule_Basic(t *testing.T) {
+func TestAccDataSourceAwsWafRateBasedRule_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 	datasourceName := "data.aws_waf_rate_based_rule.wafrule"

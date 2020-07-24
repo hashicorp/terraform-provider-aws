@@ -20,7 +20,6 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
-	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
@@ -28,10 +27,7 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
-			},
-			{
-				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
+				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
@@ -65,11 +61,57 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 }
 
 // note: cur report definitions are currently only supported in us-east-1
-func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketRegion string) string {
+func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
 	return fmt.Sprintf(`
-%[2]s
+provider "aws" {
+  region = "us-east-1"
+}
+
+data "aws_billing_service_account" "test" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = "%[2]s"
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = "${aws_s3_bucket.test.id}"
+
+  policy = <<POLICY
+{
+    "Version": "2008-10-17",
+    "Id": "s3policy",
+    "Statement": [
+        {
+            "Sid": "AllowCURBillingACLPolicy",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${data.aws_billing_service_account.test.arn}"
+            },
+            "Action": [
+                "s3:GetBucketAcl",
+                "s3:GetBucketPolicy"
+            ],
+            "Resource": "${aws_s3_bucket.test.arn}"
+        },
+        {
+            "Sid": "AllowCURPutObject",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::386209384616:root"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+        }
+    ]
+}
+POLICY
+}
 
 resource "aws_cur_report_definition" "test" {
+	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
   format                     = "textORcsv"
@@ -79,12 +121,12 @@ resource "aws_cur_report_definition" "test" {
   s3_prefix                  = ""
   s3_region                  = "${aws_s3_bucket.test.region}"
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
-	refresh_closed_reports     = true
-	report_versioning          = "CREATE_NEW_REPORT"
+  refresh_closed_reports     = true
+  report_versioning          = "CREATE_NEW_REPORT"
 }
 
 data "aws_cur_report_definition" "test" {
   report_name = "${aws_cur_report_definition.test.report_name}"
 }
-`, reportName, testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion))
+`, reportName, bucketName)
 }

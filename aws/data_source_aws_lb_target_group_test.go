@@ -26,8 +26,8 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameArn, "arn_suffix"),
 					resource.TestCheckResourceAttr(resourceNameArn, "port", "8080"),
 					resource.TestCheckResourceAttr(resourceNameArn, "protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceNameArn, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_algorithm_type"),
 					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceNameArn, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceNameArn, "tags.%", "1"),
@@ -47,6 +47,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn_suffix"),
 					resource.TestCheckResourceAttr(resourceName, "port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancing_algorithm_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
@@ -67,7 +68,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
+func TestAccDataSourceAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
@@ -180,7 +181,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -290,7 +298,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"

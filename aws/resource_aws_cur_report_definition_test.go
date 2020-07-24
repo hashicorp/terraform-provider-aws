@@ -19,7 +19,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
@@ -36,9 +36,6 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
-			},
-			{
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketPrefix, bucketRegion, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
@@ -49,7 +46,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
@@ -65,7 +62,7 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
@@ -82,9 +79,6 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
-			},
-			{
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketPrefix, bucketRegion, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
@@ -95,7 +89,7 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),
@@ -110,7 +104,7 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
@@ -127,9 +121,6 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
-			},
-			{
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketPrefix, bucketRegion, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
@@ -140,7 +131,7 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
@@ -156,7 +147,7 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
@@ -173,9 +164,6 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
-			},
-			{
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketPrefix, bucketRegion, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
@@ -186,7 +174,7 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "true"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
@@ -202,7 +190,7 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
@@ -219,9 +207,6 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion),
-			},
-			{
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketPrefix, bucketRegion, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
@@ -231,8 +216,8 @@ func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
@@ -300,56 +285,6 @@ func testAccPreCheckAWSCur(t *testing.T) {
 	}
 }
 
-// note: bucket needs to exist first due to ValidationException thrown if policy not yet applied
-func testAccAwsCurReportDefinitionConfig_bucket(bucketName string, bucketRegion string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = "%[1]s"
-  acl           = "private"
-  force_destroy = true
-	region        = "%[2]s"
-}
-
-resource "aws_s3_bucket_policy" "test" {
-	bucket = "${aws_s3_bucket.test.id}"
-
-	policy = <<POLICY
-{
-    "Version": "2008-10-17",
-    "Id": "s3policy",
-    "Statement": [
-        {
-            "Sid": "AllowCURBillingACLPolicy",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": [
-                "s3:GetBucketAcl",
-                "s3:GetBucketPolicy"
-            ],
-            "Resource": "${aws_s3_bucket.test.arn}"
-        },
-        {
-            "Sid": "AllowCURPutObject",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "${aws_s3_bucket.test.arn}/*"
-        }
-    ]
-}
-POLICY
-}
-`, bucketName, bucketRegion)
-}
-
 // note: cur report definitions are currently only supported in us-east-1
 func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketPrefix string, bucketRegion string, format string, compression string, additionalArtifacts []string, refreshClosedReports bool, reportVersioning string) string {
 	artifactsStr := strings.Join(additionalArtifacts, "\", \"")
@@ -361,9 +296,50 @@ func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName str
 	}
 
 	return fmt.Sprintf(`
-%[2]s
+provider "aws" {
+	region = "us-east-1"
+}
+resource "aws_s3_bucket" "test" {
+	bucket        = "%[2]s"
+	acl           = "private"
+	force_destroy = true
+}
+resource "aws_s3_bucket_policy" "test" {
+	bucket = "${aws_s3_bucket.test.id}"
+	policy = <<POLICY
+{
+		"Version": "2008-10-17",
+		"Id": "s3policy",
+		"Statement": [
+				{
+						"Sid": "AllowCURBillingACLPolicy",
+						"Effect": "Allow",
+						"Principal": {
+								"AWS": "arn:aws:iam::386209384616:root"
+						},
+						"Action": [
+								"s3:GetBucketAcl",
+								"s3:GetBucketPolicy"
+						],
+						"Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
+				},
+				{
+						"Sid": "AllowCURPutObject",
+						"Effect": "Allow",
+						"Principal": {
+								"AWS": "arn:aws:iam::386209384616:root"
+						},
+						"Action": "s3:PutObject",
+						"Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+				}
+		]
+}
+POLICY
+}
 
 resource "aws_cur_report_definition" "test" {
+	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
   format                     = "%[4]s"
@@ -376,5 +352,5 @@ resource "aws_cur_report_definition" "test" {
 	refresh_closed_reports     = %[7]t
 	report_versioning          = "%[8]s"
 }
-`, reportName, testAccAwsCurReportDefinitionConfig_bucket(bucketName, bucketRegion), bucketPrefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
+`, reportName, bucketName, bucketPrefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
 }

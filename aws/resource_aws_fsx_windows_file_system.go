@@ -104,7 +104,10 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 							Required: true,
 							MinItems: 1,
 							MaxItems: 2,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPAddress,
+							},
 						},
 						"domain_name": {
 							Type:     schema.TypeString,
@@ -147,11 +150,10 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntBetween(32, 65536),
 			},
 			"subnet_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				MinItems: 1,
-				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tagsSchema(),
@@ -174,6 +176,31 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
 				),
 			},
+			"deployment_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  fsx.WindowsDeploymentTypeSingleAz1,
+				ValidateFunc: validation.StringInSlice([]string{
+					fsx.WindowsDeploymentTypeMultiAz1,
+					fsx.WindowsDeploymentTypeSingleAz1,
+					fsx.WindowsDeploymentTypeSingleAz2,
+				}, false),
+			},
+			"preferred_subnet_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"preferred_file_server_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"remote_administration_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -185,7 +212,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		ClientRequestToken: aws.String(resource.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
-		SubnetIds:          expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -195,6 +222,14 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("active_directory_id"); ok {
 		input.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("deployment_type"); ok {
+		input.WindowsConfiguration.DeploymentType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("preferred_subnet_id"); ok {
+		input.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
@@ -287,6 +322,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filesystem, err := describeFsxFileSystem(conn, d.Id())
 
@@ -319,6 +355,10 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	d.Set("automatic_backup_retention_days", filesystem.WindowsConfiguration.AutomaticBackupRetentionDays)
 	d.Set("copy_tags_to_backups", filesystem.WindowsConfiguration.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", filesystem.WindowsConfiguration.DailyAutomaticBackupStartTime)
+	d.Set("deployment_type", filesystem.WindowsConfiguration.DeploymentType)
+	d.Set("preferred_subnet_id", filesystem.WindowsConfiguration.PreferredSubnetId)
+	d.Set("preferred_file_server_ip", filesystem.WindowsConfiguration.PreferredFileServerIp)
+	d.Set("remote_administration_endpoint", filesystem.WindowsConfiguration.RemoteAdministrationEndpoint)
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 
@@ -338,7 +378,7 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -410,7 +450,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fs
 
 	data := l[0].(map[string]interface{})
 	req := &fsx.SelfManagedActiveDirectoryConfigurationUpdates{
-		DnsIps:   expandStringList(data["dns_ips"].([]interface{})),
+		DnsIps:   expandStringSet(data["dns_ips"].(*schema.Set)),
 		Password: aws.String(data["password"].(string)),
 		UserName: aws.String(data["username"].(string)),
 	}

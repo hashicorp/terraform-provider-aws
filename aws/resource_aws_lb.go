@@ -713,6 +713,7 @@ func lbSuffixFromARN(arn *string) string {
 // flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
@@ -739,7 +740,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error listing tags for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

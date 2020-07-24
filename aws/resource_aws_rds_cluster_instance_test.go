@@ -192,7 +192,7 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 
 func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +204,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 				Config: testAccAWSClusterInstanceConfigKmsKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_id", keyRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{
@@ -853,10 +853,10 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName, "rds-ca-2015"),
+				Config: testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName, "rds-ca-2019"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2015"),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
 				),
 			},
 			{
@@ -867,13 +867,6 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 					"apply_immediately",
 					"identifier_prefix",
 				},
-			},
-			{
-				Config: testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName, "rds-ca-2019"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
-				),
 			},
 		},
 	})
@@ -955,7 +948,14 @@ resource "aws_db_parameter_group" "bar" {
 
 func testAccAWSClusterInstanceConfig_az(n int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_rds_cluster" "default" {
   cluster_identifier  = "tf-aurora-cluster-test-%d"

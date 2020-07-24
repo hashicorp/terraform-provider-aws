@@ -42,7 +42,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "cloudhsm_v2_test_vpc" {
   cidr_block = "10.0.0.0/16"

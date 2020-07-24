@@ -43,6 +43,13 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,

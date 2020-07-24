@@ -12,7 +12,7 @@ func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
-	asn := acctest.RandIntRange(64512, 65534)
+	asn := randIntRange(64512, 65534)
 	hostOctet := acctest.RandIntRange(1, 254)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,6 +29,7 @@ func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
@@ -39,7 +40,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
-	asn := acctest.RandIntRange(64512, 65534)
+	asn := randIntRange(64512, 65534)
 	hostOctet := acctest.RandIntRange(1, 254)
 
 	resource.ParallelTest(t, resource.TestCase{

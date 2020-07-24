@@ -23,49 +23,98 @@ data "aws_availability_zones" "azs" {
 }
 
 resource "aws_subnet" "subnet_az1" {
-  availability_zone = "${data.aws_availability_zones.azs.names[0]}"
+  availability_zone = data.aws_availability_zones.azs.names[0]
   cidr_block        = "192.168.0.0/24"
-  vpc_id            = "${aws_vpc.vpc.id}"
+  vpc_id            = aws_vpc.vpc.id
 }
 
 resource "aws_subnet" "subnet_az2" {
-  availability_zone = "${data.aws_availability_zones.azs.names[1]}"
+  availability_zone = data.aws_availability_zones.azs.names[1]
   cidr_block        = "192.168.1.0/24"
-  vpc_id            = "${aws_vpc.vpc.id}"
+  vpc_id            = aws_vpc.vpc.id
 }
 
 resource "aws_subnet" "subnet_az3" {
-  availability_zone = "${data.aws_availability_zones.azs.names[2]}"
+  availability_zone = data.aws_availability_zones.azs.names[2]
   cidr_block        = "192.168.2.0/24"
-  vpc_id            = "${aws_vpc.vpc.id}"
+  vpc_id            = aws_vpc.vpc.id
 }
 
 resource "aws_security_group" "sg" {
-  vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = aws_vpc.vpc.id
 }
 
 resource "aws_kms_key" "kms" {
   description = "example"
 }
 
+resource "aws_cloudwatch_log_group" "test" {
+  name = "msk_broker_logs"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "msk-broker-logs-bucket"
+  acl    = "private"
+}
+
+resource "aws_iam_role" "firehose_role" {
+  name = "firehose_test_role"
+
+  assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+  {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "firehose.amazonaws.com"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose_role.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    LogDeliveryEnabled = "placeholder"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.4.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
     instance_type   = "kafka.m5.large"
     ebs_volume_size = 1000
     client_subnets = [
-      "${aws_subnet.subnet_az1.id}",
-      "${aws_subnet.subnet_az2.id}",
-      "${aws_subnet.subnet_az3.id}",
+      aws_subnet.subnet_az1.id,
+      aws_subnet.subnet_az2.id,
+      aws_subnet.subnet_az3.id,
     ]
-    security_groups = ["${aws_security_group.sg.id}"]
+    security_groups = [aws_security_group.sg.id]
   }
 
   encryption_info {
-    encryption_at_rest_kms_key_arn = "${aws_kms_key.kms.arn}"
+    encryption_at_rest_kms_key_arn = aws_kms_key.kms.arn
   }
 
   open_monitoring {
@@ -79,23 +128,36 @@ resource "aws_msk_cluster" "example" {
     }
   }
 
+  logging_info {
+    broker_logs {
+      cloudwatch_logs {
+        enabled   = true
+        log_group = aws_cloudwatch_log_group.test.name
+      }
+      firehose {
+        enabled         = true
+        delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
+      }
+      s3 {
+        enabled = true
+        bucket  = aws_s3_bucket.bucket.id
+        prefix  = "logs/msk-"
+      }
+    }
+  }
+
   tags = {
     foo = "bar"
   }
 }
 
 output "zookeeper_connect_string" {
-  value = "${aws_msk_cluster.example.zookeeper_connect_string}"
-}
-
-output "bootstrap_brokers" {
-  description = "Plaintext connection host:port pairs"
-  value       = "${aws_msk_cluster.example.bootstrap_brokers}"
+  value = aws_msk_cluster.example.zookeeper_connect_string
 }
 
 output "bootstrap_brokers_tls" {
   description = "TLS connection host:port pairs"
-  value       = "${aws_msk_cluster.example.bootstrap_brokers_tls}"
+  value       = aws_msk_cluster.example.bootstrap_brokers_tls
 }
 ```
 
@@ -112,7 +174,8 @@ The following arguments are supported:
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level.  See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See below.
+* `tags` - (Optional) A map of tags to assign to the resource
 
 ### broker_node_group_info Argument Reference
 
@@ -142,7 +205,7 @@ The following arguments are supported:
 
 #### encryption_info encryption_in_transit Argument Reference
 
-* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value is `TLS_PLAINTEXT` when `encryption_in_transit` block defined, but `TLS` when `encryption_in_transit` block omitted.
+* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value is `TLS`.
 * `in_cluster` - (Optional) Whether data communication among broker nodes is encrypted. Default value: `true`.
 
 #### open_monitoring Argument Reference
@@ -161,6 +224,26 @@ The following arguments are supported:
 #### open_monitoring prometheus node_exporter Argument Reference
 
 * `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the Node Exporter.
+
+#### logging_info Argument Reference
+
+* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See below.
+
+#### logging_info broker_logs cloudwatch_logs Argument Reference
+
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Cloudwatch Logs. 
+* `log_group` - (Optional) Name of the Cloudwatch Log Group to deliver logs to.
+
+#### logging_info broker_logs firehose Argument Reference
+
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Kinesis Data Firehose.
+* `delivery_stream` - (Optional) Name of the Kinesis Data Firehose delivery stream to deliver logs to.
+
+#### logging_info broker_logs s3 Argument Reference
+
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to S3.
+* `bucket` - (Optional) Name of the S3 bucket to deliver logs to. 
+* `prefix` - (Optional) Prefix to append to the folder name. 
 
 ## Attributes Reference
 
