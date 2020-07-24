@@ -28,6 +28,8 @@ Upgrade topics:
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
+- [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
+- [Resource: aws_dx_gateway_association_proposal](#resource-aws_dx_gateway_association_proposal)
 - [Resource: aws_ebs_volume](#resource-aws_ebs_volume)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
@@ -654,6 +656,54 @@ resource "aws_cognito_user_pool" "example" {
 ### Removal of Automatic aws_dx_gateway_association Import
 
 Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
+
+## Resource: aws_dx_gateway_association
+
+### vpn_gateway_id Argument Removal
+
+Switch your Terraform configuration to the `associated_gateway_id` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_dx_gateway_association" "example" {
+  # ... other configuration ...
+  vpn_gateway_id = aws_vpn_gateway.example.id
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_dx_gateway_association" "example" {
+  # ... other configuration ...
+  associated_gateway_id = aws_vpn_gateway.example.id
+}
+```
+
+## Resource: aws_dx_gateway_association_proposal
+
+### vpn_gateway_id Argument Removal
+
+Switch your Terraform configuration to the `associated_gateway_id` argument instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_dx_gateway_association_proposal" "example" {
+  # ... other configuration ...
+  vpn_gateway_id = aws_vpn_gateway.example.id
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_dx_gateway_association_proposal" "example" {
+  # ... other configuration ...
+  associated_gateway_id = aws_vpn_gateway.example.id
+}
+```
 
 ## Resource: aws_ebs_volume
 
