@@ -48,7 +48,7 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
-func TestCleanDomainName(t *testing.T) {
+func TestTrimTrailingPeriod(t *testing.T) {
 	cases := []struct {
 		Input, Output string
 	}{
@@ -58,7 +58,7 @@ func TestCleanDomainName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanDomainName(tc.Input)
+		actual := trimTrailingPeriod(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -553,7 +553,7 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 		// To compare the Hosted Zone Domain Name returned from the API
 		// and that stored in the resource, it too must by cleaned of
 		// the trailing period
-		if cleanDomainName(aws.StringValue(zone.HostedZone.Name)) == domain {
+		if trimTrailingPeriod(aws.StringValue(zone.HostedZone.Name)) == domain {
 			return nil
 		}
 
