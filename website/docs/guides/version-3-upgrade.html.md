@@ -30,6 +30,7 @@ Upgrade topics:
 - [Resource: aws_ebs_volume](#resource-aws_ebs_volume)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
+- [Resource: aws_iam_access_key](#resource-aws_iam_access_key)
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_lambda_alias](#resource-aws_lambda_alias)
 - [Resource: aws_launch_template](#resource-aws_launch_template)
@@ -761,6 +762,12 @@ resource "aws_emr_cluster" "example" {
   }
 }
 ```
+
+## Resource: aws_iam_access_key
+
+### ses_smtp_password Attribute Removal
+
+In many regions today and in all regions after October 1, 2020, the [SES API will only accept version 4 signatures](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-ses-api-authentication.html). If referencing the `ses_smtp_password` attribute, switch your Terraform configuration to the `ses_smtp_password_v4` attribute instead. Please note that this signature is based on the region of the Terraform AWS Provider. If you need the SES v4 password in multiple regions, it may require using [multiple provider instances](/docs/configuration/providers.html#alias-multiple-provider-instances).
 
 ## Resource: aws_instance
 
