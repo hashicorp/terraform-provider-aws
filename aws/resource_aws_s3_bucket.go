@@ -1319,7 +1319,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry due to S3 eventual consistency
 	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return keyvaluetags.S3BucketListTags(s3conn, d.Id())
+		tags, err := keyvaluetags.S3BucketListTags(s3conn, d.Id())
+		if err != nil && (!isAWSErr(err, "NotImplemented", "") || !isAWSErr(err, "NoSuchTagSetError", "") || isAWSErrRequestFailureStatusCode(err, 404)) {
+			return make(keyvaluetags.KeyValueTags), nil
+		}
+		return tags, err
 	})
 
 	if err != nil {
