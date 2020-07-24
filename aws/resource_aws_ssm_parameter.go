@@ -70,6 +70,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"data_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "text",
 				ValidateFunc: validation.StringInSlice([]string{
 					"aws:ec2:image",
 					"text",
