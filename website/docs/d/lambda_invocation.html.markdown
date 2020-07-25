@@ -16,7 +16,7 @@ invocation type.
 
 ```hcl
 data "aws_lambda_invocation" "example" {
-  function_name = "${aws_lambda_function.lambda_function_test.function_name}"
+  function_name = aws_lambda_function.lambda_function_test.function_name
 
   input = <<JSON
 {

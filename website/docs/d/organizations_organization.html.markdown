@@ -15,7 +15,6 @@ Get information about the organization that the user's account belongs to
 ### List all account IDs for the organization
 
 ```hcl
-# Terraform 0.12 syntax
 data "aws_organizations_organization" "example" {}
 
 output "account_ids" {
