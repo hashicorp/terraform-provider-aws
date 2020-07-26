@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -424,6 +425,12 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAppmeshVirtualNodeConfig_tlsAcm(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
@@ -620,12 +627,25 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
 				Config: testAccAppmeshVirtualNodeConfig_clientPolicyFileUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
@@ -658,14 +678,6 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
-			},
-			{
-				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
-				Check: resource.ComposeTestCheckFunc(
-					// CA must be DISABLED for deletion.
-					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
