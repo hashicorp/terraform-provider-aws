@@ -89,15 +89,15 @@ The following arguments are supported:
 
 #### Schema Attributes
 
-~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_contraints`) is required to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
+~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_contraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
 
   * `attribute_data_type` (Required) - The attribute data type. Must be one of `Boolean`, `Number`, `String`, `DateTime`.
   * `developer_only_attribute` (Optional) - Specifies whether the attribute type is developer only.
   * `mutable` (Optional) - Specifies whether the attribute can be changed once it has been created.
   * `name` (Required) - The name of the attribute.
-  * `number_attribute_constraints` (Optional) - Specifies the [constraints for an attribute of the number type](#number-attribute-constraints).
+  * `number_attribute_constraints` (See Note) - Specifies the [constraints for an attribute of the number type](#number-attribute-constraints).
   * `required` (Optional) - Specifies whether a user pool attribute is required. If the attribute is required and the user does not provide a value, registration or sign-in will fail.
-  * `string_attribute_constraints` (Optional) -Specifies the [constraints for an attribute of the string type](#string-attribute-constraints).
+  * `string_attribute_constraints` (See Note) -Specifies the [constraints for an attribute of the string type](#string-attribute-constraints).
 
 ##### Number Attribute Constraints
 
