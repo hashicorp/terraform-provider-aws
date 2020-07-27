@@ -589,7 +589,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"items": {
+						"signers": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
