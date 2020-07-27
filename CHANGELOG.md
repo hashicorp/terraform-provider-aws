@@ -76,6 +76,7 @@ BUG FIXES
 * resource/aws_api_gateway_authorizer: Allow `authorizer_result_ttl_in_seconds` to be set to 0 [GH-12643]
 * resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
 * resource/aws_apigatewayv2_stage: Correctly handle `default_route_setting` and `route_setting` `data_trace_enabled` and `logging_level` for HTTP APIs. `logging_level` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-13809]
+* resource/aws_appautoscaling_target: Only retry `DeregisterScalableTarget` retries on all errors on deletion [GH-14259]
 * resource/aws_dx_gateway_association: Increase default create/update/delete timeouts to 30 minutes [GH-14144]
 * resource/aws_codepipeline: Only retry `CreatePipeline` errors for IAM eventual consistency errors [GH-14264]
 * resource/aws_lambda_function: Increase IAM retry timeout for creation to standard 2 minute timeout [GH-14291]
