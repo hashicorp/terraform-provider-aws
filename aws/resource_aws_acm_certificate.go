@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -93,7 +94,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Computed: true,
 			},
 			"domain_validation_options": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -115,6 +116,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 						},
 					},
 				},
+				Set: acmDomainValidationOptionsHash,
 			},
 			"validation_emails": {
 				Type:     schema.TypeList,
@@ -155,6 +157,36 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+		},
+		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
+			// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
+			if diff.Get("validation_method").(string) == "DNS" && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
+				domainValidationOptionsList := []interface{}{map[string]interface{}{
+					"domain_name": strings.TrimSuffix(diff.Get("domain_name").(string), "."),
+				}}
+
+				if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
+					for _, sanRaw := range sanSet.List() {
+						san, ok := sanRaw.(string)
+
+						if !ok {
+							continue
+						}
+
+						m := map[string]interface{}{
+							"domain_name": strings.TrimSuffix(san, "."),
+						}
+
+						domainValidationOptionsList = append(domainValidationOptionsList, m)
+					}
+				}
+
+				if err := diff.SetNew("domain_validation_options", schema.NewSet(acmDomainValidationOptionsHash, domainValidationOptionsList)); err != nil {
+					return fmt.Errorf("error setting new domain_validation_options diff: %w", err)
+				}
+			}
+
+			return nil
 		},
 	}
 }
@@ -430,6 +462,20 @@ func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, upda
 
 	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
 	return conn.ImportCertificate(params)
+}
+
+func acmDomainValidationOptionsHash(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["domain_name"].(string); ok {
+		return hashcode.String(v)
+	}
+
+	return 0
 }
 
 func expandAcmCertificateOptions(l []interface{}) *acm.CertificateOptions {

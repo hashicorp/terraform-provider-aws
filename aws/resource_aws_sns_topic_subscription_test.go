@@ -749,7 +749,6 @@ resource "aws_api_gateway_authorizer" "test" {
   name                             = "tf-acc-test-api-gw-authorizer-%d"
   rest_api_id                      = "${aws_api_gateway_rest_api.test.id}"
   authorizer_uri                   = "${aws_lambda_function.authorizer.invoke_arn}"
-  authorizer_result_ttl_in_seconds = "0"
   authorizer_credentials           = "${aws_iam_role.invocation_role.arn}"
 }
 

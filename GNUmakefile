@@ -37,7 +37,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME)
+	gofmt -s -w ./$(PKG_NAME) ./awsproviderlint
 
 # Currently required by tf-deploy compile
 fmtcheck:

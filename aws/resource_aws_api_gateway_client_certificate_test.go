@@ -89,6 +89,27 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
+	var conf apigateway.ClientCertificate
+	resourceName := "aws_api_gateway_client_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayClientCertificate(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.ClientCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

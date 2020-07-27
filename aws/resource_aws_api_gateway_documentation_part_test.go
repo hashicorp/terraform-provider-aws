@@ -156,6 +156,32 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
+	var conf apigateway.DocumentationPart
+
+	rString := acctest.RandString(8)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
+	properties := `{"description":"Terraform Acceptance Test"}`
+
+	resourceName := "aws_api_gateway_documentation_part.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationPart(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayDocumentationPartExists(n string, res *apigateway.DocumentationPart) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
