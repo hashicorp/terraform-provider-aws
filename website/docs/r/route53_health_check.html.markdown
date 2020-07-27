@@ -48,7 +48,7 @@ resource "aws_route53_health_check" "example" {
 resource "aws_route53_health_check" "parent" {
   type                   = "CALCULATED"
   child_health_threshold = 1
-  child_healthchecks     = ["${aws_route53_health_check.child.id}"]
+  child_healthchecks     = [aws_route53_health_check.child.id]
 
   tags = {
     Name = "tf-test-calculated-health-check"
@@ -73,7 +73,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 
 resource "aws_route53_health_check" "foo" {
   type                            = "CLOUDWATCH_METRIC"
-  cloudwatch_alarm_name           = "${aws_cloudwatch_metric_alarm.foobar.alarm_name}"
+  cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.foobar.alarm_name
   cloudwatch_alarm_region         = "us-west-2"
   insufficient_data_health_status = "Healthy"
 }
