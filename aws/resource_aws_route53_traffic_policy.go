@@ -176,7 +176,7 @@ func resourceAwsRoute53TrafficPolicyUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error updating Route53 Traffic Policy %s and setting new policy version. %#v", d.Get("name").(string), err)
 	}
 
-	return nil
+	return resourceAwsRoute53TrafficPolicyRead(d, meta)
 }
 
 func resourceAwsRoute53TrafficPolicyDelete(d *schema.ResourceData, meta interface{}) error {
