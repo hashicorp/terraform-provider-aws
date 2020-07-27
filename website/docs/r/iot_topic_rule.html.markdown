@@ -20,15 +20,15 @@ resource "aws_iot_topic_rule" "rule" {
 
   sns {
     message_format = "RAW"
-    role_arn       = "${aws_iam_role.role.arn}"
-    target_arn     = "${aws_sns_topic.mytopic.arn}"
+    role_arn       = aws_iam_role.role.arn
+    target_arn     = aws_sns_topic.mytopic.arn
   }
 
   error_action {
     sns {
       message_format = "RAW"
-      role_arn       = "${aws_iam_role.role.arn}"
-      target_arn     = "${aws_sns_topic.myerrortopic.arn}"
+      role_arn       = aws_iam_role.role.arn
+      target_arn     = aws_sns_topic.myerrortopic.arn
     }
   }
 }
@@ -62,7 +62,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "mypolicy"
-  role = "${aws_iam_role.role.id}"
+  role = aws_iam_role.role.id
 
   policy = <<EOF
 {
