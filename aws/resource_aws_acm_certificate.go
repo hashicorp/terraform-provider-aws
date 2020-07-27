@@ -57,23 +57,27 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			},
 			"domain_name": {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-				// trailing period, no longer requiring a custom StateFunc to
-				// prevent ACM API error
+				// trailing period, yet to account for custom user input, a StateFunc
+				// is in place to prevent ACM API error
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				StateFunc:     trimTrailingPeriod,
 			},
 			"subject_alternative_names": {
-				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-				// trailing period, no longer requiring a custom StateFunc to
-				// prevent ACM API error
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+					// trailing period, yet to account for custom user input, a StateFunc
+					// is in place to prevent ACM API error
+					StateFunc: trimTrailingPeriod,
+				},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
@@ -245,7 +249,9 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
-		d.Set("domain_name", resp.Certificate.DomainName)
+		// To be consistent with other AWS services that do not accept a trailing period,
+		// we remove the suffix from the Fully Qualified Domain Name of the Certificate returned from the API
+		d.Set("domain_name", trimTrailingPeriod(aws.StringValue(resp.Certificate.DomainName)))
 		d.Set("arn", resp.Certificate.CertificateArn)
 		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
@@ -351,10 +357,12 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 		for _, o := range certificate.DomainValidationOptions {
 			if o.ResourceRecord != nil {
 				validationOption := map[string]interface{}{
-					"domain_name":           *o.DomainName,
-					"resource_record_name":  *o.ResourceRecord.Name,
-					"resource_record_type":  *o.ResourceRecord.Type,
-					"resource_record_value": *o.ResourceRecord.Value,
+					// To be consistent with other AWS services that do not accept a trailing period,
+					// we remove the suffix from the Fully Qualified Domain Name of the Certificate returned from the API
+					"domain_name":           trimTrailingPeriod(aws.StringValue(o.DomainName)),
+					"resource_record_name":  aws.StringValue(o.ResourceRecord.Name),
+					"resource_record_type":  aws.StringValue(o.ResourceRecord.Type),
+					"resource_record_value": aws.StringValue(o.ResourceRecord.Value),
 				}
 				domainValidationResult = append(domainValidationResult, validationOption)
 			} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {

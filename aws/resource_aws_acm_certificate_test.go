@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"os"
@@ -129,7 +130,7 @@ func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
@@ -161,9 +162,9 @@ func TestAccAWSAcmCertificate_dnsValidation(t *testing.T) {
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
@@ -195,9 +196,9 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 				Config: testAccAcmCertificateConfig(rootDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(rootDomain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(rootDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
@@ -262,9 +263,9 @@ func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
@@ -297,19 +298,19 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(rootDomain, strconv.Quote(wildcardDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(rootDomain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(rootDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", trimTrailingPeriod(wildcardDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", wildcardDomain),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", trimTrailingPeriod(wildcardDomain)),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -338,19 +339,19 @@ func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", sanDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", trimTrailingPeriod(sanDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", trimTrailingPeriod(sanDomain)),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -380,17 +381,17 @@ func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(domain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", sanDomain1),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", trimTrailingPeriod(sanDomain1)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.2.domain_name", sanDomain2),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.2.domain_name", trimTrailingPeriod(sanDomain2)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.2.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.2.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.2.resource_record_value"),
@@ -411,9 +412,46 @@ func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 	})
 }
 
-// TestAccAWSAcmCertificate_san_TrailingPeriod removed in v3.0.0
-// as aws_route53_zone references no longer contain a trailing period
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
+func TestAccAWSAcmCertificate_san_TrailingPeriod(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+	sanDomain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+	resourceName := "aws_acm_certificate.cert"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(domain)),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          trimTrailingPeriod(domain),
+						"resource_record_type": "CNAME",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          trimTrailingPeriod(sanDomain),
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", strings.TrimSuffix(sanDomain, ".")),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func TestAccAWSAcmCertificate_wildcard(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
@@ -429,9 +467,9 @@ func TestAccAWSAcmCertificate_wildcard(t *testing.T) {
 				Config: testAccAcmCertificateConfig(wildcardDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(wildcardDomain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(wildcardDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
@@ -464,13 +502,13 @@ func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(wildcardDomain, strconv.Quote(rootDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", trimTrailingPeriod(wildcardDomain)),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(wildcardDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.domain_name", trimTrailingPeriod(rootDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.1.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.1.resource_record_value"),
@@ -505,7 +543,7 @@ func TestAccAWSAcmCertificate_disableCTLogging(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.domain_name", trimTrailingPeriod(rootDomain)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.0.resource_record_type", "CNAME"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_validation_options.0.resource_record_value"),
