@@ -217,8 +217,8 @@ output "lambda_result" {
 
 ### Removal of domain_name trailing period
 
-Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `www.example.com.`, the attribute now will be returned as `www.example.com`.
-When providing a `domain_name` to the data-source, this too should be given without the trailing period to match the updated naming convention.
+Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Data Source: aws_route53_zone
 
@@ -1042,7 +1042,8 @@ Previously when the `min_capacity` argument in a `scaling_configuration` block w
 
 ### Removal of domain_name trailing period
 
-Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `www.example.com.`, the attribute now will be returned as `www.example.com`
+Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_route53_zone
 

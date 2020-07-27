@@ -38,12 +38,11 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
-				// AWS Provider 3.0.0 - trailing period removed from domain_name
-				// returned from API, no longer requiring custom DiffSuppressFunc
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
+				StateFunc:    trimTrailingPeriod,
 			},
 
 			"rule_type": {
@@ -166,7 +165,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("arn", rule.Arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set("domain_name", cleanDomainName(aws.StringValue(rule.DomainName)))
+	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
 	d.Set("name", rule.Name)
 	d.Set("owner_id", rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)

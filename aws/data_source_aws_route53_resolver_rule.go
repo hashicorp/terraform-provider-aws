@@ -124,7 +124,7 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 	d.Set("arn", arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set("domain_name", cleanDomainName(aws.StringValue(rule.DomainName)))
+	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
 	d.Set("name", rule.Name)
 	d.Set("owner_id", rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
