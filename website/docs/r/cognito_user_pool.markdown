@@ -144,15 +144,15 @@ The following arguments are optional:
 
 ### schema
 
-~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_contraints`) is required to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
+~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_contraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
 
 * `attribute_data_type` - (Required) Attribute data type. Must be one of `Boolean`, `Number`, `String`, `DateTime`.
 * `developer_only_attribute` - (Optional) Whether the attribute type is developer only.
 * `mutable` - (Optional) Whether the attribute can be changed once it has been created.
 * `name` - (Required) Name of the attribute.
-* `number_attribute_constraints` - (Optional) Configuration block for the constraints for an attribute of the number type. [Detailed below](#number_attribute_constraints).
+* `number_attribute_constraints` - (Required when `attribute_data_type` is `Number`) Configuration block for the constraints for an attribute of the number type. [Detailed below](#number_attribute_constraints).
 * `required` - (Optional) Whether a user pool attribute is required. If the attribute is required and the user does not provide a value, registration or sign-in will fail.
-* `string_attribute_constraints` - (Optional) Constraints for an attribute of the string type. [Detailed below](#string_attribute_constraints).
+* `string_attribute_constraints` - (Required when `attribute_data_type` is `String`) Constraints for an attribute of the string type. [Detailed below](#string_attribute_constraints).
 
 #### schema: Defaults for Standard Attributes
 
