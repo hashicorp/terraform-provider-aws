@@ -445,6 +445,40 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 											},
 										},
 									},
+
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	appmesh.DurationUnitMs,
+																	appmesh.DurationUnitS,
+																}, false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},

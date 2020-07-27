@@ -20,6 +20,7 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"httpRoute":        testAccAwsAppmeshRoute_httpRoute,
 			"routePriority":    testAccAwsAppmeshRoute_routePriority,
 			"tcpRoute":         testAccAwsAppmeshRoute_tcpRoute,
+			"tcpRouteTimeout":  testAccAwsAppmeshRoute_tcpRoute_timeout,
 			"tags":             testAccAwsAppmeshRoute_tags,
 		},
 		"VirtualNode": {

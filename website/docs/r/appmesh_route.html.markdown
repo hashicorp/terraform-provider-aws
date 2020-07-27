@@ -208,11 +208,21 @@ The `http2_route` and `http_route` objects supports the following:
 The `tcp_route` object supports the following:
 
 * `action` - (Required) The action to take if a match is determined.
+* `timeout` - (Optional) The types of timeouts.
 
 The `action` object supports the following:
 
 * `weighted_target` - (Required) The targets that traffic is routed to when a request matches the route.
 You can specify one or more targets and their relative weights with which to distribute traffic.
+
+The `timeout` object supports the following:
+
+* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+
+The `idle` object supports the following:
+
+* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) The number of time units. Minimum value of `0`.
 
 The `grpc_route`'s `match` object supports the following:
 
