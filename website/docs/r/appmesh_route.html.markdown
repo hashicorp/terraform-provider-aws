@@ -197,6 +197,7 @@ The `grpc_route` object supports the following:
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an gRPC request match.
 * `rety_policy` - (Optional) The retry policy.
+* `timeout` - (Optional) The types of timeouts.
 
 The `http2_route` and `http_route` objects supports the following:
 
@@ -242,6 +243,16 @@ Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP statu
 * `max_retries` - (Required) The maximum number of retries.
 * `per_retry_timeout` - (Required) The per-retry timeout.
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
+
+The `grpc_route`'s `timeout` object supports the following:
+
+* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle. The default value is none.
+* `per_request` - (Optional) The per request timeout. The default value is 15 seconds.
+
+The `idle` and `per_request` objects support the following:
+
+* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) The number of time units. Minimum value of `0`.
 
 The `http2_route` and `http_route`'s `match` object supports the following:
 

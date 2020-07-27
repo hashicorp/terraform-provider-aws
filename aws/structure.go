@@ -5532,6 +5532,44 @@ func expandAppmeshGrpcRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 		grpcRoute.RetryPolicy = grpcRetryPolicy
 	}
 
+	if vGrpcTimeout, ok := mGrpcRoute["timeout"].([]interface{}); ok && len(vGrpcTimeout) > 0 && vGrpcTimeout[0] != nil {
+		grpcTimeout := &appmesh.GrpcTimeout{}
+
+		mGrpcTimeout := vGrpcTimeout[0].(map[string]interface{})
+
+		if vIdleTimeout, ok := mGrpcTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
+			idleTimeout := &appmesh.Duration{}
+
+			mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
+				idleTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
+				idleTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			grpcTimeout.Idle = idleTimeout
+		}
+
+		if vPerRequestTimeout, ok := mGrpcTimeout["per_request"].([]interface{}); ok && len(vPerRequestTimeout) > 0 && vPerRequestTimeout[0] != nil {
+			perRequestTimeout := &appmesh.Duration{}
+
+			mPerRequestTimeout := vPerRequestTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mPerRequestTimeout["unit"].(string); ok && vUnit != "" {
+				perRequestTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mPerRequestTimeout["value"].(int); ok && vValue > 0 {
+				perRequestTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			grpcTimeout.PerRequest = perRequestTimeout
+		}
+
+		grpcRoute.Timeout = grpcTimeout
+	}
+
 	return grpcRoute
 }
 
@@ -5831,6 +5869,30 @@ func flattenAppmeshGrpcRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 		}
 
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
+	}
+
+	if grpcTimeout := grpcRoute.Timeout; grpcTimeout != nil {
+		mGrpcTimeout := map[string]interface{}{}
+
+		if idleTimeout := grpcTimeout.Idle; idleTimeout != nil {
+			mIdleTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(idleTimeout.Unit),
+				"value": int(aws.Int64Value(idleTimeout.Value)),
+			}
+
+			mGrpcTimeout["idle"] = []interface{}{mIdleTimeout}
+		}
+
+		if perRequestTimeout := grpcTimeout.PerRequest; perRequestTimeout != nil {
+			mPerRequestTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(perRequestTimeout.Unit),
+				"value": int(aws.Int64Value(perRequestTimeout.Value)),
+			}
+
+			mGrpcTimeout["per_request"] = []interface{}{mPerRequestTimeout}
+		}
+
+		mGrpcRoute["timeout"] = []interface{}{mGrpcTimeout}
 	}
 
 	return []interface{}{mGrpcRoute}
