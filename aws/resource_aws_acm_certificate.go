@@ -57,16 +57,15 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				ForceNew: true,
 			},
 			"domain_name": {
+				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+				// trailing period, yet to account for custom user input, a StateFunc
+				// is in place to prevent ACM API error
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-				StateFunc: func(v interface{}) string {
-					// AWS Provider 1.42.0+ aws_route53_zone references may contain a
-					// trailing period, which generates an ACM API error
-					return strings.TrimSuffix(v.(string), ".")
-				},
+				StateFunc:     trimTrailingPeriod,
 			},
 			"subject_alternative_names": {
 				Type:     schema.TypeSet,
@@ -75,11 +74,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					StateFunc: func(v interface{}) string {
-						// AWS Provider 1.42.0+ aws_route53_zone references may contain a
-						// trailing period, which generates an ACM API error
-						return strings.TrimSuffix(v.(string), ".")
-					},
+					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+					// trailing period, yet to account for custom user input, a StateFunc
+					// is in place to prevent ACM API error
+					StateFunc: trimTrailingPeriod,
 				},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
@@ -227,7 +225,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
-		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
+		DomainName:       aws.String(d.Get("domain_name").(string)),
 		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
 		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
 	}
@@ -243,7 +241,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
 		subjectAlternativeNames := make([]*string, len(sans.(*schema.Set).List()))
 		for i, sanRaw := range sans.(*schema.Set).List() {
-			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
+			subjectAlternativeNames[i] = aws.String(sanRaw.(string))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
 	}
@@ -283,7 +281,9 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
-		d.Set("domain_name", resp.Certificate.DomainName)
+		// To be consistent with other AWS services that do not accept a trailing period,
+		// we remove the suffix from the Fully Qualified Domain Name of the Certificate returned from the API
+		d.Set("domain_name", trimTrailingPeriod(aws.StringValue(resp.Certificate.DomainName)))
 		d.Set("arn", resp.Certificate.CertificateArn)
 		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
@@ -389,10 +389,12 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 		for _, o := range certificate.DomainValidationOptions {
 			if o.ResourceRecord != nil {
 				validationOption := map[string]interface{}{
-					"domain_name":           *o.DomainName,
-					"resource_record_name":  *o.ResourceRecord.Name,
-					"resource_record_type":  *o.ResourceRecord.Type,
-					"resource_record_value": *o.ResourceRecord.Value,
+					// To be consistent with other AWS services that do not accept a trailing period,
+					// we remove the suffix from the Fully Qualified Domain Name of the Certificate returned from the API
+					"domain_name":           trimTrailingPeriod(aws.StringValue(o.DomainName)),
+					"resource_record_name":  aws.StringValue(o.ResourceRecord.Name),
+					"resource_record_type":  aws.StringValue(o.ResourceRecord.Type),
+					"resource_record_value": aws.StringValue(o.ResourceRecord.Value),
 				}
 				domainValidationResult = append(domainValidationResult, validationOption)
 			} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {
