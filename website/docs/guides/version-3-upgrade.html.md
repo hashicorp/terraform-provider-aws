@@ -27,8 +27,6 @@ Upgrade topics:
 - [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
-- [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
-- [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)

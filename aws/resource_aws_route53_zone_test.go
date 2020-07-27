@@ -133,15 +133,15 @@ func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 				Config: testAccRoute53ZoneConfigMultiple(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.0", &zone0),
-					testAccCheckDomainName(&zone0, "subdomain0.terraformtest.com"),
+					testAccCheckDomainName(&zone0, "subdomain0.terraformtest.com."),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.1", &zone1),
-					testAccCheckDomainName(&zone1, "subdomain1.terraformtest.com"),
+					testAccCheckDomainName(&zone1, "subdomain1.terraformtest.com."),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.2", &zone2),
-					testAccCheckDomainName(&zone2, "subdomain2.terraformtest.com"),
+					testAccCheckDomainName(&zone2, "subdomain2.terraformtest.com."),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.3", &zone3),
-					testAccCheckDomainName(&zone3, "subdomain3.terraformtest.com"),
+					testAccCheckDomainName(&zone3, "subdomain3.terraformtest.com."),
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test.4", &zone4),
-					testAccCheckDomainName(&zone4, "subdomain4.terraformtest.com"),
+					testAccCheckDomainName(&zone4, "subdomain4.terraformtest.com."),
 				),
 			},
 		},
@@ -571,10 +571,7 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 			return fmt.Errorf("Empty name in HostedZone for domain %s", domain)
 		}
 
-		// To compare the Hosted Zone Domain Name returned from the API
-		// and that stored in the resource, it too must by cleaned of
-		// the trailing period
-		if trimTrailingPeriod(aws.StringValue(zone.HostedZone.Name)) == domain {
+		if aws.StringValue(zone.HostedZone.Name) == domain {
 			return nil
 		}
 
@@ -584,7 +581,7 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 func testAccRoute53ZoneConfig(zoneName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "%s"
+  name = "%s."
 }
 `, zoneName)
 }
@@ -603,7 +600,7 @@ func testAccRoute53ZoneConfigComment(zoneName, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   comment = %q
-  name    = "%s"
+  name    = "%s."
 }
 `, comment, zoneName)
 }
@@ -614,7 +611,7 @@ resource "aws_route53_delegation_set" "test" {}
 
 resource "aws_route53_zone" "test" {
   delegation_set_id = "${aws_route53_delegation_set.test.id}"
-  name              = "%s"
+  name              = "%s."
 }
 `, zoneName)
 }
@@ -640,7 +637,7 @@ resource "aws_route53_zone" "test" {
 func testAccRoute53ZoneConfigTagsSingle(zoneName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "%s"
+  name = "%s."
 
   tags = {
     %q = %q
@@ -652,7 +649,7 @@ resource "aws_route53_zone" "test" {
 func testAccRoute53ZoneConfigTagsMultiple(zoneName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = "%s"
+  name = "%s."
 
   tags = {
     %q = %q
@@ -673,7 +670,7 @@ resource "aws_vpc" "test1" {
 }
 
 resource "aws_route53_zone" "test" {
-  name = "%s"
+  name = "%s."
 
   vpc {
     vpc_id = "${aws_vpc.test1.id}"
@@ -701,7 +698,7 @@ resource "aws_vpc" "test2" {
 }
 
 resource "aws_route53_zone" "test" {
-  name = "%s"
+  name = "%s."
 
   vpc {
     vpc_id = "${aws_vpc.test1.id}"
