@@ -53,6 +53,8 @@ ENHANCEMENTS
 
 * provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
 * provider: Add `assume_role` configuration block `duration_seconds`, `policy_arns`, `tags`, and `transitive_tag_keys` arguments [GH-14077]
+* data-source/aws_instance: Add `secondary_private_ips` attribute [GH-14079]
+* data-source/aws_s3_bucket: Replace `GetBucketLocation` API call with custom HTTP call for FIPS endpoint support [GH-14221]
 * resource/aws_acm_certificate: Enable `domain_validation_options` usage in downstream resource `count` and `for_each` references [GH-14199]
 * resource/aws_api_gateway_authorizer: Add plan-time validation to `authorizer_credentials` argument [GH-12643]
 * resource/aws_api_gateway_method_settings: Add import support [GH-14266]
@@ -63,7 +65,6 @@ ENHANCEMENTS
 * resource_aws_fsx_windows_file_system: add support for multi-az [GH-12676]
 * resource_aws_fsx_windows_file_system: add `SINGLE_AZ_2` deployment type [GH-12676]
 * resource_aws_fsx_windows_file_system: adds `preferred_file_server_ip`, `remote_administration_endpoint` attributes [GH-12676]
-* data-source/aws_instance: Add `secondary_private_ips` attribute [GH-14079]
 * resource/aws_instance: Add `secondary_private_ips` argument (conflicts with `network_interface` configuration block) [GH-14079]
 
 BUG FIXES
@@ -72,6 +73,7 @@ BUG FIXES
 * provider: Ensure configured STS endpoint is used during `AssumeRole` API calls [GH-14077]
 * provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
 * provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
+* data-source/aws_lb: `enable_http2` now properly set [GH-14167]
 * resource/aws_acm_certificate: Prevent unexpected ordering differences with `domain_validation_options` attribute [GH-14199]
 * resource/aws_api_gateway_authorizer: Allow `authorizer_result_ttl_in_seconds` to be set to 0 [GH-12643]
 * resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
@@ -79,16 +81,16 @@ BUG FIXES
 * resource/aws_appautoscaling_target: Only retry `DeregisterScalableTarget` retries on all errors on deletion [GH-14259]
 * resource/aws_dx_gateway_association: Increase default create/update/delete timeouts to 30 minutes [GH-14144]
 * resource/aws_codepipeline: Only retry `CreatePipeline` errors for IAM eventual consistency errors [GH-14264]
+* resource/aws_elasticsearch_domain: Update method to properly set `advanced_security_options` [GH-14167]
 * resource/aws_lambda_function: Increase IAM retry timeout for creation to standard 2 minute timeout [GH-14291]
+* resource/aws_lb_cookie_stickiness_policy: `lb_port` now properly set [GH-14167]
 * resource/aws_network_acl_rule: Immediately return `DescribeNetworkAcls` errors on creation [GH-14261]
+* resource/aws_s3_bucket: Replace `GetBucketLocation` API call with custom HTTP call for FIPS endpoint support [GH-14221]
 * resource/aws_sns_topic_subscription: Immediately return `ListSubscriptionsByTopic` errors [GH-14262]
 * resource/aws_spot_fleet_request: Only retry `RequestSpotFleet` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14265]
+* resource/aws_spot_instance_request: `primary_network_interface_id` now properly set [GH-14167]
 * resource/aws_ssm_activation: Only retry `CreateActivation` on IAM eventual consistency errors and use standard 2 minute timeout [GH-14263]
-* data-source/lb: `enable_http2` now properly set [GH-14167]
-* resource/lb_cookie_stickiness_policy: `lb_port` now properly set [GH-14167]
-* resource/spot_instance_request: `primary_network_interface_id` now properly set [GH-14167]
-* resource/ssm_association: `parameters` now properly set [GH-14167]
-* resource/elasticsearch_domain: update method to set advanced_security_options [GH-14167]
+* resource/aws_ssm_association: `parameters` now properly set [GH-14167]
 
 ## Previous Releases
 
