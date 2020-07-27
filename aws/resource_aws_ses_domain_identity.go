@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -26,12 +25,10 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 				Computed: true,
 			},
 			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					return strings.TrimSuffix(v.(string), ".")
-				},
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: trimTrailingPeriod,
 			},
 			"verification_token": {
 				Type:     schema.TypeString,
@@ -45,7 +42,6 @@ func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).sesconn
 
 	domainName := d.Get("domain").(string)
-	domainName = strings.TrimSuffix(domainName, ".")
 
 	createOpts := &ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),
