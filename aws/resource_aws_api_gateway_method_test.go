@@ -16,6 +16,7 @@ import (
 func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
+	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,27 +26,24 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayMethodConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "http_method", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_method.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 
 			{
 				Config: testAccAWSAPIGatewayMethodConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
 				),
 			},
@@ -56,6 +54,7 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
+	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -65,34 +64,28 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayMethodConfigWithCustomAuthorizer(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "http_method", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "CUSTOM"),
-					resource.TestMatchResourceAttr(
-						"aws_api_gateway_method.test", "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "authorization", "CUSTOM"),
+					resource.TestMatchResourceAttr(resourceName, "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
+					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_method.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 
 			{
 				Config: testAccAWSAPIGatewayMethodConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorizer_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 				),
 			},
 		},
@@ -102,6 +95,7 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
+	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -111,40 +105,31 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizer(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "http_method", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "COGNITO_USER_POOLS"),
-					resource.TestMatchResourceAttr(
-						"aws_api_gateway_method.test", "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization_scopes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
+					resource.TestMatchResourceAttr(resourceName, "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
+					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "2"),
 				),
 			},
 
 			{
 				Config: testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizerUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "COGNITO_USER_POOLS"),
-					resource.TestMatchResourceAttr(
-						"aws_api_gateway_method.test", "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization_scopes.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
+					resource.TestMatchResourceAttr(resourceName, "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
+					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "3"),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_method.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -154,6 +139,7 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
+	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -163,33 +149,50 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayMethodConfigWithCustomRequestValidator(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "http_method", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
-					resource.TestMatchResourceAttr(
-						"aws_api_gateway_method.test", "request_validator_id", regexp.MustCompile("^[a-z0-9]{6}$")),
+					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
+					resource.TestMatchResourceAttr(resourceName, "request_validator_id", regexp.MustCompile("^[a-z0-9]{6}$")),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_method.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 
 			{
 				Config: testAccAWSAPIGatewayMethodConfigWithCustomRequestValidatorUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_validator_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_validator_id", ""),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayMethod_disappears(t *testing.T) {
+	var conf apigateway.Method
+	rInt := acctest.RandInt()
+	resourceName := "aws_api_gateway_method.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayMethodConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethod(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

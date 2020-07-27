@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,12 +24,10 @@ func resourceAwsSesDomainIdentityVerification() *schema.Resource {
 				Computed: true,
 			},
 			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					return strings.TrimSuffix(v.(string), ".")
-				},
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: trimTrailingPeriod,
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -56,7 +53,7 @@ func getAwsSesIdentityVerificationAttributes(conn *ses.SES, domainName string) (
 
 func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
-	domainName := strings.TrimSuffix(d.Get("domain").(string), ".")
+	domainName := d.Get("domain").(string)
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		att, err := getAwsSesIdentityVerificationAttributes(conn, domainName)
 		if err != nil {

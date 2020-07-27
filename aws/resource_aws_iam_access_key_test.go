@@ -256,23 +256,3 @@ func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
 		}
 	}
 }
-
-func TestSesSmtpPasswordFromSecretKeySigV2(t *testing.T) {
-	cases := []struct {
-		Input    string
-		Expected string
-	}{
-		{"some+secret+key", "AnkqhOiWEcszZZzTMCQbOY1sPGoLFgMH9zhp4eNgSjo4"},
-		{"another+secret+key", "Akwqr0Giwi8FsQFgW3DXWCC2DiiQ/jZjqLDWK8TeTBgL"},
-	}
-
-	for _, tc := range cases {
-		actual, err := sesSmtpPasswordFromSecretKeySigV2(&tc.Input)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if actual != tc.Expected {
-			t.Fatalf("%q: expected %q, got %q", tc.Input, tc.Expected, actual)
-		}
-	}
-}

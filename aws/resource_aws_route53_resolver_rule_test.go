@@ -95,7 +95,7 @@ func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicNoTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -124,7 +124,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -140,7 +140,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicTagsChanged,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -151,7 +151,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicNoTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -176,7 +176,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicName(name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 				),
@@ -191,7 +191,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule2),
 					testAccCheckRoute53ResolverRulesSame(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 				),
@@ -216,7 +216,7 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp1, "id"),
@@ -237,7 +237,7 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule2),
 					testAccCheckRoute53ResolverRulesSame(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp1, "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
@@ -257,7 +257,7 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule3),
 					testAccCheckRoute53ResolverRulesSame(&rule3, &rule2),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp2, "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
@@ -291,7 +291,7 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp, "id"),
@@ -307,7 +307,7 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule2),
 					testAccCheckRoute53ResolverRulesDifferent(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp, "id"),

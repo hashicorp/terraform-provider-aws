@@ -73,7 +73,6 @@ The following arguments are supported:
 
 * `allow_admin_create_user_only` (Optional) - Set to True if only the administrator is allowed to create user profiles. Set to False if users can sign themselves up via an app.
 * `invite_message_template` (Optional) - The [invite message template structure](#invite-message-template).
-* `unused_account_validity_days` (Optional) - **DEPRECATED** Use password_policy.temporary_password_validity_days instead - The user account expiration limit, in days, after which the account is no longer usable.
 
 ##### Invite Message template
 
