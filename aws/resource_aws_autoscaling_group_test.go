@@ -3677,8 +3677,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name  = %q
-  roles = ["${aws_iam_role.test.name}"]
+  name = %q
+  role = aws_iam_role.test.name
 }
 
 resource "aws_launch_template" "test" {

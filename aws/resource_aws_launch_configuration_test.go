@@ -888,8 +888,8 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "profile" {
-  name  = "tf-acc-test-%[1]d"
-  roles = ["${aws_iam_role.role.name}"]
+  name = "tf-acc-test-%[1]d"
+  role = aws_iam_role.role.name
 }
 
 resource "aws_launch_configuration" "test" {

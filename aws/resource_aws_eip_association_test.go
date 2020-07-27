@@ -22,7 +22,7 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig_instance,
+				Config: testAccAWSEIPAssociationConfig_instance(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(
 						"aws_eip.test", &a),
@@ -464,10 +464,10 @@ resource "aws_eip_association" "test" {
 `, testAccAWSSpotInstanceRequestConfig(rInt))
 }
 
-const testAccAWSEIPAssociationConfig_instance = `
+func testAccAWSEIPAssociationConfig_instance() string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
-  # us-west-2
-  ami = "ami-4fccb37f"
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
 }
 
@@ -477,7 +477,8 @@ resource "aws_eip_association" "test" {
   allocation_id = "${aws_eip.test.id}"
   instance_id = "${aws_instance.test.id}"
 }
-`
+`)
+}
 
 const testAccAWSEIPAssociationConfig_networkInterface = `
 resource "aws_vpc" "test" {

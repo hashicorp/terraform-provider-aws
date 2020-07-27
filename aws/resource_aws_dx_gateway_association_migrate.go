@@ -69,7 +69,6 @@ func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
-				Deprecated:    "use 'associated_gateway_id' argument instead",
 			},
 		},
 	}

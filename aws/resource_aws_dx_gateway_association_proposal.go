@@ -43,10 +43,9 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"associated_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"vpn_gateway_id"},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"associated_gateway_owner_account_id": {
 				Type:     schema.TypeString,
@@ -67,13 +66,6 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateAwsAccountId,
 			},
-			"vpn_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_id"},
-				Deprecated:    "use 'associated_gateway_id' argument instead",
-			},
 		},
 	}
 }
@@ -86,19 +78,8 @@ func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta 
 		AddAllowedPrefixesToDirectConnectGateway: allowedPrefixes,
 		DirectConnectGatewayId:                   aws.String(d.Get("dx_gateway_id").(string)),
 		DirectConnectGatewayOwnerAccount:         aws.String(d.Get("dx_gateway_owner_account_id").(string)),
+		GatewayId:                                aws.String(d.Get("associated_gateway_id").(string)),
 	}
-	var gwID string
-	if v, ok := d.GetOk("vpn_gateway_id"); ok {
-		gwID = v.(string)
-	} else if v, ok := d.GetOk("associated_gateway_id"); ok {
-		gwID = v.(string)
-	}
-
-	if gwID == "" {
-		return fmt.Errorf("gateway id not provided, one of associated_gateway_id or vpn_gateway_id must be configured")
-	}
-
-	input.GatewayId = aws.String(gwID)
 
 	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %s", input)
 	output, err := conn.CreateDirectConnectGatewayAssociationProposal(input)
@@ -141,11 +122,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error setting allowed_prefixes: %s", err)
 	}
 
-	if _, ok := d.GetOk("vpn_gateway_id"); ok {
-		d.Set("vpn_gateway_id", aws.StringValue(proposal.AssociatedGateway.Id))
-	} else {
-		d.Set("associated_gateway_id", aws.StringValue(proposal.AssociatedGateway.Id))
-	}
+	d.Set("associated_gateway_id", aws.StringValue(proposal.AssociatedGateway.Id))
 	d.Set("associated_gateway_owner_account_id", proposal.AssociatedGateway.OwnerAccount)
 	d.Set("associated_gateway_type", proposal.AssociatedGateway.Type)
 	d.Set("dx_gateway_id", aws.StringValue(proposal.DirectConnectGatewayId))
