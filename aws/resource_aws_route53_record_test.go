@@ -41,11 +41,9 @@ func TestExpandRecordName(t *testing.T) {
 		Input, Output string
 	}{
 		{"www", "www.nonexample.com"},
-		{"www", "www.nonexample.com"},
 		{"dev.www", "dev.www.nonexample.com"},
 		{"*", "*.nonexample.com"},
 		{"nonexample.com", "nonexample.com"},
-		{"test.nonexample.com", "test.nonexample.com"},
 		{"test.nonexample.com", "test.nonexample.com"},
 	}
 
@@ -1139,7 +1137,7 @@ func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName s
 func testAccRoute53RecordConfig_allowOverwrite(allowOverwrite bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
-  name = "notexample.com"
+  name = "notexample.com."
 }
 
 resource "aws_route53_record" "default" {
@@ -1218,7 +1216,7 @@ resource "aws_route53_zone" "main" {
 
 resource "aws_route53_record" "default" {
   zone_id = "${aws_route53_zone.main.zone_id}"
-  name    = "www.NOTexamplE.com"
+  name    = "www.NOTexamplE.com."
   type    = "A"
   ttl     = "30"
   records = ["127.0.0.1", "127.0.0.27"]
