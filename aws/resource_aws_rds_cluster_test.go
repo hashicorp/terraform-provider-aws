@@ -2628,7 +2628,7 @@ func testAccAWSClusterConfig_Port(rInt, port int) string {
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql10"
+  db_cluster_parameter_group_name = "default.aurora-postgresql11"
   engine                          = "aurora-postgresql"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
