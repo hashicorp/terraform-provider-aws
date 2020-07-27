@@ -25,11 +25,10 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 				Computed: true,
 			},
 			"domain": {
-				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-				// trailing period, no longer requiring a custom StateFunc
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: trimTrailingPeriod,
 			},
 			"verification_token": {
 				Type:     schema.TypeString,

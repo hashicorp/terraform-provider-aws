@@ -130,7 +130,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 func testAccAwsSesDomainIdentityVerification_basic(rootDomain string, domain string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
-  name         = "%s"
+  name         = "%s."
   private_zone = false
 }
 
