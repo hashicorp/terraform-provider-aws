@@ -136,7 +136,7 @@ func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta i
 	if d.HasChange("properties") {
 		properties := d.Get("properties").(string)
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/properties"),
 			Value: aws.String(properties),
 		})

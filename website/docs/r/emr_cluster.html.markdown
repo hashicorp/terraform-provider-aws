@@ -642,8 +642,8 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  name = "emr_profile"
+  role = aws_iam_role.iam_emr_profile_role.name
 }
 
 resource "aws_iam_role_policy" "iam_emr_profile_policy" {

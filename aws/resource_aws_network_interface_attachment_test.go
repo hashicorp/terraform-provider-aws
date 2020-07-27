@@ -40,7 +40,7 @@ func TestAccAWSNetworkInterfaceAttachment_basic(t *testing.T) {
 }
 
 func testAccAWSNetworkInterfaceAttachmentConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"
 
@@ -49,10 +49,19 @@ resource "aws_vpc" "foo" {
   }
 }
 
+data "aws_availability_zones" "available" {
+  state            = "available"
+  
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}	
+
 resource "aws_subnet" "foo" {
   vpc_id            = "${aws_vpc.foo.id}"
   cidr_block        = "172.16.10.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-network-iface-attachment-basic"
@@ -84,7 +93,7 @@ resource "aws_network_interface" "bar" {
 }
 
 resource "aws_instance" "foo" {
-  ami           = "ami-c5eabbf5"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.foo.id}"
 

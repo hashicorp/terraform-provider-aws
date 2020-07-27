@@ -344,6 +344,22 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCheckInstanceConfigEBSBlockDeviceInvalidIops,
+				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -449,30 +465,19 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	})
 }
 
+// TestAccAWSInstance_GP2WithIopsValue updated in v3.0.0
+// to account for apply-time validation of the root_block_device.iops attribute for supported volume types
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/14310
 func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckInstanceDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGP2WithIopsValue,
-				Check:  testAccCheckInstanceExists(resourceName, &v),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config:             testAccInstanceGP2WithIopsValue,
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config:      testAccInstanceGP2WithIopsValue,
+				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -4000,6 +4005,22 @@ resource "aws_instance" "test" {
 }
 `
 
+var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume,
+	`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.ami.id
+
+  instance_type = "m3.medium"
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 10
+    volume_type = "gp2"
+    iops        = 100
+  }
+}
+`)
+
 const testAccCheckInstanceConfigWithVolumeTags = `
 resource "aws_instance" "test" {
 	ami = "ami-55a7ea65"
@@ -4113,8 +4134,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name  = %[1]q
-  roles = ["${aws_iam_role.test.name}"]
+  name = %[1]q
+  role = aws_iam_role.test.name
 }
 
 resource "aws_instance" "test" {

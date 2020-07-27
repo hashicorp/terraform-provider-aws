@@ -78,39 +78,6 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 	return nil
 }
 
-func TestAccAwsDxGatewayAssociationProposal_VpnGatewayId(t *testing.T) {
-	var proposal1 directconnect.GatewayAssociationProposal
-	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_dx_gateway_association_proposal.test"
-	resourceNameDxGw := "aws_dx_gateway.test"
-	resourceNameVgw := "aws_vpn_gateway.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
-		},
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDxGatewayAssociationProposalConfig_vpnGatewayId(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
-					resource.TestCheckNoResourceAttr(resourceName, "associated_gateway_id"),
-					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
@@ -134,7 +101,6 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -173,7 +139,6 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -356,16 +321,6 @@ resource "aws_vpn_gateway" "test" {
   }
 }
 `, rName, rBgpAsn)
-}
-
-func testAccDxGatewayAssociationProposalConfig_vpnGatewayId(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
-resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  vpn_gateway_id              = "${aws_vpn_gateway.test.id}"
-}
-`
 }
 
 func testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName string, rBgpAsn int) string {

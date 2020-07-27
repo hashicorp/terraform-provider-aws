@@ -1,6 +1,6 @@
 module github.com/terraform-providers/terraform-provider-aws
 
-go 1.13
+go 1.14
 
 require (
 	github.com/aws/aws-sdk-go v1.32.12

@@ -589,14 +589,6 @@ func (c *Config) Client() (interface{}, error) {
 	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
 	client.s3connUriCleaningDisabled = s3.New(sess.Copy(s3Config))
 
-	// Handle deprecated endpoint configurations
-	if c.Endpoints["kinesis_analytics"] != "" {
-		client.kinesisanalyticsconn = kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis_analytics"])}))
-	}
-	if c.Endpoints["r53"] != "" {
-		route53Config.Endpoint = aws.String(c.Endpoints["r53"])
-	}
-
 	// Force "global" services to correct regions
 	switch partition {
 	case endpoints.AwsPartitionID:
