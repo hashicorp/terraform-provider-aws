@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,8 +15,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -126,21 +129,14 @@ func testSweepS3Buckets(region string) error {
 }
 
 func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
-	input := &s3.GetBucketLocationInput{
-		Bucket: aws.String(bucket),
-	}
-
-	output, err := conn.GetBucketLocation(input)
-
+	region, err := s3manager.GetBucketRegionWithClient(context.Background(), conn, bucket, func(r *request.Request) {
+		r.Config.S3ForcePathStyle = aws.Bool(false)
+	})
 	if err != nil {
 		return "", err
 	}
 
-	if output == nil || output.LocationConstraint == nil {
-		return "us-east-1", nil
-	}
-
-	return aws.StringValue(output.LocationConstraint), nil
+	return region, nil
 }
 
 func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {

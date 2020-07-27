@@ -187,6 +187,8 @@ github.com/aws/aws-sdk-go/service/route53domains
 github.com/aws/aws-sdk-go/service/route53resolver
 github.com/aws/aws-sdk-go/service/s3
 github.com/aws/aws-sdk-go/service/s3/internal/arn
+github.com/aws/aws-sdk-go/service/s3/s3iface
+github.com/aws/aws-sdk-go/service/s3/s3manager
 github.com/aws/aws-sdk-go/service/s3control
 github.com/aws/aws-sdk-go/service/sagemaker
 github.com/aws/aws-sdk-go/service/secretsmanager
