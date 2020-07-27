@@ -48,7 +48,7 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
-func TestCleanDomainName(t *testing.T) {
+func TestTrimTrailingPeriod(t *testing.T) {
 	cases := []struct {
 		Input, Output string
 	}{
@@ -58,7 +58,7 @@ func TestCleanDomainName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanDomainName(tc.Input)
+		actual := trimTrailingPeriod(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -239,9 +239,30 @@ func TestAccAWSRoute53Zone_ForceDestroy(t *testing.T) {
 	})
 }
 
-// TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod removed in v3.0.0
-// as the name attribute in the resource is no longer stored with a trailing period
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
+func TestAccAWSRoute53Zone_ForceDestroy_TrailingPeriod(t *testing.T) {
+	var zone route53.GetHostedZoneOutput
+
+	rString := acctest.RandString(8)
+	resourceName := "aws_route53_zone.test"
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ZoneConfigForceDestroyTrailingPeriod(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ZoneExists(resourceName, &zone),
+					// Add >100 records to verify pagination works ok
+					testAccCreateRandomRoute53RecordsInZoneId(&zone, 100),
+					testAccCreateRandomRoute53RecordsInZoneId(&zone, 5),
+				),
+			},
+		},
+	})
+}
 
 func TestAccAWSRoute53Zone_Tags(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
@@ -553,7 +574,7 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 		// To compare the Hosted Zone Domain Name returned from the API
 		// and that stored in the resource, it too must by cleaned of
 		// the trailing period
-		if cleanDomainName(aws.StringValue(zone.HostedZone.Name)) == domain {
+		if trimTrailingPeriod(aws.StringValue(zone.HostedZone.Name)) == domain {
 			return nil
 		}
 
@@ -603,6 +624,15 @@ func testAccRoute53ZoneConfigForceDestroy(zoneName string) string {
 resource "aws_route53_zone" "test" {
   force_destroy = true
   name          = "%s"
+}
+`, zoneName)
+}
+
+func testAccRoute53ZoneConfigForceDestroyTrailingPeriod(zoneName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "%s."
 }
 `, zoneName)
 }

@@ -105,7 +105,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 				hostedZoneFound = hostedZone
 				break
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if cleanDomainName(aws.StringValue(hostedZone.Name)) == name && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
+			} else if (trimTrailingPeriod(aws.StringValue(hostedZone.Name)) == trimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
 				matchingVPC := false
 				if vpcIdExists {
 					reqHostedZone := &route53.GetHostedZoneInput{}
@@ -160,7 +160,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("zone_id", idHostedZone)
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", cleanDomainName(aws.StringValue(hostedZoneFound.Name)))
+	d.Set("name", trimTrailingPeriod(aws.StringValue(hostedZoneFound.Name)))
 	d.Set("comment", hostedZoneFound.Config.Comment)
 	d.Set("private_zone", hostedZoneFound.Config.PrivateZone)
 	d.Set("caller_reference", hostedZoneFound.CallerReference)
