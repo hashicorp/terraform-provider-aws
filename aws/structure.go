@@ -5724,6 +5724,44 @@ func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		httpRoute.RetryPolicy = httpRetryPolicy
 	}
 
+	if vHttpTimeout, ok := mHttpRoute["timeout"].([]interface{}); ok && len(vHttpTimeout) > 0 && vHttpTimeout[0] != nil {
+		httpTimeout := &appmesh.HttpTimeout{}
+
+		mHttpTimeout := vHttpTimeout[0].(map[string]interface{})
+
+		if vIdleTimeout, ok := mHttpTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
+			idleTimeout := &appmesh.Duration{}
+
+			mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
+				idleTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
+				idleTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			httpTimeout.Idle = idleTimeout
+		}
+
+		if vPerRequestTimeout, ok := mHttpTimeout["per_request"].([]interface{}); ok && len(vPerRequestTimeout) > 0 && vPerRequestTimeout[0] != nil {
+			perRequestTimeout := &appmesh.Duration{}
+
+			mPerRequestTimeout := vPerRequestTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mPerRequestTimeout["unit"].(string); ok && vUnit != "" {
+				perRequestTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mPerRequestTimeout["value"].(int); ok && vValue > 0 {
+				perRequestTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			httpTimeout.PerRequest = perRequestTimeout
+		}
+
+		httpRoute.Timeout = httpTimeout
+	}
+
 	return httpRoute
 }
 
@@ -6008,6 +6046,30 @@ func flattenAppmeshHttpRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 		}
 
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
+	}
+
+	if httpTimeout := httpRoute.Timeout; httpTimeout != nil {
+		mHttpTimeout := map[string]interface{}{}
+
+		if idleTimeout := httpTimeout.Idle; idleTimeout != nil {
+			mIdleTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(idleTimeout.Unit),
+				"value": int(aws.Int64Value(idleTimeout.Value)),
+			}
+
+			mHttpTimeout["idle"] = []interface{}{mIdleTimeout}
+		}
+
+		if perRequestTimeout := httpTimeout.PerRequest; perRequestTimeout != nil {
+			mPerRequestTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(perRequestTimeout.Unit),
+				"value": int(aws.Int64Value(perRequestTimeout.Value)),
+			}
+
+			mHttpTimeout["per_request"] = []interface{}{mPerRequestTimeout}
+		}
+
+		mHttpRoute["timeout"] = []interface{}{mHttpTimeout}
 	}
 
 	return []interface{}{mHttpRoute}

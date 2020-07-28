@@ -270,7 +270,7 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_grpcRoute_timeout(t *testing.T) {
+func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := acctest.RandomWithPrefix("tf-acc-test")
@@ -410,6 +410,7 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.unit", "s"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.value", "15"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -460,6 +461,105 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.per_retry_timeout.0.value", "250000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "spec.0.http2_route.0.retry_policy.0.tcp_retry_events.*", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	vn1Name := acctest.RandomWithPrefix("tf-acc-test")
+	vn2Name := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAppmeshRouteConfig_http2RouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
+						"invert":  "false",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.scheme", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.0.value", "250000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				Config: testAccAwsAppmeshRouteConfig_http2RouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
+						"invert":  "false",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.scheme", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.idle.0.value", "10"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.timeout.0.per_request.0.value", "5"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -513,6 +613,7 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -542,6 +643,7 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -568,8 +670,99 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsAppmeshRoute_httpRouteTimeout(t *testing.T) {
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vrName := acctest.RandomWithPrefix("tf-acc-test")
+	vn1Name := acctest.RandomWithPrefix("tf-acc-test")
+	vn2Name := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshRouteConfig_httpRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.0.value", "250000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfig_httpRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.idle.0.value", "10"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.timeout.0.per_request.0.value", "5"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
@@ -678,7 +871,7 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshRoute_tcpRoute_timeout(t *testing.T) {
+func testAccAwsAppmeshRoute_tcpRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
 	meshName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1778,6 +1971,18 @@ resource "aws_appmesh_route" "test" {
           weight       = 100
         }
       }
+
+      timeout {
+        idle {
+          unit  = "s"
+          value = 10
+        }
+
+        per_request {
+          unit  = "s"
+          value = 5
+        }
+      }
     }
   }
 }
@@ -1842,6 +2047,75 @@ resource "aws_appmesh_route" "test" {
   }
 }
 `, rName))
+}
+
+func testAccAppmeshRouteConfig_httpRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      action {
+        weighted_target {
+          virtual_node = aws_appmesh_virtual_node.foo.name
+          weight       = 100
+        }
+      }
+
+      timeout {
+        idle {
+          unit  = "ms"
+          value = 250000
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppmeshRouteConfig_httpRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      action {
+        weighted_target {
+          virtual_node = aws_appmesh_virtual_node.foo.name
+          weight       = 100
+        }
+      }
+
+      timeout {
+        idle {
+          unit  = "s"
+          value = 10
+        }
+
+        per_request {
+          unit  = "s"
+          value = 5
+        }
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {

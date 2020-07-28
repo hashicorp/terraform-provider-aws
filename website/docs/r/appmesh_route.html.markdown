@@ -204,6 +204,7 @@ The `http2_route` and `http_route` objects supports the following:
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an HTTP request match.
 * `retry_policy` - (Optional) The retry policy.
+* `timeout` - (Optional) The types of timeouts.
 
 The `tcp_route` object supports the following:
 
@@ -281,6 +282,16 @@ Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP statu
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 
 You must specify at least one value for `http_retry_events`, or at least one value for `tcp_retry_events`.
+
+The `http2_route` and `http_route`'s `timeout` object supports the following:
+
+* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `per_request` - (Optional) The per request timeout.
+
+The `idle` and `per_request` objects support the following:
+
+* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) The number of time units. Minimum value of `0`.
 
 The `per_retry_timeout` object supports the following:
 
