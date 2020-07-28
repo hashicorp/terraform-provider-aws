@@ -116,7 +116,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := ssmconn.GetParameter(&ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
-		WithDecryption: aws.Bool(true),
+		WithDecryption: aws.Bool(false),
 	})
 	if err != nil {
 		return fmt.Errorf("error getting SSM parameter: %s", err)
