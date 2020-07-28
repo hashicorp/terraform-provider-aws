@@ -102,6 +102,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
 				),
 			},
 			{
@@ -152,6 +153,37 @@ func TestAccAWSFsxWindowsFileSystem_singleAz2(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxWindowsFileSystem_storageTypeHdd(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithStorageType("SINGLE_AZ_2", "HDD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "HDD"),
 				),
 			},
 			{
@@ -197,6 +229,7 @@ func TestAccAWSFsxWindowsFileSystem_multiAz(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "MULTI_AZ_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
 				),
 			},
 			{
@@ -994,6 +1027,20 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 }
 `, azType)
+}
+
+func testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithStorageType(azType, storageType string) string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = "${aws_directory_service_directory.test.id}"
+  skip_final_backup   = true
+  storage_capacity    = 2000
+  deployment_type     = %[1]q
+  subnet_ids          = ["${aws_subnet.test1.id}"]
+  throughput_capacity = 8
+  storage_type        = %[2]q
+}
+`, azType, storageType)
 }
 
 func testAccAwsFsxWindowsFileSystemConfigSubnetIds2() string {

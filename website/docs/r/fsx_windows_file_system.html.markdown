@@ -52,7 +52,7 @@ resource "aws_fsx_windows_file_system" "example" {
 
 The following arguments are supported:
 
-* `storage_capacity` - (Required) Storage capacity (GiB) of the file system. Minimum of 32 and maximum of 65536.
+* `storage_capacity` - (Required) Storage capacity (GiB) of the file system. Minimum of 32 and maximum of 65536. If the storage type is set to `HDD` the minimum value is 2000.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set `deployment_type` to `MULTI_AZ_1`.
 * `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
 * `active_directory_id` - (Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with `self_managed_active_directory`.
@@ -67,6 +67,7 @@ The following arguments are supported:
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 * `deployment_type` - (Optional) Specifies the file system deployment type, valid values are `MULTI_AZ_1` and `SINGLE_AZ_1`. Default value is `SINGLE_AZ_1`.
 * `preferred_subnet_id` - (Optional) Specifies the subnet in which you want the preferred file server to be located. Required for when deployment type is `MULTI_AZ_1`.
+* `storage_type` - (Optional) Specifies the storage type, Valid values are `SSD` and `HDD`. `HDD` is supported on `SINGLE_AZ_1` and `MULTI_AZ_1` Windows file system deployment types. Default value is `SSD`.
 
 ### self_managed_active_directory
 

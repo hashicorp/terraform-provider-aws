@@ -201,6 +201,16 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"storage_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  fsx.StorageTypeSsd,
+				ValidateFunc: validation.StringInSlice([]string{
+					fsx.StorageTypeSsd,
+					fsx.StorageTypeHdd,
+				}, false),
+			},
 		},
 	}
 }
@@ -254,6 +264,10 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("storage_type"); ok {
+		input.StorageType = aws.String(v.(string))
 	}
 
 	result, err := conn.CreateFileSystem(input)
@@ -361,6 +375,7 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	d.Set("remote_administration_endpoint", filesystem.WindowsConfiguration.RemoteAdministrationEndpoint)
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
+	d.Set("storage_type", filesystem.StorageType)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %s", err)
