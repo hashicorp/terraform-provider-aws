@@ -2355,7 +2355,7 @@ func testAccAWSSpotFleetRequestZeroCapacityConfig(rName string, validUntil strin
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 0
     valid_until = %[1]q
     terminate_instances_with_expiration = true
