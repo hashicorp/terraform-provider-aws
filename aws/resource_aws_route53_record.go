@@ -545,7 +545,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 
 	err = d.Set("records", flattenResourceRecords(record.ResourceRecords, aws.StringValue(record.Type)))
 	if err != nil {
-		return fmt.Errorf("Error setting records for: %s, error: %w", d.Id(), err)
+		return fmt.Errorf("error setting records for: %s, error: %w", d.Id(), err)
 	}
 
 	if alias := record.AliasTarget; alias != nil {
@@ -566,7 +566,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 			"type": aws.StringValue(record.Failover),
 		}}
 		if err := d.Set("failover_routing_policy", v); err != nil {
-			return fmt.Errorf("Error setting failover records for: %s, error: %w", d.Id(), err)
+			return fmt.Errorf("error setting failover records for: %s, error: %w", d.Id(), err)
 		}
 	}
 
@@ -577,7 +577,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 			"subdivision": aws.StringValue(record.GeoLocation.SubdivisionCode),
 		}}
 		if err := d.Set("geolocation_routing_policy", v); err != nil {
-			return fmt.Errorf("Error setting gelocation records for: %s, error: %w", d.Id(), err)
+			return fmt.Errorf("error setting gelocation records for: %s, error: %w", d.Id(), err)
 		}
 	}
 
@@ -586,7 +586,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 			"region": aws.StringValue(record.Region),
 		}}
 		if err := d.Set("latency_routing_policy", v); err != nil {
-			return fmt.Errorf("Error setting latency records for: %s, error: %w", d.Id(), err)
+			return fmt.Errorf("error setting latency records for: %s, error: %w", d.Id(), err)
 		}
 	}
 
@@ -595,13 +595,13 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 			"weight": aws.Int64Value(record.Weight),
 		}}
 		if err := d.Set("weighted_routing_policy", v); err != nil {
-			return fmt.Errorf("Error setting weighted records for: %s, error: %w", d.Id(), err)
+			return fmt.Errorf("error setting weighted records for: %s, error: %w", d.Id(), err)
 		}
 	}
 
 	if record.MultiValueAnswer != nil {
 		if err := d.Set("multivalue_answer_routing_policy", record.MultiValueAnswer); err != nil {
-			return fmt.Errorf("Error setting multivalue answer records for: %s, error: %w", d.Id(), err)
+			return fmt.Errorf("error setting multivalue answer records for: %s, error: %w", d.Id(), err)
 		}
 	}
 
