@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -158,7 +157,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 }
 
 func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
-	var locationFsxWindows1, locationFsxWindows2, locationFsxWindows3 datasync.DescribeLocationFsxWindowsOutput
+	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -183,8 +182,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 			{
 				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows2),
-					testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(&locationFsxWindows1, &locationFsxWindows2),
+					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -193,8 +191,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 			{
 				Config: testAccAWSDataSyncLocationFsxWindowsConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows3),
-					testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(&locationFsxWindows2, &locationFsxWindows3),
+					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -262,16 +259,6 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 		}
 
 		*locationFsxWindows = *output
-
-		return nil
-	}
-}
-
-func testAccCheckAWSDataSyncLocationFsxWindowsNotRecreated(i, j *datasync.DescribeLocationFsxWindowsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
-			return errors.New("DataSync Location FSX Windows File System was recreated")
-		}
 
 		return nil
 	}

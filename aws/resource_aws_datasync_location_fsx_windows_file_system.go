@@ -107,7 +107,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 	log.Printf("[DEBUG] Creating DataSync Location Fsx Windows File System: %s", input)
 	output, err := conn.CreateLocationFsxWindows(input)
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %s", err)
+		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s#%s", aws.StringValue(output.LocationArn), fsxArn))
@@ -138,35 +138,38 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx Windows (%s): %s", locationArn, err)
+		return fmt.Errorf("error reading DataSync Location Fsx Windows (%s): %w", locationArn, err)
 	}
 
 	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return fmt.Errorf("error parsing Location Fsx Windows File System (%s) URI (%s): %s", d.Id(), aws.StringValue(output.LocationUri), err)
+		return fmt.Errorf("error parsing Location Fsx Windows File System (%s) URI (%s): %w", d.Id(), aws.StringValue(output.LocationUri), err)
 	}
 
 	d.Set("arn", output.LocationArn)
 	d.Set("fsx_filesystem_arn", fsxArn)
-	d.Set("security_group_arns", flattenStringSet(output.SecurityGroupArns))
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
 	d.Set("user", output.User)
 	d.Set("domain", output.Domain)
 
+	if err := d.Set("security_group_arns", flattenStringSet(output.SecurityGroupArns)); err != nil {
+		return fmt.Errorf("error setting security_group_arns: %w", err)
+	}
+
 	if err := d.Set("creation_time", output.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %s", err)
+		return fmt.Errorf("error setting creation_time: %w", err)
 	}
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, locationArn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -183,7 +186,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceDat
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.DatasyncUpdateTags(conn, locationArn, o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location Fsx Windows File System (%s) tags: %s", locationArn, err)
+			return fmt.Errorf("error updating DataSync Location Fsx Windows File System (%s) tags: %w", locationArn, err)
 		}
 	}
 
@@ -209,7 +212,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location Fsx Windows (%s): %s", locationArn, err)
+		return fmt.Errorf("error deleting DataSync Location Fsx Windows (%s): %w", locationArn, err)
 	}
 
 	return nil
