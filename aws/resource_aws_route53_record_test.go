@@ -1222,15 +1222,15 @@ resource "aws_route53_record" "default" {
 
 const testAccRoute53RecordConfigZeroTTL = `
 resource "aws_route53_zone" "test" {
-	name = "notexample.com"
+  name = "notexample.com"
 }
 
 resource "aws_route53_record" "test" {
-	zone_id = "${aws_route53_zone.test.zone_id}"
-	name = "www.NOTexamplE.com"
-	type = "A"
-	ttl = "0"
-	records = ["127.0.0.1", "127.0.0.27"]
+  zone_id = "${aws_route53_zone.test.zone_id}"
+  name = "www.NOTexamplE.com"
+  type = "A"
+  ttl = "0"
+  records = ["127.0.0.1", "127.0.0.27"]
 }
 `
 

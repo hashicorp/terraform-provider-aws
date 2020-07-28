@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -84,6 +85,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"alias"},
+				ValidateFunc:  validation.IntBetween(0, math.MaxInt32),
 			},
 
 			"set_identifier": {
@@ -178,6 +180,15 @@ func resourceAwsRoute53Record() *schema.Resource {
 						"continent": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"AF",
+								"AN",
+								"AS",
+								"EU",
+								"OC",
+								"NA",
+								"SA",
+							}, false),
 						},
 						"country": {
 							Type:     schema.TypeString,
@@ -203,8 +214,9 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"weight": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(0, 255),
 						},
 					},
 				},
@@ -231,7 +243,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 				ConflictsWith: []string{"alias"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
-				Set:           schema.HashString,
 			},
 
 			"allow_overwrite": {
@@ -581,7 +592,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 
 	if record.Weight != nil {
 		v := []map[string]interface{}{{
-			"weight": aws.Int64Value((record.Weight)),
+			"weight": aws.Int64Value(record.Weight),
 		}}
 		if err := d.Set("weighted_routing_policy", v); err != nil {
 			return fmt.Errorf("Error setting weighted records for: %s, error: %w", d.Id(), err)
