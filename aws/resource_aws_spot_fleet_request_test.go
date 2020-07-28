@@ -1244,8 +1244,7 @@ func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
@@ -1353,7 +1352,7 @@ func testAccAWSSpotFleetRequestConfig(rName, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1373,7 +1372,7 @@ func testAccAWSSpotFleetRequestConfigTags1(rName, validUntil, tagKey1, tagValue1
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1396,7 +1395,7 @@ func testAccAWSSpotFleetRequestConfigTags2(rName, validUntil, tagKey1, tagValue1
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1420,7 +1419,7 @@ func testAccAWSSpotFleetRequestConfigAssociatePublicIpAddress(rName, validUntil 
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.027"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1440,7 +1439,7 @@ func testAccAWSSpotFleetRequestConfigTargetCapacity(rName, validUntil string) st
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 3
     valid_until = %[1]q
     fleet_type = "request"
@@ -1467,7 +1466,7 @@ resource "aws_launch_template" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[1]q
   terminate_instances_with_expiration = true
@@ -1514,7 +1513,7 @@ resource "aws_launch_template" "test2" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[1]q
   terminate_instances_with_expiration = true
@@ -1552,7 +1551,7 @@ resource "aws_launch_template" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[1]q
   terminate_instances_with_expiration = true
@@ -1586,7 +1585,7 @@ func testAccAWSSpotFleetRequestConfigExcessCapacityTermination(rName, validUntil
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     excess_capacity_termination_policy = "NoTermination"
     valid_until = %[1]q
@@ -1606,7 +1605,7 @@ func testAccAWSSpotFleetRequestConfigFleetType(rName, validUntil string) string 
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     fleet_type = "request"
@@ -1667,7 +1666,7 @@ resource "aws_iam_instance_profile" "test-iam-instance-profile1" {
 
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[2]q
     terminate_instances_with_expiration = true
@@ -1688,7 +1687,7 @@ func testAccAWSSpotFleetRequestConfigChangeSpotBidPrice(rName, validUntil string
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.01"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1707,7 +1706,7 @@ func testAccAWSSpotFleetRequestConfigWithAzs(rName, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1922,7 +1921,7 @@ func testAccAWSSpotFleetRequestConfigMultipleInstanceTypesinSameAz(rName, validU
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.025"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1966,7 +1965,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.035"
+    spot_price = "0.05"
     target_capacity = 4
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1992,7 +1991,7 @@ func testAccAWSSpotFleetRequestConfigOverridingSpotPrice(rName, validUntil strin
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.035"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -2138,7 +2137,7 @@ func testAccAWSSpotFleetRequestEBSConfig(rName, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 1
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -2176,7 +2175,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   valid_until                         = %[1]q
@@ -2218,7 +2217,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   valid_until                         = %[1]q
@@ -2267,7 +2266,7 @@ func testAccAWSSpotFleetRequestTagsConfig(rName, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 1
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -2294,7 +2293,7 @@ resource "aws_placement_group" "test" {
 
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[2]q
     terminate_instances_with_expiration = true
