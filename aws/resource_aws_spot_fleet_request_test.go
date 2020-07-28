@@ -1074,8 +1074,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 
 func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
-	rName := acctest.RandString(10)
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
@@ -1085,7 +1084,7 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, rInt, validUntil),
+				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
@@ -1098,14 +1097,14 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
-				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
+				Config: testAccAWSSpotFleetRequestConfig(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
 				),
 			},
 			{
-				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, rInt, validUntil),
+				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
@@ -2352,8 +2351,8 @@ resource "aws_spot_fleet_request" "test" {
 `, rName, validUntil)
 }
 
-func testAccAWSSpotFleetRequestZeroCapacityConfig(rName string, rInt int, validUntil string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+func testAccAWSSpotFleetRequestZeroCapacityConfig(rName string, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
     spot_price = "0.005"
