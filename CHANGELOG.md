@@ -76,6 +76,7 @@ BUG FIXES
 * data-source/aws_lb: `enable_http2` now properly set [GH-14167]
 * resource/aws_acm_certificate: Prevent unexpected ordering differences with `domain_validation_options` attribute [GH-14199]
 * resource/aws_api_gateway_authorizer: Allow `authorizer_result_ttl_in_seconds` to be set to 0 [GH-12643]
+* resource/aws_apigatewayv2_integration: Correctly handle the `integration_method` attribute for AWS Lambda integrations[GH-13266]
 * resource/aws_apigatewayv2_integration: Correctly handle the `passthrough_behavior` attribute for HTTP APIs [GH-13062]
 * resource/aws_apigatewayv2_stage: Correctly handle `default_route_setting` and `route_setting` `data_trace_enabled` and `logging_level` for HTTP APIs. `logging_level` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-13809]
 * resource/aws_appautoscaling_target: Only retry `DeregisterScalableTarget` retries on all errors on deletion [GH-14259]
