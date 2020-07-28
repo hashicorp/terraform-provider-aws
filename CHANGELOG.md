@@ -62,6 +62,7 @@ ENHANCEMENTS
 * resource/aws_apigatewayv2_integration: Add `tls_config` attribute [GH-13013]
 * resource/aws_apigatewayv2_route: Support for updating route key [GH-13833]
 * resource/aws_apigatewayv2_stage: Make `deployment_id` a `Computed` attribute [GH-13644]
+* resource_aws_fsx_windows_file_system - add `storage_type` argument. [GH-14316]
 * resource_aws_fsx_windows_file_system: add support for multi-az [GH-12676]
 * resource_aws_fsx_windows_file_system: add `SINGLE_AZ_2` deployment type [GH-12676]
 * resource_aws_fsx_windows_file_system: adds `preferred_file_server_ip`, `remote_administration_endpoint` attributes [GH-12676]
