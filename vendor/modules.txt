@@ -572,7 +572,6 @@ github.com/hashicorp/terraform-json
 # github.com/hashicorp/terraform-plugin-sdk v1.14.0
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/acctest
-github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
 github.com/hashicorp/terraform-plugin-sdk/helper/hashcode
 github.com/hashicorp/terraform-plugin-sdk/helper/logging
