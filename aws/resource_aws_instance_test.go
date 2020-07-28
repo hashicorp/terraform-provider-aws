@@ -1888,7 +1888,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices,
+				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
@@ -4888,10 +4888,9 @@ data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
 // testAccLatestAmazonLinuxPvEbsAmiConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
 // The data source is named 'amzn-ami-minimal-pv-ebs'.
-/*
 func testAccLatestAmazonLinuxPvEbsAmiConfig() string {
 	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+data "aws_ami" "amzn-ami-minimal-pv-ebs" {
   most_recent = true
   owners      = ["amazon"]
 
@@ -4907,7 +4906,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 }
 `)
 }
-*/
 
 // testAccLatestWindowsServer2016CoreAmiConfig returns the configuration for a data source that
 // describes the latest Microsoft Windows Server 2016 Core AMI.
@@ -5132,9 +5130,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-const testAccAwsEc2InstanceConfigDynamicEBSBlockDevices = `
+func testAccAwsEc2InstanceConfigDynamicEBSBlockDevices() string {
+	return composeConfig(testAccLatestAmazonLinuxPvEbsAmiConfig(), `
 resource "aws_instance" "test" {
-  ami           = "ami-55a7ea65"
+  ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
   instance_type = "m3.medium"
 
   dynamic "ebs_block_device" {
@@ -5147,7 +5146,8 @@ resource "aws_instance" "test" {
     }
   }
 }
-`
+`)
+}
 
 // testAccAvailableEc2InstanceTypeForRegion returns the configuration for a data source that describes
 // the first available EC2 instance type offering in the current region from a list of preferred instance types.

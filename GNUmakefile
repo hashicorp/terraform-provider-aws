@@ -33,7 +33,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel 2 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
