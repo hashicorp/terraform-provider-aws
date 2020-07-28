@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1887,7 +1888,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices,
+				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
@@ -4906,10 +4907,9 @@ data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
 // testAccLatestAmazonLinuxPvEbsAmiConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
 // The data source is named 'amzn-ami-minimal-pv-ebs'.
-/*
 func testAccLatestAmazonLinuxPvEbsAmiConfig() string {
 	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+data "aws_ami" "amzn-ami-minimal-pv-ebs" {
   most_recent = true
   owners      = ["amazon"]
 
@@ -4925,7 +4925,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 }
 `)
 }
-*/
 
 // testAccLatestWindowsServer2016CoreAmiConfig returns the configuration for a data source that
 // describes the latest Microsoft Windows Server 2016 Core AMI.
@@ -5181,6 +5180,25 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+func testAccAwsEc2InstanceConfigDynamicEBSBlockDevices() string {
+	return composeConfig(testAccLatestAmazonLinuxPvEbsAmiConfig(), `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
+  instance_type = "m3.medium"
+
+  dynamic "ebs_block_device" {
+    for_each = ["a", "b", "c"]
+    iterator = device
+    content {
+      device_name = format("/dev/sd%s", device.value)
+      volume_size = "10"
+      volume_type = "gp2"
+    }
+  }
+}
+`)
+}
+
 // testAccAvailableEc2InstanceTypeForRegion returns the configuration for a data source that describes
 // the first available EC2 instance type offering in the current region from a list of preferred instance types.
 // The data source is named 'available'.
@@ -5197,19 +5215,32 @@ data "aws_ec2_instance_type_offering" "available" {
 `, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-const testAccAwsEc2InstanceConfigDynamicEBSBlockDevices = `
-resource "aws_instance" "test" {
-  ami           = "ami-55a7ea65"
-  instance_type = "m3.medium"
+// testAccAvailableEc2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
+// the first available EC2 instance type offering in the specified availability zone from a list of preferred instance types.
+// The first argument is either an Availability Zone name or Terraform configuration reference to one, e.g.
+//   * data.aws_availability_zones.available.names[0]
+//   * aws_subnet.test.availability_zone
+//   * us-west-2a
+// The data source is named 'available'.
+func testAccAvailableEc2InstanceTypeForAvailabilityZone(availabilityZoneName string, preferredInstanceTypes ...string) string {
+	if !strings.Contains(availabilityZoneName, ".") {
+		availabilityZoneName = strconv.Quote(availabilityZoneName)
+	}
 
-  dynamic "ebs_block_device" {
-    for_each = ["a", "b", "c"]
-    iterator = device
-    content {
-      device_name = format("/dev/sd%s", device.value)
-      volume_size = "10"
-      volume_type = "gp2"
-    }
+	return fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["%[2]v"]
   }
+
+  filter {
+    name   = "location"
+    values = [%[1]s]
+  }
+
+  location_type            = "availability-zone"
+  preferred_instance_types = ["%[2]v"]
 }
-`
+`, availabilityZoneName, strings.Join(preferredInstanceTypes, "\", \""))
+}
