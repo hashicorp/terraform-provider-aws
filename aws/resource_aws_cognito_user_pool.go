@@ -762,7 +762,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		resp, err = conn.CreateUserPool(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
+		return fmt.Errorf("error creating Cognito User Pool: %w", err)
 	}
 
 	d.SetId(*resp.UserPool.Id)
@@ -836,7 +836,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("admin_create_user_config", flattenCognitoUserPoolAdminCreateUserConfig(resp.UserPool.AdminCreateUserConfig)); err != nil {
-		return fmt.Errorf("Failed setting admin_create_user_config: %s", err)
+		return fmt.Errorf("failed setting admin_create_user_config: %w", err)
 	}
 	if resp.UserPool.AliasAttributes != nil {
 		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
@@ -859,7 +859,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("email_verification_message", resp.UserPool.EmailVerificationMessage)
 	}
 	if err := d.Set("lambda_config", flattenCognitoUserPoolLambdaConfig(resp.UserPool.LambdaConfig)); err != nil {
-		return fmt.Errorf("Failed setting lambda_config: %s", err)
+		return fmt.Errorf("failed setting lambda_config: %w", err)
 	}
 	if resp.UserPool.SmsVerificationMessage != nil {
 		d.Set("sms_verification_message", resp.UserPool.SmsVerificationMessage)
@@ -869,22 +869,22 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("device_configuration", flattenCognitoUserPoolDeviceConfiguration(resp.UserPool.DeviceConfiguration)); err != nil {
-		return fmt.Errorf("Failed setting device_configuration: %s", err)
+		return fmt.Errorf("failed setting device_configuration: %w", err)
 	}
 
 	if err := d.Set("account_recovery_setting", flattenCognitoUserPoolAccountRecoverySettingConfig(resp.UserPool.AccountRecoverySetting)); err != nil {
-		return fmt.Errorf("Failed setting account_recovery_setting: %s", err)
+		return fmt.Errorf("failed setting account_recovery_setting: %w", err)
 	}
 
 	if resp.UserPool.EmailConfiguration != nil {
 		if err := d.Set("email_configuration", flattenCognitoUserPoolEmailConfiguration(resp.UserPool.EmailConfiguration)); err != nil {
-			return fmt.Errorf("Failed setting email_configuration: %s", err)
+			return fmt.Errorf("failed setting email_configuration: %w", err)
 		}
 	}
 
 	if resp.UserPool.Policies != nil && resp.UserPool.Policies.PasswordPolicy != nil {
 		if err := d.Set("password_policy", flattenCognitoUserPoolPasswordPolicy(resp.UserPool.Policies.PasswordPolicy)); err != nil {
-			return fmt.Errorf("Failed setting password_policy: %s", err)
+			return fmt.Errorf("failed setting password_policy: %w", err)
 		}
 	}
 
@@ -893,11 +893,11 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		configuredSchema = v.(*schema.Set).List()
 	}
 	if err := d.Set("schema", flattenCognitoUserPoolSchema(expandCognitoUserPoolSchema(configuredSchema), resp.UserPool.SchemaAttributes)); err != nil {
-		return fmt.Errorf("Failed setting schema: %s", err)
+		return fmt.Errorf("failed setting schema: %w", err)
 	}
 
 	if err := d.Set("sms_configuration", flattenCognitoSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
-		return fmt.Errorf("Failed setting sms_configuration: %s", err)
+		return fmt.Errorf("failed setting sms_configuration: %w", err)
 	}
 
 	if resp.UserPool.UsernameAttributes != nil {
@@ -905,22 +905,22 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("username_configuration", flattenCognitoUserPoolUsernameConfiguration(resp.UserPool.UsernameConfiguration)); err != nil {
-		return fmt.Errorf("Failed setting username_configuration: %s", err)
+		return fmt.Errorf("failed setting username_configuration: %w", err)
 	}
 
 	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
-		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
+		return fmt.Errorf("failed setting user_pool_add_ons: %w", err)
 	}
 
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
-		return fmt.Errorf("Failed setting verification_message_template: %s", err)
+		return fmt.Errorf("failed setting verification_message_template: %w", err)
 	}
 
 	d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", resp.UserPool.Name)
 	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
@@ -942,7 +942,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("mfa_configuration", output.MfaConfiguration)
 
 	if err := d.Set("software_token_mfa_configuration", flattenCognitoSoftwareTokenMfaConfiguration(output.SoftwareTokenMfaConfiguration)); err != nil {
-		return fmt.Errorf("error setting software_token_mfa_configuration: %s", err)
+		return fmt.Errorf("error setting software_token_mfa_configuration: %w", err)
 	}
 
 	return nil
