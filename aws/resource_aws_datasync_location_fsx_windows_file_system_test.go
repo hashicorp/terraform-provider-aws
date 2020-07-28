@@ -24,7 +24,7 @@ func init() {
 func testSweepDataSyncLocationFsxWindows(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).datasyncconn
 
@@ -38,7 +38,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Location FSX Windows: %s", err)
+			return fmt.Errorf("error retrieving DataSync Location FSX Windows: %w", err)
 		}
 
 		if len(output.Locations) == 0 {
