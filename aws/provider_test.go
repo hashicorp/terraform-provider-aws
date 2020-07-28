@@ -1288,16 +1288,19 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 	}
 }
 
-// testAccPreCheckHasDefaultVpcOrEc2Classic checks that the test region has a default VPC or has the EC2-Classic platform.
+// testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets checks that the test region has either
+// - The EC2-Classic platform available, or
+// - A default VPC with default subnets.
 // This check is useful to ensure that an instance can be launched without specifying a subnet.
-func testAccPreCheckHasDefaultVpcOrEc2Classic(t *testing.T) {
+func testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 
-	if !testAccHasDefaultVpc(t) && !hasEc2Classic(client.supportedplatforms) {
-		t.Skipf("skipping tests; %s does not have a default VPC or EC2-Classic", client.region)
+	if !hasEc2Classic(client.supportedplatforms) && !(testAccHasDefaultVpc(t) && testAccDefaultSubnetCount(t) > 0) {
+		t.Skipf("skipping tests; %s does not have EC2-Classic or a default VPC with default subnets", client.region)
 	}
 }
 
+// testAccHasDefaultVpc returns whether the current AWS region has a default VPC.
 func testAccHasDefaultVpc(t *testing.T) bool {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -1315,6 +1318,26 @@ func testAccHasDefaultVpc(t *testing.T) bool {
 	}
 
 	return true
+}
+
+// testAccDefaultSubnetCount returns the number of default subnets in the current region's default VPC.
+func testAccDefaultSubnetCount(t *testing.T) int {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	input := &ec2.DescribeSubnetsInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			"defaultForAz": "true",
+		}),
+	}
+	output, err := conn.DescribeSubnets(input)
+	if testAccPreCheckSkipError(err) {
+		return 0
+	}
+	if err != nil {
+		t.Fatalf("error describing default subnets: %s", err)
+	}
+
+	return len(output.Subnets)
 }
 
 func testAccAWSProviderConfigEndpoints(endpoints string) string {

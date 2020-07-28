@@ -239,7 +239,11 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets(t)
+		},
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -247,19 +251,16 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			{
 				Config: testAccInstanceConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(
-						resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(
-						resourceName,
-						"arn",
-						"ec2",
-						regexp.MustCompile(`instance/i-.+`)),
+					testAccCheckInstanceExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance/i-[a-z0-9]+`)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// Required for EC2-Classic.
+				ImportStateVerifyIgnore: []string{"source_dest_check"},
 			},
 		},
 	})
@@ -3040,11 +3041,7 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC or EC2-Classic.
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckHasDefaultVpcOrEc2Classic(t)
-		},
+		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -3242,13 +3239,13 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 
 func testAccAvailableAZsNoOptInDefaultExcludeConfig() string {
 	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-	return testAccAvailableAZsNoOptInExcludeConfig(`"usw2-az4", "usgw1-az2"`)
+	return testAccAvailableAZsNoOptInExcludeConfig("usw2-az4", "usgw1-az2")
 }
 
-func testAccAvailableAZsNoOptInExcludeConfig(exclude string) string {
+func testAccAvailableAZsNoOptInExcludeConfig(excludeZoneIds ...string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  exclude_zone_ids = [%s]
+  exclude_zone_ids = ["%[1]v"]
   state            = "available"
 
   filter {
@@ -3256,7 +3253,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-`, exclude)
+`, strings.Join(excludeZoneIds, "\", \""))
 }
 
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
@@ -3325,10 +3322,14 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfigBasic() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
+		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m1.small", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   # Explicitly no tags so as to test creation without tags.
 }
 `))
@@ -4834,12 +4835,11 @@ data "aws_ami" "win2016core-ami" {
 }
 
 // testAccAwsInstanceVpcConfig returns the configuration for tests that create
-//   1) a VPC with IPv6 support
-//   2) a subnet in the VPC
+//   1) a VPC without IPv6 support
+//   2) a subnet in the VPC that optionally assigns public IP addresses to ENIs
 // The resources are named 'test'.
 func testAccAwsInstanceVpcConfig(rName string, mapPublicIpOnLaunch bool) string {
-	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
-		fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -4850,15 +4850,15 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block              = "10.1.1.0/24"
-  vpc_id                  = "${aws_vpc.test.id}"
-  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = %[2]t
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName, mapPublicIpOnLaunch)
+`, rName, mapPublicIpOnLaunch))
 }
 
 func testAccAwsInstanceVpcConfigBasic(rName string) string {
@@ -4927,11 +4927,10 @@ resource "aws_security_group" "test" {
 
 // testAccAwsInstanceVpcIpv6Config returns the configuration for tests that create
 //   1) a VPC with IPv6 support
-//   2) a subnet in the VPC
+//   2) a subnet in the VPC with an assigned IPv6 CIDR block
 // The resources are named 'test'.
 func testAccAwsInstanceVpcIpv6Config(rName string) string {
-	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
-		fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -4944,15 +4943,15 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccInstanceConfigHibernation(hibernation bool) string {
@@ -5007,11 +5006,13 @@ resource "aws_instance" "test" {
 func testAccInstanceConfigMetadataOptions(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
@@ -5031,11 +5032,13 @@ data "aws_instance" "test" {
 func testAccInstanceConfigMetadataOptionsUpdated(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
