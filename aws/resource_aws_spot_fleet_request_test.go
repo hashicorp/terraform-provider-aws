@@ -2366,7 +2366,7 @@ resource "aws_spot_fleet_request" "test" {
         ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
         key_name      = "${aws_key_pair.test.key_name}"
     }
-    depends_on = ["aws_iam_policy_attachment.test-attach"]
+    depends_on = ["aws_iam_policy_attachment.test"]
 }
 `, validUntil)
 }
