@@ -925,6 +925,30 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_multipleRegions(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	// record the initialized providers so that we can use them to
+	// check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigMultipleRegions,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(resourceName, &v, testAccAwsRegionProviderFunc("us-west-2", &providers)),
+					testAccCheckInstanceExistsWithProvider("aws_instance.test2", &v, testAccAwsRegionProviderFunc("us-east-1", &providers)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
