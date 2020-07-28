@@ -41,7 +41,7 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
-	domainName := d.Get("domain").(string)
+	domainName := trimTrailingPeriod(d.Get("domain").(string))
 
 	createOpts := &ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),

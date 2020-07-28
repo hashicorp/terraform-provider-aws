@@ -225,7 +225,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
-		DomainName:       aws.String(d.Get("domain_name").(string)),
+		DomainName:       aws.String(trimTrailingPeriod(d.Get("domain_name").(string))),
 		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
 		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
 	}
