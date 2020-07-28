@@ -25,6 +25,8 @@ func TestAccAWSEcrDataSource_ecrRepository(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "repository_url", dataSourceName, "repository_url"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, "image_scanning_configuration", dataSourceName, "image_scanning_configuration"),
+					resource.TestCheckResourceAttrPair(resourceName, "image_tag_mutability", dataSourceName, "image_tag_mutability"),
 				),
 			},
 		},
