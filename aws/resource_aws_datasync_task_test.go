@@ -466,7 +466,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
 }
 
 func TestAccAWSDataSyncTask_Tags(t *testing.T) {
-	t.Skip("Tagging on creation is inconsistent")
+	TestAccSkip(t, "Tagging on creation is inconsistent")
 	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"

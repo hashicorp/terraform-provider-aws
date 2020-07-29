@@ -1073,7 +1073,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 }
 
 func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
-	t.Skip("Test fails due to test harness constraints")
+	TestAccSkip(t, "Test fails due to test harness constraints")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 

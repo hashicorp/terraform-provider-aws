@@ -1853,7 +1853,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
 }
 
 func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
-	t.Skip("Currently no solution to allow updates on name attribute")
+	TestAccSkip(t, "Currently no solution to allow updates on name attribute")
 
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")

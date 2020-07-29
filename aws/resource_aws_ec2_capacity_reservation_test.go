@@ -383,7 +383,7 @@ func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
 
 func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
 	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
-	t.Skip("EC2 Capacity Reservations do not currently support dedicated tenancy.")
+	TestAccSkip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
