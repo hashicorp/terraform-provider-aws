@@ -1183,7 +1183,7 @@ resource "aws_route" "bar" {
 }
 
 func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
-	return testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() +
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
 # IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
 
@@ -1196,7 +1196,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
   vpc_id            = aws_vpc.test.id
 

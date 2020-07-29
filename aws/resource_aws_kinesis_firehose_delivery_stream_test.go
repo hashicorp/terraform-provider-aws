@@ -2187,7 +2187,7 @@ func testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName string, rInt i
 	return composeConfig(
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
@@ -2207,7 +2207,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name = %[1]q
@@ -2222,7 +2222,7 @@ resource "aws_redshift_subnet_group" "test" {
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier        = %[1]q
-  availability_zone         = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone         = "${data.aws_availability_zones.available.names[0]}"
   database_name             = "test"
   master_username           = "testuser"
   master_password           = "T3stPass"
