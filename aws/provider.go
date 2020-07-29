@@ -256,6 +256,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_account_alias":                          dataSourceAwsIamAccountAlias(),
 			"aws_iam_group":                                  dataSourceAwsIAMGroup(),
 			"aws_iam_instance_profile":                       dataSourceAwsIAMInstanceProfile(),
+			"aws_iam_openid_connect_provider":                dataSourceAwsIamOpenIDConnectProvider(),
 			"aws_iam_policy":                                 dataSourceAwsIAMPolicy(),
 			"aws_iam_policy_document":                        dataSourceAwsIamPolicyDocument(),
 			"aws_iam_role":                                   dataSourceAwsIAMRole(),
