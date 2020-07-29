@@ -206,7 +206,12 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) er
 
 		resp, _ := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
 			ClientVpnEndpointId: aws.String(rs.Primary.Attributes["client_vpn_endpoint_id"]),
-			AssociationIds:      []*string{aws.String(rs.Primary.ID)},
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("association-id"),
+					Values: []*string{aws.String(rs.Primary.ID)},
+				},
+			},
 		})
 
 		for _, v := range resp.ClientVpnTargetNetworks {
@@ -234,7 +239,12 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 
 		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
 			ClientVpnEndpointId: aws.String(rs.Primary.Attributes["client_vpn_endpoint_id"]),
-			AssociationIds:      []*string{aws.String(rs.Primary.ID)},
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("association-id"),
+					Values: []*string{aws.String(rs.Primary.ID)},
+				},
+			},
 		})
 
 		if err != nil {
