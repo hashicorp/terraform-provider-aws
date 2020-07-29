@@ -40,8 +40,8 @@ locals {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = "${aws_s3_bucket.b.bucket_regional_domain_name}"
-    origin_id   = "${local.s3_origin_id}"
+    domain_name = aws_s3_bucket.b.bucket_regional_domain_name
+    origin_id   = local.s3_origin_id
 
     s3_origin_config {
       origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
@@ -64,7 +64,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${local.s3_origin_id}"
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -85,7 +85,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     path_pattern     = "/content/immutable/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "${local.s3_origin_id}"
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -108,7 +108,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     path_pattern     = "/content/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${local.s3_origin_id}"
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -165,20 +165,20 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   origin {
-    domain_name = "${aws_s3_bucket.primary.bucket_regional_domain_name}"
+    domain_name = aws_s3_bucket.primary.bucket_regional_domain_name
     origin_id   = "primaryS3"
 
     s3_origin_config {
-      origin_access_identity = "${aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path}"
+      origin_access_identity = aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path
     }
   }
 
   origin {
-    domain_name = "${aws_s3_bucket.failover.bucket_regional_domain_name}"
+    domain_name = aws_s3_bucket.failover.bucket_regional_domain_name
     origin_id   = "failoverS3"
 
     s3_origin_config {
-      origin_access_identity = "${aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path}"
+      origin_access_identity = aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path
     }
   }
 
@@ -351,7 +351,7 @@ resource "aws_cloudfront_distribution" "example" {
 
     lambda_function_association {
       event_type   = "viewer-request"
-      lambda_arn   = "${aws_lambda_function.example.qualified_arn}"
+      lambda_arn   = aws_lambda_function.example.qualified_arn
       include_body = false
     }
   }
