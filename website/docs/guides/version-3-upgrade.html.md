@@ -618,12 +618,12 @@ resource "aws_autoscaling_group" "example"{
 
 ## Resource: aws_cloudfront_distribution
 
-### active_trusted_signers Attribute Type Change
+### active_trusted_signers Attribute Name and Type Change
 
 Previously, the `active_trusted_signers` computed attribute was implemented with a Map that did not support accessing its computed `items` attribute in Terraform 0.12. 
-To address this, the `active_trusted_signers` attribute is now implemented as a List with a computed `signers` List attribute and computed `enabled` boolean attribute. 
-The nested `signers` attribute includes computed `aws_account_number` and `key_pair_ids` sub-fields, with the latter implemented as a List. 
-Thus, user configurations referencing the `active_trusted_signers` nested attributes will need to be changed as follows.
+To address this, while also enabling access to this data without a state migration, the `active_trusted_signers` attribute has been renamed to `trusted_signers` and is now implemented as a List with a computed `items` List attribute and computed `enabled` boolean attribute. 
+The nested `items` attribute includes computed `aws_account_number` and `key_pair_ids` sub-fields, with the latter implemented as a List. 
+Thus, user configurations referencing the `active_trusted_signers` attribute and its sub-fields will need to be changed as follows.
 
 Given these previous references:
 
@@ -635,8 +635,8 @@ aws_cloudfront_distribution.example.active_trusted_signers.items
 Updated references: 
 
 ```
-aws_cloudfront_distribution.example.active_trusted_signers.0.enabled
-aws_cloudfront_distribution.example.active_trusted_signers.0.signers
+aws_cloudfront_distribution.example.trusted_signers.0.enabled
+aws_cloudfront_distribution.example.trusted_signers.0.items
 ```
 
 ## Resource: aws_cognito_user_pool
