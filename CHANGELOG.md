@@ -31,6 +31,7 @@ BREAKING CHANGES
 * resource/aws_glue_job: Remove deprecated `allocated_capacity` argument [GH-14296]
 * resource/aws_iam_access_key: Remove deprecated `ses_smtp_password` attribute [GH-14299]
 * resource/aws_iam_instance_profile: Remove deprecated `roles` argument [GH-14303]
+* resource/aws_iam_server_certificate: Remove state hashing from `certificate_body`, `certificate_chain`, and `private_key` arguments for new or recreated resources [GH-14187]
 * resource/aws_instance: Return an error when `ebs_block_device` `iops` or `root_block_device` `iops` argument set to a value greater than `0` for volume types other than `io1` [GH-14310]
 * resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN [GH-12876]
 * resource/aws_launch_template: `network_interfaces` `delete_on_termination` argument changed from `bool` to `string` type [GH-8612]
