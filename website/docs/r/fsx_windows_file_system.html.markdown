@@ -20,10 +20,10 @@ Additional information for using AWS Directory Service with Windows File Systems
 
 ```hcl
 resource "aws_fsx_windows_file_system" "example" {
-  active_directory_id = "${aws_directory_service_directory.example.id}"
-  kms_key_id          = "${aws_kms_key.example.arn}"
+  active_directory_id = aws_directory_service_directory.example.id
+  kms_key_id          = aws_kms_key.example.arn
   storage_capacity    = 300
-  subnet_ids          = ["${aws_subnet.example.id}"]
+  subnet_ids          = [aws_subnet.example.id]
   throughput_capacity = 1024
 }
 ```
@@ -34,9 +34,9 @@ Additional information for using AWS Directory Service with Windows File Systems
 
 ```hcl
 resource "aws_fsx_windows_file_system" "example" {
-  kms_key_id          = "${aws_kms_key.example.arn}"
+  kms_key_id          = aws_kms_key.example.arn
   storage_capacity    = 300
-  subnet_ids          = ["${aws_subnet.example.id}"]
+  subnet_ids          = [aws_subnet.example.id]
   throughput_capacity = 1024
 
   self_managed_active_directory {
@@ -114,11 +114,12 @@ Certain resource arguments, like `security_group_ids` and the `self_managed_acti
 ```hcl
 resource "aws_fsx_windows_file_system" "example" {
   # ... other configuration ...
-  security_group_ids = ["${aws_security_group.example.id}"]
+
+  security_group_ids = [aws_security_group.example.id]
 
   # There is no FSx API for reading security_group_ids
   lifecycle {
-    ignore_changes = ["security_group_ids"]
+    ignore_changes = [security_group_ids]
   }
 }
 ```
