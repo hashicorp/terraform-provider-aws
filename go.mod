@@ -8,7 +8,7 @@ require (
 	github.com/bflad/tfproviderdocs v0.6.0
 	github.com/bflad/tfproviderlint v0.14.0
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.26.0
+	github.com/golangci/golangci-lint v1.29.0
 	github.com/hashicorp/aws-sdk-go-base v0.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.1.0
@@ -20,6 +20,6 @@ require (
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
-	golang.org/x/tools v0.0.0-20200422022333-3d57cf2e726e
-	gopkg.in/yaml.v2 v2.2.8
+	golang.org/x/tools v0.0.0-20200710042808-f1c4188a97a1
+	gopkg.in/yaml.v2 v2.3.0
 )
