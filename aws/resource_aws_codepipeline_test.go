@@ -977,7 +977,7 @@ func testAccAWSCodePipelineConfig_multiregion(rName string) string {
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
-		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
 		fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%[1]s"
@@ -1112,7 +1112,7 @@ func testAccAWSCodePipelineConfig_multiregionUpdated(rName string) string {
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
-		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
 		fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-%[1]s"

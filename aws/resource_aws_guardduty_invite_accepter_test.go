@@ -110,13 +110,13 @@ func testAccCheckAwsGuardDutyInviteAccepterExists(resourceName string) resource.
 func testAccAwsGuardDutyInviteAccepterConfig_basic(email string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_guardduty_detector" "master" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_guardduty_detector" "member" {}
 
 resource "aws_guardduty_member" "member" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   account_id                 = "${aws_guardduty_detector.member.account_id}"
   detector_id                = "${aws_guardduty_detector.master.id}"

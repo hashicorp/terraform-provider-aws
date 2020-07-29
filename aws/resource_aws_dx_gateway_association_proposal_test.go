@@ -299,7 +299,7 @@ func testAccCheckAwsDxGatewayAssociationProposalRecreated(i, j *directconnect.Ga
 func testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName string, rBgpAsn int) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   amazon_side_asn = %[2]d
   name            = %[1]q
@@ -336,7 +336,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 func testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   amazon_side_asn = %[2]d
   name            = %[1]q

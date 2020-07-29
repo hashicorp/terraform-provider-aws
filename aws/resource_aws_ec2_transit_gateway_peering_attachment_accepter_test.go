@@ -150,14 +150,14 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   tags = {
     Name = %[1]q
   }
 }
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   peer_account_id         = aws_ec2_transit_gateway.test.owner_id
   peer_region             = data.aws_region.current.name
