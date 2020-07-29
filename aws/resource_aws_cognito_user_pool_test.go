@@ -116,7 +116,7 @@ func TestAccAWSCognitoUserPool_recovery(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanisms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 				),
 			},
 			{
@@ -130,7 +130,7 @@ func TestAccAWSCognitoUserPool_recovery(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanisms.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "2"),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func TestAccAWSCognitoUserPool_recovery(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanisms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 				),
 			},
 		},
