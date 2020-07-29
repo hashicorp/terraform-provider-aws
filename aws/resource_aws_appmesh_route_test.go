@@ -1581,8 +1581,13 @@ resource "aws_appmesh_route" "test" {
 
       timeout {
         idle {
-          unit  = "ms"
-          value = 250000
+          unit  = "s"
+          value = 10
+        }
+
+        per_request {
+          unit  = "s"
+          value = 5
         }
       }
     }
@@ -1728,6 +1733,13 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
+        }
+      }
+
+      timeout {
+        idle {
+          unit  = "ms"
+          value = 250000
         }
       }
     }
@@ -1969,18 +1981,6 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
-        }
-      }
-
-      timeout {
-        idle {
-          unit  = "s"
-          value = 10
-        }
-
-        per_request {
-          unit  = "s"
-          value = 5
         }
       }
     }

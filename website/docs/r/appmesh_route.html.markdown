@@ -257,8 +257,8 @@ Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP statu
 
 The `grpc_route`'s `timeout` object supports the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle. The default value is none.
-* `per_request` - (Optional) The per request timeout. The default value is 15 seconds.
+* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `per_request` - (Optional) The per request timeout.
 
 The `idle` and `per_request` objects support the following:
 
