@@ -42,6 +42,11 @@ jobs:
         terraform_version: ${{ matrix.terraform_version }}
         # Needed to use the output of `terraform validate -json`
         terraform_wrapper: false
+    - name: install tflint
+      env:
+        TFLINT_VERSION: "v0.18.0"
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
     - name: terraform
       run: |
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
@@ -56,10 +61,12 @@ jobs:
           echo; echo -e "\e[1;35m===> Validating Example: $DIR <===\e[0m"; echo
           # Catch errors
           terraform validate
-          # Check for warnings. For simplicity, assume warnings are related to pre-0.12 syntax
-          if [ "$(terraform validate -json | jq -r '.warning_count')" != '0' ]; then
-            echo -e "\e[1;31mError:\e[0m Configuration contains warnings."
-            exit 1
-          fi
+          # Terraform syntax checks
+          tflint \
+            --enable-rule=terraform_deprecated_interpolation \
+            --enable-rule=terraform_deprecated_index \
+            --enable-rule=terraform_unused_declarations \
+            --enable-rule=terraform_comment_syntax \
+            --enable-rule=terraform_required_version
           popd
         done

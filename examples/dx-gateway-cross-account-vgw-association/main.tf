@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 0.12"
 }
 
-// First account owns the VGW.
+# First account owns the VGW.
 provider "aws" {
   alias = "first"
 
@@ -11,7 +11,7 @@ provider "aws" {
   secret_key = var.aws_first_secret_key
 }
 
-// Second account owns the DXGW.
+# Second account owns the DXGW.
 provider "aws" {
   alias = "second"
 
@@ -44,7 +44,7 @@ resource "aws_vpn_gateway" "example" {
   }
 }
 
-// Create the association proposal in the first account...
+# Create the association proposal in the first account...
 resource "aws_dx_gateway_association_proposal" "example" {
   provider = aws.first
 
@@ -53,7 +53,7 @@ resource "aws_dx_gateway_association_proposal" "example" {
   associated_gateway_id       = aws_vpn_gateway.example.id
 }
 
-// ...and accept it in the second account, creating the association.
+# ...and accept it in the second account, creating the association.
 resource "aws_dx_gateway_association" "example" {
   provider = aws.second
 
