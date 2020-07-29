@@ -4887,6 +4887,30 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				listener.Tls = tls
 			}
 
+			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+				mTimeout := vTimeout[0].(map[string]interface{})
+
+				listenerTimeout := &appmesh.ListenerTimeout{}
+
+				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
+					listenerTimeout.Grpc = expandAppmeshGrpcTimeout(vGrpcTimeout)
+				}
+
+				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
+					listenerTimeout.Http = expandAppmeshHttpTimeout(vHttpTimeout)
+				}
+
+				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
+					listenerTimeout.Http2 = expandAppmeshHttpTimeout(vHttp2Timeout)
+				}
+
+				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
+					listenerTimeout.Tcp = expandAppmeshTcpTimeout(vTcpTimeout)
+				}
+
+				listener.Timeout = listenerTimeout
+			}
+
 			listeners = append(listeners, listener)
 		}
 
@@ -5031,6 +5055,16 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 				"protocol": aws.StringValue(portMapping.Protocol),
 			}
 			mListener["port_mapping"] = []interface{}{mPortMapping}
+		}
+
+		if listenerTimeout := listener.Timeout; listenerTimeout != nil {
+			mListenerTimeout := map[string]interface{}{
+				"grpc":  flattenAppmeshGrpcTimeout(listenerTimeout.Grpc),
+				"http":  flattenAppmeshHttpTimeout(listenerTimeout.Http),
+				"http2": flattenAppmeshHttpTimeout(listenerTimeout.Http2),
+				"tcp":   flattenAppmeshTcpTimeout(listenerTimeout.Tcp),
+			}
+			mListener["timeout"] = []interface{}{mListenerTimeout}
 		}
 
 		if tls := listener.Tls; tls != nil {
