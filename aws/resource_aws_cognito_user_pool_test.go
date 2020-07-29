@@ -30,7 +30,7 @@ func init() {
 func testSweepCognitoUserPools(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).cognitoidpconn
 
@@ -52,7 +52,7 @@ func testSweepCognitoUserPools(region string) error {
 				UserPoolId: userPool.Id,
 			})
 			if err != nil {
-				log.Printf("[ERROR] Failed deleting Cognito User Pool (%s): %s", name, err)
+				log.Printf("[ERROR] Failed deleting Cognito User Pool (%s): %w", name, err)
 			}
 		}
 		return !isLast
