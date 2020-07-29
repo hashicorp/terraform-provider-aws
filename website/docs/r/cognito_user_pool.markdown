@@ -47,12 +47,12 @@ resource "aws_cognito_user_pool" "test" {
   name = "mypool"
 
   account_recovery_setting {
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_email"
       priority = 1
     }
 
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_phone_number"
       priority = 2
     }
@@ -209,7 +209,7 @@ The following arguments are required in the `software_token_mfa_configuration` c
   
 ### Account Recovery Setting
 
-* `recovery_mechanisms` (Required) - The list of Account Recovery Options of the following structure:
+* `recovery_mechanism` (Required) - The list of Account Recovery Options of the following structure:
     * `name` (Required) - Specifies the recovery method for a user. can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
     * `priority` (Required) - A positive integer specifying priority of a method with 1 being the highest priority.
 

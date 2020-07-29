@@ -1340,7 +1340,7 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   account_recovery_setting {
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_email"
       priority = 1
     }
@@ -1355,12 +1355,12 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   account_recovery_setting {
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_email"
       priority = 1
     }
 
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_phone_number"
       priority = 2
     }
@@ -1375,7 +1375,7 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   account_recovery_setting {
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_phone_number"
       priority = 1
     }

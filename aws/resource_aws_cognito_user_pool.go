@@ -541,7 +541,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"recovery_mechanisms": {
+						"recovery_mechanism": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -1292,7 +1292,7 @@ func expandCognitoUserPoolAccountRecoverySettingConfig(config map[string]interfa
 
 	mechs := make([]*cognitoidentityprovider.RecoveryOptionType, 0)
 
-	if v, ok := config["recovery_mechanisms"]; ok {
+	if v, ok := config["recovery_mechanism"]; ok {
 		data := v.(*schema.Set).List()
 
 		for _, m := range data {
@@ -1333,7 +1333,7 @@ func flattenCognitoUserPoolAccountRecoverySettingConfig(config *cognitoidentityp
 		mechanisms = append(mechanisms, mech)
 	}
 
-	settings["recovery_mechanisms"] = mechanisms
+	settings["recovery_mechanism"] = mechanisms
 
 	return []interface{}{settings}
 }
