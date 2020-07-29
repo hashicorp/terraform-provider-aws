@@ -240,13 +240,13 @@ data "aws_route53_zone" "public_root_domain" {
 }
 
 resource "aws_acm_certificate" "existing" {
-  domain_name               = "existing.${var.public_root_domain}"
+  domain_name = "existing.${var.public_root_domain}"
   subject_alternative_names = [
     "existing1.${var.public_root_domain}",
     "existing2.${var.public_root_domain}",
     "existing3.${var.public_root_domain}",
   ]
-  validation_method         = "DNS"
+  validation_method = "DNS"
 }
 
 resource "aws_route53_record" "existing" {
@@ -286,7 +286,7 @@ Since the `domain_validation_options` attribute changed from a list to a set and
 ```hcl
 resource "aws_route53_record" "existing" {
   for_each = {
-    for dvo in aws_acm_certificate.existing.domain_validation_options: dvo.domain_name => {
+    for dvo in aws_acm_certificate.existing.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
@@ -303,7 +303,7 @@ resource "aws_route53_record" "existing" {
 
 resource "aws_acm_certificate_validation" "existing" {
   certificate_arn         = aws_acm_certificate.existing.arn
-  validation_record_fqdns = [for record in aws_route53_record.existing: record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.existing : record.fqdn]
 }
 ```
 
@@ -572,7 +572,7 @@ For example, given this previous configuration:
 ```hcl
 resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
-  load_balancers = []
+  load_balancers    = []
   target_group_arns = [aws_lb_target_group.example.arn]
 }
 ```
@@ -596,7 +596,7 @@ resource "aws_autoscaling_attachment" "example" {
   elb                    = aws_elb.example.id
 }
 
-resource "aws_autoscaling_group" "example"{
+resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
 }
 ```
@@ -609,7 +609,7 @@ resource "aws_autoscaling_attachment" "example" {
   elb                    = aws_elb.example.id
 }
 
-resource "aws_autoscaling_group" "example"{
+resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
 
   lifecycle {
@@ -786,8 +786,8 @@ resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
   instance_group {
-    instance_role  = "MASTER"
-    instance_type  = "m4.large"
+    instance_role = "MASTER"
+    instance_type = "m4.large"
   }
 
   instance_group {
@@ -821,7 +821,7 @@ resource "aws_emr_cluster" "example" {
 }
 
 resource "aws_emr_instance_group" "example" {
-  cluster_id     = "${aws_emr_cluster.example.id}"
+  cluster_id     = aws_emr_cluster.example.id
   instance_count = 2
   instance_type  = "c4.xlarge"
 }
