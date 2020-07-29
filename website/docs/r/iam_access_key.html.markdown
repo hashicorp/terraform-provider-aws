@@ -90,8 +90,6 @@ the use of the secret key in automation.
 * `encrypted_secret` - The encrypted secret, base64 encoded, if `pgp_key` was specified.
 ~> **NOTE:** The encrypted secret may be decrypted using the command line,
    for example: `terraform output encrypted_secret | base64 --decode | keybase pgp decrypt`.
-* `ses_smtp_password` - **DEPRECATED** The secret access key converted into an SES SMTP
-  password by applying AWS's SigV2 conversion algorithm
 * `ses_smtp_password_v4` - The secret access key converted into an SES SMTP
   password by applying [AWS's documented Sigv4 conversion
   algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).

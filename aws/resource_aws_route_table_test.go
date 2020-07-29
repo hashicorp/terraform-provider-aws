@@ -812,7 +812,7 @@ resource "aws_route_table" "test" {
 `
 
 func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -842,11 +842,11 @@ resource "aws_route_table" "test" {
     gateway_id = "${aws_internet_gateway.test.id}"
   }
 }
-`)
+`
 }
 
 func testAccAWSRouteTableConfigRouteConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -866,11 +866,11 @@ resource "aws_internet_gateway" "test" {
 resource "aws_route_table" "test" {
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSRouteTableConfigRouteConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -891,11 +891,11 @@ resource "aws_route_table" "test" {
   route  = []
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -941,7 +941,7 @@ resource "aws_route_table" "test" {
     transit_gateway_id = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
   }
 }
-`)
+`
 }
 
 func testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {

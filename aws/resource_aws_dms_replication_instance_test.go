@@ -77,7 +77,7 @@ func testSweepDmsReplicationInstances(region string) error {
 	return nil
 }
 
-func TestAccAWSDmsReplicationInstance_Basic(t *testing.T) {
+func TestAccAWSDmsReplicationInstance_basic(t *testing.T) {
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
 	replicationInstanceClass := "dms.c4.large"
 	resourceName := "aws_dms_replication_instance.test"

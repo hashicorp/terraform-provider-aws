@@ -222,13 +222,13 @@ func testAccCheckAWSEc2TransitGatewayRouteTableNotRecreated(i, j *ec2.TransitGat
 }
 
 func testAccAWSEc2TransitGatewayRouteTableConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayRouteTableConfigTags1(tagKey1, tagValue1 string) string {

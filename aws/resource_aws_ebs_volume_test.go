@@ -286,6 +286,22 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAwsEbsVolumeConfigWithInvalidIopsForType,
+				ExpectError: regexp.MustCompile(`error creating ebs_volume: iops attribute not supported for type gp2`),
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_withTags(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
@@ -743,6 +759,26 @@ resource "aws_ebs_volume" "test" {
   size = 10
   type = "gp2"
   iops = 0
+  tags = {
+    Name = "TerraformTest"
+  }
+}
+`
+
+const testAccAwsEbsVolumeConfigWithInvalidIopsForType = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size              = 10
+  iops              = 100
   tags = {
     Name = "TerraformTest"
   }

@@ -459,7 +459,7 @@ func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 	}
 }
 
-func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_InterruptStop(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -484,7 +484,7 @@ func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequestInterruptHibernate(t *testing.T) {
+func TestAccAWSSpotInstanceRequest_InterruptHibernate(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -516,8 +516,10 @@ func testAccAWSSpotInstanceRequestConfig(rInt int) string {
 		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 	}
 
+	%v
+
 	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-4fccb37f"
+		ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 		instance_type = "m1.small"
 		key_name = "${aws_key_pair.debugging.key_name}"
 
@@ -533,7 +535,7 @@ func testAccAWSSpotInstanceRequestConfig(rInt int) string {
 			Name = "terraform-test"
 		}
 	}
-`, rInt)
+`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
 }
 
 func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) string {
@@ -543,8 +545,10 @@ func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) 
 		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 	}
 
+	%v
+
 	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-4fccb37f"
+		ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 		instance_type = "m1.small"
 		key_name = "${aws_key_pair.debugging.key_name}"
 
@@ -564,7 +568,7 @@ func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) 
 			Name = "terraform-test"
 		}
 	}
-`, rInt, validUntil)
+`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig(), validUntil)
 }
 
 func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
@@ -574,8 +578,10 @@ func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
 		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 	}
 
+	%v
+
 	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-4fccb37f"
+		ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 		instance_type = "m1.small"
 		key_name = "${aws_key_pair.debugging.key_name}"
 
@@ -589,7 +595,7 @@ func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
 			Name = "terraform-test"
 		}
 	}
-`, rInt)
+`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
 }
 
 func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
@@ -599,8 +605,10 @@ func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
 		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 	}
 
+	%v
+
 	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-4fccb37f"
+		ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 		instance_type = "m1.small"
 		key_name = "${aws_key_pair.debugging.key_name}"
 
@@ -618,7 +626,7 @@ func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
 			Name = "terraform-test"
 		}
 	}
-`, rInt)
+`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
 }
 
 func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
@@ -628,8 +636,10 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 	}
 
+	%v
+
 	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-4fccb37f"
+		ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 		instance_type = "m1.small"
 		key_name = "${aws_key_pair.debugging.key_name}"
 
@@ -647,7 +657,7 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 			Name = "terraform-test"
 		}
 	}
-`, rInt)
+`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
 }
 
 func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
@@ -683,8 +693,10 @@ resource "aws_key_pair" "debugging" {
 	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
+%v
+
 resource "aws_spot_instance_request" "foo_VPC" {
-	ami = "ami-4fccb37f"
+	ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 	instance_type = "m1.small"
 	key_name = "${aws_key_pair.debugging.key_name}"
 
@@ -703,7 +715,7 @@ tags = {
 		Name = "terraform-test-VPC"
 	}
 }
-`, rInt)
+`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
 }
 
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
@@ -718,14 +730,16 @@ data "aws_availability_zones" "available" {
   }
 }
 
+%v
+
 resource "aws_spot_instance_request" "foo" {
-	ami                         = "ami-4fccb37f"
+	ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 	instance_type               = "m1.small"
 	spot_price                  = "0.05"
 	wait_for_fulfillment        = true
 	subnet_id                   = "${aws_subnet.tf_test_subnet.id}"
 	vpc_security_group_ids      = ["${aws_security_group.tf_test_sg_ssh.id}"]
-  associate_public_ip_address = true
+	associate_public_ip_address = true
 }
 
 resource "aws_vpc" "default" {
@@ -757,7 +771,7 @@ tags = {
 		Name = "tf_test_sg_ssh-%d"
 	}
 }
-`, rInt, rInt)
+`, testAccLatestAmazonLinuxHvmEbsAmiConfig(), rInt, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
@@ -791,8 +805,10 @@ func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
 
 func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) string {
 	return fmt.Sprintf(`
+	%v
+
 	resource "aws_spot_instance_request" "foo" {
-		ami = "ami-19e92861"
+		ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 		instance_type = "c5.large"
 
 		// base price is $0.067 hourly, so bidding above that should theoretically
@@ -804,5 +820,5 @@ func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) 
 		wait_for_fulfillment = true
 
 		instance_interruption_behaviour = "%s"
-	}`, interruption_behavior)
+	}`, testAccLatestAmazonLinuxHvmEbsAmiConfig(), interruption_behavior)
 }

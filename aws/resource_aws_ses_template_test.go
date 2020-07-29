@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSSesTemplate_Basic(t *testing.T) {
+func TestAccAWSSesTemplate_basic(t *testing.T) {
 	resourceName := "aws_ses_template.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	var template ses.Template

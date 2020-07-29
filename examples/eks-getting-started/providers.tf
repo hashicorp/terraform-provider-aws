@@ -1,10 +1,9 @@
-#
-# Provider Configuration
-#
+terraform {
+  required_version = ">= 0.12"
+}
 
 provider "aws" {
-  region  = "us-west-2"
-  version = ">= 2.38.0"
+  region = var.aws_region
 }
 
 # Using these data sources allows the configuration to be

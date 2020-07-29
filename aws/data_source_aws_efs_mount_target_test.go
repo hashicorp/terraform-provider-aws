@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsEfsMountTargetByMountTargetId(t *testing.T) {
+func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
 	rName := acctest.RandString(10)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"

@@ -649,9 +649,9 @@ func testAccPreCheckAWSEc2TransitGateway(t *testing.T) {
 }
 
 func testAccAWSEc2TransitGatewayConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {}
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayConfigAmazonSideASN(amazonSideASN int) string {
@@ -671,12 +671,12 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 func testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociationAndPropagationDisabled() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociation(defaultRouteTableAssociation string) string {

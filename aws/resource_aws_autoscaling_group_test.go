@@ -98,7 +98,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupHealthyCapacity(&group, 2),
 					testAccCheckAWSAutoScalingGroupAttributes(&group, randName),
 					testAccMatchResourceAttrRegionalARN("aws_autoscaling_group.bar", "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
-					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "default_cooldown", "300"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "4"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
@@ -391,7 +391,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
 				),
@@ -417,7 +417,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(&group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "1"),
 				),
@@ -2260,6 +2260,16 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfig(name string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -2281,7 +2291,7 @@ resource "aws_placement_group" "test" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones   = ["us-west-2a"]
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
   name                 = "%s"
   max_size             = 5
   min_size             = 2
@@ -2586,6 +2596,16 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfigWithAZ = `
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -2596,7 +2616,7 @@ resource "aws_vpc" "default" {
 resource "aws_subnet" "main" {
   vpc_id = "${aws_vpc.default.id}"
   cidr_block = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-autoscaling-group-with-az"
   }
@@ -2619,7 +2639,7 @@ resource "aws_launch_configuration" "foobar" {
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = [
-	  "us-west-2a"
+	data.aws_availability_zones.available.names[0]
   ]
   desired_capacity = 0
   max_size = 0
@@ -2629,6 +2649,16 @@ resource "aws_autoscaling_group" "bar" {
 `
 
 const testAccAWSAutoScalingGroupConfigWithVPCIdent = `
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -2639,7 +2669,7 @@ resource "aws_vpc" "default" {
 resource "aws_subnet" "main" {
   vpc_id = "${aws_vpc.default.id}"
   cidr_block = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-autoscaling-group-with-vpc-id"
   }
@@ -3647,8 +3677,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name  = %q
-  roles = ["${aws_iam_role.test.name}"]
+  name = %q
+  role = aws_iam_role.test.name
 }
 
 resource "aws_launch_template" "test" {

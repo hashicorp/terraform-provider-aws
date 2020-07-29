@@ -238,7 +238,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigInstanceBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # t2.micro instance type is not available in these Availability Zones
   exclude_zone_ids = ["usw2-az4"]
@@ -288,7 +288,7 @@ resource "aws_vpc" "test" {
     Name = "tf-acc-test-lb-target-group-attachment"
   }
 }
-`)
+`
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigTargetIdInstance(rName string) string {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"sort"
 	"testing"
 	"time"
@@ -292,6 +293,8 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11813
+// Disallow Empty filter block
 func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := acctest.RandInt()
@@ -310,6 +313,7 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
 				),
+				ExpectError: regexp.MustCompile(`config is invalid`),
 			},
 		},
 	})

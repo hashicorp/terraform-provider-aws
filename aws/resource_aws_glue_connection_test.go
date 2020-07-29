@@ -57,7 +57,7 @@ func testSweepGlueConnections(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueConnection_Basic(t *testing.T) {
+func TestAccAWSGlueConnection_basic(t *testing.T) {
 	var connection glue.Connection
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
