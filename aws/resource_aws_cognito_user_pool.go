@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -597,11 +596,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("alias_attributes"); ok {
-		params.AliasAttributes = expandStringList(v.(*schema.Set).List())
+		params.AliasAttributes = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("auto_verified_attributes"); ok {
-		params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
+		params.AutoVerifiedAttributes = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("email_configuration"); ok {
@@ -765,7 +764,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating Cognito User Pool: %w", err)
 	}
 
-	d.SetId(*resp.UserPool.Id)
+	d.SetId(aws.StringValue(resp.UserPool.Id))
 
 	if v := d.Get("mfa_configuration").(string); v != cognitoidentityprovider.UserPoolMfaTypeOff {
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
@@ -839,18 +838,12 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("failed setting admin_create_user_config: %w", err)
 	}
 	if resp.UserPool.AliasAttributes != nil {
-		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
+		d.Set("alias_attributes", flattenStringSet(resp.UserPool.AliasAttributes))
 	}
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "cognito-idp",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
+
+	d.Set("arn", resp.UserPool.Arn)
 	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*AWSClient).RegionalHostname("cognito-idp"), d.Id()))
-	d.Set("auto_verified_attributes", flattenStringList(resp.UserPool.AutoVerifiedAttributes))
+	d.Set("auto_verified_attributes", flattenStringSet(resp.UserPool.AutoVerifiedAttributes))
 
 	if resp.UserPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", resp.UserPool.EmailVerificationSubject)
@@ -1041,7 +1034,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v, ok := d.GetOk("auto_verified_attributes"); ok {
-			params.AutoVerifiedAttributes = expandStringList(v.(*schema.Set).List())
+			params.AutoVerifiedAttributes = expandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
