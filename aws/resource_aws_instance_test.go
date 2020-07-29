@@ -3324,14 +3324,14 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-func testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() string {
+func testAccAvailableAZsNoOptInDefaultExcludeConfig() string {
 	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-	return testAccCurrentAvailableAZsNoOptInExcludeConfig(`"usw2-az4", "usgw1-az2"`)
+	return testAccAvailableAZsNoOptInExcludeConfig(`"usw2-az4", "usgw1-az2"`)
 }
 
-func testAccCurrentAvailableAZsNoOptInExcludeConfig(exclude string) string {
+func testAccAvailableAZsNoOptInExcludeConfig(exclude string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   exclude_zone_ids = [%s]
   state            = "available"
 
@@ -3344,7 +3344,7 @@ data "aws_availability_zones" "current" {
 }
 
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
-	return testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() +
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
 		fmt.Sprintf(`
 data "aws_vpc" "default" {
@@ -3361,13 +3361,13 @@ resource "aws_instance" "test" {
   ami               = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type     = "t2.micro"
   security_groups   = ["${aws_security_group.test.name}"]
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 `, rName)
 }
 
 func testAccInstanceConfigInDefaultVpcBySgId(rName string) string {
-	return testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() +
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
 		fmt.Sprintf(`
 data "aws_vpc" "default" {
@@ -3384,7 +3384,7 @@ resource "aws_instance" "test" {
   ami                    = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
-  availability_zone      = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone      = "${data.aws_availability_zones.available.names[0]}"
 }
 `, rName)
 }
@@ -4424,7 +4424,7 @@ func testAccInstanceConfigAddSecurityGroupBefore(rName string) string {
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
   vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name = %[1]q
@@ -4481,7 +4481,7 @@ func testAccInstanceConfigAddSecurityGroupAfter(rName string) string {
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
   vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name = %[1]q
@@ -4928,7 +4928,7 @@ data "aws_ami" "win2016core-ami" {
 //   2) a subnet in the VPC
 // The resources are named 'test'.
 func testAccAwsInstanceVpcConfig(rName string, mapPublicIpOnLaunch bool) string {
-	return testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() +
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -4941,7 +4941,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block              = "10.1.1.0/24"
   vpc_id                  = "${aws_vpc.test.id}"
-  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
   map_public_ip_on_launch = %[2]t
 
   tags = {
@@ -5020,7 +5020,7 @@ resource "aws_security_group" "test" {
 //   2) a subnet in the VPC
 // The resources are named 'test'.
 func testAccAwsInstanceVpcIpv6Config(rName string) string {
-	return testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() +
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -5035,7 +5035,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags = {

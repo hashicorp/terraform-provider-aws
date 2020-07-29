@@ -497,7 +497,7 @@ func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
 var testAccInstanceDataSourceConfig = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
   tags = {
     Name = "HelloWorld"
   }
@@ -516,7 +516,7 @@ func testAccInstanceDataSourceConfig_Tags(rInt int) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 
   tags = {
     Name     = "HelloWorld"
@@ -534,11 +534,11 @@ data "aws_instance" "test" {
 }
 
 // filter on tag, populate more attributes
-var testAccInstanceDataSourceConfig_AzUserData = testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() +
+var testAccInstanceDataSourceConfig_AzUserData = testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 	testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   instance_type = "t2.micro"
   user_data = "test:-with-character's"
@@ -785,7 +785,7 @@ resource "aws_security_group" "tf_test_foo" {
 
 resource "aws_instance" "test" {
   ami             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type   = "m1.small"
+  instance_type   = "t2.small"
   security_groups = ["${aws_security_group.tf_test_foo.name}"]
   user_data       = "foo:-with-character's"
 }
