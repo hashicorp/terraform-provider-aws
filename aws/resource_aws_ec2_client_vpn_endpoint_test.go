@@ -112,7 +112,9 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
 				t.Cleanup(func() {
-					testAccEc2ClientVpnEndpointSemaphore.Notify()
+					if os.Getenv(resource.TestEnvVar) != "" {
+						testAccEc2ClientVpnEndpointSemaphore.Notify()
+					}
 				})
 				tc(t)
 			})
