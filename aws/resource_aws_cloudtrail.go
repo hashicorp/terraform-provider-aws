@@ -632,7 +632,7 @@ func flattenAwsCloudTrailInsightSelector(configured []*cloudtrail.InsightSelecto
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["insight_type"] = *raw.InsightType
+		item["insight_type"] = aws.StringValue(raw.InsightType)
 
 		insightSelectors = append(insightSelectors, item)
 	}
