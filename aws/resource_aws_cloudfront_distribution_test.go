@@ -581,9 +581,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_TrustedSigners(t *tes
 				Config: testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorTrustedSignersSelf(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.0.signers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.0.signers.0.aws_account_number", "self"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.0.aws_account_number", "self"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "1"),
 				),

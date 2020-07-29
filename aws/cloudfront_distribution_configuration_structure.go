@@ -1103,7 +1103,7 @@ func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners)
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(ats.Enabled),
-		"signers": flattenCloudfrontSigners(ats.Items),
+		"items":   flattenCloudfrontSigners(ats.Items),
 	}
 
 	return []interface{}{m}
