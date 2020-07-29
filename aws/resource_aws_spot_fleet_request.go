@@ -959,6 +959,10 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 			return resource.RetryableError(err)
 		}
 
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
