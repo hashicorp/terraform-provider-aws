@@ -26,6 +26,7 @@ Upgrade topics:
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
 - [Resource: aws_api_gateway_method_settings](#resource-aws_api_gateway_method_settings)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
+- [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
@@ -616,6 +617,29 @@ resource "aws_autoscaling_group" "example" {
     ignore_changes = [load_balancers, target_group_arns]
   }
 }
+```
+
+## Resource: aws_cloudfront_distribution
+
+### active_trusted_signers Attribute Name and Type Change
+
+Previously, the `active_trusted_signers` computed attribute was implemented with a Map that did not support accessing its computed `items` attribute in Terraform 0.12 correctly.
+To address this, the `active_trusted_signers` attribute has been renamed to `trusted_signers` and is now implemented as a List with a computed `items` List attribute and computed `enabled` boolean attribute.
+The nested `items` attribute includes computed `aws_account_number` and `key_pair_ids` sub-fields, with the latter implemented as a List. 
+Thus, user configurations referencing the `active_trusted_signers` attribute and its sub-fields will need to be changed as follows.
+
+Given these previous references:
+
+```
+aws_cloudfront_distribution.example.active_trusted_signers.enabled
+aws_cloudfront_distribution.example.active_trusted_signers.items
+```
+
+Updated references: 
+
+```
+aws_cloudfront_distribution.example.trusted_signers.0.enabled
+aws_cloudfront_distribution.example.trusted_signers.0.items
 ```
 
 ## Resource: aws_cognito_user_pool
