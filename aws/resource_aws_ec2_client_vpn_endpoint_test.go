@@ -111,6 +111,9 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 		for name, tc := range m {
 			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				t.Cleanup(func() {
+					testAccEc2ClientVpnEndpointSemaphore.Notify()
+				})
 				tc(t)
 			})
 		}
@@ -365,8 +368,6 @@ func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
