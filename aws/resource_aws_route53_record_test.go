@@ -83,7 +83,7 @@ func TestParseRecordId(t *testing.T) {
 		Input, Zone, Name, Type, Set string
 	}{
 		{"ABCDEF_test.notexample.com_A", "ABCDEF", "test.notexample.com", "A", ""},
-		{"ABCDEF_test.notexample.com_A", "ABCDEF", "test.notexample.com", "A", ""},
+		{"ABCDEF_test.notexample.com._A", "ABCDEF", "test.notexample.com", "A", ""},
 		{"ABCDEF_test.notexample.com_A_set1", "ABCDEF", "test.notexample.com", "A", "set1"},
 		{"ABCDEF__underscore.notexample.com_A", "ABCDEF", "_underscore.notexample.com", "A", ""},
 		{"ABCDEF__underscore.notexample.com_A_set1", "ABCDEF", "_underscore.notexample.com", "A", "set1"},
@@ -240,6 +240,34 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record2),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID ensures an aws_route53_record
+// created with a name configured with a trailing period and explicit zone_id gets imported correctly
+func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig_nameWithTrailingPeriod,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 		},
 	})
@@ -1171,6 +1199,20 @@ resource "aws_route53_zone" "main" {
 resource "aws_route53_record" "default" {
 	zone_id = "${aws_route53_zone.main.zone_id}"
 	name = "www.NOTexamplE.com"
+	type = "A"
+	ttl = "30"
+	records = ["127.0.0.1", "127.0.0.27"]
+}
+`
+
+const testAccRoute53RecordConfig_nameWithTrailingPeriod = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+	zone_id = "${aws_route53_zone.main.zone_id}"
+	name = "www.NOTexamplE.com."
 	type = "A"
 	ttl = "30"
 	records = ["127.0.0.1", "127.0.0.27"]
