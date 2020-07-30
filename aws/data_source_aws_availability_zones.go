@@ -34,7 +34,7 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 			"filter": ec2CustomFiltersSchema(),
 			"group_names": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"names": {
