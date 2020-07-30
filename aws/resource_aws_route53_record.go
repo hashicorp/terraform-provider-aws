@@ -41,12 +41,12 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
-					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-					// trailing period, no longer requiring the custom StateFunc
+					// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
+					// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
 					// to trim the string to prevent Route53 API error
-					return strings.ToLower(v.(string))
+					value := strings.TrimSuffix(v.(string), ".")
+					return strings.ToLower(value)
 				},
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
 			},
 
 			"fqdn": {
@@ -922,7 +922,7 @@ func cleanRecordName(name string) string {
 // If it does not, add the zone name to form a fully qualified name
 // and keep AWS happy.
 func expandRecordName(name, zone string) string {
-	rn := strings.ToLower(name)
+	rn := strings.ToLower(strings.TrimSuffix(name, "."))
 	zone = strings.TrimSuffix(zone, ".")
 	if !strings.HasSuffix(rn, zone) {
 		if len(name) == 0 {

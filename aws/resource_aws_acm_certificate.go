@@ -77,10 +77,8 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 					// trailing period, no longer requiring a custom StateFunc
 					// to prevent ACM API error
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
-					),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
 				},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
@@ -165,6 +163,9 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
 			if diff.Get("validation_method").(string) == "DNS" && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
 				domainValidationOptionsList := []interface{}{map[string]interface{}{
+					// AWS Provider 3.0 -- plan-time validation prevents "domain_name"
+					// argument to accept a string with trailing period; thus, trim of trailing period
+					// no longer required here
 					"domain_name": diff.Get("domain_name").(string),
 				}}
 
@@ -177,7 +178,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 						}
 
 						m := map[string]interface{}{
-							"domain_name": strings.TrimSuffix(san, "."),
+							// AWS Provider 3.0 -- plan-time validation prevents "subject_alternative_names"
+							// argument to accept strings with trailing period; thus, trim of trailing period
+							// no longer required here
+							"domain_name": san,
 						}
 
 						domainValidationOptionsList = append(domainValidationOptionsList, m)
@@ -244,7 +248,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
 		subjectAlternativeNames := make([]*string, len(sans.(*schema.Set).List()))
 		for i, sanRaw := range sans.(*schema.Set).List() {
-			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
+			subjectAlternativeNames[i] = aws.String(sanRaw.(string))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
 	}
