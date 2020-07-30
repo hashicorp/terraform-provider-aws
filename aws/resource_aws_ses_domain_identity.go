@@ -3,11 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSesDomainIdentity() *schema.Resource {
@@ -25,10 +27,10 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 				Computed: true,
 			},
 			"domain": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: trimTrailingPeriod,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
 			},
 			"verification_token": {
 				Type:     schema.TypeString,
@@ -41,7 +43,7 @@ func resourceAwsSesDomainIdentity() *schema.Resource {
 func resourceAwsSesDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
-	domainName := trimTrailingPeriod(d.Get("domain").(string))
+	domainName := d.Get("domain").(string)
 
 	createOpts := &ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),

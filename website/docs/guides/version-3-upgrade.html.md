@@ -229,11 +229,6 @@ While the returned value will omit the trailing period, use of configurations wi
 
 ## Resource: aws_acm_certificate
 
-### Removal of trailing period in domain_name argument and domain_validation_options.domain_name attribute 
-
-Previously the resource returned the Fully Qualified Domain Name of the certificate directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period. This period is now automatically removed. For example, when `domain_name` or `domain_validation_options.domain_name` would previously return a Fully Qualified Domain Name such as `example.com.`, it now will be returned as `example.com`.
-While the returned value for the `domain_name` argument will omit the trailing period, use of configurations with the trailing period in will not be interrupted.
-
 ### domain_validation_options Changed from List to Set
 
 Previously, the `domain_validation_options` attribute was a list type and completely unknown until after an initial `terraform apply`. This generally required complicated configuration workarounds to properly create DNS validation records since referencing this attribute directly could produce errors similar to the below:

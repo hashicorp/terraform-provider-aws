@@ -205,7 +205,7 @@ func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
 }
 
 func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
-	var record1, record2 route53.ResourceRecordSet
+	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -226,18 +226,21 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
+		},
+	})
+}
 
-			// Ensure that changing the name to include a trailing "dot" results in
-			// nothing happening, because the name is stripped of trailing dots on
-			// save. Otherwise, an update would occur and due to the
-			// create_before_destroy, the record would actually be destroyed, and a
-			// non-empty plan would appear, and the record will fail to exist in
-			// testAccCheckRoute53RecordExists
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
+func TestAccAWSRoute53Record_basic_name_trailingPeriod(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfig_fqdn_no_op,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53RecordExists(resourceName, &record2),
-				),
+				Config:      testAccRoute53RecordConfig_fqdn_no_op,
+				ExpectError: regexp.MustCompile(`config is invalid: invalid value for name \(cannot end with a period\)`),
 			},
 		},
 	})
