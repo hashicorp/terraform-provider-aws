@@ -189,7 +189,7 @@ func testAccAWSCloudWatchLogMetricFilterConfig(rInt int) string {
 resource "aws_cloudwatch_log_metric_filter" "foobar" {
   name           = "MyAppAccessCount-%d"
   pattern        = ""
-  log_group_name = "${aws_cloudwatch_log_group.dada.name}"
+  log_group_name = aws_cloudwatch_log_group.dada.name
 
   metric_transformation {
     name      = "EventCount"
@@ -213,7 +213,8 @@ resource "aws_cloudwatch_log_metric_filter" "foobar" {
 { $.errorCode = "AccessDenied" }
 PATTERN
 
-  log_group_name = "${aws_cloudwatch_log_group.dada.name}"
+
+  log_group_name = aws_cloudwatch_log_group.dada.name
 
   metric_transformation {
     name          = "AccessDeniedCount"
@@ -235,7 +236,7 @@ resource "aws_cloudwatch_log_metric_filter" "count_dracula" {
   count          = 15
   name           = "MyAppCountLog-${count.index}-%d"
   pattern        = "count ${count.index}"
-  log_group_name = "${aws_cloudwatch_log_group.mama.name}"
+  log_group_name = aws_cloudwatch_log_group.mama.name
 
   metric_transformation {
     name      = "CountDracula-${count.index}"

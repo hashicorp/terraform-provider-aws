@@ -821,12 +821,13 @@ resource "aws_iam_role" "test2" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test1.arn}"
+  administration_role_arn = aws_iam_role.test1.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -844,12 +845,13 @@ resource "aws_iam_role" "test2" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test2.arn}"
+  administration_role_arn = aws_iam_role.test2.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -862,13 +864,14 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   description             = %[3]q
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), description)
 }
@@ -881,13 +884,14 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   execution_role_name     = %[3]q
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), executionRoleName)
 }
@@ -900,12 +904,13 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -918,7 +923,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -928,6 +933,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParameters1(rName), value1)
 }
@@ -940,7 +946,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -951,6 +957,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParameters2(rName), value1, value2)
 }
@@ -963,12 +970,13 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersDefault1(rName))
 }
@@ -981,7 +989,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -991,6 +999,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersDefault1(rName), value1)
 }
@@ -1003,7 +1012,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -1013,6 +1022,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersNoEcho1(rName), value1)
 }
@@ -1025,7 +1035,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   tags = {
@@ -1035,6 +1045,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1)
 }
@@ -1047,7 +1058,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   tags = {
@@ -1058,6 +1069,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1, value2)
 }
@@ -1070,12 +1082,13 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, templateBody)
 }
@@ -1094,17 +1107,18 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   acl    = "public-read"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 
   content = <<CONTENT
 %[2]s
 CONTENT
 
+
   key = "%[1]s-template1.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
 }
@@ -1125,17 +1139,18 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   acl    = "public-read"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 
   content = <<CONTENT
 %[2]s
 CONTENT
 
+
   key = "%[1]s-template2.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
 }

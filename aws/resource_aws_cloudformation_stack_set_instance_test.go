@@ -440,7 +440,7 @@ resource "aws_iam_role" "Administration" {
 
 resource "aws_iam_role_policy" "Administration" {
   policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Resource\":[\"*\"],\"Action\":[\"sts:AssumeRole\"]}]}"
-  role   = "${aws_iam_role.Administration.name}"
+  role   = aws_iam_role.Administration.name
 }
 
 resource "aws_iam_role" "Execution" {
@@ -450,14 +450,14 @@ resource "aws_iam_role" "Execution" {
 
 resource "aws_iam_role_policy" "Execution" {
   policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Resource\":[\"*\"],\"Action\":[\"*\"]}]}"
-  role   = "${aws_iam_role.Execution.name}"
+  role   = aws_iam_role.Execution.name
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  depends_on = ["aws_iam_role_policy.Execution"]
+  depends_on = [aws_iam_role_policy.Execution]
 
-  administration_role_arn = "${aws_iam_role.Administration.arn}"
-  execution_role_name     = "${aws_iam_role.Execution.name}"
+  administration_role_arn = aws_iam_role.Administration.arn
+  execution_role_name     = aws_iam_role.Execution.name
   name                    = %[1]q
 
   parameters = {
@@ -490,6 +490,7 @@ Outputs:
   TestVpcID:
     Value: !Ref TestVpc
 TEMPLATE
+
 }
 `, rName)
 }
@@ -497,9 +498,9 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetInstanceConfig(rName string) string {
 	return testAccAWSCloudFormationStackSetInstanceConfigBase(rName) + `
 resource "aws_cloudformation_stack_set_instance" "test" {
-  depends_on = ["aws_iam_role_policy.Administration", "aws_iam_role_policy.Execution"]
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
-  stack_set_name = "${aws_cloudformation_stack_set.test.name}"
+  stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `
 }
@@ -507,12 +508,12 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 func testAccAWSCloudFormationStackSetInstanceConfigParameterOverrides1(rName, value1 string) string {
 	return testAccAWSCloudFormationStackSetInstanceConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
-  depends_on = ["aws_iam_role_policy.Administration", "aws_iam_role_policy.Execution"]
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
   parameter_overrides = {
     Parameter1 = %[1]q
   }
-  stack_set_name      = "${aws_cloudformation_stack_set.test.name}"
+  stack_set_name      = aws_cloudformation_stack_set.test.name
 }
 `, value1)
 }
@@ -520,13 +521,13 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 func testAccAWSCloudFormationStackSetInstanceConfigParameterOverrides2(rName, value1, value2 string) string {
 	return testAccAWSCloudFormationStackSetInstanceConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
-  depends_on = ["aws_iam_role_policy.Administration", "aws_iam_role_policy.Execution"]
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
   parameter_overrides = {
     Parameter1 = %[1]q
     Parameter2 = %[2]q
   }
-  stack_set_name      = "${aws_cloudformation_stack_set.test.name}"
+  stack_set_name      = aws_cloudformation_stack_set.test.name
 }
 `, value1, value2)
 }
@@ -534,10 +535,10 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 func testAccAWSCloudFormationStackSetInstanceConfigRetainStack(rName string, retainStack bool) string {
 	return testAccAWSCloudFormationStackSetInstanceConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
-  depends_on = ["aws_iam_role_policy.Administration", "aws_iam_role_policy.Execution"]
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
   retain_stack   = %[1]t
-  stack_set_name = "${aws_cloudformation_stack_set.test.name}"
+  stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `, retainStack)
 }

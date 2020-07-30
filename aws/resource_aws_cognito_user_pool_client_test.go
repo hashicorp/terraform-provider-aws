@@ -404,7 +404,7 @@ resource "aws_cognito_user_pool" "test" {
 
 resource "aws_cognito_user_pool_client" "test" {
   name                = "%s"
-  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+  user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
 `, userPoolName, clientName)
@@ -419,7 +419,7 @@ resource "aws_cognito_user_pool" "test" {
 resource "aws_cognito_user_pool_client" "test" {
   name                   = "%s"
   refresh_token_validity = %d
-  user_pool_id           = "${aws_cognito_user_pool.test.id}"
+  user_pool_id           = aws_cognito_user_pool.test.id
 }
 `, rName, rName, refreshTokenValidity)
 }
@@ -431,8 +431,8 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-  name                   = %[2]q
-  user_pool_id           = "${aws_cognito_user_pool.test.id}"
+  name         = %[2]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName, name)
 }
@@ -446,7 +446,7 @@ resource "aws_cognito_user_pool" "test" {
 resource "aws_cognito_user_pool_client" "test" {
   name = "%s"
 
-  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+  user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH", "CUSTOM_AUTH_FLOW_ONLY", "USER_PASSWORD_AUTH"]
 
   generate_secret = "true"
@@ -470,7 +470,8 @@ resource "aws_cognito_user_pool_client" "test" {
 
 func testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
 resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
@@ -498,11 +499,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = "%[2]s"
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<-EOF
   {
@@ -518,7 +520,8 @@ resource "aws_iam_role_policy" "test" {
       }
     ]
   }
-  EOF
+EOF
+
 }
 `, userPoolName, clientName)
 }
@@ -527,12 +530,12 @@ func testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientNa
 	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                = "%[1]s"
-  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+  user_pool_id        = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_id = "${aws_pinpoint_app.test.application_id}"
+    application_id = aws_pinpoint_app.test.application_id
     external_id    = "%[1]s"
-    role_arn       = "${aws_iam_role.test.arn}"
+    role_arn       = aws_iam_role.test.arn
   }
 }
 `, clientName)
@@ -542,12 +545,12 @@ func testAccAWSCognitoUserPoolClientConfigAnalyticsConfigShareUserData(userPoolN
 	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
   name                = "%[1]s"
-  user_pool_id        = "${aws_cognito_user_pool.test.id}"
+  user_pool_id        = aws_cognito_user_pool.test.id
 
   analytics_configuration {
-    application_id   = "${aws_pinpoint_app.test.application_id}"
+    application_id   = aws_pinpoint_app.test.application_id
     external_id      = "%[1]s"
-    role_arn         = "${aws_iam_role.test.arn}"
+    role_arn         = aws_iam_role.test.arn
     user_data_shared = true
   }
 }

@@ -1618,12 +1618,13 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1632,16 +1633,16 @@ resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   lambda_config {
-    create_auth_challenge          = "${aws_lambda_function.test.arn}"
-    custom_message                 = "${aws_lambda_function.test.arn}"
-    define_auth_challenge          = "${aws_lambda_function.test.arn}"
-    post_authentication            = "${aws_lambda_function.test.arn}"
-    post_confirmation              = "${aws_lambda_function.test.arn}"
-    pre_authentication             = "${aws_lambda_function.test.arn}"
-    pre_sign_up                    = "${aws_lambda_function.test.arn}"
-    pre_token_generation           = "${aws_lambda_function.test.arn}"
-    user_migration                 = "${aws_lambda_function.test.arn}"
-    verify_auth_challenge_response = "${aws_lambda_function.test.arn}"
+    create_auth_challenge          = aws_lambda_function.test.arn
+    custom_message                 = aws_lambda_function.test.arn
+    define_auth_challenge          = aws_lambda_function.test.arn
+    post_authentication            = aws_lambda_function.test.arn
+    post_confirmation              = aws_lambda_function.test.arn
+    pre_authentication             = aws_lambda_function.test.arn
+    pre_sign_up                    = aws_lambda_function.test.arn
+    pre_token_generation           = aws_lambda_function.test.arn
+    user_migration                 = aws_lambda_function.test.arn
+    verify_auth_challenge_response = aws_lambda_function.test.arn
   }
 }
 `, name)
@@ -1667,12 +1668,13 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1680,7 +1682,7 @@ resource "aws_lambda_function" "test" {
 resource "aws_lambda_function" "second" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s_second"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1689,16 +1691,16 @@ resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   lambda_config {
-    create_auth_challenge          = "${aws_lambda_function.second.arn}"
-    custom_message                 = "${aws_lambda_function.second.arn}"
-    define_auth_challenge          = "${aws_lambda_function.second.arn}"
-    post_authentication            = "${aws_lambda_function.second.arn}"
-    post_confirmation              = "${aws_lambda_function.second.arn}"
-    pre_authentication             = "${aws_lambda_function.second.arn}"
-    pre_sign_up                    = "${aws_lambda_function.second.arn}"
-    pre_token_generation           = "${aws_lambda_function.second.arn}"
-    user_migration                 = "${aws_lambda_function.second.arn}"
-    verify_auth_challenge_response = "${aws_lambda_function.second.arn}"
+    create_auth_challenge          = aws_lambda_function.second.arn
+    custom_message                 = aws_lambda_function.second.arn
+    define_auth_challenge          = aws_lambda_function.second.arn
+    post_authentication            = aws_lambda_function.second.arn
+    post_confirmation              = aws_lambda_function.second.arn
+    pre_authentication             = aws_lambda_function.second.arn
+    pre_sign_up                    = aws_lambda_function.second.arn
+    pre_token_generation           = aws_lambda_function.second.arn
+    user_migration                 = aws_lambda_function.second.arn
+    verify_auth_challenge_response = aws_lambda_function.second.arn
   }
 }
 `, name)
@@ -1790,9 +1792,9 @@ resource "aws_cognito_user_pool" "test" {
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message = "foo {####} bar"
+    email_message         = "foo {####} bar"
     email_message_by_link = "{##foobar##}"
-    email_subject = "foobar {####}"
+    email_subject         = "foobar {####}"
     email_subject_by_link = "foobar"
     sms_message           = "{####} baz"
   }
@@ -1818,7 +1820,8 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccAWSCognitoUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
 resource "aws_iam_role" "test" {
   name = "test-role-%s"
@@ -1844,11 +1847,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = "test-role-policy-%s"
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -1866,6 +1870,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -1898,8 +1903,8 @@ resource "aws_cognito_user_pool" "test" {
   }
 
   sms_configuration {
-    external_id    = "${data.aws_caller_identity.current.account_id}"
-    sns_caller_arn = "${aws_iam_role.test.arn}"
+    external_id    = data.aws_caller_identity.current.account_id
+    sns_caller_arn = aws_iam_role.test.arn
   }
 
   tags = {

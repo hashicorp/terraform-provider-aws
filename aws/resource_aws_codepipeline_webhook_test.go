@@ -236,7 +236,7 @@ resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
   target_action   = "Source"
-  target_pipeline = "${aws_codepipeline.test.name}"
+  target_pipeline = aws_codepipeline.test.name
 
   authentication_configuration {
     secret_token = "super-secret"
@@ -256,7 +256,7 @@ resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "IP"
   target_action   = "Source"
-  target_pipeline = "${aws_codepipeline.test.name}"
+  target_pipeline = aws_codepipeline.test.name
 
   authentication_configuration {
     allowed_ip_range = "0.0.0.0/0"
@@ -276,7 +276,7 @@ resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "UNAUTHENTICATED"
   target_action   = "Source"
-  target_pipeline = "${aws_codepipeline.test.name}"
+  target_pipeline = aws_codepipeline.test.name
 
   filter {
     json_path    = "$.ref"
@@ -292,7 +292,7 @@ resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
   target_action   = "Source"
-  target_pipeline = "${aws_codepipeline.test.name}"
+  target_pipeline = aws_codepipeline.test.name
 
   authentication_configuration {
     secret_token = "super-secret"
@@ -318,7 +318,7 @@ resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
   authentication  = "GITHUB_HMAC"
   target_action   = "Source"
-  target_pipeline = "${aws_codepipeline.test.name}"
+  target_pipeline = aws_codepipeline.test.name
 
   authentication_configuration {
     secret_token = "even-more-secret"
@@ -356,11 +356,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -389,14 +390,15 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_codepipeline" "test" {
   name     = %[1]q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.test.bucket}"
+    location = aws_s3_bucket.test.bucket
     type     = "S3"
 
     encryption_key {

@@ -139,7 +139,7 @@ func testAccAWSCognitoUserPoolDomainConfig_basic(domainName, poolName string) st
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = "%s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -152,7 +152,7 @@ func testAccAWSCognitoUserPoolDomainConfig_custom(customSubDomainName, poolName,
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool_domain" "main" {
   domain          = "%s"
-  user_pool_id    = "${aws_cognito_user_pool.main.id}"
+  user_pool_id    = aws_cognito_user_pool.main.id
   certificate_arn = "%s"
 }
 

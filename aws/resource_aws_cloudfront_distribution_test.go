@@ -1803,49 +1803,62 @@ variable rand_id {
 # backup bucket
 %s
 resource "aws_cloudfront_distribution" "failover_distribution" {
-	origin {
-		domain_name = "${aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name}"
-		origin_id = "primaryS3"
-	}
   origin {
-    domain_name = "${aws_s3_bucket.s3_backup_bucket_origin.bucket_regional_domain_name}"
-    origin_id = "failoverS3"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
+    origin_id   = "primaryS3"
   }
+
+  origin {
+    domain_name = aws_s3_bucket.s3_backup_bucket_origin.bucket_regional_domain_name
+    origin_id   = "failoverS3"
+  }
+
   origin_group {
     origin_id = "groupS3"
+
     failover_criteria {
       status_codes = [403, 404, 500, 502]
     }
+
     member {
       origin_id = "primaryS3"
     }
+
     member {
       origin_id = "failoverS3"
     }
   }
+
   enabled = true
+
   restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	default_cache_behavior {
-		allowed_methods = [ "GET", "HEAD" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "groupS3"
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "none"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations = [ "US", "CA", "GB", "DE" ]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods  = [ "GET", "HEAD" ]
+    cached_methods   = [ "GET", "HEAD" ]
+    target_origin_id = "groupS3"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+%s
 }
 `
 
@@ -2455,7 +2468,7 @@ resource "aws_cloudfront_distribution" "test" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = "${aws_acm_certificate.test.arn}"
+    acm_certificate_arn = aws_acm_certificate.test.arn
     ssl_support_method  = "sni-only"
   }
 }
@@ -2502,7 +2515,7 @@ resource "aws_cloudfront_distribution" "test" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = "${aws_acm_certificate.test.arn}"
+    acm_certificate_arn            = aws_acm_certificate.test.arn
     cloudfront_default_certificate = false
     ssl_support_method             = "sni-only"
   }

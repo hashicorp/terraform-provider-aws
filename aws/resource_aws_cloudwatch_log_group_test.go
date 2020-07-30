@@ -557,11 +557,12 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
   name       = "foo-bar-%d"
-  kms_key_id = "${aws_kms_key.foo.arn}"
+  kms_key_id = aws_kms_key.foo.arn
 }
 `, rInt, rInt)
 }

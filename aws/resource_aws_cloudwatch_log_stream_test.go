@@ -175,7 +175,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_cloudwatch_log_stream" "test" {
   name           = %[1]q
-  log_group_name = "${aws_cloudwatch_log_group.test.id}"
+  log_group_name = aws_cloudwatch_log_group.test.id
 }
 `, rName)
 }
