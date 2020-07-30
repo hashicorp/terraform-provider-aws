@@ -210,7 +210,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_backup_vault" "test" {
   name        = "tf_acc_test_backup_vault_%d"
-  kms_key_arn = "${aws_kms_key.test.arn}"
+  kms_key_arn = aws_kms_key.test.arn
 }
 `, randInt)
 }
