@@ -1755,8 +1755,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   server_side_encryption {
-	enabled     = true
-	kms_key_arn = "${aws_kms_key.test.arn}"
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
   }
 }
 `, rName)
@@ -1890,8 +1890,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -1917,24 +1917,24 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att2-index"
     hash_key        = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att3-index"
     hash_key        = "att3"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 }
@@ -1949,8 +1949,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -1976,24 +1976,24 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att2-index"
     hash_key        = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att3-index"
     hash_key        = "att3"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 }
@@ -2008,8 +2008,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -2040,8 +2040,8 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -2049,8 +2049,8 @@ resource "aws_dynamodb_table" "test" {
     name            = "att2-index"
     hash_key        = "att4"
     range_key       = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -2058,8 +2058,8 @@ resource "aws_dynamodb_table" "test" {
     name               = "att3-index"
     hash_key           = "att3"
     range_key          = "att4"
-    write_capacity     = "${var.capacity}"
-    read_capacity      = "${var.capacity}"
+    write_capacity     = var.capacity
+    read_capacity      = var.capacity
     projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute"]
   }
@@ -2075,8 +2075,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -2107,8 +2107,8 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -2116,8 +2116,8 @@ resource "aws_dynamodb_table" "test" {
     name            = "att2-index"
     hash_key        = "att4"
     range_key       = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -2125,8 +2125,8 @@ resource "aws_dynamodb_table" "test" {
     name               = "att3-index"
     hash_key           = "att3"
     range_key          = "att4"
-    write_capacity     = "${var.capacity}"
-    read_capacity      = "${var.capacity}"
+    write_capacity     = var.capacity
+    read_capacity      = var.capacity
     projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute", "AnotherAttribute"]
   }

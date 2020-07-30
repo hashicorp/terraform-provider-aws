@@ -561,8 +561,8 @@ resource "aws_vpn_gateway" "test" {
 }
 
 resource "aws_vpn_gateway_attachment" "test" {
-  vpc_id         = "${aws_vpc.test.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 `, rName, rBgpAsn)
 }
@@ -587,8 +587,8 @@ resource "aws_vpn_gateway" "test" {
 }
 
 resource "aws_vpn_gateway_attachment" "test" {
-  vpc_id         = "${aws_vpc.test.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 
 # Accepter
@@ -604,8 +604,8 @@ resource "aws_dx_gateway" "test" {
 func testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test.vpn_gateway_id
 }
 `
 }
@@ -614,18 +614,18 @@ func testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName string,
 	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
 }
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 }
 `
 }
@@ -644,8 +644,8 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_ec2_transit_gateway.test.id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -676,9 +676,9 @@ resource "aws_ec2_transit_gateway" "test" {
 
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_ec2_transit_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -690,9 +690,9 @@ resource "aws_dx_gateway_association_proposal" "test" {
 resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 }
 `, rName, rBgpAsn)
 }
@@ -719,13 +719,13 @@ resource "aws_vpn_gateway" "test1" {
 }
 
 resource "aws_vpn_gateway_attachment" "test1" {
-  vpc_id         = "${aws_vpc.test1.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test1.id}"
+  vpc_id         = aws_vpc.test1.id
+  vpn_gateway_id = aws_vpn_gateway.test1.id
 }
 
 resource "aws_dx_gateway_association" "test1" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test1.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test1.vpn_gateway_id
 }
 
 resource "aws_vpc" "test2" {
@@ -743,13 +743,13 @@ resource "aws_vpn_gateway" "test2" {
 }
 
 resource "aws_vpn_gateway_attachment" "test2" {
-  vpc_id         = "${aws_vpc.test2.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test2.id}"
+  vpc_id         = aws_vpc.test2.id
+  vpn_gateway_id = aws_vpn_gateway.test2.id
 }
 
 resource "aws_dx_gateway_association" "test2" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test2.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test2.vpn_gateway_id
 }
 `, rName1, rName2, rBgpAsn)
 }
@@ -757,8 +757,8 @@ resource "aws_dx_gateway_association" "test2" {
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test.vpn_gateway_id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -771,8 +771,8 @@ resource "aws_dx_gateway_association" "test" {
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccountUpdated(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test.vpn_gateway_id
 
   allowed_prefixes = [
     "10.255.255.8/29",
@@ -785,9 +785,9 @@ func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rNa
 	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -799,9 +799,9 @@ resource "aws_dx_gateway_association_proposal" "test" {
 resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 
   allowed_prefixes = [
     "10.255.255.8/29",
@@ -814,18 +814,18 @@ func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccountUpda
 	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
 }
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
   provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 
   allowed_prefixes = [
     "10.255.255.0/30",

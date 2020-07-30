@@ -309,7 +309,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -330,7 +330,7 @@ func testAccAWSDAXClusterConfig(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
-  iam_role_arn       = "${aws_iam_role.test.arn}"
+  iam_role_arn       = aws_iam_role.test.arn
   node_type          = "dax.t2.small"
   replication_factor = 1
   description        = "test cluster"
@@ -346,7 +346,7 @@ func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) stri
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
-  iam_role_arn       = "${aws_iam_role.test.arn}"
+  iam_role_arn       = aws_iam_role.test.arn
   node_type          = "dax.t2.small"
   replication_factor = 1
   description        = "test cluster"
@@ -366,7 +366,7 @@ func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
-  iam_role_arn       = "${aws_iam_role.test.arn}"
+  iam_role_arn       = aws_iam_role.test.arn
   node_type          = "dax.r3.large"
   replication_factor = 1
 }
@@ -377,7 +377,7 @@ func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
-  iam_role_arn       = "${aws_iam_role.test.arn}"
+  iam_role_arn       = aws_iam_role.test.arn
   node_type          = "dax.r3.large"
   replication_factor = 2
 }

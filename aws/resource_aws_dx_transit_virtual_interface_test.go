@@ -200,7 +200,7 @@ func testAccDxTransitVirtualInterfaceConfig_basic(cid, rName string, amzAsn, bgp
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
-  dx_gateway_id  = "${aws_dx_gateway.test.id}"
+  dx_gateway_id  = aws_dx_gateway.test.id
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[4]d
@@ -213,7 +213,7 @@ func testAccDxTransitVirtualInterfaceConfig_updated(cid, rName string, amzAsn, b
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
-  dx_gateway_id  = "${aws_dx_gateway.test.id}"
+  dx_gateway_id  = aws_dx_gateway.test.id
   connection_id  = %[1]q
   mtu            = 8500
   name           = %[2]q
@@ -227,7 +227,7 @@ func testAccDxTransitVirtualInterfaceConfig_tags(cid, rName string, amzAsn, bgpA
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
-  dx_gateway_id  = "${aws_dx_gateway.test.id}"
+  dx_gateway_id  = aws_dx_gateway.test.id
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[4]d
@@ -246,7 +246,7 @@ func testAccDxTransitVirtualInterfaceConfig_tagsUpdated(cid, rName string, amzAs
 resource "aws_dx_transit_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[3]d
-  dx_gateway_id  = "${aws_dx_gateway.test.id}"
+  dx_gateway_id  = aws_dx_gateway.test.id
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[4]d

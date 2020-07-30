@@ -96,8 +96,8 @@ resource "aws_dx_lag" "test" {
 }
 
 resource "aws_dx_connection_association" "test" {
-  connection_id = "${aws_dx_connection.test.id}"
-  lag_id        = "${aws_dx_lag.test.id}"
+  connection_id = aws_dx_connection.test.id
+  lag_id        = aws_dx_lag.test.id
 }
 `, rName, rName)
 }
@@ -124,13 +124,13 @@ resource "aws_dx_lag" "test" {
 }
 
 resource "aws_dx_connection_association" "test1" {
-  connection_id = "${aws_dx_connection.test1.id}"
-  lag_id        = "${aws_dx_lag.test.id}"
+  connection_id = aws_dx_connection.test1.id
+  lag_id        = aws_dx_lag.test.id
 }
 
 resource "aws_dx_connection_association" "test2" {
-  connection_id = "${aws_dx_connection.test2.id}"
-  lag_id        = "${aws_dx_lag.test.id}"
+  connection_id = aws_dx_connection.test2.id
+  lag_id        = aws_dx_lag.test.id
 }
 `, rName, rName, rName)
 }

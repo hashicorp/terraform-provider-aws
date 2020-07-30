@@ -386,11 +386,11 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 const testAccAWSDocDBClusterParameterGroupConfig_namePrefix = `
 resource "aws_docdb_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
-  family = "docdb3.6"
+  family      = "docdb3.6"
 }
 `
 const testAccAWSDocDBClusterParameterGroupConfig_generatedName = `
 resource "aws_docdb_cluster_parameter_group" "test" {
-	family = "docdb3.6"
+  family = "docdb3.6"
 }
 `

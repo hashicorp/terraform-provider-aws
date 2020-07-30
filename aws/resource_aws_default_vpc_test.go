@@ -49,8 +49,8 @@ func testAccCheckAWSDefaultVpcDestroy(s *terraform.State) error {
 
 const testAccAWSDefaultVpcConfigBasic = `
 resource "aws_default_vpc" "foo" {
-	tags = {
-		Name = "Default VPC"
-	}
+  tags = {
+    Name = "Default VPC"
+  }
 }
 `

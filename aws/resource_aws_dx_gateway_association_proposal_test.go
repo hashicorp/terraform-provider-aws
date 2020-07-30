@@ -314,7 +314,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -326,9 +326,9 @@ resource "aws_vpn_gateway" "test" {
 func testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }
@@ -349,9 +349,9 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_ec2_transit_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -365,9 +365,9 @@ func testAccDxGatewayAssociationProposalConfigAllowedPrefixes1(rName string, rBg
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/16"]
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }
@@ -376,9 +376,9 @@ func testAccDxGatewayAssociationProposalConfigAllowedPrefixes2(rName string, rBg
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/24", "10.0.1.0/24"]
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }
