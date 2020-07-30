@@ -58,7 +58,7 @@ func testAccAWSEksClusterDataSourceConfig_Basic(rName string) string {
 %[1]s
 
 data "aws_eks_cluster" "test" {
-  name = "${aws_eks_cluster.test.name}"
+  name = aws_eks_cluster.test.name
 }
 `, testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}))
 }

@@ -36,11 +36,11 @@ func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
 func testAccAWSElastiCacheClusterConfigWithDataSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id           = %[1]q
-  engine               = "memcached"
-  node_type            = "cache.t3.small"
-  num_cache_nodes      = 1
-  port                 = 11211
+  cluster_id      = %[1]q
+  engine          = "memcached"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+  port            = 11211
 }
 
 data "aws_elasticache_cluster" "test" {

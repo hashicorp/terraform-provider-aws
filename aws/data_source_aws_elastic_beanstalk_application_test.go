@@ -39,7 +39,7 @@ func testAccAwsElasticBeanstalkApplicationDataSourceConfig_Basic(rName string) s
 %s
 
 data "aws_elastic_beanstalk_application" "test" {
-  name = "${aws_elastic_beanstalk_application.tftest.name}"
+  name = aws_elastic_beanstalk_application.tftest.name
 }
 `, testAccBeanstalkAppConfigWithMaxAge(rName))
 }

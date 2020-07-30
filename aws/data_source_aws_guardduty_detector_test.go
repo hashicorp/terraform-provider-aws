@@ -66,7 +66,7 @@ func testAccAwsGuarddutyDetectorExplicitConfig() string {
 resource "aws_guardduty_detector" "test" {}
 
 data "aws_guardduty_detector" "test" {
-	id = "${aws_guardduty_detector.test.id}"
+  id = aws_guardduty_detector.test.id
 }
 `
 }
