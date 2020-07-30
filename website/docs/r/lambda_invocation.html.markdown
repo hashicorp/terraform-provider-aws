@@ -37,6 +37,7 @@ output "result_entry" {
 * `input` - (Required) A string in JSON format that is passed as payload to the lambda function.
 * `qualifier` - (Optional) The qualifier (a.k.a version) of the lambda function. Defaults
  to `$LATEST`.
+* `invoke_on_update` - (Optional) Whether to run the lambda function on argument changes. Default is `true`.
 
 ## Attributes Reference
 
