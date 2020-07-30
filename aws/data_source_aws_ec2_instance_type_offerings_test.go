@@ -104,7 +104,7 @@ data "aws_availability_zones" "available" {
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
     name   = "location"
-    values = ["${data.aws_availability_zones.available.names[0]}"]
+    values = [data.aws_availability_zones.available.names[0]]
   }
 
   location_type = "availability-zone"

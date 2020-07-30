@@ -63,7 +63,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_ecr_repository" "test" {
-  name = "${aws_ecr_repository.test.name}"
+  name = aws_ecr_repository.test.name
 }
 `, rName)
 }

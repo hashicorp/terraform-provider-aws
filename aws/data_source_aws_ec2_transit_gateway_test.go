@@ -73,7 +73,7 @@ resource "aws_ec2_transit_gateway" "test" {}
 data "aws_ec2_transit_gateway" "test" {
   filter {
     name   = "transit-gateway-id"
-    values = ["${aws_ec2_transit_gateway.test.id}"]
+    values = [aws_ec2_transit_gateway.test.id]
   }
 }
 `
@@ -84,7 +84,7 @@ func testAccAWSEc2TransitGatewayDataSourceConfigID() string {
 resource "aws_ec2_transit_gateway" "test" {}
 
 data "aws_ec2_transit_gateway" "test" {
-  id = "${aws_ec2_transit_gateway.test.id}"
+  id = aws_ec2_transit_gateway.test.id
 }
 `
 }
