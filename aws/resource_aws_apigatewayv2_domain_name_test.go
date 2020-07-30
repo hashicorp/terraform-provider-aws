@@ -333,7 +333,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
 
   domain_name_configuration {
-    certificate_arn = "${aws_acm_certificate.test.*.arn[%[2]d]}"
+    certificate_arn = aws_acm_certificate.test.*.arn[%[2]d]
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
@@ -347,7 +347,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
 
   domain_name_configuration {
-    certificate_arn = "${aws_acm_certificate.test.*.arn[%[2]d]}"
+    certificate_arn = aws_acm_certificate.test.*.arn[%[2]d]
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }

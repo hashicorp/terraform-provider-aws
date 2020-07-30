@@ -122,7 +122,7 @@ resource "aws_api_gateway_account" "test" {
 func testAccAWSAPIGatewayAccountConfig_updated(randName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = "${aws_iam_role.cloudwatch.arn}"
+  cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
 }
 
 resource "aws_iam_role" "cloudwatch" {
@@ -143,11 +143,12 @@ resource "aws_iam_role" "cloudwatch" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
   name = "default"
-  role = "${aws_iam_role.cloudwatch.id}"
+  role = aws_iam_role.cloudwatch.id
 
   policy = <<EOF
 {
@@ -169,6 +170,7 @@ resource "aws_iam_role_policy" "cloudwatch" {
     ]
 }
 EOF
+
 }
 `, randName)
 }
@@ -176,7 +178,7 @@ EOF
 func testAccAWSAPIGatewayAccountConfig_updated2(randName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = "${aws_iam_role.second.arn}"
+  cloudwatch_role_arn = aws_iam_role.second.arn
 }
 
 resource "aws_iam_role" "second" {
@@ -197,11 +199,12 @@ resource "aws_iam_role" "second" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
   name = "default"
-  role = "${aws_iam_role.second.id}"
+  role = aws_iam_role.second.id
 
   policy = <<EOF
 {
@@ -223,6 +226,7 @@ resource "aws_iam_role_policy" "cloudwatch" {
     ]
 }
 EOF
+
 }
 `, randName)
 }

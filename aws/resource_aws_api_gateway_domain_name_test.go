@@ -382,7 +382,7 @@ resource "aws_acm_certificate" "test" {
 
 resource "aws_api_gateway_domain_name" "test" {
   domain_name              = %[1]q
-  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
+  regional_certificate_arn = aws_acm_certificate.test.arn
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -416,7 +416,7 @@ resource "aws_acm_certificate" "test" {
 
 resource "aws_api_gateway_domain_name" "test" {
   domain_name              = %[1]q
-  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
+  regional_certificate_arn = aws_acm_certificate.test.arn
   security_policy          = %[4]q
 
   endpoint_configuration {

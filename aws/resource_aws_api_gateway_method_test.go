@@ -344,11 +344,12 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "invocation_policy" {
   name = "tf-acc-api-gateway-%d"
-  role = "${aws_iam_role.invocation_role.id}"
+  role = aws_iam_role.invocation_role.id
 
   policy = <<EOF
 {
@@ -362,6 +363,7 @@ resource "aws_iam_role_policy" "invocation_policy" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -382,36 +384,37 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "authorizer" {
   filename         = "test-fixtures/lambdatest.zip"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   function_name    = "tf_acc_api_gateway_authorizer_%d"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
 }
 
 resource "aws_api_gateway_authorizer" "test" {
   name                   = "tf-acc-test-authorizer"
-  rest_api_id            = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri         = "${aws_lambda_function.authorizer.invoke_arn}"
-  authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
+  rest_api_id            = aws_api_gateway_rest_api.test.id
+  authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
+  authorizer_credentials = aws_iam_role.invocation_role.arn
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "CUSTOM"
-  authorizer_id = "${aws_api_gateway_authorizer.test.id}"
+  authorizer_id = aws_api_gateway_authorizer.test.id
 
   request_models = {
     "application/json" = "Error"
@@ -450,6 +453,7 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -470,6 +474,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_pool" "pool" {
@@ -478,24 +483,24 @@ resource "aws_cognito_user_pool" "pool" {
 
 resource "aws_api_gateway_authorizer" "test" {
   name            = "tf-acc-test-cognito-authorizer"
-  rest_api_id     = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id     = aws_api_gateway_rest_api.test.id
   identity_source = "method.request.header.Authorization"
-  provider_arns   = ["${aws_cognito_user_pool.pool.arn}"]
+  provider_arns   = [aws_cognito_user_pool.pool.arn]
   type            = "COGNITO_USER_POOLS"
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id          = "${aws_api_gateway_rest_api.test.id}"
-  resource_id          = "${aws_api_gateway_resource.test.id}"
+  rest_api_id          = aws_api_gateway_rest_api.test.id
+  resource_id          = aws_api_gateway_resource.test.id
   http_method          = "GET"
   authorization        = "COGNITO_USER_POOLS"
-  authorizer_id        = "${aws_api_gateway_authorizer.test.id}"
+  authorizer_id        = aws_api_gateway_authorizer.test.id
   authorization_scopes = ["test.read", "test.write"]
 
   request_models = {
@@ -535,6 +540,7 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -555,6 +561,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_pool" "pool" {
@@ -563,24 +570,24 @@ resource "aws_cognito_user_pool" "pool" {
 
 resource "aws_api_gateway_authorizer" "test" {
   name            = "tf-acc-test-cognito-authorizer"
-  rest_api_id     = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id     = aws_api_gateway_rest_api.test.id
   identity_source = "method.request.header.Authorization"
-  provider_arns   = ["${aws_cognito_user_pool.pool.arn}"]
+  provider_arns   = [aws_cognito_user_pool.pool.arn]
   type            = "COGNITO_USER_POOLS"
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id          = "${aws_api_gateway_rest_api.test.id}"
-  resource_id          = "${aws_api_gateway_resource.test.id}"
+  rest_api_id          = aws_api_gateway_rest_api.test.id
+  resource_id          = aws_api_gateway_resource.test.id
   http_method          = "GET"
   authorization        = "COGNITO_USER_POOLS"
-  authorizer_id        = "${aws_api_gateway_authorizer.test.id}"
+  authorizer_id        = aws_api_gateway_authorizer.test.id
   authorization_scopes = ["test.read", "test.write", "test.delete"]
 
   request_models = {
@@ -601,14 +608,14 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -631,14 +638,14 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -660,20 +667,20 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_request_validator" "validator" {
-  rest_api_id                 = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id                 = aws_api_gateway_rest_api.test.id
   name                        = "paramsValidator"
   validate_request_parameters = true
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -686,7 +693,7 @@ resource "aws_api_gateway_method" "test" {
     "method.request.querystring.page"    = true
   }
 
-  request_validator_id = "${aws_api_gateway_request_validator.validator.id}"
+  request_validator_id = aws_api_gateway_request_validator.validator.id
 }
 `, rInt)
 }
@@ -698,20 +705,20 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_request_validator" "validator" {
-  rest_api_id                 = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id                 = aws_api_gateway_rest_api.test.id
   name                        = "paramsValidator"
   validate_request_parameters = true
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 

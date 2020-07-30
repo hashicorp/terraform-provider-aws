@@ -650,7 +650,7 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 func testAccAWSAPIGatewayRestAPIConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name                     = "%s"
   minimum_compression_size = 0
 }
 `, rName)
@@ -679,7 +679,7 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "11.0.0.0/16"
+  cidr_block           = "11.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -689,7 +689,7 @@ resource "aws_vpc" "test" {
 }
 
 data "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
   name   = "default"
 }
 
@@ -703,9 +703,9 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${aws_vpc.test.cidr_block}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = aws_vpc.test.cidr_block
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -715,17 +715,17 @@ resource "aws_subnet" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.execute-api"
   vpc_endpoint_type = "Interface"
   private_dns_enabled = false
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 
   security_group_ids = [
-    "${data.aws_security_group.test.id}",
+    data.aws_security_group.test.id,
   ]
 }
 
@@ -733,8 +733,8 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   endpoint_configuration {
-    types = ["PRIVATE"]
-	vpc_endpoint_ids = ["${aws_vpc_endpoint.test.id}"]
+    types            = ["PRIVATE"]
+	vpc_endpoint_ids = [aws_vpc_endpoint.test.id]
   }
 }
 `, rName)
@@ -743,7 +743,7 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "11.0.0.0/16"
+  cidr_block           = "11.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -753,7 +753,7 @@ resource "aws_vpc" "test" {
 }
 
 data "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
   name   = "default"
 }
 
@@ -767,44 +767,45 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${aws_vpc.test.cidr_block}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = aws_vpc.test.cidr_block
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
   }
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  vpc_endpoint_type = "Interface"
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 
   security_group_ids = [
-    "${data.aws_security_group.test.id}",
+    data.aws_security_group.test.id,
   ]
 }
 
 resource "aws_vpc_endpoint" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  vpc_endpoint_type = "Interface"
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 
   security_group_ids = [
-    "${data.aws_security_group.test.id}",
+    data.aws_security_group.test.id,
   ]
 }
 
@@ -812,8 +813,8 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   endpoint_configuration {
-    types = ["PRIVATE"]
-	vpc_endpoint_ids = ["${aws_vpc_endpoint.test.id}", "${aws_vpc_endpoint.test2.id}"]
+    types            = ["PRIVATE"]
+    vpc_endpoint_ids = [aws_vpc_endpoint.test.id, aws_vpc_endpoint.test2.id]
   }
 }
 `, rName)
@@ -847,8 +848,8 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
-	api_key_source = "HEADER"
+  name           = "%s"
+  api_key_source = "HEADER"
 }
 `, rName)
 }
@@ -856,8 +857,8 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
-	api_key_source = "AUTHORIZER"
+  name           = "%s"
+  api_key_source = "AUTHORIZER"
 }
 `, rName)
 }
@@ -865,9 +866,9 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfigWithPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name                     = "%s"
   minimum_compression_size = 0
-  policy = <<EOF
+  policy                   = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -887,6 +888,7 @@ resource "aws_api_gateway_rest_api" "test" {
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -894,9 +896,9 @@ EOF
 func testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name                     = "%s"
   minimum_compression_size = 0
-  policy = <<EOF
+  policy                   = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -911,6 +913,7 @@ resource "aws_api_gateway_rest_api" "test" {
     ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -918,9 +921,9 @@ EOF
 func testAccAWSAPIGatewayRestAPIUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
-  description = "test"
-  binary_media_types = ["application/octet-stream"]
+  name                     = "%s"
+  description              = "test"
+  binary_media_types       = ["application/octet-stream"]
   minimum_compression_size = 10485760
 }
 `, rName)
@@ -929,9 +932,9 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIDisableCompressionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
-  description = "test"
-  binary_media_types = ["application/octet-stream"]
+  name                     = "%s"
+  description              = "test"
+  binary_media_types       = ["application/octet-stream"]
   minimum_compression_size = -1
 }
 `, rName)
@@ -974,6 +977,7 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 EOF
+
 }
 `, rName, rName)
 }
@@ -1015,6 +1019,7 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 EOF
+
 }
 `, rName, rName)
 }

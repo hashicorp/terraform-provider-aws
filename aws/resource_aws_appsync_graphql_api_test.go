@@ -1054,7 +1054,8 @@ resource "aws_appsync_graphql_api" "test" {
 
 func testAccAppsyncGraphqlApiConfig_LogConfig_FieldLogLevel(rName, fieldLogLevel string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_iam_role" "test" {
   name = %q
@@ -1073,11 +1074,12 @@ resource "aws_iam_role" "test" {
     ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_appsync_graphql_api" "test" {
@@ -1085,7 +1087,7 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 
   log_config {
-    cloudwatch_logs_role_arn = "${aws_iam_role.test.arn}"
+    cloudwatch_logs_role_arn = aws_iam_role.test.arn
     field_log_level          = %q
   }
 }
@@ -1094,7 +1096,8 @@ resource "aws_appsync_graphql_api" "test" {
 
 func testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName string, excludeVerboseContent bool) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_iam_role" "test" {
   name = %q
@@ -1113,11 +1116,12 @@ resource "aws_iam_role" "test" {
     ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_appsync_graphql_api" "test" {
@@ -1125,9 +1129,9 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 
   log_config {
-    cloudwatch_logs_role_arn = "${aws_iam_role.test.arn}"
-	field_log_level          = "ALL"
-	exclude_verbose_content  = %t
+    cloudwatch_logs_role_arn = aws_iam_role.test.arn
+    field_log_level          = "ALL"
+    exclude_verbose_content  = %t
   }
 }
 `, rName, rName, excludeVerboseContent)
@@ -1201,7 +1205,7 @@ resource "aws_appsync_graphql_api" "test" {
   user_pool_config {
     aws_region     = %q
     default_action = "ALLOW"
-    user_pool_id   = "${aws_cognito_user_pool.test.id}"
+    user_pool_id   = aws_cognito_user_pool.test.id
   }
 }
 `, rName, rName, awsRegion)
@@ -1219,7 +1223,7 @@ resource "aws_appsync_graphql_api" "test" {
 
   user_pool_config {
     default_action = %q
-    user_pool_id   = "${aws_cognito_user_pool.test.id}"
+    user_pool_id   = aws_cognito_user_pool.test.id
   }
 }
 `, rName, rName, defaultAction)
@@ -1230,7 +1234,7 @@ func testAccAppsyncGraphqlApiConfig_Schema(rName string) string {
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = "type Mutation {\n\tputPost(id: ID!, title: String!): Post\n}\n\ntype Post {\n\tid: ID!\n\ttitle: String!\n}\n\ntype Query {\n\tsinglePost(id: ID!): Post\n}\n\nschema {\n\tquery: Query\n\tmutation: Mutation\n\n}\n"
+  schema              = "type Mutation {\n	putPost(id: ID!, title: String!): Post\n}\n\ntype Post {\n	id: ID!\n	title: String!\n}\n\ntype Query {\n	singlePost(id: ID!): Post\n}\n\nschema {\n	query: Query\n	mutation: Mutation\n\n}\n"
 }
 `, rName)
 }
@@ -1240,7 +1244,7 @@ func testAccAppsyncGraphqlApiConfig_SchemaUpdate(rName string) string {
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = "type Mutation {\n\tputPostV2(id: ID!, title: String!): PostV2\n}\n\ntype PostV2 {\n\tid: ID!\n\ttitle: String!\n}\n\ntype Query {\n\tsinglePostV2(id: ID!): PostV2\n}\n\nschema {\n\tquery: Query\n\tmutation: Mutation\n\n}\n"
+  schema              = "type Mutation {\n	putPostV2(id: ID!, title: String!): PostV2\n}\n\ntype PostV2 {\n	id: ID!\n	title: String!\n}\n\ntype Query {\n	singlePostV2(id: ID!): PostV2\n}\n\nschema {\n	query: Query\n	mutation: Mutation\n\n}\n"
 }
 `, rName)
 }
@@ -1298,9 +1302,9 @@ resource "aws_appsync_graphql_api" "test" {
 
   additional_authentication_provider {
     authentication_type = "AMAZON_COGNITO_USER_POOLS"
-    
+
     user_pool_config {
-      user_pool_id = "${aws_cognito_user_pool.test.id}"
+      user_pool_id = aws_cognito_user_pool.test.id
     }
   }
 }
@@ -1332,7 +1336,7 @@ resource "aws_cognito_user_pool" "test" {
 
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name = %q
+  name                = %q
 
   additional_authentication_provider {
     authentication_type = "AWS_IAM"
@@ -1340,9 +1344,9 @@ resource "aws_appsync_graphql_api" "test" {
 
   additional_authentication_provider {
     authentication_type = "AMAZON_COGNITO_USER_POOLS"
-    
+
     user_pool_config {
-      user_pool_id = "${aws_cognito_user_pool.test.id}"
+      user_pool_id = aws_cognito_user_pool.test.id
     }
   }
 

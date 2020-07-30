@@ -414,7 +414,7 @@ func testAccAppmeshVirtualNodeConfig_basic(meshName, vnName string) string {
 	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 }
@@ -429,7 +429,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     backend {
@@ -452,7 +452,7 @@ resource "aws_appmesh_virtual_node" "test" {
         }
 
         service_name   = %[2]q
-        namespace_name = "${aws_service_discovery_http_namespace.test.name}"
+        namespace_name = aws_service_discovery_http_namespace.test.name
       }
     }
   }
@@ -464,7 +464,7 @@ func testAccAppmeshVirtualNodeConfig_listenerHealthChecks(meshName, vnName strin
 	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     backend {
@@ -503,7 +503,7 @@ func testAccAppmeshVirtualNodeConfig_listenerHealthChecksUpdated(meshName, vnNam
 	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     backend {
@@ -548,7 +548,7 @@ func testAccAppmeshVirtualNodeConfig_logging(meshName, vnName, path string) stri
 	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     backend {
@@ -586,7 +586,7 @@ func testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, tagKey1, tagValue1, 
 	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 
