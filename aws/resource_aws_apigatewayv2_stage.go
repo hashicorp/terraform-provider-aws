@@ -41,9 +41,6 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateArn,
-							StateFunc: func(v interface{}) string {
-								return strings.TrimSuffix(v.(string), ":*")
-							},
 						},
 						"format": {
 							Type:     schema.TypeString,

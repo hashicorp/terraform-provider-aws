@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -260,7 +259,7 @@ func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.identity.sourceIp $context.requestId"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
@@ -292,7 +291,7 @@ func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.requestId"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -1039,21 +1038,6 @@ func testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName string) resource.
 		}
 
 		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["api_id"], rs.Primary.ID), nil
-	}
-}
-
-func testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, resourceKey, cloudWatchResourceName, cloudWatchResourceKey string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		cwRs, ok := s.RootModule().Resources[cloudWatchResourceName]
-		if !ok {
-			return fmt.Errorf("Resource not found: %s", cloudWatchResourceName)
-		}
-		cwArn, ok := cwRs.Primary.Attributes[cloudWatchResourceKey]
-		if !ok {
-			return fmt.Errorf("Attribute %q not found in resource %s", cloudWatchResourceKey, cloudWatchResourceName)
-		}
-
-		return resource.TestCheckResourceAttr(resourceName, resourceKey, strings.TrimSuffix(cwArn, ":*"))(s)
 	}
 }
 
