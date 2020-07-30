@@ -3364,7 +3364,7 @@ func testAccInstanceConfigAtLeastOneOtherEbsVolume(rName string) string {
 # Ensure that there is at least 1 EBS volume in the current region.
 # See https://github.com/hashicorp/terraform/issues/1249.
 resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 5
 
   tags = {
