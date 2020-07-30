@@ -300,8 +300,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentExpectedJSON = `{
   "Version": "2012-10-17",
   "Id": "policy_id",
   "Statement": [
@@ -364,8 +363,7 @@ var testAccAWSIAMPolicyDocumentExpectedJSON = `
       "Principal": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentSourceConfig = `
 data "aws_iam_policy_document" "test" {
@@ -465,8 +463,7 @@ data "aws_iam_policy_document" "test_source" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentSourceExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentSourceExpectedJSON = `{
   "Version": "2012-10-17",
   "Id": "policy_id",
   "Statement": [
@@ -538,8 +535,7 @@ var testAccAWSIAMPolicyDocumentSourceExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentSourceBlankConfig = `
 data "aws_iam_policy_document" "test_source_blank" {
@@ -553,8 +549,7 @@ data "aws_iam_policy_document" "test_source_blank" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -564,8 +559,7 @@ var testAccAWSIAMPolicyDocumentSourceBlankExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentSourceConflictingConfig = `
 data "aws_iam_policy_document" "test_source" {
@@ -587,8 +581,7 @@ data "aws_iam_policy_document" "test_source_conflicting" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -598,8 +591,7 @@ var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentOverrideConfig = `
 data "aws_iam_policy_document" "override" {
@@ -633,8 +625,7 @@ data "aws_iam_policy_document" "test_override" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -650,8 +641,7 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentNoStatementMergeConfig = `
 data "aws_iam_policy_document" "source" {
@@ -676,8 +666,7 @@ data "aws_iam_policy_document" "yak_politik" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -693,8 +682,7 @@ var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentNoStatementOverrideConfig = `
 data "aws_iam_policy_document" "source" {
@@ -719,8 +707,7 @@ data "aws_iam_policy_document" "yak_politik" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -730,8 +717,7 @@ var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentDuplicateSidConfig = `
 data "aws_iam_policy_document" "test" {
@@ -769,8 +755,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentDuplicateBlankSidExpectedJSON = `
-{
+var testAccAWSIAMPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -786,8 +771,7 @@ var testAccAWSIAMPolicyDocumentDuplicateBlankSidExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017 = `
 data "aws_iam_policy_document" "test" {
@@ -800,8 +784,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ExpectedJSON = `
-{
+const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ExpectedJSON = `{
   "Version": "2008-10-17",
   "Statement": [
     {
@@ -811,8 +794,7 @@ const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ExpectedJSON = `
       "Resource": "*"
     }
   ]
-}
-`
+}`
 
 const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionCondition = `
 data "aws_iam_policy_document" "test" {
@@ -908,8 +890,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice = `
-{
+var testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -926,8 +907,7 @@ var testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAn
       }
     }
   ]
-}
-`
+}`
 
 var testAccAWSIAMPolicyDocumentConfigStatementPrincipalIdentifiersMultiplePrincipals = `
 data "aws_iam_policy_document" "test" {
@@ -961,8 +941,7 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
-var testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals = `
-{
+var testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals = `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -980,5 +959,4 @@ var testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiple
       }
     }
   ]
-}
-`
+}`
