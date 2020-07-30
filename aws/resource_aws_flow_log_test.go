@@ -599,9 +599,11 @@ resource "aws_s3_bucket" "test" {
 resource "aws_flow_log" "test" {
   log_destination      = "${aws_s3_bucket.test.arn}"
   log_destination_type = "s3"
-  traffic_type         = "ALL"
-  vpc_id               = "${aws_vpc.test.id}"
-  log_format           = "$${version} $${vpc-id} $${subnet-id}"
+  iam_role_arn         = "${aws_iam_role.test.arn}"
+
+  traffic_type   = "ALL"
+  vpc_id         = "${aws_vpc.test.id}"
+  log_format     = "$${version} $${vpc-id} $${subnet-id}"
 }
 `, rName)
 }
