@@ -74,22 +74,25 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 
 var testAccCheckAwsKinesisStreamDataSourceConfig = `
 resource "aws_kinesis_stream" "test_stream" {
-	name = "%s"
-	shard_count = 2
-	retention_period = 72
-	tags = {
-		Name = "tf-test"
-	}
-	shard_level_metrics = [
-		"IncomingBytes",
-		"OutgoingBytes"
-	]
-	lifecycle {
-		ignore_changes = ["shard_count"]
-	}
+  name             = "%s"
+  shard_count      = 2
+  retention_period = 72
+
+  tags = {
+    Name = "tf-test"
+  }
+
+  shard_level_metrics = [
+    "IncomingBytes",
+    "OutgoingBytes"
+  ]
+
+  lifecycle {
+    ignore_changes = ["shard_count"]
+  }
 }
 
 data "aws_kinesis_stream" "test_stream" {
-	name = "${aws_kinesis_stream.test_stream.name}"
+  name = aws_kinesis_stream.test_stream.name
 }
 `

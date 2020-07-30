@@ -154,15 +154,15 @@ func testAccAWSIPRangesCheckCidrBlocksAttribute(name, attribute string) resource
 
 const testAccAWSIPRangesConfig = `
 data "aws_ip_ranges" "some" {
-  regions = [ "eu-west-1", "eu-central-1" ]
-  services = [ "ec2" ]
+  regions  = ["eu-west-1", "eu-central-1"]
+  services = ["ec2"]
 }
 `
 
 const testAccAWSIPRangesConfigUrl = `
 data "aws_ip_ranges" "some" {
-  regions  = [ "eu-west-1", "eu-central-1" ]
-  services = [ "ec2" ]
+  regions  = ["eu-west-1", "eu-central-1"]
+  services = ["ec2"]
   url      = "https://ip-ranges.amazonaws.com/ip-ranges.json"
 }
 `
