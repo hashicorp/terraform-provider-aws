@@ -47,13 +47,13 @@ func TestAccAWSElbServiceAccount_Region(t *testing.T) {
 }
 
 const testAccCheckAwsElbServiceAccountConfig = `
-data "aws_elb_service_account" "main" { }
+data "aws_elb_service_account" "main" {}
 `
 
 const testAccCheckAwsElbServiceAccountExplicitRegionConfig = `
 data "aws_region" "current" {}
 
 data "aws_elb_service_account" "regional" {
-	region = "${data.aws_region.current.name}"
+  region = data.aws_region.current.name
 }
 `

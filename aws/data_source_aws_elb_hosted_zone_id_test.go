@@ -28,11 +28,11 @@ func TestAccAWSElbHostedZoneId_basic(t *testing.T) {
 }
 
 const testAccCheckAwsElbHostedZoneIdConfig = `
-data "aws_elb_hosted_zone_id" "main" { }
+data "aws_elb_hosted_zone_id" "main" {}
 `
 
 const testAccCheckAwsElbHostedZoneIdExplicitRegionConfig = `
 data "aws_elb_hosted_zone_id" "regional" {
-	region = "eu-west-1"
+  region = "eu-west-1"
 }
 `
