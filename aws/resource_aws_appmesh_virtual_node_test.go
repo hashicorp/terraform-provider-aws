@@ -285,6 +285,96 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshVirtualNode_listenerTimeout(t *testing.T) {
+	var vn appmesh.VirtualNodeData
+	resourceName := "aws_appmesh_virtual_node.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshVirtualNodeConfig_listenerTimeout(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.grpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.tcp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.tcp.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.tcp.0.idle.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.tcp.0.idle.0.value", "250000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+			{
+				Config: testAccAppmeshVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.grpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.0.idle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.0.idle.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.0.idle.0.value", "10"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.0.per_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.0.per_request.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http.0.per_request.0.value", "5"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.http2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.timeout.0.tcp.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
@@ -997,6 +1087,89 @@ resource "aws_appmesh_virtual_node" "test" {
     service_discovery {
       dns {
         hostname = "serviceb1.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName)
+}
+
+func testAccAppmeshVirtualNodeConfig_listenerTimeout(meshName, vnName string) string {
+	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "tcp"
+      }
+
+      timeout {
+        tcp {
+          idle {
+            unit  = "ms"
+            value = 250000
+          }
+        }
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName)
+}
+
+func testAccAppmeshVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName string) string {
+	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      timeout {
+        http {
+          idle {
+            unit  = "s"
+            value = 10
+          }
+
+          per_request {
+            unit  = "s"
+            value = 5
+          }
+        }
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
       }
     }
   }

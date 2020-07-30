@@ -32,6 +32,7 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"clientPolicyFile":         testAccAwsAppmeshVirtualNode_clientPolicyFile,
 			"cloudMapServiceDiscovery": testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery,
 			"listenerHealthChecks":     testAccAwsAppmeshVirtualNode_listenerHealthChecks,
+			"listenerTimeout":          testAccAwsAppmeshVirtualNode_listenerTimeout,
 			"logging":                  testAccAwsAppmeshVirtualNode_logging,
 			"tls":                      testAccAwsAppmeshVirtualNode_tls,
 			"tags":                     testAccAwsAppmeshVirtualNode_tags,
