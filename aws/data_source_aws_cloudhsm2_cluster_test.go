@@ -56,10 +56,10 @@ resource "aws_vpc" "cloudhsm_v2_test_vpc" {
 
 resource "aws_subnet" "cloudhsm_v2_test_subnets" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.cloudhsm_v2_test_vpc.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.cloudhsm_v2_test_vpc.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = false
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic"
@@ -67,14 +67,15 @@ resource "aws_subnet" "cloudhsm_v2_test_subnets" {
 }
 
 resource "aws_cloudhsm_v2_cluster" "cluster" {
-  hsm_type = "hsm1.medium"  
-  subnet_ids = ["${aws_subnet.cloudhsm_v2_test_subnets.0.id}", "${aws_subnet.cloudhsm_v2_test_subnets.1.id}"]
+  hsm_type   = "hsm1.medium"
+  subnet_ids = [aws_subnet.cloudhsm_v2_test_subnets.0.id, aws_subnet.cloudhsm_v2_test_subnets.1.id]
+
   tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic-%d"
   }
 }
 
 data "aws_cloudhsm_v2_cluster" "default" {
-  cluster_id = "${aws_cloudhsm_v2_cluster.cluster.cluster_id}"
+  cluster_id = aws_cloudhsm_v2_cluster.cluster.cluster_id
 }
 `, acctest.RandInt())

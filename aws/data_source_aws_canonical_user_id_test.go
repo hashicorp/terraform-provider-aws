@@ -42,5 +42,5 @@ func testAccDataSourceAwsCanonicalUserIdCheckExists(name string) resource.TestCh
 }
 
 const testAccDataSourceAwsCanonicalUserIdConfig = `
-data "aws_canonical_user_id" "current" { }
+data "aws_canonical_user_id" "current" {}
 `

@@ -38,7 +38,7 @@ func TestAccAWSBackupVaultDataSource_basic(t *testing.T) {
 
 const testAccAwsBackupVaultDataSourceConfig_nonExistent = `
 data "aws_backup_vault" "test" {
-	name = "tf-acc-test-does-not-exist"
+  name = "tf-acc-test-does-not-exist"
 }
 `
 

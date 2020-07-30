@@ -41,7 +41,7 @@ resource "aws_api_gateway_api_key" "example_key" {
 }
 
 data "aws_api_gateway_api_key" "test_key" {
-  id = "${aws_api_gateway_api_key.example_key.id}"
+  id = aws_api_gateway_api_key.example_key.id
 }
 `, r)
 }

@@ -52,5 +52,5 @@ func testAccCheckAwsCallerIdentityAccountId(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsCallerIdentityConfig_basic = `
-data "aws_caller_identity" "current" { }
+data "aws_caller_identity" "current" {}
 `

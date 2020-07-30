@@ -74,35 +74,35 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = "${aws_s3_bucket.test.id}"
+  bucket = aws_s3_bucket.test.id
 
   policy = <<POLICY
 {
-    "Version": "2008-10-17",
-    "Id": "s3policy",
-    "Statement": [
-        {
-            "Sid": "AllowCURBillingACLPolicy",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "${data.aws_billing_service_account.test.arn}"
-            },
-            "Action": [
-                "s3:GetBucketAcl",
-                "s3:GetBucketPolicy"
-            ],
-            "Resource": "${aws_s3_bucket.test.arn}"
-        },
-        {
-            "Sid": "AllowCURPutObject",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
-        }
-    ]
+  "Version": "2008-10-17",
+  "Id": "s3policy",
+  "Statement": [
+    {
+      "Sid": "AllowCURBillingACLPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": data.aws_billing_service_account.test.arn
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": aws_s3_bucket.test.arn
+    },
+    {
+      "Sid": "AllowCURPutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::386209384616:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+    }
+  ]
 }
 POLICY
 }
@@ -113,14 +113,14 @@ resource "aws_cur_report_definition" "test" {
   format                     = "textORcsv"
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES"]
-  s3_bucket                  = "${aws_s3_bucket.test.id}"
+  s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
-  s3_region                  = "${aws_s3_bucket.test.region}"
+  s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
 
 data "aws_cur_report_definition" "test" {
-  report_name = "${aws_cur_report_definition.test.report_name}"
+  report_name = aws_cur_report_definition.test.report_name
 }
 `, reportName, bucketName)
 }

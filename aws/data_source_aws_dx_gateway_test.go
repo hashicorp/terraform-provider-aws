@@ -48,7 +48,7 @@ resource "aws_dx_gateway" "test" {
 }
 
 data "aws_dx_gateway" "test" {
-  name = "${aws_dx_gateway.test.name}"
+  name = aws_dx_gateway.test.name
 }
 `, rBgpAsn+1, rName, rBgpAsn, rName)
 }

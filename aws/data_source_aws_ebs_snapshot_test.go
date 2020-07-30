@@ -99,17 +99,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 1
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 }
 
 data "aws_ebs_snapshot" "test" {
-  snapshot_ids = ["${aws_ebs_snapshot.test.id}"]
+  snapshot_ids = [aws_ebs_snapshot.test.id]
 }
 `
 
@@ -124,19 +124,20 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 1
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 }
 
 data "aws_ebs_snapshot" "test" {
+
   filter {
-    name = "snapshot-id"
-    values = ["${aws_ebs_snapshot.test.id}"]
+    name   = "snapshot-id"
+    values = [aws_ebs_snapshot.test.id]
   }
 }
 `
@@ -152,13 +153,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 1
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "incorrect" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-ebs-snapshot-data-source-most-recent"
@@ -166,7 +167,7 @@ resource "aws_ebs_snapshot" "incorrect" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_snapshot.incorrect.volume_id}"
+  volume_id = aws_ebs_snapshot.incorrect.volume_id
 
   tags = {
     Name = "tf-acc-test-ec2-ebs-snapshot-data-source-most-recent"
@@ -178,7 +179,7 @@ data "aws_ebs_snapshot" "test" {
 
   filter {
     name   = "tag:Name"
-    values = ["${aws_ebs_snapshot.test.tags.Name}"]
+    values = [aws_ebs_snapshot.test.tags.Name]
   }
 }
 `

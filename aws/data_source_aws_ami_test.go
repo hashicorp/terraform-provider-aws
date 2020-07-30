@@ -171,19 +171,22 @@ data "aws_ami" "nat_ami" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-vpc-nat*"]
   }
+
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
+
   filter {
-    name = "block-device-mapping.volume-type"
+    name   = "block-device-mapping.volume-type"
     values = ["standard"]
   }
 }
@@ -196,19 +199,22 @@ data "aws_ami" "windows_ami" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["Windows_Server-2012-R2*"]
   }
+
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
+
   filter {
-    name = "block-device-mapping.volume-type"
+    name   = "block-device-mapping.volume-type"
     values = ["gp2"]
   }
 }
@@ -221,15 +227,17 @@ data "aws_ami" "instance_store_ami" {
   owners      = ["099720109477"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server*"]
   }
+
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
@@ -239,11 +247,13 @@ data "aws_ami" "instance_store_ami" {
 const testAccCheckAwsAmiDataSourceNameRegexConfig = `
 data "aws_ami" "name_regex_filtered_ami" {
   most_recent = true
-  owners = ["amazon"]
+  owners      = ["amazon"]
+
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-*"]
   }
+
   name_regex = "^amzn-ami-\\d{3}[5].*-ecs-optimized"
 }
 `
