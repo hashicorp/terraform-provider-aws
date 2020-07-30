@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 0.12"
 }
 
-// First accepts the Peering attachment.
+# First accepts the Peering attachment.
 provider "aws" {
   alias = "first"
 
@@ -11,7 +11,7 @@ provider "aws" {
   secret_key = var.aws_first_secret_key
 }
 
-// Second creates the Peering attachment.
+# Second creates the Peering attachment.
 provider "aws" {
   alias = "second"
 
@@ -24,42 +24,12 @@ data "aws_caller_identity" "first" {
   provider = aws.first
 }
 
-data "aws_caller_identity" "second" {
-  provider = aws.second
-}
-
 resource "aws_ec2_transit_gateway" "first" {
   provider = aws.first
 
   tags = {
     Name = "terraform-example"
   }
-}
-
-resource "aws_ram_resource_share" "example" {
-  provider = aws.first
-
-  name = "terraform-example"
-
-  tags = {
-    Name = "terraform-example"
-  }
-}
-
-// Share the transit gateway...
-resource "aws_ram_resource_association" "example" {
-  provider = aws.first
-
-  resource_arn       = aws_ec2_transit_gateway.first.arn
-  resource_share_arn = aws_ram_resource_share.example.id
-}
-
-// ...with the second account.
-resource "aws_ram_principal_association" "example" {
-  provider = aws.first
-
-  principal          = data.aws_caller_identity.second.account_id
-  resource_share_arn = aws_ram_resource_share.example.id
 }
 
 resource "aws_ec2_transit_gateway" "second" {
@@ -70,7 +40,7 @@ resource "aws_ec2_transit_gateway" "second" {
   }
 }
 
-// Create the Peering attachment in the second account...
+# Create the Peering attachment in the second account...
 resource "aws_ec2_transit_gateway_peering_attachment" "example" {
   provider = aws.second
 
@@ -82,11 +52,15 @@ resource "aws_ec2_transit_gateway_peering_attachment" "example" {
     Name = "terraform-example"
     Side = "Creator"
   }
-  depends_on = [
-    aws_ram_principal_association.example,
-    aws_ram_resource_association.example,
-  ]
 }
 
-// ...it then needs to accepted by the first account.
-// ...terraform currently doesnt have resource for Transit Gateway Peering Attachment Acceptance
+# ...and accept it in the first account.
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
+  provider = aws.first
+
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.example.id
+  tags = {
+    Name = "terraform-example"
+    Side = "Acceptor"
+  }
+}

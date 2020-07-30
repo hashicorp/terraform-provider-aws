@@ -24,7 +24,7 @@ resource "aws_elb" "web" {
 }
 
 resource "aws_instance" "web" {
-  instance_type = "m1.small"
+  instance_type = "t2.small"
   ami           = var.aws_amis[var.aws_region]
 
   # This will create 4 instances
