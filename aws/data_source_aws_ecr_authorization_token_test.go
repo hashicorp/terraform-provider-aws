@@ -53,8 +53,9 @@ func testAccCheckAwsEcrAuthorizationTokenDataSourceRepositoryConfig(rName string
 resource "aws_ecr_repository" "repo" {
   name = %q
 }
+
 data "aws_ecr_authorization_token" "repo" {
-	registry_id = "${aws_ecr_repository.repo.registry_id}"
+  registry_id = aws_ecr_repository.repo.registry_id
 }
 `, rName)
 }

@@ -156,7 +156,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_sameAcco
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   filter {
     name   = "transit-gateway-attachment-id"
-    values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
+    values = [aws_ec2_transit_gateway_peering_attachment.test.id]
   }
 }
 `)
@@ -167,7 +167,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_sameAccount(
 		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName),
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
-  id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
+  id = aws_ec2_transit_gateway_peering_attachment.test.id
 }
 `)
 }
@@ -178,7 +178,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags_sameAccoun
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   tags = {
-    Name = "${aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]}"
+    Name = aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]
   }
 }
 `)
@@ -190,9 +190,10 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_differen
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "awsalternate"
+
   filter {
     name   = "transit-gateway-attachment-id"
-    values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
+    values = [aws_ec2_transit_gateway_peering_attachment.test.id]
   }
 }
 `)
@@ -204,7 +205,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_differentAcc
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "awsalternate"
-  id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
+  id       = aws_ec2_transit_gateway_peering_attachment.test.id
 }
 `)
 }
