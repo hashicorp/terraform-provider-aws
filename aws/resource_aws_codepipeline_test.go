@@ -53,7 +53,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "lifesum-terraform"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "test"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "master"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.OAuthToken", hashCodePipelineGitHubToken(githubToken)),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.OAuthToken", githubToken),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.run_order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.region", ""),
@@ -101,7 +101,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "test-terraform"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "test-repo"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "stable"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.OAuthToken", hashCodePipelineGitHubToken(githubToken)),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.OAuthToken", githubToken),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
