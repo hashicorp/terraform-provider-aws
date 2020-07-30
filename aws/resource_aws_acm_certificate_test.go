@@ -249,10 +249,11 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 	})
 }
 
+// TestAccAWSAcmCertificate_root_TrailingPeriod updated in 3.0 to account for domain_name plan-time validation
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
 func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.", rootDomain)
-	resourceName := "aws_acm_certificate.cert"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -260,25 +261,8 @@ func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
-				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", strings.TrimSuffix(domain, ".")),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          strings.TrimSuffix(domain, "."),
-						"resource_record_type": "CNAME",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:      testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
+				ExpectError: regexp.MustCompile(`config is invalid: invalid value for domain_name \(cannot end with a period\)`),
 			},
 		},
 	})
