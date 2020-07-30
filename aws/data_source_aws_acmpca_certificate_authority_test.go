@@ -69,7 +69,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 }
 
 data "aws_acmpca_certificate_authority" "test" {
-  arn = "${aws_acmpca_certificate_authority.test.arn}"
+  arn = aws_acmpca_certificate_authority.test.arn
 }
 `
 

@@ -41,24 +41,24 @@ resource "aws_api_gateway_rest_api" "example" {
 }
 
 resource "aws_api_gateway_resource" "example_v1" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-  parent_id   = "${aws_api_gateway_rest_api.example.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  parent_id   = aws_api_gateway_rest_api.example.root_resource_id
   path_part   = "v1"
 }
 
 resource "aws_api_gateway_resource" "example_v1_endpoint" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-  parent_id   = "${aws_api_gateway_resource.example_v1.id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  parent_id   = aws_api_gateway_resource.example_v1.id
   path_part   = "endpoint"
 }
 
 data "aws_api_gateway_resource" "example_v1" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
   path        = "/${aws_api_gateway_resource.example_v1.path_part}"
 }
 
 data "aws_api_gateway_resource" "example_v1_endpoint" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
   path        = "/${aws_api_gateway_resource.example_v1.path_part}/${aws_api_gateway_resource.example_v1_endpoint.path_part}"
 }
 `, r)

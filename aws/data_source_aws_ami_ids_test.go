@@ -60,12 +60,12 @@ func TestAccDataSourceAwsAmiIds_sorted(t *testing.T) {
 
 const testAccDataSourceAwsAmiIdsConfig_basic = `
 data "aws_ami_ids" "ubuntu" {
-    owners = ["099720109477"]
+  owners = ["099720109477"]
 
-    filter {
-        name   = "name"
-        values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
-    }
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
+  }
 }
 `
 

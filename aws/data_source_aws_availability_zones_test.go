@@ -296,7 +296,7 @@ func testAccCheckAwsAvailabilityZonesBuildAvailable(attrs map[string]string) ([]
 }
 
 const testAccCheckAwsAvailabilityZonesConfig = `
-data "aws_availability_zones" "availability_zones" { }
+data "aws_availability_zones" "availability_zones" {}
 `
 
 func testAccCheckAwsAvailabilityZonesConfigAllAvailabilityZones() string {
@@ -310,6 +310,7 @@ data "aws_availability_zones" "test" {
 func testAccCheckAwsAvailabilityZonesConfigFilter() string {
 	return `
 data "aws_availability_zones" "test" {
+
   filter {
     name   = "state"
     values = ["available"]
@@ -323,7 +324,7 @@ func testAccCheckAwsAvailabilityZonesConfigExcludeNames() string {
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  exclude_names = ["${data.aws_availability_zones.all.names[0]}"]
+  exclude_names = [data.aws_availability_zones.all.names[0]]
 }
 `
 }
@@ -333,13 +334,13 @@ func testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds() string {
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  exclude_zone_ids = ["${data.aws_availability_zones.all.zone_ids[0]}"]
+  exclude_zone_ids = [data.aws_availability_zones.all.zone_ids[0]]
 }
 `
 }
 
 const testAccCheckAwsAvailabilityZonesStateConfig = `
 data "aws_availability_zones" "state_filter" {
-	state = "available"
+  state = "available"
 }
 `

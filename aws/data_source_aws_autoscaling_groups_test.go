@@ -102,12 +102,12 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id      = "${data.aws_ami.test_ami.id}"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -115,7 +115,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -125,7 +125,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones = ["${data.aws_availability_zones.available.names[1]}"]
+  availability_zones = [data.aws_availability_zones.available.names[1]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -133,7 +133,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -143,7 +143,7 @@ resource "aws_autoscaling_group" "foo" {
 }
 
 resource "aws_autoscaling_group" "barbaz" {
-  availability_zones = ["${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[2]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -151,7 +151,7 @@ resource "aws_autoscaling_group" "barbaz" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -184,12 +184,12 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id      = "${data.aws_ami.test_ami.id}"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -197,7 +197,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -207,7 +207,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones = ["${data.aws_availability_zones.available.names[1]}"]
+  availability_zones = [data.aws_availability_zones.available.names[1]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -215,7 +215,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -225,7 +225,7 @@ resource "aws_autoscaling_group" "foo" {
 }
 
 resource "aws_autoscaling_group" "barbaz" {
-  availability_zones = ["${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[2]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -233,7 +233,7 @@ resource "aws_autoscaling_group" "barbaz" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -243,6 +243,7 @@ resource "aws_autoscaling_group" "barbaz" {
 }
 
 data "aws_autoscaling_groups" "group_list" {
+
   filter {
     name   = "key"
     values = ["Foo"]

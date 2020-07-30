@@ -37,6 +37,7 @@ func testAccDataSourceAwsEbsVolumeIDsConfigWithDataSource(rInt int) string {
 %s
 
 data "aws_ebs_volumes" "subject_under_test" {
+
   tags = {
     TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
   }
@@ -56,7 +57,7 @@ resource "aws_ebs_volume" "volume" {
   count = 2
 
   availability_zone = data.aws_availability_zones.azs.names[0]
-  size = 1
+  size              = 1
 
   tags = {
     TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
