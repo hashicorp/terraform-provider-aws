@@ -247,11 +247,14 @@ func testAccAWSBackupSelectionImportStateIDFunc(resourceName string) resource.Im
 
 func testAccBackupSelectionConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -262,7 +265,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
 }
@@ -274,7 +277,7 @@ func testAccBackupSelectionConfigBasic(rName string) string {
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id      = "${aws_backup_plan.test.id}"
+  plan_id      = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
@@ -297,7 +300,7 @@ func testAccBackupSelectionConfigWithTags(rName string) string {
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id      = "${aws_backup_plan.test.id}"
+  plan_id      = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
@@ -337,7 +340,7 @@ data "aws_availability_zones" "available" {
 resource "aws_ebs_volume" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
@@ -346,7 +349,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_backup_selection" "test" {
-  plan_id      = "${aws_backup_plan.test.id}"
+  plan_id      = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
@@ -358,8 +361,8 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "${aws_ebs_volume.test.0.arn}",
-    "${aws_ebs_volume.test.1.arn}",
+    aws_ebs_volume.test.0.arn,
+    aws_ebs_volume.test.1.arn,
   ]
 }
 `, rName))
@@ -370,7 +373,7 @@ func testAccBackupSelectionConfigUpdateTag(rName string) string {
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id      = "${aws_backup_plan.test.id}"
+  plan_id      = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
