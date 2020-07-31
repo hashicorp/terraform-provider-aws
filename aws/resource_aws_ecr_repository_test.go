@@ -434,6 +434,7 @@ func testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName string, sc
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
+
   image_scanning_configuration {
     scan_on_push = %t
   }

@@ -97,7 +97,7 @@ func testAccCheckEmrSecurityConfigurationExists(n string) resource.TestCheckFunc
 
 const testAccEmrSecurityConfigurationConfig = `
 resource "aws_emr_security_configuration" "test" {
-	configuration = <<EOF
+  configuration = <<EOF
 {
   "EncryptionConfiguration": {
     "AtRestEncryptionConfiguration": {

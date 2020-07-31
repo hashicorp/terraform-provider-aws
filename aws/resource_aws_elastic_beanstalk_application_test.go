@@ -318,11 +318,12 @@ resource "aws_iam_role" "beanstalk_service" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "beanstalk_service" {
   name = "%[1]s"
-  role = "${aws_iam_role.beanstalk_service.id}"
+  role = aws_iam_role.beanstalk_service.id
 
   policy = <<EOF
 {
@@ -341,6 +342,7 @@ resource "aws_iam_role_policy" "beanstalk_service" {
     ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -348,13 +350,14 @@ EOF
 func testAccBeanstalkAppConfigWithMaxAge(rName string) string {
 	return testAccBeanstalkAppServiceRole(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
-	appversion_lifecycle {
-		service_role = "${aws_iam_role.beanstalk_service.arn}"
-		max_age_in_days = 90
-		delete_source_from_s3 = true
-	}
+
+  appversion_lifecycle {
+    service_role          = aws_iam_role.beanstalk_service.arn
+    max_age_in_days       = 90
+    delete_source_from_s3 = true
+  }
 }
 `, rName)
 }
@@ -362,13 +365,14 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 func testAccBeanstalkAppConfigWithMaxCount(rName string) string {
 	return testAccBeanstalkAppServiceRole(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
-	appversion_lifecycle {
-		service_role = "${aws_iam_role.beanstalk_service.arn}"
-		max_count = 10
-		delete_source_from_s3 = false
-	}
+
+  appversion_lifecycle {
+    service_role          = aws_iam_role.beanstalk_service.arn
+    max_count             = 10
+    delete_source_from_s3 = false
+  }
 }
 `, rName)
 }

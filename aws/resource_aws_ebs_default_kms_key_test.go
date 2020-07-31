@@ -118,6 +118,6 @@ const testAccAwsEbsDefaultKmsKeyConfig_basic = `
 resource "aws_kms_key" "test" {}
 
 resource "aws_ebs_default_kms_key" "test" {
-  key_arn = "${aws_kms_key.test.arn}"
+  key_arn = aws_kms_key.test.arn
 }
 `

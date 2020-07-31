@@ -352,8 +352,8 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName s
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
-  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
-  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
 }
 `, testAccGetAlternateRegion())
 }
@@ -361,10 +361,10 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName string) string {
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
-  peer_account_id         = "${aws_ec2_transit_gateway.peer.owner_id}"
+  peer_account_id         = aws_ec2_transit_gateway.peer.owner_id
   peer_region             = %[1]q
-  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
-  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
 }
 `, testAccGetAlternateRegion())
 }
@@ -373,8 +373,8 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentConfigTags1_sameAccount(rName, 
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
-  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
-  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
     Name  = %[2]q
@@ -388,8 +388,8 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentConfigTags2_sameAccount(rName, 
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
-  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
-  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
     Name  = %[2]q

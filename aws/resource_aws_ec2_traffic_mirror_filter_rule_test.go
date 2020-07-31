@@ -155,12 +155,12 @@ resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
 resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
-	traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
-	destination_cidr_block = "%s"
-	rule_action = "%s"
-	rule_number = %d
-	source_cidr_block = "%s"
-	traffic_direction = "%s"
+  traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
+  destination_cidr_block   = "%s"
+  rule_action              = "%s"
+  rule_number              = %d
+  source_cidr_block        = "%s"
+  traffic_direction        = "%s"
 }
 `, dstCidr, action, num, srcCidr, dir)
 }
@@ -171,22 +171,22 @@ resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
 resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
-	traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
-	destination_cidr_block = "%s"
-	rule_action = "%s"
-	rule_number = %d
-	source_cidr_block = "%s"
-	traffic_direction = "%s"
-	description = "%s"
-	protocol = %d
-	source_port_range {
-		from_port = %d
-		to_port = %d
-	}
-	destination_port_range {
-		from_port = %d
-		to_port = %d
-	}
+  traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
+  destination_cidr_block   = "%s"
+  rule_action              = "%s"
+  rule_number              = %d
+  source_cidr_block        = "%s"
+  traffic_direction        = "%s"
+  description              = "%s"
+  protocol                 = %d
+  source_port_range {
+    from_port = %d
+    to_port   = %d
+  }
+  destination_port_range {
+    from_port = %d
+    to_port   = %d
+  }
 }
 `, dstCidr, action, ruleNum, srcCidr, dir, description, protocol, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo)
 }

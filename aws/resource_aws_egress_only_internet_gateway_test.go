@@ -193,7 +193,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 
