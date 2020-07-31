@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAwsEc2SpotPriceDataSource(t *testing.T) {
+func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +29,7 @@ func TestAccAwsEc2SpotPriceDataSource(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2SpotPriceDataSourceFilter(t *testing.T) {
+func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
