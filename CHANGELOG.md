@@ -26,6 +26,7 @@ BREAKING CHANGES
 * resource/aws_autoscaling_group: Remove `Computed` property from `load_balancers` and `target_group_arns` arguments, enabling drift detection [GH-14064]
 * resource/aws_cloudfront_distribution: `active_trusted_signers` argument renamed to `trusted_signers` to support accessing `items` in Terraform 0.12 [GH-14339]
 * resource/aws_cloudwatch_log_group: Automatically trim `:*` suffix from `arn` attribute [GH-14214]
+* resource/aws_codepipeline: Removes `GITHUB_TOKEN` environment variable [GH-14175]
 * resource/aws_cognito_user_pool: Remove deprecated `admin_create_user_config` configuration block `unused_account_validity_days` argument [GH-14294]
 * resource/aws_dx_gateway: Remove automatic `aws_dx_gateway_association` resource import [GH-14124]
 * resource/aws_dx_gateway_association: Remove deprecated `vpn_gateway_id` argument [GH-14144]
