@@ -8,12 +8,14 @@ ENHANCEMENTS
 
 * data-source/aws_ecr_repository: Allow `registry_id` as an argument [GH-14368]
 * data-source/aws_ecr_repository: Add `image_scanning_configuration` and `image_tag_mutability` attributes [GH-14368]
+* resource/aws_api_gateway_method_settings: Plan-time validation added to `settings` `unauthorized_cache_control_header_strategy` and `logging_level` arguments [GH-12651]
 * resource/aws_lb: Add `subnet_mapping` configuration block `private_ipv4_address` argument [GH-11404]
 * resource/aws_ssm_parameter: Add `data_type` argument (support `aws:ec2:image` parameters) [GH-13326]
 
 BUG FIXES
 
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
+* resource/aws_api_gateway_method_settings: Allow `settings` `cache_ttl_in_seconds` argument to be set to 0 [GH-12651]
 * resource/aws_elastictranscoder_preset: Prevent empty configuration block panics [GH-14092]
 * resource/aws_vpc_dhcp_options_association: Properly trigger resource recreation when VPC is deleted outside Terraform [GH-14367]
 
