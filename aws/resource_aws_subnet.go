@@ -43,13 +43,13 @@ func resourceAwsSubnet() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
+				ValidateFunc: validateIpv4CIDRNetworkAddress,
 			},
 
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.IsCIDR,
+				ValidateFunc: validateIpv6CIDRNetworkAddress,
 			},
 
 			"availability_zone": {
@@ -130,29 +130,28 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateSubnet(createOpts)
 
 	if err != nil {
-		return fmt.Errorf("Error creating subnet: %s", err)
+		return fmt.Errorf("error creating subnet: %w", err)
 	}
 
 	// Get the ID and store it
 	subnet := resp.Subnet
-	d.SetId(*subnet.SubnetId)
-	log.Printf("[INFO] Subnet ID: %s", *subnet.SubnetId)
+	subnetId := aws.StringValue(subnet.SubnetId)
+	d.SetId(subnetId)
+	log.Printf("[INFO] Subnet ID: %s", subnetId)
 
 	// Wait for the Subnet to become available
-	log.Printf("[DEBUG] Waiting for subnet (%s) to become available", *subnet.SubnetId)
+	log.Printf("[DEBUG] Waiting for subnet (%s) to become available", subnetId)
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.SubnetStatePending},
 		Target:  []string{ec2.SubnetStateAvailable},
-		Refresh: SubnetStateRefreshFunc(conn, *subnet.SubnetId),
+		Refresh: SubnetStateRefreshFunc(conn, subnetId),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	_, err = stateConf.WaitForState()
 
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for subnet (%s) to become ready: %s",
-			d.Id(), err)
+		return fmt.Errorf("error waiting for subnet (%s) to become ready: %w", d.Id(), err)
 	}
 
 	// You cannot modify multiple subnet attributes in the same request.
@@ -167,7 +166,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
-			return fmt.Errorf("error enabling EC2 Subnet (%s) assign IPv6 address on creation: %s", d.Id(), err)
+			return fmt.Errorf("error enabling EC2 Subnet (%s) assign IPv6 address on creation: %w", d.Id(), err)
 		}
 	}
 
@@ -180,7 +179,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
-			return fmt.Errorf("error enabling EC2 Subnet (%s) map public IP on launch: %s", d.Id(), err)
+			return fmt.Errorf("error enabling EC2 Subnet (%s) map public IP on launch: %w", d.Id(), err)
 		}
 	}
 
@@ -222,7 +221,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipv6_cidr_block", "")
 
 	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
-		if *a.Ipv6CidrBlockState.State == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+		if aws.StringValue(a.Ipv6CidrBlockState.State) == ec2.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_cidr_block_association_id", a.AssociationId)
 			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
 			break
@@ -232,7 +231,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", subnet.SubnetArn)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("owner_id", subnet.OwnerId)
@@ -247,7 +246,7 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Subnet (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Subnet (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -318,7 +317,7 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			if _, err := stateConf.WaitForState(); err != nil {
 				return fmt.Errorf(
-					"Error waiting for IPv6 CIDR (%s) to become disassociated: %s",
+					"Error waiting for IPv6 CIDR (%s) to become disassociated: %w",
 					d.Id(), err)
 			}
 		}
@@ -344,12 +343,12 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 			stateConf := &resource.StateChangeConf{
 				Pending: []string{ec2.SubnetCidrBlockStateCodeAssociating, ec2.SubnetCidrBlockStateCodeDisassociated},
 				Target:  []string{ec2.SubnetCidrBlockStateCodeAssociated},
-				Refresh: SubnetIpv6CidrStateRefreshFunc(conn, d.Id(), *resp.Ipv6CidrBlockAssociation.AssociationId),
+				Refresh: SubnetIpv6CidrStateRefreshFunc(conn, d.Id(), aws.StringValue(resp.Ipv6CidrBlockAssociation.AssociationId)),
 				Timeout: 3 * time.Minute,
 			}
 			if _, err := stateConf.WaitForState(); err != nil {
 				return fmt.Errorf(
-					"Error waiting for IPv6 CIDR (%s) to become associated: %s",
+					"Error waiting for IPv6 CIDR (%s) to become associated: %w",
 					d.Id(), err)
 			}
 
@@ -382,7 +381,7 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting subnet: %s", d.Id())
 
 	if err := deleteLingeringLambdaENIs(conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error deleting Lambda ENIs using subnet (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Lambda ENIs using subnet (%s): %w", d.Id(), err)
 	}
 
 	req := &ec2.DeleteSubnetInput{
@@ -414,7 +413,7 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := wait.WaitForState(); err != nil {
-		return fmt.Errorf("error deleting subnet (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting subnet (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -442,7 +441,7 @@ func SubnetStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 		}
 
 		subnet := resp.Subnets[0]
-		return subnet, *subnet.State, nil
+		return subnet, aws.StringValue(subnet.State), nil
 	}
 }
 
@@ -472,8 +471,8 @@ func SubnetIpv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId stri
 		}
 
 		for _, association := range resp.Subnets[0].Ipv6CidrBlockAssociationSet {
-			if *association.AssociationId == associationId {
-				return association, *association.Ipv6CidrBlockState.State, nil
+			if aws.StringValue(association.AssociationId) == associationId {
+				return association, aws.StringValue(association.Ipv6CidrBlockState.State), nil
 			}
 		}
 

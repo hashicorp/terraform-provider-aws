@@ -58,7 +58,7 @@ func init() {
 func testSweepSubnets(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).ec2conn
 	input := &ec2.DescribeSubnetsInput{}
@@ -117,7 +117,7 @@ func testSweepSubnets(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing subnets: %s", err)
+		return fmt.Errorf("Error describing subnets: %w", err)
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -341,7 +341,7 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_id", "usw2-az3"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
 				),
 			},
 			{
@@ -366,7 +366,7 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					testAccCheckSubnetDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -427,8 +427,9 @@ func testAccCheckAwsSubnetIpv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheck
 
 func testAccCheckAwsSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.SubnetId != *after.SubnetId {
-			t.Fatalf("Expected SubnetIDs not to change, but both got before: %s and after: %s", *before.SubnetId, *after.SubnetId)
+		if aws.StringValue(before.SubnetId) != aws.StringValue(after.SubnetId) {
+			t.Fatalf("Expected SubnetIDs not to change, but both got before: %s and after: %s",
+				aws.StringValue(before.SubnetId), aws.StringValue(after.SubnetId))
 		}
 		return nil
 	}
@@ -495,17 +496,6 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSubnetDisappears(v *ec2.Subnet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
-			SubnetId: v.SubnetId,
-		})
-
-		return err
-	}
-}
-
 func testAccCheckSubnetUpdateTags(subnet *ec2.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -527,7 +517,6 @@ resource "aws_subnet" "test" {
   cidr_block              = "10.1.1.0/24"
   vpc_id                  = aws_vpc.test.id
   map_public_ip_on_launch = true
-
   }
 `
 
@@ -663,6 +652,15 @@ resource "aws_subnet" "test" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -674,8 +672,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block           = "10.1.1.0/24"
   vpc_id               = aws_vpc.test.id
-  availability_zone_id = "usw2-az3"
-
+  availability_zone_id = data.aws_availability_zones.test.zone_ids[0]
   tags = {
     Name = "tf-acc-subnet"
   }
