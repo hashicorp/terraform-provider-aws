@@ -2,11 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsCodeArtifactRepository() *schema.Resource {
@@ -112,8 +114,7 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 	}
 
 	repo := res.Repository
-	d.SetId(fmt.Sprintf("%s:%s:%s", aws.StringValue(repo.DomainOwner),
-		aws.StringValue(repo.DomainName), aws.StringValue(repo.Name)))
+	d.SetId(aws.StringValue(repo.Arn))
 
 	return resourceAwsCodeArtifactRepositoryRead(d, meta)
 }
@@ -274,9 +275,14 @@ func flattenCodeArtifactExternalConnections(connections []*codeartifact.Reposito
 }
 
 func decodeCodeArtifactRepositoryID(id string) (string, string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 3 {
-		return "", "", "", fmt.Errorf("expected ID in format DomainOwner:DomainName:RepositoryName, received: %s", id)
+	repoArn, err := arn.Parse(id)
+	if err != nil {
+		return "", "", "", err
 	}
-	return idParts[0], idParts[1], idParts[2], nil
+
+	idParts := strings.Split(strings.TrimPrefix(repoArn.Resource, "repository/"), "/")
+	if len(idParts) != 2 {
+		return "", "", "", fmt.Errorf("expected resource part of arn in format DomainName/RepositoryName, received: %s", repoArn.Resource)
+	}
+	return repoArn.AccountID, idParts[0], idParts[1], nil
 }
