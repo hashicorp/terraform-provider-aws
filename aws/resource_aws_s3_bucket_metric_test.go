@@ -313,7 +313,7 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
 				),
-				ExpectError: regexp.MustCompile(`config is invalid`),
+				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})
