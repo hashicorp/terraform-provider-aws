@@ -16,9 +16,6 @@ import (
 
 func TestAccAWSCodePipeline_basic(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p1, p2 codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
@@ -127,9 +124,6 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 
 func TestAccAWSCodePipeline_disappears(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
@@ -154,9 +148,6 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 
 func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
@@ -200,9 +191,6 @@ func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 
 func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
@@ -237,9 +225,6 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 
 func TestAccAWSCodePipeline_tags(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p1, p2, p3 codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
@@ -301,9 +286,6 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 
 func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
@@ -351,9 +333,6 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 
 func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p1, p2 codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
@@ -415,9 +394,6 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 
 func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p1, p2 codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
@@ -489,9 +465,6 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 
 func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
 
 	var p1 codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
@@ -574,8 +547,11 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSCodePipeline(t *testing.T, regions ...string) {
-	regions = append(regions, testAccGetRegion())
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
 
+	regions = append(regions, testAccGetRegion())
 	for _, region := range regions {
 		conf := &Config{
 			Region: region,
@@ -1095,7 +1071,7 @@ func testAccAWSCodePipelineConfig_multiregion(rName, githubToken string) string 
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
-		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
@@ -1178,7 +1154,7 @@ func testAccAWSCodePipelineConfig_multiregionUpdated(rName, githubToken string) 
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
-		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
