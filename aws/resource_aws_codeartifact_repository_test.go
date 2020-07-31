@@ -84,8 +84,39 @@ func TestAccAWSCodeArtifactRepository_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "domain_owner"),
-					testAccCheckResourceAttrAccountID(resourceName, "administrator_account"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain", "owner"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeArtifactRepository_owner(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codeartifact_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeArtifactRepositoryOwnerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "repository", rName),
+					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain", "owner"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
@@ -272,6 +303,26 @@ resource "aws_codeartifact_domain" "test" {
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
+}
+`, rName)
+}
+
+func testAccAWSCodeArtifactRepositoryOwnerConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = aws_kms_key.test.arn
+}
+
+resource "aws_codeartifact_repository" "test" {
+  repository   = %[1]q
+  domain       = aws_codeartifact_domain.test.domain
+  domain_owner = aws_codeartifact_domain.test.owner
 }
 `, rName)
 }
