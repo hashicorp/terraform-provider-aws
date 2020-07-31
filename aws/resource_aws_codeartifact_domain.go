@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -69,7 +71,7 @@ func resourceAwsCodeArtifactDomainCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error creating CodeArtifact Domain: %w", err)
 	}
 
-	d.SetId(aws.StringValue(domain.Domain.Name))
+	d.SetId(aws.StringValue(domain.Domain.Arn))
 
 	return resourceAwsCodeArtifactDomainRead(d, meta)
 }
@@ -79,8 +81,14 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Reading CodeArtifact Domain: %s", d.Id())
 
+	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
+	if err != nil {
+		return err
+	}
+
 	sm, err := conn.DescribeDomain(&codeartifact.DescribeDomainInput{
-		Domain: aws.String(d.Id()),
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
 		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
@@ -106,11 +114,17 @@ func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).codeartifactconn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
-	input := &codeartifact.DeleteDomainInput{
-		Domain: aws.String(d.Id()),
+	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
+	if err != nil {
+		return err
 	}
 
-	_, err := conn.DeleteDomain(input)
+	input := &codeartifact.DeleteDomainInput{
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
+	}
+
+	_, err = conn.DeleteDomain(input)
 
 	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
@@ -121,4 +135,14 @@ func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
+}
+
+func decodeCodeArtifactDomainID(id string) (string, string, error) {
+	repoArn, err := arn.Parse(id)
+	if err != nil {
+		return "", "", err
+	}
+
+	domainName := strings.TrimPrefix(repoArn.Resource, "domain/")
+	return repoArn.AccountID, domainName, nil
 }

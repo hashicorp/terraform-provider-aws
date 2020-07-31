@@ -131,8 +131,14 @@ func testAccCheckAWSCodeArtifactDomainExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
 
-		_, err := conn.DescribeDomain(&codeartifact.DescribeDomainInput{
-			Domain: aws.String(rs.Primary.ID),
+		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.DescribeDomain(&codeartifact.DescribeDomainInput{
+			Domain:      aws.String(domainName),
+			DomainOwner: aws.String(domainOwner),
 		})
 
 		return err
@@ -146,12 +152,19 @@ func testAccCheckAWSCodeArtifactDomainDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+
+		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		resp, err := conn.DescribeDomain(&codeartifact.DescribeDomainInput{
-			Domain: aws.String(rs.Primary.ID),
+			Domain:      aws.String(domainName),
+			DomainOwner: aws.String(domainOwner),
 		})
 
 		if err == nil {
-			if aws.StringValue(resp.Domain.Name) == rs.Primary.ID {
+			if aws.StringValue(resp.Domain.Arn) == rs.Primary.ID {
 				return fmt.Errorf("CodeArtifact Domain %s still exists", rs.Primary.ID)
 			}
 		}
