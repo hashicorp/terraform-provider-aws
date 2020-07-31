@@ -293,7 +293,7 @@ resource "aws_ram_principal_association" "test" {
 }
 
 data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   resolver_endpoint_id = "${aws_route53_resolver_rule.example.resolver_endpoint_id}"
 

@@ -19,7 +19,10 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 		Update: resourceAwsDbEventSubscriptionUpdate,
 		Delete: resourceAwsDbEventSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDbEventSubscriptionImport,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),

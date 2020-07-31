@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSSesTemplate_Basic(t *testing.T) {
+func TestAccAWSSesTemplate_basic(t *testing.T) {
 	resourceName := "aws_ses_template.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	var template ses.Template
@@ -44,7 +44,7 @@ func TestAccAWSSesTemplate_Basic(t *testing.T) {
 }
 
 func TestAccAWSSesTemplate_Update(t *testing.T) {
-	t.Skipf("Skip due to SES.UpdateTemplate eventual consistency issues")
+	TestAccSkip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_template.test"
 	var template ses.Template

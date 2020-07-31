@@ -601,7 +601,8 @@ func testAccPreCheckAWSBatch(t *testing.T) {
 
 func testAccAWSBatchComputeEnvironmentConfigBase(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 ########## ecs_instance_role ##########
 
@@ -622,16 +623,17 @@ resource "aws_iam_role" "ecs_instance_role" {
     ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
-  role       = "${aws_iam_role.ecs_instance_role.name}"
+  role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
   name = "tf_acc_test_batch_ip_%d"
-  role = "${aws_iam_role.ecs_instance_role.name}"
+  role = aws_iam_role.ecs_instance_role.name
 }
 
 ########## aws_batch_service_role ##########
@@ -653,10 +655,11 @@ resource "aws_iam_role" "aws_batch_service_role" {
     ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
-  role       = "${aws_iam_role.aws_batch_service_role.name}"
+  role       = aws_iam_role.aws_batch_service_role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
@@ -679,10 +682,11 @@ resource "aws_iam_role" "aws_ec2_spot_fleet_role" {
     ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "aws_ec2_spot_fleet_role" {
-  role       = "${aws_iam_role.aws_ec2_spot_fleet_role.name}"
+  role       = aws_iam_role.aws_ec2_spot_fleet_role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
@@ -690,7 +694,7 @@ resource "aws_iam_role_policy_attachment" "aws_ec2_spot_fleet_role" {
 
 resource "aws_security_group" "test_acc" {
   name   = "tf_acc_test_batch_sg_%d"
-  vpc_id = "${aws_vpc.test_acc.id}"
+  vpc_id = aws_vpc.test_acc.id
 }
 
 ########## subnets ##########
@@ -704,7 +708,7 @@ resource "aws_vpc" "test_acc" {
 }
 
 resource "aws_subnet" "test_acc" {
-  vpc_id     = "${aws_vpc.test_acc.id}"
+  vpc_id     = aws_vpc.test_acc.id
   cidr_block = "10.1.1.0/24"
 
   tags = {
@@ -718,24 +722,26 @@ func testAccAWSBatchComputeEnvironmentConfigEC2(rInt int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -744,24 +750,26 @@ func testAccAWSBatchComputeEnvironmentConfigNamePrefix(rInt int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + `
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name_prefix = "tf_acc_test"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `
 }
@@ -770,27 +778,29 @@ func testAccAWSBatchComputeEnvironmentConfigEC2WithTags(rInt int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   tags = {
       Key1 = "Value1"
     }
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-	type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -799,26 +809,28 @@ func testAccAWSBatchComputeEnvironmentConfigSpot(rInt int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "spot" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
     bid_percentage = 100
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
-    spot_iam_fleet_role = "${aws_iam_role.aws_ec2_spot_fleet_role.arn}"
+    spot_iam_fleet_role = aws_iam_role.aws_ec2_spot_fleet_role.arn
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "SPOT"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -827,9 +839,9 @@ func testAccAWSBatchComputeEnvironmentConfigUnmanaged(rInt int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "unmanaged" {
   compute_environment_name = "tf_acc_test_%d"
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "UNMANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  service_role             = aws_iam_role.aws_batch_service_role.arn
+  type                     = "UNMANAGED"
+  depends_on               = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -838,22 +850,24 @@ func testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rIn
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%[1]d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
-    instance_type = ["optimal"]
-    max_vcpus = %[2]d
-    min_vcpus = %[3]d
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["optimal"]
+    max_vcpus          = %[2]d
+    min_vcpus          = %[3]d
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
-    subnets = [
-      "${aws_subnet.test_acc.id}"
+    subnets            = [
+      aws_subnet.test_acc.id
     ]
-    type = "EC2"
+    type               = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on  = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt, maxVcpus, minVcpus)
 }
@@ -862,8 +876,9 @@ func testAccAWSBatchComputeEnvironmentConfigEC2UpdateInstanceType(rInt int) stri
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
       "c4.xlarge",
@@ -871,16 +886,17 @@ resource "aws_batch_compute_environment" "ec2" {
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -889,25 +905,27 @@ func testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt int, state strin
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  state = "%s"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  state        = "%s"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt, state)
 }
@@ -916,24 +934,26 @@ func testAccAWSBatchComputeEnvironmentConfigEC2UpdateComputeEnvironmentName(rInt
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_updated_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -942,9 +962,9 @@ func testAccAWSBatchComputeEnvironmentConfigEC2WithoutComputeResources(rInt int)
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  service_role             = aws_iam_role.aws_batch_service_role.arn
+  type                     = "MANAGED"
+  depends_on               = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -953,24 +973,26 @@ func testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rInt i
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "unmanaged" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "EC2"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "UNMANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "UNMANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -979,26 +1001,28 @@ func testAccAWSBatchComputeEnvironmentConfigSpotWithAllocationStrategy(rInt int)
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-	allocation_strategy = "BEST_FIT"
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    allocation_strategy = "BEST_FIT"
+    instance_role       = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
-	]
-	spot_iam_fleet_role = "${aws_iam_role.aws_ec2_spot_fleet_role.arn}"
+      aws_security_group.test_acc.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.aws_ec2_spot_fleet_role.arn
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "SPOT"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -1007,24 +1031,26 @@ func testAccAWSBatchComputeEnvironmentConfigSpotWithoutBidPercentage(rInt int) s
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "SPOT"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt)
 }
@@ -1037,28 +1063,32 @@ resource "aws_launch_template" "foo" {
 
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
+
     launch_template {
-			launch_template_name = "${aws_launch_template.foo.name}"
-		}
+      launch_template_name = aws_launch_template.foo.name
+    }
+
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
-    spot_iam_fleet_role = "${aws_iam_role.aws_ec2_spot_fleet_role.arn}"
+    spot_iam_fleet_role = aws_iam_role.aws_ec2_spot_fleet_role.arn
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "SPOT"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt, rInt)
 }
@@ -1071,29 +1101,33 @@ resource "aws_launch_template" "foo" {
 
 resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%d"
+
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
+
     launch_template {
-			launch_template_name = "${aws_launch_template.foo.name}"
-			version              = "%s"
-		}
+      launch_template_name = aws_launch_template.foo.name
+      version              = "%s"
+    }
+
     max_vcpus = 16
     min_vcpus = 0
     security_group_ids = [
-      "${aws_security_group.test_acc.id}"
+      aws_security_group.test_acc.id
     ]
-    spot_iam_fleet_role = "${aws_iam_role.aws_ec2_spot_fleet_role.arn}"
+    spot_iam_fleet_role = aws_iam_role.aws_ec2_spot_fleet_role.arn
     subnets = [
-      "${aws_subnet.test_acc.id}"
+      aws_subnet.test_acc.id
     ]
     type = "SPOT"
   }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt, rInt, version)
 }

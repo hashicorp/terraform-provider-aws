@@ -114,7 +114,7 @@ func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).athenaconn
 
 	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(fmt.Sprint("show databases;")),
+		QueryString:         aws.String("show databases;"),
 		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
 	}
 

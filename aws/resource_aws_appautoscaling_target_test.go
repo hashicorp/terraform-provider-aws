@@ -53,6 +53,28 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
+	var target applicationautoscaling.ScalableTarget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appautoscaling_target.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingTargetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppautoscalingTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -345,9 +367,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
-  core_instance_count  = 2
+  master_instance_group {
+    instance_type = "m3.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 2
+    instance_type  = "m3.xlarge"
+  }
 
   tags = {
     role     = "rolename"
@@ -561,8 +588,8 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  name = "emr_profile_%d"
+  role = aws_iam_role.iam_emr_profile_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {

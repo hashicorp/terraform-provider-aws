@@ -19,13 +19,6 @@ func dataSourceAwsRegion() *schema.Resource {
 				Computed: true,
 			},
 
-			"current": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				Removed:  "Defaults to current provider region if no other filtering is enabled",
-			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,

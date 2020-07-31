@@ -105,42 +105,6 @@ func TestAccAWSAvailabilityZones_AllAvailabilityZones(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_BlacklistedNames(t *testing.T) {
-	allDataSourceName := "data.aws_availability_zones.all"
-	excludeDataSourceName := "data.aws_availability_zones.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsAvailabilityZonesConfigBlacklistedNames(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAvailabilityZones_BlacklistedZoneIds(t *testing.T) {
-	allDataSourceName := "data.aws_availability_zones.all"
-	excludeDataSourceName := "data.aws_availability_zones.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsAvailabilityZonesConfigBlacklistedZoneIds(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSAvailabilityZones_Filter(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.test"
 
@@ -332,70 +296,51 @@ func testAccCheckAwsAvailabilityZonesBuildAvailable(attrs map[string]string) ([]
 }
 
 const testAccCheckAwsAvailabilityZonesConfig = `
-data "aws_availability_zones" "availability_zones" { }
+data "aws_availability_zones" "availability_zones" {}
 `
 
 func testAccCheckAwsAvailabilityZonesConfigAllAvailabilityZones() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   all_availability_zones = true
 }
-`)
-}
-
-func testAccCheckAwsAvailabilityZonesConfigBlacklistedNames() string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "all" {}
-
-data "aws_availability_zones" "test" {
-  blacklisted_names = ["${data.aws_availability_zones.all.names[0]}"]
-}
-`)
-}
-
-func testAccCheckAwsAvailabilityZonesConfigBlacklistedZoneIds() string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "all" {}
-
-data "aws_availability_zones" "test" {
-  blacklisted_zone_ids = ["${data.aws_availability_zones.all.zone_ids[0]}"]
-}
-`)
+`
 }
 
 func testAccCheckAwsAvailabilityZonesConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
+
   filter {
     name   = "state"
     values = ["available"]
   }
 }
-`)
+`
 }
 
 func testAccCheckAwsAvailabilityZonesConfigExcludeNames() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  exclude_names = ["${data.aws_availability_zones.all.names[0]}"]
+  exclude_names = [data.aws_availability_zones.all.names[0]]
 }
-`)
+`
 }
 
 func testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  exclude_zone_ids = ["${data.aws_availability_zones.all.zone_ids[0]}"]
+  exclude_zone_ids = [data.aws_availability_zones.all.zone_ids[0]]
 }
-`)
+`
 }
 
 const testAccCheckAwsAvailabilityZonesStateConfig = `
 data "aws_availability_zones" "state_filter" {
-	state = "available"
+  state = "available"
 }
 `

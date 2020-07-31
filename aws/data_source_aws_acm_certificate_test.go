@@ -238,8 +238,8 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecent(domain string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	most_recent = %v
+  domain      = "%s"
+  most_recent = %v
 }
 `, domain, mostRecent)
 }
@@ -247,9 +247,9 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain, status string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	statuses = ["%s"]
-	most_recent = %v
+  domain      = "%s"
+  statuses    = ["%s"]
+  most_recent = %v
 }
 `, domain, status, mostRecent)
 }
@@ -257,9 +257,9 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndTypes(domain, certType string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	types = ["%s"]
-	most_recent = %v
+  domain      = "%s"
+  types       = ["%s"]
+  most_recent = %v
 }
 `, domain, certType, mostRecent)
 }
@@ -276,7 +276,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 data "aws_acm_certificate" "test" {
-  domain    = "${aws_acm_certificate.test.domain_name}"
+  domain    = aws_acm_certificate.test.domain_name
   key_types = ["RSA_4096"]
 }
 `, certificate, key, rName)

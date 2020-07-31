@@ -67,6 +67,15 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"data_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"aws:ec2:image",
+					"text",
+				}, false),
+			},
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -102,11 +111,17 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		Name:           aws.String(d.Id()),
 		WithDecryption: aws.Bool(true),
 	})
-	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") {
+
+	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
+		return fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id())
+	}
+
+	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && !d.IsNewResource() {
 		log.Printf("[WARN] SSM Parameter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading SSM Parameter (%s): %w", d.Id(), err)
 	}
@@ -146,6 +161,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("tier", detail.Tier)
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
+	d.Set("data_type", detail.DataType)
 
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
@@ -196,6 +212,10 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		Value:          aws.String(d.Get("value").(string)),
 		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+	}
+
+	if v, ok := d.GetOk("data_type"); ok {
+		paramInput.DataType = aws.String(v.(string))
 	}
 
 	if d.HasChange("description") {

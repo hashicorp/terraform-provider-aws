@@ -221,7 +221,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name        = "test.acc-sd-%[1]d."
+  name        = "test.acc-sd-%[1]d"
   vpc         = "${aws_vpc.test.id}"
 }
 

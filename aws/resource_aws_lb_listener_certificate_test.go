@@ -225,12 +225,12 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccLbListenerCertificateConfig(rName, key, certificate string) string {
-	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + fmt.Sprintf(`
+	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + `
 resource "aws_lb_listener_certificate" "test" {
   certificate_arn = "${aws_iam_server_certificate.test.arn}"
   listener_arn    = "${aws_lb_listener.test.arn}"
 }
-`)
+`
 }
 
 func testAccLbListenerCertificateConfigMultiple(rName string, keys, certificates []string) string {

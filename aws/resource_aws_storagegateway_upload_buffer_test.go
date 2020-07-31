@@ -67,7 +67,7 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayUploadBuffer_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"

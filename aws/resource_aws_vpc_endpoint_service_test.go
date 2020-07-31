@@ -362,7 +362,7 @@ data "aws_caller_identity" "current" {}
 func testAccVpcEndpointServiceConfig_basic(rName1, rName2 string) string {
 	return composeConfig(
 		testAccVpcEndpointServiceConfig_base(rName1, rName2),
-		fmt.Sprintf(`
+		`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
@@ -370,7 +370,7 @@ resource "aws_vpc_endpoint_service" "test" {
     "${aws_lb.test1.arn}",
   ]
 }
-`))
+`)
 }
 
 func testAccVpcEndpointServiceConfig_allowedPrincipals(rName1, rName2 string) string {

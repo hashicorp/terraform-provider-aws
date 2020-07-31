@@ -267,19 +267,19 @@ func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
 func testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "container"
-	parameters = {
-		param1 = "val1"
-		param2 = "val2"
-	}
-	retry_strategy {
-		attempts = 1
-	}
-	timeout {
-		attempt_duration_seconds = 60
-	}
-	container_properties = <<CONTAINER_PROPERTIES
+  name = %[1]q
+  type = "container"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  retry_strategy {
+    attempts = 1
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",
@@ -312,6 +312,7 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
+
 }
 `, rName)
 }
@@ -319,9 +320,9 @@ CONTAINER_PROPERTIES
 func testAccBatchJobDefinitionConfigContainerPropertiesAdvancedUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "container"
-	container_properties = <<CONTAINER_PROPERTIES
+  name                 = %[1]q
+  type                 = "container"
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",
@@ -354,6 +355,7 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
+
 }
 `, rName)
 }

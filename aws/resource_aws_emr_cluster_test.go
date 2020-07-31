@@ -99,10 +99,14 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -135,10 +139,15 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "additional_info"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"additional_info",
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -185,10 +194,14 @@ func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -279,10 +292,14 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_AutoscalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupAutoscalingPolicy(rName, autoscalingPolicy2),
@@ -325,10 +342,14 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_BidPrice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupBidPrice(rName, "0.51"),
@@ -362,10 +383,14 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceCount(rName, 1),
@@ -408,10 +433,14 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, "m4.xlarge"),
@@ -420,78 +449,6 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceType(t *testing.T) {
 					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.xlarge"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_CoreInstanceGroup_Migration_CoreInstanceType(t *testing.T) {
-	var cluster1, cluster2 emr.Cluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_emr_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigCoreInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_type", "m4.large"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-			{
-				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
-					testAccCheckAWSEmrClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.large"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_CoreInstanceGroup_Migration_InstanceGroup(t *testing.T) {
-	var cluster1, cluster2 emr.Cluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_emr_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroupCoreInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-			{
-				Config: testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
-					testAccCheckAWSEmrClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.large"),
 				),
 			},
 		},
@@ -517,10 +474,14 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigCoreInstanceGroupName(rName, "name2"),
@@ -530,153 +491,6 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_Name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.name", "name2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_instance_group(t *testing.T) {
-	var cluster emr.Cluster
-
-	resourceName := "aws_emr_cluster.tf-test-cluster"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroups(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_instance_group_names(t *testing.T) {
-	var cluster emr.Cluster
-
-	resourceName := "aws_emr_cluster.tf-test-cluster"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroupsName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "3"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_instance_group_update(t *testing.T) {
-	var cluster emr.Cluster
-
-	resourceName := "aws_emr_cluster.tf-test-cluster"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroups(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
-				),
-			},
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroupsUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
-	var cluster emr.Cluster
-
-	resourceName := "aws_emr_cluster.tf-test-cluster"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroups_st1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "2"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_updateAutoScalingPolicy(t *testing.T) {
-	var cluster emr.Cluster
-
-	resourceName := "aws_emr_cluster.tf-test-cluster"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroups_st1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-				),
-			},
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroups_updateAutoScalingPolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -745,10 +559,15 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "kerberos_attributes.0.kdc_admin_password"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+					"kerberos_attributes.0.kdc_admin_password",
+				},
 			},
 		},
 	})
@@ -773,10 +592,14 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_BidPrice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupBidPrice(rName, "0.51"),
@@ -810,10 +633,14 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceCount(rName, 1),
@@ -847,10 +674,14 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, "m4.xlarge"),
@@ -859,78 +690,6 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceType(t *testing.T) {
 					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.xlarge"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_MasterInstanceGroup_Migration_InstanceGroup(t *testing.T) {
-	var cluster1, cluster2 emr.Cluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_emr_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigInstanceGroupMasterInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "instance_group.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-			{
-				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
-					testAccCheckAWSEmrClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.large"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEMRCluster_MasterInstanceGroup_Migration_MasterInstanceType(t *testing.T) {
-	var cluster1, cluster2 emr.Cluster
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_emr_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEmrDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEmrClusterConfigMasterInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_type", "m4.large"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
-			},
-			{
-				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, "m4.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
-					testAccCheckAWSEmrClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.large"),
 				),
 			},
 		},
@@ -956,10 +715,14 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_Name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigMasterInstanceGroupName(rName, "name2"),
@@ -992,10 +755,14 @@ func TestAccAWSEMRCluster_security_config(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1025,10 +792,14 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1052,10 +823,14 @@ func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfig_Step_NoBlocks(rName),
@@ -1065,10 +840,14 @@ func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfig_Step_Zeroed(rName),
@@ -1078,10 +857,14 @@ func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1115,10 +898,14 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1150,10 +937,14 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfig_bootstrapAdd(rName),
@@ -1176,10 +967,14 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfig_bootstrapReorder(rName),
@@ -1202,10 +997,14 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1236,10 +1035,14 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				//Need to turn off termination_protection to allow the job to be deleted
@@ -1250,10 +1053,14 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1277,10 +1084,14 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1304,10 +1115,14 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(rName),
@@ -1317,10 +1132,14 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1345,10 +1164,14 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1385,10 +1208,14 @@ func TestAccAWSEMRCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1419,10 +1246,14 @@ func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1452,10 +1283,14 @@ func TestAccAWSEMRCluster_step_concurrency_level(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1479,10 +1314,14 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1741,9 +1580,15 @@ resource "aws_emr_cluster" "test" {
   release_label        = "emr-5.0.0"
   applications         = ["Hadoop", "Hive"]
   log_uri              = "s3n://terraform/testlog/"
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   service_role = "${aws_iam_role.emr_service.arn}"
   depends_on   = [
@@ -1797,9 +1642,15 @@ resource "aws_emr_cluster" "test" {
   release_label        = "emr-5.0.0"
   applications         = ["Hadoop", "Hive"]
   log_uri              = "s3n://terraform/testlog/"
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   service_role = "${aws_iam_role.emr_service.arn}"
   depends_on   = [
@@ -1857,9 +1708,15 @@ resource "aws_emr_cluster" "test" {
   release_label        = "emr-5.0.0"
   applications         = ["Hadoop", "Hive"]
   log_uri              = "s3n://terraform/testlog/"
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   service_role = "${aws_iam_role.emr_service.arn}"
   depends_on   = [
@@ -1926,9 +1783,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -1986,9 +1848,14 @@ EOF
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -2036,9 +1903,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
@@ -2104,15 +1976,21 @@ EOF
 
 resource "aws_emr_cluster" "tf-test-cluster" {
   applications                      = ["Spark"]
-  core_instance_count               = 1
-  core_instance_type                = "c4.large"
   keep_job_flow_alive_when_no_steps = true
-  master_instance_type              = "c4.large"
   name                              = "%[1]s"
   release_label                     = "emr-5.12.0"
   security_configuration            = "${aws_emr_security_configuration.foo.name}"
   service_role                      = "EMR_DefaultRole"
   termination_protection            = false
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   ec2_attributes {
     emr_managed_master_security_group = "${aws_security_group.test.id}"
@@ -2149,9 +2027,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   security_configuration = "${aws_emr_security_configuration.foo.name}"
 
@@ -2270,15 +2153,21 @@ func testAccAWSEmrClusterConfig_Step(r string, stepConfig string) string {
 	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   applications                      = ["Spark"]
-  core_instance_count               = 1
-  core_instance_type                = "c4.large"
   keep_job_flow_alive_when_no_steps = true
   log_uri                           = "s3://${aws_s3_bucket.test.bucket}/"
-  master_instance_type              = "c4.large"
   name                              = "%[1]s"
   release_label                     = "emr-5.12.0"
   service_role                      = "EMR_DefaultRole"
   termination_protection            = false
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   ec2_attributes {
     emr_managed_master_security_group = "${aws_security_group.test.id}"
@@ -2547,563 +2436,6 @@ resource "aws_emr_cluster" "test" {
 	)
 }
 
-func testAccAWSEmrClusterConfigCoreInstanceType(rName, coreInstanceType string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
-resource "aws_emr_cluster" "test" {
-  applications                      = ["Spark"]
-  keep_job_flow_alive_when_no_steps = true
-  core_instance_count               = 1
-  core_instance_type                = %[2]q
-  name                              = %[1]q
-  release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
-
-  ec2_attributes {
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "EMR_EC2_DefaultRole"
-    subnet_id                         = "${aws_subnet.test.id}"
-  }
-
-  master_instance_group {
-    instance_type = "m4.large"
-  }
-
-  depends_on = ["aws_route_table_association.test"]
-}
-`, rName, coreInstanceType),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroupCoreInstanceType(rName, coreInstanceType string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
-resource "aws_emr_cluster" "test" {
-  applications                      = ["Spark"]
-  keep_job_flow_alive_when_no_steps = true
-  name                              = %[1]q
-  release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
-
-  ec2_attributes {
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "EMR_EC2_DefaultRole"
-    subnet_id                         = "${aws_subnet.test.id}"
-  }
-
-  instance_group {
-    instance_count = 1
-    instance_role  = "MASTER"
-    instance_type  = "m4.large"
-  }
-
-  instance_group {
-    instance_count = 1
-    instance_role  = "CORE"
-    instance_type  = %[2]q
-  }
-
-  depends_on = ["aws_route_table_association.test"]
-}
-`, rName, coreInstanceType),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroupMasterInstanceType(rName, masterInstanceType string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
-resource "aws_emr_cluster" "test" {
-  applications                      = ["Spark"]
-  keep_job_flow_alive_when_no_steps = true
-  name                              = %[1]q
-  release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
-
-  ec2_attributes {
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "EMR_EC2_DefaultRole"
-    subnet_id                         = "${aws_subnet.test.id}"
-  }
-
-  instance_group {
-    instance_count = 1
-    instance_role  = "MASTER"
-    instance_type  = %[2]q
-  }
-
-  depends_on = ["aws_route_table_association.test"]
-}
-`, rName, masterInstanceType),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroups(r string) string {
-	return testAccAWSEmrComposeConfig(false,
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-		fmt.Sprintf(`
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "%[1]s"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = "${aws_subnet.test.id}"
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
-  }
-
-  instance_group {
-    instance_role  = "CORE"
-    instance_type  = "c4.large"
-    instance_count = "1"
-
-    ebs_config {
-      size                 = "40"
-      type                 = "gp2"
-      volumes_per_instance = 1
-    }
-
-    bid_price = "0.30"
-
-    autoscaling_policy = <<EOT
-{
-  "Constraints": {
-    "MinCapacity": 1,
-    "MaxCapacity": 2
-  },
-  "Rules": [
-    {
-      "Name": "ScaleOutMemoryPercentage",
-      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
-      "Action": {
-        "SimpleScalingPolicyConfiguration": {
-          "AdjustmentType": "CHANGE_IN_CAPACITY",
-          "ScalingAdjustment": 1,
-          "CoolDown": 300
-        }
-      },
-      "Trigger": {
-        "CloudWatchAlarmDefinition": {
-          "ComparisonOperator": "LESS_THAN",
-          "EvaluationPeriods": 1,
-          "MetricName": "YARNMemoryAvailablePercentage",
-          "Namespace": "AWS/ElasticMapReduce",
-          "Period": 300,
-          "Statistic": "AVERAGE",
-          "Threshold": 15.0,
-          "Unit": "PERCENT"
-        }
-      }
-    }
-  ]
-}
-EOT
-  }
-
-  instance_group {
-    instance_role  = "MASTER"
-    instance_type  = "c4.large"
-    instance_count = 1
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  termination_protection            = false
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-	"aws_route_table_association.test",
-	"aws_iam_role_policy_attachment.emr_service",
-	"aws_iam_role_policy_attachment.emr_instance_profile",
-	"aws_iam_role_policy_attachment.emr_autoscaling_role",
-  ]
-
-  service_role     = "${aws_iam_role.emr_service.arn}"
-  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
-}
-`, r),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroupsName(r string) string {
-	return testAccAWSEmrComposeConfig(false,
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-		fmt.Sprintf(`
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "%[1]s"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = "${aws_subnet.test.id}"
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
-  }
-
-  instance_group {
-    instance_count = 1
-    instance_role  = "MASTER"
-    instance_type  = "m3.xlarge"
-    name           = "MasterInstanceGroup"
-  }
-
-  instance_group {
-    instance_count = 2
-    instance_role  = "CORE"
-    instance_type  = "r4.xlarge"
-    name           = "CoreInstanceGroup"
-
-    ebs_config {
-      iops                 = 0
-      size                 = 100
-      type                 = "gp2"
-      volumes_per_instance = 1
-    }
-  }
-
-  instance_group {
-    instance_count = 3
-    instance_role  = "TASK"
-    instance_type  = "r4.xlarge"
-    name           = "TaskInstanceGroup"
-
-    ebs_config {
-      iops                 = 0
-      size                 = 100
-      type                 = "gp2"
-      volumes_per_instance = 1
-    }
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  termination_protection            = false
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-	"aws_route_table_association.test",
-	"aws_iam_role_policy_attachment.emr_service",
-	"aws_iam_role_policy_attachment.emr_instance_profile",
-	"aws_iam_role_policy_attachment.emr_autoscaling_role",
-  ]
-
-  service_role     = "${aws_iam_role.emr_service.arn}"
-  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
-}
-`, r),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroupsUpdate(r string) string {
-	return testAccAWSEmrComposeConfig(false,
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-		fmt.Sprintf(`
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "%[1]s"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = "${aws_subnet.test.id}"
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
-  }
-
-  instance_group {
-    instance_role  = "CORE"
-    instance_type  = "c4.large"
-    instance_count = "1"
-
-    ebs_config {
-      size                 = "40"
-      type                 = "gp2"
-      volumes_per_instance = 1
-    }
-
-    bid_price = "0.30"
-
-    autoscaling_policy = <<EOT
-{
-  "Constraints": {
-    "MinCapacity": 1,
-    "MaxCapacity": 2
-  },
-  "Rules": [
-    {
-      "Name": "ScaleOutMemoryPercentage",
-      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
-      "Action": {
-        "SimpleScalingPolicyConfiguration": {
-          "AdjustmentType": "CHANGE_IN_CAPACITY",
-          "ScalingAdjustment": 1,
-          "CoolDown": 300
-        }
-      },
-      "Trigger": {
-        "CloudWatchAlarmDefinition": {
-          "ComparisonOperator": "LESS_THAN",
-          "EvaluationPeriods": 1,
-          "MetricName": "YARNMemoryAvailablePercentage",
-          "Namespace": "AWS/ElasticMapReduce",
-          "Period": 300,
-          "Statistic": "AVERAGE",
-          "Threshold": 15.0,
-          "Unit": "PERCENT"
-        }
-      }
-    }
-  ]
-}
-EOT
-  }
-
-  instance_group {
-    instance_role  = "MASTER"
-    instance_type  = "c4.large"
-    instance_count = 1
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  termination_protection            = false
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-	"aws_route_table_association.test",
-	"aws_iam_role_policy_attachment.emr_service",
-	"aws_iam_role_policy_attachment.emr_instance_profile",
-	"aws_iam_role_policy_attachment.emr_autoscaling_role",
-  ]
-
-  service_role     = "${aws_iam_role.emr_service.arn}"
-  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
-}
-`, r),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroups_st1(r string) string {
-	return testAccAWSEmrComposeConfig(false,
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-		fmt.Sprintf(`
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "%[1]s"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = "${aws_subnet.test.id}"
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
-  }
-
-  instance_group {
-    instance_role  = "CORE"
-    instance_type  = "c4.large"
-    instance_count = "1"
-
-    ebs_config {
-      size                 = "500"
-      type                 = "st1"
-      volumes_per_instance = 1
-    }
-
-    bid_price = "0.30"
-
-    autoscaling_policy = <<EOT
-{
-  "Constraints": {
-    "MinCapacity": 1,
-    "MaxCapacity": 2
-  },
-  "Rules": [
-    {
-      "Name": "ScaleOutMemoryPercentage",
-      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
-      "Action": {
-        "SimpleScalingPolicyConfiguration": {
-          "AdjustmentType": "CHANGE_IN_CAPACITY",
-          "ScalingAdjustment": 1,
-          "CoolDown": 300
-        }
-      },
-      "Trigger": {
-        "CloudWatchAlarmDefinition": {
-          "ComparisonOperator": "LESS_THAN",
-          "EvaluationPeriods": 1,
-          "MetricName": "YARNMemoryAvailablePercentage",
-          "Namespace": "AWS/ElasticMapReduce",
-          "Period": 300,
-          "Statistic": "AVERAGE",
-          "Threshold": 15.0,
-          "Unit": "PERCENT"
-        }
-      }
-    }
-  ]
-}
-EOT
-  }
-
-  instance_group {
-    instance_role  = "MASTER"
-    instance_type  = "c4.large"
-    instance_count = 1
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  termination_protection            = false
-
-  depends_on = [
-	"aws_route_table_association.test",
-	"aws_iam_role_policy_attachment.emr_service",
-	"aws_iam_role_policy_attachment.emr_instance_profile",
-	"aws_iam_role_policy_attachment.emr_autoscaling_role",
-  ]
-
-  service_role     = "${aws_iam_role.emr_service.arn}"
-  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
-}
-`, r),
-	)
-}
-
-func testAccAWSEmrClusterConfigInstanceGroups_updateAutoScalingPolicy(r string) string {
-	return testAccAWSEmrComposeConfig(false,
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-		fmt.Sprintf(`
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "%[1]s"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = "${aws_subnet.test.id}"
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
-  }
-
-  instance_group {
-    instance_role  = "CORE"
-    instance_type  = "c4.large"
-    instance_count = "1"
-
-    ebs_config {
-      size                 = "500"
-      type                 = "st1"
-      volumes_per_instance = 1
-    }
-
-    bid_price = "0.30"
-
-    autoscaling_policy = <<EOT
-{
-  "Constraints": {
-    "MinCapacity": 1,
-    "MaxCapacity": 3
-  },
-  "Rules": [
-    {
-      "Name": "ScaleOutMemoryPercentage",
-      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
-      "Action": {
-        "SimpleScalingPolicyConfiguration": {
-          "AdjustmentType": "CHANGE_IN_CAPACITY",
-          "ScalingAdjustment": 1,
-          "CoolDown": 300
-        }
-      },
-      "Trigger": {
-        "CloudWatchAlarmDefinition": {
-          "ComparisonOperator": "LESS_THAN",
-          "EvaluationPeriods": 1,
-          "MetricName": "YARNMemoryAvailablePercentage",
-          "Namespace": "AWS/ElasticMapReduce",
-          "Period": 300,
-          "Statistic": "AVERAGE",
-          "Threshold": 15.0,
-          "Unit": "PERCENT"
-        }
-      }
-    }
-  ]
-}
-EOT
-  }
-
-  instance_group {
-    instance_role  = "MASTER"
-    instance_type  = "c4.large"
-    instance_count = 1
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  termination_protection            = false
-
-  depends_on = [
-	"aws_route_table_association.test",
-	"aws_iam_role_policy_attachment.emr_service",
-	"aws_iam_role_policy_attachment.emr_instance_profile",
-	"aws_iam_role_policy_attachment.emr_autoscaling_role",
-  ]
-
-  service_role     = "${aws_iam_role.emr_service.arn}"
-  autoscaling_role = "${aws_iam_role.emr_autoscaling_role.arn}"
-}
-`, r),
-	)
-}
-
 func testAccAWSEmrClusterConfigEc2AttributesDefaultManagedSecurityGroups(rName string) string {
 	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
@@ -3243,29 +2575,6 @@ resource "aws_emr_cluster" "test" {
 	)
 }
 
-func testAccAWSEmrClusterConfigMasterInstanceType(rName, masterInstanceType string) string {
-	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
-resource "aws_emr_cluster" "test" {
-  applications                      = ["Spark"]
-  keep_job_flow_alive_when_no_steps = true
-  master_instance_type              = %[2]q
-  name                              = %[1]q
-  release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
-
-  ec2_attributes {
-    emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
-    instance_profile                  = "EMR_EC2_DefaultRole"
-    subnet_id                         = "${aws_subnet.test.id}"
-  }
-
-  depends_on = ["aws_route_table_association.test"]
-}
-`, rName, masterInstanceType),
-	)
-}
-
 func testAccAWSEmrClusterConfigTerminationPolicy(r string, term string) string {
 	return testAccAWSEmrComposeConfig(false,
 		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
@@ -3284,9 +2593,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -3332,9 +2646,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -3390,9 +2709,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -3438,9 +2762,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     dns_zone = "new_zone"
@@ -3485,9 +2814,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -3531,9 +2865,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   termination_protection            = false
   keep_job_flow_alive_when_no_steps = true
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   log_uri = "s3://${aws_s3_bucket.test.bucket}/"
 
@@ -3570,9 +2909,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"

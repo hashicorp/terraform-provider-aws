@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSElasticBeanstalkSolutionStackDataSource(t *testing.T) {
+func TestAccAWSElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -42,7 +42,7 @@ func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource
 
 const testAccCheckAwsElasticBeanstalkSolutionStackDataSourceConfig = `
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
-	most_recent = true
-	name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
+  most_recent = true
+  name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
 }
 `

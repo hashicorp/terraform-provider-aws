@@ -549,23 +549,11 @@ resource "aws_security_group" "test" {
 }
 
 func testAccAWSStorageGateway_FileGatewayBase(rName string) string {
-	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
-# Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-data "aws_ec2_instance_type_offering" "storagegateway" {
-  filter {
-    name   = "instance-type"
-    values = ["m5.xlarge", "m4.xlarge"]
-  }
-
-  filter {
-    name   = "location"
-    values = [aws_subnet.test.availability_zone]
-  }
-  
-  location_type            = "availability-zone"
-  preferred_instance_types = ["m5.xlarge", "m4.xlarge"]
-}
-
+	return composeConfig(
+		testAccAWSStorageGateway_VPCBase(rName),
+		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.xlarge", "m4.xlarge"),
+		fmt.Sprintf(`
 # Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/ec2-gateway-file.html
 data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
   name = "/aws/service/storagegateway/ami/FILE_S3/latest"
@@ -576,7 +564,7 @@ resource "aws_instance" "test" {
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.storagegateway.instance_type
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
   subnet_id                   = aws_subnet.test.id
 
@@ -584,27 +572,15 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName string) string {
-	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
-# Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-data "aws_ec2_instance_type_offering" "storagegateway" {
-  filter {
-    name   = "instance-type"
-    values = ["m5.xlarge", "m4.xlarge"]
-  }
-
-  filter {
-    name   = "location"
-    values = [aws_subnet.test.availability_zone]
-  }
-  
-  location_type            = "availability-zone"
-  preferred_instance_types = ["m5.xlarge", "m4.xlarge"]
-}
-
+	return composeConfig(
+		testAccAWSStorageGateway_VPCBase(rName),
+		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.xlarge", "m4.xlarge"),
+		fmt.Sprintf(`
 # Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/ec2-gateway-common.html
 # NOTE: CACHED, STORED, and VTL Gateway Types share the same AMI
 data "aws_ssm_parameter" "aws_service_storagegateway_ami_CACHED_latest" {
@@ -616,7 +592,7 @@ resource "aws_instance" "test" {
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_CACHED_latest.value
   associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.storagegateway.instance_type
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
   subnet_id                   = aws_subnet.test.id
 
@@ -624,7 +600,7 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName string) string {
@@ -723,7 +699,10 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.xlarge", "m4.xlarge"),
+		fmt.Sprintf(`
 # Directory Service Directories must be deployed across multiple EC2 Availability Zones
 data "aws_availability_zones" "available" {
   state = "available"
@@ -819,22 +798,6 @@ resource "aws_vpc_dhcp_options_association" "test" {
   vpc_id          = aws_vpc.test.id
 }
 
-# Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-data "aws_ec2_instance_type_offering" "storagegateway" {
-  filter {
-    name   = "instance-type"
-    values = ["m5.xlarge", "m4.xlarge"]
-  }
-
-  filter {
-    name   = "location"
-    values = [aws_subnet.test[0].availability_zone]
-  }
-
-  location_type            = "availability-zone"
-  preferred_instance_types = ["m5.xlarge", "m4.xlarge"]
-}
-
 # Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/ec2-gateway-file.html
 data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
   name = "/aws/service/storagegateway/ami/FILE_S3/latest"
@@ -845,7 +808,7 @@ resource "aws_instance" "test" {
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.storagegateway.instance_type
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
   subnet_id                   = aws_subnet.test[0].id
 
@@ -866,7 +829,7 @@ resource "aws_storagegateway_gateway" "test" {
     username    = "Administrator"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSStorageGatewayGatewayConfig_SmbGuestPassword(rName, smbGuestPassword string) string {

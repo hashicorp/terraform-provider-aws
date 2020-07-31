@@ -27,5 +27,5 @@ func TestAccAWSBillingServiceAccount_basic(t *testing.T) {
 }
 
 const testAccCheckAwsBillingServiceAccountConfig = `
-data "aws_billing_service_account" "main" { }
+data "aws_billing_service_account" "main" {}
 `

@@ -68,11 +68,10 @@ is especially important for testing AWS GovCloud (US), which requires:
 export AWS_DEFAULT_REGION=us-gov-west-1
 ```
 
-Tests can then be run by specifying the target provider and a regular
-expression defining the tests to run:
+Tests can then be run by specifying a regular expression defining the tests to run:
 
 ```sh
-$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard_update'
+$ make testacc TESTARGS='-run=TestAccAWSCloudWatchDashboard_update'
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard_update -timeout 120m
 === RUN   TestAccAWSCloudWatchDashboard_update
@@ -87,7 +86,7 @@ write the regular expression. For example, to run all tests of the
 testing like this:
 
 ```sh
-$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard'
+$ make testacc TESTARGS='-run=TestAccAWSCloudWatchDashboard'
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard -timeout 120m
 === RUN   TestAccAWSCloudWatchDashboard_importBasic
@@ -636,7 +635,7 @@ When testing requires AWS infrastructure in a second AWS account, the below chan
 - In the `PreCheck` function, include `testAccAlternateAccountPreCheck(t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
 - Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
-- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup.
+- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = "awsalternate"` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -674,9 +673,9 @@ func TestAccAwsExample_basic(t *testing.T) {
 func testAccAwsExampleConfig() string {
   return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 # Cross account resources should be handled by the cross account provider.
-# The standardized provider alias is aws.alternate as seen below.
+# The standardized provider block to use is awsalternate as seen below.
 resource "aws_cross_account_example" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   # ... configuration ...
 }
@@ -699,7 +698,7 @@ When testing requires AWS infrastructure in a second or third AWS region, the be
 - In the `PreCheck` function, include `testAccMultipleRegionPreCheck(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
 - Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
-- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = "aws.alternate"` (and/or `provider = "aws.third"`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = "awsalternate"` (and/or `provider = "awsthird"`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -737,9 +736,9 @@ func TestAccAwsExample_basic(t *testing.T) {
 func testAccAwsExampleConfig() string {
   return testAccMultipleRegionProviderConfig(2) + fmt.Sprintf(`
 # Cross region resources should be handled by the cross region provider.
-# The standardized provider alias is aws.alternate as seen below.
+# The standardized provider is awsalternate as seen below.
 resource "aws_cross_region_example" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   # ... configuration ...
 }
@@ -751,6 +750,22 @@ resource "aws_example" "test" {
 }
 `)
 }
+```
+
+#### Please Note
+
+When adding a new provider to the codebase for the purposes of cross-account/cross-region testing, please ensure the provider name in the config matches an entry in the list of factories in `provider_test.go`
+
+```hcl
+# provider block, ensure name does not include periods '.'
+provider "awsnewalternate" {
+  region = "us-west-3"
+}
+```
+
+```go
+// provider_testo.go in init()
+var providerNames = []string{"aws", "awseast", "awswest", "awsalternate", /* ... */ "awsnewalternate"}
 ```
 
 Searching for usage of `testAccMultipleRegionPreCheck` in the codebase will yield real world examples of this setup in action.

@@ -39,11 +39,11 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
 }
 
 data "aws_efs_access_point" "test" {
-  access_point_id = "${aws_efs_access_point.test.id}"
+  access_point_id = aws_efs_access_point.test.id
 }
 `, rName)
 }

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -109,6 +110,8 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 	})
 }
 
+// TestAccAWSSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com.",
@@ -120,11 +123,8 @@ func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSESDomainIdentityConfig(domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESDomainIdentityExists("aws_ses_domain_identity.test"),
-					testAccCheckAwsSESDomainIdentityArn("aws_ses_domain_identity.test", domain),
-				),
+				Config:      testAccAwsSESDomainIdentityConfig(domain),
+				ExpectError: regexp.MustCompile(`config is invalid: invalid value for domain \(cannot end with a period\)`),
 			},
 		},
 	})

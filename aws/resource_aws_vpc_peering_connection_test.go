@@ -780,7 +780,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
   tags = {

@@ -43,9 +43,9 @@ data "aws_ecr_image" "by_tag" {
 }
 
 data "aws_ecr_image" "by_digest" {
-  registry_id     = "${data.aws_ecr_image.by_tag.registry_id}"
-  repository_name = "${data.aws_ecr_image.by_tag.repository_name}"
-  image_digest    = "${data.aws_ecr_image.by_tag.image_digest}"
+  registry_id     = data.aws_ecr_image.by_tag.registry_id
+  repository_name = data.aws_ecr_image.by_tag.repository_name
+  image_digest    = data.aws_ecr_image.by_tag.image_digest
 }
 `, reg, repo, tag)
 }

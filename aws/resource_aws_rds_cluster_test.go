@@ -1026,7 +1026,7 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.6"),
-				ExpectError: regexp.MustCompile(`Cannot modify engine version without a primary instance in DB cluster`),
+				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
 	})
@@ -1338,6 +1338,46 @@ func TestAccAWSRDSCluster_ScalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11698
+func TestAccAWSRDSCluster_ScalingConfiguration_DefaultMinCapacity(t *testing.T) {
+	var dbCluster rds.DBCluster
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_ScalingConfiguration_DefaultMinCapacity(rName, false, 128, 301, "RollbackCapacityChange"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
 			},
 			{
@@ -2265,11 +2305,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_region" "current" {}
-
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
-  region = "${data.aws_region.current.name}"
 }
 
 resource "aws_s3_bucket_object" "xtrabackup_db" {
@@ -2350,13 +2387,13 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccAWSClusterConfig_generatedName() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_rds_cluster" "test" {
   master_username      = "root"
   master_password      = "password"
   skip_final_snapshot  = true
 }
-`)
+`
 }
 
 func testAccAWSClusterConfigWithFinalSnapshot(n int) string {
@@ -2591,7 +2628,7 @@ func testAccAWSClusterConfig_Port(rInt, port int) string {
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql10"
+  db_cluster_parameter_group_name = "default.aurora-postgresql11"
   engine                          = "aurora-postgresql"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
@@ -2848,7 +2885,7 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   state = "available"
 
@@ -2891,7 +2928,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_kms_key" "alternate" {
-  provider    = "aws.alternate"
+  provider    = "awsalternate"
   description = "Terraform acc test %[1]d"
 
   policy = <<POLICY
@@ -2914,7 +2951,7 @@ resource "aws_kms_key" "alternate" {
 }
 
 resource "aws_vpc" "alternate" {
-  provider   = "aws.alternate"
+  provider   = "awsalternate"
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2923,7 +2960,7 @@ resource "aws_vpc" "alternate" {
 }
 
 resource "aws_subnet" "alternate" {
-  provider          = "aws.alternate"
+  provider          = "awsalternate"
   count             = 3
   vpc_id            = aws_vpc.alternate.id
   availability_zone = data.aws_availability_zones.alternate.names[count.index]
@@ -2935,13 +2972,13 @@ resource "aws_subnet" "alternate" {
 }
 
 resource "aws_db_subnet_group" "alternate" {
-  provider   = "aws.alternate"
+  provider   = "awsalternate"
   name       = "test_replica-subnet-%[1]d"
   subnet_ids = aws_subnet.alternate[*].id
 }
 
 resource "aws_rds_cluster" "alternate" {
-  provider                      = "aws.alternate"
+  provider                      = "awsalternate"
   cluster_identifier            = "tf-test-replica-%[1]d"
   db_subnet_group_name          = aws_db_subnet_group.alternate.name
   database_name                 = "mydb"
@@ -3118,6 +3155,25 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, rName, autoPause, maxCapacity, minCapacity, secondsUntilAutoPause, timeoutAction)
+}
+
+func testAccAWSRDSClusterConfig_ScalingConfiguration_DefaultMinCapacity(rName string, autoPause bool, maxCapacity, secondsUntilAutoPause int, timeoutAction string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  engine_mode         = "serverless"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+
+  scaling_configuration {
+    auto_pause               = %t
+    max_capacity             = %d
+    seconds_until_auto_pause = %d
+    timeout_action           = "%s"
+  }
+}
+`, rName, autoPause, maxCapacity, secondsUntilAutoPause, timeoutAction)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier(rName string) string {

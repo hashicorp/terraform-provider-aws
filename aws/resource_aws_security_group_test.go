@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 // add sweeper to delete known test sgs
@@ -642,7 +643,6 @@ func TestAccAWSSecurityGroup_IPRangeAndSecurityGroupWithSameRules(t *testing.T) 
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(4),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -668,7 +668,6 @@ func TestAccAWSSecurityGroup_IPRangesWithSameRules(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(3),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -681,11 +680,10 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfig,
@@ -696,25 +694,24 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				// NOTE: These ImportStateVerify functions are currently broken because of known issues with multi-import.
-				// Once those are fixed we can uncomment all these.
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -737,11 +734,10 @@ func TestAccAWSSecurityGroup_egressConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
 				Config: testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks(),
@@ -778,11 +774,10 @@ func TestAccAWSSecurityGroup_ingressConfigMode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
 				Config: testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks(),
@@ -808,10 +803,9 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfig_ruleGathering(sgName),
@@ -819,73 +813,84 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", sgName),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.description", "egress for all ipv6"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.ipv6_cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.ipv6_cidr_blocks.0", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.protocol", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2760422146.to_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.cidr_blocks.0", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.description", "egress for all ipv4"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.protocol", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3161496341.to_port", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "0",
+						"description":        "egress for all ipv6",
+						"from_port":          "0",
+						"ipv6_cidr_blocks.#": "1",
+						"ipv6_cidr_blocks.0": "::/0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "-1",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "0.0.0.0/0",
+						"description":        "egress for all ipv4",
+						"from_port":          "0",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "-1",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "0",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "5"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.cidr_blocks.0", "192.168.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.description", "ingress from 192.168.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1274017860.to_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.description", "ingress from all ipv6"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.ipv6_cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.ipv6_cidr_blocks.0", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1396402051.to_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.cidr_blocks.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.cidr_blocks.0", "10.0.2.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.cidr_blocks.1", "10.0.3.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.description", "ingress from 10.0.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1889111182.to_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.cidr_blocks.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.cidr_blocks.0", "10.0.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.cidr_blocks.1", "10.0.1.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.self", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2038285407.to_port", "80"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "192.168.0.0/16",
+						"description":        "ingress from 192.168.0.0/16",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "80",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "0",
+						"description":        "ingress from all ipv6",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "1",
+						"ipv6_cidr_blocks.0": "::/0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "80",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "2",
+						"cidr_blocks.0":      "10.0.2.0/24",
+						"cidr_blocks.1":      "10.0.3.0/24",
+						"description":        "ingress from 10.0.0.0/16",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "80",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "2",
+						"cidr_blocks.0":      "10.0.0.0/24",
+						"cidr_blocks.1":      "10.0.1.0/24",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "true",
+						"to_port":            "80",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(8),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -924,11 +929,10 @@ func TestAccAWSSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed. Terraform tries to destroy them but cannot. Expect a
@@ -1006,11 +1010,10 @@ func TestAccAWSSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed, and the Groups not configured to revoke their ruls.
@@ -1043,11 +1046,10 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigIpv6,
@@ -1056,33 +1058,36 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.ipv6_cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.ipv6_cidr_blocks.0", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2293451516.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "0",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "1",
+						"ipv6_cidr_blocks.0": "::/0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.ipv6_cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.ipv6_cidr_blocks.0", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.2293451516.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "0",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "1",
+						"ipv6_cidr_blocks.0": "::/0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1133,11 +1138,10 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigSelf,
@@ -1145,19 +1149,20 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3971148406.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3971148406.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3971148406.to_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3971148406.self", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":  "tcp",
+						"from_port": "80",
+						"to_port":   "8000",
+						"self":      "true",
+					}),
 					checkSelf,
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1168,11 +1173,10 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigVpc,
@@ -1183,35 +1187,28 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 						resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Used in the terraform acceptance tests"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":      "tcp",
+						"from_port":     "80",
+						"to_port":       "8000",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"protocol":      "tcp",
+						"from_port":     "80",
+						"to_port":       "8000",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 					testAccAWSSecurityGroupCheckVPCIDExists(&group),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1222,11 +1219,10 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigVpcNegOneIngress,
@@ -1237,25 +1233,21 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 						resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Used in the terraform acceptance tests"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.956249133.protocol", "-1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.956249133.from_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.956249133.to_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.956249133.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.956249133.cidr_blocks.0", "10.0.0.0/8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":      "-1",
+						"from_port":     "0",
+						"to_port":       "0",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 					testAccAWSSecurityGroupCheckVPCIDExists(&group),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1265,11 +1257,10 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigVpcProtoNumIngress,
@@ -1279,25 +1270,21 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 						resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Used in the terraform acceptance tests"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.2449525218.protocol", "50"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.2449525218.from_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.2449525218.to_port", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.2449525218.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.2449525218.cidr_blocks.0", "10.0.0.0/8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":      "50",
+						"from_port":     "0",
+						"to_port":       "0",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 					testAccAWSSecurityGroupCheckVPCIDExists(&group),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1319,11 +1306,10 @@ func TestAccAWSSecurityGroup_multiIngress(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1346,11 +1332,10 @@ func TestAccAWSSecurityGroup_change(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
 				Config: testAccAWSSecurityGroupConfigChange,
@@ -1368,45 +1353,47 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigRuleDescription("Egress description", "Ingress description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.description", "Egress description"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.2129912301.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "Egress description",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.description", "Ingress description"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1147649399.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "Ingress description",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			// Change just the rule descriptions.
 			{
@@ -1414,26 +1401,30 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.description", "New egress description"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.746197026.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "New egress description",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.description", "New ingress description"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.1341057959.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "New ingress description",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 			// Remove just the rule descriptions.
@@ -1442,23 +1433,27 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":     "1",
+						"cidr_blocks.0":     "10.0.0.0/8",
+						"description":       "",
+						"from_port":         "80",
+						"protocol":          "tcp",
+						"security_groups.#": "0",
+						"self":              "false",
+						"to_port":           "8000",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":     "1",
+						"cidr_blocks.0":     "10.0.0.0/8",
+						"description":       "",
+						"from_port":         "80",
+						"protocol":          "tcp",
+						"security_groups.#": "0",
+						"self":              "false",
+						"to_port":           "8000",
+					}),
 				),
 			},
 		},
@@ -1508,11 +1503,10 @@ func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1541,7 +1535,6 @@ func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(1),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -1555,10 +1548,9 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfig_drift(),
@@ -1567,32 +1559,38 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.cidr_blocks.0", "206.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "206.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName: resourceName,
+				ImportState:  true,
+				// In rules with cidr_block drift, import only creates a single ingress
+				// rule with the cidr_blocks de-normalized. During subsequent apply, its
+				// normalized to create the 2 ingress rules seen in checks above.
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
 			},
 		},
 	})
@@ -1603,10 +1601,9 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfig_drift_complex(),
@@ -1614,53 +1611,63 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.cidr_blocks.0", "206.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.657243763.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "206.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.cidr_blocks.0", "206.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.657243763.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "206.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(5),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName: resourceName,
+				ImportState:  true,
+				// In rules with cidr_block drift, import only creates a single ingress
+				// rule with the cidr_blocks de-normalized. During subsequent apply, its
+				// normalized to create the 2 ingress rules seen in checks above.
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
 			},
 		},
 	})
@@ -1712,7 +1719,6 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateCheck:        testAccAWSSecurityGroupImportStateCheckFunc(1),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
@@ -1746,11 +1752,10 @@ func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(5),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1761,10 +1766,9 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs,
@@ -1772,34 +1776,37 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupSGandCidrAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.3629188364.to_port", "8000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.cidr_blocks.0", "192.168.0.1/32"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.to_port", "22"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "192.168.0.1/32",
+						"description":        "",
+						"from_port":          "22",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "22",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(5),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1814,10 +1821,9 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic,
@@ -1826,23 +1832,24 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 					testAccCheckAWSSecurityGroupSGandCidrAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.cidr_blocks.0", "192.168.0.1/32"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.3893008652.to_port", "22"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "192.168.0.1/32",
+						"description":        "",
+						"from_port":          "22",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "22",
+					}),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(4),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1867,11 +1874,10 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1896,11 +1902,10 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(2),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1911,57 +1916,50 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityGroupConfigIpv4andIpv6Egress,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.cidr_blocks.0", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.protocol", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.482069346.to_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.ipv6_cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.ipv6_cidr_blocks.0", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.protocol", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.self", "false"),
-					resource.TestCheckResourceAttr(resourceName, "egress.706749478.to_port", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "0.0.0.0/0",
+						"description":        "",
+						"from_port":          "0",
+						"ipv6_cidr_blocks.#": "0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "-1",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "0",
+						"description":        "",
+						"from_port":          "0",
+						"ipv6_cidr_blocks.#": "1",
+						"ipv6_cidr_blocks.0": "::/0",
+						"prefix_list_ids.#":  "0",
+						"protocol":           "-1",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "0",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: testAccAWSSecurityGroupImportStateCheckFunc(3),
-				//ImportStateVerify:       true,
-				//ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
 		},
 	})
-}
-
-func testAccAWSSecurityGroupImportStateCheckFunc(expectedStates int) resource.ImportStateCheckFunc {
-	return func(s []*terraform.InstanceState) error {
-		if len(s) != expectedStates {
-			return fmt.Errorf("expected %d states, got %d: %#v", expectedStates, len(s), s)
-		}
-		return nil
-	}
 }
 
 func testAccAWSSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.TestCheckFunc {
@@ -4127,7 +4125,7 @@ resource "aws_security_group" "test" {
 `
 
 func testAccAWSSecurityGroupConfigEgressConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4157,11 +4155,11 @@ resource "aws_security_group" "test" {
     to_port     = 0
   }
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4177,11 +4175,11 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigEgressConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4199,11 +4197,11 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigIngressConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4233,11 +4231,11 @@ resource "aws_security_group" "test" {
     to_port     = 0
   }
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4253,11 +4251,11 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigIngressConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4275,5 +4273,5 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }

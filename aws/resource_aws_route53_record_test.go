@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"regexp"
 
@@ -244,6 +245,34 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 	})
 }
 
+// TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID ensures an aws_route53_record
+// created with a name configured with a trailing period and explicit zone_id gets imported correctly
+func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig_nameWithTrailingPeriod,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_txtSupport(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
@@ -276,18 +305,16 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckRoute53RecordDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53RecordConfigSPF,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record1),
-					resource.TestCheckResourceAttr(
-						resourceName, "records.2930149397", "include:notexample.com"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "records.*", "include:notexample.com"),
 				),
 			},
 			{
@@ -305,18 +332,16 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckRoute53RecordDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53RecordConfigCAA,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record1),
-					resource.TestCheckResourceAttr(
-						resourceName, "records.2965463512", "0 issue \"exampleca.com;\""),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "records.*", "0 issue \"exampleca.com;\""),
 				),
 			},
 			{
@@ -1180,6 +1205,20 @@ resource "aws_route53_record" "default" {
 }
 `
 
+const testAccRoute53RecordConfig_nameWithTrailingPeriod = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+	zone_id = "${aws_route53_zone.main.zone_id}"
+	name = "www.NOTexamplE.com."
+	type = "A"
+	ttl = "30"
+	records = ["127.0.0.1", "127.0.0.27"]
+}
+`
+
 const testAccRoute53RecordConfigMultiple = `
 resource "aws_route53_zone" "test" {
   name = "notexample.com"
@@ -1771,7 +1810,7 @@ resource "aws_route53_zone" "test" {
 }
 
 func testAccRoute53RecordConfigAliasCustomVpcEndpointSwappedAliasAttributes(rName string) string {
-	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+	return testAccRoute53CustomVpcEndpointBase(rName) + `
 resource "aws_route53_record" "test" {
   name    = "test"
   type    = "A"
@@ -1783,11 +1822,11 @@ resource "aws_route53_record" "test" {
     zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")}"
   }
 }
-`)
+`
 }
 
 func testAccRoute53RecordConfigCustomVpcEndpoint(rName string) string {
-	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+	return testAccRoute53CustomVpcEndpointBase(rName) + `
 resource "aws_route53_record" "test" {
   name    = "test"
   type    = "A"
@@ -1799,7 +1838,7 @@ resource "aws_route53_record" "test" {
     zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")}"
   }
 }
-`)
+`
 }
 
 const testAccRoute53WeightedElbAliasRecord = `
@@ -1937,7 +1976,7 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_route53_record" "sample" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
+  zone_id = "${aws_route53_zone.main.zone_id}"
   name = "sample"
   type = "CNAME"
   ttl = "30"

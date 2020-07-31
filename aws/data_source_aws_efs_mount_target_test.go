@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsEfsMountTargetByMountTargetId(t *testing.T) {
+func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
 	rName := acctest.RandString(10)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
@@ -56,8 +56,8 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_mount_target" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
-  subnet_id      = "${aws_subnet.test.id}"
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test.id
 }
 
 resource "aws_vpc" "test" {
@@ -69,8 +69,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.1.0/24"
 
   tags = {
@@ -79,7 +79,7 @@ resource "aws_subnet" "test" {
 }
 
 data "aws_efs_mount_target" "test" {
-  mount_target_id = "${aws_efs_mount_target.test.id}"
+  mount_target_id = aws_efs_mount_target.test.id
 }
 `, ct)
 }
