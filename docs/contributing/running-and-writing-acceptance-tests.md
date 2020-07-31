@@ -777,7 +777,7 @@ Writing acceptance testing for data sources is similar to resources, with the bi
 - Adding `DataSource` to the test and configuration naming, such as `TestAccAwsExampleThingDataSource_Filter`
 - The basic test _may_ be named after the easiest lookup attribute instead, e.g. `TestAccAwsExampleThingDataSource_Name`
 - No disappears testing
-- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
+- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
 - The usage of an additional `dataSourceName` variable to store a data source reference, e.g. `data.aws_example_thing.test`
 
 Data sources testing should still utilize the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is ran.
