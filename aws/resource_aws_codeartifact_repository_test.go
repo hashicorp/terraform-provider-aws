@@ -23,7 +23,7 @@ func init() {
 func testSweepCodeArtifactRepositories(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).codeartifactconn
 	input := &codeartifact.ListRepositoriesInput{}

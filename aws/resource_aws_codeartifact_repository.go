@@ -181,13 +181,13 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 
 	if sm.Repository.Upstreams != nil {
 		if err := d.Set("upstream", flattenCodeArtifactUpstreams(sm.Repository.Upstreams)); err != nil {
-			return fmt.Errorf("[WARN] Error setting upstream: %s", err)
+			return fmt.Errorf("[WARN] Error setting upstream: %w", err)
 		}
 	}
 
 	if sm.Repository.ExternalConnections != nil {
 		if err := d.Set("external_connections", flattenCodeArtifactExternalConnections(sm.Repository.ExternalConnections)); err != nil {
-			return fmt.Errorf("[WARN] Error setting external_connections: %s", err)
+			return fmt.Errorf("[WARN] Error setting external_connections: %w", err)
 		}
 	}
 
