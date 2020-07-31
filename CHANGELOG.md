@@ -17,8 +17,9 @@ BUG FIXES
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
 * resource/aws_api_gateway_method_settings: Allow `settings` `cache_ttl_in_seconds` argument to be set to 0 [GH-12651]
 * resource/aws_elastictranscoder_preset: Prevent empty configuration block panics [GH-14092]
-* resource/aws_spot_fleet_request: Allow `target_capacity` to be updated to 0 [GH-12759]
-* resource/aws_splot_fleet_request: Wait for modify operation completion (default timeout of 10 minutes) [GH-12759]
+* resource/aws_lambda_event_source_mapping: Allow `maximum_retry_attempts` argument to be set to 0 [GH-12479]
+* resource/aws_spot_fleet_request: Allow `target_capacity` argument to be updated to 0 [GH-12759]
+* resource/aws_spot_fleet_request: Wait for modify operation completion (default timeout of 10 minutes) [GH-12759]
 * resource/aws_vpc_dhcp_options_association: Properly trigger resource recreation when VPC is deleted outside Terraform [GH-14367]
 
 ## 3.0.0 (July 31, 2020)
