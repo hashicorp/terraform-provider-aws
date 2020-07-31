@@ -26,6 +26,7 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 			"registry_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"repository_url": {
 				Type:     schema.TypeString,
