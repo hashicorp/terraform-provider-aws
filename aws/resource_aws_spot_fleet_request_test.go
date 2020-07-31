@@ -1072,6 +1072,48 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	TestAccSkip(t, "Test fails due to test harness constraints")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2307,4 +2349,24 @@ resource "aws_spot_fleet_request" "test" {
     depends_on = ["aws_iam_policy_attachment.test"]
 }
 `, rName, validUntil)
+}
+
+func testAccAWSSpotFleetRequestZeroCapacityConfig(rName string, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName) + fmt.Sprintf(`
+resource "aws_spot_fleet_request" "test" {
+    iam_fleet_role = "${aws_iam_role.test.arn}"
+    spot_price = "0.05"
+    target_capacity = 0
+    valid_until = %[1]q
+    terminate_instances_with_expiration = true
+    instance_interruption_behaviour = "stop"
+    wait_for_fulfillment = true
+    launch_specification {
+        instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+        ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+        key_name      = "${aws_key_pair.test.key_name}"
+    }
+    depends_on = ["aws_iam_policy_attachment.test"]
+}
+`, validUntil)
 }
