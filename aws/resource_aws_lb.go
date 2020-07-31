@@ -116,9 +116,10 @@ func resourceAwsLb() *schema.Resource {
 							ForceNew: true,
 						},
 						"private_ipv4_address": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv4Address,
 						},
 					},
 				},
