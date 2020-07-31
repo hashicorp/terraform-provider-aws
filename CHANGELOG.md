@@ -13,6 +13,7 @@ BUG FIXES
 
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
 * resource/aws_elastictranscoder_preset: Prevent empty configuration block panics [GH-14092]
+* resource/aws_vpc_dhcp_options_association: Properly trigger resource recreation when VPC is deleted outside Terraform [GH-14367]
 
 ## 3.0.0 (July 31, 2020)
 
