@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_lb: Add `subnet_mapping` configuration block `private_ipv4_address` argument [GH-11404]
+* resource/aws_ssm_parameter: Add `data_type` argument (support `aws:ec2:image` parameters) [GH-13326]
 
 BUG FIXES
 
