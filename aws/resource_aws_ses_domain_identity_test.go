@@ -124,7 +124,7 @@ func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsSESDomainIdentityConfig(domain),
-				ExpectError: regexp.MustCompile(`config is invalid: invalid value for domain \(cannot end with a period\)`),
+				ExpectError: regexp.MustCompile(`invalid value for domain \(cannot end with a period\)`),
 			},
 		},
 	})

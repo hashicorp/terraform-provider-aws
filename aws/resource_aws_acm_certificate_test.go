@@ -262,7 +262,7 @@ func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
-				ExpectError: regexp.MustCompile(`config is invalid: invalid value for domain_name \(cannot end with a period\)`),
+				ExpectError: regexp.MustCompile(`invalid value for domain_name \(cannot end with a period\)`),
 			},
 		},
 	})
