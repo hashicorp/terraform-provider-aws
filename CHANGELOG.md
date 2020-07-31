@@ -3,6 +3,7 @@
 BUG FIXES
 
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
+* resource/aws_elastictranscoder_preset: Prevent empty configuration block panics [GH-14092]
 
 ## 3.0.0 (July 31, 2020)
 
