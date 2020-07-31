@@ -341,7 +341,7 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.test", "zone_ids.0"),
 				),
 			},
 			{
@@ -652,7 +652,7 @@ resource "aws_subnet" "test" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
-data "aws_availability_zones" "available" {
+data "aws_availability_zones" "test" {
   state = "available"
 
   filter {
@@ -673,6 +673,7 @@ resource "aws_subnet" "test" {
   cidr_block           = "10.1.1.0/24"
   vpc_id               = aws_vpc.test.id
   availability_zone_id = data.aws_availability_zones.test.zone_ids[0]
+
   tags = {
     Name = "tf-acc-subnet"
   }
