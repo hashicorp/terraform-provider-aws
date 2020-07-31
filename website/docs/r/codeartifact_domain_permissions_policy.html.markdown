@@ -19,11 +19,11 @@ resource "aws_kms_key" "example" {
 
 resource "aws_codeartifact_domain" "example" {
   domain         = "example.com"
-  encryption_key = "${aws_kms_key.example.arn}"
+  encryption_key = aws_kms_key.example.arn
 }
 
 resource "aws_codeartifact_domain_permissions_policy" "test" {
-  domain          = "${aws_codeartifact_domain.example.id}"
+  domain          = aws_codeartifact_domain.example.domain
   policy_document = <<EOF
 {
     "Version": "2012-10-17",

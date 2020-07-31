@@ -70,7 +70,7 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyPut(d *schema.ResourceData, m
 
 	res, err := conn.PutDomainPermissionsPolicy(params)
 	if err != nil {
-		return fmt.Errorf("error creating CodeArtifact Domain Permissions Policy: %s", err)
+		return fmt.Errorf("error creating CodeArtifact Domain Permissions Policy: %w", err)
 	}
 
 	d.SetId(aws.StringValue(res.Policy.ResourceArn))
