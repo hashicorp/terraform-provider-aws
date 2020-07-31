@@ -335,9 +335,9 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_dataType(t *testing.T) {
+func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -346,11 +346,10 @@ func TestAccAWSSSMParameter_dataType(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigDataType(name, "text", "teststring"),
+				Config: testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "value", "teststring"),
-					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
 				),
 			},
 			{
@@ -538,15 +537,17 @@ resource "aws_ssm_parameter" "test" {
 `, rName, tier)
 }
 
-func testAccAWSSSMParameterConfigDataType(rName, data_type, value string) string {
-	return fmt.Sprintf(`
+func testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name       = %[1]q
-  data_type  = %[2]q
+  data_type  = "aws:ec2:image"
   type       = "String"
-  value      = %[3]q
+  value      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 }
-`, rName, data_type, value)
+`, rName))
 }
 
 func testAccAWSSSMParameterBasicConfigTags1(rName, tagKey1, tagValue1 string) string {

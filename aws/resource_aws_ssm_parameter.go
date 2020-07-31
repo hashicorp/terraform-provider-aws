@@ -70,7 +70,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"data_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "text",
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"aws:ec2:image",
 					"text",
@@ -111,11 +111,17 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		Name:           aws.String(d.Id()),
 		WithDecryption: aws.Bool(true),
 	})
-	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") {
+
+	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
+		return fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id())
+	}
+
+	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && !d.IsNewResource() {
 		log.Printf("[WARN] SSM Parameter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading SSM Parameter (%s): %w", d.Id(), err)
 	}
