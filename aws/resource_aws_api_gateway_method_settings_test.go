@@ -87,6 +87,14 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T)
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsCacheTtlInSeconds(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodSettingsExists(resourceName, &stage1),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "0"),
+				),
+			},
+			{
 				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsCacheTtlInSeconds(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayMethodSettingsExists(resourceName, &stage1),
