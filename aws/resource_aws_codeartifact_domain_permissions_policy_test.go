@@ -28,6 +28,7 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
 				),
 			},
 			{
@@ -43,7 +44,36 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:ListRepositoriesInDomain")),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeArtifactDomainPermissionsPolicy_owner(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codeartifact_domain_permissions_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeArtifactDomainPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeArtifactDomainPermissionsPolicyOwnerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -104,8 +134,14 @@ func testAccCheckAWSCodeArtifactDomainPermissionsExists(n string) resource.TestC
 
 		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
 
-		_, err := conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
-			Domain: aws.String(rs.Primary.ID),
+		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
+			Domain:      aws.String(domainName),
+			DomainOwner: aws.String(domainOwner),
 		})
 
 		return err
@@ -119,12 +155,19 @@ func testAccCheckAWSCodeArtifactDomainPermissionsDestroy(s *terraform.State) err
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).codeartifactconn
+
+		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		resp, err := conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
-			Domain: aws.String(rs.Primary.ID),
+			Domain:      aws.String(domainName),
+			DomainOwner: aws.String(domainOwner),
 		})
 
 		if err == nil {
-			if aws.StringValue(resp.Policy.ResourceArn) == rs.Primary.Attributes["resource_arn"] {
+			if aws.StringValue(resp.Policy.ResourceArn) == rs.Primary.ID {
 				return fmt.Errorf("CodeArtifact Domain %s still exists", rs.Primary.ID)
 			}
 		}
@@ -148,11 +191,43 @@ resource "aws_kms_key" "test" {
 
 resource "aws_codeartifact_domain" "test" {
   domain         = %[1]q
-  encryption_key = "${aws_kms_key.test.arn}"
+  encryption_key = aws_kms_key.test.arn
 }
 
 resource "aws_codeartifact_domain_permissions_policy" "test" {
-  domain          = "${aws_codeartifact_domain.test.id}"
+  domain          = aws_codeartifact_domain.test.domain
+  policy_document = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "codeartifact:CreateRepository",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Resource": "${aws_codeartifact_domain.test.arn}"
+        }
+    ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccAWSCodeArtifactDomainPermissionsPolicyOwnerConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = aws_kms_key.test.arn
+}
+
+resource "aws_codeartifact_domain_permissions_policy" "test" {
+  domain          = aws_codeartifact_domain.test.domain
+  domain_owner    = aws_codeartifact_domain.test.owner
   policy_document = <<EOF
 {
     "Version": "2012-10-17",
@@ -179,11 +254,11 @@ resource "aws_kms_key" "test" {
 
 resource "aws_codeartifact_domain" "test" {
   domain         = %[1]q
-  encryption_key = "${aws_kms_key.test.arn}"
+  encryption_key = aws_kms_key.test.arn
 }
 
 resource "aws_codeartifact_domain_permissions_policy" "test" {
-  domain          = "${aws_codeartifact_domain.test.id}"
+  domain          = aws_codeartifact_domain.test.domain
   policy_document = <<EOF
 {
     "Version": "2012-10-17",

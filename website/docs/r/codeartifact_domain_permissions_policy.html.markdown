@@ -45,7 +45,8 @@ EOF
 The following arguments are supported:
 
 * `domain` - (Required) The name of the domain on which to set the resource policy.
-* `encryption_key` - (Required) A valid displayable JSON Aspen policy string to be set as the access control resource policy on the provided domain.
+* `policy_document` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.
+* `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
 * `policy_revision` - (Optional) The current revision of the resource policy to be set. This revision is used for optimistic locking, which prevents others from overwriting your changes to the domain's resource policy.
 
 ## Attributes Reference
@@ -57,8 +58,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Domain Permissions Policies can be imported using the CodeArtifact Domain name, e.g.
+CodeArtifact Domain Permissions Policies can be imported using the CodeArtifact Domain ARN, e.g.
 
 ```
-$ terraform import aws_codeartifact_domain_permissions_policy.example example.com
+$ terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
 ```

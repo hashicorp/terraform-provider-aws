@@ -26,7 +26,12 @@ func resourceAwsCodeArtifactDomainPermissionsPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
+			"domain_owner": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"policy_document": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -50,34 +55,41 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyPut(d *schema.ResourceData, m
 	conn := meta.(*AWSClient).codeartifactconn
 	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
 
-	domain := d.Get("domain").(string)
-
 	params := &codeartifact.PutDomainPermissionsPolicyInput{
-		Domain:         aws.String(domain),
+		Domain:         aws.String(d.Get("domain").(string)),
 		PolicyDocument: aws.String(d.Get("policy_document").(string)),
+	}
+
+	if v, ok := d.GetOk("domain_owner"); ok {
+		params.DomainOwner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("policy_revision"); ok {
 		params.PolicyRevision = aws.String(v.(string))
 	}
 
-	_, err := conn.PutDomainPermissionsPolicy(params)
+	res, err := conn.PutDomainPermissionsPolicy(params)
 	if err != nil {
 		return fmt.Errorf("error creating CodeArtifact Domain Permissions Policy: %s", err)
 	}
 
-	d.SetId(domain)
+	d.SetId(aws.StringValue(res.Policy.ResourceArn))
 
 	return resourceAwsCodeArtifactDomainPermissionsPolicyRead(d, meta)
 }
 
 func resourceAwsCodeArtifactDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codeartifactconn
-
 	log.Printf("[DEBUG] Reading CodeArtifact Domain Permissions Policy: %s", d.Id())
 
+	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
+	if err != nil {
+		return err
+	}
+
 	dm, err := conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
-		Domain: aws.String(d.Id()),
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
 		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
@@ -88,7 +100,8 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyRead(d *schema.ResourceData, 
 		return fmt.Errorf("error reading CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
 	}
 
-	d.Set("domain", d.Id())
+	d.Set("domain", domainName)
+	d.Set("domain_owner", domainOwner)
 	d.Set("resource_arn", dm.Policy.ResourceArn)
 	d.Set("policy_document", dm.Policy.Document)
 	d.Set("policy_revision", dm.Policy.Revision)
@@ -100,11 +113,17 @@ func resourceAwsCodeArtifactDomainPermissionsPolicyDelete(d *schema.ResourceData
 	conn := meta.(*AWSClient).codeartifactconn
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
 
-	input := &codeartifact.DeleteDomainPermissionsPolicyInput{
-		Domain: aws.String(d.Id()),
+	domainOwner, domainName, err := decodeCodeArtifactDomainID(d.Id())
+	if err != nil {
+		return err
 	}
 
-	_, err := conn.DeleteDomainPermissionsPolicy(input)
+	input := &codeartifact.DeleteDomainPermissionsPolicyInput{
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
+	}
+
+	_, err = conn.DeleteDomainPermissionsPolicy(input)
 
 	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
