@@ -191,6 +191,40 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_NLB_privateipv4address(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-pipv4a-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_lb.lb_test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/net/%s/.+", lbName))),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "internal", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
+					resource.TestCheckResourceAttr(resourceName, "name", lbName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_privateipv4address"),
+					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -1766,6 +1800,46 @@ resource "aws_lb" "lb_test" {
 
 resource "aws_eip" "lb" {
   count = "2"
+}
+`, lbName)
+}
+
+func testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
+  name               = "%s"
+  internal           = true
+  load_balancer_type = "network"
+
+  enable_deletion_protection       = false
+
+  subnet_mapping {
+	subnet_id            = "${aws_subnet.alb_test.id}"
+	private_ipv4_address = "10.10.0.15"
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_privateipv4address"
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "TestAccAWSALB_privateipv4address"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "10.10.0.0/21"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-west-2a"
+
+  tags = {
+    Name = "TestAccAWSALB_privateipv4address"
+  }
 }
 `, lbName)
 }
