@@ -19,6 +19,7 @@ import (
 const (
 	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
 	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
+	rdsClusterTimeoutDelete                           = 2 * time.Minute
 )
 
 func resourceAwsRDSCluster() *schema.Resource {
@@ -1283,10 +1284,13 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
