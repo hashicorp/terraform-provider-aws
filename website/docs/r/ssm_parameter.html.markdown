@@ -65,6 +65,8 @@ The following arguments are supported:
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
 * `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `false` if the resource has not been created by terraform to avoid overwrite of existing resource and will default to `true` otherwise (terraform lifecycle rules should then be used to manage the update behavior).
 * `allowed_pattern` - (Optional) A regular expression used to validate the parameter value.
+* `data_type` - (Optional) The data_type of the parameter. Valid values: text and aws:ec2:image for AMI format, see the [Native parameter support for Amazon Machine Image IDs
+](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)
 * `tags` - (Optional) A map of tags to assign to the object.
 
 ## Attributes Reference

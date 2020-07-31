@@ -67,6 +67,15 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"data_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "text",
+				ValidateFunc: validation.StringInSlice([]string{
+					"aws:ec2:image",
+					"text",
+				}, false),
+			},
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -146,6 +155,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("tier", detail.Tier)
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
+	d.Set("data_type", detail.DataType)
 
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
@@ -196,6 +206,10 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		Value:          aws.String(d.Get("value").(string)),
 		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+	}
+
+	if v, ok := d.GetOk("data_type"); ok {
+		paramInput.DataType = aws.String(v.(string))
 	}
 
 	if d.HasChange("description") {

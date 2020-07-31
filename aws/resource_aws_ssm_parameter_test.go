@@ -31,6 +31,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 				),
 			},
 			{
@@ -334,6 +335,34 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMParameter_dataType(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterConfigDataType(name, "text", "teststring"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "value", "teststring"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 	var param ssm.Parameter
 	randString := acctest.RandString(10)
@@ -507,6 +536,17 @@ resource "aws_ssm_parameter" "test" {
   value = "test2"
 }
 `, rName, tier)
+}
+
+func testAccAWSSSMParameterConfigDataType(rName, data_type, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name       = %[1]q
+  data_type  = %[2]q
+  type       = "String"
+  value      = %[3]q
+}
+`, rName, data_type, value)
 }
 
 func testAccAWSSSMParameterBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
