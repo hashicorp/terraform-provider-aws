@@ -4,6 +4,10 @@ FEATURES
 
 * **New Data Source:** `aws_ec2_spot_price` [GH-12504]
 
+ENHANCEMENTS
+
+* resource/aws_lb: Add `subnet_mapping` configuration block `private_ipv4_address` argument [GH-11404]
+
 BUG FIXES
 
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
