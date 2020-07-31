@@ -30,6 +30,7 @@ Upgrade topics:
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
 - [Resource: aws_cloudwatch_log_group](#resource-aws_cloudwatch_log_group)
+- [Resource: aws_codepipeline](#resource-aws_codepipeline)
 - [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
@@ -713,6 +714,75 @@ data "aws_iam_policy_document" "ad-log-policy" {
     }
     resources = ["${aws_cloudwatch_log_group.example.arn}:*"]
     effect = "Allow"
+  }
+}
+```
+
+## Resource: aws_codepipeline
+
+### GITHUB_TOKEN environment variable removal
+
+Switch your Terraform configuration to the `OAuthToken` element in the `action` `configuration` map instead.
+
+For example, given this previous configuration:
+
+```bash
+$ GITHUB_TOKEN=<token> terraform apply
+```
+
+```hcl
+resource "aws_codepipeline" "example" {
+  # ... other configuration ...
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["example"]
+
+      configuration = {
+        Owner  = "lifesum-terraform"
+        Repo   = "example"
+        Branch = "main"
+      }
+    }
+  }
+}
+```
+
+```bash
+$ TF_VAR_github_token=<token> terraform apply
+```
+
+```hcl
+variable "github_token" {}
+
+resource "aws_codepipeline" "example" {
+  # ... other configuration ...
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["example"]
+
+      configuration = {
+        Owner      = "lifesum-terraform"
+        Repo       = "example"
+        Branch     = "main"
+        OAuthToken = var.github_token
+      }
+    }
   }
 }
 ```
