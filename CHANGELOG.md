@@ -6,6 +6,8 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_ecr_repository: Allow `registry_id` as an argument [GH-14368]
+* data-source/aws_ecr_repository: Add `image_scanning_configuration` and `image_tag_mutability` attributes [GH-14368]
 * resource/aws_lb: Add `subnet_mapping` configuration block `private_ipv4_address` argument [GH-11404]
 * resource/aws_ssm_parameter: Add `data_type` argument (support `aws:ec2:image` parameters) [GH-13326]
 
