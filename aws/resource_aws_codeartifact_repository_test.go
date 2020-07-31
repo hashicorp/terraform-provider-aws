@@ -87,7 +87,8 @@ func TestAccAWSCodeArtifactRepository_basic(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "domain_owner"),
 					testAccCheckResourceAttrAccountID(resourceName, "administrator_account"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
 				),
 			},
 			{
@@ -144,8 +145,8 @@ func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
 				Config: testAccAWSCodeArtifactRepositoryUpstreamsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
 				),
 			},
 			{
@@ -157,17 +158,17 @@ func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
 				Config: testAccAWSCodeArtifactRepositoryUpstreamsConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.1.repository_name", fmt.Sprintf("%s-upstream2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "upstream.1.repository_name", fmt.Sprintf("%s-upstream2", rName)),
 				),
 			},
 			{
 				Config: testAccAWSCodeArtifactRepositoryUpstreamsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "upstreams.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
 				),
 			},
 		},
@@ -316,7 +317,7 @@ resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
 
-  upstreams {
+  upstream {
     repository_name = aws_codeartifact_repository.upstream1.repository
   }
 }
@@ -349,11 +350,11 @@ resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
 
-  upstreams {
+  upstream {
     repository_name = aws_codeartifact_repository.upstream1.repository
   }
 
-  upstreams {
+  upstream {
     repository_name = aws_codeartifact_repository.upstream2.repository
   }
 }

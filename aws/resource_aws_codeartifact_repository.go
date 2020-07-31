@@ -44,7 +44,7 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"upstreams": {
+			"upstream": {
 				Type:     schema.TypeList,
 				MinItems: 1,
 				Optional: true,
@@ -53,6 +53,26 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 						"repository_name": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+					},
+				},
+			},
+			"external_connections": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"external_connection_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"package_format": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -82,7 +102,7 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 		params.DomainOwner = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("upstreams"); ok {
+	if v, ok := d.GetOk("upstream"); ok {
 		params.Upstreams = expandCodeArtifactUpstreams(v.([]interface{}))
 	}
 
@@ -114,8 +134,8 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("upstreams") {
-		if v, ok := d.GetOk("upstreams"); ok {
+	if d.HasChange("upstream") {
+		if v, ok := d.GetOk("upstream"); ok {
 			params.Upstreams = expandCodeArtifactUpstreams(v.([]interface{}))
 		}
 	}
@@ -159,14 +179,14 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 	d.Set("description", sm.Repository.Description)
 
 	if sm.Repository.Upstreams != nil {
-		if err := d.Set("upstreams", flattenCodeArtifactUpstreams(sm.Repository.Upstreams)); err != nil {
-			return fmt.Errorf("[WARN] Error setting upstreams: %s", err)
+		if err := d.Set("upstream", flattenCodeArtifactUpstreams(sm.Repository.Upstreams)); err != nil {
+			return fmt.Errorf("[WARN] Error setting upstream: %s", err)
 		}
 	}
 
 	if sm.Repository.ExternalConnections != nil {
-		if err := d.Set("external_connections", flattenCodeArtifactUpstreams(sm.Repository.Upstreams)); err != nil {
-			return fmt.Errorf("[WARN] Error setting upstreams: %s", err)
+		if err := d.Set("external_connections", flattenCodeArtifactExternalConnections(sm.Repository.ExternalConnections)); err != nil {
+			return fmt.Errorf("[WARN] Error setting external_connections: %s", err)
 		}
 	}
 
@@ -225,6 +245,26 @@ func flattenCodeArtifactUpstreams(upstreams []*codeartifact.UpstreamRepositoryIn
 	for _, upstream := range upstreams {
 		m := map[string]interface{}{
 			"repository_name": aws.StringValue(upstream.RepositoryName),
+		}
+
+		ls = append(ls, m)
+	}
+
+	return ls
+}
+
+func flattenCodeArtifactExternalConnections(connections []*codeartifact.RepositoryExternalConnectionInfo) []interface{} {
+	if len(connections) == 0 {
+		return nil
+	}
+
+	var ls []interface{}
+
+	for _, connection := range connections {
+		m := map[string]interface{}{
+			"external_connection_name": aws.StringValue(connection.ExternalConnectionName),
+			"package_format":           aws.StringValue(connection.PackageFormat),
+			"status":                   aws.StringValue(connection.Status),
 		}
 
 		ls = append(ls, m)
