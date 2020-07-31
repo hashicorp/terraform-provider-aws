@@ -1,9 +1,12 @@
 package aws
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -106,11 +109,10 @@ func resourceAwsCodePipeline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"configuration": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										// Some configuration types can contain sensitive values, such as a GitHub OAuthToken
-										Sensitive: true,
-										Elem:      &schema.Schema{Type: schema.TypeString},
+										Type:             schema.TypeMap,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
 									},
 									"category": {
 										Type:     schema.TypeString,
@@ -423,7 +425,8 @@ func flattenAwsCodePipelineStageActions(si int, actions []*codepipeline.ActionDe
 				if _, ok := config[CodePipelineGitHubActionConfigurationOAuthToken]; ok {
 					// The AWS API returns "****" for the OAuthToken value. Pull the value from the configuration.
 					addr := fmt.Sprintf("stage.%d.action.%d.configuration.OAuthToken", si, ai)
-					config[CodePipelineGitHubActionConfigurationOAuthToken] = d.Get(addr).(string)
+					hash := hashCodePipelineGitHubToken(d.Get(addr).(string))
+					config[CodePipelineGitHubActionConfigurationOAuthToken] = hash
 				}
 			}
 
@@ -615,4 +618,29 @@ func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return err
+}
+
+func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
+	parts := strings.Split(k, ".")
+	parts = parts[:len(parts)-2]
+	providerAddr := strings.Join(append(parts, "provider"), ".")
+	provider := d.Get(providerAddr).(string)
+
+	if provider == CodePipelineProviderGitHub && strings.HasSuffix(k, CodePipelineGitHubActionConfigurationOAuthToken) {
+		hash := hashCodePipelineGitHubToken(new)
+		return old == hash
+	}
+
+	return false
+}
+
+const codePipelineGitHubTokenHashPrefix = "hash-"
+
+func hashCodePipelineGitHubToken(token string) string {
+	// Without this check, the value was getting encoded twice
+	if strings.HasPrefix(token, codePipelineGitHubTokenHashPrefix) {
+		return token
+	}
+	sum := sha256.Sum256([]byte(token))
+	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
 }
