@@ -1,5 +1,9 @@
 ## 3.1.0 (Unreleased)
 
+FEATURES
+
+* **New Data Source:** `aws_ec2_spot_price` [GH-12504]
+
 BUG FIXES
 
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
