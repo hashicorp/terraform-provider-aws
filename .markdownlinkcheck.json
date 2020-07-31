@@ -21,6 +21,10 @@
             "replacement": "file:///github/workspace/website/docs/"
         },
         {
+            "pattern": "^(custom-service-endpoints|resource-tagging|version-2-upgrade|version-3-upgrade).html.markdown(#.*)?$",
+            "replacement": "file:///github/workspace/website/docs/guides/$1.html.md$2"
+        },
+        {
             "pattern": "^file:///github/workspace/website/docs/guides/(.*)\\.markdown(#.*)?$",
             "replacement": "file:///github/workspace/website/docs/guides/$1.md$2"
         },
