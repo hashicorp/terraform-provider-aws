@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -472,6 +473,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+
+			"instance_refresh_token": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -708,6 +714,8 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	d.Set("instance_refresh_token", resource.PrefixedUniqueId(""))
+
 	return resourceAwsAutoscalingGroupRead(d, meta)
 }
 
@@ -900,6 +908,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.Au
 func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
 	shouldWaitForCapacity := false
+	shouldRefreshInstances := false
 
 	opts := autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(d.Id()),
@@ -920,16 +929,21 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		if v, ok := d.GetOk("launch_configuration"); ok {
 			opts.LaunchConfigurationName = aws.String(v.(string))
 		}
+
+		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("launch_template") {
 		if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 {
 			opts.LaunchTemplate, _ = expandLaunchTemplateSpecification(v.([]interface{}))
 		}
+
+		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("mixed_instances_policy") {
 		opts.MixedInstancesPolicy = expandAutoScalingMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
+		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("min_size") {
@@ -956,16 +970,20 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("vpc_zone_identifier") {
 		opts.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
+		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("availability_zones") {
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
 			opts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
 		}
+
+		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("placement_group") {
 		opts.PlacementGroup = aws.String(d.Get("placement_group").(string))
+		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("termination_policies") {
@@ -998,12 +1016,34 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		if err := keyvaluetags.AutoscalingUpdateTags(conn, d.Id(), autoscalingTagResourceTypeAutoScalingGroup, oldTags, newTags); err != nil {
 			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
+
+		oldPropagatedTags := map[string]string{} // key => value
+		for _, tag := range oldTags {
+			if aws.BoolValue(tag.PropagateAtLaunch) {
+				oldPropagatedTags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+			}
+		}
+
+		newPropagatedTags := map[string]string{} // key => value
+		for _, tag := range newTags {
+			if aws.BoolValue(tag.PropagateAtLaunch) {
+				newPropagatedTags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+			}
+		}
+
+		if !reflect.DeepEqual(oldPropagatedTags, newPropagatedTags) {
+			shouldRefreshInstances = true
+		}
 	}
 
 	log.Printf("[DEBUG] AutoScaling Group update configuration: %#v", opts)
 	_, err := conn.UpdateAutoScalingGroup(&opts)
 	if err != nil {
 		return fmt.Errorf("Error updating Autoscaling group: %s", err)
+	}
+
+	if shouldRefreshInstances {
+		d.Set("instance_refresh_token", resource.PrefixedUniqueId(""))
 	}
 
 	if d.HasChange("load_balancers") {

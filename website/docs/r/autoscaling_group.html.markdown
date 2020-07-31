@@ -123,7 +123,7 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
-## Interpolated tags
+### Interpolated tags
 
 ```hcl
 variable "extra_tags" {
@@ -163,6 +163,33 @@ resource "aws_autoscaling_group" "bar" {
     ],
     var.extra_tags,
   )
+}
+```
+
+### Initiate an Instance Refresh on update
+
+```hcl
+resource "aws_launch_configuration" "test" {
+  image_id      = "ami-123456789"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = ["us-west-2"]
+  min_size             = 1
+  max_size             = 2
+  launch_configuration = aws_launch_configuration.test.name
+}
+
+resource "aws_autoscaling_instance_refresh" "test" {
+  autoscaling_group_name  = aws_autoscaling_group.test.name
+  min_healthy_percentage  = 50
+  instance_warmup_seconds = 5
+  strategy                = "Rolling"
+
+  triggers = {
+    token = aws_autoscaling_group.test.instance_refresh_token
+  }
 }
 ```
 
@@ -312,6 +339,7 @@ In addition to all arguments above, the following attributes are exported:
 * `desired_capacity` -The number of Amazon EC2 instances that should be running in the group.
 * `launch_configuration` - The launch configuration of the autoscale group
 * `vpc_zone_identifier` (Optional) - The VPC zone identifier
+* `instance_refresh_token` - An arbitrary value, recomputed every time an [Instance Refresh](/docs/providers/aws/r/autoscaling_instance_refresh.html) should be triggered.
 
 ~> **NOTE:** When using `ELB` as the `health_check_type`, `health_check_grace_period` is required.
 
@@ -396,6 +424,19 @@ number of configuration problems. See the [AWS Docs on Load Balancer
 Troubleshooting](https://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/elb-troubleshooting.html)
 for more information.
 
+## Replacing instances using Instance Refresh
+
+This resource provides the `instance_refresh_token` attribute, which is an arbitrary
+token that changes every time modifications to the ASG would result in new
+instance configurations. The properties that will result in this token changing
+are: `launch_configuration`, `launch_template`, `vpc_zone_identifier`,
+`availability_zones`, `placement_group`, `tags` (the subset that propagate on launch).
+
+Use the [`aws_autoscaling_instance_refresh`](/docs/providers/aws/r/autoscaling_instance_refresh.html)
+resource to initiate an instance refresh.
+
+Note that the `aws_autoscaling_instance_refresh` is unable to detect whether
+it was created in response to a new or modified ASG.
 
 ## Import
 
