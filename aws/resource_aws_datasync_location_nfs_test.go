@@ -415,7 +415,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAWSDataSyncLocationNfsConfig(rName string) string {
-	return testAccAWSDataSyncLocationNfsConfigBase(rName) + fmt.Sprintf(`
+	return testAccAWSDataSyncLocationNfsConfigBase(rName) + `
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
   subdirectory    = "/"
@@ -424,7 +424,7 @@ resource "aws_datasync_location_nfs" "test" {
     agent_arns = ["${aws_datasync_agent.test.arn}"]
   }
 }
-`)
+`
 }
 
 func testAccAWSDataSyncLocationNfsConfigAgentArnsMultiple(rName string) string {

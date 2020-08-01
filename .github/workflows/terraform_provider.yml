@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - 'release/**'
   pull_request:
     paths:
       - .github/workflows/terraform_provider.yml
@@ -225,6 +226,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint
     - run: golangci-lint run ./aws/...
+    - run: golangci-lint run ./awsproviderlint/...
 
   goreleaser:
     needs: [go_mod_download]

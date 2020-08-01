@@ -600,7 +600,7 @@ func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchC
 }
 
 func testAccAWSLaunchConfigurationConfig_ami() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
@@ -610,11 +610,11 @@ data "aws_ami" "ubuntu" {
     values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-2017*"]
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_HvmEbsAmi() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -629,11 +629,11 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     values = ["ebs"]
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_instanceStoreAMI() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
   owners      = ["amazon"]
@@ -648,7 +648,7 @@ data "aws_ami" "amzn-ami-minimal-pv" {
     values = ["instance-store"]
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName string) string {
@@ -778,18 +778,18 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationNoNameConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data = "testtest-user-data-change"
   associate_public_ip_address = false
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationPrefixNameConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   name_prefix = "tf-acc-test-"
   image_id = "${data.aws_ami.ubuntu.id}"
@@ -797,11 +797,11 @@ resource "aws_launch_configuration" "test" {
   user_data = "testtest-user-data-change"
   associate_public_ip_address = false
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationWithEncryption() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
@@ -817,11 +817,11 @@ resource "aws_launch_configuration" "test" {
     encrypted = true
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationWithEncryptionUpdated() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
@@ -837,7 +837,7 @@ resource "aws_launch_configuration" "test" {
     encrypted = true
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
@@ -888,8 +888,8 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "profile" {
-  name  = "tf-acc-test-%[1]d"
-  roles = ["${aws_iam_role.role.name}"]
+  name = "tf-acc-test-%[1]d"
+  role = aws_iam_role.role.name
 }
 
 resource "aws_launch_configuration" "test" {
@@ -915,23 +915,23 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationConfig_userData() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data = "foo:-with-character's"
   associate_public_ip_address = false
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_userDataBase64() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data_base64 = "${base64encode("hello world")}"
   associate_public_ip_address = false
 }
-`)
+`
 }

@@ -84,7 +84,7 @@ resource "aws_launch_configuration" "foo" {
 }
 
 data "aws_launch_configuration" "foo" {
-  name = "${aws_launch_configuration.foo.name}"
+  name = aws_launch_configuration.foo.name
 }
 `, rInt)
 }
@@ -97,18 +97,18 @@ resource "aws_vpc" "test" {
 
 resource "aws_security_group" "test" {
   name   = "terraform-test_%d"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_launch_configuration" "test" {
   name            = "terraform-test-%d"
   image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "m1.small"
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups = [aws_security_group.test.id]
 }
 
 data "aws_launch_configuration" "foo" {
-  name = "${aws_launch_configuration.test.name}"
+  name = aws_launch_configuration.test.name
 }
 `, rInt, rInt)
 }

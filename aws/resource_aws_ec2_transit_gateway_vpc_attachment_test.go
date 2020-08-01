@@ -542,7 +542,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentNotRecreated(i, j *ec2.Transit
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -579,7 +579,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
   vpc_id             = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigDnsSupport(dnsSupport string) string {
@@ -684,24 +684,24 @@ data "aws_availability_zones" "available" {
 data "aws_organizations_organization" "test" {}
 
 resource "aws_ec2_transit_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_ram_resource_share" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name = %[1]q
 }
 
 resource "aws_ram_resource_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   resource_arn       = "${aws_ec2_transit_gateway.test.arn}"
   resource_share_arn = "${aws_ram_resource_share.test.id}"
 }
 
 resource "aws_ram_principal_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   principal          = "${data.aws_organizations_organization.test.arn}"
   resource_share_arn = "${aws_ram_resource_share.test.id}"
@@ -736,7 +736,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSubnetIds1() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -775,11 +775,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
   vpc_id             = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSubnetIds2() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -818,7 +818,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
   vpc_id             = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTags1(tagKey1, tagValue1 string) string {
@@ -913,7 +913,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTableAssociationAndPropagationDisabled() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -955,7 +955,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   transit_gateway_id                              = "${aws_ec2_transit_gateway.test.id}"
   vpc_id                                          = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTableAssociation(transitGatewayDefaultRouteTableAssociation bool) string {

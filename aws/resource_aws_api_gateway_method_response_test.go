@@ -55,6 +55,28 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayMethodResponse_disappears(t *testing.T) {
+	var conf apigateway.MethodResponse
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	resourceName := "aws_api_gateway_method_response.error"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayMethodResponseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayMethodResponseConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodResponseExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethodResponse(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayMethodResponseAttributes(conf *apigateway.MethodResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.StatusCode == "" {

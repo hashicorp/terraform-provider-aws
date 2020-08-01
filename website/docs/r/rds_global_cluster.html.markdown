@@ -26,40 +26,40 @@ provider "aws" {
 }
 
 resource "aws_rds_global_cluster" "example" {
-  provider = "aws.primary"
+  provider = aws.primary
 
   global_cluster_identifier = "example"
 }
 
 resource "aws_rds_cluster" "primary" {
-  provider = "aws.primary"
+  provider = aws.primary
 
   # ... other configuration ...
   engine_mode               = "global"
-  global_cluster_identifier = "${aws_rds_global_cluster.example.id}"
+  global_cluster_identifier = aws_rds_global_cluster.example.id
 }
 
 resource "aws_rds_cluster_instance" "primary" {
-  provider = "aws.primary"
+  provider = aws.primary
 
   # ... other configuration ...
-  cluster_identifier = "${aws_rds_cluster.primary.id}"
+  cluster_identifier = aws_rds_cluster.primary.id
 }
 
 resource "aws_rds_cluster" "secondary" {
-  depends_on = ["aws_rds_cluster_instance.primary"]
-  provider   = "aws.secondary"
+  depends_on = [aws_rds_cluster_instance.primary]
+  provider   = aws.secondary
 
   # ... other configuration ...
   engine_mode               = "global"
-  global_cluster_identifier = "${aws_rds_global_cluster.example.id}"
+  global_cluster_identifier = aws_rds_global_cluster.example.id
 }
 
 resource "aws_rds_cluster_instance" "secondary" {
-  provider = "aws.secondary"
+  provider = aws.secondary
 
   # ... other configuration ...
-  cluster_identifier = "${aws_rds_cluster.secondary.id}"
+  cluster_identifier = aws_rds_cluster.secondary.id
 }
 ```
 

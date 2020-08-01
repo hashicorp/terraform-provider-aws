@@ -13,7 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccAwsWafv2IPSet_Basic(t *testing.T) {
+func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"

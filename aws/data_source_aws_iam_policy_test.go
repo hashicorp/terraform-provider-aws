@@ -55,7 +55,7 @@ EOF
 }
 
 data "aws_iam_policy" "test" {
-  arn = "${aws_iam_policy.test_policy.arn}"
+  arn = aws_iam_policy.test_policy.arn
 }
 `, policyName)
 }

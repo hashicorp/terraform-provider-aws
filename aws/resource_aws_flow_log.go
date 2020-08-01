@@ -38,10 +38,6 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"log_group_name"},
 				ValidateFunc:  validateArn,
-				StateFunc: func(arn interface{}) string {
-					// aws_cloudwatch_log_group arn attribute references contain a trailing `:*`, which breaks functionality
-					return strings.TrimSuffix(arn.(string), ":*")
-				},
 			},
 
 			"log_destination_type": {

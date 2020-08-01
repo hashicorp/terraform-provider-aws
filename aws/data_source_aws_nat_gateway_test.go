@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceAwsNatGateway(t *testing.T) {
+func TestAccDataSourceAwsNatGateway_basic(t *testing.T) {
 	// This is used as a portion of CIDR network addresses.
 	rInt := acctest.RandIntRange(4, 254)
 

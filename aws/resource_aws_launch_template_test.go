@@ -1405,7 +1405,7 @@ resource "aws_launch_template" "test" {
     }
   }
 }
-`, rName)
+`, rName) //lintignore:AWSAT002
 }
 
 func testAccAWSLaunchTemplateConfig_tagsUpdate(rName string) string {

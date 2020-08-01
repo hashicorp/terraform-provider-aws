@@ -153,6 +153,27 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aws_api_gateway_vpc_link.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayVpcLink(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsAPIGatewayVpcLinkDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 

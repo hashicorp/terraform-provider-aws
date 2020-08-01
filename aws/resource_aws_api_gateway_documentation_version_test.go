@@ -86,6 +86,32 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
+	var conf apigateway.DocumentationVersion
+
+	rString := acctest.RandString(8)
+	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
+
+	resourceName := "aws_api_gateway_documentation_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigateway.DocumentationVersion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

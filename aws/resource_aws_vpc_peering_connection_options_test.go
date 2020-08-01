@@ -286,7 +286,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -308,7 +308,7 @@ resource "aws_vpc_peering_connection" "test" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
   auto_accept = true
@@ -330,7 +330,7 @@ resource "aws_vpc_peering_connection_options" "test" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_options" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
 
@@ -352,7 +352,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -362,7 +362,7 @@ resource "aws_vpc" "peer" {
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 // Requester's side of the connection.
@@ -378,7 +378,7 @@ resource "aws_vpc_peering_connection" "test" {
 
  // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
   auto_accept = true
@@ -400,7 +400,7 @@ resource "aws_vpc_peering_connection_options" "test" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_options" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
 

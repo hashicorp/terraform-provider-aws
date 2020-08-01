@@ -38,7 +38,7 @@ resource "aws_cognito_user_pool" "main" {
 }
 
 data "aws_cognito_user_pools" "selected" {
-  name = "${aws_cognito_user_pool.main.*.name[0]}"
+  name = aws_cognito_user_pool.main.*.name[0]
 }
 `, rName)
 }

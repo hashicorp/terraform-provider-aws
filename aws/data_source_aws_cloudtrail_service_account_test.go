@@ -47,13 +47,13 @@ func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
 }
 
 const testAccCheckAwsCloudTrailServiceAccountConfig = `
-data "aws_cloudtrail_service_account" "main" { }
+data "aws_cloudtrail_service_account" "main" {}
 `
 
 const testAccCheckAwsCloudTrailServiceAccountConfigRegion = `
 data "aws_region" "current" {}
 
 data "aws_cloudtrail_service_account" "regional" {
-  region = "${data.aws_region.current.name}"
+  region = data.aws_region.current.name
 }
 `

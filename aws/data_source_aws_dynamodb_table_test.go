@@ -81,7 +81,7 @@ resource "aws_dynamodb_table" "test" {
 }
 
 data "aws_dynamodb_table" "test" {
-  name = "${aws_dynamodb_table.test.name}"
+  name = aws_dynamodb_table.test.name
 }
 `, tableName)
 }

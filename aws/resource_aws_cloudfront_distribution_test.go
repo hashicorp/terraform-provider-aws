@@ -581,9 +581,9 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_TrustedSigners(t *tes
 				Config: testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorTrustedSignersSelf(retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.%", "6"),
-					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.items.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.items.0.aws_account_number", "self"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_signers.0.items.0.aws_account_number", "self"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "1"),
 				),
@@ -1109,26 +1109,26 @@ func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
 	})
 }
 
-var originBucket = fmt.Sprintf(`
+var originBucket = `
 resource "aws_s3_bucket" "s3_bucket_origin" {
 	bucket = "mybucket.${var.rand_id}"
 	acl = "public-read"
 }
-`)
+`
 
-var backupBucket = fmt.Sprintf(`
+var backupBucket = `
 resource "aws_s3_bucket" "s3_backup_bucket_origin" {
 	bucket = "mybucket-backup.${var.rand_id}"
 	acl = "public-read"
 }
-`)
+`
 
-var logBucket = fmt.Sprintf(`
+var logBucket = `
 resource "aws_s3_bucket" "s3_bucket_logs" {
 	bucket = "mylogs.${var.rand_id}"
 	acl = "public-read"
 }
-`)
+`
 
 var testAccAWSCloudFrontDistributionS3Config = `
 variable rand_id {
@@ -2358,22 +2358,27 @@ resource "aws_cloudfront_distribution" "test" {
   enabled             = false
   retain_on_delete    = %[1]t
   wait_for_deployment = false
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "test"
     trusted_signers        = ["self"]
     viewer_protocol_policy = "allow-all"
+
     forwarded_values {
       query_string = false
+
       cookies {
         forward = "all"
       }
     }
   }
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "test"
+
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -2381,11 +2386,13 @@ resource "aws_cloudfront_distribution" "test" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
     }
   }
+
   viewer_certificate {
     cloudfront_default_certificate = true
   }
@@ -2400,7 +2407,7 @@ func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBas
 
 	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  provider = "aws.us-east-1"
+  provider = "awsus-east-1"
 
   certificate_body = "%[1]s"
   private_key      = "%[2]s"

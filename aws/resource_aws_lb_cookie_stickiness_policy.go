@@ -138,7 +138,11 @@ func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interf
 
 	d.Set("name", policyName)
 	d.Set("load_balancer", lbName)
-	d.Set("lb_port", lbPort)
+	lbPortInt, err := strconv.Atoi(lbPort)
+	if err != nil {
+		return err
+	}
+	d.Set("lb_port", lbPortInt)
 
 	return nil
 }

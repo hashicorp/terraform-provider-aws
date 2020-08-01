@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,8 +15,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -126,21 +129,14 @@ func testSweepS3Buckets(region string) error {
 }
 
 func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
-	input := &s3.GetBucketLocationInput{
-		Bucket: aws.String(bucket),
-	}
-
-	output, err := conn.GetBucketLocation(input)
-
+	region, err := s3manager.GetBucketRegionWithClient(context.Background(), conn, bucket, func(r *request.Request) {
+		r.Config.S3ForcePathStyle = aws.Bool(false)
+	})
 	if err != nil {
 		return "", err
 	}
 
-	if output == nil || output.LocationConstraint == nil {
-		return "us-east-1", nil
-	}
-
-	return aws.StringValue(output.LocationConstraint), nil
+	return region, nil
 }
 
 func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
@@ -1930,6 +1926,60 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_SameRegionReplicationSchemaV2(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationResourceName := "aws_s3_bucket.destination"
+	rNameDestination := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "replication_configuration.0.role", "iam", fmt.Sprintf("role/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExists(destinationResourceName),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						testAccProviderFunc,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("testid"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::%s", testAccGetPartition(), rNameDestination)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+								},
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("testprefix"),
+								},
+								Priority: aws.Int64(0),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+							},
+						},
+					),
+				),
+			},
+			{
+				Config:            testAccAWSS3BucketConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
@@ -3603,7 +3653,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "destination" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
   bucket   = "tf-test-bucket-destination-%[1]d"
 
   versioning {
@@ -3656,7 +3706,7 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_kms_key" "replica" {
-  provider                = "aws.alternate"
+  provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
@@ -3763,7 +3813,7 @@ func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjectsAndAccessContr
 data "aws_caller_identity" "current" {}
 
 resource "aws_kms_key" "replica" {
-  provider                = "aws.alternate"
+  provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
@@ -3878,6 +3928,44 @@ resource "aws_s3_bucket" "bucket" {
     }
 }
 `, randInt)
+}
+
+func testAccAWSS3BucketConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination string) string {
+	return composeConfig(testAccAWSS3BucketReplicationConfig_iamPolicy(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = "${aws_iam_role.test.arn}"
+    rules {
+      id     = "testid"
+      status = "Enabled"
+
+      filter {
+        prefix = "testprefix"
+      }
+
+      destination {
+        bucket        = "${aws_s3_bucket.destination.arn}"
+        storage_class = "STANDARD"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "destination" {
+  bucket = %[2]q
+
+  versioning {
+    enabled = true
+  }
+}
+`, rName, rNameDestination))
 }
 
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(randInt int) string {
@@ -4072,6 +4160,28 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 `, bucketName)
+}
+
+func testAccAWSS3BucketReplicationConfig_iamPolicy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "s3.amazonaws.com"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }]
+}
+POLICY
+}
+`, rName)
 }
 
 const testAccAWSS3BucketConfigBucketEmptyString = `

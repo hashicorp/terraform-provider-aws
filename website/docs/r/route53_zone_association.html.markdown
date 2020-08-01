@@ -38,17 +38,17 @@ resource "aws_route53_zone" "example" {
   #       resource is for illustrative purposes (e.g. for a separate
   #       cross-account authorization process, which is not shown here).
   vpc {
-    vpc_id = "${aws_vpc.primary.id}"
+    vpc_id = aws_vpc.primary.id
   }
 
   lifecycle {
-    ignore_changes = ["vpc"]
+    ignore_changes = [vpc]
   }
 }
 
 resource "aws_route53_zone_association" "secondary" {
-  zone_id = "${aws_route53_zone.example.zone_id}"
-  vpc_id  = "${aws_vpc.secondary.id}"
+  zone_id = aws_route53_zone.example.zone_id
+  vpc_id  = aws_vpc.secondary.id
 }
 ```
 

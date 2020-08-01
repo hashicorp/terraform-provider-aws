@@ -228,11 +228,11 @@ resource "aws_ram_principal_association" "test" {
 
 # VPC attachment creator.
 data "aws_caller_identity" "creator" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_vpc" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.0.0.0/16"
 
@@ -242,7 +242,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "10.0.0.0/24"
@@ -254,7 +254,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   depends_on = ["aws_ram_principal_association.test", "aws_ram_resource_association.test"]
 
@@ -271,11 +271,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_basic(rName string) string {
-	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + fmt.Sprintf(`
+	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + `
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
   transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tags(rName string) string {

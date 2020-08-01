@@ -108,7 +108,10 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:foo-bar-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("foo-bar-%d", rInt)),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{

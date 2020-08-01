@@ -35,7 +35,7 @@ func TestAccAWSDataSourceCloudFrontDistribution_basic(t *testing.T) {
 var testAccAWSCloudFrontDistributionData = fmt.Sprintf(`
 %s
 
-data aws_cloudfront_distribution test {
-	id = aws_cloudfront_distribution.s3_distribution.id
+data "aws_cloudfront_distribution" "test" {
+  id = aws_cloudfront_distribution.s3_distribution.id
 }
 `, fmt.Sprintf(testAccAWSCloudFrontDistributionS3ConfigWithTags, acctest.RandInt(), originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig()))

@@ -4,12 +4,12 @@ terraform {
   }
 
   required_providers {
-    github = "2.9.0"
+    github = "2.9.2"
   }
 
   required_version = "~> 0.12.24"
 }
 
 provider "github" {
-  owner = "terraform-providers"
+  organization = "terraform-providers"
 }

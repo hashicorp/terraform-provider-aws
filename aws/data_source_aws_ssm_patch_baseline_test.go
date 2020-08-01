@@ -49,13 +49,13 @@ func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 
 // Test against one of the default baselines created by AWS
 func testAccCheckAwsSsmPatchBaselineDataSourceConfig_existingBaseline() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ssm_patch_baseline" "test_existing" {
 	owner            = "AWS"
 	name_prefix	     = "AWS-"
 	operating_system = "CENTOS"
 }
-`)
+`
 }
 
 // Create a new baseline and pull it back

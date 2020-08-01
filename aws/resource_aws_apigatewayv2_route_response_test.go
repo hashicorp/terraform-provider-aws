@@ -186,17 +186,17 @@ func testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName string) r
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2RouteConfig_basic(rName) + `
 resource "aws_apigatewayv2_route_response" "test" {
   api_id             = "${aws_apigatewayv2_api.test.id}"
   route_id           = "${aws_apigatewayv2_route.test.id}"
   route_response_key = "$default"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_model(rName string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_model(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2RouteConfig_model(rName) + `
 resource "aws_apigatewayv2_route_response" "test" {
   api_id             = "${aws_apigatewayv2_api.test.id}"
   route_id           = "${aws_apigatewayv2_route.test.id}"
@@ -208,5 +208,5 @@ resource "aws_apigatewayv2_route_response" "test" {
     "test" = "${aws_apigatewayv2_model.test.name}"
   }
 }
-`)
+`
 }

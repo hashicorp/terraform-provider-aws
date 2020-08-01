@@ -2243,7 +2243,7 @@ func testAccAWSDynamoDbTableConfigReplica1(rName string) string {
 		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -2270,11 +2270,11 @@ func testAccAWSDynamoDbTableConfigReplica2(rName string) string {
 		testAccMultipleRegionProviderConfig(3),
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 data "aws_region" "third" {
-  provider = "aws.third"
+  provider = "awsthird"
 }
 
 resource "aws_dynamodb_table" "test" {

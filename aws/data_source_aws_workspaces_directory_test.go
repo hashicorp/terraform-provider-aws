@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -44,7 +43,7 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "test" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -64,5 +63,5 @@ data "aws_workspaces_directory" "test" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`)
+`
 }

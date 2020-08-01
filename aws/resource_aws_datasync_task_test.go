@@ -466,7 +466,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
 }
 
 func TestAccAWSDataSyncTask_Tags(t *testing.T) {
-	t.Skip("Tagging on creation is inconsistent")
+	TestAccSkip(t, "Tagging on creation is inconsistent")
 	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -820,10 +820,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_datasync_task" "test" {
-  cloudwatch_log_group_arn = "${replace(aws_cloudwatch_log_group.test.arn, ":*", "")}"
-  destination_location_arn = "${aws_datasync_location_s3.destination.arn}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %q
-  source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
+  source_location_arn      = aws_datasync_location_nfs.source.arn
 }
 `, rName, rName)
 }

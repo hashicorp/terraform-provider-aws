@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsSecretsManagerSecretRotation(t *testing.T) {
+func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_rotation.test"

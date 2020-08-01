@@ -94,6 +94,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
 				),
 			},
 			{
@@ -101,6 +102,10 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config:   testAccAwsFsxLustreFileSystemDeploymentType(fsx.LustreDeploymentTypeScratch1),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -382,6 +387,60 @@ func TestAccAWSFsxLustreFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemPersistentDeploymentType(50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					// per_unit_storage_throughput is only available with deployment_type=PERSISTENT_1, so we test both here.
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemDeploymentType(fsx.LustreDeploymentTypeScratch2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch2),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
 func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -471,7 +530,7 @@ func testAccCheckFsxLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.Tes
 }
 
 func testAccAwsFsxLustreFileSystemConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -490,7 +549,7 @@ resource "aws_subnet" "test1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigExportPath(rName, exportPrefix string) string {
@@ -541,7 +600,7 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = "${aws_vpc.test.id}"
@@ -566,11 +625,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
   subnet_ids         = ["${aws_subnet.test1.id}"]
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds2() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = "${aws_vpc.test.id}"
@@ -614,7 +673,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
   subnet_ids         = ["${aws_subnet.test1.id}"]
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigStorageCapacity(storageCapacity int) string {
@@ -627,12 +686,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccAwsFsxLustreFileSystemConfigSubnetIds1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = ["${aws_subnet.test1.id}"]
 }
-`)
+`
 }
 
 func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string {
@@ -670,4 +729,25 @@ resource "aws_fsx_lustre_file_system" "test" {
   weekly_maintenance_start_time = %[1]q
 }
 `, weeklyMaintenanceStartTime)
+}
+
+func testAccAwsFsxLustreFileSystemDeploymentType(deploymentType string) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity              = 1200
+  subnet_ids                    = ["${aws_subnet.test1.id}"]
+  deployment_type               = %[1]q
+}
+`, deploymentType)
+}
+
+func testAccAwsFsxLustreFileSystemPersistentDeploymentType(perUnitStorageThroughput int) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity              = 1200
+  subnet_ids                    = ["${aws_subnet.test1.id}"]
+  deployment_type               = "PERSISTENT_1"
+  per_unit_storage_throughput   = %[1]d
+}
+`, perUnitStorageThroughput)
 }

@@ -55,7 +55,7 @@ func testSweepGlueJobs(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueJob_Basic(t *testing.T) {
+func TestAccAWSGlueJob_basic(t *testing.T) {
 	var job glue.Job
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
@@ -79,44 +79,6 @@ func TestAccAWSGlueJob_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSGlueJob_AllocatedCapacity(t *testing.T) {
-	var job glue.Job
-
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
-	resourceName := "aws_glue_job.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSGlueJobDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSGlueJobConfig_AllocatedCapacity(rName, 1),
-				ExpectError: regexp.MustCompile(`expected allocated_capacity to be at least`),
-			},
-			{
-				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueJobExists(resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "allocated_capacity", "2"),
-				),
-			},
-			{
-				Config: testAccAWSGlueJobConfig_AllocatedCapacity(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueJobExists(resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "allocated_capacity", "3"),
 				),
 			},
 			{
@@ -730,32 +692,14 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccAWSGlueJobConfig_AllocatedCapacity(rName string, allocatedCapacity int) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_glue_job" "test" {
-  allocated_capacity = %d
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-
-  command {
-    script_location = "testscriptlocation"
-  }
-
-  depends_on = ["aws_iam_role_policy_attachment.test"]
-}
-`, testAccAWSGlueJobConfig_Base(rName), allocatedCapacity, rName)
-}
-
 func testAccAWSGlueJobConfig_Command(rName, scriptLocation string) string {
 	return fmt.Sprintf(`
 %s
 
 resource "aws_glue_job" "test" {
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "%s"
@@ -771,9 +715,9 @@ func testAccAWSGlueJobConfig_DefaultArguments(rName, jobBookmarkOption, jobLangu
 %s
 
 resource "aws_glue_job" "test" {
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -794,10 +738,10 @@ func testAccAWSGlueJobConfig_Description(rName, description string) string {
 %s
 
 resource "aws_glue_job" "test" {
-  description        = "%s"
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  description  = "%s"
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -813,10 +757,10 @@ func testAccAWSGlueJobConfig_GlueVersion(rName, glueVersion string) string {
 %s
 
 resource "aws_glue_job" "test" {
-  glue_version       = "%s"
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  glue_version = "%s"
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -832,9 +776,9 @@ func testAccAWSGlueJobConfig_ExecutionProperty(rName string, maxConcurrentRuns i
 %s
 
 resource "aws_glue_job" "test" {
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -854,10 +798,10 @@ func testAccAWSGlueJobConfig_MaxRetries(rName string, maxRetries int) string {
 %s
 
 resource "aws_glue_job" "test" {
-  max_retries        = %d
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  max_capacity = 10
+  max_retries  = %d
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -873,9 +817,9 @@ func testAccAWSGlueJobConfig_NotificationProperty(rName string, notifyDelayAfter
 %s
 
 resource "aws_glue_job" "test" {
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -895,9 +839,9 @@ func testAccAWSGlueJobConfig_Required(rName string) string {
 %s
 
 resource "aws_glue_job" "test" {
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  allocated_capacity = 10
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
@@ -956,10 +900,10 @@ func testAccAWSGlueJobConfig_Timeout(rName string, timeout int) string {
 %s
 
 resource "aws_glue_job" "test" {
-  name               = "%s"
-  role_arn           = "${aws_iam_role.test.arn}"
-  timeout            = %d
-  allocated_capacity = 10
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
+  timeout      = %d
 
   command {
     script_location = "testscriptlocation"
@@ -975,10 +919,10 @@ func testAccAWSGlueJobConfig_SecurityConfiguration(rName string, securityConfigu
 %s
 
 resource "aws_glue_job" "test" {
+  max_capacity           = 10
   name                   = "%s"
-  role_arn               = "${aws_iam_role.test.arn}"
+  role_arn               = aws_iam_role.test.arn
   security_configuration = "%s"
-  allocated_capacity     = 10
 
   command {
     script_location = "testscriptlocation"

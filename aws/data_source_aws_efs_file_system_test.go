@@ -125,7 +125,7 @@ const testAccDataSourceAwsEfsFileSystemNameConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
-  creation_token = "${aws_efs_file_system.test.creation_token}"
+  creation_token = aws_efs_file_system.test.creation_token
 }
 `
 
@@ -133,6 +133,6 @@ const testAccDataSourceAwsEfsFileSystemIDConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
 }
 `

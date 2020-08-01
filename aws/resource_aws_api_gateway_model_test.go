@@ -47,6 +47,30 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
+	var conf apigateway.Model
+	rInt := acctest.RandString(10)
+	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
+	modelName := fmt.Sprintf("tfacctest%s", rInt)
+	resourceName := "aws_api_gateway_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayModel(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayModelAttributes(conf *apigateway.Model, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Name != name {

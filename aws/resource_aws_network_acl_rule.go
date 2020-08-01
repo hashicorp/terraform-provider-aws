@@ -198,7 +198,7 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
 		r, err = findNetworkAclRule(d, meta)
 		if err != nil {
-			return resource.RetryableError(err)
+			return resource.NonRetryableError(err)
 		}
 		if r == nil {
 			return resource.RetryableError(fmt.Errorf("Network ACL rule (%s) not found", d.Id()))

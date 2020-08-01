@@ -15,6 +15,7 @@
     - [Pull Request Merge Process](#pull-request-merge-process)
     - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
 - [Breaking Changes](#breaking-changes)
+- [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
 - [Label Dictionary](#label-dictionary)
 
@@ -174,7 +175,7 @@ provider "aws" {
 ```markdown
 NOTES:
 
-* provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
+* provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
 
 ENHANCEMENTS:
 
@@ -340,6 +341,17 @@ When breaking changes to the provider are necessary we release them in a major v
 - Add the `breaking-change` label.
 - Add the issue/PR to the next major version milestone.
 - Leave a comment why this is a breaking change or otherwise only being considered for a major version update. If possible, detail any changes that might be made for the contributor to accomplish the task without a breaking change.
+
+## Branch Dictionary
+
+The following branch conventions are used:
+
+| Branch | Example | Description |
+|--------|---------|-------------|
+| `master` | `master` | Main, unreleased code branch. |
+| `release/*` | `release/2.x` | Backport branches for previous major releases. |
+
+Additional branch naming recommendations can be found in the [Pull Request Submission and Lifecycle documentation](contributing/pullrequest-submission-and-lifecycle.md#branch-prefixes).
 
 ## Environment Variable Dictionary
 

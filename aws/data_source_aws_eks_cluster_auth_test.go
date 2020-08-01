@@ -56,6 +56,6 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 
 const testAccCheckAwsEksClusterAuthConfig_basic = `
 data "aws_eks_cluster_auth" "test" {
-	name = "foobar"
+  name = "foobar"
 }
 `

@@ -862,7 +862,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupId
 }
 
 func TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection(t *testing.T) {
-	t.Skip("CreateDBInstanceReadReplica API currently ignores DeletionProtection=true with SourceDBInstanceIdentifier set")
+	TestAccSkip(t, "CreateDBInstanceReadReplica API currently ignores DeletionProtection=true with SourceDBInstanceIdentifier set")
 	// --- FAIL: TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection (1624.88s)
 	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'deletion_protection' expected "true", got "false"
 	//
@@ -1776,7 +1776,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
 }
 
 func TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset(t *testing.T) {
-	t.Skip("To be fixed: https://github.com/terraform-providers/terraform-provider-aws/issues/5959")
+	TestAccSkip(t, "To be fixed: https://github.com/terraform-providers/terraform-provider-aws/issues/5959")
 	// --- FAIL: TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset (1086.15s)
 	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'tags.%' expected "0", got "1"
 
@@ -4662,7 +4662,7 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_DbSubnetGroupName_RamShared(rName string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   state = "available"
 
@@ -4675,7 +4675,7 @@ data "aws_availability_zones" "available" {
 data "aws_organizations_organization" "test" {}
 
 resource "aws_vpc" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.0.0.0/16"
 
@@ -4686,7 +4686,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   count    = 2
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
@@ -4698,13 +4698,13 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ram_resource_share" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name = %[1]q
 }
 
 resource "aws_ram_principal_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   principal          = data.aws_organizations_organization.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
@@ -4712,7 +4712,7 @@ resource "aws_ram_principal_association" "test" {
 
 resource "aws_ram_resource_association" "test" {
   count    = 2
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   resource_arn       = aws_subnet.test[count.index].arn
   resource_share_arn = aws_ram_resource_share.test.id
@@ -5066,7 +5066,7 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName(rName string) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   state = "available"
 
@@ -5086,7 +5086,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -5105,7 +5105,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "alternate" {
   count    = 2
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   availability_zone = data.aws_availability_zones.alternate.names[count.index]
   cidr_block        = "10.1.${count.index}.0/24"
@@ -5129,7 +5129,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_db_subnet_group" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name       = %[1]q
   subnet_ids = aws_subnet.alternate[*].id
@@ -5141,7 +5141,7 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_db_instance" "source" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   allocated_storage       = 5
   backup_retention_period = 1
@@ -5167,7 +5167,7 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_RamShared(rName string) string {
 	return testAccAlternateAccountAndAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternateaccountsameregion" {
-  provider = "aws.alternateaccountsameregion"
+  provider = "awsalternateaccountsameregion"
 
   state = "available"
 
@@ -5178,7 +5178,7 @@ data "aws_availability_zones" "alternateaccountsameregion" {
 }
 
 data "aws_availability_zones" "sameaccountalternateregion" {
-  provider = "aws.sameaccountalternateregion"
+  provider = "awssameaccountalternateregion"
 
   state = "available"
 
@@ -5191,7 +5191,7 @@ data "aws_availability_zones" "sameaccountalternateregion" {
 data "aws_organizations_organization" "test" {}
 
 resource "aws_vpc" "sameaccountalternateregion" {
-  provider = "aws.sameaccountalternateregion"
+  provider = "awssameaccountalternateregion"
 
   cidr_block = "10.1.0.0/16"
 
@@ -5201,7 +5201,7 @@ resource "aws_vpc" "sameaccountalternateregion" {
 }
 
 resource "aws_vpc" "alternateaccountsameregion" {
-  provider = "aws.alternateaccountsameregion"
+  provider = "awsalternateaccountsameregion"
 
   cidr_block = "10.0.0.0/16"
 
@@ -5212,7 +5212,7 @@ resource "aws_vpc" "alternateaccountsameregion" {
 
 resource "aws_subnet" "sameaccountalternateregion" {
   count    = 2
-  provider = "aws.sameaccountalternateregion"
+  provider = "awssameaccountalternateregion"
 
   availability_zone = data.aws_availability_zones.sameaccountalternateregion.names[count.index]
   cidr_block        = "10.1.${count.index}.0/24"
@@ -5225,7 +5225,7 @@ resource "aws_subnet" "sameaccountalternateregion" {
 
 resource "aws_subnet" "alternateaccountsameregion" {
   count    = 2
-  provider = "aws.alternateaccountsameregion"
+  provider = "awsalternateaccountsameregion"
 
   availability_zone = data.aws_availability_zones.alternateaccountsameregion.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
@@ -5237,13 +5237,13 @@ resource "aws_subnet" "alternateaccountsameregion" {
 }
 
 resource "aws_ram_resource_share" "alternateaccountsameregion" {
-  provider = "aws.alternateaccountsameregion"
+  provider = "awsalternateaccountsameregion"
 
   name = %[1]q
 }
 
 resource "aws_ram_principal_association" "alternateaccountsameregion" {
-  provider = "aws.alternateaccountsameregion"
+  provider = "awsalternateaccountsameregion"
 
   principal          = data.aws_organizations_organization.test.arn
   resource_share_arn = aws_ram_resource_share.alternateaccountsameregion.arn
@@ -5251,14 +5251,14 @@ resource "aws_ram_principal_association" "alternateaccountsameregion" {
 
 resource "aws_ram_resource_association" "alternateaccountsameregion" {
   count    = 2
-  provider = "aws.alternateaccountsameregion"
+  provider = "awsalternateaccountsameregion"
 
   resource_arn       = aws_subnet.alternateaccountsameregion[count.index].arn
   resource_share_arn = aws_ram_resource_share.alternateaccountsameregion.id
 }
 
 resource "aws_db_subnet_group" "sameaccountalternateregion" {
-  provider = "aws.sameaccountalternateregion"
+  provider = "awssameaccountalternateregion"
 
   name       = %[1]q
   subnet_ids = aws_subnet.sameaccountalternateregion[*].id
@@ -5279,7 +5279,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_db_instance" "source" {
-  provider = "aws.sameaccountalternateregion"
+  provider = "awssameaccountalternateregion"
 
   allocated_storage       = 5
   backup_retention_period = 1
@@ -5306,7 +5306,7 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   state = "available"
 
@@ -5326,7 +5326,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -5350,7 +5350,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_subnet" "alternate" {
   count    = 2
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   availability_zone = data.aws_availability_zones.alternate.names[count.index]
   cidr_block        = "10.1.${count.index}.0/24"
@@ -5374,7 +5374,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_db_subnet_group" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name       = %[1]q
   subnet_ids = aws_subnet.alternate[*].id
@@ -5386,7 +5386,7 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_db_instance" "source" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   allocated_storage       = 5
   backup_retention_period = 1
@@ -6017,7 +6017,7 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_RamShared(rName string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   state = "available"
 
@@ -6030,7 +6030,7 @@ data "aws_availability_zones" "available" {
 data "aws_organizations_organization" "test" {}
 
 resource "aws_vpc" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.0.0.0/16"
 
@@ -6041,7 +6041,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   count    = 2
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
@@ -6053,13 +6053,13 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ram_resource_share" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name = %[1]q
 }
 
 resource "aws_ram_principal_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   principal          = data.aws_organizations_organization.test.arn
   resource_share_arn = aws_ram_resource_share.test.arn
@@ -6067,7 +6067,7 @@ resource "aws_ram_principal_association" "test" {
 
 resource "aws_ram_resource_association" "test" {
   count    = 2
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   resource_arn       = aws_subnet.test[count.index].arn
   resource_share_arn = aws_ram_resource_share.test.id

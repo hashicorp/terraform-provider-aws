@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -58,7 +57,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -79,9 +78,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -91,22 +90,22 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 
 data "aws_ec2_transit_gateway_vpc_attachment" "test" {
   filter {
     name   = "transit-gateway-attachment-id"
-    values = ["${aws_ec2_transit_gateway_vpc_attachment.test.id}"]
+    values = [aws_ec2_transit_gateway_vpc_attachment.test.id]
   }
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -127,9 +126,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -139,13 +138,13 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 
 data "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
+  id = aws_ec2_transit_gateway_vpc_attachment.test.id
 }
-`)
+`
 }
