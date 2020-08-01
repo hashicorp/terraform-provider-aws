@@ -14,19 +14,24 @@ import (
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 	var providers []*schema.Provider
+	resourceName := "aws_route53_vpc_association_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53VPCAssociationAuthorizationExists("aws_route53_vpc_association_authorization.test"),
+					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
 				),
 			},
 			{
+				Config:            testAccRoute53VPCAssociationAuthorizationConfig(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -117,7 +122,7 @@ resource "aws_vpc" "test" {
 resource "aws_route53_zone" "test" {
   name = "example.com"
   vpc {
-    vpc_id = "${aws_vpc.test.id}"
+    vpc_id = aws_vpc.test.id
   }
 }
 
@@ -129,8 +134,8 @@ resource "aws_vpc" "alternate" {
 }
 
 resource "aws_route53_vpc_association_authorization" "test" {
-  zone_id = "${aws_route53_zone.test.id}"
-  vpc_id  = "${aws_vpc.alternate.id}"
+  zone_id = aws_route53_zone.test.id
+  vpc_id  = aws_vpc.alternate.id
 }
 `
 }

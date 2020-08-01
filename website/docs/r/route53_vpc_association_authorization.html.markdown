@@ -29,7 +29,7 @@ resource "aws_vpc" "example" {
 resource "aws_route53_zone" "example" {
   name = "example.com"
   vpc {
-    vpc_id = "${aws_vpc.example.id}"
+    vpc_id = aws_vpc.example.id
   }
 }
 
@@ -41,14 +41,14 @@ resource "aws_vpc" "alternate" {
 }
 
 resource "aws_route53_vpc_association_authorization" "example" {
-  zone_id = "${aws_route53_zone.example.id}"
-  vpc_id  = "${aws_vpc.alternate.id}"
+  zone_id = aws_route53_zone.example.id
+  vpc_id  = aws_vpc.alternate.id
 }
 
 resource "aws_route53_zone_association" "alternate" {
   provider = "aws.alternate"
-  zone_id  = "${aws_route53_zone.example.zone_id}"
-  vpc_id   = "${aws_vpc.alternate.id}"
+  zone_id  = aws_route53_zone.example.zone_id
+  vpc_id   = aws_vpc.alternate.id
 }
 ```
 
