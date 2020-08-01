@@ -26,6 +26,11 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 					testAccCheckRoute53VPCAssociationAuthorizationExists("aws_route53_vpc_association_authorization.test"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -117,7 +122,7 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_vpc" "alternate" {
-  provider             = "aws.alternate"
+  provider             = "awsalternate"
   cidr_block           = "10.7.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true

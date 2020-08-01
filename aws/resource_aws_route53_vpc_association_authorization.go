@@ -16,6 +16,9 @@ func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 		Create: resourceAwsRoute53VPCAssociationAuthorizationCreate,
 		Read:   resourceAwsRoute53VPCAssociationAuthorizationRead,
 		Delete: resourceAwsRoute53VPCAssociationAuthorizationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"zone_id": {
@@ -50,8 +53,9 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 			VPCRegion: aws.String(meta.(*AWSClient).region),
 		},
 	}
-	if w := d.Get("vpc_region"); w != "" {
-		req.VPC.VPCRegion = aws.String(w.(string))
+
+	if v, ok := d.GetOk("vpc_region"); ok {
+		req.VPC.VPCRegion = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Route53 VPC Association Authorization for hosted zone %s with VPC %s and region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
@@ -62,23 +66,28 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 
 	// Store association id
 	d.SetId(fmt.Sprintf("%s:%s", *req.HostedZoneId, *req.VPC.VPCId))
-	d.Set("vpc_region", req.VPC.VPCRegion)
 
 	return resourceAwsRoute53VPCAssociationAuthorizationRead(d, meta)
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
-	zone_id, vpc_id := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
+
+	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	req := route53.ListVPCAssociationAuthorizationsInput{
 		HostedZoneId: aws.String(zone_id),
 	}
+
 	for {
 		log.Printf("[DEBUG] Listing Route53 VPC Association Authorizations for hosted zone %s", zone_id)
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
 
 		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+			log.Printf("[WARN] Route53 VPC Association Authorization (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -88,7 +97,10 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 		}
 
 		for _, vpc := range res.VPCs {
-			if vpc_id == *vpc.VPCId {
+			if vpc_id == aws.StringValue(vpc.VPCId) {
+				d.Set("vpc_id", vpc.VPCId)
+				d.Set("vpc_region", vpc.VPCRegion)
+				d.Set("zone_id", zone_id)
 				return nil
 			}
 		}
@@ -102,13 +114,18 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 	}
 
 	// no association found
+	log.Printf("[WARN] Route53 VPC Association Authorization (%s) not found, removing from state", d.Id())
 	d.SetId("")
 	return nil
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
-	zone_id, vpc_id := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
+
+	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
+	if err != nil {
+		return err
+	}
 
 	req := route53.DeleteVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(zone_id),
@@ -119,7 +136,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting Route53 Assocatiation Authorization for hosted zone %s for VPC %s", zone_id, vpc_id)
-	_, err := conn.DeleteVPCAssociationAuthorization(&req)
+	_, err = conn.DeleteVPCAssociationAuthorization(&req)
 	if err != nil {
 		return fmt.Errorf("Error deleting Route53 VPC Association Authorization: %s", err)
 	}
@@ -127,9 +144,12 @@ func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsRoute53VPCAssociationAuthorizationParseId(id string) (zone_id, vpc_id string) {
+func resourceAwsRoute53VPCAssociationAuthorizationParseId(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
-	zone_id = parts[0]
-	vpc_id = parts[1]
-	return
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected ZONEID:VPCID", id)
+	}
+
+	return parts[0], parts[1], nil
 }

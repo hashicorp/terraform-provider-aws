@@ -65,6 +65,11 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The calculated unique identifier for the association.
-* `zone_id` - The ID of the hosted zone for the association.
-* `vpc_id` - The ID of the authorized VPC.
-* `vpc_region` - The region in which the VPC identified by `vpc_id` was created.
+
+## Import
+
+Route 53 VPC Association Authorizations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.
+
+```
+$ terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
+```
