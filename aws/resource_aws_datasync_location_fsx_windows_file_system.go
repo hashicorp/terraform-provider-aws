@@ -123,7 +123,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s#%s", aws.StringValue(output.LocationArn), fsxArn))
+	d.SetId(aws.StringValue(output.LocationArn))
 
 	return resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d, meta)
 }
