@@ -124,7 +124,7 @@ func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxLustreFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					testAccCheckFsxLustreFileSystemDisappears(&filesystem),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -489,24 +489,6 @@ func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
-}
-
-func testAccCheckFsxLustreFileSystemDisappears(filesystem *fsx.FileSystem) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).fsxconn
-
-		input := &fsx.DeleteFileSystemInput{
-			FileSystemId: filesystem.FileSystemId,
-		}
-
-		_, err := conn.DeleteFileSystem(input)
-
-		if err != nil {
-			return err
-		}
-
-		return waitForFsxFileSystemDeletion(conn, aws.StringValue(filesystem.FileSystemId), 30*time.Minute)
-	}
 }
 
 func testAccCheckFsxLustreFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
