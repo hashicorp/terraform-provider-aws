@@ -243,6 +243,12 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
 		}
+
+		log.Println("[DEBUG] Waiting for filesystem to become available")
+
+		if err := waitForFsxFileSystemUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("Error waiting for filesystem (%s) to become available: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsFsxLustreFileSystemRead(d, meta)
