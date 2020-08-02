@@ -131,7 +131,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
+func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
@@ -158,7 +158,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
+func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 	var locationFsxWindows1 datasync.DescribeLocationFsxWindowsOutput
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
