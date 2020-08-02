@@ -103,6 +103,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
@@ -150,6 +151,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Subdirectory(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
@@ -177,6 +179,7 @@ func TestAccAWSDataSyncLocationFsxWindows_Tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName),
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
@@ -208,16 +211,11 @@ func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error 
 			continue
 		}
 
-		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		input := &datasync.DescribeLocationFsxWindowsInput{
-			LocationArn: aws.String(locationArn),
+			LocationArn: aws.String(rs.Primary.ID),
 		}
 
-		_, err = conn.DescribeLocationFsxWindows(input)
+		_, err := conn.DescribeLocationFsxWindows(input)
 
 		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
 			return nil
@@ -238,14 +236,9 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
 		input := &datasync.DescribeLocationFsxWindowsInput{
-			LocationArn: aws.String(locationArn),
+			LocationArn: aws.String(rs.Primary.ID),
 		}
 
 		output, err := conn.DescribeLocationFsxWindows(input)
@@ -261,6 +254,17 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 		*locationFsxWindows = *output
 
 		return nil
+	}
+}
+
+func testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s#%s", rs.Primary.ID, rs.Primary.Attributes["fsx_filesystem_arn"]), nil
 	}
 }
 

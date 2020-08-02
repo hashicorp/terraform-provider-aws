@@ -20,7 +20,20 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 		Update: resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate,
 		Delete: resourceAwsDataSyncLocationFsxWindowsFileSystemDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "#")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxArn", d.Id())
+				}
+
+				DSArn := idParts[0]
+				FSxArn := idParts[1]
+
+				d.Set("fsx_filesystem_arn", FSxArn)
+				d.SetId(DSArn)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -119,26 +132,21 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	conn := meta.(*AWSClient).datasyncconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	locationArn, fsxArn, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(d.Id())
-	if err != nil {
-		return err
-	}
-
 	input := &datasync.DescribeLocationFsxWindowsInput{
-		LocationArn: aws.String(locationArn),
+		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Reading DataSync Location Fsx Windows: %s", input)
 	output, err := conn.DescribeLocationFsxWindows(input)
 
 	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		log.Printf("[WARN] DataSync Location Fsx Windows %q not found - removing from state", locationArn)
+		log.Printf("[WARN] DataSync Location Fsx Windows %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx Windows (%s): %w", locationArn, err)
+		return fmt.Errorf("error reading DataSync Location Fsx Windows (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
@@ -148,7 +156,6 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	}
 
 	d.Set("arn", output.LocationArn)
-	d.Set("fsx_filesystem_arn", fsxArn)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
 	d.Set("user", output.User)
@@ -162,7 +169,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 		return fmt.Errorf("error setting creation_time: %w", err)
 	}
 
-	tags, err := keyvaluetags.DatasyncListTags(conn, locationArn)
+	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %w", d.Id(), err)
@@ -177,16 +184,12 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
-	locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(d.Id())
-	if err != nil {
-		return err
-	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.DatasyncUpdateTags(conn, locationArn, o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location Fsx Windows File System (%s) tags: %w", locationArn, err)
+		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating DataSync Location Fsx Windows File System (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -195,35 +198,21 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceDat
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
-	locationArn, _, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(d.Id())
-	if err != nil {
-		return err
-	}
 
 	input := &datasync.DeleteLocationInput{
-		LocationArn: aws.String(locationArn),
+		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DataSync Location Fsx Windows File System: %s", input)
-	_, err = conn.DeleteLocation(input)
+	_, err := conn.DeleteLocation(input)
 
 	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location Fsx Windows (%s): %w", locationArn, err)
+		return fmt.Errorf("error deleting DataSync Location Fsx Windows (%s): %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func decodeAwsDataSyncLocationFsxWindowsFileSystemID(id string) (string, string, error) {
-	parts := strings.Split(id, "#")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn:FsxArn", id)
-	}
-
-	return parts[0], parts[1], nil
 }
