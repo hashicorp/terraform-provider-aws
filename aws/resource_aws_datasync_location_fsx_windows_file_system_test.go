@@ -271,10 +271,10 @@ func testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName string) r
 func testAccAWSDataSyncLocationFsxWindowsConfig() string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
-  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
-  security_group_arns = ["${aws_security_group.test1.arn}"]
+  security_group_arns = [aws_security_group.test1.arn]
 }
 `)
 }
@@ -282,10 +282,10 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 func testAccAWSDataSyncLocationFsxWindowsConfigSubdirectory(subdirectory string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
-  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
-  security_group_arns = ["${aws_security_group.test1.arn}"]
+  security_group_arns = [aws_security_group.test1.arn]
   subdirectory        = %[1]q
 }
 `, subdirectory)
@@ -294,10 +294,10 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 func testAccAWSDataSyncLocationFsxWindowsConfigTags1(key1, value1 string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
-  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
-  security_group_arns = ["${aws_security_group.test1.arn}"]
+  security_group_arns = [aws_security_group.test1.arn]
 
   tags = {
     %[1]q = %[2]q
@@ -309,10 +309,10 @@ resource "aws_datasync_location_fsx_windows_file_system" "test" {
 func testAccAWSDataSyncLocationFsxWindowsConfigTags2(key1, value1, key2, value2 string) string {
 	return testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() + fmt.Sprintf(`
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
-  fsx_filesystem_arn  = "${aws_fsx_windows_file_system.test.arn}"
+  fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
   password            = "SuperSecretPassw0rd"
-  security_group_arns = ["${aws_security_group.test1.arn}"]
+  security_group_arns = [aws_security_group.test1.arn]
 
   tags = {
     %[1]q = %[2]q
