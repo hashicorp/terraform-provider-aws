@@ -186,7 +186,7 @@ resource "aws_dynamodb_global_table" "test" {
 func testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName string) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 data "aws_region" "current" {}
@@ -206,7 +206,7 @@ resource "aws_dynamodb_table" "test" {
 }
 
 resource "aws_dynamodb_table" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   hash_key         = "myAttribute"
   name             = %[1]q
@@ -224,7 +224,7 @@ resource "aws_dynamodb_table" "alternate" {
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
-	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + fmt.Sprintf(`
+	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + `
 resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
@@ -232,11 +232,11 @@ resource "aws_dynamodb_global_table" "test" {
     region_name = data.aws_region.current.name
   }
 }
-`)
+`
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
-	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + fmt.Sprintf(`
+	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + `
 resource "aws_dynamodb_global_table" "test" {
   depends_on = [aws_dynamodb_table.alternate]
 
@@ -250,7 +250,7 @@ resource "aws_dynamodb_global_table" "test" {
     region_name = data.aws_region.current.name
   }
 }
-`)
+`
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {

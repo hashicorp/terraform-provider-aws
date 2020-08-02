@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,6 +27,7 @@ func TestAccAWSAMICopy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMICopyExists(resourceName, &image),
 					testAccCheckAWSAMICopyAttributes(&image, rName),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 				),
 			},
 		},
@@ -181,10 +183,10 @@ func testAccCheckAWSAMICopyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAMICopyAttributes(image *ec2.Image, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if expected := "available"; aws.StringValue(image.State) != expected {
+		if expected := ec2.ImageStateAvailable; aws.StringValue(image.State) != expected {
 			return fmt.Errorf("invalid image state; expected %s, got %s", expected, aws.StringValue(image.State))
 		}
-		if expected := "machine"; aws.StringValue(image.ImageType) != expected {
+		if expected := ec2.ImageTypeValuesMachine; aws.StringValue(image.ImageType) != expected {
 			return fmt.Errorf("wrong image type; expected %s, got %s", expected, aws.StringValue(image.ImageType))
 		}
 		if expected := expectedName; aws.StringValue(image.Name) != expected {
@@ -209,7 +211,7 @@ func testAccCheckAWSAMICopyAttributes(image *ec2.Image, expectedName string) res
 	}
 }
 
-func testAccAWSAMICopyConfigBase() string {
+func testAccAWSAMICopyConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -226,7 +228,7 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 
   tags = {
-    Name = "tf-acc-test-ami-copy"
+    Name = %[1]q
   }
 }
 
@@ -234,14 +236,14 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = "${aws_ebs_volume.test.id}"
 
   tags = {
-    Name = "tf-acc-test-ami-copy"
+    Name = %[1]q
   }
 }
-`)
+`, rName)
 }
 
 func testAccAWSAMICopyConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSAMICopyConfigBase() + fmt.Sprintf(`
+	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = %[1]q
   virtualization_type = "hvm"
@@ -266,7 +268,7 @@ resource "aws_ami_copy" "test" {
 }
 
 func testAccAWSAMICopyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSAMICopyConfigBase() + fmt.Sprintf(`
+	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = %[1]q
   virtualization_type = "hvm"
@@ -292,7 +294,7 @@ resource "aws_ami_copy" "test" {
 }
 
 func testAccAWSAMICopyConfig(rName string) string {
-	return testAccAWSAMICopyConfigBase() + fmt.Sprintf(`
+	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = "%s-source"
   virtualization_type = "hvm"
@@ -313,7 +315,7 @@ resource "aws_ami_copy" "test" {
 }
 
 func testAccAWSAMICopyConfigDescription(rName, description string) string {
-	return testAccAWSAMICopyConfigBase() + fmt.Sprintf(`
+	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = "%s-source"
   virtualization_type = "hvm"
@@ -335,7 +337,7 @@ resource "aws_ami_copy" "test" {
 }
 
 func testAccAWSAMICopyConfigENASupport(rName string) string {
-	return testAccAWSAMICopyConfigBase() + fmt.Sprintf(`
+	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
   name                = "%s-source"

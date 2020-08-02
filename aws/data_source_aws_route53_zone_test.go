@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -114,9 +113,9 @@ func TestAccDataSourceAwsRoute53Zone_serviceDiscovery(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsRoute53ZoneConfigServiceDiscovery(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "linked_service_principal", "servicediscovery.amazonaws.com"),
-					resource.TestMatchResourceAttr(dataSourceName, "linked_service_description", regexp.MustCompile(`^arn:[^:]+:servicediscovery:[^:]+:[^:]+:namespace/ns-\w+$`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "linked_service_description", resourceName, "arn"),
 				),
 			},
 		},
@@ -222,7 +221,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name        = "test.acc-sd-%[1]d."
+  name        = "test.acc-sd-%[1]d"
   vpc         = "${aws_vpc.test.id}"
 }
 

@@ -43,7 +43,7 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 }
 
 func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
-	t.Skip("MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
+	TestAccSkip(t, "MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
 
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"

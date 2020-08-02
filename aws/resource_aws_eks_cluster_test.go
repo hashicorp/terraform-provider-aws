@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -192,7 +193,7 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "api"),
 				),
 			},
 			{
@@ -206,8 +207,8 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2451111801", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "api"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "audit"),
 				),
 			},
 			// Disable all log types.

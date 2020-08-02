@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
@@ -162,9 +163,11 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.3297634353.apply_method", "pending-reboot"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.3297634353.name", "tls"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.3297634353.value", "disabled"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "tls",
+						"value":        "disabled",
+					}),
 				),
 			},
 			{
@@ -178,9 +181,11 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.4005179180.apply_method", "pending-reboot"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.4005179180.name", "tls"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.4005179180.value", "enabled"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "tls",
+						"value":        "enabled",
+					}),
 				),
 			},
 		},

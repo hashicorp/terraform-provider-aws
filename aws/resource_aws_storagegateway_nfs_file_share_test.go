@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_list.217649824", "0.0.0.0/0"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),

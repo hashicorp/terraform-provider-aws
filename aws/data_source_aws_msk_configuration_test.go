@@ -46,7 +46,7 @@ PROPERTIES
 }
 
 data "aws_msk_configuration" "test" {
-  name = "${aws_msk_configuration.test.name}"
+  name = aws_msk_configuration.test.name
 }
 `, rName)
 }

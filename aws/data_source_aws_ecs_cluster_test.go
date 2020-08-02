@@ -53,20 +53,21 @@ resource "aws_ecs_cluster" "default" {
 }
 
 data "aws_ecs_cluster" "default" {
-  cluster_name = "${aws_ecs_cluster.default.name}"
+  cluster_name = aws_ecs_cluster.default.name
 }
 `, acctest.RandInt())
 
 var testAccCheckAwsEcsClusterDataSourceConfigContainerInsights = fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = "default-%d"
+
   setting {
-    name = "containerInsights"
+    name  = "containerInsights"
     value = "enabled"
   }
 }
 
 data "aws_ecs_cluster" "default" {
-  cluster_name = "${aws_ecs_cluster.default.name}"
+  cluster_name = aws_ecs_cluster.default.name
 }
 `, acctest.RandInt())

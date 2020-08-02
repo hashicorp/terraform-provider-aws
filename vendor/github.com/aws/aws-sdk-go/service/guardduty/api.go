@@ -4,6 +4,7 @@ package guardduty
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
@@ -1646,8 +1647,8 @@ func (c *GuardDuty) DisableOrganizationAdminAccountRequest(input *DisableOrganiz
 
 // DisableOrganizationAdminAccount API operation for Amazon GuardDuty.
 //
-// Disables GuardDuty administrator permissions for an AWS account within the
-// Organization.
+// Disables an AWS account within the Organization as the GuardDuty delegated
+// administrator.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1896,8 +1897,8 @@ func (c *GuardDuty) EnableOrganizationAdminAccountRequest(input *EnableOrganizat
 
 // EnableOrganizationAdminAccount API operation for Amazon GuardDuty.
 //
-// Enables GuardDuty administrator permissions for an AWS account within the
-// organization.
+// Enables an AWS account within the organization as the GuardDuty delegated
+// administrator.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3514,8 +3515,8 @@ func (c *GuardDuty) ListMembersRequest(input *ListMembersInput) (req *request.Re
 
 // ListMembers API operation for Amazon GuardDuty.
 //
-// Lists details about associated member accounts for the current GuardDuty
-// master account.
+// Lists details about all member accounts for the current GuardDuty master
+// account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3655,7 +3656,7 @@ func (c *GuardDuty) ListOrganizationAdminAccountsRequest(input *ListOrganization
 
 // ListOrganizationAdminAccounts API operation for Amazon GuardDuty.
 //
-// Lists the accounts configured as AWS Organization delegated administrators.
+// Lists the accounts configured as GuardDuty delegated administrators.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5191,6 +5192,41 @@ func (s AcceptInvitationOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information on the current access control policies for the bucket.
+type AccessControlList struct {
+	_ struct{} `type:"structure"`
+
+	// A value that indicates whether public read access for the bucket is enabled
+	// through an Access Control List (ACL).
+	AllowsPublicReadAccess *bool `locationName:"allowsPublicReadAccess" type:"boolean"`
+
+	// A value that indicates whether public write access for the bucket is enabled
+	// through an Access Control List (ACL).
+	AllowsPublicWriteAccess *bool `locationName:"allowsPublicWriteAccess" type:"boolean"`
+}
+
+// String returns the string representation
+func (s AccessControlList) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessControlList) GoString() string {
+	return s.String()
+}
+
+// SetAllowsPublicReadAccess sets the AllowsPublicReadAccess field's value.
+func (s *AccessControlList) SetAllowsPublicReadAccess(v bool) *AccessControlList {
+	s.AllowsPublicReadAccess = &v
+	return s
+}
+
+// SetAllowsPublicWriteAccess sets the AllowsPublicWriteAccess field's value.
+func (s *AccessControlList) SetAllowsPublicWriteAccess(v bool) *AccessControlList {
+	s.AllowsPublicWriteAccess = &v
+	return s
+}
+
 // Contains information about the access keys.
 type AccessKeyDetails struct {
 	_ struct{} `type:"structure"`
@@ -5298,6 +5334,30 @@ func (s *AccountDetail) SetAccountId(v string) *AccountDetail {
 // SetEmail sets the Email field's value.
 func (s *AccountDetail) SetEmail(v string) *AccountDetail {
 	s.Email = &v
+	return s
+}
+
+// Contains information about the account level permissions on the S3 bucket.
+type AccountLevelPermissions struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the S3 Block Public Access settings of the bucket's parent account.
+	BlockPublicAccess *BlockPublicAccess `locationName:"blockPublicAccess" type:"structure"`
+}
+
+// String returns the string representation
+func (s AccountLevelPermissions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountLevelPermissions) GoString() string {
+	return s.String()
+}
+
+// SetBlockPublicAccess sets the BlockPublicAccess field's value.
+func (s *AccountLevelPermissions) SetBlockPublicAccess(v *BlockPublicAccess) *AccountLevelPermissions {
+	s.BlockPublicAccess = v
 	return s
 }
 
@@ -5583,6 +5643,137 @@ func (s *BadRequestException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *BadRequestException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// Contains information on how the bucker owner's S3 Block Public Access settings
+// are being applied to the S3 bucket. See S3 Block Public Access (https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html)
+// for more information.
+type BlockPublicAccess struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates if S3 Block Public Access is set to BlockPublicAcls.
+	BlockPublicAcls *bool `locationName:"blockPublicAcls" type:"boolean"`
+
+	// Indicates if S3 Block Public Access is set to BlockPublicPolicy.
+	BlockPublicPolicy *bool `locationName:"blockPublicPolicy" type:"boolean"`
+
+	// Indicates if S3 Block Public Access is set to IgnorePublicAcls.
+	IgnorePublicAcls *bool `locationName:"ignorePublicAcls" type:"boolean"`
+
+	// Indicates if S3 Block Public Access is set to RestrictPublicBuckets.
+	RestrictPublicBuckets *bool `locationName:"restrictPublicBuckets" type:"boolean"`
+}
+
+// String returns the string representation
+func (s BlockPublicAccess) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlockPublicAccess) GoString() string {
+	return s.String()
+}
+
+// SetBlockPublicAcls sets the BlockPublicAcls field's value.
+func (s *BlockPublicAccess) SetBlockPublicAcls(v bool) *BlockPublicAccess {
+	s.BlockPublicAcls = &v
+	return s
+}
+
+// SetBlockPublicPolicy sets the BlockPublicPolicy field's value.
+func (s *BlockPublicAccess) SetBlockPublicPolicy(v bool) *BlockPublicAccess {
+	s.BlockPublicPolicy = &v
+	return s
+}
+
+// SetIgnorePublicAcls sets the IgnorePublicAcls field's value.
+func (s *BlockPublicAccess) SetIgnorePublicAcls(v bool) *BlockPublicAccess {
+	s.IgnorePublicAcls = &v
+	return s
+}
+
+// SetRestrictPublicBuckets sets the RestrictPublicBuckets field's value.
+func (s *BlockPublicAccess) SetRestrictPublicBuckets(v bool) *BlockPublicAccess {
+	s.RestrictPublicBuckets = &v
+	return s
+}
+
+// Contains information about the bucket level permissions for the S3 bucket.
+type BucketLevelPermissions struct {
+	_ struct{} `type:"structure"`
+
+	// Contains information on how Access Control Policies are applied to the bucket.
+	AccessControlList *AccessControlList `locationName:"accessControlList" type:"structure"`
+
+	// Contains information on which account level S3 Block Public Access settings
+	// are applied to the S3 bucket.
+	BlockPublicAccess *BlockPublicAccess `locationName:"blockPublicAccess" type:"structure"`
+
+	// Contains information on the bucket policies for the S3 bucket.
+	BucketPolicy *BucketPolicy `locationName:"bucketPolicy" type:"structure"`
+}
+
+// String returns the string representation
+func (s BucketLevelPermissions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BucketLevelPermissions) GoString() string {
+	return s.String()
+}
+
+// SetAccessControlList sets the AccessControlList field's value.
+func (s *BucketLevelPermissions) SetAccessControlList(v *AccessControlList) *BucketLevelPermissions {
+	s.AccessControlList = v
+	return s
+}
+
+// SetBlockPublicAccess sets the BlockPublicAccess field's value.
+func (s *BucketLevelPermissions) SetBlockPublicAccess(v *BlockPublicAccess) *BucketLevelPermissions {
+	s.BlockPublicAccess = v
+	return s
+}
+
+// SetBucketPolicy sets the BucketPolicy field's value.
+func (s *BucketLevelPermissions) SetBucketPolicy(v *BucketPolicy) *BucketLevelPermissions {
+	s.BucketPolicy = v
+	return s
+}
+
+// Contains information on the current bucket policies for the S3 bucket.
+type BucketPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// A value that indicates whether public read access for the bucket is enabled
+	// through a bucket policy.
+	AllowsPublicReadAccess *bool `locationName:"allowsPublicReadAccess" type:"boolean"`
+
+	// A value that indicates whether public write access for the bucket is enabled
+	// through a bucket policy.
+	AllowsPublicWriteAccess *bool `locationName:"allowsPublicWriteAccess" type:"boolean"`
+}
+
+// String returns the string representation
+func (s BucketPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BucketPolicy) GoString() string {
+	return s.String()
+}
+
+// SetAllowsPublicReadAccess sets the AllowsPublicReadAccess field's value.
+func (s *BucketPolicy) SetAllowsPublicReadAccess(v bool) *BucketPolicy {
+	s.AllowsPublicReadAccess = &v
+	return s
+}
+
+// SetAllowsPublicWriteAccess sets the AllowsPublicWriteAccess field's value.
+func (s *BucketPolicy) SetAllowsPublicWriteAccess(v bool) *BucketPolicy {
+	s.AllowsPublicWriteAccess = &v
+	return s
 }
 
 // Contains information about the city associated with the IP address.
@@ -5976,6 +6167,8 @@ type CreateFilterInput struct {
 	//    * service.action.networkConnectionAction.localPortDetails.port
 	//
 	//    * service.action.networkConnectionAction.protocol
+	//
+	//    * service.action.networkConnectionAction.localIpDetails.ipAddressV4
 	//
 	//    * service.action.networkConnectionAction.remoteIpDetails.city.cityName
 	//
@@ -6785,6 +6978,42 @@ func (s *DeclineInvitationsOutput) SetUnprocessedAccounts(v []*UnprocessedAccoun
 	return s
 }
 
+// Contains information on the server side encryption method used in the S3
+// bucket. See S3 Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/atest/dev/serv-side-encryption.html)
+// for more information.
+type DefaultServerSideEncryption struct {
+	_ struct{} `type:"structure"`
+
+	// The type of encryption used for objects within the S3 bucket.
+	EncryptionType *string `locationName:"encryptionType" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the KMS encryption key. Only available
+	// if the bucket EncryptionType is aws:kms.
+	KmsMasterKeyArn *string `locationName:"kmsMasterKeyArn" type:"string"`
+}
+
+// String returns the string representation
+func (s DefaultServerSideEncryption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DefaultServerSideEncryption) GoString() string {
+	return s.String()
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *DefaultServerSideEncryption) SetEncryptionType(v string) *DefaultServerSideEncryption {
+	s.EncryptionType = &v
+	return s
+}
+
+// SetKmsMasterKeyArn sets the KmsMasterKeyArn field's value.
+func (s *DefaultServerSideEncryption) SetKmsMasterKeyArn(v string) *DefaultServerSideEncryption {
+	s.KmsMasterKeyArn = &v
+	return s
+}
+
 type DeleteDetectorInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7579,7 +7808,7 @@ func (s *DestinationProperties) SetKmsKeyArn(v string) *DestinationProperties {
 type DisableOrganizationAdminAccountInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID for the Organizations account to be disabled as a GuardDuty
+	// The AWS Account ID for the organizations account to be disabled as a GuardDuty
 	// delegated administrator.
 	//
 	// AdminAccountId is a required field
@@ -7821,7 +8050,7 @@ func (s *DomainDetails) SetDomain(v string) *DomainDetails {
 type EnableOrganizationAdminAccountInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Account ID for the Organizations account to be enabled as a GuardDuty
+	// The AWS Account ID for the organization account to be enabled as a GuardDuty
 	// delegated administrator.
 	//
 	// AdminAccountId is a required field
@@ -10017,10 +10246,8 @@ type ListMembersInput struct {
 	// from the previous response to continue listing data.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// Specifies what member accounts the response includes based on their relationship
-	// status with the master account. The default value is "true". If set to "false"
-	// the response includes all existing member accounts (including members who
-	// haven't been invited yet or have been disassociated).
+	// Specifies whether to only return associated members or to return all members
+	// (including members who haven't been invited yet or have been disassociated).
 	OnlyAssociated *string `location:"querystring" locationName:"onlyAssociated" type:"string"`
 }
 
@@ -10892,6 +11119,64 @@ func (s *Organization) SetOrg(v string) *Organization {
 	return s
 }
 
+// Contains information on the owner of the bucket.
+type Owner struct {
+	_ struct{} `type:"structure"`
+
+	// The canonical user ID of the bucket owner. For information about locating
+	// your canonical user ID see Finding Your Account Canonical User ID. (https://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html#FindingCanonicalId)
+	Id *string `locationName:"id" type:"string"`
+}
+
+// String returns the string representation
+func (s Owner) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Owner) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *Owner) SetId(v string) *Owner {
+	s.Id = &v
+	return s
+}
+
+// Contains information about how permissions are configured for the S3 bucket.
+type PermissionConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Contains information about the account level permissions on the S3 bucket.
+	AccountLevelPermissions *AccountLevelPermissions `locationName:"accountLevelPermissions" type:"structure"`
+
+	// Contains information about the bucket level permissions for the S3 bucket.
+	BucketLevelPermissions *BucketLevelPermissions `locationName:"bucketLevelPermissions" type:"structure"`
+}
+
+// String returns the string representation
+func (s PermissionConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PermissionConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAccountLevelPermissions sets the AccountLevelPermissions field's value.
+func (s *PermissionConfiguration) SetAccountLevelPermissions(v *AccountLevelPermissions) *PermissionConfiguration {
+	s.AccountLevelPermissions = v
+	return s
+}
+
+// SetBucketLevelPermissions sets the BucketLevelPermissions field's value.
+func (s *PermissionConfiguration) SetBucketLevelPermissions(v *BucketLevelPermissions) *PermissionConfiguration {
+	s.BucketLevelPermissions = v
+	return s
+}
+
 // Contains information about the PORT_PROBE action described in the finding.
 type PortProbeAction struct {
 	_ struct{} `type:"structure"`
@@ -11034,6 +11319,40 @@ func (s *ProductCode) SetProductType(v string) *ProductCode {
 	return s
 }
 
+// Describes the public access policies that apply to the S3 bucket.
+type PublicAccess struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the effective permission on this bucket after factoring all attached
+	// policies.
+	EffectivePermission *string `locationName:"effectivePermission" type:"string"`
+
+	// Contains information about how permissions are configured for the S3 bucket.
+	PermissionConfiguration *PermissionConfiguration `locationName:"permissionConfiguration" type:"structure"`
+}
+
+// String returns the string representation
+func (s PublicAccess) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublicAccess) GoString() string {
+	return s.String()
+}
+
+// SetEffectivePermission sets the EffectivePermission field's value.
+func (s *PublicAccess) SetEffectivePermission(v string) *PublicAccess {
+	s.EffectivePermission = &v
+	return s
+}
+
+// SetPermissionConfiguration sets the PermissionConfiguration field's value.
+func (s *PublicAccess) SetPermissionConfiguration(v *PermissionConfiguration) *PublicAccess {
+	s.PermissionConfiguration = v
+	return s
+}
+
 // Contains information about the remote IP address of the connection.
 type RemoteIpDetails struct {
 	_ struct{} `type:"structure"`
@@ -11142,6 +11461,9 @@ type Resource struct {
 
 	// The type of AWS resource.
 	ResourceType *string `locationName:"resourceType" type:"string"`
+
+	// Contains information on the S3 bucket.
+	S3BucketDetails []*S3BucketDetail `locationName:"s3BucketDetails" type:"list"`
 }
 
 // String returns the string representation
@@ -11169,6 +11491,98 @@ func (s *Resource) SetInstanceDetails(v *InstanceDetails) *Resource {
 // SetResourceType sets the ResourceType field's value.
 func (s *Resource) SetResourceType(v string) *Resource {
 	s.ResourceType = &v
+	return s
+}
+
+// SetS3BucketDetails sets the S3BucketDetails field's value.
+func (s *Resource) SetS3BucketDetails(v []*S3BucketDetail) *Resource {
+	s.S3BucketDetails = v
+	return s
+}
+
+type S3BucketDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the S3 bucket.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The date and time the bucket was created at.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// Describes the server side encryption method used in the S3 bucket.
+	DefaultServerSideEncryption *DefaultServerSideEncryption `locationName:"defaultServerSideEncryption" type:"structure"`
+
+	// The name of the S3 bucket.
+	Name *string `locationName:"name" type:"string"`
+
+	// The owner of the S3 bucket.
+	Owner *Owner `locationName:"owner" type:"structure"`
+
+	// Describes the public access policies that apply to the S3 bucket.
+	PublicAccess *PublicAccess `locationName:"publicAccess" type:"structure"`
+
+	// All tags attached to the S3 bucket
+	Tags []*Tag `locationName:"tags" type:"list"`
+
+	// Describes whether the bucket is a source or destination bucket.
+	Type *string `locationName:"type" type:"string"`
+}
+
+// String returns the string representation
+func (s S3BucketDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3BucketDetail) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *S3BucketDetail) SetArn(v string) *S3BucketDetail {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *S3BucketDetail) SetCreatedAt(v time.Time) *S3BucketDetail {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetDefaultServerSideEncryption sets the DefaultServerSideEncryption field's value.
+func (s *S3BucketDetail) SetDefaultServerSideEncryption(v *DefaultServerSideEncryption) *S3BucketDetail {
+	s.DefaultServerSideEncryption = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *S3BucketDetail) SetName(v string) *S3BucketDetail {
+	s.Name = &v
+	return s
+}
+
+// SetOwner sets the Owner field's value.
+func (s *S3BucketDetail) SetOwner(v *Owner) *S3BucketDetail {
+	s.Owner = v
+	return s
+}
+
+// SetPublicAccess sets the PublicAccess field's value.
+func (s *S3BucketDetail) SetPublicAccess(v *PublicAccess) *S3BucketDetail {
+	s.PublicAccess = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *S3BucketDetail) SetTags(v []*Tag) *S3BucketDetail {
+	s.Tags = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *S3BucketDetail) SetType(v string) *S3BucketDetail {
+	s.Type = &v
 	return s
 }
 

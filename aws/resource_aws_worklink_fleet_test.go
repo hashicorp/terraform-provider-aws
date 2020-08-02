@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
+func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
 	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 

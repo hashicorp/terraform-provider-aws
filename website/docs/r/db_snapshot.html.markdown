@@ -3,12 +3,12 @@ subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
 description: |-
-  Manages a RDS database instance snapshot.
+  Manages an RDS database instance snapshot.
 ---
 
 # Resource: aws_db_snapshot
 
-Manages a RDS database instance snapshot. For managing RDS database cluster snapshots, see the [`aws_db_cluster_snapshot` resource](/docs/providers/aws/r/db_cluster_snapshot.html).
+Manages an RDS database instance snapshot. For managing RDS database cluster snapshots, see the [`aws_db_cluster_snapshot` resource](/docs/providers/aws/r/db_cluster_snapshot.html).
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ resource "aws_db_instance" "bar" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.bar.id}"
+  db_instance_identifier = aws_db_instance.bar.id
   db_snapshot_identifier = "testsnapshot1234"
 }
 ```
@@ -61,6 +61,12 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Specifies the status of this DB snapshot.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
 * `vpc_id` - Specifies the storage type associated with DB snapshot.
+
+## Timeouts
+
+`aws_db_snapshot` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `read` - (Default `20 minutes`)  Length of time to wait for the snapshot to become available
 
 ## Import
 

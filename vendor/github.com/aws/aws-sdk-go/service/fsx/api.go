@@ -158,10 +158,19 @@ func (c *FSx) CreateBackupRequest(input *CreateBackupInput) (req *request.Reques
 
 // CreateBackup API operation for Amazon FSx.
 //
-// Creates a backup of an existing Amazon FSx for Windows File Server file system.
-// Creating regular backups for your file system is a best practice that complements
-// the replication that Amazon FSx for Windows File Server performs for your
-// file system. It also enables you to restore from user modification of data.
+// Creates a backup of an existing Amazon FSx file system. Creating regular
+// backups for your file system is a best practice, enabling you to restore
+// a file system from a backup if an issue arises with the original file system.
+//
+// For Amazon FSx for Lustre file systems, you can create a backup only for
+// file systems with the following configuration:
+//
+//    * a Persistent deployment type
+//
+//    * is not linked to an Amazon S3 data respository.
+//
+// For more information, see https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-backups.html
+// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-backups.html).
 //
 // If a backup with the specified client request token exists, and the parameters
 // match, this operation returns the description of the existing backup. If
@@ -181,10 +190,9 @@ func (c *FSx) CreateBackupRequest(input *CreateBackupInput) (req *request.Reques
 // created a backup, the operation returns a successful result because all the
 // parameters are the same.
 //
-// The CreateFileSystem operation returns while the backup's lifecycle state
-// is still CREATING. You can check the file system creation status by calling
-// the DescribeBackups operation, which returns the backup state along with
-// other information.
+// The CreateBackup operation returns while the backup's lifecycle state is
+// still CREATING. You can check the backup creation status by calling the DescribeBackups
+// operation, which returns the backup state along with other information.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -538,8 +546,7 @@ func (c *FSx) CreateFileSystemFromBackupRequest(input *CreateFileSystemFromBacku
 
 // CreateFileSystemFromBackup API operation for Amazon FSx.
 //
-// Creates a new Amazon FSx file system from an existing Amazon FSx for Windows
-// File Server backup.
+// Creates a new Amazon FSx file system from an existing Amazon FSx backup.
 //
 // If a file system with the specified client request token exists and the parameters
 // match, this operation returns the description of the file system. If a client
@@ -596,6 +603,10 @@ func (c *FSx) CreateFileSystemFromBackupRequest(input *CreateFileSystemFromBacku
 //   or not part of the VPC specified. InvalidSecurityGroupIds returns the list
 //   of IDs for security groups that are either invalid or not part of the VPC
 //   specified.
+//
+//   * InvalidPerUnitStorageThroughput
+//   An invalid value for PerUnitStorageThroughput was provided. Please create
+//   your file system again, using a valid value.
 //
 //   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
@@ -676,8 +687,8 @@ func (c *FSx) DeleteBackupRequest(input *DeleteBackupInput) (req *request.Reques
 
 // DeleteBackup API operation for Amazon FSx.
 //
-// Deletes an Amazon FSx for Windows File Server backup, deleting its contents.
-// After deletion, the backup no longer exists, and its data is gone.
+// Deletes an Amazon FSx backup, deleting its contents. After deletion, the
+// backup no longer exists, and its data is gone.
 //
 // The DeleteBackup call returns instantly. The backup will not show up in later
 // DescribeBackups calls.
@@ -898,10 +909,9 @@ func (c *FSx) DescribeBackupsRequest(input *DescribeBackupsInput) (req *request.
 
 // DescribeBackups API operation for Amazon FSx.
 //
-// Returns the description of specific Amazon FSx for Windows File Server backups,
-// if a BackupIds value is provided for that backup. Otherwise, it returns all
-// backups owned by your AWS account in the AWS Region of the endpoint that
-// you're calling.
+// Returns the description of specific Amazon FSx backups, if a BackupIds value
+// is provided for that backup. Otherwise, it returns all backups owned by your
+// AWS account in the AWS Region of the endpoint that you're calling.
 //
 // When retrieving all backups, you can optionally specify the MaxResults parameter
 // to limit the number of backups in a response. If more backups remain, Amazon
@@ -1683,7 +1693,24 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 
 // UpdateFileSystem API operation for Amazon FSx.
 //
-// Updates a file system configuration.
+// Use this operation to update the configuration of an existing Amazon FSx
+// file system. For an Amazon FSx for Lustre file system, you can update only
+// the WeeklyMaintenanceStartTime. For an Amazon for Windows File Server file
+// system, you can update the following properties:
+//
+//    * AutomaticBackupRetentionDays
+//
+//    * DailyAutomaticBackupStartTime
+//
+//    * SelfManagedActiveDirectoryConfiguration
+//
+//    * StorageCapacity
+//
+//    * ThroughputCapacity
+//
+//    * WeeklyMaintenanceStartTime
+//
+// You can update multiple properties in a single request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1712,6 +1739,10 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 //
 //   * MissingFileSystemConfiguration
 //   A file system configuration is required for this operation.
+//
+//   * ServiceLimitExceeded
+//   An error indicating that a particular service limit was exceeded. You can
+//   increase some service limits by contacting AWS Support.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/UpdateFileSystem
 func (c *FSx) UpdateFileSystem(input *UpdateFileSystemInput) (*UpdateFileSystemOutput, error) {
@@ -1835,8 +1866,128 @@ func (s *ActiveDirectoryError) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// A backup of an Amazon FSx for Windows File Server file system. You can create
-// a new file system from a backup to protect against data loss.
+// Describes a specific Amazon FSx Administrative Action for the current Windows
+// file system.
+type AdministrativeAction struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the type of administrative action, as follows:
+	//
+	//    * FILE_SYSTEM_UPDATE - A file system update administrative action initiated
+	//    by the user from the Amazon FSx console, API (UpdateFileSystem), or CLI
+	//    (update-file-system). A
+	//
+	//    * STORAGE_OPTIMIZATION - Once the FILE_SYSTEM_UPDATE task to increase
+	//    a file system's storage capacity completes successfully, a STORAGE_OPTIMIZATION
+	//    task starts. Storage optimization is the process of migrating the file
+	//    system data to the new, larger disks. You can track the storage migration
+	//    progress using the ProgressPercent property. When STORAGE_OPTIMIZATION
+	//    completes successfully, the parent FILE_SYSTEM_UPDATE action status changes
+	//    to COMPLETED. For more information, see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+	AdministrativeActionType *string `type:"string" enum:"AdministrativeActionType"`
+
+	// Provides information about a failed administrative action.
+	FailureDetails *AdministrativeActionFailureDetails `type:"structure"`
+
+	// Provides the percent complete of a STORAGE_OPTIMIZATION administrative action.
+	ProgressPercent *int64 `type:"integer"`
+
+	// Time that the administrative action request was received.
+	RequestTime *time.Time `type:"timestamp"`
+
+	// Describes the status of the administrative action, as follows:
+	//
+	//    * FAILED - Amazon FSx failed to process the administrative action successfully.
+	//
+	//    * IN_PROGRESS - Amazon FSx is processing the administrative action.
+	//
+	//    * PENDING - Amazon FSx is waiting to process the administrative action.
+	//
+	//    * COMPLETED - Amazon FSx has finished processing the administrative task.
+	//
+	//    * UPDATED_OPTIMIZING - For a storage capacity increase update, Amazon
+	//    FSx has updated the file system with the new storage capacity, and is
+	//    now performing the storage optimization process. For more information,
+	//    see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+	Status *string `type:"string" enum:"Status"`
+
+	// Describes the target StorageCapacity or ThroughputCapacity value provided
+	// in the UpdateFileSystem operation. Returned for FILE_SYSTEM_UPDATE administrative
+	// actions.
+	TargetFileSystemValues *FileSystem `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdministrativeAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdministrativeAction) GoString() string {
+	return s.String()
+}
+
+// SetAdministrativeActionType sets the AdministrativeActionType field's value.
+func (s *AdministrativeAction) SetAdministrativeActionType(v string) *AdministrativeAction {
+	s.AdministrativeActionType = &v
+	return s
+}
+
+// SetFailureDetails sets the FailureDetails field's value.
+func (s *AdministrativeAction) SetFailureDetails(v *AdministrativeActionFailureDetails) *AdministrativeAction {
+	s.FailureDetails = v
+	return s
+}
+
+// SetProgressPercent sets the ProgressPercent field's value.
+func (s *AdministrativeAction) SetProgressPercent(v int64) *AdministrativeAction {
+	s.ProgressPercent = &v
+	return s
+}
+
+// SetRequestTime sets the RequestTime field's value.
+func (s *AdministrativeAction) SetRequestTime(v time.Time) *AdministrativeAction {
+	s.RequestTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AdministrativeAction) SetStatus(v string) *AdministrativeAction {
+	s.Status = &v
+	return s
+}
+
+// SetTargetFileSystemValues sets the TargetFileSystemValues field's value.
+func (s *AdministrativeAction) SetTargetFileSystemValues(v *FileSystem) *AdministrativeAction {
+	s.TargetFileSystemValues = v
+	return s
+}
+
+// Provides information about a failed administrative action.
+type AdministrativeActionFailureDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Error message providing details about the failure.
+	Message *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AdministrativeActionFailureDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdministrativeActionFailureDetails) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *AdministrativeActionFailureDetails) SetMessage(v string) *AdministrativeActionFailureDetails {
+	s.Message = &v
+	return s
+}
+
+// A backup of an Amazon FSx for file system.
 type Backup struct {
 	_ struct{} `type:"structure"`
 
@@ -2401,9 +2552,9 @@ func (s *CompletionReport) SetScope(v string) *CompletionReport {
 type CreateBackupInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent creation. This string is automatically filled on your behalf
-	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// creation. This string is automatically filled on your behalf when you use
+	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The ID of the file system to back up.
@@ -2412,7 +2563,10 @@ type CreateBackupInput struct {
 	FileSystemId *string `min:"11" type:"string" required:"true"`
 
 	// The tags to apply to the backup at backup creation. The key value of the
-	// Name tag appears in the console as the backup name.
+	// Name tag appears in the console as the backup name. If you have set CopyTagsToBackups
+	// to true, and you specify one or more tags using the CreateBackup action,
+	// no existing tags on the file system are copied from the file system to the
+	// backup.
 	Tags []*Tag `min:"1" type:"list"`
 }
 
@@ -2660,10 +2814,13 @@ type CreateFileSystemFromBackupInput struct {
 	// BackupId is a required field
 	BackupId *string `min:"12" type:"string" required:"true"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent creation. This string is automatically filled on your behalf
-	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// creation. This string is automatically filled on your behalf when you use
+	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The Lustre configuration for the file system being created.
+	LustreConfiguration *CreateFileSystemLustreConfiguration `type:"structure"`
 
 	// A list of IDs for the security groups that apply to the specified network
 	// interfaces created for file system access. These security groups apply to
@@ -2738,6 +2895,11 @@ func (s *CreateFileSystemFromBackupInput) Validate() error {
 	if s.Tags != nil && len(s.Tags) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
 	}
+	if s.LustreConfiguration != nil {
+		if err := s.LustreConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("LustreConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -2769,6 +2931,12 @@ func (s *CreateFileSystemFromBackupInput) SetBackupId(v string) *CreateFileSyste
 // SetClientRequestToken sets the ClientRequestToken field's value.
 func (s *CreateFileSystemFromBackupInput) SetClientRequestToken(v string) *CreateFileSystemFromBackupInput {
 	s.ClientRequestToken = &v
+	return s
+}
+
+// SetLustreConfiguration sets the LustreConfiguration field's value.
+func (s *CreateFileSystemFromBackupInput) SetLustreConfiguration(v *CreateFileSystemLustreConfiguration) *CreateFileSystemFromBackupInput {
+	s.LustreConfiguration = v
 	return s
 }
 
@@ -2830,9 +2998,9 @@ func (s *CreateFileSystemFromBackupOutput) SetFileSystem(v *FileSystem) *CreateF
 type CreateFileSystemInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent creation. This string is automatically filled on your behalf
-	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// creation. This string is automatically filled on your behalf when you use
+	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The type of Amazon FSx file system to create, either WINDOWS or LUSTRE.
@@ -2885,7 +3053,7 @@ type CreateFileSystemInput struct {
 	//    * Set to HDD to use hard disk drive storage. HDD is supported on SINGLE_AZ_2
 	//    and MULTI_AZ_1 Windows file system deployment types.
 	//
-	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-tco.html#saz-maz-storage-type)
+	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-costs.html#storage-type-options)
 	// in the Amazon FSx for Windows User Guide.
 	StorageType *string `type:"string" enum:"StorageType"`
 
@@ -3032,10 +3200,30 @@ func (s *CreateFileSystemInput) SetWindowsConfiguration(v *CreateFileSystemWindo
 type CreateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) Choose SCRATCH_1 and SCRATCH_2 deployment types when you need
-	// temporary storage and shorter-term processing of data. The SCRATCH_2 deployment
-	// type provides in-transit encryption of data and higher burst throughput capacity
-	// than SCRATCH_1.
+	// The number of days to retain automatic backups. Setting this to 0 disables
+	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// The default is 0.
+	AutomaticBackupRetentionDays *int64 `type:"integer"`
+
+	// A boolean flag indicating whether tags for the file system should be copied
+	// to backups. This value defaults to false. If it's set to true, all tags for
+	// the file system are copied to all automatic and user-initiated backups where
+	// the user doesn't specify tags. If this value is true, and you specify one
+	// or more tags, only the specified tags are copied to backups. If you specify
+	// one or more tags when creating a user-initiated backup, no tags are copied
+	// from the file system, regardless of this value.
+	CopyTagsToBackups *bool `type:"boolean"`
+
+	// A recurring daily time, in the format HH:MM. HH is the zero-padded hour of
+	// the day (0-23), and MM is the zero-padded minute of the hour. For example,
+	// 05:00 specifies 5 AM daily.
+	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
+
+	// Choose SCRATCH_1 and SCRATCH_2 deployment types when you need temporary storage
+	// and shorter-term processing of data. The SCRATCH_2 deployment type provides
+	// in-transit encryption of data and higher burst throughput capacity than SCRATCH_1.
+	//
+	// This option can only be set for for PERSISTENT_1 deployments types.
 	//
 	// Choose PERSISTENT_1 deployment type for longer-term storage and workloads
 	// and encryption of data in transit. To learn more about deployment types,
@@ -3095,7 +3283,9 @@ type CreateFileSystemLustreConfiguration struct {
 	// Valid values are 50, 100, 200.
 	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone, where d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -3112,6 +3302,9 @@ func (s CreateFileSystemLustreConfiguration) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateFileSystemLustreConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateFileSystemLustreConfiguration"}
+	if s.DailyAutomaticBackupStartTime != nil && len(*s.DailyAutomaticBackupStartTime) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("DailyAutomaticBackupStartTime", 5))
+	}
 	if s.ExportPath != nil && len(*s.ExportPath) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("ExportPath", 3))
 	}
@@ -3132,6 +3325,24 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAutomaticBackupRetentionDays sets the AutomaticBackupRetentionDays field's value.
+func (s *CreateFileSystemLustreConfiguration) SetAutomaticBackupRetentionDays(v int64) *CreateFileSystemLustreConfiguration {
+	s.AutomaticBackupRetentionDays = &v
+	return s
+}
+
+// SetCopyTagsToBackups sets the CopyTagsToBackups field's value.
+func (s *CreateFileSystemLustreConfiguration) SetCopyTagsToBackups(v bool) *CreateFileSystemLustreConfiguration {
+	s.CopyTagsToBackups = &v
+	return s
+}
+
+// SetDailyAutomaticBackupStartTime sets the DailyAutomaticBackupStartTime field's value.
+func (s *CreateFileSystemLustreConfiguration) SetDailyAutomaticBackupStartTime(v string) *CreateFileSystemLustreConfiguration {
+	s.DailyAutomaticBackupStartTime = &v
+	return s
 }
 
 // SetDeploymentType sets the DeploymentType field's value.
@@ -3258,7 +3469,8 @@ type CreateFileSystemWindowsConfiguration struct {
 	ThroughputCapacity *int64 `min:"8" type:"integer" required:"true"`
 
 	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
-	// in the UTC time zone.
+	// in the UTC time zone, where d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -3903,9 +4115,9 @@ type DeleteBackupInput struct {
 	// BackupId is a required field
 	BackupId *string `min:"12" type:"string" required:"true"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent deletion. This is automatically filled on your behalf when
-	// using the AWS CLI or SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// deletion. This is automatically filled on your behalf when using the AWS
+	// CLI or SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 }
 
@@ -3987,15 +4199,19 @@ func (s *DeleteBackupOutput) SetLifecycle(v string) *DeleteBackupOutput {
 type DeleteFileSystemInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent deletion. This is automatically filled on your behalf when
-	// using the AWS CLI or SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// deletion. This is automatically filled on your behalf when using the AWS
+	// CLI or SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The ID of the file system you want to delete.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `min:"11" type:"string" required:"true"`
+
+	// The configuration object for the Amazon FSx for Lustre file system being
+	// deleted in the DeleteFileSystem operation.
+	LustreConfiguration *DeleteFileSystemLustreConfiguration `type:"structure"`
 
 	// The configuration object for the Microsoft Windows file system used in the
 	// DeleteFileSystem operation.
@@ -4024,6 +4240,11 @@ func (s *DeleteFileSystemInput) Validate() error {
 	if s.FileSystemId != nil && len(*s.FileSystemId) < 11 {
 		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 11))
 	}
+	if s.LustreConfiguration != nil {
+		if err := s.LustreConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("LustreConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.WindowsConfiguration != nil {
 		if err := s.WindowsConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("WindowsConfiguration", err.(request.ErrInvalidParams))
@@ -4048,9 +4269,112 @@ func (s *DeleteFileSystemInput) SetFileSystemId(v string) *DeleteFileSystemInput
 	return s
 }
 
+// SetLustreConfiguration sets the LustreConfiguration field's value.
+func (s *DeleteFileSystemInput) SetLustreConfiguration(v *DeleteFileSystemLustreConfiguration) *DeleteFileSystemInput {
+	s.LustreConfiguration = v
+	return s
+}
+
 // SetWindowsConfiguration sets the WindowsConfiguration field's value.
 func (s *DeleteFileSystemInput) SetWindowsConfiguration(v *DeleteFileSystemWindowsConfiguration) *DeleteFileSystemInput {
 	s.WindowsConfiguration = v
+	return s
+}
+
+// The configuration object for the Amazon FSx for Lustre file system being
+// deleted in the DeleteFileSystem operation.
+type DeleteFileSystemLustreConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Use if SkipFinalBackup is set to false, and you want to apply an array of
+	// tags to the final backup. If you have set the file system property CopyTagsToBackups
+	// to true, and you specify one or more FinalBackupTags when deleting a file
+	// system, Amazon FSx will not copy any existing file system tags to the backup.
+	FinalBackupTags []*Tag `min:"1" type:"list"`
+
+	// Set SkipFinalBackup to false if you want to take a final backup of the file
+	// system you are deleting. By default, Amazon FSx will not take a final backup
+	// on your behalf when the DeleteFileSystem operation is invoked. (Default =
+	// true)
+	SkipFinalBackup *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DeleteFileSystemLustreConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFileSystemLustreConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteFileSystemLustreConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteFileSystemLustreConfiguration"}
+	if s.FinalBackupTags != nil && len(s.FinalBackupTags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FinalBackupTags", 1))
+	}
+	if s.FinalBackupTags != nil {
+		for i, v := range s.FinalBackupTags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "FinalBackupTags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFinalBackupTags sets the FinalBackupTags field's value.
+func (s *DeleteFileSystemLustreConfiguration) SetFinalBackupTags(v []*Tag) *DeleteFileSystemLustreConfiguration {
+	s.FinalBackupTags = v
+	return s
+}
+
+// SetSkipFinalBackup sets the SkipFinalBackup field's value.
+func (s *DeleteFileSystemLustreConfiguration) SetSkipFinalBackup(v bool) *DeleteFileSystemLustreConfiguration {
+	s.SkipFinalBackup = &v
+	return s
+}
+
+// The response object for the Amazon FSx for Lustre file system being deleted
+// in the DeleteFileSystem operation.
+type DeleteFileSystemLustreResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the final backup for this file system.
+	FinalBackupId *string `min:"12" type:"string"`
+
+	// The set of tags applied to the final backup.
+	FinalBackupTags []*Tag `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteFileSystemLustreResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFileSystemLustreResponse) GoString() string {
+	return s.String()
+}
+
+// SetFinalBackupId sets the FinalBackupId field's value.
+func (s *DeleteFileSystemLustreResponse) SetFinalBackupId(v string) *DeleteFileSystemLustreResponse {
+	s.FinalBackupId = &v
+	return s
+}
+
+// SetFinalBackupTags sets the FinalBackupTags field's value.
+func (s *DeleteFileSystemLustreResponse) SetFinalBackupTags(v []*Tag) *DeleteFileSystemLustreResponse {
+	s.FinalBackupTags = v
 	return s
 }
 
@@ -4063,6 +4387,10 @@ type DeleteFileSystemOutput struct {
 
 	// The file system lifecycle for the deletion request. Should be DELETING.
 	Lifecycle *string `type:"string" enum:"FileSystemLifecycle"`
+
+	// The response object for the Amazon FSx for Lustre file system being deleted
+	// in the DeleteFileSystem operation.
+	LustreResponse *DeleteFileSystemLustreResponse `type:"structure"`
 
 	// The response object for the Microsoft Windows file system used in the DeleteFileSystem
 	// operation.
@@ -4088,6 +4416,12 @@ func (s *DeleteFileSystemOutput) SetFileSystemId(v string) *DeleteFileSystemOutp
 // SetLifecycle sets the Lifecycle field's value.
 func (s *DeleteFileSystemOutput) SetLifecycle(v string) *DeleteFileSystemOutput {
 	s.Lifecycle = &v
+	return s
+}
+
+// SetLustreResponse sets the LustreResponse field's value.
+func (s *DeleteFileSystemOutput) SetLustreResponse(v *DeleteFileSystemLustreResponse) *DeleteFileSystemOutput {
+	s.LustreResponse = v
 	return s
 }
 
@@ -4195,22 +4529,22 @@ func (s *DeleteFileSystemWindowsResponse) SetFinalBackupTags(v []*Tag) *DeleteFi
 type DescribeBackupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) IDs of the backups you want to retrieve (String). This overrides
-	// any filters. If any IDs are not found, BackupNotFound will be thrown.
+	// IDs of the backups you want to retrieve (String). This overrides any filters.
+	// If any IDs are not found, BackupNotFound will be thrown.
 	BackupIds []*string `type:"list"`
 
-	// (Optional) Filters structure. Supported names are file-system-id and backup-type.
+	// Filters structure. Supported names are file-system-id and backup-type.
 	Filters []*Filter `type:"list"`
 
-	// (Optional) Maximum number of backups to return in the response (integer).
-	// This parameter value must be greater than 0. The number of items that Amazon
-	// FSx returns is the minimum of the MaxResults parameter specified in the request
-	// and the service's internal maximum number of items per page.
+	// Maximum number of backups to return in the response (integer). This parameter
+	// value must be greater than 0. The number of items that Amazon FSx returns
+	// is the minimum of the MaxResults parameter specified in the request and the
+	// service's internal maximum number of items per page.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// (Optional) Opaque pagination token returned from a previous DescribeBackups
-	// operation (String). If a token present, the action continues the list from
-	// where the returning call left off.
+	// Opaque pagination token returned from a previous DescribeBackups operation
+	// (String). If a token present, the action continues the list from where the
+	// returning call left off.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -4407,19 +4741,18 @@ func (s *DescribeDataRepositoryTasksOutput) SetNextToken(v string) *DescribeData
 type DescribeFileSystemsInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) IDs of the file systems whose descriptions you want to retrieve
-	// (String).
+	// IDs of the file systems whose descriptions you want to retrieve (String).
 	FileSystemIds []*string `type:"list"`
 
-	// (Optional) Maximum number of file systems to return in the response (integer).
-	// This parameter value must be greater than 0. The number of items that Amazon
-	// FSx returns is the minimum of the MaxResults parameter specified in the request
+	// Maximum number of file systems to return in the response (integer). This
+	// parameter value must be greater than 0. The number of items that Amazon FSx
+	// returns is the minimum of the MaxResults parameter specified in the request
 	// and the service's internal maximum number of items per page.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// (Optional) Opaque pagination token returned from a previous DescribeFileSystems
-	// operation (String). If a token present, the action continues the list from
-	// where the returning call left off.
+	// Opaque pagination token returned from a previous DescribeFileSystems operation
+	// (String). If a token present, the action continues the list from where the
+	// returning call left off.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -4504,6 +4837,11 @@ func (s *DescribeFileSystemsOutput) SetNextToken(v string) *DescribeFileSystemsO
 // A description of a specific Amazon FSx file system.
 type FileSystem struct {
 	_ struct{} `type:"structure"`
+
+	// A list of administrative actions for the file system that are in process
+	// or waiting to be processed. Administrative actions describe changes to the
+	// Windows file system that you have initiated using the UpdateFileSystem action.
+	AdministrativeActions []*AdministrativeAction `type:"list"`
 
 	// The time that the file system was created, in seconds (since 1970-01-01T00:00:00Z),
 	// also known as Unix time.
@@ -4614,6 +4952,12 @@ func (s FileSystem) String() string {
 // GoString returns the string representation
 func (s FileSystem) GoString() string {
 	return s.String()
+}
+
+// SetAdministrativeActions sets the AdministrativeActions field's value.
+func (s *FileSystem) SetAdministrativeActions(v []*AdministrativeAction) *FileSystem {
+	s.AdministrativeActions = v
+	return s
 }
 
 // SetCreationTime sets the CreationTime field's value.
@@ -5206,15 +5550,15 @@ func (s *InvalidPerUnitStorageThroughput) RequestID() string {
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) Maximum number of tags to return in the response (integer). This
-	// parameter value must be greater than 0. The number of items that Amazon FSx
-	// returns is the minimum of the MaxResults parameter specified in the request
-	// and the service's internal maximum number of items per page.
+	// Maximum number of tags to return in the response (integer). This parameter
+	// value must be greater than 0. The number of items that Amazon FSx returns
+	// is the minimum of the MaxResults parameter specified in the request and the
+	// service's internal maximum number of items per page.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// (Optional) Opaque pagination token returned from a previous ListTagsForResource
-	// operation (String). If a token present, the action continues the list from
-	// where the returning call left off.
+	// Opaque pagination token returned from a previous ListTagsForResource operation
+	// (String). If a token present, the action continues the list from where the
+	// returning call left off.
 	NextToken *string `min:"1" type:"string"`
 
 	// The ARN of the Amazon FSx resource that will have its tags listed.
@@ -5311,11 +5655,41 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 type LustreFileSystemConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// The number of days to retain automatic backups. Setting this to 0 disables
+	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// The default is 0.
+	AutomaticBackupRetentionDays *int64 `type:"integer"`
+
+	// A boolean flag indicating whether tags on the file system should be copied
+	// to backups. If it's set to true, all tags on the file system are copied to
+	// all automatic backups and any user-initiated backups where the user doesn't
+	// specify any tags. If this value is true, and you specify one or more tags,
+	// only the specified tags are copied to backups. If you specify one or more
+	// tags when creating a user-initiated backup, no tags are copied from the file
+	// system, regardless of this value. (Default = false)
+	CopyTagsToBackups *bool `type:"boolean"`
+
+	// A recurring daily time, in the format HH:MM. HH is the zero-padded hour of
+	// the day (0-23), and MM is the zero-padded minute of the hour. For example,
+	// 05:00 specifies 5 AM daily.
+	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
+
 	// The data repository configuration object for Lustre file systems returned
 	// in the response of the CreateFileSystem operation.
 	DataRepositoryConfiguration *DataRepositoryConfiguration `type:"structure"`
 
-	// The deployment type of the FSX for Lustre file system.
+	// The deployment type of the FSX for Lustre file system. Scratch deployment
+	// type is designed for temporary storage and shorter-term processing of data.
+	//
+	// SCRATCH_1 and SCRATCH_2 deployment types are best suited for when you need
+	// temporary storage and shorter-term processing of data. The SCRATCH_2 deployment
+	// type provides in-transit encryption of data and higher burst throughput capacity
+	// than SCRATCH_1.
+	//
+	// The PERSISTENT_1 deployment type is used for longer-term storage and workloads
+	// and encryption of data in transit. To learn more about deployment types,
+	// see FSx for Lustre Deployment Options (https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-deployment-types.html).
+	// (Default = SCRATCH_1)
 	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
 
 	// You use the MountName value when mounting the file system.
@@ -5332,7 +5706,9 @@ type LustreFileSystemConfiguration struct {
 	// are 50, 100, 200.
 	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
 
-	// The UTC time that you want to begin your weekly maintenance window.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -5344,6 +5720,24 @@ func (s LustreFileSystemConfiguration) String() string {
 // GoString returns the string representation
 func (s LustreFileSystemConfiguration) GoString() string {
 	return s.String()
+}
+
+// SetAutomaticBackupRetentionDays sets the AutomaticBackupRetentionDays field's value.
+func (s *LustreFileSystemConfiguration) SetAutomaticBackupRetentionDays(v int64) *LustreFileSystemConfiguration {
+	s.AutomaticBackupRetentionDays = &v
+	return s
+}
+
+// SetCopyTagsToBackups sets the CopyTagsToBackups field's value.
+func (s *LustreFileSystemConfiguration) SetCopyTagsToBackups(v bool) *LustreFileSystemConfiguration {
+	s.CopyTagsToBackups = &v
+	return s
+}
+
+// SetDailyAutomaticBackupStartTime sets the DailyAutomaticBackupStartTime field's value.
+func (s *LustreFileSystemConfiguration) SetDailyAutomaticBackupStartTime(v string) *LustreFileSystemConfiguration {
+	s.DailyAutomaticBackupStartTime = &v
+	return s
 }
 
 // SetDataRepositoryConfiguration sets the DataRepositoryConfiguration field's value.
@@ -5836,7 +6230,7 @@ func (s *SelfManagedActiveDirectoryConfiguration) SetUserName(v string) *SelfMan
 }
 
 // The configuration that Amazon FSx uses to join the Windows File Server instance
-// to the self-managed Microsoft Active Directory (AD) directory.
+// to a self-managed Microsoft Active Directory (AD) directory.
 type SelfManagedActiveDirectoryConfigurationUpdates struct {
 	_ struct{} `type:"structure"`
 
@@ -6237,12 +6631,12 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateFileSystemInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent updates. This string is automatically filled on your behalf
-	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// updates. This string is automatically filled on your behalf when you use
+	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
-	// The globally unique ID of the file system, assigned by Amazon FSx.
+	// Identifies the file system that you are updating.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `min:"11" type:"string" required:"true"`
@@ -6251,9 +6645,18 @@ type UpdateFileSystemInput struct {
 	// UpdateFileSystem operation.
 	LustreConfiguration *UpdateFileSystemLustreConfiguration `type:"structure"`
 
-	// The configuration update for this Microsoft Windows file system. The only
-	// supported options are for backup and maintenance and for self-managed Active
-	// Directory configuration.
+	// Use this parameter to increase the storage capacity of an Amazon FSx for
+	// Windows File Server file system. Specifies the storage capacity target value,
+	// GiB, for the file system you're updating. The storage capacity target value
+	// must be at least 10 percent (%) greater than the current storage capacity
+	// value. In order to increase storage capacity, the file system needs to have
+	// at least 16 MB/s of throughput capacity. You cannot make a storage capacity
+	// increase request if there is an existing storage capacity increase request
+	// in progress. For more information, see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+	StorageCapacity *int64 `type:"integer"`
+
+	// The configuration updates for an Amazon FSx for Windows File Server file
+	// system.
 	WindowsConfiguration *UpdateFileSystemWindowsConfiguration `type:"structure"`
 }
 
@@ -6314,6 +6717,12 @@ func (s *UpdateFileSystemInput) SetLustreConfiguration(v *UpdateFileSystemLustre
 	return s
 }
 
+// SetStorageCapacity sets the StorageCapacity field's value.
+func (s *UpdateFileSystemInput) SetStorageCapacity(v int64) *UpdateFileSystemInput {
+	s.StorageCapacity = &v
+	return s
+}
+
 // SetWindowsConfiguration sets the WindowsConfiguration field's value.
 func (s *UpdateFileSystemInput) SetWindowsConfiguration(v *UpdateFileSystemWindowsConfiguration) *UpdateFileSystemInput {
 	s.WindowsConfiguration = v
@@ -6325,7 +6734,19 @@ func (s *UpdateFileSystemInput) SetWindowsConfiguration(v *UpdateFileSystemWindo
 type UpdateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// The number of days to retain automatic backups. Setting this to 0 disables
+	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// The default is 0.
+	AutomaticBackupRetentionDays *int64 `type:"integer"`
+
+	// A recurring daily time, in the format HH:MM. HH is the zero-padded hour of
+	// the day (0-23), and MM is the zero-padded minute of the hour. For example,
+	// 05:00 specifies 5 AM daily.
+	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
+
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6342,6 +6763,9 @@ func (s UpdateFileSystemLustreConfiguration) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateFileSystemLustreConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateFileSystemLustreConfiguration"}
+	if s.DailyAutomaticBackupStartTime != nil && len(*s.DailyAutomaticBackupStartTime) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("DailyAutomaticBackupStartTime", 5))
+	}
 	if s.WeeklyMaintenanceStartTime != nil && len(*s.WeeklyMaintenanceStartTime) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("WeeklyMaintenanceStartTime", 7))
 	}
@@ -6350,6 +6774,18 @@ func (s *UpdateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAutomaticBackupRetentionDays sets the AutomaticBackupRetentionDays field's value.
+func (s *UpdateFileSystemLustreConfiguration) SetAutomaticBackupRetentionDays(v int64) *UpdateFileSystemLustreConfiguration {
+	s.AutomaticBackupRetentionDays = &v
+	return s
+}
+
+// SetDailyAutomaticBackupStartTime sets the DailyAutomaticBackupStartTime field's value.
+func (s *UpdateFileSystemLustreConfiguration) SetDailyAutomaticBackupStartTime(v string) *UpdateFileSystemLustreConfiguration {
+	s.DailyAutomaticBackupStartTime = &v
+	return s
 }
 
 // SetWeeklyMaintenanceStartTime sets the WeeklyMaintenanceStartTime field's value.
@@ -6382,25 +6818,38 @@ func (s *UpdateFileSystemOutput) SetFileSystem(v *FileSystem) *UpdateFileSystemO
 	return s
 }
 
-// Updates the Microsoft Windows configuration for an existing Amazon FSx for
-// Windows File Server file system. Amazon FSx overwrites existing properties
-// with non-null values provided in the request. If you don't specify a non-null
-// value for a property, that property is not updated.
+// Updates the configuration for an existing Amazon FSx for Windows File Server
+// file system. Amazon FSx only overwrites existing properties with non-null
+// values provided in the request.
 type UpdateFileSystemWindowsConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The number of days to retain automatic backups. Setting this to 0 disables
-	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// The number of days to retain automatic daily backups. Setting this to zero
+	// (0) disables automatic daily backups. You can retain automatic daily backups
+	// for a maximum of 35 days. For more information, see Working with Automatic
+	// Daily Backups (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/using-backups.html#automatic-backups).
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
-	// The preferred time to take daily automatic backups, in the UTC time zone.
+	// The preferred time to start the daily automatic backup, in the UTC time zone,
+	// for example, 02:00
 	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
 
 	// The configuration Amazon FSx uses to join the Windows File Server instance
-	// to the self-managed Microsoft AD directory.
+	// to the self-managed Microsoft AD directory. You cannot make a self-managed
+	// Microsoft AD update request if there is an existing self-managed Microsoft
+	// AD update request in progress.
 	SelfManagedActiveDirectoryConfiguration *SelfManagedActiveDirectoryConfigurationUpdates `type:"structure"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// Sets the target value for a file system's throughput capacity, in MB/s, that
+	// you are updating the file system to. Valid values are 8, 16, 32, 64, 128,
+	// 256, 512, 1024, 2048. You cannot make a throughput capacity update request
+	// if there is an existing throughput capacity update request in progress. For
+	// more information, see Managing Throughput Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-throughput-capacity.html).
+	ThroughputCapacity *int64 `min:"8" type:"integer"`
+
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. Where d is the weekday number, from 1 through 7, with
+	// 1 = Monday and 7 = Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6419,6 +6868,9 @@ func (s *UpdateFileSystemWindowsConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateFileSystemWindowsConfiguration"}
 	if s.DailyAutomaticBackupStartTime != nil && len(*s.DailyAutomaticBackupStartTime) < 5 {
 		invalidParams.Add(request.NewErrParamMinLen("DailyAutomaticBackupStartTime", 5))
+	}
+	if s.ThroughputCapacity != nil && *s.ThroughputCapacity < 8 {
+		invalidParams.Add(request.NewErrParamMinValue("ThroughputCapacity", 8))
 	}
 	if s.WeeklyMaintenanceStartTime != nil && len(*s.WeeklyMaintenanceStartTime) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("WeeklyMaintenanceStartTime", 7))
@@ -6450,6 +6902,12 @@ func (s *UpdateFileSystemWindowsConfiguration) SetDailyAutomaticBackupStartTime(
 // SetSelfManagedActiveDirectoryConfiguration sets the SelfManagedActiveDirectoryConfiguration field's value.
 func (s *UpdateFileSystemWindowsConfiguration) SetSelfManagedActiveDirectoryConfiguration(v *SelfManagedActiveDirectoryConfigurationUpdates) *UpdateFileSystemWindowsConfiguration {
 	s.SelfManagedActiveDirectoryConfiguration = v
+	return s
+}
+
+// SetThroughputCapacity sets the ThroughputCapacity field's value.
+func (s *UpdateFileSystemWindowsConfiguration) SetThroughputCapacity(v int64) *UpdateFileSystemWindowsConfiguration {
+	s.ThroughputCapacity = &v
 	return s
 }
 
@@ -6541,7 +6999,9 @@ type WindowsFileSystemConfiguration struct {
 	// The throughput of an Amazon FSx file system, measured in megabytes per second.
 	ThroughputCapacity *int64 `min:"8" type:"integer"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6647,6 +7107,27 @@ const (
 	ActiveDirectoryErrorTypeInvalidDomainStage = "INVALID_DOMAIN_STAGE"
 )
 
+// Describes the type of administrative action, as follows:
+//
+//    * FILE_SYSTEM_UPDATE - A file system update administrative action initiated
+//    by the user from the Amazon FSx console, API (UpdateFileSystem), or CLI
+//    (update-file-system). A
+//
+//    * STORAGE_OPTIMIZATION - Once the FILE_SYSTEM_UPDATE task to increase
+//    a file system's storage capacity completes successfully, a STORAGE_OPTIMIZATION
+//    task starts. Storage optimization is the process of migrating the file
+//    system data to the new, larger disks. You can track the storage migration
+//    progress using the ProgressPercent property. When STORAGE_OPTIMIZATION
+//    completes successfully, the parent FILE_SYSTEM_UPDATE action status changes
+//    to COMPLETED. For more information, see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+const (
+	// AdministrativeActionTypeFileSystemUpdate is a AdministrativeActionType enum value
+	AdministrativeActionTypeFileSystemUpdate = "FILE_SYSTEM_UPDATE"
+
+	// AdministrativeActionTypeStorageOptimization is a AdministrativeActionType enum value
+	AdministrativeActionTypeStorageOptimization = "STORAGE_OPTIMIZATION"
+)
+
 // The lifecycle status of the backup.
 const (
 	// BackupLifecycleAvailable is a BackupLifecycle enum value
@@ -6750,6 +7231,9 @@ const (
 
 	// FilterNameBackupType is a FilterName enum value
 	FilterNameBackupType = "backup-type"
+
+	// FilterNameFileSystemType is a FilterName enum value
+	FilterNameFileSystemType = "file-system-type"
 )
 
 const (
@@ -6789,6 +7273,23 @@ const (
 
 	// ServiceLimitTotalUserInitiatedBackups is a ServiceLimit enum value
 	ServiceLimitTotalUserInitiatedBackups = "TOTAL_USER_INITIATED_BACKUPS"
+)
+
+const (
+	// StatusFailed is a Status enum value
+	StatusFailed = "FAILED"
+
+	// StatusInProgress is a Status enum value
+	StatusInProgress = "IN_PROGRESS"
+
+	// StatusPending is a Status enum value
+	StatusPending = "PENDING"
+
+	// StatusCompleted is a Status enum value
+	StatusCompleted = "COMPLETED"
+
+	// StatusUpdatedOptimizing is a Status enum value
+	StatusUpdatedOptimizing = "UPDATED_OPTIMIZING"
 )
 
 // The storage type for your Amazon FSx file system.

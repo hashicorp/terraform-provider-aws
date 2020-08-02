@@ -58,5 +58,6 @@ resource "aws_kms_key" "test" {
 
 data "aws_kms_key" "test" {
   key_id = "${aws_kms_key.test.key_id}"
-}`, rName)
+}
+`, rName)
 }

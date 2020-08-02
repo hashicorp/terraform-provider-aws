@@ -134,7 +134,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
-				ExpectError: regexp.MustCompile(`config is invalid:`),
+				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})
@@ -365,7 +365,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(rName, rName),
-				ExpectError: regexp.MustCompile(`config is invalid:`),
+				ExpectError: regexp.MustCompile(`required field is not set`),
 			},
 		},
 	})

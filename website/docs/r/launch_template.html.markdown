@@ -112,6 +112,8 @@ The following arguments are supported:
 * `name` - The name of the launch template. If you leave this blank, Terraform will auto-generate a unique name.
 * `name_prefix` - Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - Description of the launch template.
+* `default_version` - Default Version of the launch template.
+* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`. 
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -168,7 +170,7 @@ Each `block_device_mappings` supports the following:
 
 The `ebs` block supports the following:
 
-* `delete_on_termination` - Whether the volume should be destroyed on instance termination (Default: `false`). See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+* `delete_on_termination` - Whether the volume should be destroyed on instance termination. Defaults to `false` if not set. See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
 * `encrypted` - Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 * `iops` - The amount of provisioned
@@ -288,7 +290,7 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 Each `network_interfaces` block supports the following:
 
 * `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
-* `delete_on_termination` - Whether the network interface should be destroyed on instance termination.
+* `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
@@ -312,6 +314,7 @@ The `placement` block supports the following:
 * `host_id` - The ID of the Dedicated Host for the instance.
 * `spread_domain` - Reserved for future use.
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
+* `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
 
 ### Hibernation Options
 
@@ -335,7 +338,6 @@ The following attributes are exported along with all argument references:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
-* `default_version` - The default version of the launch template.
 * `latest_version` - The latest version of the launch template.
 
 ## Import

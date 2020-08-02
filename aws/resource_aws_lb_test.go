@@ -191,7 +191,36 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLB_NLB_privateipv4address(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-pipv4a-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "internal", "true"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_alb.lb_test"
@@ -1770,6 +1799,54 @@ resource "aws_eip" "lb" {
 `, lbName)
 }
 
+func testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lb" "test" {
+  name                       = "%s"
+  internal                   = true
+  load_balancer_type         = "network"
+  enable_deletion_protection = false
+
+  subnet_mapping {
+    subnet_id            = aws_subnet.test.id
+    private_ipv4_address = "10.10.0.15"
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_privateipv4address"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "TestAccAWSALB_privateipv4address"
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.10.0.0/21"
+  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "TestAccAWSALB_privateipv4address"
+  }
+}
+`, lbName)
+}
+
 func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb" "lb_test" {
@@ -1923,7 +2000,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_generatedName() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -2001,11 +2078,11 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`)
+}`
 }
 
 func testAccAWSLBConfig_zeroValueName() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
@@ -2089,11 +2166,11 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`)
+}`
 }
 
 func testAccAWSLBConfig_namePrefix() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
@@ -2164,7 +2241,7 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`)
+}`
 }
 func testAccAWSLBConfig_updatedTags(lbName string) string {
 	return fmt.Sprintf(`

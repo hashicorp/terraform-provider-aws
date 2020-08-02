@@ -89,7 +89,7 @@ EOF
 }
 
 data "aws_iam_role" "test" {
-  name = "${aws_iam_role.test.name}"
+  name = aws_iam_role.test.name
 }
 `, roleName)
 }
@@ -122,7 +122,7 @@ EOF
 }
 
 data "aws_iam_role" "test" {
-  name = "${aws_iam_role.test.name}"
+  name = aws_iam_role.test.name
 }
 `, roleName)
 }

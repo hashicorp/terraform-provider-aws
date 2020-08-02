@@ -2,15 +2,71 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_batch_job_definition", &resource.Sweeper{
+		Name: "aws_batch_job_definition",
+		F:    testSweepBatchJobDefinitions,
+		Dependencies: []string{
+			"aws_batch_job_queue",
+		},
+	})
+}
+
+func testSweepBatchJobDefinitions(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).batchconn
+	input := &batch.DescribeJobDefinitionsInput{
+		Status: aws.String("ACTIVE"),
+	}
+	var sweeperErrs *multierror.Error
+
+	err = conn.DescribeJobDefinitionsPages(input, func(page *batch.DescribeJobDefinitionsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, jobDefinition := range page.JobDefinitions {
+			arn := aws.StringValue(jobDefinition.JobDefinitionArn)
+
+			log.Printf("[INFO] Deleting Batch Job Definition: %s", arn)
+			_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
+				JobDefinition: aws.String(arn),
+			})
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Batch Job Definition (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Batch Job Definitions sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Batch Job Definitions: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	var jd batch.JobDefinition
@@ -211,19 +267,19 @@ func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
 func testAccBatchJobDefinitionConfigContainerPropertiesAdvanced(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "container"
-	parameters = {
-		param1 = "val1"
-		param2 = "val2"
-	}
-	retry_strategy {
-		attempts = 1
-	}
-	timeout {
-		attempt_duration_seconds = 60
-	}
-	container_properties = <<CONTAINER_PROPERTIES
+  name = %[1]q
+  type = "container"
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+  retry_strategy {
+    attempts = 1
+  }
+  timeout {
+    attempt_duration_seconds = 60
+  }
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",
@@ -256,6 +312,7 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
+
 }
 `, rName)
 }
@@ -263,9 +320,9 @@ CONTAINER_PROPERTIES
 func testAccBatchJobDefinitionConfigContainerPropertiesAdvancedUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-	name = %[1]q
-	type = "container"
-	container_properties = <<CONTAINER_PROPERTIES
+  name                 = %[1]q
+  type                 = "container"
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",
@@ -298,6 +355,7 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
+
 }
 `, rName)
 }

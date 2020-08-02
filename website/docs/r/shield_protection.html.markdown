@@ -25,7 +25,7 @@ resource "aws_eip" "foo" {
 }
 
 resource "aws_shield_protection" "foo" {
-  name         = "${var.name}"
+  name         = var.name
   resource_arn = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.foo.id}"
 }
 ```

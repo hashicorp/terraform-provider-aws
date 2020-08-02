@@ -71,11 +71,6 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"min_adjustment_step": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Removed:  "Use `min_adjustment_magnitude` argument instead",
-			},
 			"scaling_adjustment": {
 				Type:          schema.TypeInt,
 				Optional:      true,
