@@ -29,7 +29,7 @@ The following arguments are supported:
 * `password` - (Required) The password of the user who has the permissions to access files and folders in the FSx for Windows file system.
 * `user` - (Required) The user who has the permissions to access files and folders in the FSx for Windows file system.
 * `domain` - (Optional) The name of the Windows domain that the FSx for Windows server belongs to.
-* `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for Windows file system.
+* `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups used to configure the FSx for Windows file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location.
 
