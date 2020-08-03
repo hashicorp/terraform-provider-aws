@@ -368,7 +368,7 @@ func flattenAwsDataSyncTaskSchedule(schedule *datasync.TaskSchedule) []interface
 	}
 
 	m := map[string]interface{}{
-		"atime": aws.StringValue(schedule.ScheduleExpression),
+		"schedule_expression": aws.StringValue(schedule.ScheduleExpression),
 	}
 
 	return []interface{}{m}
