@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-pcxopts-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_vpc_peering_connection_options.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 
@@ -23,7 +23,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName),
+				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(
@@ -32,12 +32,8 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "false",
 						"allow_classic_link_to_remote_vpc": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "true",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -56,12 +52,8 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "true",
 						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -80,13 +72,58 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					// Requester's view:
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"requester.#",
+						"1",
+					),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "false",
+						"allow_classic_link_to_remote_vpc": "true",
+						"allow_vpc_to_remote_classic_link": "false",
+					}),
+					testAccCheckAWSVpcPeeringConnectionOptions(
+						pcxResourceName,
+						"requester",
+						&ec2.VpcPeeringConnectionOptionsDescription{
+							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
+							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(true),
+							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
+						},
+					),
+					// Accepter's view:
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"accepter.#",
+						"1",
+					),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "false",
+						"allow_classic_link_to_remote_vpc": "false",
+						"allow_vpc_to_remote_classic_link": "false",
+					}),
+					testAccCheckAWSVpcPeeringConnectionOptions(
+						pcxResourceName,
+						"accepter",
+						&ec2.VpcPeeringConnectionOptionsDescription{
+							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
+							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
+							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
+						},
+					),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing.T) {
 	var providers []*schema.Provider
-	rName := fmt.Sprintf("tf-testacc-pcxopts-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_vpc_peering_connection_options.test"         // Requester
 	resourceNamePeer := "aws_vpc_peering_connection_options.peer"     // Accepter
 	pcxResourceName := "aws_vpc_peering_connection.test"              // Requester
@@ -205,7 +242,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 
 func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T) {
 	var providers []*schema.Provider
-	rName := fmt.Sprintf("tf-testacc-pcxopts-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_vpc_peering_connection_options.test"     // Requester
 	resourceNamePeer := "aws_vpc_peering_connection_options.peer" // Accepter
 	pcxResourceName := "aws_vpc_peering_connection.test"          // Requester
@@ -264,7 +301,7 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 	})
 }
 
-func testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName string) string {
+func testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName string, accepterDnsResolution, requesterRemoteClassicLink bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -297,15 +334,15 @@ resource "aws_vpc_peering_connection_options" "test" {
   vpc_peering_connection_id = aws_vpc_peering_connection.test.id
 
   accepter {
-    allow_remote_vpc_dns_resolution = true
+    allow_remote_vpc_dns_resolution = %[2]t
   }
 
   requester {
-    allow_vpc_to_remote_classic_link = true
+    allow_vpc_to_remote_classic_link = %[3]t
     allow_classic_link_to_remote_vpc = true
   }
 }
-`, rName)
+`, rName, accepterDnsResolution, requesterRemoteClassicLink)
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string, dnsResolution, dnsResolutionPeer bool) string {
