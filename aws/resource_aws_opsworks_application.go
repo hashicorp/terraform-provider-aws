@@ -293,8 +293,14 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 	d.Set("description", app.Description)
 	d.Set("domains", flattenStringList(app.Domains))
 	d.Set("enable_ssl", app.EnableSsl)
-	resourceAwsOpsworksSetApplicationSsl(d, app.SslConfiguration)
-	resourceAwsOpsworksSetApplicationSource(d, app.AppSource)
+	err = resourceAwsOpsworksSetApplicationSsl(d, app.SslConfiguration)
+	if err != nil {
+		return err
+	}
+	err = resourceAwsOpsworksSetApplicationSource(d, app.AppSource)
+	if err != nil {
+		return err
+	}
 	resourceAwsOpsworksSetApplicationDataSources(d, app.DataSources)
 	resourceAwsOpsworksSetApplicationEnvironmentVariable(d, app.Environment)
 	resourceAwsOpsworksSetApplicationAttributes(d, app.Attributes)
@@ -381,37 +387,42 @@ func resourceAwsOpsworksApplicationDelete(d *schema.ResourceData, meta interface
 	return err
 }
 
-func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData, v []*opsworks.EnvironmentVariable) {
-	log.Printf("[DEBUG] envs: %s %d", v, len(v))
-	if len(v) == 0 {
+func resourceAwsOpsworksFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVariable) *opsworks.EnvironmentVariable {
+	for _, v := range vs {
+		if aws.StringValue(v.Key) == key {
+			return v
+		}
+	}
+	return nil
+}
+
+func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
+	if len(vs) == 0 {
 		d.Set("environment", nil)
 		return
 	}
-	newValue := make([]*map[string]interface{}, len(v))
 
-	for i := 0; i < len(v); i++ {
-		config := v[i]
-		data := make(map[string]interface{})
-		newValue[i] = &data
+	// sensitive variables are returned obfuscated from the API, this creates a
+	// permadiff between the obfuscated API response and the config value. We
+	// start with the existing state so it can passthrough when the key is secure
+	values := d.Get("environment").(*schema.Set).List()
 
-		if config.Key != nil {
-			data["key"] = *config.Key
-		}
-		if config.Value != nil {
-			data["value"] = *config.Value
-		}
-		if config.Secure != nil {
-
-			if aws.BoolValue(config.Secure) {
-				data["secure"] = &opsworksTrueString
-			} else {
-				data["secure"] = &opsworksFalseString
+	for i := 0; i < len(values); i++ {
+		value := values[i].(map[string]interface{})
+		if v := resourceAwsOpsworksFindEnvironmentVariable(value["key"].(string), vs); v != nil {
+			if !aws.BoolValue(v.Secure) {
+				value["secure"] = aws.BoolValue(v.Secure)
+				value["key"] = aws.StringValue(v.Key)
+				value["value"] = aws.StringValue(v.Value)
+				values[i] = value
 			}
+		} else {
+			// delete if not found in API response
+			values = append(values[:i], values[i+1:]...)
 		}
-		log.Printf("[DEBUG] v: %s", data)
 	}
 
-	d.Set("environment", newValue)
+	d.Set("environment", values)
 }
 
 func resourceAwsOpsworksApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
@@ -446,7 +457,7 @@ func resourceAwsOpsworksApplicationSource(d *schema.ResourceData) *opsworks.Sour
 	}
 }
 
-func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) {
+func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
 	if v != nil {
 		m := make(map[string]interface{})
@@ -475,8 +486,9 @@ func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks
 	err := d.Set("app_source", nv)
 	if err != nil {
 		// should never happen
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func resourceAwsOpsworksApplicationDataSources(d *schema.ResourceData) []*opsworks.DataSource {
@@ -523,7 +535,7 @@ func resourceAwsOpsworksApplicationSsl(d *schema.ResourceData) *opsworks.SslConf
 	}
 }
 
-func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.SslConfiguration) {
+func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.SslConfiguration) error {
 	nv := make([]interface{}, 0, 1)
 	set := false
 	if v != nil {
@@ -548,8 +560,9 @@ func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.Ss
 	err := d.Set("ssl_configuration", nv)
 	if err != nil {
 		// should never happen
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func resourceAwsOpsworksApplicationAttributes(d *schema.ResourceData) map[string]*string {

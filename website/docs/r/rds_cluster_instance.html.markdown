@@ -29,8 +29,10 @@ For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amaz
 resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
-  cluster_identifier = "${aws_rds_cluster.default.id}"
+  cluster_identifier = aws_rds_cluster.default.id
   instance_class     = "db.r4.large"
+  engine             = aws_rds_cluster.default.engine
+  engine_version     = aws_rds_cluster.default.engine_version
 }
 
 resource "aws_rds_cluster" "default" {
@@ -81,7 +83,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
 * `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
-* `tags` - (Optional) A mapping of tags to assign to the instance.
+* `tags` - (Optional) A map of tags to assign to the instance.
 
 ## Attributes Reference
 

@@ -105,6 +105,7 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 
 func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).licensemanagerconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetLicenseConfiguration(&licensemanager.GetLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
@@ -128,7 +129,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 	}
 	d.Set("name", resp.Name)
 
-	if err := d.Set("tags", keyvaluetags.LicensemanagerKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.LicensemanagerKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

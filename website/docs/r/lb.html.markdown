@@ -21,13 +21,13 @@ resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = ["${aws_security_group.lb_sg.id}"]
-  subnets            = ["${aws_subnet.public.*.id}"]
+  security_groups    = [aws_security_group.lb_sg.id]
+  subnets            = [aws_subnet.public.*.id]
 
   enable_deletion_protection = true
 
   access_logs {
-    bucket  = "${aws_s3_bucket.lb_logs.bucket}"
+    bucket  = aws_s3_bucket.lb_logs.bucket
     prefix  = "test-lb"
     enabled = true
   }
@@ -45,7 +45,7 @@ resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "network"
-  subnets            = ["${aws_subnet.public.*.id}"]
+  subnets            = [aws_subnet.public.*.id]
 
   enable_deletion_protection = true
 
@@ -63,13 +63,32 @@ resource "aws_lb" "example" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id     = "${aws_subnet.example1.id}"
-    allocation_id = "${aws_eip.example1.id}"
+    subnet_id     = aws_subnet.example1.id
+    allocation_id = aws_eip.example1.id
   }
 
   subnet_mapping {
-    subnet_id     = "${aws_subnet.example2.id}"
-    allocation_id = "${aws_eip.example2.id}"
+    subnet_id     = aws_subnet.example2.id
+    allocation_id = aws_eip.example2.id
+  }
+}
+```
+
+### Specifying private IP addresses for an internal-facing load balancer
+
+```hcl
+resource "aws_lb" "example" {
+  name               = "example"
+  load_balancer_type = "network"
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.example1.id}"
+    private_ipv4_address = "10.0.1.15"
+  }
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.example2.id}"
+    private_ipv4_address = "10.0.2.15"
   }
 }
 ```
@@ -102,7 +121,7 @@ for load balancers of type `network` will force a recreation of the resource.
    This is a `network` load balancer feature. Defaults to `false`.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Access Logs (`access_logs`) support the following:
 
@@ -114,6 +133,7 @@ Subnet Mapping (`subnet_mapping`) blocks support the following:
 
 * `subnet_id` - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
 * `allocation_id` - (Optional) The allocation ID of the Elastic IP address.
+* `private_ipv4_address` - (Optional) A private ipv4 address within the subnet to assign to the internal-facing load balancer.
 
 ## Attributes Reference
 

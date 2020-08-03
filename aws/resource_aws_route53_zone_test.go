@@ -48,6 +48,23 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
+func TestTrimTrailingPeriod(t *testing.T) {
+	cases := []struct {
+		Input, Output string
+	}{
+		{"example.com", "example.com"},
+		{"example.com.", "example.com"},
+		{"www.example.com.", "www.example.com"},
+	}
+
+	for _, tc := range cases {
+		actual := trimTrailingPeriod(tc.Input)
+		if actual != tc.Output {
+			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		}
+	}
+}
+
 func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 
@@ -64,7 +81,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists(resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s.", zoneName)),
+					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
@@ -554,7 +571,7 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 			return fmt.Errorf("Empty name in HostedZone for domain %s", domain)
 		}
 
-		if *zone.HostedZone.Name == domain {
+		if aws.StringValue(zone.HostedZone.Name) == domain {
 			return nil
 		}
 
@@ -570,13 +587,13 @@ resource "aws_route53_zone" "test" {
 }
 
 func testAccRoute53ZoneConfigMultiple() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_route53_zone" "test" {
   count = 5
 
   name = "subdomain${count.index}.terraformtest.com"
 }
-`)
+`
 }
 
 func testAccRoute53ZoneConfigComment(zoneName, comment string) string {

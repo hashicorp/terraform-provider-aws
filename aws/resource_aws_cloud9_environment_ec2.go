@@ -148,6 +148,7 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 
 func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloud9conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Cloud9 Environment EC2 %s", d.Id())
 
@@ -182,7 +183,7 @@ func resourceAwsCloud9EnvironmentEc2Read(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for Cloud9 EC2 Environment (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

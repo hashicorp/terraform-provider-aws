@@ -115,6 +115,12 @@ func resourceAwsLb() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"private_ipv4_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv4Address,
+						},
 					},
 				},
 				Set: func(v interface{}) int {
@@ -123,6 +129,9 @@ func resourceAwsLb() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
 					if m["allocation_id"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
+					}
+					if m["private_ipv4_address"] != "" {
+						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
 					}
 					return hashcode.String(buf.String())
 				},
@@ -275,6 +284,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 			if subnetMap["allocation_id"].(string) != "" {
 				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
+			}
+
+			if subnetMap["private_ipv4_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
 			}
 		}
 	}
@@ -689,6 +702,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
+			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
 		}
 
 		l = append(l, m)
@@ -713,6 +727,7 @@ func lbSuffixFromARN(arn *string) string {
 // flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
@@ -739,7 +754,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error listing tags for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

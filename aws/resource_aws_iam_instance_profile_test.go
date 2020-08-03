@@ -37,32 +37,6 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
-	var conf iam.GetInstanceProfileOutput
-	resourceName := "aws_iam_instance_profile.test"
-
-	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSInstanceProfileWithRoleSpecified(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
-			},
-		},
-	})
-}
-
 func TestAccAWSIAMInstanceProfile_withoutRole(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
@@ -195,8 +169,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name  = "test"
-  roles = ["${aws_iam_role.test.name}"]
+  name = "test-%[1]s"
+  role = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -218,21 +192,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_instance_profile" "test" {
   name_prefix = "test-"
-  roles       = ["${aws_iam_role.test.name}"]
-}
-`, rName)
-}
-
-func testAccAWSInstanceProfileWithRoleSpecified(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = "test-%s"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name_prefix = "test-"
-  role        = "${aws_iam_role.test.name}"
+  role        = aws_iam_role.test.name
 }
 `, rName)
 }

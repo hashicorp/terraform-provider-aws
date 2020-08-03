@@ -18,8 +18,8 @@ detach volumes from AWS Instances.
 ```hcl
 resource "aws_volume_attachment" "ebs_att" {
   device_name = "/dev/sdh"
-  volume_id   = "${aws_ebs_volume.example.id}"
-  instance_id = "${aws_instance.web.id}"
+  volume_id   = aws_ebs_volume.example.id
+  instance_id = aws_instance.web.id
 }
 
 resource "aws_instance" "web" {
@@ -61,6 +61,15 @@ means attached.
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance
 * `volume_id` - ID of the Volume
+
+## Import
+
+EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`, e.g.
+
+```
+$ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
+```
+
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
 [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names

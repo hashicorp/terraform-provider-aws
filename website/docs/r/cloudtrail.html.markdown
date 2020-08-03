@@ -26,7 +26,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
-  s3_bucket_name                = "${aws_s3_bucket.foo.id}"
+  s3_bucket_name                = aws_s3_bucket.foo.id
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
 }
@@ -70,7 +70,7 @@ POLICY
 
 ### Data Event Logging
 
-CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-management-and-data-events-with-cloudtrail.html#logging-data-events) for certain services such as S3 bucket objects and Lambda function invocations. Additional information about data event configuration can be found in the [CloudTrail API DataResource documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DataResource.html).
+CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html) for certain services such as S3 bucket objects and Lambda function invocations. Additional information about data event configuration can be found in the [CloudTrail API DataResource documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DataResource.html).
 
 #### Logging All Lambda Function Invocations
 
@@ -158,7 +158,7 @@ The following arguments are supported:
     Defaults to `false`.
 * `kms_key_id` - (Optional) Specifies the KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `event_selector` - (Optional) Specifies an event selector for enabling data event logging. Fields documented below. Please note the [CloudTrail limits](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/WhatIsCloudTrail-Limits.html) when configuring these.
-* `tags` - (Optional) A mapping of tags to assign to the trail
+* `tags` - (Optional) A map of tags to assign to the trail
 
 ### Event Selector Arguments
 For **event_selector** the following attributes are supported.

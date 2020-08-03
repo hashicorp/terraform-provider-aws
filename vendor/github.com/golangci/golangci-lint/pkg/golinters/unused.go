@@ -33,7 +33,7 @@ func NewUnused() *goanalysis.Linter {
 		for _, ur := range u.Result() {
 			p := u.ProblemObject(lintCtx.Packages[0].Fset, ur)
 			pkg := typesToPkg[ur.Pkg()]
-			issues = append(issues, goanalysis.NewIssue(&result.Issue{ //nolint:scopelint
+			i := &result.Issue{
 				FromLinter: name,
 				Text:       p.Message,
 				Pos:        p.Pos,
@@ -42,15 +42,23 @@ func NewUnused() *goanalysis.Linter {
 					From: p.Pos.Line,
 					To:   p.End.Line,
 				},
-				Replacement: &result.Replacement{
+			}
+			// See https://github.com/golangci/golangci-lint/issues/1048
+			// If range is invalid, this will break `--fix` mode.
+			if i.LineRange.To >= i.LineRange.From {
+				i.Replacement = &result.Replacement{
 					// Suggest deleting unused stuff.
 					NeedOnlyDelete: true,
-				},
-			}, nil))
+				}
+			}
+			issues = append(issues, goanalysis.NewIssue(i, nil))
 		}
 		return issues
 	}).WithContextSetter(func(lintCtx *linter.Context) {
-		u.WholeProgram = lintCtx.Settings().Unused.CheckExported
+		if lintCtx.Settings().Unused.CheckExported {
+			lintCtx.Log.Infof("Using whole program analysis for unused, it can be memory-heavy")
+			u.WholeProgram = true
+		}
 	}).WithLoadMode(goanalysis.LoadModeWholeProgram)
 	lnt.UseOriginalPackages()
 	return lnt

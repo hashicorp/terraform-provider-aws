@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
@@ -49,6 +48,28 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.bar"),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppautoScalingTarget_disappears(t *testing.T) {
+	var target applicationautoscaling.ScalableTarget
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appautoscaling_target.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingTargetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingTargetExists(resourceName, &target),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppautoscalingTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -149,8 +170,6 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
-	r, _ := regexp.Compile("arn:aws:iam::.*:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -160,7 +179,8 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 				Config: testAccAWSAppautoscalingTarget_optionalRoleArn(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingTargetExists("aws_appautoscaling_target.read", &readTarget),
-					resource.TestMatchResourceAttr("aws_appautoscaling_target.read", "role_arn", r),
+					testAccCheckResourceAttrGlobalARN("aws_appautoscaling_target.read", "role_arn", "iam",
+						"role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
 				),
 			},
 		},
@@ -324,8 +344,8 @@ func testAccAWSAppautoscalingTargetEmrClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type m3.xlarge is not supported in the requested availability zone.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -347,9 +367,14 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
-  core_instance_count  = 2
+  master_instance_group {
+    instance_type = "m3.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 2
+    instance_type  = "m3.xlarge"
+  }
 
   tags = {
     role     = "rolename"
@@ -563,8 +588,8 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  name = "emr_profile_%d"
+  role = aws_iam_role.iam_emr_profile_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {

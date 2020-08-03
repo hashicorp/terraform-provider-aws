@@ -9,9 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAWSEcrDataSource_ecrRepository(t *testing.T) {
+func TestAccAWSEcrRepositoryDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "data.aws_ecr_repository.default"
+	resourceName := "aws_ecr_repository.test"
+	dataSourceName := "data.aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -20,20 +21,41 @@ func TestAccAWSEcrDataSource_ecrRepository(t *testing.T) {
 			{
 				Config: testAccCheckAwsEcrRepositoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:ecr:[a-zA-Z]+-[a-zA-Z]+-\d+:\d+:repository/tf-acc-test-\d+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "registry_id"),
-					resource.TestMatchResourceAttr(resourceName, "repository_url", regexp.MustCompile(`^\d+\.dkr\.ecr\.[a-zA-Z]+-[a-zA-Z]+-\d+\.amazonaws\.com/tf-acc-test-\d+$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "repository_url", dataSourceName, "repository_url"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, "image_scanning_configuration.#", dataSourceName, "image_scanning_configuration.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "image_tag_mutability", dataSourceName, "image_tag_mutability"),
 				),
 			},
 		},
 	})
 }
 
+func TestAccAWSEcrRepositoryDataSource_nonExistent(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCheckAwsEcrRepositoryDataSourceConfig_NonExistent,
+				ExpectError: regexp.MustCompile(`not found`),
+			},
+		},
+	})
+}
+
+const testAccCheckAwsEcrRepositoryDataSourceConfig_NonExistent = `
+data "aws_ecr_repository" "test" {
+  name = "tf-acc-test-non-existent"
+}
+`
+
 func testAccCheckAwsEcrRepositoryDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecr_repository" "default" {
+resource "aws_ecr_repository" "test" {
   name = %q
 
   tags = {
@@ -42,8 +64,8 @@ resource "aws_ecr_repository" "default" {
   }
 }
 
-data "aws_ecr_repository" "default" {
-  name = "${aws_ecr_repository.default.name}"
+data "aws_ecr_repository" "test" {
+  name = aws_ecr_repository.test.name
 }
 `, rName)
 }

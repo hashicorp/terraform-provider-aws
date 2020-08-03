@@ -758,6 +758,103 @@ func (c *Kafka) GetBootstrapBrokersWithContext(ctx aws.Context, input *GetBootst
 	return out, req.Send()
 }
 
+const opGetCompatibleKafkaVersions = "GetCompatibleKafkaVersions"
+
+// GetCompatibleKafkaVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the GetCompatibleKafkaVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCompatibleKafkaVersions for more information on using the GetCompatibleKafkaVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCompatibleKafkaVersionsRequest method.
+//    req, resp := client.GetCompatibleKafkaVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/GetCompatibleKafkaVersions
+func (c *Kafka) GetCompatibleKafkaVersionsRequest(input *GetCompatibleKafkaVersionsInput) (req *request.Request, output *GetCompatibleKafkaVersionsOutput) {
+	op := &request.Operation{
+		Name:       opGetCompatibleKafkaVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/compatible-kafka-versions",
+	}
+
+	if input == nil {
+		input = &GetCompatibleKafkaVersionsInput{}
+	}
+
+	output = &GetCompatibleKafkaVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCompatibleKafkaVersions API operation for Managed Streaming for Kafka.
+//
+// Gets the Apache Kafka versions to which you can update the MSK cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation GetCompatibleKafkaVersions for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/GetCompatibleKafkaVersions
+func (c *Kafka) GetCompatibleKafkaVersions(input *GetCompatibleKafkaVersionsInput) (*GetCompatibleKafkaVersionsOutput, error) {
+	req, out := c.GetCompatibleKafkaVersionsRequest(input)
+	return out, req.Send()
+}
+
+// GetCompatibleKafkaVersionsWithContext is the same as GetCompatibleKafkaVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCompatibleKafkaVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) GetCompatibleKafkaVersionsWithContext(ctx aws.Context, input *GetCompatibleKafkaVersionsInput, opts ...request.Option) (*GetCompatibleKafkaVersionsOutput, error) {
+	req, out := c.GetCompatibleKafkaVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListClusterOperations = "ListClusterOperations"
 
 // ListClusterOperationsRequest generates a "aws/request.Request" representing the
@@ -2180,6 +2277,103 @@ func (c *Kafka) UpdateClusterConfigurationWithContext(ctx aws.Context, input *Up
 	return out, req.Send()
 }
 
+const opUpdateClusterKafkaVersion = "UpdateClusterKafkaVersion"
+
+// UpdateClusterKafkaVersionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateClusterKafkaVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateClusterKafkaVersion for more information on using the UpdateClusterKafkaVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateClusterKafkaVersionRequest method.
+//    req, resp := client.UpdateClusterKafkaVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateClusterKafkaVersion
+func (c *Kafka) UpdateClusterKafkaVersionRequest(input *UpdateClusterKafkaVersionInput) (req *request.Request, output *UpdateClusterKafkaVersionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateClusterKafkaVersion,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/version",
+	}
+
+	if input == nil {
+		input = &UpdateClusterKafkaVersionInput{}
+	}
+
+	output = &UpdateClusterKafkaVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateClusterKafkaVersion API operation for Managed Streaming for Kafka.
+//
+// Updates the Apache Kafka version for the cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateClusterKafkaVersion for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateClusterKafkaVersion
+func (c *Kafka) UpdateClusterKafkaVersion(input *UpdateClusterKafkaVersionInput) (*UpdateClusterKafkaVersionOutput, error) {
+	req, out := c.UpdateClusterKafkaVersionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateClusterKafkaVersionWithContext is the same as UpdateClusterKafkaVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateClusterKafkaVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateClusterKafkaVersionWithContext(ctx aws.Context, input *UpdateClusterKafkaVersionInput, opts ...request.Option) (*UpdateClusterKafkaVersionOutput, error) {
+	req, out := c.UpdateClusterKafkaVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateMonitoring = "UpdateMonitoring"
 
 // UpdateMonitoringRequest generates a "aws/request.Request" representing the
@@ -2275,8 +2469,8 @@ func (c *Kafka) UpdateMonitoringWithContext(ctx aws.Context, input *UpdateMonito
 
 // Returns information about an error.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -2295,17 +2489,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2313,22 +2507,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies the EBS volume upgrade information. The broker identifier must
@@ -2930,6 +3124,9 @@ type ClusterOperationInfo struct {
 	// State of the cluster operation.
 	OperationState *string `locationName:"operationState" type:"string"`
 
+	// Steps completed during the operation.
+	OperationSteps []*ClusterOperationStep `locationName:"operationSteps" type:"list"`
+
 	// Type of the cluster operation.
 	OperationType *string `locationName:"operationType" type:"string"`
 
@@ -2992,6 +3189,12 @@ func (s *ClusterOperationInfo) SetOperationState(v string) *ClusterOperationInfo
 	return s
 }
 
+// SetOperationSteps sets the OperationSteps field's value.
+func (s *ClusterOperationInfo) SetOperationSteps(v []*ClusterOperationStep) *ClusterOperationInfo {
+	s.OperationSteps = v
+	return s
+}
+
 // SetOperationType sets the OperationType field's value.
 func (s *ClusterOperationInfo) SetOperationType(v string) *ClusterOperationInfo {
 	s.OperationType = &v
@@ -3007,6 +3210,94 @@ func (s *ClusterOperationInfo) SetSourceClusterInfo(v *MutableClusterInfo) *Clus
 // SetTargetClusterInfo sets the TargetClusterInfo field's value.
 func (s *ClusterOperationInfo) SetTargetClusterInfo(v *MutableClusterInfo) *ClusterOperationInfo {
 	s.TargetClusterInfo = v
+	return s
+}
+
+// Step taken during a cluster operation.
+type ClusterOperationStep struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the step and its status.
+	StepInfo *ClusterOperationStepInfo `locationName:"stepInfo" type:"structure"`
+
+	// The name of the step.
+	StepName *string `locationName:"stepName" type:"string"`
+}
+
+// String returns the string representation
+func (s ClusterOperationStep) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterOperationStep) GoString() string {
+	return s.String()
+}
+
+// SetStepInfo sets the StepInfo field's value.
+func (s *ClusterOperationStep) SetStepInfo(v *ClusterOperationStepInfo) *ClusterOperationStep {
+	s.StepInfo = v
+	return s
+}
+
+// SetStepName sets the StepName field's value.
+func (s *ClusterOperationStep) SetStepName(v string) *ClusterOperationStep {
+	s.StepName = &v
+	return s
+}
+
+// State information about the operation step.
+type ClusterOperationStepInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The steps current status.
+	StepStatus *string `locationName:"stepStatus" type:"string"`
+}
+
+// String returns the string representation
+func (s ClusterOperationStepInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterOperationStepInfo) GoString() string {
+	return s.String()
+}
+
+// SetStepStatus sets the StepStatus field's value.
+func (s *ClusterOperationStepInfo) SetStepStatus(v string) *ClusterOperationStepInfo {
+	s.StepStatus = &v
+	return s
+}
+
+// Contains source Kafka versions and compatible target Kafka versions.
+type CompatibleKafkaVersion struct {
+	_ struct{} `type:"structure"`
+
+	SourceVersion *string `locationName:"sourceVersion" type:"string"`
+
+	TargetVersions []*string `locationName:"targetVersions" type:"list"`
+}
+
+// String returns the string representation
+func (s CompatibleKafkaVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CompatibleKafkaVersion) GoString() string {
+	return s.String()
+}
+
+// SetSourceVersion sets the SourceVersion field's value.
+func (s *CompatibleKafkaVersion) SetSourceVersion(v string) *CompatibleKafkaVersion {
+	s.SourceVersion = &v
+	return s
+}
+
+// SetTargetVersions sets the TargetVersions field's value.
+func (s *CompatibleKafkaVersion) SetTargetVersions(v []*string) *CompatibleKafkaVersion {
+	s.TargetVersions = v
 	return s
 }
 
@@ -3193,8 +3484,8 @@ func (s *ConfigurationRevision) SetRevision(v int64) *ConfigurationRevision {
 
 // Returns information about an error.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -3213,17 +3504,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3231,22 +3522,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Creates a cluster.
@@ -3478,9 +3769,7 @@ type CreateConfigurationInput struct {
 	Description *string `locationName:"description" type:"string"`
 
 	// The versions of Apache Kafka with which you can use this MSK configuration.
-	//
-	// KafkaVersions is a required field
-	KafkaVersions []*string `locationName:"kafkaVersions" type:"list" required:"true"`
+	KafkaVersions []*string `locationName:"kafkaVersions" type:"list"`
 
 	// The name of the configuration. Configuration names are strings that match
 	// the regex "^[0-9A-Za-z-]+$".
@@ -3507,9 +3796,6 @@ func (s CreateConfigurationInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateConfigurationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateConfigurationInput"}
-	if s.KafkaVersions == nil {
-		invalidParams.Add(request.NewErrParamRequired("KafkaVersions"))
-	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -4286,8 +4572,8 @@ func (s *Firehose) SetEnabled(v bool) *Firehose {
 
 // Returns information about an error.
 type ForbiddenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -4306,17 +4592,17 @@ func (s ForbiddenException) GoString() string {
 
 func newErrorForbiddenException(v protocol.ResponseMetadata) error {
 	return &ForbiddenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ForbiddenException) Code() string {
+func (s *ForbiddenException) Code() string {
 	return "ForbiddenException"
 }
 
 // Message returns the exception's message.
-func (s ForbiddenException) Message() string {
+func (s *ForbiddenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4324,22 +4610,22 @@ func (s ForbiddenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ForbiddenException) OrigErr() error {
+func (s *ForbiddenException) OrigErr() error {
 	return nil
 }
 
-func (s ForbiddenException) Error() string {
+func (s *ForbiddenException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ForbiddenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ForbiddenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ForbiddenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ForbiddenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type GetBootstrapBrokersInput struct {
@@ -4416,10 +4702,56 @@ func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerStringTls(v string) *GetBo
 	return s
 }
 
+type GetCompatibleKafkaVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	ClusterArn *string `location:"querystring" locationName:"clusterArn" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCompatibleKafkaVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCompatibleKafkaVersionsInput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *GetCompatibleKafkaVersionsInput) SetClusterArn(v string) *GetCompatibleKafkaVersionsInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// Response body for GetCompatibleKafkaVersions.
+type GetCompatibleKafkaVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of CompatibleKafkaVersion objects.
+	CompatibleKafkaVersions []*CompatibleKafkaVersion `locationName:"compatibleKafkaVersions" type:"list"`
+}
+
+// String returns the string representation
+func (s GetCompatibleKafkaVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCompatibleKafkaVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleKafkaVersions sets the CompatibleKafkaVersions field's value.
+func (s *GetCompatibleKafkaVersionsOutput) SetCompatibleKafkaVersions(v []*CompatibleKafkaVersion) *GetCompatibleKafkaVersionsOutput {
+	s.CompatibleKafkaVersions = v
+	return s
+}
+
 // Returns information about an error.
 type InternalServerErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -4438,17 +4770,17 @@ func (s InternalServerErrorException) GoString() string {
 
 func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServerErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerErrorException) Code() string {
+func (s *InternalServerErrorException) Code() string {
 	return "InternalServerErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerErrorException) Message() string {
+func (s *InternalServerErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4456,22 +4788,22 @@ func (s InternalServerErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerErrorException) OrigErr() error {
+func (s *InternalServerErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerErrorException) Error() string {
+func (s *InternalServerErrorException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Indicates whether you want to enable or disable the JMX Exporter.
@@ -5216,6 +5548,8 @@ type MutableClusterInfo struct {
 	// CloudWatch for this cluster.
 	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
 
+	KafkaVersion *string `locationName:"kafkaVersion" type:"string"`
+
 	// LoggingInfo details.
 	LoggingInfo *LoggingInfo `locationName:"loggingInfo" type:"structure"`
 
@@ -5251,6 +5585,12 @@ func (s *MutableClusterInfo) SetConfigurationInfo(v *ConfigurationInfo) *Mutable
 // SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
 func (s *MutableClusterInfo) SetEnhancedMonitoring(v string) *MutableClusterInfo {
 	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetKafkaVersion sets the KafkaVersion field's value.
+func (s *MutableClusterInfo) SetKafkaVersion(v string) *MutableClusterInfo {
+	s.KafkaVersion = &v
 	return s
 }
 
@@ -5408,8 +5748,8 @@ func (s *NodeInfo) SetZookeeperNodeInfo(v *ZookeeperNodeInfo) *NodeInfo {
 
 // Returns information about an error.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -5428,17 +5768,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5446,22 +5786,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // JMX and Node monitoring for the MSK cluster.
@@ -5679,8 +6019,8 @@ func (s *S3) SetPrefix(v string) *S3 {
 
 // Returns information about an error.
 type ServiceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -5699,17 +6039,17 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableException) Code() string {
+func (s *ServiceUnavailableException) Code() string {
 	return "ServiceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableException) Message() string {
+func (s *ServiceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5717,22 +6057,22 @@ func (s ServiceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableException) OrigErr() error {
+func (s *ServiceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableException) Error() string {
+func (s *ServiceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains information about storage volumes attached to MSK broker nodes.
@@ -5868,8 +6208,8 @@ func (s *Tls) SetCertificateAuthorityArnList(v []*string) *Tls {
 
 // Returns information about an error.
 type TooManyRequestsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -5888,17 +6228,17 @@ func (s TooManyRequestsException) GoString() string {
 
 func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
 	return &TooManyRequestsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyRequestsException) Code() string {
+func (s *TooManyRequestsException) Code() string {
 	return "TooManyRequestsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyRequestsException) Message() string {
+func (s *TooManyRequestsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5906,28 +6246,28 @@ func (s TooManyRequestsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyRequestsException) OrigErr() error {
+func (s *TooManyRequestsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyRequestsException) Error() string {
+func (s *TooManyRequestsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyRequestsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyRequestsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Returns information about an error.
 type UnauthorizedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	InvalidParameter *string `locationName:"invalidParameter" type:"string"`
 
@@ -5946,17 +6286,17 @@ func (s UnauthorizedException) GoString() string {
 
 func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
 	return &UnauthorizedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnauthorizedException) Code() string {
+func (s *UnauthorizedException) Code() string {
 	return "UnauthorizedException"
 }
 
 // Message returns the exception's message.
-func (s UnauthorizedException) Message() string {
+func (s *UnauthorizedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5964,22 +6304,22 @@ func (s UnauthorizedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnauthorizedException) OrigErr() error {
+func (s *UnauthorizedException) OrigErr() error {
 	return nil
 }
 
-func (s UnauthorizedException) Error() string {
+func (s *UnauthorizedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnauthorizedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnauthorizedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnauthorizedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnauthorizedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -6372,6 +6712,121 @@ func (s *UpdateClusterConfigurationOutput) SetClusterArn(v string) *UpdateCluste
 
 // SetClusterOperationArn sets the ClusterOperationArn field's value.
 func (s *UpdateClusterConfigurationOutput) SetClusterOperationArn(v string) *UpdateClusterConfigurationOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
+// Request body for UpdateClusterKafkaVersion.
+type UpdateClusterKafkaVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// Specifies the configuration to use for the brokers.
+	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
+
+	// Current cluster version.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
+
+	// Target Kafka version.
+	//
+	// TargetKafkaVersion is a required field
+	TargetKafkaVersion *string `locationName:"targetKafkaVersion" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateClusterKafkaVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateClusterKafkaVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateClusterKafkaVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateClusterKafkaVersionInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.TargetKafkaVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetKafkaVersion"))
+	}
+	if s.ConfigurationInfo != nil {
+		if err := s.ConfigurationInfo.Validate(); err != nil {
+			invalidParams.AddNested("ConfigurationInfo", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateClusterKafkaVersionInput) SetClusterArn(v string) *UpdateClusterKafkaVersionInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetConfigurationInfo sets the ConfigurationInfo field's value.
+func (s *UpdateClusterKafkaVersionInput) SetConfigurationInfo(v *ConfigurationInfo) *UpdateClusterKafkaVersionInput {
+	s.ConfigurationInfo = v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateClusterKafkaVersionInput) SetCurrentVersion(v string) *UpdateClusterKafkaVersionInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetTargetKafkaVersion sets the TargetKafkaVersion field's value.
+func (s *UpdateClusterKafkaVersionInput) SetTargetKafkaVersion(v string) *UpdateClusterKafkaVersionInput {
+	s.TargetKafkaVersion = &v
+	return s
+}
+
+// Response body for UpdateClusterKafkaVersion.
+type UpdateClusterKafkaVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateClusterKafkaVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateClusterKafkaVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateClusterKafkaVersionOutput) SetClusterArn(v string) *UpdateClusterKafkaVersionOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *UpdateClusterKafkaVersionOutput) SetClusterOperationArn(v string) *UpdateClusterKafkaVersionOutput {
 	s.ClusterOperationArn = &v
 	return s
 }

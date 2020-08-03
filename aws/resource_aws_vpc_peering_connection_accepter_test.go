@@ -240,7 +240,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -263,7 +263,7 @@ resource "aws_vpc_peering_connection" "main" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
   auto_accept               = true
@@ -286,7 +286,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -296,7 +296,7 @@ resource "aws_vpc" "peer" {
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 // Requester's side of the connection.
@@ -314,7 +314,7 @@ resource "aws_vpc_peering_connection" "main" {
 
  // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
   auto_accept               = true
@@ -337,7 +337,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -347,7 +347,7 @@ resource "aws_vpc" "peer" {
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 // Requester's side of the connection.
@@ -365,7 +365,7 @@ resource "aws_vpc_peering_connection" "main" {
 
  // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
   auto_accept               = true

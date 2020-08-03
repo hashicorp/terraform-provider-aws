@@ -119,7 +119,7 @@ var completeEventCategoriesList = []string{
 
 var testAccCheckAwsDbEventCategoriesConfig_sourceType = `
 data "aws_db_event_categories" "example" {
-	source_type = "db-snapshot"
+  source_type = "db-snapshot"
 }
 `
 

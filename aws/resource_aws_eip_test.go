@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -278,6 +279,7 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 func TestAccAWSEIP_Instance_Reassociate(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -285,13 +287,13 @@ func TestAccAWSEIP_Instance_Reassociate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIP_Instance(),
+				Config: testAccAWSEIP_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
 			},
 			{
-				Config: testAccAWSEIP_Instance(),
+				Config: testAccAWSEIP_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
@@ -519,6 +521,33 @@ func testAccCheckAWSEIPDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigCustomerOwnedIpv4Pool(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexp.MustCompile(`^ipv4pool-coip-.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ip", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccCheckAWSEIPAttributes(conf *ec2.Address) resource.TestCheckFunc {
@@ -953,7 +982,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-  
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
 	tags = {
@@ -995,41 +1024,18 @@ resource "aws_eip" "test2" {
 }
 `
 
-func testAccAWSEIP_Instance() string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-data "aws_ec2_instance_type_offering" "available" {
-  filter {
-    name   = "instance-type"
-    values = ["t3.micro", "t2.micro"]
-  }
-
-  filter {
-    name   = "location"
-    values = [aws_subnet.test.availability_zone]
-  }
-
-  location_type            = "availability-zone"
-  preferred_instance_types = ["t3.micro", "t2.micro"]
-}
-
+func testAccAWSEIP_Instance(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
   instance = aws_instance.test.id
   vpc      = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -1039,7 +1045,7 @@ resource "aws_instance" "test" {
   subnet_id                   = aws_subnet.test.id
 
   tags = {
-    Name = "testAccAWSEIP_Instance"
+    Name = %[1]q
   }
 
   lifecycle {
@@ -1051,12 +1057,16 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-eip-disassociate"
+    Name = %[1]q
   }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -1064,7 +1074,7 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-eip-disassociate"
+    Name = %[1]q
   }
 }
 
@@ -1075,13 +1085,17 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table_association" "test" {
   subnet_id      = aws_subnet.test.id
   route_table_id = aws_route_table.test.id
 }
-`)
+`, rName))
 }
 
 const testAccAWSEIPAssociate_not_associated = `
@@ -1132,3 +1146,14 @@ resource "aws_eip" "test" {
 	instance = "${aws_instance.test.id}"
 }
 `
+
+func testAccAWSEIPConfigCustomerOwnedIpv4Pool() string {
+	return `
+data "aws_ec2_coip_pools" "test" {}
+
+resource "aws_eip" "test" {
+  customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
+  vpc                      = true
+}
+`
+}

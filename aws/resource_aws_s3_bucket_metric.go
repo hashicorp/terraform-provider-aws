@@ -36,10 +36,16 @@ func resourceAwsS3BucketMetric() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							AtLeastOneOf: filterAtLeastOneOfKeys,
 						},
-						"tags": tagsSchema(),
+						"tags": {
+							Type:         schema.TypeMap,
+							Optional:     true,
+							Elem:         &schema.Schema{Type: schema.TypeString},
+							AtLeastOneOf: filterAtLeastOneOfKeys,
+						},
 					},
 				},
 			},

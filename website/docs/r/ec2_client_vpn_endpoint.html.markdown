@@ -16,18 +16,18 @@ Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on
 ```hcl
 resource "aws_ec2_client_vpn_endpoint" "example" {
   description            = "terraform-clientvpn-example"
-  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  server_certificate_arn = aws_acm_certificate.cert.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.root_cert.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.root_cert.arn
   }
 
   connection_log_options {
     enabled               = true
-    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
-    cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
+    cloudwatch_log_group  = aws_cloudwatch_log_group.lg.name
+    cloudwatch_log_stream = aws_cloudwatch_log_stream.ls.name
   }
 }
 ```
@@ -45,6 +45,7 @@ The following arguments are supported:
 * `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
+
 
 ### `authentication_options` Argument Reference
 
@@ -67,6 +68,7 @@ One of the following arguments must be supplied:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Client VPN endpoint.
+* `arn` - The ARN of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
 * `status` - The current state of the Client VPN endpoint.
 

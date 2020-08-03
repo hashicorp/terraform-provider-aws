@@ -38,11 +38,11 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressRoute53ZoneNameWithTrailingDot,
-				ValidateFunc:     validation.StringLenBetween(1, 256),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+				StateFunc:    trimTrailingPeriod,
 			},
 
 			"rule_type": {
@@ -149,6 +149,7 @@ func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	ruleRaw, state, err := route53ResolverRuleRefresh(conn, d.Id())()
 	if err != nil {
@@ -162,7 +163,9 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 
 	rule := ruleRaw.(*route53resolver.ResolverRule)
 	d.Set("arn", rule.Arn)
-	d.Set("domain_name", rule.DomainName)
+	// To be consistent with other AWS services that do not accept a trailing period,
+	// we remove the suffix from the Domain Name returned from the API
+	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
 	d.Set("name", rule.Name)
 	d.Set("owner_id", rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
@@ -178,7 +181,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags for Route53 Resolver rule (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -188,7 +191,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	if d.HasChange("name") || d.HasChange("resolver_endpoint_id") || d.HasChange("target_ip") {
+	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
 		req := &route53resolver.UpdateResolverRuleInput{
 			ResolverRuleId: aws.String(d.Id()),
 			Config:         &route53resolver.ResolverRuleConfig{},

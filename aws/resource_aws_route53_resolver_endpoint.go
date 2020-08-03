@@ -139,6 +139,7 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 
 func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
 	if err != nil {
@@ -186,7 +187,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error listing tags for Route53 Resolver endpoint (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

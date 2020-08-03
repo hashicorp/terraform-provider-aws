@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -81,7 +82,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 				Config: testAccAWSEksClusterConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:eks:[^:]+:[^:]+:cluster/%s$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
 					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^https://`)),
@@ -90,7 +91,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "identity.0.oidc.0.issuer", regexp.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestMatchResourceAttr(resourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
-					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(fmt.Sprintf("%s$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", eks.ClusterStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile(`^\d+\.\d+$`)),
@@ -192,7 +193,7 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "api"),
 				),
 			},
 			{
@@ -206,8 +207,8 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2451111801", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "api"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "audit"),
 				),
 			},
 			// Disable all log types.

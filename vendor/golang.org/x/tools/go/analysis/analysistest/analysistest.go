@@ -2,7 +2,9 @@
 package analysistest
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
 	"go/token"
 	"go/types"
 	"io/ioutil"
@@ -18,7 +20,11 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/internal/checker"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/lsp/diff"
+	"golang.org/x/tools/internal/lsp/diff/myers"
+	"golang.org/x/tools/internal/span"
 	"golang.org/x/tools/internal/testenv"
+	"golang.org/x/tools/txtar"
 )
 
 // WriteFiles is a helper function that creates a temporary directory
@@ -59,6 +65,159 @@ var TestData = func() string {
 // Testing is an abstraction of a *testing.T.
 type Testing interface {
 	Errorf(format string, args ...interface{})
+}
+
+// RunWithSuggestedFixes behaves like Run, but additionally verifies suggested fixes.
+// It uses golden files placed alongside the source code under analysis:
+// suggested fixes for code in example.go will be compared against example.go.golden.
+//
+// Golden files can be formatted in one of two ways: as plain Go source code, or as txtar archives.
+// In the first case, all suggested fixes will be applied to the original source, which will then be compared against the golden file.
+// In the second case, suggested fixes will be grouped by their messages, and each set of fixes will be applied and tested separately.
+// Each section in the archive corresponds to a single message.
+//
+// A golden file using txtar may look like this:
+// 	-- turn into single negation --
+// 	package pkg
+//
+// 	func fn(b1, b2 bool) {
+// 		if !b1 { // want `negating a boolean twice`
+// 			println()
+// 		}
+// 	}
+//
+// 	-- remove double negation --
+// 	package pkg
+//
+// 	func fn(b1, b2 bool) {
+// 		if b1 { // want `negating a boolean twice`
+// 			println()
+// 		}
+// 	}
+func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns ...string) []*Result {
+	r := Run(t, dir, a, patterns...)
+
+	// file -> message -> edits
+	fileEdits := make(map[*token.File]map[string][]diff.TextEdit)
+	fileContents := make(map[*token.File][]byte)
+
+	// Validate edits, prepare the fileEdits map and read the file contents.
+	for _, act := range r {
+		for _, diag := range act.Diagnostics {
+			for _, sf := range diag.SuggestedFixes {
+				for _, edit := range sf.TextEdits {
+					// Validate the edit.
+					if edit.Pos > edit.End {
+						t.Errorf(
+							"diagnostic for analysis %v contains Suggested Fix with malformed edit: pos (%v) > end (%v)",
+							act.Pass.Analyzer.Name, edit.Pos, edit.End)
+						continue
+					}
+					file, endfile := act.Pass.Fset.File(edit.Pos), act.Pass.Fset.File(edit.End)
+					if file == nil || endfile == nil || file != endfile {
+						t.Errorf(
+							"diagnostic for analysis %v contains Suggested Fix with malformed spanning files %v and %v",
+							act.Pass.Analyzer.Name, file.Name(), endfile.Name())
+						continue
+					}
+					if _, ok := fileContents[file]; !ok {
+						contents, err := ioutil.ReadFile(file.Name())
+						if err != nil {
+							t.Errorf("error reading %s: %v", file.Name(), err)
+						}
+						fileContents[file] = contents
+					}
+					spn, err := span.NewRange(act.Pass.Fset, edit.Pos, edit.End).Span()
+					if err != nil {
+						t.Errorf("error converting edit to span %s: %v", file.Name(), err)
+					}
+
+					if _, ok := fileEdits[file]; !ok {
+						fileEdits[file] = make(map[string][]diff.TextEdit)
+					}
+					fileEdits[file][sf.Message] = append(fileEdits[file][sf.Message], diff.TextEdit{
+						Span:    spn,
+						NewText: string(edit.NewText),
+					})
+				}
+			}
+		}
+	}
+
+	for file, fixes := range fileEdits {
+		// Get the original file contents.
+		orig, ok := fileContents[file]
+		if !ok {
+			t.Errorf("could not find file contents for %s", file.Name())
+			continue
+		}
+
+		// Get the golden file and read the contents.
+		ar, err := txtar.ParseFile(file.Name() + ".golden")
+		if err != nil {
+			t.Errorf("error reading %s.golden: %v", file.Name(), err)
+			continue
+		}
+
+		if len(ar.Files) > 0 {
+			// one virtual file per kind of suggested fix
+
+			if len(ar.Comment) != 0 {
+				// we allow either just the comment, or just virtual
+				// files, not both. it is not clear how "both" should
+				// behave.
+				t.Errorf("%s.golden has leading comment; we don't know what to do with it", file.Name())
+				continue
+			}
+
+			for sf, edits := range fixes {
+				found := false
+				for _, vf := range ar.Files {
+					if vf.Name == sf {
+						found = true
+						out := diff.ApplyEdits(string(orig), edits)
+						// the file may contain multiple trailing
+						// newlines if the user places empty lines
+						// between files in the archive. normalize
+						// this to a single newline.
+						want := string(bytes.TrimRight(vf.Data, "\n")) + "\n"
+						formatted, err := format.Source([]byte(out))
+						if err != nil {
+							continue
+						}
+						if want != string(formatted) {
+							d := myers.ComputeEdits("", want, string(formatted))
+							t.Errorf("suggested fixes failed for %s:\n%s", file.Name(), diff.ToUnified(fmt.Sprintf("%s.golden [%s]", file.Name(), sf), "actual", want, d))
+						}
+						break
+					}
+				}
+				if !found {
+					t.Errorf("no section for suggested fix %q in %s.golden", sf, file.Name())
+				}
+			}
+		} else {
+			// all suggested fixes are represented by a single file
+
+			var catchallEdits []diff.TextEdit
+			for _, edits := range fixes {
+				catchallEdits = append(catchallEdits, edits...)
+			}
+
+			out := diff.ApplyEdits(string(orig), catchallEdits)
+			want := string(ar.Comment)
+
+			formatted, err := format.Source([]byte(out))
+			if err != nil {
+				continue
+			}
+			if want != string(formatted) {
+				d := myers.ComputeEdits("", want, string(formatted))
+				t.Errorf("suggested fixes failed for %s:\n%s", file.Name(), diff.ToUnified(file.Name()+".golden", "actual", want, d))
+			}
+		}
+	}
+	return r
 }
 
 // Run applies an analysis to the packages denoted by the "go list" patterns.

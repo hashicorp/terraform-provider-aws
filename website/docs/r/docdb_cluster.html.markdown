@@ -48,10 +48,11 @@ The following arguments are supported:
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that
   instances in the DB cluster can be created in.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
-* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
+* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
+* `deletion_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
@@ -69,7 +70,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
-* `tags` - (Optional) A mapping of tags to assign to the DB cluster.
+* `tags` - (Optional) A map of tags to assign to the DB cluster.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
 

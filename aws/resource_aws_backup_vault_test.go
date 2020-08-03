@@ -124,7 +124,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists(resourceName, &vault),
-					testAccCheckAwsBackupVaultDisappears(&vault),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,18 +177,6 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 	}
 }
 
-func testAccCheckAwsBackupVaultDisappears(vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
-		params := &backup.DeleteBackupVaultInput{
-			BackupVaultName: vault.BackupVaultName,
-		}
-		_, err := conn.DeleteBackupVault(params)
-
-		return err
-	}
-}
-
 func testAccPreCheckAWSBackup(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).backupconn
 
@@ -222,7 +210,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_backup_vault" "test" {
   name        = "tf_acc_test_backup_vault_%d"
-  kms_key_arn = "${aws_kms_key.test.arn}"
+  kms_key_arn = aws_kms_key.test.arn
 }
 `, randInt)
 }

@@ -43,6 +43,7 @@ func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsElasticBeanstalkEnvironmentCreate,
 		Read:   resourceAwsElasticBeanstalkEnvironmentRead,
@@ -493,6 +494,7 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 
 func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	envID := d.Id()
 
@@ -616,7 +618,7 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreElasticbeanstalk().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

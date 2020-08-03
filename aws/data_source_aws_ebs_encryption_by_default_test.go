@@ -53,5 +53,5 @@ func testAccCheckDataSourceAwsEBSEncryptionByDefault(n string) resource.TestChec
 }
 
 const testAccDataSourceAwsEBSEncryptionByDefaultConfig = `
-data "aws_ebs_encryption_by_default" "current" { }
+data "aws_ebs_encryption_by_default" "current" {}
 `

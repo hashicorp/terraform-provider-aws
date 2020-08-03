@@ -79,6 +79,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Default:  true,
 			},
 
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -145,13 +150,20 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(*resp.NetworkInterface.NetworkInterfaceId)
-	log.Printf("[INFO] ENI ID: %s", d.Id())
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
 	return resourceAwsNetworkInterfaceUpdate(d, meta)
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []*string{aws.String(d.Id())},
 	}
@@ -186,6 +198,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("private_ip", eni.PrivateIpAddress)
+	d.Set("outpost_arn", eni.OutpostArn)
 
 	if err := d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %s", err)
@@ -200,7 +213,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -404,7 +417,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {

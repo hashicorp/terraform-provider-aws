@@ -31,7 +31,7 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -47,6 +47,7 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 				ForceNew: true,
 				Default:  organizations.PolicyTypeServiceControlPolicy,
 				ValidateFunc: validation.StringInSlice([]string{
+					organizations.PolicyTypeBackupPolicy,
 					organizations.PolicyTypeServiceControlPolicy,
 					organizations.PolicyTypeTagPolicy,
 				}, false),
