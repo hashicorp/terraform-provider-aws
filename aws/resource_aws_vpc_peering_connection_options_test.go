@@ -102,7 +102,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName),
+				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(
@@ -111,12 +111,8 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "true",
 						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -135,12 +131,8 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "true",
 						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
@@ -156,10 +148,56 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 				),
 			},
 			{
-				Config:            testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName),
+				Config:            testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, true, true),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					// Requester's view:
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"requester.#",
+						"1",
+					),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "false",
+						"allow_classic_link_to_remote_vpc": "false",
+						"allow_vpc_to_remote_classic_link": "false",
+					}),
+					testAccCheckAWSVpcPeeringConnectionOptions(
+						pcxResourceName,
+						"requester",
+						&ec2.VpcPeeringConnectionOptionsDescription{
+							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
+							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
+							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
+						},
+					),
+					// Accepter's view:
+					resource.TestCheckResourceAttr(
+						resourceNamePeer,
+						"accepter.#",
+						"1",
+					),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
+						"allow_remote_vpc_dns_resolution":  "false",
+						"allow_classic_link_to_remote_vpc": "false",
+						"allow_vpc_to_remote_classic_link": "false",
+					}),
+					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
+						pcxResourceNamePeer,
+						"accepter",
+						&ec2.VpcPeeringConnectionOptionsDescription{
+							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
+							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
+							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
+						},
+						testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers),
+					),
+				),
 			},
 		},
 	})
@@ -270,8 +308,8 @@ resource "aws_vpc_peering_connection_options" "test" {
 `, rName)
 }
 
-func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string, dnsResolution, dnsResolutionPeer bool) string {
+	return composeConfig(testAccAlternateRegionProviderConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -323,7 +361,7 @@ resource "aws_vpc_peering_connection_options" "test" {
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   requester {
-    allow_remote_vpc_dns_resolution = true
+    allow_remote_vpc_dns_resolution = %[3]t
   }
 }
 
@@ -334,10 +372,10 @@ resource "aws_vpc_peering_connection_options" "peer" {
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   accepter {
-    allow_remote_vpc_dns_resolution = true
+    allow_remote_vpc_dns_resolution = %[4]t
   }
 }
-`, rName, testAccGetAlternateRegion())
+`, rName, testAccGetAlternateRegion(), dnsResolution, dnsResolutionPeer))
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName string) string {
