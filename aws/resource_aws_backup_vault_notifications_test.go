@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"log"
 	"testing"
 
@@ -25,6 +26,7 @@ func testSweepBackupVaultNotifications(region string) error {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).backupconn
+	var sweeperErrs *multierror.Error
 
 	input := &backup.ListBackupVaultsInput{}
 
@@ -35,7 +37,8 @@ func testSweepBackupVaultNotifications(region string) error {
 				log.Printf("[WARN] Skipping Backup Vault Notifications sweep for %s: %s", region, err)
 				return nil
 			}
-			return fmt.Errorf("Error retrieving Backup Vault Notifications: %w", err)
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Backup Vault Notifications: %w", err))
+			return sweeperErrs.ErrorOrNil()
 		}
 
 		if len(output.BackupVaultList) == 0 {
@@ -51,7 +54,10 @@ func testSweepBackupVaultNotifications(region string) error {
 				BackupVaultName: aws.String(name),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting Backup Vault Notifications %s: %w", name, err)
+				sweeperErr := fmt.Errorf("error deleting Backup Vault Notifications %s: %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
@@ -61,7 +67,7 @@ func testSweepBackupVaultNotifications(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsBackupVaultNotification_basic(t *testing.T) {

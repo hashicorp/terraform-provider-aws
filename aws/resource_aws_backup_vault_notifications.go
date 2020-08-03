@@ -106,7 +106,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	d.Set("sns_topic_arn", resp.SNSTopicArn)
 	d.Set("backup_vault_arn", resp.BackupVaultArn)
 	if err := d.Set("backup_vault_events", flattenStringSet(resp.BackupVaultEvents)); err != nil {
-	  return fmt.Errorf("error setting backup_vault_events: %w", err)
+		return fmt.Errorf("error setting backup_vault_events: %w", err)
 	}
 
 	return nil
