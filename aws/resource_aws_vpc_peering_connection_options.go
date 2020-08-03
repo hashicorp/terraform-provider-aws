@@ -87,13 +87,13 @@ func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta i
 			VpcPeeringConnectionId: aws.String(d.Id()),
 		}
 		if d.HasChange("accepter") {
-			req.AccepterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("accepter").(*schema.Set).List(), crossRegionPeering)
+			req.AccepterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("accepter").([]interface{}), crossRegionPeering)
 		}
 		if d.HasChange("requester") {
-			req.RequesterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("requester").(*schema.Set).List(), crossRegionPeering)
+			req.RequesterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("requester").([]interface{}), crossRegionPeering)
 		}
 
-		log.Printf("[DEBUG] Modifying VPC Peering Connection options: %#v", req)
+		log.Printf("[DEBUG] Modifying VPC Peering Connection options: %s", req)
 		if _, err := conn.ModifyVpcPeeringConnectionOptions(req); err != nil {
 			return fmt.Errorf("error modifying VPC Peering Connection (%s) Options: %s", d.Id(), err)
 		}

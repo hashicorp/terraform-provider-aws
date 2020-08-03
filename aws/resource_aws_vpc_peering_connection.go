@@ -232,7 +232,7 @@ func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error
 				req.RequesterPeeringConnectionOptions = expandVpcPeeringConnectionOptions(d.Get("requester").([]interface{}), crossRegionPeering)
 			}
 
-			log.Printf("[DEBUG] Modifying VPC Peering Connection options: %#v", req)
+			log.Printf("[DEBUG] Modifying VPC Peering Connection options: %s", req)
 			if _, err := conn.ModifyVpcPeeringConnectionOptions(req); err != nil {
 				return fmt.Errorf("error modifying VPC Peering Connection (%s) Options: %s", d.Id(), err)
 			}
