@@ -24,7 +24,7 @@ func init() {
 func testSweepDataSyncTasks(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).datasyncconn
 
@@ -38,7 +38,7 @@ func testSweepDataSyncTasks(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving DataSync Tasks: %s", err)
+			return fmt.Errorf("Error retrieving DataSync Tasks: %w", err)
 		}
 
 		if len(output.Tasks) == 0 {
@@ -56,7 +56,7 @@ func testSweepDataSyncTasks(region string) error {
 
 			_, err := conn.DeleteTask(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -108,6 +108,7 @@ func TestAccAWSDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_location_arn", dataSyncSourceLocationResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
 				),
 			},
 			{
@@ -134,9 +135,44 @@ func TestAccAWSDataSyncTask_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncTaskConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
-					testAccCheckAWSDataSyncTaskDisappears(&task1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDataSyncTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSyncTask_schedule(t *testing.T) {
+	var task1 datasync.DescribeTaskOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSyncTaskScheduleConfig(rName, "0 12 ? * SUN,WED *"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "0 12 ? * SUN,WED *"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDataSyncTaskScheduleConfig(rName, "0 12 ? * SUN,MON *"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "0 12 ? * SUN,MON *"),
+				),
 			},
 		},
 	})
@@ -157,13 +193,19 @@ func TestAccAWSDataSyncTask_CloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccAWSDataSyncTaskConfigCloudWatchLogGroupArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
-					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch_log_group_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test", "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDataSyncTaskConfigCloudWatchLogGroupArn2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test2", "arn")),
 			},
 		},
 	})
@@ -575,7 +617,7 @@ func testAccCheckAWSDataSyncTaskDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeTask(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
 			return nil
 		}
 
@@ -617,20 +659,6 @@ func testAccCheckAWSDataSyncTaskExists(resourceName string, task *datasync.Descr
 		*task = *output
 
 		return nil
-	}
-}
-
-func testAccCheckAWSDataSyncTaskDisappears(location *datasync.DescribeTaskOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
-
-		input := &datasync.DeleteTaskInput{
-			TaskArn: location.TaskArn,
-		}
-
-		_, err := conn.DeleteTask(input)
-
-		return err
 	}
 }
 
@@ -844,6 +872,20 @@ resource "aws_datasync_task" "test" {
 `, rName)
 }
 
+func testAccAWSDataSyncTaskScheduleConfig(rName, cron string) string {
+	return testAccAWSDataSyncTaskConfigDestinationLocationS3Base(rName) + testAccAWSDataSyncTaskConfigSourceLocationNfsBase(rName) + fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = "${aws_datasync_location_s3.destination.arn}"
+  name                     = %[1]q
+  source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
+
+  schedule {
+    schedule_expression = %[2]q
+  }
+}
+`, rName, cron)
+}
+
 func testAccAWSDataSyncTaskConfigCloudWatchLogGroupArn(rName string) string {
 	return testAccAWSDataSyncTaskConfigDestinationLocationS3Base(rName) + testAccAWSDataSyncTaskConfigSourceLocationNfsBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -857,6 +899,25 @@ resource "aws_datasync_task" "test" {
   source_location_arn      = aws_datasync_location_nfs.source.arn
 }
 `, rName, rName)
+}
+
+func testAccAWSDataSyncTaskConfigCloudWatchLogGroupArn2(rName string) string {
+	return testAccAWSDataSyncTaskConfigDestinationLocationS3Base(rName) + testAccAWSDataSyncTaskConfigSourceLocationNfsBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name = "%[1]s-2"
+}
+
+resource "aws_datasync_task" "test" {
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test2.arn
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+}
+`, rName)
 }
 
 func testAccAWSDataSyncTaskConfigDefaultSyncOptionsAtimeMtime(rName, atime, mtime string) string {
