@@ -90,6 +90,7 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 						"client_ip_preservation_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},

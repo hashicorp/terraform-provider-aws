@@ -41,7 +41,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
+func TestAccAwsGlobalAcceleratorEndpointGroup_ALB_ClientIP(t *testing.T) {
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -51,7 +51,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorEndpointGroup_alb_clientip(rName),
+				Config: testAccGlobalAcceleratorEndpointGroupConfigALBClientIP(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -63,6 +63,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "true",
+						"weight":                         "20",
 					}),
 				),
 			},
@@ -70,6 +71,23 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_alb_clientip(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigALBClientIP(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"client_ip_preservation_enabled": "false",
+						"weight":                         "20",
+					}),
+				),
 			},
 		},
 	})
@@ -196,13 +214,13 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
 `, rInt)
 }
 
-func testAccGlobalAcceleratorEndpointGroup_alb_clientip(rName string) string {
-	return fmt.Sprintf(`
+func testAccGlobalAcceleratorEndpointGroupConfigALBClientIP(rName string, clientIP bool) string {
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = false
-  security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  security_groups = [aws_security_group.test.id]
+  subnets         = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -214,16 +232,7 @@ resource "aws_lb" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+  type    = list
 }
 
 resource "aws_vpc" "test" {
@@ -235,10 +244,10 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count             = 2
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${element(var.subnets, count.index)}"
-  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  count             = length(var.subnets)
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = element(var.subnets, count.index)
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = %[1]q
@@ -247,7 +256,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_security_group" "test" {
   name   = %[1]q
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -269,7 +278,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -283,7 +292,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.test.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.test.id
   protocol        = "TCP"
 
   port_range {
@@ -293,12 +302,12 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = "${aws_globalaccelerator_listener.test.id}"
+  listener_arn = aws_globalaccelerator_listener.test.id
 
   endpoint_configuration {
-    endpoint_id = "${aws_lb.test.id}"
-    weight      = 20
-    client_ip_preservation_enabled = true
+    endpoint_id                    = aws_lb.test.id
+    weight                         = 20
+    client_ip_preservation_enabled = %[2]t
   }
 
   health_check_interval_seconds = 30
@@ -308,7 +317,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   threshold_count               = 3
   traffic_dial_percentage       = 100
 }
-`, rName)
+`, rName, clientIP))
 }
 
 func testAccGlobalAcceleratorEndpointGroup_update(rInt int) string {
