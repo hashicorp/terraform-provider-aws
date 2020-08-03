@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 )
 
 func init() {
@@ -64,7 +65,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 	return nil
 }
 
-func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
+func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
@@ -275,8 +276,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_lambda_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"), // Must be removed with aws_secretsmanager_secret_rotation after version 2.67.0
 				),
 			},
 		},
@@ -329,8 +329,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"), // Must be removed with aws_secretsmanager_secret_rotation after version 2.67.0
 				),
 			},
 		},
@@ -424,12 +423,32 @@ func testAccCheckAwsSecretsManagerSecretDestroy(s *terraform.State) error {
 			SecretId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeSecret(input)
+		var output *secretsmanager.DescribeSecretOutput
+
+		err := resource.Retry(waiter.DeletionPropagationTimeout, func() *resource.RetryError {
+			var err error
+			output, err = conn.DescribeSecret(input)
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			if output != nil && output.DeletedDate == nil {
+				return resource.RetryableError(fmt.Errorf("Secret %q still exists", rs.Primary.ID))
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			output, err = conn.DescribeSecret(input)
+		}
+
+		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			continue
+		}
 
 		if err != nil {
-			if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 

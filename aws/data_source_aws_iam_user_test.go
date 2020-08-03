@@ -39,7 +39,7 @@ resource "aws_iam_user" "user" {
 }
 
 data "aws_iam_user" "test" {
-  user_name = "${aws_iam_user.user.name}"
+  user_name = aws_iam_user.user.name
 }
 `, name)
 }

@@ -77,9 +77,10 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 40
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 40
+
   tags = {
     Name = "External Volume"
   }
@@ -87,13 +88,15 @@ resource "aws_ebs_volume" "test" {
 
 data "aws_ebs_volume" "test" {
   most_recent = true
+
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["External Volume"]
   }
+
   filter {
-    name = "volume-type"
-    values = ["${aws_ebs_volume.test.type}"]
+    name   = "volume-type"
+    values = [aws_ebs_volume.test.type]
   }
 }
 `
@@ -109,9 +112,10 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 10
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 10
+
   tags = {
     Name = "External Volume 1"
   }
@@ -119,17 +123,20 @@ resource "aws_ebs_volume" "test" {
 
 data "aws_ebs_volume" "test" {
   most_recent = true
+
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["External Volume 1"]
   }
+
   filter {
-    name = "size"
-    values = ["${aws_ebs_volume.test.size}"]
+    name   = "size"
+    values = [aws_ebs_volume.test.size]
   }
+
   filter {
-    name = "volume-type"
-    values = ["${aws_ebs_volume.test.type}"]
+    name   = "volume-type"
+    values = [aws_ebs_volume.test.type]
   }
 }
 `

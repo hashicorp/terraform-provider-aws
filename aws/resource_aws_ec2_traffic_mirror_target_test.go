@@ -32,6 +32,7 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.lb", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -144,7 +145,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
-					testAccCheckAWSEc2TrafficMirrorTargetDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TrafficMirrorTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,17 +181,6 @@ func testAccCheckAWSEc2TrafficMirrorTargetExists(name string, target *ec2.Traffi
 		*target = *out.TrafficMirrorTargets[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSEc2TrafficMirrorTargetDisappears(target *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DeleteTrafficMirrorTarget(&ec2.DeleteTrafficMirrorTargetInput{
-			TrafficMirrorTargetId: target.TrafficMirrorTargetId,
-		})
-
-		return err
 	}
 }
 

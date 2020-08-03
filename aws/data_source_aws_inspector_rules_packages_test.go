@@ -20,5 +20,5 @@ func TestAccAWSInspectorRulesPackages_basic(t *testing.T) {
 }
 
 const testAccCheckAWSInspectorRulesPackagesConfig = `
-data "aws_inspector_rules_packages" "test" { }
+data "aws_inspector_rules_packages" "test" {}
 `

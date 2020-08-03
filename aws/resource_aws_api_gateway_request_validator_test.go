@@ -56,6 +56,28 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
+	var conf apigateway.UpdateRequestValidatorOutput
+	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	resourceName := "aws_api_gateway_request_validator.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRequestValidator(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayRequestValidatorName(conf *apigateway.UpdateRequestValidatorOutput, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.Name == nil {

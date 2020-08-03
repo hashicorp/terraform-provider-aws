@@ -22,7 +22,7 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig_instance,
+				Config: testAccAWSEIPAssociationConfig_instance(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(
 						"aws_eip.test", &a),
@@ -123,7 +123,7 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					testAccCheckAWSEIPAssociationHasIpBasedId(resourceName, &a),
+					testAccCheckAWSEIPAssociationHasIpBasedId(resourceName),
 				),
 			},
 			{
@@ -230,7 +230,7 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 	}
 }
 
-func testAccCheckAWSEIPAssociationHasIpBasedId(name string, res *ec2.Address) resource.TestCheckFunc {
+func testAccCheckAWSEIPAssociationHasIpBasedId(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -464,10 +464,10 @@ resource "aws_eip_association" "test" {
 `, testAccAWSSpotInstanceRequestConfig(rInt))
 }
 
-const testAccAWSEIPAssociationConfig_instance = `
+func testAccAWSEIPAssociationConfig_instance() string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
-  # us-west-2
-  ami = "ami-4fccb37f"
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
 }
 
@@ -477,7 +477,8 @@ resource "aws_eip_association" "test" {
   allocation_id = "${aws_eip.test.id}"
   instance_id = "${aws_instance.test.id}"
 }
-`
+`)
+}
 
 const testAccAWSEIPAssociationConfig_networkInterface = `
 resource "aws_vpc" "test" {

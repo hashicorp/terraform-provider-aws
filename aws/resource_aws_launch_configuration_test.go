@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -170,7 +171,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckAmiExists(amiCopyResourceName, &ami),
-					testAccCheckAmiDisappears(&ami),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmi(), amiCopyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -357,16 +358,17 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSLaunchConfigurationDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1393547169.volume_size", "9"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "9",
+					}),
 				),
 			},
 			{
@@ -379,7 +381,9 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				Config: testAccAWSLaunchConfigurationWithEncryptionUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.4131155854.volume_size", "10"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "10",
+					}),
 				),
 			},
 		},
@@ -392,18 +396,19 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSLaunchConfigurationDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3099842682.device_name", "/dev/sda2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3099842682.no_device", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sda2",
+						"no_device":   "true",
+					}),
 				),
 			},
 			{
@@ -595,7 +600,7 @@ func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchC
 }
 
 func testAccAWSLaunchConfigurationConfig_ami() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
@@ -605,11 +610,11 @@ data "aws_ami" "ubuntu" {
     values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-2017*"]
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_HvmEbsAmi() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -624,11 +629,11 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     values = ["ebs"]
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_instanceStoreAMI() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
   owners      = ["amazon"]
@@ -643,7 +648,7 @@ data "aws_ami" "amzn-ami-minimal-pv" {
     values = ["instance-store"]
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName string) string {
@@ -773,18 +778,18 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationNoNameConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data = "testtest-user-data-change"
   associate_public_ip_address = false
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationPrefixNameConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   name_prefix = "tf-acc-test-"
   image_id = "${data.aws_ami.ubuntu.id}"
@@ -792,11 +797,11 @@ resource "aws_launch_configuration" "test" {
   user_data = "testtest-user-data-change"
   associate_public_ip_address = false
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationWithEncryption() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
@@ -812,11 +817,11 @@ resource "aws_launch_configuration" "test" {
     encrypted = true
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationWithEncryptionUpdated() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
@@ -832,7 +837,7 @@ resource "aws_launch_configuration" "test" {
     encrypted = true
   }
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
@@ -883,8 +888,8 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "profile" {
-  name  = "tf-acc-test-%[1]d"
-  roles = ["${aws_iam_role.role.name}"]
+  name = "tf-acc-test-%[1]d"
+  role = aws_iam_role.role.name
 }
 
 resource "aws_launch_configuration" "test" {
@@ -910,23 +915,23 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationConfig_userData() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data = "foo:-with-character's"
   associate_public_ip_address = false
 }
-`)
+`
 }
 
 func testAccAWSLaunchConfigurationConfig_userDataBase64() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
   image_id = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
   user_data_base64 = "${base64encode("hello world")}"
   associate_public_ip_address = false
 }
-`)
+`
 }

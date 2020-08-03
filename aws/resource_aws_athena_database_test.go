@@ -145,7 +145,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 		}
 
 		input := &athena.StartQueryExecutionInput{
-			QueryString: aws.String(fmt.Sprint("show databases;")),
+			QueryString: aws.String("show databases;"),
 			ResultConfiguration: &athena.ResultConfiguration{
 				OutputLocation: aws.String("s3://" + bucketName),
 			},

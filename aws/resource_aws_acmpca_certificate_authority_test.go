@@ -60,7 +60,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 	return nil
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
+func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -109,7 +109,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 
 	// error updating ACMPCA Certificate Authority: InvalidStateException: The certificate authority must be in the Active or DISABLED state to be updated
-	t.Skip("We need to fully sign the certificate authority CSR from another CA in order to test this functionality, which requires another resource")
+	TestAccSkip(t, "We need to fully sign the certificate authority CSR from another CA in order to test this functionality, which requires another resource")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

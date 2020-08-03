@@ -3,23 +3,23 @@ subcategory: "EFS"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system"
 description: |-
-  Provides an Elastic File System (EFS) data source.
+  Provides an Elastic File System (EFS) File System data source.
 ---
 
 # Data Source: aws_efs_file_system
 
-Provides information about an Elastic File System (EFS).
+Provides information about an Elastic File System (EFS) File System.
 
 ## Example Usage
 
 ```hcl
 variable "file_system_id" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 data "aws_efs_file_system" "by_id" {
-  file_system_id = "${var.file_system_id}"
+  file_system_id = var.file_system_id
 }
 ```
 

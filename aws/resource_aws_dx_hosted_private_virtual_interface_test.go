@@ -179,11 +179,11 @@ resource "aws_dx_hosted_private_virtual_interface" "test" {
 
 # Accepter
 data "aws_caller_identity" "accepter" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_vpn_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   tags = {
     Name = %[2]q
@@ -193,20 +193,20 @@ resource "aws_vpn_gateway" "test" {
 }
 
 func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
+	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + `
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
   vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
 }
-`)
+`
 }
 
 func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
   vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
@@ -223,7 +223,7 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
 func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, bgpAsn, vlan int) string {
 	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
   vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
