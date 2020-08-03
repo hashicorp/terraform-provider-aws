@@ -89,11 +89,6 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"requester.#",
 						"1",
 					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "false",
-						"allow_classic_link_to_remote_vpc": "true",
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
@@ -109,11 +104,6 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"accepter.#",
 						"1",
 					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "false",
-						"allow_classic_link_to_remote_vpc": "false",
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"accepter",
@@ -215,11 +205,6 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"requester.#",
 						"1",
 					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "false",
-						"allow_classic_link_to_remote_vpc": "false",
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
@@ -235,11 +220,6 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"accepter.#",
 						"1",
 					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "false",
-						"allow_classic_link_to_remote_vpc": "false",
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
 					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
 						pcxResourceNamePeer,
 						"accepter",
@@ -315,12 +295,13 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 					}),
 				),
 			},
-			{
-				Config:            testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			// Comment out until Plugin SDK correctly handles import testing with multiple providers.
+			// {
+			// 	Config:            testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
 		},
 	})
 }
