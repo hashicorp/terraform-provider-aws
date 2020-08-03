@@ -215,6 +215,11 @@ func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("Unable to accept VPC Peering Connection: %s", err)
 		}
 		log.Printf("[DEBUG] VPC Peering Connection accept status: %s", statusCode)
+
+		// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."
+		if err := vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
+		}
 	}
 
 	if d.HasChanges("accepter", "requester") {
@@ -241,10 +246,6 @@ func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error
 				"%q is not active. Please set `auto_accept` attribute to `true`, "+
 				"or activate VPC Peering Connection manually.", d.Id())
 		}
-	}
-
-	if err := vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
 	}
 
 	return resourceAwsVPCPeeringRead(d, meta)
