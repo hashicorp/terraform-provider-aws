@@ -22,7 +22,7 @@ func init() {
 func testSweepBackupVaultNotifications(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).backupconn
 
@@ -35,7 +35,7 @@ func testSweepBackupVaultNotifications(region string) error {
 				log.Printf("[WARN] Skipping Backup Vault Notifications sweep for %s: %s", region, err)
 				return nil
 			}
-			return fmt.Errorf("Error retrieving Backup Vault Notifications: %s", err)
+			return fmt.Errorf("Error retrieving Backup Vault Notifications: %w", err)
 		}
 
 		if len(output.BackupVaultList) == 0 {
@@ -51,7 +51,7 @@ func testSweepBackupVaultNotifications(region string) error {
 				BackupVaultName: aws.String(name),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting Backup Vault Notifications %s: %s", name, err)
+				return fmt.Errorf("Error deleting Backup Vault Notifications %s: %w", name, err)
 			}
 		}
 
@@ -126,7 +126,7 @@ func testAccCheckAwsBackupVaultNotificationDestroy(s *terraform.State) error {
 		resp, err := conn.GetBackupVaultNotifications(input)
 
 		if err == nil {
-			if *resp.BackupVaultName == rs.Primary.ID {
+			if aws.StringValue(resp.BackupVaultName) == rs.Primary.ID {
 				return fmt.Errorf("Backup Plan notifications '%s' was not deleted properly", rs.Primary.ID)
 			}
 		}

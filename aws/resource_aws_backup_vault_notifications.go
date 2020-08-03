@@ -77,7 +77,7 @@ func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta inte
 
 	_, err := conn.PutBackupVaultNotifications(input)
 	if err != nil {
-		return fmt.Errorf("error creating Backup Vault Notification (%s): %s", d.Id(), err)
+		return fmt.Errorf("error creating Backup Vault Notification (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(d.Get("backup_vault_name").(string))
@@ -100,7 +100,7 @@ func resourceAwsBackupVaultNotificationsRead(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Backup Vault (%s): %w", d.Id(), err)
 	}
 	d.Set("backup_vault_name", resp.BackupVaultName)
 	d.Set("sns_topic_arn", resp.SNSTopicArn)
@@ -119,7 +119,10 @@ func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta inte
 
 	_, err := conn.DeleteBackupVaultNotifications(input)
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Vault Notification (%s): %s", d.Id(), err)
+		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("error deleting Backup Vault Notification (%s): %w", d.Id(), err)
 	}
 
 	return nil
