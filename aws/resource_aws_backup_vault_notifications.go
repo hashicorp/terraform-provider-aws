@@ -77,7 +77,7 @@ func resourceAwsBackupVaultNotificationsCreate(d *schema.ResourceData, meta inte
 
 	_, err := conn.PutBackupVaultNotifications(input)
 	if err != nil {
-		return fmt.Errorf("error creating Backup Vault Notification (%s): %w", d.Id(), err)
+		return fmt.Errorf("error creating Backup Vault Notifications (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(d.Get("backup_vault_name").(string))
