@@ -32,8 +32,12 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "false",
+						"allow_remote_vpc_dns_resolution": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_classic_link_to_remote_vpc": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "true",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -52,8 +56,12 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "true",
+						"allow_remote_vpc_dns_resolution": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
 						"allow_classic_link_to_remote_vpc": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -148,8 +156,12 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "true",
+						"allow_remote_vpc_dns_resolution": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_classic_link_to_remote_vpc": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -168,8 +180,12 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "true",
+						"allow_remote_vpc_dns_resolution": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
 						"allow_classic_link_to_remote_vpc": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
@@ -265,8 +281,12 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "true",
+						"allow_remote_vpc_dns_resolution": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_classic_link_to_remote_vpc": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 					testAccCheckAWSVpcPeeringConnectionOptions(
@@ -285,8 +305,12 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 						"1",
 					),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution":  "true",
+						"allow_remote_vpc_dns_resolution": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
 						"allow_classic_link_to_remote_vpc": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
 						"allow_vpc_to_remote_classic_link": "false",
 					}),
 				),
