@@ -124,7 +124,7 @@ func resourceAwsBackupVaultNotificationsDelete(d *schema.ResourceData, meta inte
 		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Backup Vault Notification (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Backup Vault Notifications (%s): %w", d.Id(), err)
 	}
 
 	return nil
