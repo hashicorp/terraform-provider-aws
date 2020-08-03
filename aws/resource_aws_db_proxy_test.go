@@ -82,8 +82,7 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 						resourceName, "name", name),
 					resource.TestCheckResourceAttr(
 						resourceName, "engine_family", "MYSQL"),
-					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:db-proxy:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db-proxy:.+`)),
 				),
 			},
 			{

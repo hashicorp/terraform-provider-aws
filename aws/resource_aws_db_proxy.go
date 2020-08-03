@@ -263,6 +263,7 @@ func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) *schema.Set 
 
 func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(d.Id()),
@@ -302,7 +303,11 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	// if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	// 	return fmt.Errorf("error setting tags: %s", err)
+	// }
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
 
