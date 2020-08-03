@@ -191,13 +191,13 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_sns_topic_policy" "test" {
-  arn = "${aws_sns_topic.test.arn}"
-  policy = "${data.aws_iam_policy_document.test.json}"
+  arn    = aws_sns_topic.test.arn
+  policy = data.aws_iam_policy_document.test.json
 }
 
 resource "aws_backup_vault_notifications" "test" {
-  backup_vault_name   = "${aws_backup_vault.test.name}"
-  sns_topic_arn       = "${aws_sns_topic.test.arn}"
+  backup_vault_name   = aws_backup_vault.test.name
+  sns_topic_arn       = aws_sns_topic.test.arn
   backup_vault_events = ["BACKUP_JOB_STARTED", "RESTORE_JOB_COMPLETED"] 
 }
 `, rName)
