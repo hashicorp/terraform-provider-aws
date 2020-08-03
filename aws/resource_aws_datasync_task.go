@@ -167,6 +167,10 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 		input.Schedule = expandAwsDataSyncTaskSchedule(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("schedule"); ok {
+		input.Schedule = expandAwsDataSyncTaskSchedule(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
 		input.CloudWatchLogGroupArn = aws.String(v.(string))
 	}
