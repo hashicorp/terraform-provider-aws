@@ -154,11 +154,11 @@ func TestAccAWSDataSyncTask_schedule(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSyncTaskScheduleConfig(rName, "0 12 ? * SUN,WED *"),
+				Config: testAccAWSDataSyncTaskScheduleConfig(rName, "cron(0 12 ? * SUN,WED *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "0 12 ? * SUN,WED *"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,WED *)"),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccAWSDataSyncTask_schedule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "0 12 ? * SUN,MON *"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 				),
 			},
 		},

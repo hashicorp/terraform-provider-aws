@@ -33,7 +33,7 @@ resource "aws_datasync_task" "example" {
   source_location_arn      = aws_datasync_location_nfs.source.arn
 
   schedule {
-    schedule_expression = "0 12 ? * SUN,WED *"
+    schedule_expression = "cron(0 12 ? * SUN,WED *)"
   }
 }
 ```
