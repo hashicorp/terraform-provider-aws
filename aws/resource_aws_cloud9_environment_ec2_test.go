@@ -290,11 +290,11 @@ func testAccPreCheckAWSCloud9(t *testing.T) {
 }
 
 func testAccAWSCloud9EnvironmentEc2ConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # t2.micro instance type is not available in these Availability Zones
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -333,7 +333,7 @@ resource "aws_route" "test" {
   gateway_id             = aws_internet_gateway.test.id
   route_table_id         = aws_vpc.test.main_route_table_id
 }
-`)
+`
 }
 
 func testAccAWSCloud9EnvironmentEc2Config(name string) string {

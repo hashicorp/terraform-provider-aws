@@ -173,7 +173,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
       type = "Service"
     }
   
-    resources = ["${aws_cloudwatch_log_group.logs.arn}"]
+    resources = ["${aws_cloudwatch_log_group.logs.arn}:*"]
   
     effect = "Allow"
   }

@@ -46,14 +46,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"availability_zones": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Removed:  "Use `preferred_availability_zones` argument instead",
-			},
 			"az_mode": {
 				Type:     schema.TypeString,
 				Optional: true,

@@ -1,12 +1,15 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -91,19 +94,12 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func bucketLocation(client *AWSClient, d *schema.ResourceData, bucket string) error {
-	location, err := client.s3conn.GetBucketLocation(
-		&s3.GetBucketLocationInput{
-			Bucket: aws.String(bucket),
-		},
-	)
+	region, err := s3manager.GetBucketRegionWithClient(context.Background(), client.s3conn, bucket, func(r *request.Request) {
+		r.Config.S3ForcePathStyle = aws.Bool(false)
+	})
 	if err != nil {
 		return err
 	}
-	var region string
-	if location.LocationConstraint != nil {
-		region = *location.LocationConstraint
-	}
-	region = normalizeRegion(region)
 	if err := d.Set("region", region); err != nil {
 		return err
 	}

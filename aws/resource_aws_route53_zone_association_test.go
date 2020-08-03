@@ -261,7 +261,7 @@ resource "aws_route53_zone_association" "foobar" {
 func testAccRoute53ZoneAssociationRegionConfig() string {
 	return testAccAlternateRegionProviderConfig() + `
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 data "aws_region" "current" {}
@@ -277,7 +277,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block           = "10.7.0.0/16"
   enable_dns_hostnames = true

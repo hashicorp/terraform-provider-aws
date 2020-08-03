@@ -59,6 +59,28 @@ func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayIntegrationResponse_disappears(t *testing.T) {
+	var conf apigateway.IntegrationResponse
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	resourceName := "aws_api_gateway_integration_response.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationResponseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayIntegrationResponseConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayIntegrationResponseExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayIntegrationResponse(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayIntegrationResponseAttributes(conf *apigateway.IntegrationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.StatusCode != "400" {

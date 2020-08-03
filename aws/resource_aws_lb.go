@@ -115,6 +115,12 @@ func resourceAwsLb() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"private_ipv4_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv4Address,
+						},
 					},
 				},
 				Set: func(v interface{}) int {
@@ -123,6 +129,9 @@ func resourceAwsLb() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
 					if m["allocation_id"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
+					}
+					if m["private_ipv4_address"] != "" {
+						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
 					}
 					return hashcode.String(buf.String())
 				},
@@ -275,6 +284,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 			if subnetMap["allocation_id"].(string) != "" {
 				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
+			}
+
+			if subnetMap["private_ipv4_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
 			}
 		}
 	}
@@ -689,6 +702,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
+			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
 		}
 
 		l = append(l, m)

@@ -421,7 +421,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Uid(t *testing.T) {
 }
 
 func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
-	var task1, task2 datasync.DescribeTaskOutput
+	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
 
@@ -452,12 +452,21 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
 				),
 			},
+			{
+				Config: testAccAWSDataSyncTaskConfigDefaultSyncOptionsVerifyMode(rName, "ONLY_FILES_TRANSFERRED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task3),
+					testAccCheckAWSDataSyncTaskNotRecreated(&task2, &task3),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSDataSyncTask_Tags(t *testing.T) {
-	t.Skip("Tagging on creation is inconsistent")
+	TestAccSkip(t, "Tagging on creation is inconsistent")
 	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
@@ -811,10 +820,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_datasync_task" "test" {
-  cloudwatch_log_group_arn = "${replace(aws_cloudwatch_log_group.test.arn, ":*", "")}"
-  destination_location_arn = "${aws_datasync_location_s3.destination.arn}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %q
-  source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
+  source_location_arn      = aws_datasync_location_nfs.source.arn
 }
 `, rName, rName)
 }

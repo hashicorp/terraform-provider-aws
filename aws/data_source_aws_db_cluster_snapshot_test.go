@@ -138,9 +138,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %q
@@ -149,27 +149,28 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %q
-  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %q
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
   master_password      = "barbarbarbar"
   master_username      = "foo"
   skip_final_snapshot  = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.test.id}"
+  db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %q
+
   tags = {
     Name = %q
   }
 }
 
 data "aws_db_cluster_snapshot" "test" {
-  db_cluster_snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, rName, rName, rName, rName, rName)
 }
@@ -196,9 +197,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %q
@@ -207,27 +208,28 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %q
-  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %q
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
   master_password      = "barbarbarbar"
   master_username      = "foo"
   skip_final_snapshot  = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.test.id}"
+  db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %q
+
   tags = {
     Name = %q
   }
 }
 
 data "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier = "${aws_db_cluster_snapshot.test.db_cluster_identifier}"
+  db_cluster_identifier = aws_db_cluster_snapshot.test.db_cluster_identifier
 }
 `, rName, rName, rName, rName, rName, rName)
 }
@@ -254,9 +256,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %q
@@ -265,29 +267,29 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %q
-  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %q
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
   master_password      = "barbarbarbar"
   master_username      = "foo"
   skip_final_snapshot  = true
 }
 
 resource "aws_db_cluster_snapshot" "incorrect" {
-  db_cluster_identifier          = "${aws_rds_cluster.test.id}"
+  db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = "%s-incorrect"
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_db_cluster_snapshot.incorrect.db_cluster_identifier}"
+  db_cluster_identifier          = aws_db_cluster_snapshot.incorrect.db_cluster_identifier
   db_cluster_snapshot_identifier = %q
 }
 
 data "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier = "${aws_db_cluster_snapshot.test.db_cluster_identifier}"
+  db_cluster_identifier = aws_db_cluster_snapshot.test.db_cluster_identifier
   most_recent           = true
 }
 `, rName, rName, rName, rName, rName, rName)

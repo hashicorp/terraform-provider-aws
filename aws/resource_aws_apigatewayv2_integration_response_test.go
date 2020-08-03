@@ -198,17 +198,17 @@ func testAccAWSAPIGatewayV2IntegrationResponseImportStateIdFunc(resourceName str
 }
 
 func testAccAWSAPIGatewayV2IntegrationResponseConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = "${aws_apigatewayv2_api.test.id}"
   integration_id           = "${aws_apigatewayv2_integration.test.id}"
   integration_response_key = "/200/"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributes(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = "${aws_apigatewayv2_api.test.id}"
   integration_id           = "${aws_apigatewayv2_integration.test.id}"
@@ -221,11 +221,11 @@ resource "aws_apigatewayv2_integration_response" "test" {
     "application/json" = ""
   }
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributesUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = "${aws_apigatewayv2_api.test.id}"
   integration_id           = "${aws_apigatewayv2_integration.test.id}"
@@ -239,5 +239,5 @@ resource "aws_apigatewayv2_integration_response" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`)
+`
 }

@@ -40,13 +40,6 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 
-			"reference_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				Removed:  "Use `creation_token` argument instead",
-			},
-
 			"performance_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -201,7 +194,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 
-	if d.HasChange("provisioned_throughput_in_mibps") || d.HasChange("throughput_mode") {
+	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
 
 		input := &efs.UpdateFileSystemInput{

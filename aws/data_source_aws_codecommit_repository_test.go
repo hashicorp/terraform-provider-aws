@@ -37,7 +37,7 @@ resource "aws_codecommit_repository" "default" {
 }
 
 data "aws_codecommit_repository" "default" {
-  repository_name = "${aws_codecommit_repository.default.repository_name}"
+  repository_name = aws_codecommit_repository.default.repository_name
 }
 `, rName)
 }

@@ -191,7 +191,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {
@@ -346,7 +349,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 			for _, ni := range instance.NetworkInterfaces {
 				if *ni.Attachment.DeviceIndex == 0 {
 					d.Set("subnet_id", ni.SubnetId)
-					d.Set("network_interface_id", ni.NetworkInterfaceId)
+					d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 					d.Set("associate_public_ip_address", ni.Association != nil)
 					d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
 
@@ -357,7 +360,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 			}
 		} else {
 			d.Set("subnet_id", instance.SubnetId)
-			d.Set("network_interface_id", "")
+			d.Set("primary_network_interface_id", "")
 		}
 
 		if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {

@@ -94,7 +94,7 @@ const (
 	// ErrCodeInvalidArgument for service response error code
 	// "InvalidArgument".
 	//
-	// The argument is invalid.
+	// An argument is invalid.
 	ErrCodeInvalidArgument = "InvalidArgument"
 
 	// ErrCodeInvalidDefaultRootObject for service response error code
@@ -319,7 +319,7 @@ const (
 	// ErrCodePreconditionFailed for service response error code
 	// "PreconditionFailed".
 	//
-	// The precondition given in one or more of the request-header fields evaluated
+	// The precondition given in one or more of the request header fields evaluated
 	// to false.
 	ErrCodePreconditionFailed = "PreconditionFailed"
 

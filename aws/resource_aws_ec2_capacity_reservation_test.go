@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
@@ -77,6 +78,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 				Config: testAccEc2CapacityReservationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`capacity-reservation/cr-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
@@ -358,9 +360,30 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2CapacityReservation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
 	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
-	t.Skip("EC2 Capacity Reservations do not currently support dedicated tenancy.")
+	TestAccSkip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 

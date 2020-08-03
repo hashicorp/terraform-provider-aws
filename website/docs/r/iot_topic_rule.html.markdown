@@ -20,13 +20,25 @@ resource "aws_iot_topic_rule" "rule" {
 
   sns {
     message_format = "RAW"
-    role_arn       = "${aws_iam_role.role.arn}"
-    target_arn     = "${aws_sns_topic.mytopic.arn}"
+    role_arn       = aws_iam_role.role.arn
+    target_arn     = aws_sns_topic.mytopic.arn
+  }
+
+  error_action {
+    sns {
+      message_format = "RAW"
+      role_arn       = aws_iam_role.role.arn
+      target_arn     = aws_sns_topic.myerrortopic.arn
+    }
   }
 }
 
 resource "aws_sns_topic" "mytopic" {
   name = "mytopic"
+}
+
+resource "aws_sns_topic" "myerrortopic" {
+  name = "myerrortopic"
 }
 
 resource "aws_iam_role" "role" {
@@ -50,7 +62,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "mypolicy"
-  role = "${aws_iam_role.role.id}"
+  role = aws_iam_role.role.id
 
   policy = <<EOF
 {
@@ -76,6 +88,8 @@ EOF
 * `enabled` - (Required) Specifies whether the rule is enabled.
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
+* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `iot_analytics`, `iot_events`, `kinesis`, `lambda`, `republish`, `s3`, `step_functions`, `sns`, `sqs` configuration blocks for further configuration details.
+* `tags` - (Optional) Key-value map of resource tags
 
 The `cloudwatch_alarm` object takes the following arguments:
 
@@ -159,6 +173,12 @@ The `sqs` object takes the following arguments:
 * `queue_url` - (Required) The URL of the Amazon SQS queue.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `use_base64` - (Required) Specifies whether to use Base64 encoding.
+
+The `step_functions` object takes the following arguments:
+
+* `execution_name_prefix` - (Optional) The prefix used to generate, along with a UUID, the unique state machine execution name.
+* `state_machine_name` - (Required) The name of the Step Functions state machine whose execution will be started.
+* `role_arn` - (Required) The ARN of the IAM role that grants access to start execution of the state machine.
 
 The `iot_analytics` object takes the following arguments:
 

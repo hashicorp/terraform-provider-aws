@@ -68,7 +68,7 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
@@ -190,7 +190,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
 }
 
 func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
-	t.Skip("This test can cause Storage Gateway 2.0.10.0 to enter an irrecoverable state during volume deletion.")
+	TestAccSkip(t, "This test can cause Storage Gateway 2.0.10.0 to enter an irrecoverable state during volume deletion.")
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
