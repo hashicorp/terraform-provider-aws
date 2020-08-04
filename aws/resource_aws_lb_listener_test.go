@@ -841,8 +841,8 @@ resource "aws_lb_listener" "test" {
       }
 
       stickiness {
-       enabled  = true
-       duration = 3600
+        enabled  = true
+        duration = 3600
       }
     }
   }
@@ -1421,8 +1421,8 @@ resource "aws_lb_listener" "test" {
       user_pool_client_id = aws_cognito_user_pool_client.test.id
       user_pool_domain    = aws_cognito_user_pool_domain.test.domain
 
-      authentication_request_extra_params = {
-	param = "test"
+      authentication_request_extra_params = { 
+        param = "test"
       }
     }
   }
@@ -1504,7 +1504,7 @@ resource "aws_lb_listener" "test" {
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
       authentication_request_extra_params = {
-       param = "test"
+        param = "test"
       }
     }
   }
@@ -1539,7 +1539,7 @@ resource "aws_lb_listener" "test" {
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
       authentication_request_extra_params = {
-       param = "test"
+        param = "test"
       }
     }
   }
