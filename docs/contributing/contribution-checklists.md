@@ -216,7 +216,7 @@ Some AWS components support [resource-based IAM policies](https://docs.aws.amazo
 - Splitting the resources allows operators to logically split their infrastructure on purely operational and security boundaries with separate configurations/modules.
 - Splitting the resources prevents any separate policy API calls from needing to be permitted in the main resource in environments with restrictive IAM permissions, which can be undesirable.
 
-Follow the [New Resource section][#new-resource] for more information about implementing the separate resource.
+See the [New Resource][#new-resource] section for more information about implementing the separate resource.
 
 ## Adding Resource Tagging Support
 
