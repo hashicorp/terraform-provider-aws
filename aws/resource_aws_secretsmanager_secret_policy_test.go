@@ -47,7 +47,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					continue
 				}
-				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %w", name, err)
+				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
 			}
 		}
 
@@ -55,7 +55,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %w", region, err)
+			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
 			return nil
 		}
 		return fmt.Errorf("Error retrieving Secrets Manager Secrets: %w", err)
