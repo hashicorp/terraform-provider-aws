@@ -75,6 +75,13 @@ func resourceAwsLbListener() *schema.Resource {
 			"alpn_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"HTTP1Only",
+					"HTTP2Only",
+					"HTTP2Optional",
+					"HTTP2Preferred",
+					"None",
+				}, true),
 			},
 
 			"default_action": {
