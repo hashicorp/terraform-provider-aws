@@ -708,11 +708,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 
 			"kinesis_source_configuration": {
-				Type:          schema.TypeList,
+				Type: schema.TypeList,
 				ForceNew:      true,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"server_side_encryption"},
+				Optional: true,
+				MaxItems: 1,
+				// ConflictsWith: []string{"server_side_encryption"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kinesis_stream_arn": {
