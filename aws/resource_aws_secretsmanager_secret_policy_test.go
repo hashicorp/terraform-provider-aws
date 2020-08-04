@@ -37,18 +37,17 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 		for _, secret := range page.SecretList {
 			name := aws.StringValue(secret.Name)
 
-			log.Printf("[INFO] Deleting Secrets Manager Secret: %s", name)
-			input := &secretsmanager.DeleteSecretInput{
-				ForceDeleteWithoutRecovery: aws.Bool(true),
-				SecretId:                   aws.String(name),
+			log.Printf("[INFO] Deleting Secrets Manager Secret Policy: %s", name)
+			input := &secretsmanager.DeleteResourcePolicyInput{
+				SecretId: aws.String(name),
 			}
 
-			_, err := conn.DeleteSecret(input)
+			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
 				if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 					continue
 				}
-				log.Printf("[ERROR] Failed to delete Secrets Manager Secret (%s): %s", name, err)
+				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %w", name, err)
 			}
 		}
 
@@ -56,10 +55,10 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %w", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Secrets Manager Secrets: %s", err)
+		return fmt.Errorf("Error retrieving Secrets Manager Secrets: %w", err)
 	}
 	return nil
 }
