@@ -32,7 +32,7 @@ resource "aws_secretsmanager_secret_policy" "example" {
 	  "Principal": {
 		"AWS": "*"
 	  },
-	  "Action": "secretsmanager:*",
+	  "Action": "secretsmanager:GetSecretValue",
 	  "Resource": "*"
 	}
   ]
