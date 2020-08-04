@@ -695,7 +695,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-				ConflictsWith:    []string{"kinesis_source_configuration"},
+				// ConflictsWith:    []string{"kinesis_source_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
