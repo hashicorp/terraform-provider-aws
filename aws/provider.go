@@ -835,6 +835,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_notebook_instance":                         resourceAwsSagemakerNotebookInstance(),
 			"aws_secretsmanager_secret":                               resourceAwsSecretsManagerSecret(),
+			"aws_secretsmanager_secret_policy":                        resourceAwsSecretsManagerSecretPolicy(),
 			"aws_secretsmanager_secret_version":                       resourceAwsSecretsManagerSecretVersion(),
 			"aws_secretsmanager_secret_rotation":                      resourceAwsSecretsManagerSecretRotation(),
 			"aws_ses_active_receipt_rule_set":                         resourceAwsSesActiveReceiptRuleSet(),
