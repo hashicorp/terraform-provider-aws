@@ -49,6 +49,11 @@ func dataSourceAwsLbListener() *schema.Resource {
 				Computed: true,
 			},
 
+			"alpn_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"default_action": {
 				Type:     schema.TypeList,
 				Computed: true,
