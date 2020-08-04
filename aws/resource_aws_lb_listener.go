@@ -72,6 +72,11 @@ func resourceAwsLbListener() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"alpn_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -414,6 +419,11 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
+		params.AlpnPolicy = make([]*string, 1)
+		params.AlpnPolicy[0] = aws.String(alpnPolicy.(string))
+	}
+
 	defaultActions := d.Get("default_action").([]interface{})
 	params.DefaultActions = make([]*elbv2.Action, len(defaultActions))
 	for i, defaultAction := range defaultActions {
@@ -635,6 +645,10 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 
+	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 && listener.AlpnPolicy[0] != nil {
+		d.Set("alpn_policy", listener.AlpnPolicy[0])
+	}
+
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.Int64Value(listener.DefaultActions[i].Order) < aws.Int64Value(listener.DefaultActions[j].Order)
 	})
@@ -770,6 +784,11 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		params.Certificates[0] = &elbv2.Certificate{
 			CertificateArn: aws.String(certificateArn.(string)),
 		}
+	}
+
+	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
+		params.AlpnPolicy = make([]*string, 1)
+		params.AlpnPolicy[0] = aws.String(alpnPolicy.(string))
 	}
 
 	if d.HasChange("default_action") {

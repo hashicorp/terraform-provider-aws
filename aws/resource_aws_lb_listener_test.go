@@ -841,8 +841,8 @@ resource "aws_lb_listener" "test" {
       }
 
       stickiness {
-        enabled  = true
-        duration = 3600
+	enabled  = true
+	duration = 3600
       }
     }
   }
@@ -1231,7 +1231,7 @@ resource "aws_lb" "test" {
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
-  protocol = "TCP"
+  protocol = "TLS"
   vpc_id   = aws_vpc.test.id
 
   health_check {
@@ -1253,6 +1253,7 @@ resource "aws_lb_listener" "test" {
   port              = "443"
   protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
+  alpn_policy       = "HTTP2Preferred"
 
   default_action {
     target_group_arn = aws_lb_target_group.test.arn
@@ -1421,7 +1422,7 @@ resource "aws_lb_listener" "test" {
       user_pool_domain    = aws_cognito_user_pool_domain.test.domain
 
       authentication_request_extra_params = {
-        param = "test"
+	param = "test"
       }
     }
   }
@@ -1503,7 +1504,7 @@ resource "aws_lb_listener" "test" {
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
       authentication_request_extra_params = {
-        param = "test"
+	param = "test"
       }
     }
   }
@@ -1538,7 +1539,7 @@ resource "aws_lb_listener" "test" {
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
       authentication_request_extra_params = {
-        param = "test"
+	param = "test"
       }
     }
   }
