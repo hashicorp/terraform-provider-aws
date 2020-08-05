@@ -113,9 +113,11 @@ POLICY
     instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
+
     zone_awareness_config {
       availability_zone_count = 2
     }
+
     zone_awareness_enabled = true
   }
 
@@ -238,9 +240,11 @@ POLICY
     instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
+
     zone_awareness_config {
       availability_zone_count = 2
     }
+
     zone_awareness_enabled = true
   }
 

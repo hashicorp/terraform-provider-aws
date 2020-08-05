@@ -243,7 +243,6 @@ resource "aws_autoscaling_group" "barbaz" {
 }
 
 data "aws_autoscaling_groups" "group_list" {
-
   filter {
     name   = "key"
     values = ["Foo"]

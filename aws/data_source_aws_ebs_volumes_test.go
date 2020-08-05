@@ -37,7 +37,6 @@ func testAccDataSourceAwsEbsVolumeIDsConfigWithDataSource(rInt int) string {
 %s
 
 data "aws_ebs_volumes" "subject_under_test" {
-
   tags = {
     TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
   }

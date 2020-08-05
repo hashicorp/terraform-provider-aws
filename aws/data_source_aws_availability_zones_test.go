@@ -310,7 +310,6 @@ data "aws_availability_zones" "test" {
 func testAccCheckAwsAvailabilityZonesConfigFilter() string {
 	return `
 data "aws_availability_zones" "test" {
-
   filter {
     name   = "state"
     values = ["available"]

@@ -367,89 +367,89 @@ var testAccAWSIAMPolicyDocumentExpectedJSON = `{
 
 var testAccAWSIAMPolicyDocumentSourceConfig = `
 data "aws_iam_policy_document" "test" {
-    policy_id = "policy_id"
+  policy_id = "policy_id"
 
-    statement {
-        sid = "1"
-        actions = [
-            "s3:ListAllMyBuckets",
-            "s3:GetBucketLocation",
-        ]
-        resources = [
-            "arn:aws:s3:::*",
-        ]
+  statement {
+    sid = "1"
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
+    resources = [
+      "arn:aws:s3:::*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::foo",
+    ]
+
+    condition {
+      test     = "StringLike"
+      variable = "s3:prefix"
+      values = [
+        "home/",
+        "home/&{aws:username}/",
+      ]
     }
 
-    statement {
-        actions = [
-            "s3:ListBucket",
-        ]
-
-        resources = [
-            "arn:aws:s3:::foo",
-        ]
-
-        condition {
-            test = "StringLike"
-            variable = "s3:prefix"
-            values = [
-                "home/",
-                "home/&{aws:username}/",
-            ]
-        }
-
-        not_principals {
-            type = "AWS"
-            identifiers = ["arn:blahblah:example"]
-        }
+    not_principals {
+      type        = "AWS"
+      identifiers = ["arn:blahblah:example"]
     }
+  }
 
-    statement {
-        actions = [
-            "s3:*",
-        ]
+  statement {
+    actions = [
+      "s3:*",
+    ]
 
-        resources = [
-            "arn:aws:s3:::foo/home/&{aws:username}",
-            "arn:aws:s3:::foo/home/&{aws:username}/*",
-        ]
+    resources = [
+      "arn:aws:s3:::foo/home/&{aws:username}",
+      "arn:aws:s3:::foo/home/&{aws:username}/*",
+    ]
 
-        principals {
-            type = "AWS"
-            identifiers = [
-              "arn:blahblah:example",
-              "arn:blahblahblah:example",
-			      ]
-        }
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:blahblah:example",
+        "arn:blahblahblah:example",
+      ]
     }
+  }
 
-    statement {
-        effect = "Deny"
-        not_actions = ["s3:*"]
-        not_resources = ["arn:aws:s3:::*"]
+  statement {
+    effect        = "Deny"
+    not_actions   = ["s3:*"]
+    not_resources = ["arn:aws:s3:::*"]
+  }
+
+  # Normalization of wildcard principals
+
+  statement {
+    effect  = "Allow"
+    actions = ["kinesis:*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
     }
+  }
 
-    # Normalization of wildcard principals
+  statement {
+    effect  = "Allow"
+    actions = ["firehose:*"]
 
-    statement {
-        effect = "Allow"
-        actions = ["kinesis:*"]
-
-        principals {
-            type = "AWS"
-            identifiers = ["*"]
-        }
+    principals {
+      type        = "*"
+      identifiers = ["*"]
     }
-
-    statement {
-        effect = "Allow"
-        actions = ["firehose:*"]
-
-        principals {
-            type = "*"
-            identifiers = ["*"]
-        }
-    }
+  }
 }
 
 data "aws_iam_policy_document" "test_source" {
@@ -595,7 +595,6 @@ var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `{
 
 var testAccAWSIAMPolicyDocumentOverrideConfig = `
 data "aws_iam_policy_document" "override" {
-
   statement {
     sid = "SidToOverwrite"
 
@@ -646,7 +645,7 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
 var testAccAWSIAMPolicyDocumentNoStatementMergeConfig = `
 data "aws_iam_policy_document" "source" {
   statement {
-    sid = ""
+    sid       = ""
     actions   = ["ec2:DescribeAccountAttributes"]
     resources = ["*"]
   }
@@ -654,14 +653,14 @@ data "aws_iam_policy_document" "source" {
 
 data "aws_iam_policy_document" "override" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["s3:GetObject"]
     resources = ["*"]
   }
 }
 
 data "aws_iam_policy_document" "yak_politik" {
-  source_json = data.aws_iam_policy_document.source.json
+  source_json   = data.aws_iam_policy_document.source.json
   override_json = data.aws_iam_policy_document.override.json
 }
 `
@@ -687,7 +686,7 @@ var testAccAWSIAMPolicyDocumentNoStatementMergeExpectedJSON = `{
 var testAccAWSIAMPolicyDocumentNoStatementOverrideConfig = `
 data "aws_iam_policy_document" "source" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["ec2:DescribeAccountAttributes"]
     resources = ["*"]
   }
@@ -695,14 +694,14 @@ data "aws_iam_policy_document" "source" {
 
 data "aws_iam_policy_document" "override" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["s3:GetObject"]
     resources = ["*"]
   }
 }
 
 data "aws_iam_policy_document" "yak_politik" {
-  source_json = data.aws_iam_policy_document.source.json
+  source_json   = data.aws_iam_policy_document.source.json
   override_json = data.aws_iam_policy_document.override.json
 }
 `
@@ -722,16 +721,16 @@ var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
 var testAccAWSIAMPolicyDocumentDuplicateSidConfig = `
 data "aws_iam_policy_document" "test" {
   statement {
-    sid    = "1"
-    effect = "Allow"
-    actions = ["ec2:DescribeAccountAttributes"]
+    sid       = "1"
+    effect    = "Allow"
+    actions   = ["ec2:DescribeAccountAttributes"]
     resources = ["*"]
   }
 
   statement {
-    sid    = "1"
-    effect = "Allow"
-    actions = ["s3:GetObject"]
+    sid       = "1"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
     resources = ["*"]
   }
 }
@@ -777,7 +776,7 @@ const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017 = `
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
-   statement {
+  statement {
     actions   = ["ec2:*"]
     resources = ["*"]
   }
@@ -800,12 +799,12 @@ const testAccAWSIAMPolicyDocumentDataSourceConfigVersion20081017ConversionCondit
 data "aws_iam_policy_document" "test" {
   version = "2008-10-17"
 
-   statement {
+  statement {
     actions   = ["*"]
     resources = ["*"]
 
     condition {
-      test   = "StringLike"
+      test = "StringLike"
       values = [
         "home/",
         "home/&{aws:username}/",

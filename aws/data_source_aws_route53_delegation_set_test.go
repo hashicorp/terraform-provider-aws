@@ -40,10 +40,10 @@ resource "aws_route53_delegation_set" "dset" {
 
 resource "aws_route53_zone" "primary" {
   name              = "example.xyz"
-  delegation_set_id = "${aws_route53_delegation_set.dset.id}"
+  delegation_set_id = aws_route53_delegation_set.dset.id
 }
 
 data "aws_route53_delegation_set" "dset" {
-  id = "${aws_route53_delegation_set.dset.id}"
+  id = aws_route53_delegation_set.dset.id
 }
 `
