@@ -2315,8 +2315,10 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 func testAccAWSAutoScalingGroupConfigWithLoadBalancer() string {
-	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
-		fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -2377,22 +2379,17 @@ resource "aws_elb" "bar" {
   depends_on = ["aws_internet_gateway.gw"]
 }
 
-// need an AMI that listens on :80 at boot, this is:
-data "aws_ami" "test_ami" {
-  most_recent = true
-
-  owners = ["979382823631"]
-
-  filter {
-    name   = "name"
-    values = ["bitnami-nginxstack-*-linux-debian-9-x86_64-hvm-ebs"]
-  }
-}
-
 resource "aws_launch_configuration" "foobar" {
-  image_id        = data.aws_ami.test_ami.id
+  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.foo.id]
+
+  # Need the instance to listen on port 80 at boot
+  user_data = <<EOF
+#!/bin/bash
+echo "Terraform aws_autoscaling_group Testing" > index.html
+nohup python -m SimpleHTTPServer 80 &
+EOF
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -2411,8 +2408,10 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 func testAccAWSAutoScalingGroupConfigWithTargetGroup() string {
-	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
-		fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -2479,22 +2478,17 @@ resource "aws_elb" "bar" {
   depends_on = ["aws_internet_gateway.gw"]
 }
 
-// need an AMI that listens on :80 at boot, this is:
-data "aws_ami" "test_ami" {
-  most_recent = true
-
-  owners = ["979382823631"]
-
-  filter {
-    name   = "name"
-    values = ["bitnami-nginxstack-*-linux-debian-9-x86_64-hvm-ebs"]
-  }
-}
-
 resource "aws_launch_configuration" "foobar" {
-  image_id        = data.aws_ami.test_ami.id
+  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.foo.id]
+
+  # Need the instance to listen on port 80 at boot
+  user_data = <<EOF
+#!/bin/bash
+echo "Terraform aws_autoscaling_group Testing" > index.html
+nohup python -m SimpleHTTPServer 80 &
+EOF
 }
 
 resource "aws_autoscaling_group" "bar" {
