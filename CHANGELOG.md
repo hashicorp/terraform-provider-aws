@@ -20,6 +20,7 @@ BUG FIXES
 * resource/aws_lambda_event_source_mapping: Allow `maximum_retry_attempts` argument to be set to 0 [GH-12479]
 * resource/aws_rds_cluster: Add an `InvalidDBClusterStateFault` retryable error condition for clusters part of a global cluster [GH-14420]
 * resource/aws_rds_cluster: Increase retry timeout for deletion to 2 minutes [GH-14420]
+* resource/aws_security_group: Ensure `name_prefix` argument with hex digits `a` through `f` is properly imported [GH-14475]
 * resource/aws_spot_fleet_request: Allow `target_capacity` argument to be updated to 0 [GH-12759]
 * resource/aws_spot_fleet_request: Wait for modify operation completion (default timeout of 10 minutes) [GH-12759]
 * resource/aws_vpc_dhcp_options_association: Properly trigger resource recreation when VPC is deleted outside Terraform [GH-14367]
