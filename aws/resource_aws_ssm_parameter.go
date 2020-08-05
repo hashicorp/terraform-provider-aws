@@ -100,7 +100,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := ssmconn.GetParameter(&ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
-		WithDecryption: aws.Bool(true),
+		WithDecryption: aws.Bool(false),
 	})
 	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") {
 		log.Printf("[WARN] SSM Parameter (%s) not found, removing from state", d.Id())
