@@ -45,9 +45,8 @@ resource "aws_waf_web_acl" "web_acl" {
 }
 
 data "aws_waf_web_acl" "web_acl" {
-  name = "${aws_waf_web_acl.web_acl.name}"
+  name = aws_waf_web_acl.web_acl.name
 }
-
 `, name)
 }
 

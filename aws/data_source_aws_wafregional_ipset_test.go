@@ -36,10 +36,11 @@ func TestAccDataSourceAwsWafRegionalIPSet_basic(t *testing.T) {
 func testAccDataSourceAwsWafRegionalIPSet_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name        = %[1]q
+  name = %[1]q
 }
+
 data "aws_wafregional_ipset" "ipset" {
-  name = "${aws_wafregional_ipset.ipset.name}"
+  name = aws_wafregional_ipset.ipset.name
 }
 `, name)
 }

@@ -41,7 +41,7 @@ resource "aws_waf_rule" "wafrule" {
 }
 
 data "aws_waf_rule" "wafrule" {
-  name = "${aws_waf_rule.wafrule.name}"
+  name = aws_waf_rule.wafrule.name
 }
 `, name)
 }

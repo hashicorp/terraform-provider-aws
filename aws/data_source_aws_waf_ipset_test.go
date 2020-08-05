@@ -38,8 +38,9 @@ func testAccDataSourceAwsWafIPSet_Name(name string) string {
 resource "aws_waf_ipset" "ipset" {
   name = %[1]q
 }
+
 data "aws_waf_ipset" "ipset" {
-  name = "${aws_waf_ipset.ipset.name}"
+  name = aws_waf_ipset.ipset.name
 }
 `, name)
 }

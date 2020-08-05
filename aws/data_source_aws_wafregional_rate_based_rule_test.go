@@ -43,7 +43,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 }
 
 data "aws_wafregional_rate_based_rule" "wafrule" {
-  name = "${aws_wafregional_rate_based_rule.wafrule.name}"
+  name = aws_wafregional_rate_based_rule.wafrule.name
 }
 `, name)
 }
