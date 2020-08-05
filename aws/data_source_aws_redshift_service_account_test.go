@@ -47,13 +47,13 @@ func TestAccAWSRedshiftServiceAccount_Region(t *testing.T) {
 }
 
 const testAccCheckAwsRedshiftServiceAccountConfig = `
-data "aws_redshift_service_account" "main" { }
+data "aws_redshift_service_account" "main" {}
 `
 
 const testAccCheckAwsRedshiftServiceAccountExplicitRegionConfig = `
 data "aws_region" "current" {}
 
 data "aws_redshift_service_account" "regional" {
-	region = data.aws_region.current.name
+  region = data.aws_region.current.name
 }
 `

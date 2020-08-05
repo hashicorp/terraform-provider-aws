@@ -79,7 +79,7 @@ data "aws_prefix_list" "s3_by_id" {
 }
 
 data "aws_prefix_list" "s3_by_name" {
- name = "com.amazonaws.us-west-2.s3"
+  name = "com.amazonaws.us-west-2.s3"
 }
 `
 
