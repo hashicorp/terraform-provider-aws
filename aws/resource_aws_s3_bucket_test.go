@@ -130,7 +130,11 @@ func testSweepS3Buckets(region string) error {
 
 func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
 	region, err := s3manager.GetBucketRegionWithClient(context.Background(), conn, bucket, func(r *request.Request) {
-		r.Config.S3ForcePathStyle = aws.Bool(false)
+		// By default, GetBucketRegion forces virtual host addressing, which
+		// is not compatible with many non-AWS implementations. Instead, pass
+		// the provider s3_force_path_style configuration, which defaults to
+		// false, but allows override.
+		r.Config.S3ForcePathStyle = conn.Config.S3ForcePathStyle
 	})
 	if err != nil {
 		return "", err
