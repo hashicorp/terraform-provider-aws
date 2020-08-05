@@ -260,11 +260,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(err)
 		}
 
-		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
-
-		if err != nil {
-			return resource.RetryableError(err)
-		}
+		domainValidationOptions, emailValidationOptions, _ := convertValidationOptions(resp.Certificate)
 
 		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
 			return resource.NonRetryableError(err)
