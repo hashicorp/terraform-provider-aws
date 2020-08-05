@@ -57,7 +57,7 @@ EOF
 
 resource "aws_sfn_state_machine" "test" {
   name     = "test_sfn_%s"
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  role_arn = aws_iam_role.iam_for_sfn.arn
 
   definition = <<EOF
 {
@@ -72,7 +72,7 @@ EOF
 }
 
 data "aws_sfn_state_machine" "test" {
-  name = "${aws_sfn_state_machine.test.name}"
+  name = aws_sfn_state_machine.test.name
 }
 `, rName, rName)
 }

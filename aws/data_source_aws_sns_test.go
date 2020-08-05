@@ -61,6 +61,6 @@ resource "aws_sns_topic" "tf_wrong2" {
 }
 
 data "aws_sns_topic" "by_name" {
-  name = "${aws_sns_topic.tf_test.name}"
+  name = aws_sns_topic.tf_test.name
 }
 `

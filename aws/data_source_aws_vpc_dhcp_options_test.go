@@ -110,7 +110,7 @@ resource "aws_vpc_dhcp_options" "test" {
 }
 
 data "aws_vpc_dhcp_options" "test" {
-  dhcp_options_id = "${aws_vpc_dhcp_options.test.id}"
+  dhcp_options_id = aws_vpc_dhcp_options.test.id
 }
 `
 
@@ -142,7 +142,7 @@ data "aws_vpc_dhcp_options" "test" {
 
   filter {
     name   = "value"
-    values = ["${aws_vpc_dhcp_options.test.0.domain_name}"]
+    values = [aws_vpc_dhcp_options.test.0.domain_name]
   }
 }
 `, count, rInt, rInt)
