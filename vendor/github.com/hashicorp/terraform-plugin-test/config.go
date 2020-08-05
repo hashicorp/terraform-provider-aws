@@ -2,8 +2,11 @@ package tftest
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/hashicorp/terraform-exec/tfinstall"
 )
 
 // Config is used to configure the test helper. In most normal test programs
@@ -14,6 +17,7 @@ type Config struct {
 	PluginName         string
 	SourceDir          string
 	TerraformExec      string
+	execTempDir        string
 	CurrentPluginExec  string
 	PreviousPluginExec string
 }
@@ -21,19 +25,27 @@ type Config struct {
 // DiscoverConfig uses environment variables and other means to automatically
 // discover a reasonable test helper configuration.
 func DiscoverConfig(pluginName string, sourceDir string) (*Config, error) {
-	var tfExec string
-	var err error
 	tfVersion := os.Getenv("TF_ACC_TERRAFORM_VERSION")
-	if tfVersion == "" {
-		tfExec = FindTerraform()
-		if tfExec == "" {
-			return nil, fmt.Errorf("unable to find 'terraform' executable for testing; either place it in PATH or set TF_ACC_TERRAFORM_PATH explicitly to a direct executable path")
-		}
-	} else {
-		tfExec, err = InstallTerraform(tfVersion)
-		if err != nil {
-			return nil, fmt.Errorf("could not install Terraform version %s: %s", tfVersion, err)
-		}
+	tfPath := os.Getenv("TF_ACC_TERRAFORM_PATH")
+
+	tempDir := os.Getenv("TF_ACC_TEMP_DIR")
+	tfDir, err := ioutil.TempDir(tempDir, "tftest-terraform")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+
+	finders := []tfinstall.ExecPathFinder{}
+	switch {
+	case tfPath != "":
+		finders = append(finders, tfinstall.ExactPath(tfPath))
+	case tfVersion != "":
+		finders = append(finders, tfinstall.ExactVersion(tfVersion, tfDir))
+	default:
+		finders = append(finders, tfinstall.LookPath(), tfinstall.LatestVersion(tfDir, true))
+	}
+	tfExec, err := tfinstall.Find(finders...)
+	if err != nil {
+		return nil, err
 	}
 
 	prevExec := os.Getenv("TF_ACC_PREVIOUS_EXEC")
@@ -54,6 +66,7 @@ func DiscoverConfig(pluginName string, sourceDir string) (*Config, error) {
 		PluginName:         pluginName,
 		SourceDir:          sourceDir,
 		TerraformExec:      tfExec,
+		execTempDir:        tfDir,
 		CurrentPluginExec:  absPluginExecPath,
 		PreviousPluginExec: os.Getenv("TF_ACC_PREVIOUS_EXEC"),
 	}, nil

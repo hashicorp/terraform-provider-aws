@@ -24,6 +24,8 @@ type WorkingDir struct {
 
 	// configDir contains the singular config file generated for each test
 	configDir string
+
+	env map[string]string
 }
 
 // Close deletes the directories and files created to represent the receiving
@@ -31,6 +33,24 @@ type WorkingDir struct {
 // is invalid and may no longer be used.
 func (wd *WorkingDir) Close() error {
 	return os.RemoveAll(wd.baseDir)
+}
+
+// Setenv sets an environment variable on the WorkingDir.
+func (wd *WorkingDir) Setenv(envVar, val string) {
+	if wd.env == nil {
+		wd.env = map[string]string{}
+	}
+	wd.env[envVar] = val
+}
+
+// Unsetenv removes an environment variable from the WorkingDir.
+func (wd *WorkingDir) Unsetenv(envVar string) {
+	delete(wd.env, envVar)
+}
+
+// GetHelper returns the Helper set on the WorkingDir.
+func (wd *WorkingDir) GetHelper() *Helper {
+	return wd.h
 }
 
 // SetConfig sets a new configuration for the working directory.
@@ -114,7 +134,7 @@ func (wd *WorkingDir) RequireClearPlan(t TestControl) {
 }
 
 func (wd *WorkingDir) init(pluginDir string) error {
-	args := []string{"init"}
+	args := []string{"init", wd.configDir}
 	args = append(args, wd.baseArgs...)
 	return wd.runTerraform(args...)
 }

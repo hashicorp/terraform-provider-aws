@@ -39,9 +39,13 @@ type Helper struct {
 
 	// sourceDir is the dir containing the provider source code, needed
 	// for tests that use fixture files.
-	sourceDir                    string
-	pluginName                   string
-	terraformExec                string
+	sourceDir     string
+	pluginName    string
+	terraformExec string
+
+	// execTempDir is created during DiscoverConfig to store any downloaded
+	// binaries
+	execTempDir                  string
 	thisPluginDir, prevPluginDir string
 }
 
@@ -116,6 +120,7 @@ func InitHelper(config *Config) (*Helper, error) {
 		sourceDir:     config.SourceDir,
 		pluginName:    config.PluginName,
 		terraformExec: config.TerraformExec,
+		execTempDir:   config.execTempDir,
 		thisPluginDir: thisPluginDir,
 		prevPluginDir: prevPluginDir,
 	}, nil
@@ -207,6 +212,12 @@ func (h *Helper) GetPluginName() string {
 // Call this before returning from TestMain to minimize the amount of detritus
 // left behind in the filesystem after the tests complete.
 func (h *Helper) Close() error {
+	if h.execTempDir != "" {
+		err := os.RemoveAll(h.execTempDir)
+		if err != nil {
+			return err
+		}
+	}
 	return os.RemoveAll(h.baseDir)
 }
 
