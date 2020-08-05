@@ -2,6 +2,7 @@ package schema
 
 import (
 	"go/ast"
+	"go/constant"
 	"go/types"
 
 	"github.com/bflad/tfproviderlint/helper/astutils"
@@ -67,6 +68,10 @@ func NewSchemaInfo(cl *ast.CompositeLit, info *types.Info) *SchemaInfo {
 		TypesInfo:       info,
 	}
 
+	if kvExpr := result.Fields[SchemaFieldType]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
+		result.Schema.Type = ValueType(kvExpr.Value, info)
+	}
+
 	if kvExpr := result.Fields[SchemaFieldAtLeastOneOf]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
 		result.Schema.AtLeastOneOf = []string{}
 	}
@@ -80,7 +85,22 @@ func NewSchemaInfo(cl *ast.CompositeLit, info *types.Info) *SchemaInfo {
 	}
 
 	if kvExpr := result.Fields[SchemaFieldDefault]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
-		result.Schema.Default = func() (interface{}, error) { return nil, nil }
+		switch result.Schema.Type {
+		case tfschema.TypeBool:
+			if ptr := astutils.ExprBoolValue(kvExpr.Value); ptr != nil {
+				result.Schema.Default = *ptr
+			}
+		case tfschema.TypeInt:
+			if ptr := astutils.ExprIntValue(kvExpr.Value); ptr != nil {
+				result.Schema.Default = *ptr
+			}
+		case tfschema.TypeString:
+			if ptr := astutils.ExprStringValue(kvExpr.Value); ptr != nil {
+				result.Schema.Default = *ptr
+			}
+		default:
+			result.Schema.Default = func() (interface{}, error) { return nil, nil }
+		}
 	}
 
 	if kvExpr := result.Fields[SchemaFieldDefaultFunc]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
@@ -137,6 +157,21 @@ func NewSchemaInfo(cl *ast.CompositeLit, info *types.Info) *SchemaInfo {
 
 	if kvExpr := result.Fields[SchemaFieldValidateFunc]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
 		result.Schema.ValidateFunc = func(interface{}, string) ([]string, []error) { return nil, nil }
+	}
+
+	if kvExpr := result.Fields[SchemaFieldElem]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
+		if uexpr, ok := kvExpr.Value.(*ast.UnaryExpr); ok {
+			if cl := uexpr.X.(*ast.CompositeLit); ok {
+				switch {
+				case IsTypeResource(info.TypeOf(cl.Type)):
+					resourceInfo := NewResourceInfo(cl, info)
+					result.Schema.Elem = resourceInfo.Resource
+				case IsTypeSchema(info.TypeOf(cl.Type)):
+					schemaInfo := NewSchemaInfo(cl, info)
+					result.Schema.Elem = schemaInfo.Schema
+				}
+			}
+		}
 	}
 
 	return result
@@ -237,6 +272,25 @@ func IsValueType(e ast.Expr, info *types.Info) bool {
 		}
 	default:
 		return false
+	}
+}
+
+// ValueType returns the schema value type
+func ValueType(e ast.Expr, info *types.Info) tfschema.ValueType {
+	switch e := e.(type) {
+	case *ast.SelectorExpr:
+		switch t := info.ObjectOf(e.Sel).(type) {
+		case *types.Const:
+			v, ok := constant.Int64Val(t.Val())
+			if !ok {
+				return tfschema.TypeInvalid
+			}
+			return tfschema.ValueType(v)
+		default:
+			return tfschema.TypeInvalid
+		}
+	default:
+		return tfschema.TypeInvalid
 	}
 }
 

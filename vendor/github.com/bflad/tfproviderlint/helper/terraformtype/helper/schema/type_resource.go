@@ -14,6 +14,7 @@ const (
 	ResourceFieldCustomizeDiff      = `CustomizeDiff`
 	ResourceFieldDelete             = `Delete`
 	ResourceFieldDeprecationMessage = `DeprecationMessage`
+	ResourceFieldDescription        = `Description`
 	ResourceFieldExists             = `Exists`
 	ResourceFieldImporter           = `Importer`
 	ResourceFieldMigrateState       = `MigrateState`
@@ -44,8 +45,44 @@ func NewResourceInfo(cl *ast.CompositeLit, info *types.Info) *ResourceInfo {
 		TypesInfo:       info,
 	}
 
+	if kvExpr := result.Fields[ResourceFieldDescription]; kvExpr != nil && astutils.ExprStringValue(kvExpr.Value) != nil {
+		result.Resource.Description = *astutils.ExprStringValue(kvExpr.Value)
+	}
+
 	if kvExpr := result.Fields[ResourceFieldMigrateState]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
 		result.Resource.MigrateState = func(int, *terraform.InstanceState, interface{}) (*terraform.InstanceState, error) { return nil, nil }
+	}
+
+	if kvExpr := result.Fields[ResourceFieldSchema]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
+		result.Resource.Schema = map[string]*tfschema.Schema{}
+		if smap, ok := kvExpr.Value.(*ast.CompositeLit); ok {
+			for _, expr := range smap.Elts {
+				switch elt := expr.(type) {
+				case *ast.KeyValueExpr:
+					var key string
+
+					switch keyExpr := elt.Key.(type) {
+					case *ast.BasicLit:
+						keyPtr := astutils.ExprStringValue(keyExpr)
+
+						if keyPtr == nil {
+							continue
+						}
+
+						key = *keyPtr
+					}
+
+					if key == "" {
+						continue
+					}
+
+					switch valueExpr := elt.Value.(type) {
+					case *ast.CompositeLit:
+						result.Resource.Schema[key] = NewSchemaInfo(valueExpr, info).Schema
+					}
+				}
+			}
+		}
 	}
 
 	return result
