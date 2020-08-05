@@ -95,6 +95,6 @@ func guardDutyPublishingDestinationRefreshStatusFunc(conn *guardduty.GuardDuty, 
 		if err != nil {
 			return nil, guardDutyPublishingStatusFailed, err
 		}
-		return resp, *resp.Status, nil
+		return resp, aws.StringValue(resp.Status), nil
 	}
 }

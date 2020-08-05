@@ -67,13 +67,13 @@ func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Creating GuardDuty publishing destination: %s", input)
 	output, err := conn.CreatePublishingDestination(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty publishing destination failed: %s", err.Error())
+		return fmt.Errorf("Creating GuardDuty publishing destination failed: %w", err)
 	}
 
 	_, err = waiter.PublishingDestinationCreated(conn, *output.DestinationId, detectorID)
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %s",
+		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %w",
 			guardduty.PublishingStatusPublishing, err)
 	}
 
@@ -104,7 +104,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading GuardDuty publishing destination: '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("Reading GuardDuty publishing destination: '%s' failed: %w", d.Id(), err)
 	}
 
 	d.Set("detector_id", detectorId)
@@ -136,7 +136,7 @@ func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Update GuardDuty publishing destination: %s", input)
 	_, err := conn.UpdatePublishingDestination(&input)
 	if err != nil {
-		return fmt.Errorf("Updating GuardDuty publishing destination '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("Updating GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
 	}
 
 	return resourceAwsGuardDutyPublishingDestinationRead(d, meta)
@@ -164,7 +164,7 @@ func resourceAwsGuardDutyPublishingDestinationDelete(d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty publishing destination '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("Deleting GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
 	}
 
 	return nil
