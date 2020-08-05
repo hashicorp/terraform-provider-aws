@@ -48,7 +48,7 @@ func init() {
 		var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 		for _, name := range providerNames {
 			p := Provider()
-			factories[name] = func() (*schema.Provider, error) {
+			factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 				return p, nil
 			}
 			*providers = append(*providers, p)
