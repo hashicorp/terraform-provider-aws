@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -42,7 +44,9 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 }
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_ALB_ClientIP(t *testing.T) {
+	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	vpcResourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -87,6 +91,13 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALB_ClientIP(t *testing.T) {
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
+				),
+			},
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigBaseVpc(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGroup(&vpc),
 				),
 			},
 		},
@@ -173,6 +184,42 @@ func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error
 	return nil
 }
 
+// testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGroup deletes the security group
+// placed into the VPC when Global Accelerator client IP address preservation is enabled.
+func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGroup(vpc *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DescribeSecurityGroupsInput{
+			Filters: buildEC2AttributeFilterList(
+				map[string]string{
+					"group-name": "GlobalAccelerator",
+					"vpc-id":     aws.StringValue(vpc.VpcId),
+				},
+			),
+		}
+
+		output, err := conn.DescribeSecurityGroups(input)
+		if err != nil {
+			return err
+		}
+
+		if len(output.SecurityGroups) == 0 {
+			// Already gone.
+			return nil
+		}
+
+		_, err = conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+			GroupId: output.SecurityGroups[0].GroupId,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 func testAccGlobalAcceleratorEndpointGroup_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "example" {
@@ -214,8 +261,23 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
 `, rInt)
 }
 
+func testAccGlobalAcceleratorEndpointGroupConfigBaseVpc(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
 func testAccGlobalAcceleratorEndpointGroupConfigALBClientIP(rName string, clientIP bool) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccGlobalAcceleratorEndpointGroupConfigBaseVpc(rName),
+		fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = false
@@ -233,14 +295,6 @@ resource "aws_lb" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = list
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_subnet" "test" {
