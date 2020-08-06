@@ -1,8 +1,13 @@
 ## 3.1.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_route53_zone_association: The addition of cross-account zone association support required the use of new `ListHostedZonesByVPC` API call and adding the VPC Region to the resource ID for new resources. Restrictive IAM permissions for Terraform and cross-region imports may require updates. [GH-14215]
+
 FEATURES
 
 * **New Data Source:** `aws_ec2_spot_price` [GH-12504]
+* **New Resource**: `aws_route53_vpc_association_authorization` [GH-14215]
 
 ENHANCEMENTS
 
@@ -10,6 +15,7 @@ ENHANCEMENTS
 * data-source/aws_ecr_repository: Add `image_scanning_configuration` and `image_tag_mutability` attributes [GH-14368]
 * resource/aws_api_gateway_method_settings: Plan-time validation added to `settings` `unauthorized_cache_control_header_strategy` and `logging_level` arguments [GH-12651]
 * resource/aws_lb: Add `subnet_mapping` configuration block `private_ipv4_address` argument [GH-11404]
+* resource/aws_route53_zone_association: Cross-account zone associations can now be created in conjunction with the new `aws_route53_vpc_association_authorization` resource [GH-14215]
 * resource/aws_ssm_parameter: Add `data_type` argument (support `aws:ec2:image` parameters) [GH-13326]
 
 BUG FIXES
