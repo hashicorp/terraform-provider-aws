@@ -119,7 +119,7 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.PutResourcePolicy(input)
 			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
