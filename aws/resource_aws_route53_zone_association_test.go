@@ -7,9 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
 )
 
 func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
@@ -219,22 +216,6 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckRoute53ZoneAssociationDisappears(zone *route53.GetHostedZoneOutput, vpc *route53.VPC) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
-
-		input := &route53.DisassociateVPCFromHostedZoneInput{
-			HostedZoneId: zone.HostedZone.Id,
-			VPC:          vpc,
-			Comment:      aws.String("Managed by Terraform"),
-		}
-
-		_, err := conn.DisassociateVPCFromHostedZone(input)
-
-		return err
 	}
 }
 
