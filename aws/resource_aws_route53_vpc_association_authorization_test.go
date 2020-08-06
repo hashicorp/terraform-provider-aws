@@ -40,6 +40,30 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_route53_vpc_association_authorization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53VPCAssociationAuthorization(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).r53conn
 
@@ -48,7 +72,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 			continue
 		}
 
-		zone_id, vpc_id, err := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+		zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -85,7 +109,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 			return fmt.Errorf("No VPC association authorization ID is set")
 		}
 
-		zone_id, vpc_id, err := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+		zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
