@@ -22,9 +22,9 @@ resource "aws_emr_cluster" "sample" {
   }
 
   core_instance_group {
-    instance_type  = "c4.large"
+    instance_type = "c4.large"
   }
-...
+  # skip ...
 }
 
 resource "aws_emr_managed_scaling_policy" "samplepolicy" {
@@ -49,3 +49,5 @@ The following arguments are supported:
 * `maximum_core_capacity_units` - (Optional) The upper boundary of EC2 units for core node type in a cluster. It is measured through VCPU cores or instances for instance groups and measured through units for instance fleets. The core units are not allowed to scale beyond this boundary. The parameter is used to split capacity allocation between core and task nodes.
 
 ## Import
+
+EMR Managed Scaling policy cannot be imported at this time.
