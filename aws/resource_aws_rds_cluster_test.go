@@ -1291,6 +1291,35 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *te
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13715
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_ReplicationSourceIdentifier(t *testing.T) {
+	var providers []*schema.Provider
+	var primaryDbCluster, secondaryDbCluster rds.DBCluster
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceNamePrimary := "aws_rds_cluster.primary"
+	resourceNameSecondary := "aws_rds_cluster.secondary"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+			testAccPreCheckAWSRdsGlobalCluster(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_ReplicationSourceIdentifier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, testAccAwsRegionProviderFunc(testAccGetRegion(), &providers)),
+					testAccCheckAWSClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_Port(t *testing.T) {
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rInt := acctest.RandInt()
@@ -3258,6 +3287,100 @@ resource "aws_rds_cluster_instance" "secondary" {
   engine_version     = aws_rds_cluster.secondary.engine_version
 }
 `, rNameGlobal, rNamePrimary, rNameSecondary))
+}
+
+func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_ReplicationSourceIdentifier(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "alternate" {
+  provider = "awsalternate"
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
+  engine_version            = "10.11"
+}
+
+resource "aws_rds_cluster" "primary" {
+  cluster_identifier        = "%[1]s-primary"
+  database_name             = "mydb"
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  master_password           = "barbarbar"
+  master_username           = "foo"
+  skip_final_snapshot       = true
+}
+
+resource "aws_rds_cluster_instance" "primary" {
+  cluster_identifier = aws_rds_cluster.primary.id
+  engine             = aws_rds_cluster.primary.engine
+  engine_version     = aws_rds_cluster.primary.engine_version
+  identifier         = "%[1]s-primary"
+  instance_class     = "db.r4.large"                          # only db.r4 or db.r5 are valid for Aurora global db
+}
+
+resource "aws_vpc" "alternate" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  provider          = "awsalternate"
+  count             = 3
+  vpc_id            = aws_vpc.alternate.id
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "alternate" {
+  provider   = "awsalternate"
+  name       = "%[1]s"
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_rds_cluster" "secondary" {
+  provider   = "awsalternate"
+  depends_on = [aws_rds_cluster_instance.primary]
+
+  cluster_identifier            = "%[1]s-secondary"
+  db_subnet_group_name          = aws_db_subnet_group.alternate.name
+  engine                        = aws_rds_global_cluster.test.engine
+  engine_version                = aws_rds_global_cluster.test.engine_version
+  global_cluster_identifier     = aws_rds_global_cluster.test.id
+  replication_source_identifier = aws_rds_cluster.primary.arn
+  skip_final_snapshot           = true
+  source_region                 = data.aws_region.current.name
+}
+
+resource "aws_rds_cluster_instance" "secondary" {
+  provider = "awsalternate"
+
+  cluster_identifier = aws_rds_cluster.secondary.id
+  engine             = aws_rds_cluster.secondary.engine
+  engine_version     = aws_rds_cluster.secondary.engine_version
+  identifier         = "%[1]s-secondary"
+  instance_class     = aws_rds_cluster_instance.primary.instance_class
+}
+`, rName))
 }
 
 func testAccAWSRDSClusterConfig_ScalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
