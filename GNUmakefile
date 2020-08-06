@@ -62,7 +62,7 @@ depscheck:
 docs-lint:
 	@echo "==> Checking docs against linters..."
 	@misspell -error -source=text docs/ || (echo; \
-		echo "Unexpected mispelling found in docs files."; \
+		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
@@ -214,4 +214,3 @@ endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 .PHONY: awsproviderlint build gen golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
-
