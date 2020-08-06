@@ -1276,7 +1276,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	// Add the region as an attribute
 	discoveredRegion, err := retryOnAwsCode("NotFound", func() (interface{}, error) {
 		return s3manager.GetBucketRegionWithClient(context.Background(), s3conn, d.Id(), func(r *request.Request) {
-			r.Config.S3ForcePathStyle = aws.Bool(false)
+			// By default, GetBucketRegion forces virtual host addressing, which
+			// is not compatible with many non-AWS implementations. Instead, pass
+			// the provider s3_force_path_style configuration, which defaults to
+			// false, but allows override.
+			r.Config.S3ForcePathStyle = s3conn.Config.S3ForcePathStyle
 		})
 	})
 	if err != nil {
