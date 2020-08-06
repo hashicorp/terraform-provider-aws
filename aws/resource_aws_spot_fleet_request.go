@@ -559,6 +559,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"on_demand_max_total_price": {
 				Type:     schema.TypeString,
