@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsSecretsManagerSecretPolicy() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 	var res *secretsmanager.PutResourcePolicyOutput
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		res, err = conn.PutResourcePolicy(input)
 		if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -119,7 +120,7 @@ func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.PutResourcePolicy(input)
 			if isAWSErr(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
