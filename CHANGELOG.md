@@ -15,11 +15,13 @@ ENHANCEMENTS
 BUG FIXES
 
 * data-source/aws_availability_zones: Prevent unexpected plan output every apply with `group_names` attribute [GH-14412]
+* data-source/aws_s3_bucket: Ensure provider `s3_force_path_style` configuration is passed through for getting S3 Bucket location with non-AWS implementations [GH-14481]
 * resource/aws_api_gateway_method_settings: Allow `settings` `cache_ttl_in_seconds` argument to be set to 0 [GH-12651]
 * resource/aws_elastictranscoder_preset: Prevent empty configuration block panics [GH-14092]
 * resource/aws_lambda_event_source_mapping: Allow `maximum_retry_attempts` argument to be set to 0 [GH-12479]
 * resource/aws_rds_cluster: Add an `InvalidDBClusterStateFault` retryable error condition for clusters part of a global cluster [GH-14420]
 * resource/aws_rds_cluster: Increase retry timeout for deletion to 2 minutes [GH-14420]
+* resource/aws_s3_bucket: Ensure provider `s3_force_path_style` configuration is passed through for getting S3 Bucket location with non-AWS implementations [GH-14481]
 * resource/aws_security_group: Ensure `name_prefix` argument with hex digits `a` through `f` is properly imported [GH-14475]
 * resource/aws_spot_fleet_request: Allow `target_capacity` argument to be updated to 0 [GH-12759]
 * resource/aws_spot_fleet_request: Wait for modify operation completion (default timeout of 10 minutes) [GH-12759]
