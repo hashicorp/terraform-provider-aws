@@ -2,27 +2,27 @@
 
 - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
 - [Running an Acceptance Test](#running-an-acceptance-test)
-  - [Running Cross-Account Tests](#running-cross-account-tests)
-  - [Running Cross-Region Tests](#running-cross-region-tests)
+    - [Running Cross-Account Tests](#running-cross-account-tests)
+    - [Running Cross-Region Tests](#running-cross-region-tests)
 - [Writing an Acceptance Test](#writing-an-acceptance-test)
-  - [Anatomy of an Acceptance Test](#anatomy-of-an-acceptance-test)
-  - [Resource Acceptance Testing](#resource-acceptance-testing)
-    - [Test Configurations](#test-configurations)
-    - [Combining Test Configurations](#combining-test-configurations)
-      - [Base Test Configurations](#base-test-configurations)
-      - [Available Common Test Configurations](#available-common-test-configurations)
-    - [Randomized Naming](#randomized-naming)
-    - [Other Recommended Variables](#other-recommended-variables)
-    - [Basic Acceptance Tests](#basic-acceptance-tests)
-    - [Service Availability PreCheck](#service-availability-precheck)
-    - [Disappears Acceptance Tests](#disappears-acceptance-tests)
-    - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
-    - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
-    - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
-  - [Data Source Acceptance Testing](#data-source-acceptance-testing)
+    - [Anatomy of an Acceptance Test](#anatomy-of-an-acceptance-test)
+    - [Resource Acceptance Testing](#resource-acceptance-testing)
+        - [Test Configurations](#test-configurations)
+        - [Combining Test Configurations](#combining-test-configurations)
+            - [Base Test Configurations](#base-test-configurations)
+            - [Available Common Test Configurations](#available-common-test-configurations)
+        - [Randomized Naming](#randomized-naming)
+        - [Other Recommended Variables](#other-recommended-variables)
+        - [Basic Acceptance Tests](#basic-acceptance-tests)
+        - [Service Availability PreCheck](#service-availability-precheck)
+        - [Disappears Acceptance Tests](#disappears-acceptance-tests)
+        - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
+        - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
+        - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
+    - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
-  - [Running Test Sweepers](#running-test-sweepers)
-  - [Writing Test Sweepers](#writing-test-sweepers)
+    - [Running Test Sweepers](#running-test-sweepers)
+    - [Writing Test Sweepers](#writing-test-sweepers)
 - [Acceptance Test Checklist](#acceptance-test-checklist)
 
 Terraform includes an acceptance test harness that does most of the repetitive
@@ -61,7 +61,7 @@ export AWS_DEFAULT_REGION=...
 ```
 
 Please note that the default region for the testing is `us-west-2` and must be
-overriden via the `AWS_DEFAULT_REGION` environment variable, if necessary. This
+overridden via the `AWS_DEFAULT_REGION` environment variable, if necessary. This
 is especially important for testing AWS GovCloud (US), which requires:
 
 ```sh

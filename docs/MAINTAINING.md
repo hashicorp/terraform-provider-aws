@@ -99,7 +99,7 @@ Almost exclusively, `github.com/aws/aws-sdk-go` updates are additive in nature. 
 
 Authentication changes:
 
-Occassionally, there will be changes listed in the authentication pieces of the AWS Go SDK codebase, e.g. changes to `aws/session`. The AWS Go SDK `CHANGELOG` should include a relevant description of these changes under a heading such as `SDK Enhancements` or `SDK Bug Fixes`. If they seem worthy of a callout in the Terraform AWS Provider `CHANGELOG`, then upon merging we should include a similar message prefixed with the `provider` subsystem, e.g. `* provider: ...`.
+Occasionally, there will be changes listed in the authentication pieces of the AWS Go SDK codebase, e.g. changes to `aws/session`. The AWS Go SDK `CHANGELOG` should include a relevant description of these changes under a heading such as `SDK Enhancements` or `SDK Bug Fixes`. If they seem worthy of a callout in the Terraform AWS Provider `CHANGELOG`, then upon merging we should include a similar message prefixed with the `provider` subsystem, e.g. `* provider: ...`.
 
 Additionally, if a `CHANGELOG` addition seemed appropriate, this dependency and version should also be updated in the Terraform S3 Backend, which currently lives in Terraform Core. An example of this can be found with https://github.com/terraform-providers/terraform-provider-aws/pull/9305 and https://github.com/hashicorp/terraform/pull/22055.
 
@@ -182,7 +182,7 @@ ENHANCEMENTS:
 * provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
 
-- Follow the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#new-region) to submit updates for various data sources to support the new region
+- Follow the [Contributing Guide](contributing/contribution-checklists.md#new-region) to submit updates for various data sources to support the new region
 - Submit the dependency update to the Terraform S3 Backend by running the following:
 
 ```shell
@@ -317,7 +317,7 @@ The fix for this has been merged and will release with version X.Y.Z of the Terr
 
 The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
 
-#### Changes that should have a CHANGELOG entry:
+#### Changes that should have a CHANGELOG entry
 
 - New Resources and Data Sources
 - New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
@@ -326,11 +326,11 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 - Deprecations
 - Removals
 
-#### Changes that may have a CHANGELOG entry:
+#### Changes that may have a CHANGELOG entry
 
 - Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
 
-#### Changes that should _not_ have a CHANGELOG entry:
+#### Changes that should _not_ have a CHANGELOG entry
 
 - Resource and provider documentation updates
 - Testing updates
@@ -338,6 +338,7 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 ## Breaking Changes
 
 When breaking changes to the provider are necessary we release them in a major version. If an issue or PR necessitates a breaking change, then the following procedure should be observed:
+
 - Add the `breaking-change` label.
 - Add the issue/PR to the next major version milestone.
 - Leave a comment why this is a breaking change or otherwise only being considered for a major version update. If possible, detail any changes that might be made for the contributor to accomplish the task without a breaking change.
