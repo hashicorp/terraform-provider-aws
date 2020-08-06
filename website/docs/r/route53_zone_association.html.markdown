@@ -68,6 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 * `zone_id` - The ID of the hosted zone for the association.
 * `vpc_id` - The ID of the VPC for the association.
 * `vpc_region` - The region in which the VPC identified by `vpc_id` was created.
+* `owning_account` - The account ID of the account that created the hosted zone.
 
 ## Import
 

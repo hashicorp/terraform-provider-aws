@@ -41,6 +41,11 @@ func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+
+			"owning_account": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -61,7 +66,7 @@ func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Associating Route53 Private Zone %s with VPC %s with region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
-	var err error
+
 	resp, err := r53.AssociateVPCWithHostedZone(req)
 	if err != nil {
 		return err
@@ -73,16 +78,11 @@ func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interf
 	// Wait until we are done initializing
 	wait := resource.StateChangeConf{
 		Delay:      30 * time.Second,
-		Pending:    []string{"PENDING"},
-		Target:     []string{"INSYNC"},
+		Pending:    []string{route53.ChangeStatusPending},
+		Target:     []string{route53.ChangeStatusInsync},
 		Timeout:    10 * time.Minute,
 		MinTimeout: 2 * time.Second,
-		Refresh: func() (result interface{}, state string, err error) {
-			changeRequest := &route53.GetChangeInput{
-				Id: aws.String(cleanChangeID(*resp.ChangeInfo.Id)),
-			}
-			return resourceAwsGoRoute53Wait(r53, changeRequest)
-		},
+		Refresh:    resourceAwsRoute53ZoneAssociationRefreshFunc(r53, cleanChangeID(*resp.ChangeInfo.Id), d.Id()),
 	}
 	_, err = wait.WaitForState()
 	if err != nil {
@@ -96,32 +96,28 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).r53conn
 
 	zoneID, vpcID, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
+	vpcRegion := meta.(*AWSClient).region
 
 	if err != nil {
 		return err
 	}
 
-	vpc, err := route53GetZoneAssociation(conn, zoneID, vpcID)
-
-	if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
-		log.Printf("[WARN] Route 53 Hosted Zone (%s) not found, removing from state", zoneID)
-		d.SetId("")
-		return nil
-	}
+	hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
 	if err != nil {
 		return fmt.Errorf("error getting Route 53 Hosted Zone (%s): %s", zoneID, err)
 	}
 
-	if vpc == nil {
+	if hostedZoneSummary == nil {
 		log.Printf("[WARN] Route 53 Hosted Zone (%s) Association (%s) not found, removing from state", zoneID, vpcID)
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("vpc_id", vpc.VPCId)
-	d.Set("vpc_region", vpc.VPCRegion)
+	d.Set("vpc_id", vpcID)
+	d.Set("vpc_region", vpcRegion)
 	d.Set("zone_id", zoneID)
+	d.Set("owning_account", hostedZoneSummary.Owner.OwningAccount)
 
 	return nil
 }
@@ -163,24 +159,39 @@ func resourceAwsRoute53ZoneAssociationParseId(id string) (string, string, error)
 	return parts[0], parts[1], nil
 }
 
-func route53GetZoneAssociation(conn *route53.Route53, zoneID, vpcID string) (*route53.VPC, error) {
-	input := &route53.GetHostedZoneInput{
-		Id: aws.String(zoneID),
+func resourceAwsRoute53ZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		changeRequest := &route53.GetChangeInput{
+			Id: aws.String(changeId),
+		}
+		result, state, err := resourceAwsGoRoute53Wait(conn, changeRequest)
+		if isAWSErr(err, "AccessDenied", "") {
+			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
+			return true, route53.ChangeStatusInsync, nil
+		}
+		return result, state, err
+	}
+}
+
+func route53GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion string) (*route53.HostedZoneSummary, error) {
+	input := &route53.ListHostedZonesByVPCInput{
+		VPCId:     aws.String(vpcID),
+		VPCRegion: aws.String(vpcRegion),
 	}
 
-	output, err := conn.GetHostedZone(input)
+	output, err := conn.ListHostedZonesByVPC(input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var vpc *route53.VPC
-	for _, zoneVPC := range output.VPCs {
-		if vpcID == aws.StringValue(zoneVPC.VPCId) {
-			vpc = zoneVPC
+	var associatedHostedZoneSummary *route53.HostedZoneSummary
+	for _, hostedZoneSummary := range output.HostedZoneSummaries {
+		if zoneID == aws.StringValue(hostedZoneSummary.HostedZoneId) {
+			associatedHostedZoneSummary = hostedZoneSummary
 			break
 		}
 	}
 
-	return vpc, nil
+	return associatedHostedZoneSummary, nil
 }
