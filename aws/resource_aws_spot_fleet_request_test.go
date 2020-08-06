@@ -447,34 +447,6 @@ func TestAccAWSSpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_onDemandFulfilledCapacity(t *testing.T) {
-	var sfr ec2.SpotFleetRequestConfig
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
-	resourceName := "aws_spot_fleet_request.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotFleetRequestOnDemandFulfilledCapacityConfig(rName, validUntil, "2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_fulfilled_capacity", "2"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
-			},
-		},
-	})
-}
-
 func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2884,36 +2856,4 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = ["aws_iam_policy_attachment.test"]
 }
 `, rName, validUntil, strategy)
-}
-
-func testAccAWSSpotFleetRequestOnDemandFulfilledCapacityConfig(rName, validUntil, capacity string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName) +
-		fmt.Sprintf(`
-resource "aws_launch_template" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  key_name      = aws_key_pair.test.key_name
-}
-
-resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.005"
-  target_capacity                     = 2
-  valid_until                         = %[2]q
-  terminate_instances_with_expiration = true
-  instance_interruption_behaviour     = "stop"
-  wait_for_fulfillment                = true
-  on_demand_fulfilled_capacity        = %[3]q
-
-  launch_template_config {
-    launch_template_specification {
-      name    = aws_launch_template.test.name
-      version = aws_launch_template.test.latest_version
-    }
-  }
-
-  depends_on = ["aws_iam_policy_attachment.test"]
-}
-`, rName, validUntil, capacity)
 }

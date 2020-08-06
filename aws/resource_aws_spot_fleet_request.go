@@ -555,12 +555,6 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 					ec2.OnDemandAllocationStrategyLowestPrice,
 				}, false),
 			},
-			"on_demand_fulfilled_capacity": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
 			"on_demand_max_total_price": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1025,10 +1019,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.OnDemandMaxTotalPrice = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("on_demand_fulfilled_capacity"); ok {
-		spotFleetConfig.OnDemandFulfilledCapacity = aws.Float64(v.(float64))
-	}
-
 	if v, ok := d.GetOk("valid_from"); ok {
 		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
@@ -1175,7 +1165,7 @@ func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta in
 
 		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
 
-		return spotFleetRequest, *spotFleetRequest.SpotFleetRequestState, nil
+		return spotFleetRequest, aws.StringValue(spotFleetRequest.SpotFleetRequestState), nil
 	}
 }
 
@@ -1200,7 +1190,7 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 		}
 
 		cfg := resp.SpotFleetRequestConfigs[0]
-		status := *cfg.ActivityStatus
+		status := aws.StringValue(cfg.ActivityStatus)
 
 		var fleetError error
 		if status == ec2.ActivityStatusError {
@@ -1361,10 +1351,6 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	if config.OnDemandMaxTotalPrice != nil {
 		d.Set("on_demand_max_total_price", aws.StringValue(config.OnDemandMaxTotalPrice))
-	}
-
-	if config.OnDemandFulfilledCapacity != nil {
-		d.Set("on_demand_fulfilled_capacity", aws.Float64Value(config.OnDemandFulfilledCapacity))
 	}
 
 	if config.LoadBalancersConfig != nil {
