@@ -1045,6 +1045,9 @@ func (c *ServiceCatalog) CreatePortfolioShareRequest(input *CreatePortfolioShare
 // AWSOrganizationsAccess must be enabled in order to create a portfolio share
 // to an organization node.
 //
+// You can't share a shared resource. This includes portfolios that contain
+// a shared product.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -12199,18 +12202,27 @@ type DescribeProvisioningParametersInput struct {
 
 	// The path identifier of the product. This value is optional if the product
 	// has a default path, and required if the product has more than one path. To
-	// list the paths for a product, use ListLaunchPaths.
+	// list the paths for a product, use ListLaunchPaths. You must provide the name
+	// or ID, but not both.
 	PathId *string `min:"1" type:"string"`
 
-	// The product identifier.
-	//
-	// ProductId is a required field
-	ProductId *string `min:"1" type:"string" required:"true"`
+	// The name of the path. You must provide the name or ID, but not both.
+	PathName *string `min:"1" type:"string"`
 
-	// The identifier of the provisioning artifact.
-	//
-	// ProvisioningArtifactId is a required field
-	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+	// The product identifier. You must provide the product name or ID, but not
+	// both.
+	ProductId *string `min:"1" type:"string"`
+
+	// The name of the product. You must provide the name or ID, but not both.
+	ProductName *string `type:"string"`
+
+	// The identifier of the provisioning artifact. You must provide the name or
+	// ID, but not both.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact. You must provide the name or ID, but
+	// not both.
+	ProvisioningArtifactName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12229,14 +12241,11 @@ func (s *DescribeProvisioningParametersInput) Validate() error {
 	if s.PathId != nil && len(*s.PathId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
 	}
-	if s.ProductId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	if s.PathName != nil && len(*s.PathName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathName", 1))
 	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
-	}
-	if s.ProvisioningArtifactId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
 	}
 	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
@@ -12260,9 +12269,21 @@ func (s *DescribeProvisioningParametersInput) SetPathId(v string) *DescribeProvi
 	return s
 }
 
+// SetPathName sets the PathName field's value.
+func (s *DescribeProvisioningParametersInput) SetPathName(v string) *DescribeProvisioningParametersInput {
+	s.PathName = &v
+	return s
+}
+
 // SetProductId sets the ProductId field's value.
 func (s *DescribeProvisioningParametersInput) SetProductId(v string) *DescribeProvisioningParametersInput {
 	s.ProductId = &v
+	return s
+}
+
+// SetProductName sets the ProductName field's value.
+func (s *DescribeProvisioningParametersInput) SetProductName(v string) *DescribeProvisioningParametersInput {
+	s.ProductName = &v
 	return s
 }
 
@@ -12272,11 +12293,20 @@ func (s *DescribeProvisioningParametersInput) SetProvisioningArtifactId(v string
 	return s
 }
 
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *DescribeProvisioningParametersInput) SetProvisioningArtifactName(v string) *DescribeProvisioningParametersInput {
+	s.ProvisioningArtifactName = &v
+	return s
+}
+
 type DescribeProvisioningParametersOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the constraints used to provision the product.
 	ConstraintSummaries []*ConstraintSummary `type:"list"`
+
+	// The output of the provisioning artifact.
+	ProvisioningArtifactOutputs []*ProvisioningArtifactOutput `type:"list"`
 
 	// Information about the parameters used to provision the product.
 	ProvisioningArtifactParameters []*ProvisioningArtifactParameter `type:"list"`
@@ -12306,6 +12336,12 @@ func (s DescribeProvisioningParametersOutput) GoString() string {
 // SetConstraintSummaries sets the ConstraintSummaries field's value.
 func (s *DescribeProvisioningParametersOutput) SetConstraintSummaries(v []*ConstraintSummary) *DescribeProvisioningParametersOutput {
 	s.ConstraintSummaries = v
+	return s
+}
+
+// SetProvisioningArtifactOutputs sets the ProvisioningArtifactOutputs field's value.
+func (s *DescribeProvisioningParametersOutput) SetProvisioningArtifactOutputs(v []*ProvisioningArtifactOutput) *DescribeProvisioningParametersOutput {
+	s.ProvisioningArtifactOutputs = v
 	return s
 }
 
@@ -16283,13 +16319,18 @@ type ProvisionProductInput struct {
 
 	// The path identifier of the product. This value is optional if the product
 	// has a default path, and required if the product has more than one path. To
-	// list the paths for a product, use ListLaunchPaths.
+	// list the paths for a product, use ListLaunchPaths. You must provide the name
+	// or ID, but not both.
 	PathId *string `min:"1" type:"string"`
 
-	// The product identifier.
-	//
-	// ProductId is a required field
-	ProductId *string `min:"1" type:"string" required:"true"`
+	// The name of the path. You must provide the name or ID, but not both.
+	PathName *string `min:"1" type:"string"`
+
+	// The product identifier. You must provide the name or ID, but not both.
+	ProductId *string `min:"1" type:"string"`
+
+	// The name of the product. You must provide the name or ID, but not both.
+	ProductName *string `type:"string"`
 
 	// An idempotency token that uniquely identifies the provisioning request.
 	ProvisionToken *string `min:"1" type:"string" idempotencyToken:"true"`
@@ -16300,10 +16341,13 @@ type ProvisionProductInput struct {
 	// ProvisionedProductName is a required field
 	ProvisionedProductName *string `min:"1" type:"string" required:"true"`
 
-	// The identifier of the provisioning artifact.
-	//
-	// ProvisioningArtifactId is a required field
-	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+	// The identifier of the provisioning artifact. You must provide the name or
+	// ID, but not both.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact. You must provide the name or ID, but
+	// not both.
+	ProvisioningArtifactName *string `type:"string"`
 
 	// Parameters specified by the administrator that are required for provisioning
 	// the product.
@@ -16333,8 +16377,8 @@ func (s *ProvisionProductInput) Validate() error {
 	if s.PathId != nil && len(*s.PathId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
 	}
-	if s.ProductId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	if s.PathName != nil && len(*s.PathName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathName", 1))
 	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
@@ -16347,9 +16391,6 @@ func (s *ProvisionProductInput) Validate() error {
 	}
 	if s.ProvisionedProductName != nil && len(*s.ProvisionedProductName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductName", 1))
-	}
-	if s.ProvisioningArtifactId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
 	}
 	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
@@ -16404,9 +16445,21 @@ func (s *ProvisionProductInput) SetPathId(v string) *ProvisionProductInput {
 	return s
 }
 
+// SetPathName sets the PathName field's value.
+func (s *ProvisionProductInput) SetPathName(v string) *ProvisionProductInput {
+	s.PathName = &v
+	return s
+}
+
 // SetProductId sets the ProductId field's value.
 func (s *ProvisionProductInput) SetProductId(v string) *ProvisionProductInput {
 	s.ProductId = &v
+	return s
+}
+
+// SetProductName sets the ProductName field's value.
+func (s *ProvisionProductInput) SetProductName(v string) *ProvisionProductInput {
+	s.ProductName = &v
 	return s
 }
 
@@ -16425,6 +16478,12 @@ func (s *ProvisionProductInput) SetProvisionedProductName(v string) *ProvisionPr
 // SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
 func (s *ProvisionProductInput) SetProvisioningArtifactId(v string) *ProvisionProductInput {
 	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *ProvisionProductInput) SetProvisioningArtifactName(v string) *ProvisionProductInput {
+	s.ProvisioningArtifactName = &v
 	return s
 }
 
@@ -17147,6 +17206,39 @@ func (s *ProvisioningArtifactDetail) SetName(v string) *ProvisioningArtifactDeta
 // SetType sets the Type field's value.
 func (s *ProvisioningArtifactDetail) SetType(v string) *ProvisioningArtifactDetail {
 	s.Type = &v
+	return s
+}
+
+// Provisioning artifact output.
+type ProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Description of the provisioning artifact output key.
+	Description *string `type:"string"`
+
+	// The provisioning artifact output key.
+	Key *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *ProvisioningArtifactOutput) SetDescription(v string) *ProvisioningArtifactOutput {
+	s.Description = &v
+	return s
+}
+
+// SetKey sets the Key field's value.
+func (s *ProvisioningArtifactOutput) SetKey(v string) *ProvisioningArtifactOutput {
+	s.Key = &v
 	return s
 }
 
@@ -19952,15 +20044,22 @@ type UpdateProvisionedProductInput struct {
 	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
-	// The new path identifier. This value is optional if the product has a default
-	// path, and required if the product has more than one path.
+	// The path identifier. This value is optional if the product has a default
+	// path, and required if the product has more than one path. You must provide
+	// the name or ID, but not both.
 	PathId *string `min:"1" type:"string"`
 
-	// The identifier of the product.
+	// The name of the path. You must provide the name or ID, but not both.
+	PathName *string `min:"1" type:"string"`
+
+	// The identifier of the product. You must provide the name or ID, but not both.
 	ProductId *string `min:"1" type:"string"`
 
-	// The identifier of the provisioned product. You cannot specify both ProvisionedProductName
-	// and ProvisionedProductId.
+	// The name of the product. You must provide the name or ID, but not both.
+	ProductName *string `type:"string"`
+
+	// The identifier of the provisioned product. You must provide the name or ID,
+	// but not both.
 	ProvisionedProductId *string `min:"1" type:"string"`
 
 	// The name of the provisioned product. You cannot specify both ProvisionedProductName
@@ -19969,6 +20068,10 @@ type UpdateProvisionedProductInput struct {
 
 	// The identifier of the provisioning artifact.
 	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact. You must provide the name or ID, but
+	// not both.
+	ProvisioningArtifactName *string `type:"string"`
 
 	// The new parameters.
 	ProvisioningParameters []*UpdateProvisioningParameter `type:"list"`
@@ -20000,6 +20103,9 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateProvisionedProductInput"}
 	if s.PathId != nil && len(*s.PathId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
+	}
+	if s.PathName != nil && len(*s.PathName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathName", 1))
 	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
@@ -20060,9 +20166,21 @@ func (s *UpdateProvisionedProductInput) SetPathId(v string) *UpdateProvisionedPr
 	return s
 }
 
+// SetPathName sets the PathName field's value.
+func (s *UpdateProvisionedProductInput) SetPathName(v string) *UpdateProvisionedProductInput {
+	s.PathName = &v
+	return s
+}
+
 // SetProductId sets the ProductId field's value.
 func (s *UpdateProvisionedProductInput) SetProductId(v string) *UpdateProvisionedProductInput {
 	s.ProductId = &v
+	return s
+}
+
+// SetProductName sets the ProductName field's value.
+func (s *UpdateProvisionedProductInput) SetProductName(v string) *UpdateProvisionedProductInput {
+	s.ProductName = &v
 	return s
 }
 
@@ -20081,6 +20199,12 @@ func (s *UpdateProvisionedProductInput) SetProvisionedProductName(v string) *Upd
 // SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
 func (s *UpdateProvisionedProductInput) SetProvisioningArtifactId(v string) *UpdateProvisionedProductInput {
 	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *UpdateProvisionedProductInput) SetProvisioningArtifactName(v string) *UpdateProvisionedProductInput {
+	s.ProvisioningArtifactName = &v
 	return s
 }
 

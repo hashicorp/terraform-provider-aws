@@ -2236,10 +2236,6 @@ func (c *RDS) CreateDBProxyRequest(input *CreateDBProxyInput) (req *request.Requ
 
 // CreateDBProxy API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Creates a new DB proxy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3645,10 +3641,6 @@ func (c *RDS) DeleteDBProxyRequest(input *DeleteDBProxyInput) (req *request.Requ
 
 // DeleteDBProxy API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Deletes an existing proxy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4319,10 +4311,6 @@ func (c *RDS) DeregisterDBProxyTargetsRequest(input *DeregisterDBProxyTargetsInp
 }
 
 // DeregisterDBProxyTargets API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Remove the association between one or more DBProxyTarget data structures
 // and a DBProxyTargetGroup.
@@ -6560,10 +6548,6 @@ func (c *RDS) DescribeDBProxiesRequest(input *DescribeDBProxiesInput) (req *requ
 
 // DescribeDBProxies API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Returns information about DB proxies.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6701,10 +6685,6 @@ func (c *RDS) DescribeDBProxyTargetGroupsRequest(input *DescribeDBProxyTargetGro
 }
 
 // DescribeDBProxyTargetGroups API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Returns information about DB proxy target groups, represented by DBProxyTargetGroup
 // data structures.
@@ -6851,10 +6831,6 @@ func (c *RDS) DescribeDBProxyTargetsRequest(input *DescribeDBProxyTargetsInput) 
 }
 
 // DescribeDBProxyTargets API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Returns information about DBProxyTarget objects. This API supports pagination.
 //
@@ -10658,6 +10634,12 @@ func (c *RDS) ModifyDBInstanceRequest(input *ModifyDBInstanceInput) (req *reques
 //
 //   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
 //
+//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   An error occurred accessing an AWS KMS key.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The requested operation can't be performed while the cluster is in this state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyDBInstance
 func (c *RDS) ModifyDBInstance(input *ModifyDBInstanceInput) (*ModifyDBInstanceOutput, error) {
 	req, out := c.ModifyDBInstanceRequest(input)
@@ -10825,10 +10807,6 @@ func (c *RDS) ModifyDBProxyRequest(input *ModifyDBProxyInput) (req *request.Requ
 
 // ModifyDBProxy API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Changes the settings for an existing DB proxy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -10915,10 +10893,6 @@ func (c *RDS) ModifyDBProxyTargetGroupRequest(input *ModifyDBProxyTargetGroupInp
 }
 
 // ModifyDBProxyTargetGroup API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Modifies the properties of a DBProxyTargetGroup.
 //
@@ -11911,10 +11885,6 @@ func (c *RDS) RegisterDBProxyTargetsRequest(input *RegisterDBProxyTargetsInput) 
 }
 
 // RegisterDBProxyTargets API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Associate one or more DBProxyTarget data structures with a DBProxyTargetGroup.
 //
@@ -14389,8 +14359,13 @@ func (c *RDS) StopDBInstanceWithContext(ctx aws.Context, input *StopDBInstanceIn
 //    * EventSubscriptions - The number of event subscriptions per account.
 //    The used value is the count of the event subscriptions in the account.
 //
-//    * ManualSnapshots - The number of manual DB snapshots per account. The
-//    used value is the count of the manual DB snapshots in the account.
+//    * ManualClusterSnapshots - The number of manual DB cluster snapshots per
+//    account. The used value is the count of the manual DB cluster snapshots
+//    in the account.
+//
+//    * ManualSnapshots - The number of manual DB instance snapshots per account.
+//    The used value is the count of the manual DB instance snapshots in the
+//    account.
 //
 //    * OptionGroups - The number of DB option groups per account, excluding
 //    default option groups. The used value is the count of nondefault DB option
@@ -15609,10 +15584,6 @@ func (s *CloudwatchLogsExportConfiguration) SetEnableLogTypes(v []*string) *Clou
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Specifies the settings that control the size and behavior of the connection
 // pool associated with a DBProxyTargetGroup.
 type ConnectionPoolConfiguration struct {
@@ -15632,8 +15603,6 @@ type ConnectionPoolConfiguration struct {
 	// has identical settings such as time zone and character set. For multiple
 	// statements, use semicolons as the separator. You can also include multiple
 	// variables in a single SET statement, such as SET x=1, y=2.
-	//
-	// InitQuery is not currently supported for PostgreSQL.
 	//
 	// Default: no initialization query
 	InitQuery *string `type:"string"`
@@ -15708,10 +15677,6 @@ func (s *ConnectionPoolConfiguration) SetSessionPinningFilters(v []*string) *Con
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Displays the settings that control the size and behavior of the connection
 // pool associated with a DBProxyTarget.
 type ConnectionPoolConfigurationInfo struct {
@@ -15728,8 +15693,6 @@ type ConnectionPoolConfigurationInfo struct {
 	// is empty by default. For multiple statements, use semicolons as the separator.
 	// You can also include multiple variables in a single SET statement, such as
 	// SET x=1, y=2.
-	//
-	// InitQuery is not currently supported for PostgreSQL.
 	InitQuery *string `type:"string"`
 
 	// The maximum size of the connection pool for each target in a target group.
@@ -18942,7 +18905,7 @@ type CreateDBInstanceReadReplicaInput struct {
 
 	// The Active Directory directory ID to create the DB instance in.
 	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// For Oracle DB instances, Amazon RDS can use Kerberos authentication to authenticate
 	// users that connect to the DB instance. For more information, see Using Kerberos
 	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
 	// in the Amazon RDS User Guide.
@@ -21760,9 +21723,17 @@ type DBEngineVersion struct {
 	// of the CreateDBInstance action.
 	SupportedTimezones []*Timezone `locationNameList:"Timezone" type:"list"`
 
+	// A value that indicates whether you can use Aurora global databases with a
+	// specific DB engine version.
+	SupportsGlobalDatabases *bool `type:"boolean"`
+
 	// A value that indicates whether the engine version supports exporting the
 	// log types specified by ExportableLogTypes to CloudWatch Logs.
 	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
+
+	// A value that indicates whether you can use Aurora parallel query with a specific
+	// DB engine version.
+	SupportsParallelQuery *bool `type:"boolean"`
 
 	// Indicates whether the database engine version supports read replicas.
 	SupportsReadReplica *bool `type:"boolean"`
@@ -21854,9 +21825,21 @@ func (s *DBEngineVersion) SetSupportedTimezones(v []*Timezone) *DBEngineVersion 
 	return s
 }
 
+// SetSupportsGlobalDatabases sets the SupportsGlobalDatabases field's value.
+func (s *DBEngineVersion) SetSupportsGlobalDatabases(v bool) *DBEngineVersion {
+	s.SupportsGlobalDatabases = &v
+	return s
+}
+
 // SetSupportsLogExportsToCloudwatchLogs sets the SupportsLogExportsToCloudwatchLogs field's value.
 func (s *DBEngineVersion) SetSupportsLogExportsToCloudwatchLogs(v bool) *DBEngineVersion {
 	s.SupportsLogExportsToCloudwatchLogs = &v
+	return s
+}
+
+// SetSupportsParallelQuery sets the SupportsParallelQuery field's value.
+func (s *DBEngineVersion) SetSupportsParallelQuery(v bool) *DBEngineVersion {
+	s.SupportsParallelQuery = &v
 	return s
 }
 
@@ -22987,10 +22970,6 @@ func (s *DBParameterGroupStatus) SetParameterApplyStatus(v string) *DBParameterG
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // The data structure representing a proxy managed by the RDS Proxy.
 //
 // This data type is used as a response element in the DescribeDBProxies action.
@@ -23154,10 +23133,6 @@ func (s *DBProxy) SetVpcSubnetIds(v []*string) *DBProxy {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Contains the details for an RDS Proxy target. It represents an RDS DB instance
 // or Aurora DB cluster that the proxy can connect to. One or more targets are
 // associated with an RDS Proxy target group.
@@ -23245,10 +23220,6 @@ func (s *DBProxyTarget) SetType(v string) *DBProxyTarget {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Represents a set of RDS DB instances, Aurora DB clusters, or both that a
 // proxy can connect to. Currently, each target group is associated with exactly
 // one RDS DB instance or Aurora DB cluster.
@@ -33147,7 +33118,7 @@ type ModifyDBInstanceInput struct {
 	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
 	// in the Amazon RDS User Guide.
 	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// For Oracle DB instances, Amazon RDS can use Kerberos authentication to authenticate
 	// users that connect to the DB instance. For more information, see Using Kerberos
 	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
 	// in the Amazon RDS User Guide.
@@ -35416,6 +35387,13 @@ type OrderableDBInstanceOption struct {
 	// Indicates whether a DB instance is Multi-AZ capable.
 	MultiAZCapable *bool `type:"boolean"`
 
+	// Whether a DB instance supports RDS on Outposts.
+	//
+	// For more information about RDS on Outposts, see Amazon RDS on AWS Outposts
+	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html)
+	// in the Amazon RDS User Guide.
+	OutpostCapable *bool `type:"boolean"`
+
 	// Indicates whether a DB instance can have a read replica.
 	ReadReplicaCapable *bool `type:"boolean"`
 
@@ -35432,6 +35410,10 @@ type OrderableDBInstanceOption struct {
 	// Indicates whether a DB instance supports Enhanced Monitoring at intervals
 	// from 1 to 60 seconds.
 	SupportsEnhancedMonitoring *bool `type:"boolean"`
+
+	// A value that indicates whether you can use Aurora global databases with a
+	// specific combination of other DB engine attributes.
+	SupportsGlobalDatabases *bool `type:"boolean"`
 
 	// Indicates whether a DB instance supports IAM database authentication.
 	SupportsIAMDatabaseAuthentication *bool `type:"boolean"`
@@ -35550,6 +35532,12 @@ func (s *OrderableDBInstanceOption) SetMultiAZCapable(v bool) *OrderableDBInstan
 	return s
 }
 
+// SetOutpostCapable sets the OutpostCapable field's value.
+func (s *OrderableDBInstanceOption) SetOutpostCapable(v bool) *OrderableDBInstanceOption {
+	s.OutpostCapable = &v
+	return s
+}
+
 // SetReadReplicaCapable sets the ReadReplicaCapable field's value.
 func (s *OrderableDBInstanceOption) SetReadReplicaCapable(v bool) *OrderableDBInstanceOption {
 	s.ReadReplicaCapable = &v
@@ -35571,6 +35559,12 @@ func (s *OrderableDBInstanceOption) SetSupportedEngineModes(v []*string) *Ordera
 // SetSupportsEnhancedMonitoring sets the SupportsEnhancedMonitoring field's value.
 func (s *OrderableDBInstanceOption) SetSupportsEnhancedMonitoring(v bool) *OrderableDBInstanceOption {
 	s.SupportsEnhancedMonitoring = &v
+	return s
+}
+
+// SetSupportsGlobalDatabases sets the SupportsGlobalDatabases field's value.
+func (s *OrderableDBInstanceOption) SetSupportsGlobalDatabases(v bool) *OrderableDBInstanceOption {
+	s.SupportsGlobalDatabases = &v
 	return s
 }
 
@@ -35613,6 +35607,34 @@ func (s *OrderableDBInstanceOption) SetSupportsStorageEncryption(v bool) *Ordera
 // SetVpc sets the Vpc field's value.
 func (s *OrderableDBInstanceOption) SetVpc(v bool) *OrderableDBInstanceOption {
 	s.Vpc = &v
+	return s
+}
+
+// A data type that represents an Outpost.
+//
+// For more information about RDS on Outposts, see Amazon RDS on AWS Outposts
+// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html)
+// in the Amazon RDS User Guide.
+type Outpost struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Outpost.
+	Arn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Outpost) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Outpost) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Outpost) SetArn(v string) *Outpost {
+	s.Arn = &v
 	return s
 }
 
@@ -38758,7 +38780,7 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
 	// in the Amazon RDS User Guide.
 	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// For Oracle DB instances, Amazon RDS can use Kerberos authentication to authenticate
 	// users that connect to the DB instance. For more information, see Using Kerberos
 	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
 	// in the Amazon RDS User Guide.
@@ -39849,7 +39871,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
 	// in the Amazon RDS User Guide.
 	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// For Oracle DB instances, Amazon RDS can use Kerberos authentication to authenticate
 	// users that connect to the DB instance. For more information, see Using Kerberos
 	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
 	// in the Amazon RDS User Guide.
@@ -41423,8 +41445,8 @@ func (s *StopDBInstanceOutput) SetDBInstance(v *DBInstance) *StopDBInstanceOutpu
 	return s
 }
 
-// This data type is used as a response element in the DescribeDBSubnetGroups
-// action.
+// This data type is used as a response element for the DescribeDBSubnetGroups
+// operation.
 type Subnet struct {
 	_ struct{} `type:"structure"`
 
@@ -41434,10 +41456,17 @@ type Subnet struct {
 	// type.
 	SubnetAvailabilityZone *AvailabilityZone `type:"structure"`
 
-	// Specifies the identifier of the subnet.
+	// The identifier of the subnet.
 	SubnetIdentifier *string `type:"string"`
 
-	// Specifies the status of the subnet.
+	// If the subnet is associated with an Outpost, this value specifies the Outpost.
+	//
+	// For more information about RDS on Outposts, see Amazon RDS on AWS Outposts
+	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html)
+	// in the Amazon RDS User Guide.
+	SubnetOutpost *Outpost `type:"structure"`
+
+	// The status of the subnet.
 	SubnetStatus *string `type:"string"`
 }
 
@@ -41460,6 +41489,12 @@ func (s *Subnet) SetSubnetAvailabilityZone(v *AvailabilityZone) *Subnet {
 // SetSubnetIdentifier sets the SubnetIdentifier field's value.
 func (s *Subnet) SetSubnetIdentifier(v string) *Subnet {
 	s.SubnetIdentifier = &v
+	return s
+}
+
+// SetSubnetOutpost sets the SubnetOutpost field's value.
+func (s *Subnet) SetSubnetOutpost(v *Outpost) *Subnet {
+	s.SubnetOutpost = v
 	return s
 }
 
@@ -41508,10 +41543,6 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Information about the connection health of an RDS Proxy target.
 type TargetHealth struct {
 	_ struct{} `type:"structure"`
@@ -41646,10 +41677,6 @@ func (s *UpgradeTarget) SetIsMajorVersionUpgrade(v bool) *UpgradeTarget {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Specifies the details of authentication used by a proxy to log in as a specific
 // database user.
 type UserAuthConfig struct {
@@ -41716,10 +41743,6 @@ func (s *UserAuthConfig) SetUserName(v string) *UserAuthConfig {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Returns the details of authentication used by a proxy to log in as a specific
 // database user.
 type UserAuthConfigInfo struct {

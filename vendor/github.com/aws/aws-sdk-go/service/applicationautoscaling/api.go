@@ -3275,7 +3275,9 @@ type PredefinedMetricSpecification struct {
 	// a resource label unless the metric type is ALBRequestCountPerTarget and there
 	// is a target group attached to the Spot Fleet request or ECS service.
 	//
-	// The format is app/<load-balancer-name>/<load-balancer-id>/targetgroup/<target-group-name>/<target-group-id>,
+	// Elastic Load Balancing sends data about your load balancers to Amazon CloudWatch.
+	// CloudWatch collects the data and specifies the format to use to access the
+	// data. The format is app/<load-balancer-name>/<load-balancer-id>/targetgroup/<target-group-name>/<target-group-id>,
 	// where:
 	//
 	//    * app/<load-balancer-name>/<load-balancer-id> is the final portion of
@@ -3283,6 +3285,12 @@ type PredefinedMetricSpecification struct {
 	//
 	//    * targetgroup/<target-group-name>/<target-group-id> is the final portion
 	//    of the target group ARN.
+	//
+	// To find the ARN for an Application Load Balancer, use the DescribeLoadBalancers
+	// (https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html)
+	// API operation. To find the ARN for the target group, use the DescribeTargetGroups
+	// (https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetGroups.html)
+	// API operation.
 	ResourceLabel *string `min:"1" type:"string"`
 }
 
@@ -3854,8 +3862,10 @@ type RegisterScalableTargetInput struct {
 	// the minimum capacity limit in response to changing demand.
 	//
 	// This parameter is required if you are registering a scalable target. For
-	// Lambda provisioned concurrency, the minimum value allowed is 0. For all other
-	// resources, the minimum value allowed is 1.
+	// certain resources, the minimum value allowed is 0. This includes Lambda provisioned
+	// concurrency, Spot Fleet, ECS services, Aurora DB clusters, EMR clusters,
+	// and custom resources. For all other resources, the minimum value allowed
+	// is 1.
 	MinCapacity *int64 `type:"integer"`
 
 	// The identifier of the resource that is associated with the scalable target.

@@ -13,7 +13,138 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/restxml"
 )
 
-const opCreateCloudFrontOriginAccessIdentity = "CreateCloudFrontOriginAccessIdentity2019_03_26"
+const opCreateCachePolicy = "CreateCachePolicy2020_05_31"
+
+// CreateCachePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the CreateCachePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateCachePolicy for more information on using the CreateCachePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateCachePolicyRequest method.
+//    req, resp := client.CreateCachePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateCachePolicy
+func (c *CloudFront) CreateCachePolicyRequest(input *CreateCachePolicyInput) (req *request.Request, output *CreateCachePolicyOutput) {
+	op := &request.Operation{
+		Name:       opCreateCachePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/cache-policy",
+	}
+
+	if input == nil {
+		input = &CreateCachePolicyInput{}
+	}
+
+	output = &CreateCachePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateCachePolicy API operation for Amazon CloudFront.
+//
+// Creates a cache policy.
+//
+// After you create a cache policy, you can attach it to one or more cache behaviors.
+// When it’s attached to a cache behavior, the cache policy determines the
+// following:
+//
+//    * The values that CloudFront includes in the cache key. These values can
+//    include HTTP headers, cookies, and URL query strings. CloudFront uses
+//    the cache key to find an object in its cache that it can return to the
+//    viewer.
+//
+//    * The default, minimum, and maximum time to live (TTL) values that you
+//    want objects to stay in the CloudFront cache.
+//
+// The headers, cookies, and query strings that are included in the cache key
+// are automatically included in requests that CloudFront sends to the origin.
+// CloudFront sends a request when it can’t find an object in its cache that
+// matches the request’s cache key. If you want to send values to the origin
+// but not include them in the cache key, use CreateOriginRequestPolicy.
+//
+// For more information about cache policies, see Controlling the cache key
+// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html)
+// in the Amazon CloudFront Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation CreateCachePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeInconsistentQuantities "InconsistentQuantities"
+//   The value of Quantity and the size of Items don't match.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+//   * ErrCodeCachePolicyAlreadyExists "CachePolicyAlreadyExists"
+//   A cache policy with this name already exists. You must provide a unique name.
+//   To modify an existing cache policy, use UpdateCachePolicy.
+//
+//   * ErrCodeTooManyCachePolicies "TooManyCachePolicies"
+//   You have reached the maximum number of cache policies for this AWS account.
+//   For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyHeadersInCachePolicy "TooManyHeadersInCachePolicy"
+//   The number of headers in the cache policy exceeds the maximum. For more information,
+//   see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyCookiesInCachePolicy "TooManyCookiesInCachePolicy"
+//   The number of cookies in the cache policy exceeds the maximum. For more information,
+//   see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyQueryStringsInCachePolicy "TooManyQueryStringsInCachePolicy"
+//   The number of query strings in the cache policy exceeds the maximum. For
+//   more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateCachePolicy
+func (c *CloudFront) CreateCachePolicy(input *CreateCachePolicyInput) (*CreateCachePolicyOutput, error) {
+	req, out := c.CreateCachePolicyRequest(input)
+	return out, req.Send()
+}
+
+// CreateCachePolicyWithContext is the same as CreateCachePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateCachePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) CreateCachePolicyWithContext(ctx aws.Context, input *CreateCachePolicyInput, opts ...request.Option) (*CreateCachePolicyOutput, error) {
+	req, out := c.CreateCachePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateCloudFrontOriginAccessIdentity = "CreateCloudFrontOriginAccessIdentity2020_05_31"
 
 // CreateCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCloudFrontOriginAccessIdentity operation. The "output" return
@@ -38,12 +169,12 @@ const opCreateCloudFrontOriginAccessIdentity = "CreateCloudFrontOriginAccessIden
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateCloudFrontOriginAccessIdentity
 func (c *CloudFront) CreateCloudFrontOriginAccessIdentityRequest(input *CreateCloudFrontOriginAccessIdentityInput) (req *request.Request, output *CreateCloudFrontOriginAccessIdentityOutput) {
 	op := &request.Operation{
 		Name:       opCreateCloudFrontOriginAccessIdentity,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/origin-access-identity/cloudfront",
+		HTTPPath:   "/2020-05-31/origin-access-identity/cloudfront",
 	}
 
 	if input == nil {
@@ -92,7 +223,7 @@ func (c *CloudFront) CreateCloudFrontOriginAccessIdentityRequest(input *CreateCl
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateCloudFrontOriginAccessIdentity
 func (c *CloudFront) CreateCloudFrontOriginAccessIdentity(input *CreateCloudFrontOriginAccessIdentityInput) (*CreateCloudFrontOriginAccessIdentityOutput, error) {
 	req, out := c.CreateCloudFrontOriginAccessIdentityRequest(input)
 	return out, req.Send()
@@ -114,7 +245,7 @@ func (c *CloudFront) CreateCloudFrontOriginAccessIdentityWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
-const opCreateDistribution = "CreateDistribution2019_03_26"
+const opCreateDistribution = "CreateDistribution2020_05_31"
 
 // CreateDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDistribution operation. The "output" return
@@ -139,12 +270,12 @@ const opCreateDistribution = "CreateDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateDistribution
 func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (req *request.Request, output *CreateDistributionOutput) {
 	op := &request.Operation{
 		Name:       opCreateDistribution,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/distribution",
+		HTTPPath:   "/2020-05-31/distribution",
 	}
 
 	if input == nil {
@@ -308,6 +439,10 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   Processing your request would cause the maximum number of distributions with
 //   Lambda function associations per owner to be exceeded.
 //
+//   * ErrCodeTooManyDistributionsWithSingleFunctionARN "TooManyDistributionsWithSingleFunctionARN"
+//   The maximum number of distributions have been associated with the specified
+//   Lambda function.
+//
 //   * ErrCodeTooManyLambdaFunctionAssociations "TooManyLambdaFunctionAssociations"
 //   Your request contains more Lambda function associations than are allowed
 //   per distribution.
@@ -332,7 +467,23 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   The maximum number of distributions have been associated with the specified
 //   configuration for field-level encryption.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateDistribution
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodeTooManyDistributionsAssociatedToCachePolicy "TooManyDistributionsAssociatedToCachePolicy"
+//   The maximum number of distributions have been associated with the specified
+//   cache policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy "TooManyDistributionsAssociatedToOriginRequestPolicy"
+//   The maximum number of distributions have been associated with the specified
+//   origin request policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateDistribution
 func (c *CloudFront) CreateDistribution(input *CreateDistributionInput) (*CreateDistributionOutput, error) {
 	req, out := c.CreateDistributionRequest(input)
 	return out, req.Send()
@@ -354,7 +505,7 @@ func (c *CloudFront) CreateDistributionWithContext(ctx aws.Context, input *Creat
 	return out, req.Send()
 }
 
-const opCreateDistributionWithTags = "CreateDistributionWithTags2019_03_26"
+const opCreateDistributionWithTags = "CreateDistributionWithTags2020_05_31"
 
 // CreateDistributionWithTagsRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDistributionWithTags operation. The "output" return
@@ -379,12 +530,12 @@ const opCreateDistributionWithTags = "CreateDistributionWithTags2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateDistributionWithTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateDistributionWithTags
 func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistributionWithTagsInput) (req *request.Request, output *CreateDistributionWithTagsOutput) {
 	op := &request.Operation{
 		Name:       opCreateDistributionWithTags,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/distribution?WithTags",
+		HTTPPath:   "/2020-05-31/distribution?WithTags",
 	}
 
 	if input == nil {
@@ -539,6 +690,10 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   Processing your request would cause the maximum number of distributions with
 //   Lambda function associations per owner to be exceeded.
 //
+//   * ErrCodeTooManyDistributionsWithSingleFunctionARN "TooManyDistributionsWithSingleFunctionARN"
+//   The maximum number of distributions have been associated with the specified
+//   Lambda function.
+//
 //   * ErrCodeTooManyLambdaFunctionAssociations "TooManyLambdaFunctionAssociations"
 //   Your request contains more Lambda function associations than are allowed
 //   per distribution.
@@ -563,7 +718,23 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   The maximum number of distributions have been associated with the specified
 //   configuration for field-level encryption.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateDistributionWithTags
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodeTooManyDistributionsAssociatedToCachePolicy "TooManyDistributionsAssociatedToCachePolicy"
+//   The maximum number of distributions have been associated with the specified
+//   cache policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy "TooManyDistributionsAssociatedToOriginRequestPolicy"
+//   The maximum number of distributions have been associated with the specified
+//   origin request policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateDistributionWithTags
 func (c *CloudFront) CreateDistributionWithTags(input *CreateDistributionWithTagsInput) (*CreateDistributionWithTagsOutput, error) {
 	req, out := c.CreateDistributionWithTagsRequest(input)
 	return out, req.Send()
@@ -585,7 +756,7 @@ func (c *CloudFront) CreateDistributionWithTagsWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
-const opCreateFieldLevelEncryptionConfig = "CreateFieldLevelEncryptionConfig2019_03_26"
+const opCreateFieldLevelEncryptionConfig = "CreateFieldLevelEncryptionConfig2020_05_31"
 
 // CreateFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateFieldLevelEncryptionConfig operation. The "output" return
@@ -610,12 +781,12 @@ const opCreateFieldLevelEncryptionConfig = "CreateFieldLevelEncryptionConfig2019
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateFieldLevelEncryptionConfig
 func (c *CloudFront) CreateFieldLevelEncryptionConfigRequest(input *CreateFieldLevelEncryptionConfigInput) (req *request.Request, output *CreateFieldLevelEncryptionConfigOutput) {
 	op := &request.Operation{
 		Name:       opCreateFieldLevelEncryptionConfig,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/field-level-encryption",
+		HTTPPath:   "/2020-05-31/field-level-encryption",
 	}
 
 	if input == nil {
@@ -666,7 +837,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionConfigRequest(input *CreateFieldL
 //   * ErrCodeQueryArgProfileEmpty "QueryArgProfileEmpty"
 //   No profile specified for the field-level encryption query argument.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateFieldLevelEncryptionConfig
 func (c *CloudFront) CreateFieldLevelEncryptionConfig(input *CreateFieldLevelEncryptionConfigInput) (*CreateFieldLevelEncryptionConfigOutput, error) {
 	req, out := c.CreateFieldLevelEncryptionConfigRequest(input)
 	return out, req.Send()
@@ -688,7 +859,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionConfigWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
-const opCreateFieldLevelEncryptionProfile = "CreateFieldLevelEncryptionProfile2019_03_26"
+const opCreateFieldLevelEncryptionProfile = "CreateFieldLevelEncryptionProfile2020_05_31"
 
 // CreateFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the CreateFieldLevelEncryptionProfile operation. The "output" return
@@ -713,12 +884,12 @@ const opCreateFieldLevelEncryptionProfile = "CreateFieldLevelEncryptionProfile20
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateFieldLevelEncryptionProfile
 func (c *CloudFront) CreateFieldLevelEncryptionProfileRequest(input *CreateFieldLevelEncryptionProfileInput) (req *request.Request, output *CreateFieldLevelEncryptionProfileOutput) {
 	op := &request.Operation{
 		Name:       opCreateFieldLevelEncryptionProfile,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/field-level-encryption-profile",
+		HTTPPath:   "/2020-05-31/field-level-encryption-profile",
 	}
 
 	if input == nil {
@@ -768,7 +939,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionProfileRequest(input *CreateField
 //   The maximum number of field patterns for field-level encryption have been
 //   created.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateFieldLevelEncryptionProfile
 func (c *CloudFront) CreateFieldLevelEncryptionProfile(input *CreateFieldLevelEncryptionProfileInput) (*CreateFieldLevelEncryptionProfileOutput, error) {
 	req, out := c.CreateFieldLevelEncryptionProfileRequest(input)
 	return out, req.Send()
@@ -790,7 +961,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionProfileWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
-const opCreateInvalidation = "CreateInvalidation2019_03_26"
+const opCreateInvalidation = "CreateInvalidation2020_05_31"
 
 // CreateInvalidationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateInvalidation operation. The "output" return
@@ -815,12 +986,12 @@ const opCreateInvalidation = "CreateInvalidation2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateInvalidation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateInvalidation
 func (c *CloudFront) CreateInvalidationRequest(input *CreateInvalidationInput) (req *request.Request, output *CreateInvalidationOutput) {
 	op := &request.Operation{
 		Name:       opCreateInvalidation,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/distribution/{DistributionId}/invalidation",
+		HTTPPath:   "/2020-05-31/distribution/{DistributionId}/invalidation",
 	}
 
 	if input == nil {
@@ -867,7 +1038,7 @@ func (c *CloudFront) CreateInvalidationRequest(input *CreateInvalidationInput) (
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateInvalidation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateInvalidation
 func (c *CloudFront) CreateInvalidation(input *CreateInvalidationInput) (*CreateInvalidationOutput, error) {
 	req, out := c.CreateInvalidationRequest(input)
 	return out, req.Send()
@@ -889,7 +1060,141 @@ func (c *CloudFront) CreateInvalidationWithContext(ctx aws.Context, input *Creat
 	return out, req.Send()
 }
 
-const opCreatePublicKey = "CreatePublicKey2019_03_26"
+const opCreateOriginRequestPolicy = "CreateOriginRequestPolicy2020_05_31"
+
+// CreateOriginRequestPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the CreateOriginRequestPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateOriginRequestPolicy for more information on using the CreateOriginRequestPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateOriginRequestPolicyRequest method.
+//    req, resp := client.CreateOriginRequestPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateOriginRequestPolicy
+func (c *CloudFront) CreateOriginRequestPolicyRequest(input *CreateOriginRequestPolicyInput) (req *request.Request, output *CreateOriginRequestPolicyOutput) {
+	op := &request.Operation{
+		Name:       opCreateOriginRequestPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/origin-request-policy",
+	}
+
+	if input == nil {
+		input = &CreateOriginRequestPolicyInput{}
+	}
+
+	output = &CreateOriginRequestPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateOriginRequestPolicy API operation for Amazon CloudFront.
+//
+// Creates an origin request policy.
+//
+// After you create an origin request policy, you can attach it to one or more
+// cache behaviors. When it’s attached to a cache behavior, the origin request
+// policy determines the values that CloudFront includes in requests that it
+// sends to the origin. Each request that CloudFront sends to the origin includes
+// the following:
+//
+//    * The request body and the URL path (without the domain name) from the
+//    viewer request.
+//
+//    * The headers that CloudFront automatically includes in every origin request,
+//    including Host, User-Agent, and X-Amz-Cf-Id.
+//
+//    * All HTTP headers, cookies, and URL query strings that are specified
+//    in the cache policy or the origin request policy. These can include items
+//    from the viewer request and, in the case of headers, additional ones that
+//    are added by CloudFront.
+//
+// CloudFront sends a request when it can’t find a valid object in its cache
+// that matches the request. If you want to send values to the origin and also
+// include them in the cache key, use CreateCachePolicy.
+//
+// For more information about origin request policies, see Controlling origin
+// requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html)
+// in the Amazon CloudFront Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation CreateOriginRequestPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeInconsistentQuantities "InconsistentQuantities"
+//   The value of Quantity and the size of Items don't match.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+//   * ErrCodeOriginRequestPolicyAlreadyExists "OriginRequestPolicyAlreadyExists"
+//   An origin request policy with this name already exists. You must provide
+//   a unique name. To modify an existing origin request policy, use UpdateOriginRequestPolicy.
+//
+//   * ErrCodeTooManyOriginRequestPolicies "TooManyOriginRequestPolicies"
+//   You have reached the maximum number of origin request policies for this AWS
+//   account. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyHeadersInOriginRequestPolicy "TooManyHeadersInOriginRequestPolicy"
+//   The number of headers in the origin request policy exceeds the maximum. For
+//   more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyCookiesInOriginRequestPolicy "TooManyCookiesInOriginRequestPolicy"
+//   The number of cookies in the origin request policy exceeds the maximum. For
+//   more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyQueryStringsInOriginRequestPolicy "TooManyQueryStringsInOriginRequestPolicy"
+//   The number of query strings in the origin request policy exceeds the maximum.
+//   For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateOriginRequestPolicy
+func (c *CloudFront) CreateOriginRequestPolicy(input *CreateOriginRequestPolicyInput) (*CreateOriginRequestPolicyOutput, error) {
+	req, out := c.CreateOriginRequestPolicyRequest(input)
+	return out, req.Send()
+}
+
+// CreateOriginRequestPolicyWithContext is the same as CreateOriginRequestPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateOriginRequestPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) CreateOriginRequestPolicyWithContext(ctx aws.Context, input *CreateOriginRequestPolicyInput, opts ...request.Option) (*CreateOriginRequestPolicyOutput, error) {
+	req, out := c.CreateOriginRequestPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreatePublicKey = "CreatePublicKey2020_05_31"
 
 // CreatePublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePublicKey operation. The "output" return
@@ -914,12 +1219,12 @@ const opCreatePublicKey = "CreatePublicKey2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreatePublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreatePublicKey
 func (c *CloudFront) CreatePublicKeyRequest(input *CreatePublicKeyInput) (req *request.Request, output *CreatePublicKeyOutput) {
 	op := &request.Operation{
 		Name:       opCreatePublicKey,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/public-key",
+		HTTPPath:   "/2020-05-31/public-key",
 	}
 
 	if input == nil {
@@ -954,7 +1259,7 @@ func (c *CloudFront) CreatePublicKeyRequest(input *CreatePublicKeyInput) (req *r
 //   The maximum number of public keys for field-level encryption have been created.
 //   To create a new public key, delete one of the existing keys.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreatePublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreatePublicKey
 func (c *CloudFront) CreatePublicKey(input *CreatePublicKeyInput) (*CreatePublicKeyOutput, error) {
 	req, out := c.CreatePublicKeyRequest(input)
 	return out, req.Send()
@@ -976,7 +1281,7 @@ func (c *CloudFront) CreatePublicKeyWithContext(ctx aws.Context, input *CreatePu
 	return out, req.Send()
 }
 
-const opCreateStreamingDistribution = "CreateStreamingDistribution2019_03_26"
+const opCreateStreamingDistribution = "CreateStreamingDistribution2020_05_31"
 
 // CreateStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStreamingDistribution operation. The "output" return
@@ -1001,12 +1306,12 @@ const opCreateStreamingDistribution = "CreateStreamingDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateStreamingDistribution
 func (c *CloudFront) CreateStreamingDistributionRequest(input *CreateStreamingDistributionInput) (req *request.Request, output *CreateStreamingDistributionOutput) {
 	op := &request.Operation{
 		Name:       opCreateStreamingDistribution,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/streaming-distribution",
+		HTTPPath:   "/2020-05-31/streaming-distribution",
 	}
 
 	if input == nil {
@@ -1097,7 +1402,7 @@ func (c *CloudFront) CreateStreamingDistributionRequest(input *CreateStreamingDi
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateStreamingDistribution
 func (c *CloudFront) CreateStreamingDistribution(input *CreateStreamingDistributionInput) (*CreateStreamingDistributionOutput, error) {
 	req, out := c.CreateStreamingDistributionRequest(input)
 	return out, req.Send()
@@ -1119,7 +1424,7 @@ func (c *CloudFront) CreateStreamingDistributionWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
-const opCreateStreamingDistributionWithTags = "CreateStreamingDistributionWithTags2019_03_26"
+const opCreateStreamingDistributionWithTags = "CreateStreamingDistributionWithTags2020_05_31"
 
 // CreateStreamingDistributionWithTagsRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStreamingDistributionWithTags operation. The "output" return
@@ -1144,12 +1449,12 @@ const opCreateStreamingDistributionWithTags = "CreateStreamingDistributionWithTa
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateStreamingDistributionWithTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateStreamingDistributionWithTags
 func (c *CloudFront) CreateStreamingDistributionWithTagsRequest(input *CreateStreamingDistributionWithTagsInput) (req *request.Request, output *CreateStreamingDistributionWithTagsOutput) {
 	op := &request.Operation{
 		Name:       opCreateStreamingDistributionWithTags,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/streaming-distribution?WithTags",
+		HTTPPath:   "/2020-05-31/streaming-distribution?WithTags",
 	}
 
 	if input == nil {
@@ -1216,7 +1521,7 @@ func (c *CloudFront) CreateStreamingDistributionWithTagsRequest(input *CreateStr
 //   * ErrCodeInvalidTagging "InvalidTagging"
 //   The tagging specified is not valid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/CreateStreamingDistributionWithTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateStreamingDistributionWithTags
 func (c *CloudFront) CreateStreamingDistributionWithTags(input *CreateStreamingDistributionWithTagsInput) (*CreateStreamingDistributionWithTagsOutput, error) {
 	req, out := c.CreateStreamingDistributionWithTagsRequest(input)
 	return out, req.Send()
@@ -1238,7 +1543,111 @@ func (c *CloudFront) CreateStreamingDistributionWithTagsWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
-const opDeleteCloudFrontOriginAccessIdentity = "DeleteCloudFrontOriginAccessIdentity2019_03_26"
+const opDeleteCachePolicy = "DeleteCachePolicy2020_05_31"
+
+// DeleteCachePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteCachePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteCachePolicy for more information on using the DeleteCachePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteCachePolicyRequest method.
+//    req, resp := client.DeleteCachePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteCachePolicy
+func (c *CloudFront) DeleteCachePolicyRequest(input *DeleteCachePolicyInput) (req *request.Request, output *DeleteCachePolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteCachePolicy,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2020-05-31/cache-policy/{Id}",
+	}
+
+	if input == nil {
+		input = &DeleteCachePolicyInput{}
+	}
+
+	output = &DeleteCachePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteCachePolicy API operation for Amazon CloudFront.
+//
+// Deletes a cache policy.
+//
+// You cannot delete a cache policy if it’s attached to a cache behavior.
+// First update your distributions to remove the cache policy from all cache
+// behaviors, then delete the cache policy.
+//
+// To delete a cache policy, you must provide the policy’s identifier and
+// version. To get these values, you can use ListCachePolicies or GetCachePolicy.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation DeleteCachePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
+//   The If-Match version is missing or not valid.
+//
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodePreconditionFailed "PreconditionFailed"
+//   The precondition given in one or more of the request header fields evaluated
+//   to false.
+//
+//   * ErrCodeIllegalDelete "IllegalDelete"
+//   You cannot delete a managed policy.
+//
+//   * ErrCodeCachePolicyInUse "CachePolicyInUse"
+//   Cannot delete the cache policy because it is attached to one or more cache
+//   behaviors.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteCachePolicy
+func (c *CloudFront) DeleteCachePolicy(input *DeleteCachePolicyInput) (*DeleteCachePolicyOutput, error) {
+	req, out := c.DeleteCachePolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteCachePolicyWithContext is the same as DeleteCachePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteCachePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) DeleteCachePolicyWithContext(ctx aws.Context, input *DeleteCachePolicyInput, opts ...request.Option) (*DeleteCachePolicyOutput, error) {
+	req, out := c.DeleteCachePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteCloudFrontOriginAccessIdentity = "DeleteCloudFrontOriginAccessIdentity2020_05_31"
 
 // DeleteCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCloudFrontOriginAccessIdentity operation. The "output" return
@@ -1263,12 +1672,12 @@ const opDeleteCloudFrontOriginAccessIdentity = "DeleteCloudFrontOriginAccessIden
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteCloudFrontOriginAccessIdentity
 func (c *CloudFront) DeleteCloudFrontOriginAccessIdentityRequest(input *DeleteCloudFrontOriginAccessIdentityInput) (req *request.Request, output *DeleteCloudFrontOriginAccessIdentityOutput) {
 	op := &request.Operation{
 		Name:       opDeleteCloudFrontOriginAccessIdentity,
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/2019-03-26/origin-access-identity/cloudfront/{Id}",
+		HTTPPath:   "/2020-05-31/origin-access-identity/cloudfront/{Id}",
 	}
 
 	if input == nil {
@@ -1297,7 +1706,7 @@ func (c *CloudFront) DeleteCloudFrontOriginAccessIdentityRequest(input *DeleteCl
 //   Access denied.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchCloudFrontOriginAccessIdentity "NoSuchCloudFrontOriginAccessIdentity"
 //   The specified origin access identity does not exist.
@@ -1309,7 +1718,7 @@ func (c *CloudFront) DeleteCloudFrontOriginAccessIdentityRequest(input *DeleteCl
 //   * ErrCodeOriginAccessIdentityInUse "CloudFrontOriginAccessIdentityInUse"
 //   The Origin Access Identity specified is already in use.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteCloudFrontOriginAccessIdentity
 func (c *CloudFront) DeleteCloudFrontOriginAccessIdentity(input *DeleteCloudFrontOriginAccessIdentityInput) (*DeleteCloudFrontOriginAccessIdentityOutput, error) {
 	req, out := c.DeleteCloudFrontOriginAccessIdentityRequest(input)
 	return out, req.Send()
@@ -1331,7 +1740,7 @@ func (c *CloudFront) DeleteCloudFrontOriginAccessIdentityWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
-const opDeleteDistribution = "DeleteDistribution2019_03_26"
+const opDeleteDistribution = "DeleteDistribution2020_05_31"
 
 // DeleteDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDistribution operation. The "output" return
@@ -1356,12 +1765,12 @@ const opDeleteDistribution = "DeleteDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteDistribution
 func (c *CloudFront) DeleteDistributionRequest(input *DeleteDistributionInput) (req *request.Request, output *DeleteDistributionOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDistribution,
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/2019-03-26/distribution/{Id}",
+		HTTPPath:   "/2020-05-31/distribution/{Id}",
 	}
 
 	if input == nil {
@@ -1394,7 +1803,7 @@ func (c *CloudFront) DeleteDistributionRequest(input *DeleteDistributionInput) (
 //   distribution before you can delete it.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchDistribution "NoSuchDistribution"
 //   The specified distribution does not exist.
@@ -1403,7 +1812,7 @@ func (c *CloudFront) DeleteDistributionRequest(input *DeleteDistributionInput) (
 //   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteDistribution
 func (c *CloudFront) DeleteDistribution(input *DeleteDistributionInput) (*DeleteDistributionOutput, error) {
 	req, out := c.DeleteDistributionRequest(input)
 	return out, req.Send()
@@ -1425,7 +1834,7 @@ func (c *CloudFront) DeleteDistributionWithContext(ctx aws.Context, input *Delet
 	return out, req.Send()
 }
 
-const opDeleteFieldLevelEncryptionConfig = "DeleteFieldLevelEncryptionConfig2019_03_26"
+const opDeleteFieldLevelEncryptionConfig = "DeleteFieldLevelEncryptionConfig2020_05_31"
 
 // DeleteFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteFieldLevelEncryptionConfig operation. The "output" return
@@ -1450,12 +1859,12 @@ const opDeleteFieldLevelEncryptionConfig = "DeleteFieldLevelEncryptionConfig2019
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteFieldLevelEncryptionConfig
 func (c *CloudFront) DeleteFieldLevelEncryptionConfigRequest(input *DeleteFieldLevelEncryptionConfigInput) (req *request.Request, output *DeleteFieldLevelEncryptionConfigOutput) {
 	op := &request.Operation{
 		Name:       opDeleteFieldLevelEncryptionConfig,
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/2019-03-26/field-level-encryption/{Id}",
+		HTTPPath:   "/2020-05-31/field-level-encryption/{Id}",
 	}
 
 	if input == nil {
@@ -1484,7 +1893,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionConfigRequest(input *DeleteFieldL
 //   Access denied.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchFieldLevelEncryptionConfig "NoSuchFieldLevelEncryptionConfig"
 //   The specified configuration for field-level encryption doesn't exist.
@@ -1496,7 +1905,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionConfigRequest(input *DeleteFieldL
 //   * ErrCodeFieldLevelEncryptionConfigInUse "FieldLevelEncryptionConfigInUse"
 //   The specified configuration for field-level encryption is in use.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteFieldLevelEncryptionConfig
 func (c *CloudFront) DeleteFieldLevelEncryptionConfig(input *DeleteFieldLevelEncryptionConfigInput) (*DeleteFieldLevelEncryptionConfigOutput, error) {
 	req, out := c.DeleteFieldLevelEncryptionConfigRequest(input)
 	return out, req.Send()
@@ -1518,7 +1927,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionConfigWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
-const opDeleteFieldLevelEncryptionProfile = "DeleteFieldLevelEncryptionProfile2019_03_26"
+const opDeleteFieldLevelEncryptionProfile = "DeleteFieldLevelEncryptionProfile2020_05_31"
 
 // DeleteFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteFieldLevelEncryptionProfile operation. The "output" return
@@ -1543,12 +1952,12 @@ const opDeleteFieldLevelEncryptionProfile = "DeleteFieldLevelEncryptionProfile20
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteFieldLevelEncryptionProfile
 func (c *CloudFront) DeleteFieldLevelEncryptionProfileRequest(input *DeleteFieldLevelEncryptionProfileInput) (req *request.Request, output *DeleteFieldLevelEncryptionProfileOutput) {
 	op := &request.Operation{
 		Name:       opDeleteFieldLevelEncryptionProfile,
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/2019-03-26/field-level-encryption-profile/{Id}",
+		HTTPPath:   "/2020-05-31/field-level-encryption-profile/{Id}",
 	}
 
 	if input == nil {
@@ -1577,7 +1986,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionProfileRequest(input *DeleteField
 //   Access denied.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchFieldLevelEncryptionProfile "NoSuchFieldLevelEncryptionProfile"
 //   The specified profile for field-level encryption doesn't exist.
@@ -1589,7 +1998,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionProfileRequest(input *DeleteField
 //   * ErrCodeFieldLevelEncryptionProfileInUse "FieldLevelEncryptionProfileInUse"
 //   The specified profile for field-level encryption is in use.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteFieldLevelEncryptionProfile
 func (c *CloudFront) DeleteFieldLevelEncryptionProfile(input *DeleteFieldLevelEncryptionProfileInput) (*DeleteFieldLevelEncryptionProfileOutput, error) {
 	req, out := c.DeleteFieldLevelEncryptionProfileRequest(input)
 	return out, req.Send()
@@ -1611,7 +2020,112 @@ func (c *CloudFront) DeleteFieldLevelEncryptionProfileWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
-const opDeletePublicKey = "DeletePublicKey2019_03_26"
+const opDeleteOriginRequestPolicy = "DeleteOriginRequestPolicy2020_05_31"
+
+// DeleteOriginRequestPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteOriginRequestPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteOriginRequestPolicy for more information on using the DeleteOriginRequestPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteOriginRequestPolicyRequest method.
+//    req, resp := client.DeleteOriginRequestPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteOriginRequestPolicy
+func (c *CloudFront) DeleteOriginRequestPolicyRequest(input *DeleteOriginRequestPolicyInput) (req *request.Request, output *DeleteOriginRequestPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteOriginRequestPolicy,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2020-05-31/origin-request-policy/{Id}",
+	}
+
+	if input == nil {
+		input = &DeleteOriginRequestPolicyInput{}
+	}
+
+	output = &DeleteOriginRequestPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteOriginRequestPolicy API operation for Amazon CloudFront.
+//
+// Deletes an origin request policy.
+//
+// You cannot delete an origin request policy if it’s attached to any cache
+// behaviors. First update your distributions to remove the origin request policy
+// from all cache behaviors, then delete the origin request policy.
+//
+// To delete an origin request policy, you must provide the policy’s identifier
+// and version. To get the identifier, you can use ListOriginRequestPolicies
+// or GetOriginRequestPolicy.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation DeleteOriginRequestPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
+//   The If-Match version is missing or not valid.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodePreconditionFailed "PreconditionFailed"
+//   The precondition given in one or more of the request header fields evaluated
+//   to false.
+//
+//   * ErrCodeIllegalDelete "IllegalDelete"
+//   You cannot delete a managed policy.
+//
+//   * ErrCodeOriginRequestPolicyInUse "OriginRequestPolicyInUse"
+//   Cannot delete the origin request policy because it is attached to one or
+//   more cache behaviors.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteOriginRequestPolicy
+func (c *CloudFront) DeleteOriginRequestPolicy(input *DeleteOriginRequestPolicyInput) (*DeleteOriginRequestPolicyOutput, error) {
+	req, out := c.DeleteOriginRequestPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteOriginRequestPolicyWithContext is the same as DeleteOriginRequestPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteOriginRequestPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) DeleteOriginRequestPolicyWithContext(ctx aws.Context, input *DeleteOriginRequestPolicyInput, opts ...request.Option) (*DeleteOriginRequestPolicyOutput, error) {
+	req, out := c.DeleteOriginRequestPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeletePublicKey = "DeletePublicKey2020_05_31"
 
 // DeletePublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePublicKey operation. The "output" return
@@ -1636,12 +2150,12 @@ const opDeletePublicKey = "DeletePublicKey2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeletePublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeletePublicKey
 func (c *CloudFront) DeletePublicKeyRequest(input *DeletePublicKeyInput) (req *request.Request, output *DeletePublicKeyOutput) {
 	op := &request.Operation{
 		Name:       opDeletePublicKey,
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/2019-03-26/public-key/{Id}",
+		HTTPPath:   "/2020-05-31/public-key/{Id}",
 	}
 
 	if input == nil {
@@ -1673,7 +2187,7 @@ func (c *CloudFront) DeletePublicKeyRequest(input *DeletePublicKeyInput) (req *r
 //   The specified public key is in use.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
@@ -1682,7 +2196,7 @@ func (c *CloudFront) DeletePublicKeyRequest(input *DeletePublicKeyInput) (req *r
 //   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeletePublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeletePublicKey
 func (c *CloudFront) DeletePublicKey(input *DeletePublicKeyInput) (*DeletePublicKeyOutput, error) {
 	req, out := c.DeletePublicKeyRequest(input)
 	return out, req.Send()
@@ -1704,7 +2218,7 @@ func (c *CloudFront) DeletePublicKeyWithContext(ctx aws.Context, input *DeletePu
 	return out, req.Send()
 }
 
-const opDeleteStreamingDistribution = "DeleteStreamingDistribution2019_03_26"
+const opDeleteStreamingDistribution = "DeleteStreamingDistribution2020_05_31"
 
 // DeleteStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteStreamingDistribution operation. The "output" return
@@ -1729,12 +2243,12 @@ const opDeleteStreamingDistribution = "DeleteStreamingDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteStreamingDistribution
 func (c *CloudFront) DeleteStreamingDistributionRequest(input *DeleteStreamingDistributionInput) (req *request.Request, output *DeleteStreamingDistributionOutput) {
 	op := &request.Operation{
 		Name:       opDeleteStreamingDistribution,
 		HTTPMethod: "DELETE",
-		HTTPPath:   "/2019-03-26/streaming-distribution/{Id}",
+		HTTPPath:   "/2020-05-31/streaming-distribution/{Id}",
 	}
 
 	if input == nil {
@@ -1802,7 +2316,7 @@ func (c *CloudFront) DeleteStreamingDistributionRequest(input *DeleteStreamingDi
 //   distribution before you can delete it.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchStreamingDistribution "NoSuchStreamingDistribution"
 //   The specified streaming distribution does not exist.
@@ -1811,7 +2325,7 @@ func (c *CloudFront) DeleteStreamingDistributionRequest(input *DeleteStreamingDi
 //   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteStreamingDistribution
 func (c *CloudFront) DeleteStreamingDistribution(input *DeleteStreamingDistributionInput) (*DeleteStreamingDistributionOutput, error) {
 	req, out := c.DeleteStreamingDistributionRequest(input)
 	return out, req.Send()
@@ -1833,7 +2347,187 @@ func (c *CloudFront) DeleteStreamingDistributionWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
-const opGetCloudFrontOriginAccessIdentity = "GetCloudFrontOriginAccessIdentity2019_03_26"
+const opGetCachePolicy = "GetCachePolicy2020_05_31"
+
+// GetCachePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetCachePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCachePolicy for more information on using the GetCachePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCachePolicyRequest method.
+//    req, resp := client.GetCachePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCachePolicy
+func (c *CloudFront) GetCachePolicyRequest(input *GetCachePolicyInput) (req *request.Request, output *GetCachePolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetCachePolicy,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/cache-policy/{Id}",
+	}
+
+	if input == nil {
+		input = &GetCachePolicyInput{}
+	}
+
+	output = &GetCachePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCachePolicy API operation for Amazon CloudFront.
+//
+// Gets a cache policy, including the following metadata:
+//
+//    * The policy’s identifier.
+//
+//    * The date and time when the policy was last modified.
+//
+// To get a cache policy, you must provide the policy’s identifier. If the
+// cache policy is attached to a distribution’s cache behavior, you can get
+// the policy’s identifier using ListDistributions or GetDistribution. If
+// the cache policy is not attached to a cache behavior, you can get the identifier
+// using ListCachePolicies.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation GetCachePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCachePolicy
+func (c *CloudFront) GetCachePolicy(input *GetCachePolicyInput) (*GetCachePolicyOutput, error) {
+	req, out := c.GetCachePolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetCachePolicyWithContext is the same as GetCachePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCachePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) GetCachePolicyWithContext(ctx aws.Context, input *GetCachePolicyInput, opts ...request.Option) (*GetCachePolicyOutput, error) {
+	req, out := c.GetCachePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetCachePolicyConfig = "GetCachePolicyConfig2020_05_31"
+
+// GetCachePolicyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the GetCachePolicyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCachePolicyConfig for more information on using the GetCachePolicyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCachePolicyConfigRequest method.
+//    req, resp := client.GetCachePolicyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCachePolicyConfig
+func (c *CloudFront) GetCachePolicyConfigRequest(input *GetCachePolicyConfigInput) (req *request.Request, output *GetCachePolicyConfigOutput) {
+	op := &request.Operation{
+		Name:       opGetCachePolicyConfig,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/cache-policy/{Id}/config",
+	}
+
+	if input == nil {
+		input = &GetCachePolicyConfigInput{}
+	}
+
+	output = &GetCachePolicyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCachePolicyConfig API operation for Amazon CloudFront.
+//
+// Gets a cache policy configuration.
+//
+// To get a cache policy configuration, you must provide the policy’s identifier.
+// If the cache policy is attached to a distribution’s cache behavior, you
+// can get the policy’s identifier using ListDistributions or GetDistribution.
+// If the cache policy is not attached to a cache behavior, you can get the
+// identifier using ListCachePolicies.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation GetCachePolicyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCachePolicyConfig
+func (c *CloudFront) GetCachePolicyConfig(input *GetCachePolicyConfigInput) (*GetCachePolicyConfigOutput, error) {
+	req, out := c.GetCachePolicyConfigRequest(input)
+	return out, req.Send()
+}
+
+// GetCachePolicyConfigWithContext is the same as GetCachePolicyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCachePolicyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) GetCachePolicyConfigWithContext(ctx aws.Context, input *GetCachePolicyConfigInput, opts ...request.Option) (*GetCachePolicyConfigOutput, error) {
+	req, out := c.GetCachePolicyConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetCloudFrontOriginAccessIdentity = "GetCloudFrontOriginAccessIdentity2020_05_31"
 
 // GetCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the GetCloudFrontOriginAccessIdentity operation. The "output" return
@@ -1858,12 +2552,12 @@ const opGetCloudFrontOriginAccessIdentity = "GetCloudFrontOriginAccessIdentity20
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCloudFrontOriginAccessIdentity
 func (c *CloudFront) GetCloudFrontOriginAccessIdentityRequest(input *GetCloudFrontOriginAccessIdentityInput) (req *request.Request, output *GetCloudFrontOriginAccessIdentityOutput) {
 	op := &request.Operation{
 		Name:       opGetCloudFrontOriginAccessIdentity,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/origin-access-identity/cloudfront/{Id}",
+		HTTPPath:   "/2020-05-31/origin-access-identity/cloudfront/{Id}",
 	}
 
 	if input == nil {
@@ -1893,7 +2587,7 @@ func (c *CloudFront) GetCloudFrontOriginAccessIdentityRequest(input *GetCloudFro
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCloudFrontOriginAccessIdentity
 func (c *CloudFront) GetCloudFrontOriginAccessIdentity(input *GetCloudFrontOriginAccessIdentityInput) (*GetCloudFrontOriginAccessIdentityOutput, error) {
 	req, out := c.GetCloudFrontOriginAccessIdentityRequest(input)
 	return out, req.Send()
@@ -1915,7 +2609,7 @@ func (c *CloudFront) GetCloudFrontOriginAccessIdentityWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
-const opGetCloudFrontOriginAccessIdentityConfig = "GetCloudFrontOriginAccessIdentityConfig2019_03_26"
+const opGetCloudFrontOriginAccessIdentityConfig = "GetCloudFrontOriginAccessIdentityConfig2020_05_31"
 
 // GetCloudFrontOriginAccessIdentityConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetCloudFrontOriginAccessIdentityConfig operation. The "output" return
@@ -1940,12 +2634,12 @@ const opGetCloudFrontOriginAccessIdentityConfig = "GetCloudFrontOriginAccessIden
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetCloudFrontOriginAccessIdentityConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCloudFrontOriginAccessIdentityConfig
 func (c *CloudFront) GetCloudFrontOriginAccessIdentityConfigRequest(input *GetCloudFrontOriginAccessIdentityConfigInput) (req *request.Request, output *GetCloudFrontOriginAccessIdentityConfigOutput) {
 	op := &request.Operation{
 		Name:       opGetCloudFrontOriginAccessIdentityConfig,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/origin-access-identity/cloudfront/{Id}/config",
+		HTTPPath:   "/2020-05-31/origin-access-identity/cloudfront/{Id}/config",
 	}
 
 	if input == nil {
@@ -1975,7 +2669,7 @@ func (c *CloudFront) GetCloudFrontOriginAccessIdentityConfigRequest(input *GetCl
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetCloudFrontOriginAccessIdentityConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetCloudFrontOriginAccessIdentityConfig
 func (c *CloudFront) GetCloudFrontOriginAccessIdentityConfig(input *GetCloudFrontOriginAccessIdentityConfigInput) (*GetCloudFrontOriginAccessIdentityConfigOutput, error) {
 	req, out := c.GetCloudFrontOriginAccessIdentityConfigRequest(input)
 	return out, req.Send()
@@ -1997,7 +2691,7 @@ func (c *CloudFront) GetCloudFrontOriginAccessIdentityConfigWithContext(ctx aws.
 	return out, req.Send()
 }
 
-const opGetDistribution = "GetDistribution2019_03_26"
+const opGetDistribution = "GetDistribution2020_05_31"
 
 // GetDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the GetDistribution operation. The "output" return
@@ -2022,12 +2716,12 @@ const opGetDistribution = "GetDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetDistribution
 func (c *CloudFront) GetDistributionRequest(input *GetDistributionInput) (req *request.Request, output *GetDistributionOutput) {
 	op := &request.Operation{
 		Name:       opGetDistribution,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/distribution/{Id}",
+		HTTPPath:   "/2020-05-31/distribution/{Id}",
 	}
 
 	if input == nil {
@@ -2057,7 +2751,7 @@ func (c *CloudFront) GetDistributionRequest(input *GetDistributionInput) (req *r
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetDistribution
 func (c *CloudFront) GetDistribution(input *GetDistributionInput) (*GetDistributionOutput, error) {
 	req, out := c.GetDistributionRequest(input)
 	return out, req.Send()
@@ -2079,7 +2773,7 @@ func (c *CloudFront) GetDistributionWithContext(ctx aws.Context, input *GetDistr
 	return out, req.Send()
 }
 
-const opGetDistributionConfig = "GetDistributionConfig2019_03_26"
+const opGetDistributionConfig = "GetDistributionConfig2020_05_31"
 
 // GetDistributionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetDistributionConfig operation. The "output" return
@@ -2104,12 +2798,12 @@ const opGetDistributionConfig = "GetDistributionConfig2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetDistributionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetDistributionConfig
 func (c *CloudFront) GetDistributionConfigRequest(input *GetDistributionConfigInput) (req *request.Request, output *GetDistributionConfigOutput) {
 	op := &request.Operation{
 		Name:       opGetDistributionConfig,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/distribution/{Id}/config",
+		HTTPPath:   "/2020-05-31/distribution/{Id}/config",
 	}
 
 	if input == nil {
@@ -2139,7 +2833,7 @@ func (c *CloudFront) GetDistributionConfigRequest(input *GetDistributionConfigIn
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetDistributionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetDistributionConfig
 func (c *CloudFront) GetDistributionConfig(input *GetDistributionConfigInput) (*GetDistributionConfigOutput, error) {
 	req, out := c.GetDistributionConfigRequest(input)
 	return out, req.Send()
@@ -2161,7 +2855,7 @@ func (c *CloudFront) GetDistributionConfigWithContext(ctx aws.Context, input *Ge
 	return out, req.Send()
 }
 
-const opGetFieldLevelEncryption = "GetFieldLevelEncryption2019_03_26"
+const opGetFieldLevelEncryption = "GetFieldLevelEncryption2020_05_31"
 
 // GetFieldLevelEncryptionRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryption operation. The "output" return
@@ -2186,12 +2880,12 @@ const opGetFieldLevelEncryption = "GetFieldLevelEncryption2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryption
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryption
 func (c *CloudFront) GetFieldLevelEncryptionRequest(input *GetFieldLevelEncryptionInput) (req *request.Request, output *GetFieldLevelEncryptionOutput) {
 	op := &request.Operation{
 		Name:       opGetFieldLevelEncryption,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/field-level-encryption/{Id}",
+		HTTPPath:   "/2020-05-31/field-level-encryption/{Id}",
 	}
 
 	if input == nil {
@@ -2221,7 +2915,7 @@ func (c *CloudFront) GetFieldLevelEncryptionRequest(input *GetFieldLevelEncrypti
 //   * ErrCodeNoSuchFieldLevelEncryptionConfig "NoSuchFieldLevelEncryptionConfig"
 //   The specified configuration for field-level encryption doesn't exist.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryption
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryption
 func (c *CloudFront) GetFieldLevelEncryption(input *GetFieldLevelEncryptionInput) (*GetFieldLevelEncryptionOutput, error) {
 	req, out := c.GetFieldLevelEncryptionRequest(input)
 	return out, req.Send()
@@ -2243,7 +2937,7 @@ func (c *CloudFront) GetFieldLevelEncryptionWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
-const opGetFieldLevelEncryptionConfig = "GetFieldLevelEncryptionConfig2019_03_26"
+const opGetFieldLevelEncryptionConfig = "GetFieldLevelEncryptionConfig2020_05_31"
 
 // GetFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryptionConfig operation. The "output" return
@@ -2268,12 +2962,12 @@ const opGetFieldLevelEncryptionConfig = "GetFieldLevelEncryptionConfig2019_03_26
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryptionConfig
 func (c *CloudFront) GetFieldLevelEncryptionConfigRequest(input *GetFieldLevelEncryptionConfigInput) (req *request.Request, output *GetFieldLevelEncryptionConfigOutput) {
 	op := &request.Operation{
 		Name:       opGetFieldLevelEncryptionConfig,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/field-level-encryption/{Id}/config",
+		HTTPPath:   "/2020-05-31/field-level-encryption/{Id}/config",
 	}
 
 	if input == nil {
@@ -2303,7 +2997,7 @@ func (c *CloudFront) GetFieldLevelEncryptionConfigRequest(input *GetFieldLevelEn
 //   * ErrCodeNoSuchFieldLevelEncryptionConfig "NoSuchFieldLevelEncryptionConfig"
 //   The specified configuration for field-level encryption doesn't exist.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryptionConfig
 func (c *CloudFront) GetFieldLevelEncryptionConfig(input *GetFieldLevelEncryptionConfigInput) (*GetFieldLevelEncryptionConfigOutput, error) {
 	req, out := c.GetFieldLevelEncryptionConfigRequest(input)
 	return out, req.Send()
@@ -2325,7 +3019,7 @@ func (c *CloudFront) GetFieldLevelEncryptionConfigWithContext(ctx aws.Context, i
 	return out, req.Send()
 }
 
-const opGetFieldLevelEncryptionProfile = "GetFieldLevelEncryptionProfile2019_03_26"
+const opGetFieldLevelEncryptionProfile = "GetFieldLevelEncryptionProfile2020_05_31"
 
 // GetFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryptionProfile operation. The "output" return
@@ -2350,12 +3044,12 @@ const opGetFieldLevelEncryptionProfile = "GetFieldLevelEncryptionProfile2019_03_
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryptionProfile
 func (c *CloudFront) GetFieldLevelEncryptionProfileRequest(input *GetFieldLevelEncryptionProfileInput) (req *request.Request, output *GetFieldLevelEncryptionProfileOutput) {
 	op := &request.Operation{
 		Name:       opGetFieldLevelEncryptionProfile,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/field-level-encryption-profile/{Id}",
+		HTTPPath:   "/2020-05-31/field-level-encryption-profile/{Id}",
 	}
 
 	if input == nil {
@@ -2385,7 +3079,7 @@ func (c *CloudFront) GetFieldLevelEncryptionProfileRequest(input *GetFieldLevelE
 //   * ErrCodeNoSuchFieldLevelEncryptionProfile "NoSuchFieldLevelEncryptionProfile"
 //   The specified profile for field-level encryption doesn't exist.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryptionProfile
 func (c *CloudFront) GetFieldLevelEncryptionProfile(input *GetFieldLevelEncryptionProfileInput) (*GetFieldLevelEncryptionProfileOutput, error) {
 	req, out := c.GetFieldLevelEncryptionProfileRequest(input)
 	return out, req.Send()
@@ -2407,7 +3101,7 @@ func (c *CloudFront) GetFieldLevelEncryptionProfileWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
-const opGetFieldLevelEncryptionProfileConfig = "GetFieldLevelEncryptionProfileConfig2019_03_26"
+const opGetFieldLevelEncryptionProfileConfig = "GetFieldLevelEncryptionProfileConfig2020_05_31"
 
 // GetFieldLevelEncryptionProfileConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetFieldLevelEncryptionProfileConfig operation. The "output" return
@@ -2432,12 +3126,12 @@ const opGetFieldLevelEncryptionProfileConfig = "GetFieldLevelEncryptionProfileCo
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryptionProfileConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryptionProfileConfig
 func (c *CloudFront) GetFieldLevelEncryptionProfileConfigRequest(input *GetFieldLevelEncryptionProfileConfigInput) (req *request.Request, output *GetFieldLevelEncryptionProfileConfigOutput) {
 	op := &request.Operation{
 		Name:       opGetFieldLevelEncryptionProfileConfig,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/field-level-encryption-profile/{Id}/config",
+		HTTPPath:   "/2020-05-31/field-level-encryption-profile/{Id}/config",
 	}
 
 	if input == nil {
@@ -2467,7 +3161,7 @@ func (c *CloudFront) GetFieldLevelEncryptionProfileConfigRequest(input *GetField
 //   * ErrCodeNoSuchFieldLevelEncryptionProfile "NoSuchFieldLevelEncryptionProfile"
 //   The specified profile for field-level encryption doesn't exist.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetFieldLevelEncryptionProfileConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetFieldLevelEncryptionProfileConfig
 func (c *CloudFront) GetFieldLevelEncryptionProfileConfig(input *GetFieldLevelEncryptionProfileConfigInput) (*GetFieldLevelEncryptionProfileConfigOutput, error) {
 	req, out := c.GetFieldLevelEncryptionProfileConfigRequest(input)
 	return out, req.Send()
@@ -2489,7 +3183,7 @@ func (c *CloudFront) GetFieldLevelEncryptionProfileConfigWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
-const opGetInvalidation = "GetInvalidation2019_03_26"
+const opGetInvalidation = "GetInvalidation2020_05_31"
 
 // GetInvalidationRequest generates a "aws/request.Request" representing the
 // client's request for the GetInvalidation operation. The "output" return
@@ -2514,12 +3208,12 @@ const opGetInvalidation = "GetInvalidation2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetInvalidation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetInvalidation
 func (c *CloudFront) GetInvalidationRequest(input *GetInvalidationInput) (req *request.Request, output *GetInvalidationOutput) {
 	op := &request.Operation{
 		Name:       opGetInvalidation,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/distribution/{DistributionId}/invalidation/{Id}",
+		HTTPPath:   "/2020-05-31/distribution/{DistributionId}/invalidation/{Id}",
 	}
 
 	if input == nil {
@@ -2552,7 +3246,7 @@ func (c *CloudFront) GetInvalidationRequest(input *GetInvalidationInput) (req *r
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetInvalidation
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetInvalidation
 func (c *CloudFront) GetInvalidation(input *GetInvalidationInput) (*GetInvalidationOutput, error) {
 	req, out := c.GetInvalidationRequest(input)
 	return out, req.Send()
@@ -2574,7 +3268,187 @@ func (c *CloudFront) GetInvalidationWithContext(ctx aws.Context, input *GetInval
 	return out, req.Send()
 }
 
-const opGetPublicKey = "GetPublicKey2019_03_26"
+const opGetOriginRequestPolicy = "GetOriginRequestPolicy2020_05_31"
+
+// GetOriginRequestPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetOriginRequestPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOriginRequestPolicy for more information on using the GetOriginRequestPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOriginRequestPolicyRequest method.
+//    req, resp := client.GetOriginRequestPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginRequestPolicy
+func (c *CloudFront) GetOriginRequestPolicyRequest(input *GetOriginRequestPolicyInput) (req *request.Request, output *GetOriginRequestPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetOriginRequestPolicy,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/origin-request-policy/{Id}",
+	}
+
+	if input == nil {
+		input = &GetOriginRequestPolicyInput{}
+	}
+
+	output = &GetOriginRequestPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOriginRequestPolicy API operation for Amazon CloudFront.
+//
+// Gets an origin request policy, including the following metadata:
+//
+//    * The policy’s identifier.
+//
+//    * The date and time when the policy was last modified.
+//
+// To get an origin request policy, you must provide the policy’s identifier.
+// If the origin request policy is attached to a distribution’s cache behavior,
+// you can get the policy’s identifier using ListDistributions or GetDistribution.
+// If the origin request policy is not attached to a cache behavior, you can
+// get the identifier using ListOriginRequestPolicies.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation GetOriginRequestPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginRequestPolicy
+func (c *CloudFront) GetOriginRequestPolicy(input *GetOriginRequestPolicyInput) (*GetOriginRequestPolicyOutput, error) {
+	req, out := c.GetOriginRequestPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetOriginRequestPolicyWithContext is the same as GetOriginRequestPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOriginRequestPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) GetOriginRequestPolicyWithContext(ctx aws.Context, input *GetOriginRequestPolicyInput, opts ...request.Option) (*GetOriginRequestPolicyOutput, error) {
+	req, out := c.GetOriginRequestPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetOriginRequestPolicyConfig = "GetOriginRequestPolicyConfig2020_05_31"
+
+// GetOriginRequestPolicyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the GetOriginRequestPolicyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOriginRequestPolicyConfig for more information on using the GetOriginRequestPolicyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOriginRequestPolicyConfigRequest method.
+//    req, resp := client.GetOriginRequestPolicyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginRequestPolicyConfig
+func (c *CloudFront) GetOriginRequestPolicyConfigRequest(input *GetOriginRequestPolicyConfigInput) (req *request.Request, output *GetOriginRequestPolicyConfigOutput) {
+	op := &request.Operation{
+		Name:       opGetOriginRequestPolicyConfig,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/origin-request-policy/{Id}/config",
+	}
+
+	if input == nil {
+		input = &GetOriginRequestPolicyConfigInput{}
+	}
+
+	output = &GetOriginRequestPolicyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOriginRequestPolicyConfig API operation for Amazon CloudFront.
+//
+// Gets an origin request policy configuration.
+//
+// To get an origin request policy configuration, you must provide the policy’s
+// identifier. If the origin request policy is attached to a distribution’s
+// cache behavior, you can get the policy’s identifier using ListDistributions
+// or GetDistribution. If the origin request policy is not attached to a cache
+// behavior, you can get the identifier using ListOriginRequestPolicies.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation GetOriginRequestPolicyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetOriginRequestPolicyConfig
+func (c *CloudFront) GetOriginRequestPolicyConfig(input *GetOriginRequestPolicyConfigInput) (*GetOriginRequestPolicyConfigOutput, error) {
+	req, out := c.GetOriginRequestPolicyConfigRequest(input)
+	return out, req.Send()
+}
+
+// GetOriginRequestPolicyConfigWithContext is the same as GetOriginRequestPolicyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOriginRequestPolicyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) GetOriginRequestPolicyConfigWithContext(ctx aws.Context, input *GetOriginRequestPolicyConfigInput, opts ...request.Option) (*GetOriginRequestPolicyConfigOutput, error) {
+	req, out := c.GetOriginRequestPolicyConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetPublicKey = "GetPublicKey2020_05_31"
 
 // GetPublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the GetPublicKey operation. The "output" return
@@ -2599,12 +3473,12 @@ const opGetPublicKey = "GetPublicKey2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetPublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetPublicKey
 func (c *CloudFront) GetPublicKeyRequest(input *GetPublicKeyInput) (req *request.Request, output *GetPublicKeyOutput) {
 	op := &request.Operation{
 		Name:       opGetPublicKey,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/public-key/{Id}",
+		HTTPPath:   "/2020-05-31/public-key/{Id}",
 	}
 
 	if input == nil {
@@ -2634,7 +3508,7 @@ func (c *CloudFront) GetPublicKeyRequest(input *GetPublicKeyInput) (req *request
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetPublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetPublicKey
 func (c *CloudFront) GetPublicKey(input *GetPublicKeyInput) (*GetPublicKeyOutput, error) {
 	req, out := c.GetPublicKeyRequest(input)
 	return out, req.Send()
@@ -2656,7 +3530,7 @@ func (c *CloudFront) GetPublicKeyWithContext(ctx aws.Context, input *GetPublicKe
 	return out, req.Send()
 }
 
-const opGetPublicKeyConfig = "GetPublicKeyConfig2019_03_26"
+const opGetPublicKeyConfig = "GetPublicKeyConfig2020_05_31"
 
 // GetPublicKeyConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetPublicKeyConfig operation. The "output" return
@@ -2681,12 +3555,12 @@ const opGetPublicKeyConfig = "GetPublicKeyConfig2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetPublicKeyConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetPublicKeyConfig
 func (c *CloudFront) GetPublicKeyConfigRequest(input *GetPublicKeyConfigInput) (req *request.Request, output *GetPublicKeyConfigOutput) {
 	op := &request.Operation{
 		Name:       opGetPublicKeyConfig,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/public-key/{Id}/config",
+		HTTPPath:   "/2020-05-31/public-key/{Id}/config",
 	}
 
 	if input == nil {
@@ -2716,7 +3590,7 @@ func (c *CloudFront) GetPublicKeyConfigRequest(input *GetPublicKeyConfigInput) (
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetPublicKeyConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetPublicKeyConfig
 func (c *CloudFront) GetPublicKeyConfig(input *GetPublicKeyConfigInput) (*GetPublicKeyConfigOutput, error) {
 	req, out := c.GetPublicKeyConfigRequest(input)
 	return out, req.Send()
@@ -2738,7 +3612,7 @@ func (c *CloudFront) GetPublicKeyConfigWithContext(ctx aws.Context, input *GetPu
 	return out, req.Send()
 }
 
-const opGetStreamingDistribution = "GetStreamingDistribution2019_03_26"
+const opGetStreamingDistribution = "GetStreamingDistribution2020_05_31"
 
 // GetStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the GetStreamingDistribution operation. The "output" return
@@ -2763,12 +3637,12 @@ const opGetStreamingDistribution = "GetStreamingDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetStreamingDistribution
 func (c *CloudFront) GetStreamingDistributionRequest(input *GetStreamingDistributionInput) (req *request.Request, output *GetStreamingDistributionOutput) {
 	op := &request.Operation{
 		Name:       opGetStreamingDistribution,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/streaming-distribution/{Id}",
+		HTTPPath:   "/2020-05-31/streaming-distribution/{Id}",
 	}
 
 	if input == nil {
@@ -2799,7 +3673,7 @@ func (c *CloudFront) GetStreamingDistributionRequest(input *GetStreamingDistribu
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetStreamingDistribution
 func (c *CloudFront) GetStreamingDistribution(input *GetStreamingDistributionInput) (*GetStreamingDistributionOutput, error) {
 	req, out := c.GetStreamingDistributionRequest(input)
 	return out, req.Send()
@@ -2821,7 +3695,7 @@ func (c *CloudFront) GetStreamingDistributionWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
-const opGetStreamingDistributionConfig = "GetStreamingDistributionConfig2019_03_26"
+const opGetStreamingDistributionConfig = "GetStreamingDistributionConfig2020_05_31"
 
 // GetStreamingDistributionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the GetStreamingDistributionConfig operation. The "output" return
@@ -2846,12 +3720,12 @@ const opGetStreamingDistributionConfig = "GetStreamingDistributionConfig2019_03_
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetStreamingDistributionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetStreamingDistributionConfig
 func (c *CloudFront) GetStreamingDistributionConfigRequest(input *GetStreamingDistributionConfigInput) (req *request.Request, output *GetStreamingDistributionConfigOutput) {
 	op := &request.Operation{
 		Name:       opGetStreamingDistributionConfig,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/streaming-distribution/{Id}/config",
+		HTTPPath:   "/2020-05-31/streaming-distribution/{Id}/config",
 	}
 
 	if input == nil {
@@ -2881,7 +3755,7 @@ func (c *CloudFront) GetStreamingDistributionConfigRequest(input *GetStreamingDi
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/GetStreamingDistributionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetStreamingDistributionConfig
 func (c *CloudFront) GetStreamingDistributionConfig(input *GetStreamingDistributionConfigInput) (*GetStreamingDistributionConfigOutput, error) {
 	req, out := c.GetStreamingDistributionConfigRequest(input)
 	return out, req.Send()
@@ -2903,7 +3777,101 @@ func (c *CloudFront) GetStreamingDistributionConfigWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
-const opListCloudFrontOriginAccessIdentities = "ListCloudFrontOriginAccessIdentities2019_03_26"
+const opListCachePolicies = "ListCachePolicies2020_05_31"
+
+// ListCachePoliciesRequest generates a "aws/request.Request" representing the
+// client's request for the ListCachePolicies operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListCachePolicies for more information on using the ListCachePolicies
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListCachePoliciesRequest method.
+//    req, resp := client.ListCachePoliciesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListCachePolicies
+func (c *CloudFront) ListCachePoliciesRequest(input *ListCachePoliciesInput) (req *request.Request, output *ListCachePoliciesOutput) {
+	op := &request.Operation{
+		Name:       opListCachePolicies,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/cache-policy",
+	}
+
+	if input == nil {
+		input = &ListCachePoliciesInput{}
+	}
+
+	output = &ListCachePoliciesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListCachePolicies API operation for Amazon CloudFront.
+//
+// Gets a list of cache policies.
+//
+// You can optionally apply a filter to return only the managed policies created
+// by AWS, or only the custom policies created in your AWS account.
+//
+// You can optionally specify the maximum number of items to receive in the
+// response. If the total number of items in the list exceeds the maximum that
+// you specify, or the default maximum, the response is paginated. To get the
+// next page of items, send a subsequent request that specifies the NextMarker
+// value from the current response as the Marker value in the subsequent request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation ListCachePolicies for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListCachePolicies
+func (c *CloudFront) ListCachePolicies(input *ListCachePoliciesInput) (*ListCachePoliciesOutput, error) {
+	req, out := c.ListCachePoliciesRequest(input)
+	return out, req.Send()
+}
+
+// ListCachePoliciesWithContext is the same as ListCachePolicies with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListCachePolicies for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) ListCachePoliciesWithContext(ctx aws.Context, input *ListCachePoliciesInput, opts ...request.Option) (*ListCachePoliciesOutput, error) {
+	req, out := c.ListCachePoliciesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListCloudFrontOriginAccessIdentities = "ListCloudFrontOriginAccessIdentities2020_05_31"
 
 // ListCloudFrontOriginAccessIdentitiesRequest generates a "aws/request.Request" representing the
 // client's request for the ListCloudFrontOriginAccessIdentities operation. The "output" return
@@ -2928,12 +3896,12 @@ const opListCloudFrontOriginAccessIdentities = "ListCloudFrontOriginAccessIdenti
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListCloudFrontOriginAccessIdentities
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListCloudFrontOriginAccessIdentities
 func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesRequest(input *ListCloudFrontOriginAccessIdentitiesInput) (req *request.Request, output *ListCloudFrontOriginAccessIdentitiesOutput) {
 	op := &request.Operation{
 		Name:       opListCloudFrontOriginAccessIdentities,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/origin-access-identity/cloudfront",
+		HTTPPath:   "/2020-05-31/origin-access-identity/cloudfront",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"Marker"},
 			OutputTokens:    []string{"CloudFrontOriginAccessIdentityList.NextMarker"},
@@ -2966,7 +3934,7 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesRequest(input *ListClou
 //   * ErrCodeInvalidArgument "InvalidArgument"
 //   An argument is invalid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListCloudFrontOriginAccessIdentities
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListCloudFrontOriginAccessIdentities
 func (c *CloudFront) ListCloudFrontOriginAccessIdentities(input *ListCloudFrontOriginAccessIdentitiesInput) (*ListCloudFrontOriginAccessIdentitiesOutput, error) {
 	req, out := c.ListCloudFrontOriginAccessIdentitiesRequest(input)
 	return out, req.Send()
@@ -3040,7 +4008,7 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesPagesWithContext(ctx aw
 	return p.Err()
 }
 
-const opListDistributions = "ListDistributions2019_03_26"
+const opListDistributions = "ListDistributions2020_05_31"
 
 // ListDistributionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDistributions operation. The "output" return
@@ -3065,12 +4033,12 @@ const opListDistributions = "ListDistributions2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributions
 func (c *CloudFront) ListDistributionsRequest(input *ListDistributionsInput) (req *request.Request, output *ListDistributionsOutput) {
 	op := &request.Operation{
 		Name:       opListDistributions,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/distribution",
+		HTTPPath:   "/2020-05-31/distribution",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"Marker"},
 			OutputTokens:    []string{"DistributionList.NextMarker"},
@@ -3103,7 +4071,7 @@ func (c *CloudFront) ListDistributionsRequest(input *ListDistributionsInput) (re
 //   * ErrCodeInvalidArgument "InvalidArgument"
 //   An argument is invalid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributions
 func (c *CloudFront) ListDistributions(input *ListDistributionsInput) (*ListDistributionsOutput, error) {
 	req, out := c.ListDistributionsRequest(input)
 	return out, req.Send()
@@ -3177,7 +4145,191 @@ func (c *CloudFront) ListDistributionsPagesWithContext(ctx aws.Context, input *L
 	return p.Err()
 }
 
-const opListDistributionsByWebACLId = "ListDistributionsByWebACLId2019_03_26"
+const opListDistributionsByCachePolicyId = "ListDistributionsByCachePolicyId2020_05_31"
+
+// ListDistributionsByCachePolicyIdRequest generates a "aws/request.Request" representing the
+// client's request for the ListDistributionsByCachePolicyId operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDistributionsByCachePolicyId for more information on using the ListDistributionsByCachePolicyId
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDistributionsByCachePolicyIdRequest method.
+//    req, resp := client.ListDistributionsByCachePolicyIdRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByCachePolicyId
+func (c *CloudFront) ListDistributionsByCachePolicyIdRequest(input *ListDistributionsByCachePolicyIdInput) (req *request.Request, output *ListDistributionsByCachePolicyIdOutput) {
+	op := &request.Operation{
+		Name:       opListDistributionsByCachePolicyId,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/distributionsByCachePolicyId/{CachePolicyId}",
+	}
+
+	if input == nil {
+		input = &ListDistributionsByCachePolicyIdInput{}
+	}
+
+	output = &ListDistributionsByCachePolicyIdOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDistributionsByCachePolicyId API operation for Amazon CloudFront.
+//
+// Gets a list of distribution IDs for distributions that have a cache behavior
+// that’s associated with the specified cache policy.
+//
+// You can optionally specify the maximum number of items to receive in the
+// response. If the total number of items in the list exceeds the maximum that
+// you specify, or the default maximum, the response is paginated. To get the
+// next page of items, send a subsequent request that specifies the NextMarker
+// value from the current response as the Marker value in the subsequent request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation ListDistributionsByCachePolicyId for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByCachePolicyId
+func (c *CloudFront) ListDistributionsByCachePolicyId(input *ListDistributionsByCachePolicyIdInput) (*ListDistributionsByCachePolicyIdOutput, error) {
+	req, out := c.ListDistributionsByCachePolicyIdRequest(input)
+	return out, req.Send()
+}
+
+// ListDistributionsByCachePolicyIdWithContext is the same as ListDistributionsByCachePolicyId with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDistributionsByCachePolicyId for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) ListDistributionsByCachePolicyIdWithContext(ctx aws.Context, input *ListDistributionsByCachePolicyIdInput, opts ...request.Option) (*ListDistributionsByCachePolicyIdOutput, error) {
+	req, out := c.ListDistributionsByCachePolicyIdRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListDistributionsByOriginRequestPolicyId = "ListDistributionsByOriginRequestPolicyId2020_05_31"
+
+// ListDistributionsByOriginRequestPolicyIdRequest generates a "aws/request.Request" representing the
+// client's request for the ListDistributionsByOriginRequestPolicyId operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDistributionsByOriginRequestPolicyId for more information on using the ListDistributionsByOriginRequestPolicyId
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDistributionsByOriginRequestPolicyIdRequest method.
+//    req, resp := client.ListDistributionsByOriginRequestPolicyIdRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByOriginRequestPolicyId
+func (c *CloudFront) ListDistributionsByOriginRequestPolicyIdRequest(input *ListDistributionsByOriginRequestPolicyIdInput) (req *request.Request, output *ListDistributionsByOriginRequestPolicyIdOutput) {
+	op := &request.Operation{
+		Name:       opListDistributionsByOriginRequestPolicyId,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/distributionsByOriginRequestPolicyId/{OriginRequestPolicyId}",
+	}
+
+	if input == nil {
+		input = &ListDistributionsByOriginRequestPolicyIdInput{}
+	}
+
+	output = &ListDistributionsByOriginRequestPolicyIdOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDistributionsByOriginRequestPolicyId API operation for Amazon CloudFront.
+//
+// Gets a list of distribution IDs for distributions that have a cache behavior
+// that’s associated with the specified origin request policy.
+//
+// You can optionally specify the maximum number of items to receive in the
+// response. If the total number of items in the list exceeds the maximum that
+// you specify, or the default maximum, the response is paginated. To get the
+// next page of items, send a subsequent request that specifies the NextMarker
+// value from the current response as the Marker value in the subsequent request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation ListDistributionsByOriginRequestPolicyId for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByOriginRequestPolicyId
+func (c *CloudFront) ListDistributionsByOriginRequestPolicyId(input *ListDistributionsByOriginRequestPolicyIdInput) (*ListDistributionsByOriginRequestPolicyIdOutput, error) {
+	req, out := c.ListDistributionsByOriginRequestPolicyIdRequest(input)
+	return out, req.Send()
+}
+
+// ListDistributionsByOriginRequestPolicyIdWithContext is the same as ListDistributionsByOriginRequestPolicyId with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDistributionsByOriginRequestPolicyId for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) ListDistributionsByOriginRequestPolicyIdWithContext(ctx aws.Context, input *ListDistributionsByOriginRequestPolicyIdInput, opts ...request.Option) (*ListDistributionsByOriginRequestPolicyIdOutput, error) {
+	req, out := c.ListDistributionsByOriginRequestPolicyIdRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListDistributionsByWebACLId = "ListDistributionsByWebACLId2020_05_31"
 
 // ListDistributionsByWebACLIdRequest generates a "aws/request.Request" representing the
 // client's request for the ListDistributionsByWebACLId operation. The "output" return
@@ -3202,12 +4354,12 @@ const opListDistributionsByWebACLId = "ListDistributionsByWebACLId2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributionsByWebACLId
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByWebACLId
 func (c *CloudFront) ListDistributionsByWebACLIdRequest(input *ListDistributionsByWebACLIdInput) (req *request.Request, output *ListDistributionsByWebACLIdOutput) {
 	op := &request.Operation{
 		Name:       opListDistributionsByWebACLId,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/distributionsByWebACLId/{WebACLId}",
+		HTTPPath:   "/2020-05-31/distributionsByWebACLId/{WebACLId}",
 	}
 
 	if input == nil {
@@ -3240,7 +4392,7 @@ func (c *CloudFront) ListDistributionsByWebACLIdRequest(input *ListDistributions
 //   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
 //   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributionsByWebACLId
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByWebACLId
 func (c *CloudFront) ListDistributionsByWebACLId(input *ListDistributionsByWebACLIdInput) (*ListDistributionsByWebACLIdOutput, error) {
 	req, out := c.ListDistributionsByWebACLIdRequest(input)
 	return out, req.Send()
@@ -3262,7 +4414,7 @@ func (c *CloudFront) ListDistributionsByWebACLIdWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
-const opListFieldLevelEncryptionConfigs = "ListFieldLevelEncryptionConfigs2019_03_26"
+const opListFieldLevelEncryptionConfigs = "ListFieldLevelEncryptionConfigs2020_05_31"
 
 // ListFieldLevelEncryptionConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListFieldLevelEncryptionConfigs operation. The "output" return
@@ -3287,12 +4439,12 @@ const opListFieldLevelEncryptionConfigs = "ListFieldLevelEncryptionConfigs2019_0
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionConfigs
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListFieldLevelEncryptionConfigs
 func (c *CloudFront) ListFieldLevelEncryptionConfigsRequest(input *ListFieldLevelEncryptionConfigsInput) (req *request.Request, output *ListFieldLevelEncryptionConfigsOutput) {
 	op := &request.Operation{
 		Name:       opListFieldLevelEncryptionConfigs,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/field-level-encryption",
+		HTTPPath:   "/2020-05-31/field-level-encryption",
 	}
 
 	if input == nil {
@@ -3320,7 +4472,7 @@ func (c *CloudFront) ListFieldLevelEncryptionConfigsRequest(input *ListFieldLeve
 //   * ErrCodeInvalidArgument "InvalidArgument"
 //   An argument is invalid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionConfigs
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListFieldLevelEncryptionConfigs
 func (c *CloudFront) ListFieldLevelEncryptionConfigs(input *ListFieldLevelEncryptionConfigsInput) (*ListFieldLevelEncryptionConfigsOutput, error) {
 	req, out := c.ListFieldLevelEncryptionConfigsRequest(input)
 	return out, req.Send()
@@ -3342,7 +4494,7 @@ func (c *CloudFront) ListFieldLevelEncryptionConfigsWithContext(ctx aws.Context,
 	return out, req.Send()
 }
 
-const opListFieldLevelEncryptionProfiles = "ListFieldLevelEncryptionProfiles2019_03_26"
+const opListFieldLevelEncryptionProfiles = "ListFieldLevelEncryptionProfiles2020_05_31"
 
 // ListFieldLevelEncryptionProfilesRequest generates a "aws/request.Request" representing the
 // client's request for the ListFieldLevelEncryptionProfiles operation. The "output" return
@@ -3367,12 +4519,12 @@ const opListFieldLevelEncryptionProfiles = "ListFieldLevelEncryptionProfiles2019
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionProfiles
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListFieldLevelEncryptionProfiles
 func (c *CloudFront) ListFieldLevelEncryptionProfilesRequest(input *ListFieldLevelEncryptionProfilesInput) (req *request.Request, output *ListFieldLevelEncryptionProfilesOutput) {
 	op := &request.Operation{
 		Name:       opListFieldLevelEncryptionProfiles,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/field-level-encryption-profile",
+		HTTPPath:   "/2020-05-31/field-level-encryption-profile",
 	}
 
 	if input == nil {
@@ -3400,7 +4552,7 @@ func (c *CloudFront) ListFieldLevelEncryptionProfilesRequest(input *ListFieldLev
 //   * ErrCodeInvalidArgument "InvalidArgument"
 //   An argument is invalid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionProfiles
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListFieldLevelEncryptionProfiles
 func (c *CloudFront) ListFieldLevelEncryptionProfiles(input *ListFieldLevelEncryptionProfilesInput) (*ListFieldLevelEncryptionProfilesOutput, error) {
 	req, out := c.ListFieldLevelEncryptionProfilesRequest(input)
 	return out, req.Send()
@@ -3422,7 +4574,7 @@ func (c *CloudFront) ListFieldLevelEncryptionProfilesWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
-const opListInvalidations = "ListInvalidations2019_03_26"
+const opListInvalidations = "ListInvalidations2020_05_31"
 
 // ListInvalidationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListInvalidations operation. The "output" return
@@ -3447,12 +4599,12 @@ const opListInvalidations = "ListInvalidations2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListInvalidations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListInvalidations
 func (c *CloudFront) ListInvalidationsRequest(input *ListInvalidationsInput) (req *request.Request, output *ListInvalidationsOutput) {
 	op := &request.Operation{
 		Name:       opListInvalidations,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/distribution/{DistributionId}/invalidation",
+		HTTPPath:   "/2020-05-31/distribution/{DistributionId}/invalidation",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"Marker"},
 			OutputTokens:    []string{"InvalidationList.NextMarker"},
@@ -3491,7 +4643,7 @@ func (c *CloudFront) ListInvalidationsRequest(input *ListInvalidationsInput) (re
 //   * ErrCodeAccessDenied "AccessDenied"
 //   Access denied.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListInvalidations
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListInvalidations
 func (c *CloudFront) ListInvalidations(input *ListInvalidationsInput) (*ListInvalidationsOutput, error) {
 	req, out := c.ListInvalidationsRequest(input)
 	return out, req.Send()
@@ -3565,7 +4717,101 @@ func (c *CloudFront) ListInvalidationsPagesWithContext(ctx aws.Context, input *L
 	return p.Err()
 }
 
-const opListPublicKeys = "ListPublicKeys2019_03_26"
+const opListOriginRequestPolicies = "ListOriginRequestPolicies2020_05_31"
+
+// ListOriginRequestPoliciesRequest generates a "aws/request.Request" representing the
+// client's request for the ListOriginRequestPolicies operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListOriginRequestPolicies for more information on using the ListOriginRequestPolicies
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListOriginRequestPoliciesRequest method.
+//    req, resp := client.ListOriginRequestPoliciesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListOriginRequestPolicies
+func (c *CloudFront) ListOriginRequestPoliciesRequest(input *ListOriginRequestPoliciesInput) (req *request.Request, output *ListOriginRequestPoliciesOutput) {
+	op := &request.Operation{
+		Name:       opListOriginRequestPolicies,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/origin-request-policy",
+	}
+
+	if input == nil {
+		input = &ListOriginRequestPoliciesInput{}
+	}
+
+	output = &ListOriginRequestPoliciesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListOriginRequestPolicies API operation for Amazon CloudFront.
+//
+// Gets a list of origin request policies.
+//
+// You can optionally apply a filter to return only the managed policies created
+// by AWS, or only the custom policies created in your AWS account.
+//
+// You can optionally specify the maximum number of items to receive in the
+// response. If the total number of items in the list exceeds the maximum that
+// you specify, or the default maximum, the response is paginated. To get the
+// next page of items, send a subsequent request that specifies the NextMarker
+// value from the current response as the Marker value in the subsequent request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation ListOriginRequestPolicies for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListOriginRequestPolicies
+func (c *CloudFront) ListOriginRequestPolicies(input *ListOriginRequestPoliciesInput) (*ListOriginRequestPoliciesOutput, error) {
+	req, out := c.ListOriginRequestPoliciesRequest(input)
+	return out, req.Send()
+}
+
+// ListOriginRequestPoliciesWithContext is the same as ListOriginRequestPolicies with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListOriginRequestPolicies for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) ListOriginRequestPoliciesWithContext(ctx aws.Context, input *ListOriginRequestPoliciesInput, opts ...request.Option) (*ListOriginRequestPoliciesOutput, error) {
+	req, out := c.ListOriginRequestPoliciesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListPublicKeys = "ListPublicKeys2020_05_31"
 
 // ListPublicKeysRequest generates a "aws/request.Request" representing the
 // client's request for the ListPublicKeys operation. The "output" return
@@ -3590,12 +4836,12 @@ const opListPublicKeys = "ListPublicKeys2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListPublicKeys
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListPublicKeys
 func (c *CloudFront) ListPublicKeysRequest(input *ListPublicKeysInput) (req *request.Request, output *ListPublicKeysOutput) {
 	op := &request.Operation{
 		Name:       opListPublicKeys,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/public-key",
+		HTTPPath:   "/2020-05-31/public-key",
 	}
 
 	if input == nil {
@@ -3622,7 +4868,7 @@ func (c *CloudFront) ListPublicKeysRequest(input *ListPublicKeysInput) (req *req
 //   * ErrCodeInvalidArgument "InvalidArgument"
 //   An argument is invalid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListPublicKeys
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListPublicKeys
 func (c *CloudFront) ListPublicKeys(input *ListPublicKeysInput) (*ListPublicKeysOutput, error) {
 	req, out := c.ListPublicKeysRequest(input)
 	return out, req.Send()
@@ -3644,7 +4890,7 @@ func (c *CloudFront) ListPublicKeysWithContext(ctx aws.Context, input *ListPubli
 	return out, req.Send()
 }
 
-const opListStreamingDistributions = "ListStreamingDistributions2019_03_26"
+const opListStreamingDistributions = "ListStreamingDistributions2020_05_31"
 
 // ListStreamingDistributionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListStreamingDistributions operation. The "output" return
@@ -3669,12 +4915,12 @@ const opListStreamingDistributions = "ListStreamingDistributions2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListStreamingDistributions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListStreamingDistributions
 func (c *CloudFront) ListStreamingDistributionsRequest(input *ListStreamingDistributionsInput) (req *request.Request, output *ListStreamingDistributionsOutput) {
 	op := &request.Operation{
 		Name:       opListStreamingDistributions,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/streaming-distribution",
+		HTTPPath:   "/2020-05-31/streaming-distribution",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"Marker"},
 			OutputTokens:    []string{"StreamingDistributionList.NextMarker"},
@@ -3707,7 +4953,7 @@ func (c *CloudFront) ListStreamingDistributionsRequest(input *ListStreamingDistr
 //   * ErrCodeInvalidArgument "InvalidArgument"
 //   An argument is invalid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListStreamingDistributions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListStreamingDistributions
 func (c *CloudFront) ListStreamingDistributions(input *ListStreamingDistributionsInput) (*ListStreamingDistributionsOutput, error) {
 	req, out := c.ListStreamingDistributionsRequest(input)
 	return out, req.Send()
@@ -3781,7 +5027,7 @@ func (c *CloudFront) ListStreamingDistributionsPagesWithContext(ctx aws.Context,
 	return p.Err()
 }
 
-const opListTagsForResource = "ListTagsForResource2019_03_26"
+const opListTagsForResource = "ListTagsForResource2020_05_31"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
@@ -3806,12 +5052,12 @@ const opListTagsForResource = "ListTagsForResource2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListTagsForResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListTagsForResource
 func (c *CloudFront) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
 	op := &request.Operation{
 		Name:       opListTagsForResource,
 		HTTPMethod: "GET",
-		HTTPPath:   "/2019-03-26/tagging",
+		HTTPPath:   "/2020-05-31/tagging",
 	}
 
 	if input == nil {
@@ -3847,7 +5093,7 @@ func (c *CloudFront) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 //   * ErrCodeNoSuchResource "NoSuchResource"
 //   A resource that was specified is not valid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListTagsForResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListTagsForResource
 func (c *CloudFront) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
 	return out, req.Send()
@@ -3869,7 +5115,7 @@ func (c *CloudFront) ListTagsForResourceWithContext(ctx aws.Context, input *List
 	return out, req.Send()
 }
 
-const opTagResource = "TagResource2019_03_26"
+const opTagResource = "TagResource2020_05_31"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the TagResource operation. The "output" return
@@ -3894,12 +5140,12 @@ const opTagResource = "TagResource2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/TagResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TagResource
 func (c *CloudFront) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
 	op := &request.Operation{
 		Name:       opTagResource,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/tagging?Operation=Tag",
+		HTTPPath:   "/2020-05-31/tagging?Operation=Tag",
 	}
 
 	if input == nil {
@@ -3936,7 +5182,7 @@ func (c *CloudFront) TagResourceRequest(input *TagResourceInput) (req *request.R
 //   * ErrCodeNoSuchResource "NoSuchResource"
 //   A resource that was specified is not valid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/TagResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/TagResource
 func (c *CloudFront) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
 	req, out := c.TagResourceRequest(input)
 	return out, req.Send()
@@ -3958,7 +5204,7 @@ func (c *CloudFront) TagResourceWithContext(ctx aws.Context, input *TagResourceI
 	return out, req.Send()
 }
 
-const opUntagResource = "UntagResource2019_03_26"
+const opUntagResource = "UntagResource2020_05_31"
 
 // UntagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the UntagResource operation. The "output" return
@@ -3983,12 +5229,12 @@ const opUntagResource = "UntagResource2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UntagResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UntagResource
 func (c *CloudFront) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
 	op := &request.Operation{
 		Name:       opUntagResource,
 		HTTPMethod: "POST",
-		HTTPPath:   "/2019-03-26/tagging?Operation=Untag",
+		HTTPPath:   "/2020-05-31/tagging?Operation=Untag",
 	}
 
 	if input == nil {
@@ -4025,7 +5271,7 @@ func (c *CloudFront) UntagResourceRequest(input *UntagResourceInput) (req *reque
 //   * ErrCodeNoSuchResource "NoSuchResource"
 //   A resource that was specified is not valid.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UntagResource
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UntagResource
 func (c *CloudFront) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
 	req, out := c.UntagResourceRequest(input)
 	return out, req.Send()
@@ -4047,7 +5293,136 @@ func (c *CloudFront) UntagResourceWithContext(ctx aws.Context, input *UntagResou
 	return out, req.Send()
 }
 
-const opUpdateCloudFrontOriginAccessIdentity = "UpdateCloudFrontOriginAccessIdentity2019_03_26"
+const opUpdateCachePolicy = "UpdateCachePolicy2020_05_31"
+
+// UpdateCachePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateCachePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateCachePolicy for more information on using the UpdateCachePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateCachePolicyRequest method.
+//    req, resp := client.UpdateCachePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateCachePolicy
+func (c *CloudFront) UpdateCachePolicyRequest(input *UpdateCachePolicyInput) (req *request.Request, output *UpdateCachePolicyOutput) {
+	op := &request.Operation{
+		Name:       opUpdateCachePolicy,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2020-05-31/cache-policy/{Id}",
+	}
+
+	if input == nil {
+		input = &UpdateCachePolicyInput{}
+	}
+
+	output = &UpdateCachePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateCachePolicy API operation for Amazon CloudFront.
+//
+// Updates a cache policy configuration.
+//
+// When you update a cache policy configuration, all the fields are updated
+// with the values provided in the request. You cannot update some fields independent
+// of others. To update a cache policy configuration:
+//
+// Use GetCachePolicyConfig to get the current configuration.
+//
+// Locally modify the fields in the cache policy configuration that you want
+// to update.
+//
+// Call UpdateCachePolicy by providing the entire cache policy configuration,
+// including the fields that you modified and those that you didn’t.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation UpdateCachePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeIllegalUpdate "IllegalUpdate"
+//   The update contains modifications that are not allowed.
+//
+//   * ErrCodeInconsistentQuantities "InconsistentQuantities"
+//   The value of Quantity and the size of Items don't match.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+//   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
+//   The If-Match version is missing or not valid.
+//
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodePreconditionFailed "PreconditionFailed"
+//   The precondition given in one or more of the request header fields evaluated
+//   to false.
+//
+//   * ErrCodeCachePolicyAlreadyExists "CachePolicyAlreadyExists"
+//   A cache policy with this name already exists. You must provide a unique name.
+//   To modify an existing cache policy, use UpdateCachePolicy.
+//
+//   * ErrCodeTooManyHeadersInCachePolicy "TooManyHeadersInCachePolicy"
+//   The number of headers in the cache policy exceeds the maximum. For more information,
+//   see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyCookiesInCachePolicy "TooManyCookiesInCachePolicy"
+//   The number of cookies in the cache policy exceeds the maximum. For more information,
+//   see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyQueryStringsInCachePolicy "TooManyQueryStringsInCachePolicy"
+//   The number of query strings in the cache policy exceeds the maximum. For
+//   more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateCachePolicy
+func (c *CloudFront) UpdateCachePolicy(input *UpdateCachePolicyInput) (*UpdateCachePolicyOutput, error) {
+	req, out := c.UpdateCachePolicyRequest(input)
+	return out, req.Send()
+}
+
+// UpdateCachePolicyWithContext is the same as UpdateCachePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateCachePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) UpdateCachePolicyWithContext(ctx aws.Context, input *UpdateCachePolicyInput, opts ...request.Option) (*UpdateCachePolicyOutput, error) {
+	req, out := c.UpdateCachePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateCloudFrontOriginAccessIdentity = "UpdateCloudFrontOriginAccessIdentity2020_05_31"
 
 // UpdateCloudFrontOriginAccessIdentityRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCloudFrontOriginAccessIdentity operation. The "output" return
@@ -4072,12 +5447,12 @@ const opUpdateCloudFrontOriginAccessIdentity = "UpdateCloudFrontOriginAccessIden
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateCloudFrontOriginAccessIdentity
 func (c *CloudFront) UpdateCloudFrontOriginAccessIdentityRequest(input *UpdateCloudFrontOriginAccessIdentityInput) (req *request.Request, output *UpdateCloudFrontOriginAccessIdentityOutput) {
 	op := &request.Operation{
 		Name:       opUpdateCloudFrontOriginAccessIdentity,
 		HTTPMethod: "PUT",
-		HTTPPath:   "/2019-03-26/origin-access-identity/cloudfront/{Id}/config",
+		HTTPPath:   "/2020-05-31/origin-access-identity/cloudfront/{Id}/config",
 	}
 
 	if input == nil {
@@ -4105,10 +5480,10 @@ func (c *CloudFront) UpdateCloudFrontOriginAccessIdentityRequest(input *UpdateCl
 //   Access denied.
 //
 //   * ErrCodeIllegalUpdate "IllegalUpdate"
-//   Origin and CallerReference cannot be updated.
+//   The update contains modifications that are not allowed.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeMissingBody "MissingBody"
 //   This operation requires a body. Ensure that the body is present and the Content-Type
@@ -4127,7 +5502,7 @@ func (c *CloudFront) UpdateCloudFrontOriginAccessIdentityRequest(input *UpdateCl
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateCloudFrontOriginAccessIdentity
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateCloudFrontOriginAccessIdentity
 func (c *CloudFront) UpdateCloudFrontOriginAccessIdentity(input *UpdateCloudFrontOriginAccessIdentityInput) (*UpdateCloudFrontOriginAccessIdentityOutput, error) {
 	req, out := c.UpdateCloudFrontOriginAccessIdentityRequest(input)
 	return out, req.Send()
@@ -4149,7 +5524,7 @@ func (c *CloudFront) UpdateCloudFrontOriginAccessIdentityWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
-const opUpdateDistribution = "UpdateDistribution2019_03_26"
+const opUpdateDistribution = "UpdateDistribution2020_05_31"
 
 // UpdateDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDistribution operation. The "output" return
@@ -4174,12 +5549,12 @@ const opUpdateDistribution = "UpdateDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateDistribution
 func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (req *request.Request, output *UpdateDistributionOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDistribution,
 		HTTPMethod: "PUT",
-		HTTPPath:   "/2019-03-26/distribution/{Id}/config",
+		HTTPPath:   "/2020-05-31/distribution/{Id}/config",
 	}
 
 	if input == nil {
@@ -4273,10 +5648,10 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   The CNAME specified is already defined for CloudFront.
 //
 //   * ErrCodeIllegalUpdate "IllegalUpdate"
-//   Origin and CallerReference cannot be updated.
+//   The update contains modifications that are not allowed.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeMissingBody "MissingBody"
 //   This operation requires a body. Ensure that the body is present and the Content-Type
@@ -4391,6 +5766,10 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   Processing your request would cause the maximum number of distributions with
 //   Lambda function associations per owner to be exceeded.
 //
+//   * ErrCodeTooManyDistributionsWithSingleFunctionARN "TooManyDistributionsWithSingleFunctionARN"
+//   The maximum number of distributions have been associated with the specified
+//   Lambda function.
+//
 //   * ErrCodeTooManyLambdaFunctionAssociations "TooManyLambdaFunctionAssociations"
 //   Your request contains more Lambda function associations than are allowed
 //   per distribution.
@@ -4415,7 +5794,23 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   The maximum number of distributions have been associated with the specified
 //   configuration for field-level encryption.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateDistribution
+//   * ErrCodeNoSuchCachePolicy "NoSuchCachePolicy"
+//   The cache policy does not exist.
+//
+//   * ErrCodeTooManyDistributionsAssociatedToCachePolicy "TooManyDistributionsAssociatedToCachePolicy"
+//   The maximum number of distributions have been associated with the specified
+//   cache policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy "TooManyDistributionsAssociatedToOriginRequestPolicy"
+//   The maximum number of distributions have been associated with the specified
+//   origin request policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateDistribution
 func (c *CloudFront) UpdateDistribution(input *UpdateDistributionInput) (*UpdateDistributionOutput, error) {
 	req, out := c.UpdateDistributionRequest(input)
 	return out, req.Send()
@@ -4437,7 +5832,7 @@ func (c *CloudFront) UpdateDistributionWithContext(ctx aws.Context, input *Updat
 	return out, req.Send()
 }
 
-const opUpdateFieldLevelEncryptionConfig = "UpdateFieldLevelEncryptionConfig2019_03_26"
+const opUpdateFieldLevelEncryptionConfig = "UpdateFieldLevelEncryptionConfig2020_05_31"
 
 // UpdateFieldLevelEncryptionConfigRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateFieldLevelEncryptionConfig operation. The "output" return
@@ -4462,12 +5857,12 @@ const opUpdateFieldLevelEncryptionConfig = "UpdateFieldLevelEncryptionConfig2019
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateFieldLevelEncryptionConfig
 func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldLevelEncryptionConfigInput) (req *request.Request, output *UpdateFieldLevelEncryptionConfigOutput) {
 	op := &request.Operation{
 		Name:       opUpdateFieldLevelEncryptionConfig,
 		HTTPMethod: "PUT",
-		HTTPPath:   "/2019-03-26/field-level-encryption/{Id}/config",
+		HTTPPath:   "/2020-05-31/field-level-encryption/{Id}/config",
 	}
 
 	if input == nil {
@@ -4495,7 +5890,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   Access denied.
 //
 //   * ErrCodeIllegalUpdate "IllegalUpdate"
-//   Origin and CallerReference cannot be updated.
+//   The update contains modifications that are not allowed.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -4504,7 +5899,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchFieldLevelEncryptionProfile "NoSuchFieldLevelEncryptionProfile"
 //   The specified profile for field-level encryption doesn't exist.
@@ -4527,7 +5922,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   * ErrCodeQueryArgProfileEmpty "QueryArgProfileEmpty"
 //   No profile specified for the field-level encryption query argument.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateFieldLevelEncryptionConfig
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateFieldLevelEncryptionConfig
 func (c *CloudFront) UpdateFieldLevelEncryptionConfig(input *UpdateFieldLevelEncryptionConfigInput) (*UpdateFieldLevelEncryptionConfigOutput, error) {
 	req, out := c.UpdateFieldLevelEncryptionConfigRequest(input)
 	return out, req.Send()
@@ -4549,7 +5944,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
-const opUpdateFieldLevelEncryptionProfile = "UpdateFieldLevelEncryptionProfile2019_03_26"
+const opUpdateFieldLevelEncryptionProfile = "UpdateFieldLevelEncryptionProfile2020_05_31"
 
 // UpdateFieldLevelEncryptionProfileRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateFieldLevelEncryptionProfile operation. The "output" return
@@ -4574,12 +5969,12 @@ const opUpdateFieldLevelEncryptionProfile = "UpdateFieldLevelEncryptionProfile20
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateFieldLevelEncryptionProfile
 func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateFieldLevelEncryptionProfileInput) (req *request.Request, output *UpdateFieldLevelEncryptionProfileOutput) {
 	op := &request.Operation{
 		Name:       opUpdateFieldLevelEncryptionProfile,
 		HTTPMethod: "PUT",
-		HTTPPath:   "/2019-03-26/field-level-encryption-profile/{Id}/config",
+		HTTPPath:   "/2020-05-31/field-level-encryption-profile/{Id}/config",
 	}
 
 	if input == nil {
@@ -4610,7 +6005,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   The specified profile for field-level encryption already exists.
 //
 //   * ErrCodeIllegalUpdate "IllegalUpdate"
-//   Origin and CallerReference cannot be updated.
+//   The update contains modifications that are not allowed.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -4619,7 +6014,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
@@ -4642,7 +6037,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   The maximum number of field patterns for field-level encryption have been
 //   created.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateFieldLevelEncryptionProfile
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateFieldLevelEncryptionProfile
 func (c *CloudFront) UpdateFieldLevelEncryptionProfile(input *UpdateFieldLevelEncryptionProfileInput) (*UpdateFieldLevelEncryptionProfileOutput, error) {
 	req, out := c.UpdateFieldLevelEncryptionProfileRequest(input)
 	return out, req.Send()
@@ -4664,7 +6059,137 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
-const opUpdatePublicKey = "UpdatePublicKey2019_03_26"
+const opUpdateOriginRequestPolicy = "UpdateOriginRequestPolicy2020_05_31"
+
+// UpdateOriginRequestPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateOriginRequestPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateOriginRequestPolicy for more information on using the UpdateOriginRequestPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateOriginRequestPolicyRequest method.
+//    req, resp := client.UpdateOriginRequestPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateOriginRequestPolicy
+func (c *CloudFront) UpdateOriginRequestPolicyRequest(input *UpdateOriginRequestPolicyInput) (req *request.Request, output *UpdateOriginRequestPolicyOutput) {
+	op := &request.Operation{
+		Name:       opUpdateOriginRequestPolicy,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2020-05-31/origin-request-policy/{Id}",
+	}
+
+	if input == nil {
+		input = &UpdateOriginRequestPolicyInput{}
+	}
+
+	output = &UpdateOriginRequestPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateOriginRequestPolicy API operation for Amazon CloudFront.
+//
+// Updates an origin request policy configuration.
+//
+// When you update an origin request policy configuration, all the fields are
+// updated with the values provided in the request. You cannot update some fields
+// independent of others. To update an origin request policy configuration:
+//
+// Use GetOriginRequestPolicyConfig to get the current configuration.
+//
+// Locally modify the fields in the origin request policy configuration that
+// you want to update.
+//
+// Call UpdateOriginRequestPolicy by providing the entire origin request policy
+// configuration, including the fields that you modified and those that you
+// didn’t.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation UpdateOriginRequestPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeIllegalUpdate "IllegalUpdate"
+//   The update contains modifications that are not allowed.
+//
+//   * ErrCodeInconsistentQuantities "InconsistentQuantities"
+//   The value of Quantity and the size of Items don't match.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+//   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
+//   The If-Match version is missing or not valid.
+//
+//   * ErrCodeNoSuchOriginRequestPolicy "NoSuchOriginRequestPolicy"
+//   The origin request policy does not exist.
+//
+//   * ErrCodePreconditionFailed "PreconditionFailed"
+//   The precondition given in one or more of the request header fields evaluated
+//   to false.
+//
+//   * ErrCodeOriginRequestPolicyAlreadyExists "OriginRequestPolicyAlreadyExists"
+//   An origin request policy with this name already exists. You must provide
+//   a unique name. To modify an existing origin request policy, use UpdateOriginRequestPolicy.
+//
+//   * ErrCodeTooManyHeadersInOriginRequestPolicy "TooManyHeadersInOriginRequestPolicy"
+//   The number of headers in the origin request policy exceeds the maximum. For
+//   more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyCookiesInOriginRequestPolicy "TooManyCookiesInOriginRequestPolicy"
+//   The number of cookies in the origin request policy exceeds the maximum. For
+//   more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeTooManyQueryStringsInOriginRequestPolicy "TooManyQueryStringsInOriginRequestPolicy"
+//   The number of query strings in the origin request policy exceeds the maximum.
+//   For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateOriginRequestPolicy
+func (c *CloudFront) UpdateOriginRequestPolicy(input *UpdateOriginRequestPolicyInput) (*UpdateOriginRequestPolicyOutput, error) {
+	req, out := c.UpdateOriginRequestPolicyRequest(input)
+	return out, req.Send()
+}
+
+// UpdateOriginRequestPolicyWithContext is the same as UpdateOriginRequestPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateOriginRequestPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) UpdateOriginRequestPolicyWithContext(ctx aws.Context, input *UpdateOriginRequestPolicyInput, opts ...request.Option) (*UpdateOriginRequestPolicyOutput, error) {
+	req, out := c.UpdateOriginRequestPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdatePublicKey = "UpdatePublicKey2020_05_31"
 
 // UpdatePublicKeyRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePublicKey operation. The "output" return
@@ -4689,12 +6214,12 @@ const opUpdatePublicKey = "UpdatePublicKey2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdatePublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdatePublicKey
 func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *request.Request, output *UpdatePublicKeyOutput) {
 	op := &request.Operation{
 		Name:       opUpdatePublicKey,
 		HTTPMethod: "PUT",
-		HTTPPath:   "/2019-03-26/public-key/{Id}/config",
+		HTTPPath:   "/2020-05-31/public-key/{Id}/config",
 	}
 
 	if input == nil {
@@ -4729,10 +6254,10 @@ func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *r
 //   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeIllegalUpdate "IllegalUpdate"
-//   Origin and CallerReference cannot be updated.
+//   The update contains modifications that are not allowed.
 //
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
@@ -4741,7 +6266,7 @@ func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *r
 //   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdatePublicKey
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdatePublicKey
 func (c *CloudFront) UpdatePublicKey(input *UpdatePublicKeyInput) (*UpdatePublicKeyOutput, error) {
 	req, out := c.UpdatePublicKeyRequest(input)
 	return out, req.Send()
@@ -4763,7 +6288,7 @@ func (c *CloudFront) UpdatePublicKeyWithContext(ctx aws.Context, input *UpdatePu
 	return out, req.Send()
 }
 
-const opUpdateStreamingDistribution = "UpdateStreamingDistribution2019_03_26"
+const opUpdateStreamingDistribution = "UpdateStreamingDistribution2020_05_31"
 
 // UpdateStreamingDistributionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateStreamingDistribution operation. The "output" return
@@ -4788,12 +6313,12 @@ const opUpdateStreamingDistribution = "UpdateStreamingDistribution2019_03_26"
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateStreamingDistribution
 func (c *CloudFront) UpdateStreamingDistributionRequest(input *UpdateStreamingDistributionInput) (req *request.Request, output *UpdateStreamingDistributionOutput) {
 	op := &request.Operation{
 		Name:       opUpdateStreamingDistribution,
 		HTTPMethod: "PUT",
-		HTTPPath:   "/2019-03-26/streaming-distribution/{Id}/config",
+		HTTPPath:   "/2020-05-31/streaming-distribution/{Id}/config",
 	}
 
 	if input == nil {
@@ -4824,10 +6349,10 @@ func (c *CloudFront) UpdateStreamingDistributionRequest(input *UpdateStreamingDi
 //   The CNAME specified is already defined for CloudFront.
 //
 //   * ErrCodeIllegalUpdate "IllegalUpdate"
-//   Origin and CallerReference cannot be updated.
+//   The update contains modifications that are not allowed.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
-//   The If-Match version is missing or not valid for the distribution.
+//   The If-Match version is missing or not valid.
 //
 //   * ErrCodeMissingBody "MissingBody"
 //   This operation requires a body. Ensure that the body is present and the Content-Type
@@ -4858,7 +6383,7 @@ func (c *CloudFront) UpdateStreamingDistributionRequest(input *UpdateStreamingDi
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdateStreamingDistribution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateStreamingDistribution
 func (c *CloudFront) UpdateStreamingDistribution(input *UpdateStreamingDistributionInput) (*UpdateStreamingDistributionOutput, error) {
 	req, out := c.UpdateStreamingDistributionRequest(input)
 	return out, req.Send()
@@ -5190,12 +6715,24 @@ type CacheBehavior struct {
 	// to delete objects from your origin.
 	AllowedMethods *AllowedMethods `type:"structure"`
 
+	// The unique identifier of the cache policy that is attached to this cache
+	// behavior. For more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	CachePolicyId *string `type:"string"`
+
 	// Whether you want CloudFront to automatically compress certain files for this
 	// cache behavior. If so, specify true; if not, specify false. For more information,
 	// see Serving Compressed Files (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/ServingCompressedFiles.html)
 	// in the Amazon CloudFront Developer Guide.
 	Compress *bool `type:"boolean"`
 
+	// This field is deprecated. We recommend that you use the DefaultTTL field
+	// in a cache policy instead of this field. For more information, see Creating
+	// cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// The default amount of time that you want objects to stay in CloudFront caches
 	// before CloudFront forwards another request to your origin to determine whether
 	// the object has been updated. The value that you specify applies only when
@@ -5203,22 +6740,46 @@ type CacheBehavior struct {
 	// s-maxage, and Expires to objects. For more information, see Managing How
 	// Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
-	DefaultTTL *int64 `type:"long"`
+	//
+	// Deprecated: DefaultTTL has been deprecated
+	DefaultTTL *int64 `deprecated:"true" type:"long"`
 
 	// The value of ID for the field-level encryption configuration that you want
 	// CloudFront to use for encrypting specific fields of data for this cache behavior.
 	FieldLevelEncryptionId *string `type:"string"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field. For more information, see Working
+	// with policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/working-with-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to include values in the cache key, use a cache policy. For more
+	// information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send values to the origin but not include them in the cache
+	// key, use an origin request policy. For more information, see Creating origin
+	// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// or Using the managed origin request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// A complex type that specifies how CloudFront handles query strings, cookies,
 	// and HTTP headers.
 	//
-	// ForwardedValues is a required field
-	ForwardedValues *ForwardedValues `type:"structure" required:"true"`
+	// Deprecated: ForwardedValues has been deprecated
+	ForwardedValues *ForwardedValues `deprecated:"true" type:"structure"`
 
 	// A complex type that contains zero or more Lambda function associations for
 	// a cache behavior.
 	LambdaFunctionAssociations *LambdaFunctionAssociations `type:"structure"`
 
+	// This field is deprecated. We recommend that you use the MaxTTL field in a
+	// cache policy instead of this field. For more information, see Creating cache
+	// policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// The maximum amount of time that you want objects to stay in CloudFront caches
 	// before CloudFront forwards another request to your origin to determine whether
 	// the object has been updated. The value that you specify applies only when
@@ -5226,8 +6787,16 @@ type CacheBehavior struct {
 	// s-maxage, and Expires to objects. For more information, see Managing How
 	// Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
-	MaxTTL *int64 `type:"long"`
+	//
+	// Deprecated: MaxTTL has been deprecated
+	MaxTTL *int64 `deprecated:"true" type:"long"`
 
+	// This field is deprecated. We recommend that you use the MinTTL field in a
+	// cache policy instead of this field. For more information, see Creating cache
+	// policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// The minimum amount of time that you want objects to stay in CloudFront caches
 	// before CloudFront forwards another request to your origin to determine whether
 	// the object has been updated. For more information, see Managing How Long
@@ -5238,8 +6807,15 @@ type CacheBehavior struct {
 	// headers to your origin (under Headers, if you specify 1 for Quantity and
 	// * for Name).
 	//
-	// MinTTL is a required field
-	MinTTL *int64 `type:"long" required:"true"`
+	// Deprecated: MinTTL has been deprecated
+	MinTTL *int64 `deprecated:"true" type:"long"`
+
+	// The unique identifier of the origin request policy that is attached to this
+	// cache behavior. For more information, see Creating origin request policies
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// or Using the managed origin request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	OriginRequestPolicyId *string `type:"string"`
 
 	// The pattern (for example, images/*.jpg) that specifies which requests to
 	// apply the behavior to. When CloudFront receives a viewer request, the requested
@@ -5336,12 +6912,6 @@ func (s CacheBehavior) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CacheBehavior) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CacheBehavior"}
-	if s.ForwardedValues == nil {
-		invalidParams.Add(request.NewErrParamRequired("ForwardedValues"))
-	}
-	if s.MinTTL == nil {
-		invalidParams.Add(request.NewErrParamRequired("MinTTL"))
-	}
 	if s.PathPattern == nil {
 		invalidParams.Add(request.NewErrParamRequired("PathPattern"))
 	}
@@ -5387,6 +6957,12 @@ func (s *CacheBehavior) SetAllowedMethods(v *AllowedMethods) *CacheBehavior {
 	return s
 }
 
+// SetCachePolicyId sets the CachePolicyId field's value.
+func (s *CacheBehavior) SetCachePolicyId(v string) *CacheBehavior {
+	s.CachePolicyId = &v
+	return s
+}
+
 // SetCompress sets the Compress field's value.
 func (s *CacheBehavior) SetCompress(v bool) *CacheBehavior {
 	s.Compress = &v
@@ -5426,6 +7002,12 @@ func (s *CacheBehavior) SetMaxTTL(v int64) *CacheBehavior {
 // SetMinTTL sets the MinTTL field's value.
 func (s *CacheBehavior) SetMinTTL(v int64) *CacheBehavior {
 	s.MinTTL = &v
+	return s
+}
+
+// SetOriginRequestPolicyId sets the OriginRequestPolicyId field's value.
+func (s *CacheBehavior) SetOriginRequestPolicyId(v string) *CacheBehavior {
+	s.OriginRequestPolicyId = &v
 	return s
 }
 
@@ -5515,6 +7097,520 @@ func (s *CacheBehaviors) SetItems(v []*CacheBehavior) *CacheBehaviors {
 // SetQuantity sets the Quantity field's value.
 func (s *CacheBehaviors) SetQuantity(v int64) *CacheBehaviors {
 	s.Quantity = &v
+	return s
+}
+
+// A cache policy.
+//
+// When it’s attached to a cache behavior, the cache policy determines the
+// following:
+//
+//    * The values that CloudFront includes in the cache key. These values can
+//    include HTTP headers, cookies, and URL query strings. CloudFront uses
+//    the cache key to find an object in its cache that it can return to the
+//    viewer.
+//
+//    * The default, minimum, and maximum time to live (TTL) values that you
+//    want objects to stay in the CloudFront cache.
+//
+// The headers, cookies, and query strings that are included in the cache key
+// are automatically included in requests that CloudFront sends to the origin.
+// CloudFront sends a request when it can’t find a valid object in its cache
+// that matches the request’s cache key. If you want to send values to the
+// origin but not include them in the cache key, use OriginRequestPolicy.
+type CachePolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The cache policy configuration.
+	//
+	// CachePolicyConfig is a required field
+	CachePolicyConfig *CachePolicyConfig `type:"structure" required:"true"`
+
+	// The unique identifier for the cache policy.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// The date and time when the cache policy was last modified.
+	//
+	// LastModifiedTime is a required field
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s CachePolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicy) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicyConfig sets the CachePolicyConfig field's value.
+func (s *CachePolicy) SetCachePolicyConfig(v *CachePolicyConfig) *CachePolicy {
+	s.CachePolicyConfig = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *CachePolicy) SetId(v string) *CachePolicy {
+	s.Id = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *CachePolicy) SetLastModifiedTime(v time.Time) *CachePolicy {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// A cache policy configuration.
+//
+// This configuration determines the following:
+//
+//    * The values that CloudFront includes in the cache key. These values can
+//    include HTTP headers, cookies, and URL query strings. CloudFront uses
+//    the cache key to find an object in its cache that it can return to the
+//    viewer.
+//
+//    * The default, minimum, and maximum time to live (TTL) values that you
+//    want objects to stay in the CloudFront cache.
+//
+// The headers, cookies, and query strings that are included in the cache key
+// are automatically included in requests that CloudFront sends to the origin.
+// CloudFront sends a request when it can’t find a valid object in its cache
+// that matches the request’s cache key. If you want to send values to the
+// origin but not include them in the cache key, use OriginRequestPolicy.
+type CachePolicyConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A comment to describe the cache policy.
+	Comment *string `type:"string"`
+
+	// The default amount of time, in seconds, that you want objects to stay in
+	// the CloudFront cache before CloudFront sends another request to the origin
+	// to see if the object has been updated. CloudFront uses this value as the
+	// object’s time to live (TTL) only when the origin does not send Cache-Control
+	// or Expires headers with the object. For more information, see Managing How
+	// Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// The default value for this field is 86400 seconds (one day). If the value
+	// of MinTTL is more than 86400 seconds, then the default value for this field
+	// is the same as the value of MinTTL.
+	DefaultTTL *int64 `type:"long"`
+
+	// The maximum amount of time, in seconds, that objects stay in the CloudFront
+	// cache before CloudFront sends another request to the origin to see if the
+	// object has been updated. CloudFront uses this value only when the origin
+	// sends Cache-Control or Expires headers with the object. For more information,
+	// see Managing How Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// The default value for this field is 31536000 seconds (one year). If the value
+	// of MinTTL or DefaultTTL is more than 31536000 seconds, then the default value
+	// for this field is the same as the value of DefaultTTL.
+	MaxTTL *int64 `type:"long"`
+
+	// The minimum amount of time, in seconds, that you want objects to stay in
+	// the CloudFront cache before CloudFront sends another request to the origin
+	// to see if the object has been updated. For more information, see Managing
+	// How Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// MinTTL is a required field
+	MinTTL *int64 `type:"long" required:"true"`
+
+	// A unique name to identify the cache policy.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The HTTP headers, cookies, and URL query strings to include in the cache
+	// key. The values included in the cache key are automatically included in requests
+	// that CloudFront sends to the origin.
+	ParametersInCacheKeyAndForwardedToOrigin *ParametersInCacheKeyAndForwardedToOrigin `type:"structure"`
+}
+
+// String returns the string representation
+func (s CachePolicyConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicyConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CachePolicyConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CachePolicyConfig"}
+	if s.MinTTL == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinTTL"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.ParametersInCacheKeyAndForwardedToOrigin != nil {
+		if err := s.ParametersInCacheKeyAndForwardedToOrigin.Validate(); err != nil {
+			invalidParams.AddNested("ParametersInCacheKeyAndForwardedToOrigin", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetComment sets the Comment field's value.
+func (s *CachePolicyConfig) SetComment(v string) *CachePolicyConfig {
+	s.Comment = &v
+	return s
+}
+
+// SetDefaultTTL sets the DefaultTTL field's value.
+func (s *CachePolicyConfig) SetDefaultTTL(v int64) *CachePolicyConfig {
+	s.DefaultTTL = &v
+	return s
+}
+
+// SetMaxTTL sets the MaxTTL field's value.
+func (s *CachePolicyConfig) SetMaxTTL(v int64) *CachePolicyConfig {
+	s.MaxTTL = &v
+	return s
+}
+
+// SetMinTTL sets the MinTTL field's value.
+func (s *CachePolicyConfig) SetMinTTL(v int64) *CachePolicyConfig {
+	s.MinTTL = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CachePolicyConfig) SetName(v string) *CachePolicyConfig {
+	s.Name = &v
+	return s
+}
+
+// SetParametersInCacheKeyAndForwardedToOrigin sets the ParametersInCacheKeyAndForwardedToOrigin field's value.
+func (s *CachePolicyConfig) SetParametersInCacheKeyAndForwardedToOrigin(v *ParametersInCacheKeyAndForwardedToOrigin) *CachePolicyConfig {
+	s.ParametersInCacheKeyAndForwardedToOrigin = v
+	return s
+}
+
+// An object that determines whether any cookies in viewer requests (and if
+// so, which cookies) are included in the cache key and automatically included
+// in requests that CloudFront sends to the origin.
+type CachePolicyCookiesConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether any cookies in viewer requests are included in the cache
+	// key and automatically included in requests that CloudFront sends to the origin.
+	// Valid values are:
+	//
+	//    * none – Cookies in viewer requests are not included in the cache key
+	//    and are not automatically included in requests that CloudFront sends to
+	//    the origin. Even when this field is set to none, any cookies that are
+	//    listed in an OriginRequestPolicy are included in origin requests.
+	//
+	//    * whitelist – The cookies in viewer requests that are listed in the
+	//    CookieNames type are included in the cache key and automatically included
+	//    in requests that CloudFront sends to the origin.
+	//
+	//    * allExcept – All cookies in viewer requests that are not listed in
+	//    the CookieNames type are included in the cache key and automatically included
+	//    in requests that CloudFront sends to the origin.
+	//
+	//    * all – All cookies in viewer requests are included in the cache key
+	//    and are automatically included in requests that CloudFront sends to the
+	//    origin.
+	//
+	// CookieBehavior is a required field
+	CookieBehavior *string `type:"string" required:"true" enum:"CachePolicyCookieBehavior"`
+
+	// Contains a list of cookie names.
+	Cookies *CookieNames `type:"structure"`
+}
+
+// String returns the string representation
+func (s CachePolicyCookiesConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicyCookiesConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CachePolicyCookiesConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CachePolicyCookiesConfig"}
+	if s.CookieBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("CookieBehavior"))
+	}
+	if s.Cookies != nil {
+		if err := s.Cookies.Validate(); err != nil {
+			invalidParams.AddNested("Cookies", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCookieBehavior sets the CookieBehavior field's value.
+func (s *CachePolicyCookiesConfig) SetCookieBehavior(v string) *CachePolicyCookiesConfig {
+	s.CookieBehavior = &v
+	return s
+}
+
+// SetCookies sets the Cookies field's value.
+func (s *CachePolicyCookiesConfig) SetCookies(v *CookieNames) *CachePolicyCookiesConfig {
+	s.Cookies = v
+	return s
+}
+
+// An object that determines whether any HTTP headers (and if so, which headers)
+// are included in the cache key and automatically included in requests that
+// CloudFront sends to the origin.
+type CachePolicyHeadersConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether any HTTP headers are included in the cache key and automatically
+	// included in requests that CloudFront sends to the origin. Valid values are:
+	//
+	//    * none – HTTP headers are not included in the cache key and are not
+	//    automatically included in requests that CloudFront sends to the origin.
+	//    Even when this field is set to none, any headers that are listed in an
+	//    OriginRequestPolicy are included in origin requests.
+	//
+	//    * whitelist – The HTTP headers that are listed in the Headers type are
+	//    included in the cache key and are automatically included in requests that
+	//    CloudFront sends to the origin.
+	//
+	// HeaderBehavior is a required field
+	HeaderBehavior *string `type:"string" required:"true" enum:"CachePolicyHeaderBehavior"`
+
+	// Contains a list of HTTP header names.
+	Headers *Headers `type:"structure"`
+}
+
+// String returns the string representation
+func (s CachePolicyHeadersConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicyHeadersConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CachePolicyHeadersConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CachePolicyHeadersConfig"}
+	if s.HeaderBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("HeaderBehavior"))
+	}
+	if s.Headers != nil {
+		if err := s.Headers.Validate(); err != nil {
+			invalidParams.AddNested("Headers", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHeaderBehavior sets the HeaderBehavior field's value.
+func (s *CachePolicyHeadersConfig) SetHeaderBehavior(v string) *CachePolicyHeadersConfig {
+	s.HeaderBehavior = &v
+	return s
+}
+
+// SetHeaders sets the Headers field's value.
+func (s *CachePolicyHeadersConfig) SetHeaders(v *Headers) *CachePolicyHeadersConfig {
+	s.Headers = v
+	return s
+}
+
+// A list of cache policies.
+type CachePolicyList struct {
+	_ struct{} `type:"structure"`
+
+	// Contains the cache policies in the list.
+	Items []*CachePolicySummary `locationNameList:"CachePolicySummary" type:"list"`
+
+	// The maximum number of cache policies requested.
+	//
+	// MaxItems is a required field
+	MaxItems *int64 `type:"integer" required:"true"`
+
+	// If there are more items in the list than are in this response, this element
+	// is present. It contains the value that you should use in the Marker field
+	// of a subsequent request to continue listing cache policies where you left
+	// off.
+	NextMarker *string `type:"string"`
+
+	// The total number of cache policies returned in the response.
+	//
+	// Quantity is a required field
+	Quantity *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s CachePolicyList) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicyList) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *CachePolicyList) SetItems(v []*CachePolicySummary) *CachePolicyList {
+	s.Items = v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *CachePolicyList) SetMaxItems(v int64) *CachePolicyList {
+	s.MaxItems = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *CachePolicyList) SetNextMarker(v string) *CachePolicyList {
+	s.NextMarker = &v
+	return s
+}
+
+// SetQuantity sets the Quantity field's value.
+func (s *CachePolicyList) SetQuantity(v int64) *CachePolicyList {
+	s.Quantity = &v
+	return s
+}
+
+// An object that determines whether any URL query strings in viewer requests
+// (and if so, which query strings) are included in the cache key and automatically
+// included in requests that CloudFront sends to the origin.
+type CachePolicyQueryStringsConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether any URL query strings in viewer requests are included
+	// in the cache key and automatically included in requests that CloudFront sends
+	// to the origin. Valid values are:
+	//
+	//    * none – Query strings in viewer requests are not included in the cache
+	//    key and are not automatically included in requests that CloudFront sends
+	//    to the origin. Even when this field is set to none, any query strings
+	//    that are listed in an OriginRequestPolicy are included in origin requests.
+	//
+	//    * whitelist – The query strings in viewer requests that are listed in
+	//    the QueryStringNames type are included in the cache key and automatically
+	//    included in requests that CloudFront sends to the origin.
+	//
+	//    * allExcept – All query strings in viewer requests that are not listed
+	//    in the QueryStringNames type are included in the cache key and automatically
+	//    included in requests that CloudFront sends to the origin.
+	//
+	//    * all – All query strings in viewer requests are included in the cache
+	//    key and are automatically included in requests that CloudFront sends to
+	//    the origin.
+	//
+	// QueryStringBehavior is a required field
+	QueryStringBehavior *string `type:"string" required:"true" enum:"CachePolicyQueryStringBehavior"`
+
+	// Contains the specific query strings in viewer requests that either are or
+	// are not included in the cache key and automatically included in requests
+	// that CloudFront sends to the origin. The behavior depends on whether the
+	// QueryStringBehavior field in the CachePolicyQueryStringsConfig type is set
+	// to whitelist (the listed query strings are included) or allExcept (the listed
+	// query strings are not included, but all other query strings are).
+	QueryStrings *QueryStringNames `type:"structure"`
+}
+
+// String returns the string representation
+func (s CachePolicyQueryStringsConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicyQueryStringsConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CachePolicyQueryStringsConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CachePolicyQueryStringsConfig"}
+	if s.QueryStringBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryStringBehavior"))
+	}
+	if s.QueryStrings != nil {
+		if err := s.QueryStrings.Validate(); err != nil {
+			invalidParams.AddNested("QueryStrings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetQueryStringBehavior sets the QueryStringBehavior field's value.
+func (s *CachePolicyQueryStringsConfig) SetQueryStringBehavior(v string) *CachePolicyQueryStringsConfig {
+	s.QueryStringBehavior = &v
+	return s
+}
+
+// SetQueryStrings sets the QueryStrings field's value.
+func (s *CachePolicyQueryStringsConfig) SetQueryStrings(v *QueryStringNames) *CachePolicyQueryStringsConfig {
+	s.QueryStrings = v
+	return s
+}
+
+// Contains a cache policy.
+type CachePolicySummary struct {
+	_ struct{} `type:"structure"`
+
+	// The cache policy.
+	//
+	// CachePolicy is a required field
+	CachePolicy *CachePolicy `type:"structure" required:"true"`
+
+	// The type of cache policy, either managed (created by AWS) or custom (created
+	// in this AWS account).
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"CachePolicyType"`
+}
+
+// String returns the string representation
+func (s CachePolicySummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachePolicySummary) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicy sets the CachePolicy field's value.
+func (s *CachePolicySummary) SetCachePolicy(v *CachePolicy) *CachePolicySummary {
+	s.CachePolicy = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *CachePolicySummary) SetType(v string) *CachePolicySummary {
+	s.Type = &v
 	return s
 }
 
@@ -5760,27 +7856,14 @@ func (s *ContentTypeProfiles) SetQuantity(v int64) *ContentTypeProfiles {
 	return s
 }
 
-// A complex type that specifies whether you want CloudFront to forward cookies
-// to the origin and, if so, which ones. For more information about forwarding
-// cookies to the origin, see Caching Content Based on Request Headers (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/header-caching.html)
-// in the Amazon CloudFront Developer Guide.
+// Contains a list of cookie names.
 type CookieNames struct {
 	_ struct{} `type:"structure"`
 
-	// A complex type that contains one Name element for each cookie that you want
-	// CloudFront to forward to the origin for this cache behavior. It must contain
-	// the same number of items that is specified in the Quantity field.
-	//
-	// When you set Forward = whitelist (in the CookiePreferences object), this
-	// field must contain at least one item.
+	// A list of cookie names.
 	Items []*string `locationNameList:"Name" type:"list"`
 
-	// The number of different cookies that you want CloudFront to forward to the
-	// origin for this cache behavior. The value must equal the number of items
-	// that are in the Items field.
-	//
-	// When you set Forward = whitelist (in the CookiePreferences object), this
-	// value must be 1 or higher.
+	// The number of cookie names in the Items list.
 	//
 	// Quantity is a required field
 	Quantity *int64 `type:"integer" required:"true"`
@@ -5821,6 +7904,15 @@ func (s *CookieNames) SetQuantity(v int64) *CookieNames {
 	return s
 }
 
+// This field is deprecated. We recommend that you use a cache policy or an
+// origin request policy instead of this field.
+//
+// If you want to include cookies in the cache key, use CookiesConfig in a cache
+// policy. See CreateCachePolicy.
+//
+// If you want to send cookies to the origin but not include them in the cache
+// key, use CookiesConfig in an origin request policy. See CreateOriginRequestPolicy.
+//
 // A complex type that specifies whether you want CloudFront to forward cookies
 // to the origin and, if so, which ones. For more information about forwarding
 // cookies to the origin, see Caching Content Based on Cookies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Cookies.html)
@@ -5828,6 +7920,18 @@ func (s *CookieNames) SetQuantity(v int64) *CookieNames {
 type CookiePreference struct {
 	_ struct{} `type:"structure"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field.
+	//
+	// If you want to include cookies in the cache key, use a cache policy. For
+	// more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send cookies to the origin but not include them in the cache
+	// key, use origin request policy. For more information, see Creating origin
+	// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// Specifies which cookies to forward to the origin for this cache behavior:
 	// all, none, or the list of cookies specified in the WhitelistedNames complex
 	// type.
@@ -5838,6 +7942,18 @@ type CookiePreference struct {
 	// Forward is a required field
 	Forward *string `type:"string" required:"true" enum:"ItemSelection"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field.
+	//
+	// If you want to include cookies in the cache key, use a cache policy. For
+	// more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send cookies to the origin but not include them in the cache
+	// key, use an origin request policy. For more information, see Creating origin
+	// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// Required if you specify whitelist for the value of Forward. A complex type
 	// that specifies how many different cookies you want CloudFront to forward
 	// to the origin for this cache behavior and, if you want to forward selected
@@ -5894,6 +8010,90 @@ func (s *CookiePreference) SetWhitelistedNames(v *CookieNames) *CookiePreference
 	return s
 }
 
+type CreateCachePolicyInput struct {
+	_ struct{} `locationName:"CreateCachePolicyRequest" type:"structure" payload:"CachePolicyConfig"`
+
+	// A cache policy configuration.
+	//
+	// CachePolicyConfig is a required field
+	CachePolicyConfig *CachePolicyConfig `locationName:"CachePolicyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+}
+
+// String returns the string representation
+func (s CreateCachePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCachePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateCachePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateCachePolicyInput"}
+	if s.CachePolicyConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("CachePolicyConfig"))
+	}
+	if s.CachePolicyConfig != nil {
+		if err := s.CachePolicyConfig.Validate(); err != nil {
+			invalidParams.AddNested("CachePolicyConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCachePolicyConfig sets the CachePolicyConfig field's value.
+func (s *CreateCachePolicyInput) SetCachePolicyConfig(v *CachePolicyConfig) *CreateCachePolicyInput {
+	s.CachePolicyConfig = v
+	return s
+}
+
+type CreateCachePolicyOutput struct {
+	_ struct{} `type:"structure" payload:"CachePolicy"`
+
+	// A cache policy.
+	CachePolicy *CachePolicy `type:"structure"`
+
+	// The current version of the cache policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	// The fully qualified URI of the cache policy just created.
+	Location *string `location:"header" locationName:"Location" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateCachePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCachePolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicy sets the CachePolicy field's value.
+func (s *CreateCachePolicyOutput) SetCachePolicy(v *CachePolicy) *CreateCachePolicyOutput {
+	s.CachePolicy = v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *CreateCachePolicyOutput) SetETag(v string) *CreateCachePolicyOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetLocation sets the Location field's value.
+func (s *CreateCachePolicyOutput) SetLocation(v string) *CreateCachePolicyOutput {
+	s.Location = &v
+	return s
+}
+
 // The request to create a new origin access identity (OAI). An origin access
 // identity is a special CloudFront user that you can associate with Amazon
 // S3 origins, so that you can secure all or just some of your Amazon S3 content.
@@ -5906,7 +8106,7 @@ type CreateCloudFrontOriginAccessIdentityInput struct {
 	// The current configuration information for the identity.
 	//
 	// CloudFrontOriginAccessIdentityConfig is a required field
-	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -5953,8 +8153,7 @@ type CreateCloudFrontOriginAccessIdentityOutput struct {
 	// The current version of the origin access identity created.
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
-	// The fully qualified URI of the new origin access identity just created. For
-	// example: https://cloudfront.amazonaws.com/2010-11-01/origin-access-identity/cloudfront/E74FTE3AJFJ256A.
+	// The fully qualified URI of the new origin access identity just created.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 }
 
@@ -5993,7 +8192,7 @@ type CreateDistributionInput struct {
 	// The distribution's configuration information.
 	//
 	// DistributionConfig is a required field
-	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6040,8 +8239,7 @@ type CreateDistributionOutput struct {
 	// The current version of the distribution created.
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
-	// The fully qualified URI of the new distribution resource just created. For
-	// example: https://cloudfront.amazonaws.com/2010-11-01/distribution/EDFDVBD632BHDS5.
+	// The fully qualified URI of the new distribution resource just created.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 }
 
@@ -6080,7 +8278,7 @@ type CreateDistributionWithTagsInput struct {
 	// The distribution's configuration information.
 	//
 	// DistributionConfigWithTags is a required field
-	DistributionConfigWithTags *DistributionConfigWithTags `locationName:"DistributionConfigWithTags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	DistributionConfigWithTags *DistributionConfigWithTags `locationName:"DistributionConfigWithTags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6127,8 +8325,7 @@ type CreateDistributionWithTagsOutput struct {
 	// The current version of the distribution created.
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
-	// The fully qualified URI of the new distribution resource just created. For
-	// example: https://cloudfront.amazonaws.com/2010-11-01/distribution/EDFDVBD632BHDS5.
+	// The fully qualified URI of the new distribution resource just created.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 }
 
@@ -6166,7 +8363,7 @@ type CreateFieldLevelEncryptionConfigInput struct {
 	// The request to create a new field-level encryption configuration.
 	//
 	// FieldLevelEncryptionConfig is a required field
-	FieldLevelEncryptionConfig *FieldLevelEncryptionConfig `locationName:"FieldLevelEncryptionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	FieldLevelEncryptionConfig *FieldLevelEncryptionConfig `locationName:"FieldLevelEncryptionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6213,8 +8410,7 @@ type CreateFieldLevelEncryptionConfigOutput struct {
 	// Returned when you create a new field-level encryption configuration.
 	FieldLevelEncryption *FieldLevelEncryption `type:"structure"`
 
-	// The fully qualified URI of the new configuration resource just created. For
-	// example: https://cloudfront.amazonaws.com/2010-11-01/field-level-encryption-config/EDFDVBD632BHDS5.
+	// The fully qualified URI of the new configuration resource just created.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 }
 
@@ -6252,7 +8448,7 @@ type CreateFieldLevelEncryptionProfileInput struct {
 	// The request to create a field-level encryption profile.
 	//
 	// FieldLevelEncryptionProfileConfig is a required field
-	FieldLevelEncryptionProfileConfig *FieldLevelEncryptionProfileConfig `locationName:"FieldLevelEncryptionProfileConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	FieldLevelEncryptionProfileConfig *FieldLevelEncryptionProfileConfig `locationName:"FieldLevelEncryptionProfileConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6298,8 +8494,7 @@ type CreateFieldLevelEncryptionProfileOutput struct {
 	// Returned when you create a new field-level encryption profile.
 	FieldLevelEncryptionProfile *FieldLevelEncryptionProfile `type:"structure"`
 
-	// The fully qualified URI of the new profile resource just created. For example:
-	// https://cloudfront.amazonaws.com/2010-11-01/field-level-encryption-profile/EDFDVBD632BHDS5.
+	// The fully qualified URI of the new profile resource just created.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 }
 
@@ -6343,7 +8538,7 @@ type CreateInvalidationInput struct {
 	// The batch information for the invalidation.
 	//
 	// InvalidationBatch is a required field
-	InvalidationBatch *InvalidationBatch `locationName:"InvalidationBatch" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	InvalidationBatch *InvalidationBatch `locationName:"InvalidationBatch" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6426,13 +8621,97 @@ func (s *CreateInvalidationOutput) SetLocation(v string) *CreateInvalidationOutp
 	return s
 }
 
+type CreateOriginRequestPolicyInput struct {
+	_ struct{} `locationName:"CreateOriginRequestPolicyRequest" type:"structure" payload:"OriginRequestPolicyConfig"`
+
+	// An origin request policy configuration.
+	//
+	// OriginRequestPolicyConfig is a required field
+	OriginRequestPolicyConfig *OriginRequestPolicyConfig `locationName:"OriginRequestPolicyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+}
+
+// String returns the string representation
+func (s CreateOriginRequestPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOriginRequestPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateOriginRequestPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateOriginRequestPolicyInput"}
+	if s.OriginRequestPolicyConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("OriginRequestPolicyConfig"))
+	}
+	if s.OriginRequestPolicyConfig != nil {
+		if err := s.OriginRequestPolicyConfig.Validate(); err != nil {
+			invalidParams.AddNested("OriginRequestPolicyConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOriginRequestPolicyConfig sets the OriginRequestPolicyConfig field's value.
+func (s *CreateOriginRequestPolicyInput) SetOriginRequestPolicyConfig(v *OriginRequestPolicyConfig) *CreateOriginRequestPolicyInput {
+	s.OriginRequestPolicyConfig = v
+	return s
+}
+
+type CreateOriginRequestPolicyOutput struct {
+	_ struct{} `type:"structure" payload:"OriginRequestPolicy"`
+
+	// The current version of the origin request policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	// The fully qualified URI of the origin request policy just created.
+	Location *string `location:"header" locationName:"Location" type:"string"`
+
+	// An origin request policy.
+	OriginRequestPolicy *OriginRequestPolicy `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateOriginRequestPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOriginRequestPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetETag sets the ETag field's value.
+func (s *CreateOriginRequestPolicyOutput) SetETag(v string) *CreateOriginRequestPolicyOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetLocation sets the Location field's value.
+func (s *CreateOriginRequestPolicyOutput) SetLocation(v string) *CreateOriginRequestPolicyOutput {
+	s.Location = &v
+	return s
+}
+
+// SetOriginRequestPolicy sets the OriginRequestPolicy field's value.
+func (s *CreateOriginRequestPolicyOutput) SetOriginRequestPolicy(v *OriginRequestPolicy) *CreateOriginRequestPolicyOutput {
+	s.OriginRequestPolicy = v
+	return s
+}
+
 type CreatePublicKeyInput struct {
 	_ struct{} `locationName:"CreatePublicKeyRequest" type:"structure" payload:"PublicKeyConfig"`
 
 	// The request to add a public key to CloudFront.
 	//
 	// PublicKeyConfig is a required field
-	PublicKeyConfig *PublicKeyConfig `locationName:"PublicKeyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	PublicKeyConfig *PublicKeyConfig `locationName:"PublicKeyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6475,8 +8754,7 @@ type CreatePublicKeyOutput struct {
 	// The current version of the public key. For example: E2QWRUHAPOMQZL.
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
-	// The fully qualified URI of the new public key resource just created. For
-	// example: https://cloudfront.amazonaws.com/2010-11-01/cloudfront-public-key/EDFDVBD632BHDS5.
+	// The fully qualified URI of the new public key resource just created.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 
 	// Returned when you add a public key.
@@ -6518,7 +8796,7 @@ type CreateStreamingDistributionInput struct {
 	// The streaming distribution's configuration information.
 	//
 	// StreamingDistributionConfig is a required field
-	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6563,7 +8841,6 @@ type CreateStreamingDistributionOutput struct {
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
 	// The fully qualified URI of the new streaming distribution resource just created.
-	// For example: https://cloudfront.amazonaws.com/2010-11-01/streaming-distribution/EGTXBD79H29TRA8.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 
 	// The streaming distribution's information.
@@ -6605,7 +8882,7 @@ type CreateStreamingDistributionWithTagsInput struct {
 	// The streaming distribution's configuration information.
 	//
 	// StreamingDistributionConfigWithTags is a required field
-	StreamingDistributionConfigWithTags *StreamingDistributionConfigWithTags `locationName:"StreamingDistributionConfigWithTags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	StreamingDistributionConfigWithTags *StreamingDistributionConfigWithTags `locationName:"StreamingDistributionConfigWithTags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -6650,7 +8927,6 @@ type CreateStreamingDistributionWithTagsOutput struct {
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
 	// The fully qualified URI of the new streaming distribution resource just created.
-	// For example:https://cloudfront.amazonaws.com/2010-11-01/streaming-distribution/EGTXBD79H29TRA8.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 
 	// The streaming distribution's information.
@@ -7088,12 +9364,24 @@ type DefaultCacheBehavior struct {
 	// to delete objects from your origin.
 	AllowedMethods *AllowedMethods `type:"structure"`
 
+	// The unique identifier of the cache policy that is attached to the default
+	// cache behavior. For more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	CachePolicyId *string `type:"string"`
+
 	// Whether you want CloudFront to automatically compress certain files for this
 	// cache behavior. If so, specify true; if not, specify false. For more information,
 	// see Serving Compressed Files (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/ServingCompressedFiles.html)
 	// in the Amazon CloudFront Developer Guide.
 	Compress *bool `type:"boolean"`
 
+	// This field is deprecated. We recommend that you use the DefaultTTL field
+	// in a cache policy instead of this field. For more information, see Creating
+	// cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// The default amount of time that you want objects to stay in CloudFront caches
 	// before CloudFront forwards another request to your origin to determine whether
 	// the object has been updated. The value that you specify applies only when
@@ -7101,23 +9389,47 @@ type DefaultCacheBehavior struct {
 	// s-maxage, and Expires to objects. For more information, see Managing How
 	// Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
-	DefaultTTL *int64 `type:"long"`
+	//
+	// Deprecated: DefaultTTL has been deprecated
+	DefaultTTL *int64 `deprecated:"true" type:"long"`
 
 	// The value of ID for the field-level encryption configuration that you want
 	// CloudFront to use for encrypting specific fields of data for the default
 	// cache behavior.
 	FieldLevelEncryptionId *string `type:"string"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field. For more information, see Working
+	// with policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/working-with-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to include values in the cache key, use a cache policy. For more
+	// information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send values to the origin but not include them in the cache
+	// key, use an origin request policy. For more information, see Creating origin
+	// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// or Using the managed origin request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// A complex type that specifies how CloudFront handles query strings, cookies,
 	// and HTTP headers.
 	//
-	// ForwardedValues is a required field
-	ForwardedValues *ForwardedValues `type:"structure" required:"true"`
+	// Deprecated: ForwardedValues has been deprecated
+	ForwardedValues *ForwardedValues `deprecated:"true" type:"structure"`
 
 	// A complex type that contains zero or more Lambda function associations for
 	// a cache behavior.
 	LambdaFunctionAssociations *LambdaFunctionAssociations `type:"structure"`
 
+	// This field is deprecated. We recommend that you use the MaxTTL field in a
+	// cache policy instead of this field. For more information, see Creating cache
+	// policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// The maximum amount of time that you want objects to stay in CloudFront caches
 	// before CloudFront forwards another request to your origin to determine whether
 	// the object has been updated. The value that you specify applies only when
@@ -7125,8 +9437,16 @@ type DefaultCacheBehavior struct {
 	// s-maxage, and Expires to objects. For more information, see Managing How
 	// Long Content Stays in an Edge Cache (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
-	MaxTTL *int64 `type:"long"`
+	//
+	// Deprecated: MaxTTL has been deprecated
+	MaxTTL *int64 `deprecated:"true" type:"long"`
 
+	// This field is deprecated. We recommend that you use the MinTTL field in a
+	// cache policy instead of this field. For more information, see Creating cache
+	// policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// or Using the managed cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// The minimum amount of time that you want objects to stay in CloudFront caches
 	// before CloudFront forwards another request to your origin to determine whether
 	// the object has been updated. For more information, see Managing How Long
@@ -7137,8 +9457,15 @@ type DefaultCacheBehavior struct {
 	// headers to your origin (under Headers, if you specify 1 for Quantity and
 	// * for Name).
 	//
-	// MinTTL is a required field
-	MinTTL *int64 `type:"long" required:"true"`
+	// Deprecated: MinTTL has been deprecated
+	MinTTL *int64 `deprecated:"true" type:"long"`
+
+	// The unique identifier of the origin request policy that is attached to the
+	// default cache behavior. For more information, see Creating origin request
+	// policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// or Using the managed origin request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
+	// in the Amazon CloudFront Developer Guide.
+	OriginRequestPolicyId *string `type:"string"`
 
 	// Indicates whether you want to distribute media files in the Microsoft Smooth
 	// Streaming format using the origin that is associated with this cache behavior.
@@ -7216,12 +9543,6 @@ func (s DefaultCacheBehavior) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DefaultCacheBehavior) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DefaultCacheBehavior"}
-	if s.ForwardedValues == nil {
-		invalidParams.Add(request.NewErrParamRequired("ForwardedValues"))
-	}
-	if s.MinTTL == nil {
-		invalidParams.Add(request.NewErrParamRequired("MinTTL"))
-	}
 	if s.TargetOriginId == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetOriginId"))
 	}
@@ -7261,6 +9582,12 @@ func (s *DefaultCacheBehavior) Validate() error {
 // SetAllowedMethods sets the AllowedMethods field's value.
 func (s *DefaultCacheBehavior) SetAllowedMethods(v *AllowedMethods) *DefaultCacheBehavior {
 	s.AllowedMethods = v
+	return s
+}
+
+// SetCachePolicyId sets the CachePolicyId field's value.
+func (s *DefaultCacheBehavior) SetCachePolicyId(v string) *DefaultCacheBehavior {
+	s.CachePolicyId = &v
 	return s
 }
 
@@ -7306,6 +9633,12 @@ func (s *DefaultCacheBehavior) SetMinTTL(v int64) *DefaultCacheBehavior {
 	return s
 }
 
+// SetOriginRequestPolicyId sets the OriginRequestPolicyId field's value.
+func (s *DefaultCacheBehavior) SetOriginRequestPolicyId(v string) *DefaultCacheBehavior {
+	s.OriginRequestPolicyId = &v
+	return s
+}
+
 // SetSmoothStreaming sets the SmoothStreaming field's value.
 func (s *DefaultCacheBehavior) SetSmoothStreaming(v bool) *DefaultCacheBehavior {
 	s.SmoothStreaming = &v
@@ -7328,6 +9661,73 @@ func (s *DefaultCacheBehavior) SetTrustedSigners(v *TrustedSigners) *DefaultCach
 func (s *DefaultCacheBehavior) SetViewerProtocolPolicy(v string) *DefaultCacheBehavior {
 	s.ViewerProtocolPolicy = &v
 	return s
+}
+
+type DeleteCachePolicyInput struct {
+	_ struct{} `locationName:"DeleteCachePolicyRequest" type:"structure"`
+
+	// The unique identifier for the cache policy that you are deleting. To get
+	// the identifier, you can use ListCachePolicies.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+
+	// The version of the cache policy that you are deleting. The version is the
+	// cache policy’s ETag value, which you can get using ListCachePolicies, GetCachePolicy,
+	// or GetCachePolicyConfig.
+	IfMatch *string `location:"header" locationName:"If-Match" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteCachePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteCachePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteCachePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteCachePolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteCachePolicyInput) SetId(v string) *DeleteCachePolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetIfMatch sets the IfMatch field's value.
+func (s *DeleteCachePolicyInput) SetIfMatch(v string) *DeleteCachePolicyInput {
+	s.IfMatch = &v
+	return s
+}
+
+type DeleteCachePolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteCachePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteCachePolicyOutput) GoString() string {
+	return s.String()
 }
 
 // Deletes a origin access identity.
@@ -7623,6 +10023,73 @@ func (s DeleteFieldLevelEncryptionProfileOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteFieldLevelEncryptionProfileOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteOriginRequestPolicyInput struct {
+	_ struct{} `locationName:"DeleteOriginRequestPolicyRequest" type:"structure"`
+
+	// The unique identifier for the origin request policy that you are deleting.
+	// To get the identifier, you can use ListOriginRequestPolicies.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+
+	// The version of the origin request policy that you are deleting. The version
+	// is the origin request policy’s ETag value, which you can get using ListOriginRequestPolicies,
+	// GetOriginRequestPolicy, or GetOriginRequestPolicyConfig.
+	IfMatch *string `location:"header" locationName:"If-Match" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteOriginRequestPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOriginRequestPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteOriginRequestPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteOriginRequestPolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteOriginRequestPolicyInput) SetId(v string) *DeleteOriginRequestPolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetIfMatch sets the IfMatch field's value.
+func (s *DeleteOriginRequestPolicyInput) SetIfMatch(v string) *DeleteOriginRequestPolicyInput {
+	s.IfMatch = &v
+	return s
+}
+
+type DeleteOriginRequestPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteOriginRequestPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOriginRequestPolicyOutput) GoString() string {
 	return s.String()
 }
 
@@ -8314,6 +10781,86 @@ func (s *DistributionConfigWithTags) SetDistributionConfig(v *DistributionConfig
 // SetTags sets the Tags field's value.
 func (s *DistributionConfigWithTags) SetTags(v *Tags) *DistributionConfigWithTags {
 	s.Tags = v
+	return s
+}
+
+// A list of distribution IDs.
+type DistributionIdList struct {
+	_ struct{} `type:"structure"`
+
+	// A flag that indicates whether more distribution IDs remain to be listed.
+	// If your results were truncated, you can make a subsequent request using the
+	// Marker request field to retrieve more distribution IDs in the list.
+	//
+	// IsTruncated is a required field
+	IsTruncated *bool `type:"boolean" required:"true"`
+
+	// Contains the distribution IDs in the list.
+	Items []*string `locationNameList:"DistributionId" type:"list"`
+
+	// The value provided in the Marker request field.
+	//
+	// Marker is a required field
+	Marker *string `type:"string" required:"true"`
+
+	// The maximum number of distribution IDs requested.
+	//
+	// MaxItems is a required field
+	MaxItems *int64 `type:"integer" required:"true"`
+
+	// Contains the value that you should use in the Marker field of a subsequent
+	// request to continue listing distribution IDs where you left off.
+	NextMarker *string `type:"string"`
+
+	// The total number of distribution IDs returned in the response.
+	//
+	// Quantity is a required field
+	Quantity *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s DistributionIdList) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DistributionIdList) GoString() string {
+	return s.String()
+}
+
+// SetIsTruncated sets the IsTruncated field's value.
+func (s *DistributionIdList) SetIsTruncated(v bool) *DistributionIdList {
+	s.IsTruncated = &v
+	return s
+}
+
+// SetItems sets the Items field's value.
+func (s *DistributionIdList) SetItems(v []*string) *DistributionIdList {
+	s.Items = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DistributionIdList) SetMarker(v string) *DistributionIdList {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *DistributionIdList) SetMaxItems(v int64) *DistributionIdList {
+	s.MaxItems = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *DistributionIdList) SetNextMarker(v string) *DistributionIdList {
+	s.NextMarker = &v
+	return s
+}
+
+// SetQuantity sets the Quantity field's value.
+func (s *DistributionIdList) SetQuantity(v int64) *DistributionIdList {
+	s.Quantity = &v
 	return s
 }
 
@@ -9354,11 +11901,35 @@ func (s *FieldPatterns) SetQuantity(v int64) *FieldPatterns {
 	return s
 }
 
+// This field is deprecated. We recommend that you use a cache policy or an
+// origin request policy instead of this field.
+//
+// If you want to include values in the cache key, use a cache policy. For more
+// information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+// in the Amazon CloudFront Developer Guide.
+//
+// If you want to send values to the origin but not include them in the cache
+// key, use an origin request policy. For more information, see Creating origin
+// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+// in the Amazon CloudFront Developer Guide.
+//
 // A complex type that specifies how CloudFront handles query strings, cookies,
 // and HTTP headers.
 type ForwardedValues struct {
 	_ struct{} `type:"structure"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field.
+	//
+	// If you want to include cookies in the cache key, use a cache policy. For
+	// more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send cookies to the origin but not include them in the cache
+	// key, use an origin request policy. For more information, see Creating origin
+	// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// A complex type that specifies whether you want CloudFront to forward cookies
 	// to the origin and, if so, which ones. For more information about forwarding
 	// cookies to the origin, see How CloudFront Forwards, Caches, and Logs Cookies
@@ -9368,6 +11939,18 @@ type ForwardedValues struct {
 	// Cookies is a required field
 	Cookies *CookiePreference `type:"structure" required:"true"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field.
+	//
+	// If you want to include headers in the cache key, use a cache policy. For
+	// more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send headers to the origin but not include them in the cache
+	// key, use an origin request policy. For more information, see Creating origin
+	// request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// A complex type that specifies the Headers, if any, that you want CloudFront
 	// to forward to the origin for this cache behavior (whitelisted headers). For
 	// the headers that you specify, CloudFront also caches separate versions of
@@ -9377,6 +11960,18 @@ type ForwardedValues struct {
 	// in the Amazon CloudFront Developer Guide.
 	Headers *Headers `type:"structure"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field.
+	//
+	// If you want to include query strings in the cache key, use a cache policy.
+	// For more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send query strings to the origin but not include them in the
+	// cache key, use an origin request policy. For more information, see Creating
+	// origin request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// Indicates whether you want CloudFront to forward query strings to the origin
 	// that is associated with this cache behavior and cache based on the query
 	// string parameters. CloudFront behavior depends on the value of QueryString
@@ -9404,6 +11999,18 @@ type ForwardedValues struct {
 	// QueryString is a required field
 	QueryString *bool `type:"boolean" required:"true"`
 
+	// This field is deprecated. We recommend that you use a cache policy or an
+	// origin request policy instead of this field.
+	//
+	// If you want to include query strings in the cache key, use a cache policy.
+	// For more information, see Creating cache policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-key-create-cache-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If you want to send query strings to the origin but not include them in the
+	// cache key, use an origin request policy. For more information, see Creating
+	// origin request policies (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html#origin-request-create-origin-request-policy)
+	// in the Amazon CloudFront Developer Guide.
+	//
 	// A complex type that contains information about the query string parameters
 	// that you want CloudFront to use for caching for this cache behavior.
 	QueryStringCacheKeys *QueryStringCacheKeys `type:"structure"`
@@ -9558,6 +12165,158 @@ func (s *GeoRestriction) SetQuantity(v int64) *GeoRestriction {
 // SetRestrictionType sets the RestrictionType field's value.
 func (s *GeoRestriction) SetRestrictionType(v string) *GeoRestriction {
 	s.RestrictionType = &v
+	return s
+}
+
+type GetCachePolicyConfigInput struct {
+	_ struct{} `locationName:"GetCachePolicyConfigRequest" type:"structure"`
+
+	// The unique identifier for the cache policy. If the cache policy is attached
+	// to a distribution’s cache behavior, you can get the policy’s identifier
+	// using ListDistributions or GetDistribution. If the cache policy is not attached
+	// to a cache behavior, you can get the identifier using ListCachePolicies.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCachePolicyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCachePolicyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCachePolicyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCachePolicyConfigInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *GetCachePolicyConfigInput) SetId(v string) *GetCachePolicyConfigInput {
+	s.Id = &v
+	return s
+}
+
+type GetCachePolicyConfigOutput struct {
+	_ struct{} `type:"structure" payload:"CachePolicyConfig"`
+
+	// The cache policy configuration.
+	CachePolicyConfig *CachePolicyConfig `type:"structure"`
+
+	// The current version of the cache policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCachePolicyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCachePolicyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicyConfig sets the CachePolicyConfig field's value.
+func (s *GetCachePolicyConfigOutput) SetCachePolicyConfig(v *CachePolicyConfig) *GetCachePolicyConfigOutput {
+	s.CachePolicyConfig = v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *GetCachePolicyConfigOutput) SetETag(v string) *GetCachePolicyConfigOutput {
+	s.ETag = &v
+	return s
+}
+
+type GetCachePolicyInput struct {
+	_ struct{} `locationName:"GetCachePolicyRequest" type:"structure"`
+
+	// The unique identifier for the cache policy. If the cache policy is attached
+	// to a distribution’s cache behavior, you can get the policy’s identifier
+	// using ListDistributions or GetDistribution. If the cache policy is not attached
+	// to a cache behavior, you can get the identifier using ListCachePolicies.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCachePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCachePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCachePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCachePolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *GetCachePolicyInput) SetId(v string) *GetCachePolicyInput {
+	s.Id = &v
+	return s
+}
+
+type GetCachePolicyOutput struct {
+	_ struct{} `type:"structure" payload:"CachePolicy"`
+
+	// The cache policy.
+	CachePolicy *CachePolicy `type:"structure"`
+
+	// The current version of the cache policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCachePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCachePolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicy sets the CachePolicy field's value.
+func (s *GetCachePolicyOutput) SetCachePolicy(v *CachePolicy) *GetCachePolicyOutput {
+	s.CachePolicy = v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *GetCachePolicyOutput) SetETag(v string) *GetCachePolicyOutput {
+	s.ETag = &v
 	return s
 }
 
@@ -10244,6 +13003,160 @@ func (s *GetInvalidationOutput) SetInvalidation(v *Invalidation) *GetInvalidatio
 	return s
 }
 
+type GetOriginRequestPolicyConfigInput struct {
+	_ struct{} `locationName:"GetOriginRequestPolicyConfigRequest" type:"structure"`
+
+	// The unique identifier for the origin request policy. If the origin request
+	// policy is attached to a distribution’s cache behavior, you can get the
+	// policy’s identifier using ListDistributions or GetDistribution. If the
+	// origin request policy is not attached to a cache behavior, you can get the
+	// identifier using ListOriginRequestPolicies.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetOriginRequestPolicyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOriginRequestPolicyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOriginRequestPolicyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOriginRequestPolicyConfigInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *GetOriginRequestPolicyConfigInput) SetId(v string) *GetOriginRequestPolicyConfigInput {
+	s.Id = &v
+	return s
+}
+
+type GetOriginRequestPolicyConfigOutput struct {
+	_ struct{} `type:"structure" payload:"OriginRequestPolicyConfig"`
+
+	// The current version of the origin request policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	// The origin request policy configuration.
+	OriginRequestPolicyConfig *OriginRequestPolicyConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetOriginRequestPolicyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOriginRequestPolicyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetETag sets the ETag field's value.
+func (s *GetOriginRequestPolicyConfigOutput) SetETag(v string) *GetOriginRequestPolicyConfigOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetOriginRequestPolicyConfig sets the OriginRequestPolicyConfig field's value.
+func (s *GetOriginRequestPolicyConfigOutput) SetOriginRequestPolicyConfig(v *OriginRequestPolicyConfig) *GetOriginRequestPolicyConfigOutput {
+	s.OriginRequestPolicyConfig = v
+	return s
+}
+
+type GetOriginRequestPolicyInput struct {
+	_ struct{} `locationName:"GetOriginRequestPolicyRequest" type:"structure"`
+
+	// The unique identifier for the origin request policy. If the origin request
+	// policy is attached to a distribution’s cache behavior, you can get the
+	// policy’s identifier using ListDistributions or GetDistribution. If the
+	// origin request policy is not attached to a cache behavior, you can get the
+	// identifier using ListOriginRequestPolicies.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetOriginRequestPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOriginRequestPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOriginRequestPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOriginRequestPolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *GetOriginRequestPolicyInput) SetId(v string) *GetOriginRequestPolicyInput {
+	s.Id = &v
+	return s
+}
+
+type GetOriginRequestPolicyOutput struct {
+	_ struct{} `type:"structure" payload:"OriginRequestPolicy"`
+
+	// The current version of the origin request policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	// The origin request policy.
+	OriginRequestPolicy *OriginRequestPolicy `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetOriginRequestPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOriginRequestPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetETag sets the ETag field's value.
+func (s *GetOriginRequestPolicyOutput) SetETag(v string) *GetOriginRequestPolicyOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetOriginRequestPolicy sets the OriginRequestPolicy field's value.
+func (s *GetOriginRequestPolicyOutput) SetOriginRequestPolicy(v *OriginRequestPolicy) *GetOriginRequestPolicyOutput {
+	s.OriginRequestPolicy = v
+	return s
+}
+
 type GetPublicKeyConfigInput struct {
 	_ struct{} `locationName:"GetPublicKeyConfigRequest" type:"structure"`
 
@@ -10541,50 +13454,14 @@ func (s *GetStreamingDistributionOutput) SetStreamingDistribution(v *StreamingDi
 	return s
 }
 
-// A complex type that specifies the request headers, if any, that you want
-// CloudFront to base caching on for this cache behavior.
-//
-// For the headers that you specify, CloudFront caches separate versions of
-// a specified object based on the header values in viewer requests. For example,
-// suppose viewer requests for logo.jpg contain a custom product header that
-// has a value of either acme or apex, and you configure CloudFront to cache
-// your content based on values in the product header. CloudFront forwards the
-// product header to the origin and caches the response from the origin once
-// for each header value. For more information about caching based on header
-// values, see How CloudFront Forwards and Caches Headers (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/header-caching.html)
-// in the Amazon CloudFront Developer Guide.
+// Contains a list of HTTP header names.
 type Headers struct {
 	_ struct{} `type:"structure"`
 
-	// A list that contains one Name element for each header that you want CloudFront
-	// to use for caching in this cache behavior. If Quantity is 0, omit Items.
+	// A list of HTTP header names.
 	Items []*string `locationNameList:"Name" type:"list"`
 
-	// The number of different headers that you want CloudFront to base caching
-	// on for this cache behavior. You can configure each cache behavior in a web
-	// distribution to do one of the following:
-	//
-	//    * Forward all headers to your origin: Specify 1 for Quantity and * for
-	//    Name. CloudFront doesn't cache the objects that are associated with this
-	//    cache behavior. Instead, CloudFront sends every request to the origin.
-	//
-	//    * Forward a whitelist of headers you specify: Specify the number of headers
-	//    that you want CloudFront to base caching on. Then specify the header names
-	//    in Name elements. CloudFront caches your objects based on the values in
-	//    the specified headers.
-	//
-	//    * Forward only the default headers: Specify 0 for Quantity and omit Items.
-	//    In this configuration, CloudFront doesn't cache based on the values in
-	//    the request headers.
-	//
-	// Regardless of which option you choose, CloudFront forwards headers to your
-	// origin based on whether the origin is an S3 bucket or a custom origin. See
-	// the following documentation:
-	//
-	//    * S3 bucket: See HTTP Request Headers That CloudFront Removes or Updates
-	//    (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorS3Origin.html#request-s3-removed-headers)
-	//
-	//    * Custom origin: See HTTP Request Headers and CloudFront Behavior (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-headers-behavior)
+	// The number of header names in the Items list.
 	//
 	// Quantity is a required field
 	Quantity *int64 `type:"integer" required:"true"`
@@ -10948,9 +13825,9 @@ type LambdaFunctionAssociation struct {
 	//    from a viewer and before it checks to see whether the requested object
 	//    is in the edge cache.
 	//
-	//    * origin-request: The function executes only when CloudFront forwards
-	//    a request to your origin. When the requested object is in the edge cache,
-	//    the function doesn't execute.
+	//    * origin-request: The function executes only when CloudFront sends a request
+	//    to your origin. When the requested object is in the edge cache, the function
+	//    doesn't execute.
 	//
 	//    * origin-response: The function executes after CloudFront receives a response
 	//    from the origin and before it caches the object in the response. When
@@ -11090,6 +13967,78 @@ func (s *LambdaFunctionAssociations) SetQuantity(v int64) *LambdaFunctionAssocia
 	return s
 }
 
+type ListCachePoliciesInput struct {
+	_ struct{} `locationName:"ListCachePoliciesRequest" type:"structure"`
+
+	// Use this field when paginating results to indicate where to begin in your
+	// list of cache policies. The response includes cache policies in the list
+	// that occur after the marker. To get the next page of the list, set this field’s
+	// value to the value of NextMarker from the current page’s response.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of cache policies that you want in the response.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" type:"integer"`
+
+	// A filter to return only the specified kinds of cache policies. Valid values
+	// are:
+	//
+	//    * managed – Returns only the managed policies created by AWS.
+	//
+	//    * custom – Returns only the custom policies created in your AWS account.
+	Type *string `location:"querystring" locationName:"Type" type:"string" enum:"CachePolicyType"`
+}
+
+// String returns the string representation
+func (s ListCachePoliciesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListCachePoliciesInput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListCachePoliciesInput) SetMarker(v string) *ListCachePoliciesInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListCachePoliciesInput) SetMaxItems(v int64) *ListCachePoliciesInput {
+	s.MaxItems = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ListCachePoliciesInput) SetType(v string) *ListCachePoliciesInput {
+	s.Type = &v
+	return s
+}
+
+type ListCachePoliciesOutput struct {
+	_ struct{} `type:"structure" payload:"CachePolicyList"`
+
+	// A list of cache policies.
+	CachePolicyList *CachePolicyList `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListCachePoliciesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListCachePoliciesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicyList sets the CachePolicyList field's value.
+func (s *ListCachePoliciesOutput) SetCachePolicyList(v *CachePolicyList) *ListCachePoliciesOutput {
+	s.CachePolicyList = v
+	return s
+}
+
 // The request to list origin access identities.
 type ListCloudFrontOriginAccessIdentitiesInput struct {
 	_ struct{} `locationName:"ListCloudFrontOriginAccessIdentitiesRequest" type:"structure"`
@@ -11148,6 +14097,178 @@ func (s ListCloudFrontOriginAccessIdentitiesOutput) GoString() string {
 // SetCloudFrontOriginAccessIdentityList sets the CloudFrontOriginAccessIdentityList field's value.
 func (s *ListCloudFrontOriginAccessIdentitiesOutput) SetCloudFrontOriginAccessIdentityList(v *OriginAccessIdentityList) *ListCloudFrontOriginAccessIdentitiesOutput {
 	s.CloudFrontOriginAccessIdentityList = v
+	return s
+}
+
+type ListDistributionsByCachePolicyIdInput struct {
+	_ struct{} `locationName:"ListDistributionsByCachePolicyIdRequest" type:"structure"`
+
+	// The ID of the cache policy whose associated distribution IDs you want to
+	// list.
+	//
+	// CachePolicyId is a required field
+	CachePolicyId *string `location:"uri" locationName:"CachePolicyId" type:"string" required:"true"`
+
+	// Use this field when paginating results to indicate where to begin in your
+	// list of distribution IDs. The response includes distribution IDs in the list
+	// that occur after the marker. To get the next page of the list, set this field’s
+	// value to the value of NextMarker from the current page’s response.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of distribution IDs that you want in the response.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListDistributionsByCachePolicyIdInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDistributionsByCachePolicyIdInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDistributionsByCachePolicyIdInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDistributionsByCachePolicyIdInput"}
+	if s.CachePolicyId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CachePolicyId"))
+	}
+	if s.CachePolicyId != nil && len(*s.CachePolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CachePolicyId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCachePolicyId sets the CachePolicyId field's value.
+func (s *ListDistributionsByCachePolicyIdInput) SetCachePolicyId(v string) *ListDistributionsByCachePolicyIdInput {
+	s.CachePolicyId = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListDistributionsByCachePolicyIdInput) SetMarker(v string) *ListDistributionsByCachePolicyIdInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListDistributionsByCachePolicyIdInput) SetMaxItems(v int64) *ListDistributionsByCachePolicyIdInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListDistributionsByCachePolicyIdOutput struct {
+	_ struct{} `type:"structure" payload:"DistributionIdList"`
+
+	// A list of distribution IDs.
+	DistributionIdList *DistributionIdList `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListDistributionsByCachePolicyIdOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDistributionsByCachePolicyIdOutput) GoString() string {
+	return s.String()
+}
+
+// SetDistributionIdList sets the DistributionIdList field's value.
+func (s *ListDistributionsByCachePolicyIdOutput) SetDistributionIdList(v *DistributionIdList) *ListDistributionsByCachePolicyIdOutput {
+	s.DistributionIdList = v
+	return s
+}
+
+type ListDistributionsByOriginRequestPolicyIdInput struct {
+	_ struct{} `locationName:"ListDistributionsByOriginRequestPolicyIdRequest" type:"structure"`
+
+	// Use this field when paginating results to indicate where to begin in your
+	// list of distribution IDs. The response includes distribution IDs in the list
+	// that occur after the marker. To get the next page of the list, set this field’s
+	// value to the value of NextMarker from the current page’s response.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of distribution IDs that you want in the response.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" type:"integer"`
+
+	// The ID of the origin request policy whose associated distribution IDs you
+	// want to list.
+	//
+	// OriginRequestPolicyId is a required field
+	OriginRequestPolicyId *string `location:"uri" locationName:"OriginRequestPolicyId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListDistributionsByOriginRequestPolicyIdInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDistributionsByOriginRequestPolicyIdInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDistributionsByOriginRequestPolicyIdInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDistributionsByOriginRequestPolicyIdInput"}
+	if s.OriginRequestPolicyId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OriginRequestPolicyId"))
+	}
+	if s.OriginRequestPolicyId != nil && len(*s.OriginRequestPolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OriginRequestPolicyId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListDistributionsByOriginRequestPolicyIdInput) SetMarker(v string) *ListDistributionsByOriginRequestPolicyIdInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListDistributionsByOriginRequestPolicyIdInput) SetMaxItems(v int64) *ListDistributionsByOriginRequestPolicyIdInput {
+	s.MaxItems = &v
+	return s
+}
+
+// SetOriginRequestPolicyId sets the OriginRequestPolicyId field's value.
+func (s *ListDistributionsByOriginRequestPolicyIdInput) SetOriginRequestPolicyId(v string) *ListDistributionsByOriginRequestPolicyIdInput {
+	s.OriginRequestPolicyId = &v
+	return s
+}
+
+type ListDistributionsByOriginRequestPolicyIdOutput struct {
+	_ struct{} `type:"structure" payload:"DistributionIdList"`
+
+	// A list of distribution IDs.
+	DistributionIdList *DistributionIdList `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListDistributionsByOriginRequestPolicyIdOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDistributionsByOriginRequestPolicyIdOutput) GoString() string {
+	return s.String()
+}
+
+// SetDistributionIdList sets the DistributionIdList field's value.
+func (s *ListDistributionsByOriginRequestPolicyIdOutput) SetDistributionIdList(v *DistributionIdList) *ListDistributionsByOriginRequestPolicyIdOutput {
+	s.DistributionIdList = v
 	return s
 }
 
@@ -11515,6 +14636,79 @@ func (s ListInvalidationsOutput) GoString() string {
 // SetInvalidationList sets the InvalidationList field's value.
 func (s *ListInvalidationsOutput) SetInvalidationList(v *InvalidationList) *ListInvalidationsOutput {
 	s.InvalidationList = v
+	return s
+}
+
+type ListOriginRequestPoliciesInput struct {
+	_ struct{} `locationName:"ListOriginRequestPoliciesRequest" type:"structure"`
+
+	// Use this field when paginating results to indicate where to begin in your
+	// list of origin request policies. The response includes origin request policies
+	// in the list that occur after the marker. To get the next page of the list,
+	// set this field’s value to the value of NextMarker from the current page’s
+	// response.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of origin request policies that you want in the response.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" type:"integer"`
+
+	// A filter to return only the specified kinds of origin request policies. Valid
+	// values are:
+	//
+	//    * managed – Returns only the managed policies created by AWS.
+	//
+	//    * custom – Returns only the custom policies created in your AWS account.
+	Type *string `location:"querystring" locationName:"Type" type:"string" enum:"OriginRequestPolicyType"`
+}
+
+// String returns the string representation
+func (s ListOriginRequestPoliciesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOriginRequestPoliciesInput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListOriginRequestPoliciesInput) SetMarker(v string) *ListOriginRequestPoliciesInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListOriginRequestPoliciesInput) SetMaxItems(v int64) *ListOriginRequestPoliciesInput {
+	s.MaxItems = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ListOriginRequestPoliciesInput) SetType(v string) *ListOriginRequestPoliciesInput {
+	s.Type = &v
+	return s
+}
+
+type ListOriginRequestPoliciesOutput struct {
+	_ struct{} `type:"structure" payload:"OriginRequestPolicyList"`
+
+	// A list of origin request policies.
+	OriginRequestPolicyList *OriginRequestPolicyList `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListOriginRequestPoliciesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOriginRequestPoliciesOutput) GoString() string {
+	return s.String()
+}
+
+// SetOriginRequestPolicyList sets the OriginRequestPolicyList field's value.
+func (s *ListOriginRequestPoliciesOutput) SetOriginRequestPolicyList(v *OriginRequestPolicyList) *ListOriginRequestPoliciesOutput {
+	s.OriginRequestPolicyList = v
 	return s
 }
 
@@ -12235,9 +15429,8 @@ func (s *OriginAccessIdentitySummary) SetS3CanonicalUserId(v string) *OriginAcce
 type OriginCustomHeader struct {
 	_ struct{} `type:"structure"`
 
-	// The name of a header that you want CloudFront to forward to your origin.
-	// For more information, see Forwarding Custom Headers to Your Origin (Web Distributions
-	// Only) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/forward-custom-headers.html)
+	// The name of a header that you want CloudFront to send to your origin. For
+	// more information, see Adding Custom Headers to Origin Requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/forward-custom-headers.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// HeaderName is a required field
@@ -12580,6 +15773,500 @@ func (s *OriginGroups) SetQuantity(v int64) *OriginGroups {
 	return s
 }
 
+// An origin request policy.
+//
+// When it’s attached to a cache behavior, the origin request policy determines
+// the values that CloudFront includes in requests that it sends to the origin.
+// Each request that CloudFront sends to the origin includes the following:
+//
+//    * The request body and the URL path (without the domain name) from the
+//    viewer request.
+//
+//    * The headers that CloudFront automatically includes in every origin request,
+//    including Host, User-Agent, and X-Amz-Cf-Id.
+//
+//    * All HTTP headers, cookies, and URL query strings that are specified
+//    in the cache policy or the origin request policy. These can include items
+//    from the viewer request and, in the case of headers, additional ones that
+//    are added by CloudFront.
+//
+// CloudFront sends a request when it can’t find an object in its cache that
+// matches the request. If you want to send values to the origin and also include
+// them in the cache key, use CreateCachePolicy.
+type OriginRequestPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the origin request policy.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// The date and time when the origin request policy was last modified.
+	//
+	// LastModifiedTime is a required field
+	LastModifiedTime *time.Time `type:"timestamp" required:"true"`
+
+	// The origin request policy configuration.
+	//
+	// OriginRequestPolicyConfig is a required field
+	OriginRequestPolicyConfig *OriginRequestPolicyConfig `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicy) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *OriginRequestPolicy) SetId(v string) *OriginRequestPolicy {
+	s.Id = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *OriginRequestPolicy) SetLastModifiedTime(v time.Time) *OriginRequestPolicy {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetOriginRequestPolicyConfig sets the OriginRequestPolicyConfig field's value.
+func (s *OriginRequestPolicy) SetOriginRequestPolicyConfig(v *OriginRequestPolicyConfig) *OriginRequestPolicy {
+	s.OriginRequestPolicyConfig = v
+	return s
+}
+
+// An origin request policy configuration.
+//
+// This configuration determines the values that CloudFront includes in requests
+// that it sends to the origin. Each request that CloudFront sends to the origin
+// includes the following:
+//
+//    * The request body and the URL path (without the domain name) from the
+//    viewer request.
+//
+//    * The headers that CloudFront automatically includes in every origin request,
+//    including Host, User-Agent, and X-Amz-Cf-Id.
+//
+//    * All HTTP headers, cookies, and URL query strings that are specified
+//    in the cache policy or the origin request policy. These can include items
+//    from the viewer request and, in the case of headers, additional ones that
+//    are added by CloudFront.
+//
+// CloudFront sends a request when it can’t find an object in its cache that
+// matches the request. If you want to send values to the origin and also include
+// them in the cache key, use CreateCachePolicy.
+type OriginRequestPolicyConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A comment to describe the origin request policy.
+	Comment *string `type:"string"`
+
+	// The cookies from viewer requests to include in origin requests.
+	//
+	// CookiesConfig is a required field
+	CookiesConfig *OriginRequestPolicyCookiesConfig `type:"structure" required:"true"`
+
+	// The HTTP headers to include in origin requests. These can include headers
+	// from viewer requests and additional headers added by CloudFront.
+	//
+	// HeadersConfig is a required field
+	HeadersConfig *OriginRequestPolicyHeadersConfig `type:"structure" required:"true"`
+
+	// A unique name to identify the origin request policy.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The URL query strings from viewer requests to include in origin requests.
+	//
+	// QueryStringsConfig is a required field
+	QueryStringsConfig *OriginRequestPolicyQueryStringsConfig `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicyConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicyConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OriginRequestPolicyConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OriginRequestPolicyConfig"}
+	if s.CookiesConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("CookiesConfig"))
+	}
+	if s.HeadersConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("HeadersConfig"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.QueryStringsConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryStringsConfig"))
+	}
+	if s.CookiesConfig != nil {
+		if err := s.CookiesConfig.Validate(); err != nil {
+			invalidParams.AddNested("CookiesConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.HeadersConfig != nil {
+		if err := s.HeadersConfig.Validate(); err != nil {
+			invalidParams.AddNested("HeadersConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.QueryStringsConfig != nil {
+		if err := s.QueryStringsConfig.Validate(); err != nil {
+			invalidParams.AddNested("QueryStringsConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetComment sets the Comment field's value.
+func (s *OriginRequestPolicyConfig) SetComment(v string) *OriginRequestPolicyConfig {
+	s.Comment = &v
+	return s
+}
+
+// SetCookiesConfig sets the CookiesConfig field's value.
+func (s *OriginRequestPolicyConfig) SetCookiesConfig(v *OriginRequestPolicyCookiesConfig) *OriginRequestPolicyConfig {
+	s.CookiesConfig = v
+	return s
+}
+
+// SetHeadersConfig sets the HeadersConfig field's value.
+func (s *OriginRequestPolicyConfig) SetHeadersConfig(v *OriginRequestPolicyHeadersConfig) *OriginRequestPolicyConfig {
+	s.HeadersConfig = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *OriginRequestPolicyConfig) SetName(v string) *OriginRequestPolicyConfig {
+	s.Name = &v
+	return s
+}
+
+// SetQueryStringsConfig sets the QueryStringsConfig field's value.
+func (s *OriginRequestPolicyConfig) SetQueryStringsConfig(v *OriginRequestPolicyQueryStringsConfig) *OriginRequestPolicyConfig {
+	s.QueryStringsConfig = v
+	return s
+}
+
+// An object that determines whether any cookies in viewer requests (and if
+// so, which cookies) are included in requests that CloudFront sends to the
+// origin.
+type OriginRequestPolicyCookiesConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether cookies in viewer requests are included in requests that
+	// CloudFront sends to the origin. Valid values are:
+	//
+	//    * none – Cookies in viewer requests are not included in requests that
+	//    CloudFront sends to the origin. Even when this field is set to none, any
+	//    cookies that are listed in a CachePolicy are included in origin requests.
+	//
+	//    * whitelist – The cookies in viewer requests that are listed in the
+	//    CookieNames type are included in requests that CloudFront sends to the
+	//    origin.
+	//
+	//    * all – All cookies in viewer requests are included in requests that
+	//    CloudFront sends to the origin.
+	//
+	// CookieBehavior is a required field
+	CookieBehavior *string `type:"string" required:"true" enum:"OriginRequestPolicyCookieBehavior"`
+
+	// Contains a list of cookie names.
+	Cookies *CookieNames `type:"structure"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicyCookiesConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicyCookiesConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OriginRequestPolicyCookiesConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OriginRequestPolicyCookiesConfig"}
+	if s.CookieBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("CookieBehavior"))
+	}
+	if s.Cookies != nil {
+		if err := s.Cookies.Validate(); err != nil {
+			invalidParams.AddNested("Cookies", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCookieBehavior sets the CookieBehavior field's value.
+func (s *OriginRequestPolicyCookiesConfig) SetCookieBehavior(v string) *OriginRequestPolicyCookiesConfig {
+	s.CookieBehavior = &v
+	return s
+}
+
+// SetCookies sets the Cookies field's value.
+func (s *OriginRequestPolicyCookiesConfig) SetCookies(v *CookieNames) *OriginRequestPolicyCookiesConfig {
+	s.Cookies = v
+	return s
+}
+
+// An object that determines whether any HTTP headers (and if so, which headers)
+// are included in requests that CloudFront sends to the origin.
+type OriginRequestPolicyHeadersConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether any HTTP headers are included in requests that CloudFront
+	// sends to the origin. Valid values are:
+	//
+	//    * none – HTTP headers are not included in requests that CloudFront sends
+	//    to the origin. Even when this field is set to none, any headers that are
+	//    listed in a CachePolicy are included in origin requests.
+	//
+	//    * whitelist – The HTTP headers that are listed in the Headers type are
+	//    included in requests that CloudFront sends to the origin.
+	//
+	//    * allViewer – All HTTP headers in viewer requests are included in requests
+	//    that CloudFront sends to the origin.
+	//
+	//    * allViewerAndWhitelistCloudFront – All HTTP headers in viewer requests
+	//    and the additional CloudFront headers that are listed in the Headers type
+	//    are included in requests that CloudFront sends to the origin. The additional
+	//    headers are added by CloudFront.
+	//
+	// HeaderBehavior is a required field
+	HeaderBehavior *string `type:"string" required:"true" enum:"OriginRequestPolicyHeaderBehavior"`
+
+	// Contains a list of HTTP header names.
+	Headers *Headers `type:"structure"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicyHeadersConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicyHeadersConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OriginRequestPolicyHeadersConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OriginRequestPolicyHeadersConfig"}
+	if s.HeaderBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("HeaderBehavior"))
+	}
+	if s.Headers != nil {
+		if err := s.Headers.Validate(); err != nil {
+			invalidParams.AddNested("Headers", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHeaderBehavior sets the HeaderBehavior field's value.
+func (s *OriginRequestPolicyHeadersConfig) SetHeaderBehavior(v string) *OriginRequestPolicyHeadersConfig {
+	s.HeaderBehavior = &v
+	return s
+}
+
+// SetHeaders sets the Headers field's value.
+func (s *OriginRequestPolicyHeadersConfig) SetHeaders(v *Headers) *OriginRequestPolicyHeadersConfig {
+	s.Headers = v
+	return s
+}
+
+// A list of origin request policies.
+type OriginRequestPolicyList struct {
+	_ struct{} `type:"structure"`
+
+	// Contains the origin request policies in the list.
+	Items []*OriginRequestPolicySummary `locationNameList:"OriginRequestPolicySummary" type:"list"`
+
+	// The maximum number of origin request policies requested.
+	//
+	// MaxItems is a required field
+	MaxItems *int64 `type:"integer" required:"true"`
+
+	// If there are more items in the list than are in this response, this element
+	// is present. It contains the value that you should use in the Marker field
+	// of a subsequent request to continue listing origin request policies where
+	// you left off.
+	NextMarker *string `type:"string"`
+
+	// The total number of origin request policies returned in the response.
+	//
+	// Quantity is a required field
+	Quantity *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicyList) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicyList) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *OriginRequestPolicyList) SetItems(v []*OriginRequestPolicySummary) *OriginRequestPolicyList {
+	s.Items = v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *OriginRequestPolicyList) SetMaxItems(v int64) *OriginRequestPolicyList {
+	s.MaxItems = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *OriginRequestPolicyList) SetNextMarker(v string) *OriginRequestPolicyList {
+	s.NextMarker = &v
+	return s
+}
+
+// SetQuantity sets the Quantity field's value.
+func (s *OriginRequestPolicyList) SetQuantity(v int64) *OriginRequestPolicyList {
+	s.Quantity = &v
+	return s
+}
+
+// An object that determines whether any URL query strings in viewer requests
+// (and if so, which query strings) are included in requests that CloudFront
+// sends to the origin.
+type OriginRequestPolicyQueryStringsConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether any URL query strings in viewer requests are included
+	// in requests that CloudFront sends to the origin. Valid values are:
+	//
+	//    * none – Query strings in viewer requests are not included in requests
+	//    that CloudFront sends to the origin. Even when this field is set to none,
+	//    any query strings that are listed in a CachePolicy are included in origin
+	//    requests.
+	//
+	//    * whitelist – The query strings in viewer requests that are listed in
+	//    the QueryStringNames type are included in requests that CloudFront sends
+	//    to the origin.
+	//
+	//    * all – All query strings in viewer requests are included in requests
+	//    that CloudFront sends to the origin.
+	//
+	// QueryStringBehavior is a required field
+	QueryStringBehavior *string `type:"string" required:"true" enum:"OriginRequestPolicyQueryStringBehavior"`
+
+	// Contains a list of the query strings in viewer requests that are included
+	// in requests that CloudFront sends to the origin.
+	QueryStrings *QueryStringNames `type:"structure"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicyQueryStringsConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicyQueryStringsConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OriginRequestPolicyQueryStringsConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OriginRequestPolicyQueryStringsConfig"}
+	if s.QueryStringBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryStringBehavior"))
+	}
+	if s.QueryStrings != nil {
+		if err := s.QueryStrings.Validate(); err != nil {
+			invalidParams.AddNested("QueryStrings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetQueryStringBehavior sets the QueryStringBehavior field's value.
+func (s *OriginRequestPolicyQueryStringsConfig) SetQueryStringBehavior(v string) *OriginRequestPolicyQueryStringsConfig {
+	s.QueryStringBehavior = &v
+	return s
+}
+
+// SetQueryStrings sets the QueryStrings field's value.
+func (s *OriginRequestPolicyQueryStringsConfig) SetQueryStrings(v *QueryStringNames) *OriginRequestPolicyQueryStringsConfig {
+	s.QueryStrings = v
+	return s
+}
+
+// Contains an origin request policy.
+type OriginRequestPolicySummary struct {
+	_ struct{} `type:"structure"`
+
+	// The origin request policy.
+	//
+	// OriginRequestPolicy is a required field
+	OriginRequestPolicy *OriginRequestPolicy `type:"structure" required:"true"`
+
+	// The type of origin request policy, either managed (created by AWS) or custom
+	// (created in this AWS account).
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"OriginRequestPolicyType"`
+}
+
+// String returns the string representation
+func (s OriginRequestPolicySummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginRequestPolicySummary) GoString() string {
+	return s.String()
+}
+
+// SetOriginRequestPolicy sets the OriginRequestPolicy field's value.
+func (s *OriginRequestPolicySummary) SetOriginRequestPolicy(v *OriginRequestPolicy) *OriginRequestPolicySummary {
+	s.OriginRequestPolicy = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *OriginRequestPolicySummary) SetType(v string) *OriginRequestPolicySummary {
+	s.Type = &v
+	return s
+}
+
 // A complex type that contains information about the SSL/TLS protocols that
 // CloudFront can use when establishing an HTTPS connection with your origin.
 type OriginSslProtocols struct {
@@ -12699,6 +16386,144 @@ func (s *Origins) SetItems(v []*Origin) *Origins {
 // SetQuantity sets the Quantity field's value.
 func (s *Origins) SetQuantity(v int64) *Origins {
 	s.Quantity = &v
+	return s
+}
+
+// This object determines the values that CloudFront includes in the cache key.
+// These values can include HTTP headers, cookies, and URL query strings. CloudFront
+// uses the cache key to find an object in its cache that it can return to the
+// viewer.
+//
+// The headers, cookies, and query strings that are included in the cache key
+// are automatically included in requests that CloudFront sends to the origin.
+// CloudFront sends a request when it can’t find an object in its cache that
+// matches the request’s cache key. If you want to send values to the origin
+// but not include them in the cache key, use CreateOriginRequestPolicy.
+type ParametersInCacheKeyAndForwardedToOrigin struct {
+	_ struct{} `type:"structure"`
+
+	// An object that determines whether any cookies in viewer requests (and if
+	// so, which cookies) are included in the cache key and automatically included
+	// in requests that CloudFront sends to the origin.
+	//
+	// CookiesConfig is a required field
+	CookiesConfig *CachePolicyCookiesConfig `type:"structure" required:"true"`
+
+	// A flag that determines whether the Accept-Encoding HTTP header is included
+	// in the cache key and included in requests that CloudFront sends to the origin.
+	//
+	// If this field is true and the viewer request includes the Accept-Encoding
+	// header, then CloudFront normalizes the value of the viewer’s Accept-Encoding
+	// header to one of the following:
+	//
+	//    * Accept-Encoding: gzip (if gzip is in the viewer’s Accept-Encoding
+	//    header)
+	//
+	//    * Accept-Encoding: identity (if gzip is not in the viewer’s Accept-Encoding
+	//    header)
+	//
+	// CloudFront includes the normalized header in the cache key and includes it
+	// in requests that CloudFront sends to the origin.
+	//
+	// If this field is false, then CloudFront treats the Accept-Encoding header
+	// the same as any other HTTP header in the viewer request. By default, it’s
+	// not included in the cache key and it’s not included in origin requests.
+	// You can manually add Accept-Encoding to the headers whitelist like any other
+	// HTTP header.
+	//
+	// When this field is true, you should not whitelist the Accept-Encoding header
+	// in the cache policy or in an origin request policy attached to the same cache
+	// behavior.
+	//
+	// For more information, see Cache compressed objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-policy-compressed-objects)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// EnableAcceptEncodingGzip is a required field
+	EnableAcceptEncodingGzip *bool `type:"boolean" required:"true"`
+
+	// An object that determines whether any HTTP headers (and if so, which headers)
+	// are included in the cache key and automatically included in requests that
+	// CloudFront sends to the origin.
+	//
+	// HeadersConfig is a required field
+	HeadersConfig *CachePolicyHeadersConfig `type:"structure" required:"true"`
+
+	// An object that determines whether any URL query strings in viewer requests
+	// (and if so, which query strings) are included in the cache key and automatically
+	// included in requests that CloudFront sends to the origin.
+	//
+	// QueryStringsConfig is a required field
+	QueryStringsConfig *CachePolicyQueryStringsConfig `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ParametersInCacheKeyAndForwardedToOrigin) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParametersInCacheKeyAndForwardedToOrigin) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ParametersInCacheKeyAndForwardedToOrigin) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ParametersInCacheKeyAndForwardedToOrigin"}
+	if s.CookiesConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("CookiesConfig"))
+	}
+	if s.EnableAcceptEncodingGzip == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnableAcceptEncodingGzip"))
+	}
+	if s.HeadersConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("HeadersConfig"))
+	}
+	if s.QueryStringsConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryStringsConfig"))
+	}
+	if s.CookiesConfig != nil {
+		if err := s.CookiesConfig.Validate(); err != nil {
+			invalidParams.AddNested("CookiesConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.HeadersConfig != nil {
+		if err := s.HeadersConfig.Validate(); err != nil {
+			invalidParams.AddNested("HeadersConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.QueryStringsConfig != nil {
+		if err := s.QueryStringsConfig.Validate(); err != nil {
+			invalidParams.AddNested("QueryStringsConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCookiesConfig sets the CookiesConfig field's value.
+func (s *ParametersInCacheKeyAndForwardedToOrigin) SetCookiesConfig(v *CachePolicyCookiesConfig) *ParametersInCacheKeyAndForwardedToOrigin {
+	s.CookiesConfig = v
+	return s
+}
+
+// SetEnableAcceptEncodingGzip sets the EnableAcceptEncodingGzip field's value.
+func (s *ParametersInCacheKeyAndForwardedToOrigin) SetEnableAcceptEncodingGzip(v bool) *ParametersInCacheKeyAndForwardedToOrigin {
+	s.EnableAcceptEncodingGzip = &v
+	return s
+}
+
+// SetHeadersConfig sets the HeadersConfig field's value.
+func (s *ParametersInCacheKeyAndForwardedToOrigin) SetHeadersConfig(v *CachePolicyHeadersConfig) *ParametersInCacheKeyAndForwardedToOrigin {
+	s.HeadersConfig = v
+	return s
+}
+
+// SetQueryStringsConfig sets the QueryStringsConfig field's value.
+func (s *ParametersInCacheKeyAndForwardedToOrigin) SetQueryStringsConfig(v *CachePolicyQueryStringsConfig) *ParametersInCacheKeyAndForwardedToOrigin {
+	s.QueryStringsConfig = v
 	return s
 }
 
@@ -13177,6 +17002,15 @@ func (s *QueryArgProfiles) SetQuantity(v int64) *QueryArgProfiles {
 	return s
 }
 
+// This field is deprecated. We recommend that you use a cache policy or an
+// origin request policy instead of this field.
+//
+// If you want to include query strings in the cache key, use QueryStringsConfig
+// in a cache policy. See CreateCachePolicy.
+//
+// If you want to send query strings to the origin but not include them in the
+// cache key, use QueryStringsConfig in an origin request policy. See CreateOriginRequestPolicy.
+//
 // A complex type that contains information about the query string parameters
 // that you want CloudFront to use for caching for a cache behavior.
 type QueryStringCacheKeys struct {
@@ -13224,6 +17058,54 @@ func (s *QueryStringCacheKeys) SetItems(v []*string) *QueryStringCacheKeys {
 
 // SetQuantity sets the Quantity field's value.
 func (s *QueryStringCacheKeys) SetQuantity(v int64) *QueryStringCacheKeys {
+	s.Quantity = &v
+	return s
+}
+
+// Contains a list of query string names.
+type QueryStringNames struct {
+	_ struct{} `type:"structure"`
+
+	// A list of query string names.
+	Items []*string `locationNameList:"Name" type:"list"`
+
+	// The number of query string names in the Items list.
+	//
+	// Quantity is a required field
+	Quantity *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s QueryStringNames) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryStringNames) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *QueryStringNames) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "QueryStringNames"}
+	if s.Quantity == nil {
+		invalidParams.Add(request.NewErrParamRequired("Quantity"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetItems sets the Items field's value.
+func (s *QueryStringNames) SetItems(v []*string) *QueryStringNames {
+	s.Items = v
+	return s
+}
+
+// SetQuantity sets the Quantity field's value.
+func (s *QueryStringNames) SetQuantity(v int64) *QueryStringNames {
 	s.Quantity = &v
 	return s
 }
@@ -14242,7 +18124,7 @@ type TagResourceInput struct {
 	// A complex type that contains zero or more Tag elements.
 	//
 	// Tags is a required field
-	Tags *Tags `locationName:"Tags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	Tags *Tags `locationName:"Tags" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -14440,7 +18322,7 @@ type UntagResourceInput struct {
 	// A complex type that contains zero or more Tag key elements.
 	//
 	// TagKeys is a required field
-	TagKeys *TagKeys `locationName:"TagKeys" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	TagKeys *TagKeys `locationName:"TagKeys" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -14495,6 +18377,110 @@ func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateCachePolicyInput struct {
+	_ struct{} `locationName:"UpdateCachePolicyRequest" type:"structure" payload:"CachePolicyConfig"`
+
+	// A cache policy configuration.
+	//
+	// CachePolicyConfig is a required field
+	CachePolicyConfig *CachePolicyConfig `locationName:"CachePolicyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+
+	// The unique identifier for the cache policy that you are updating. The identifier
+	// is returned in a cache behavior’s CachePolicyId field in the response to
+	// GetDistributionConfig.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+
+	// The version of the cache policy that you are updating. The version is returned
+	// in the cache policy’s ETag field in the response to GetCachePolicyConfig.
+	IfMatch *string `location:"header" locationName:"If-Match" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateCachePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateCachePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateCachePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateCachePolicyInput"}
+	if s.CachePolicyConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("CachePolicyConfig"))
+	}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.CachePolicyConfig != nil {
+		if err := s.CachePolicyConfig.Validate(); err != nil {
+			invalidParams.AddNested("CachePolicyConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCachePolicyConfig sets the CachePolicyConfig field's value.
+func (s *UpdateCachePolicyInput) SetCachePolicyConfig(v *CachePolicyConfig) *UpdateCachePolicyInput {
+	s.CachePolicyConfig = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *UpdateCachePolicyInput) SetId(v string) *UpdateCachePolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetIfMatch sets the IfMatch field's value.
+func (s *UpdateCachePolicyInput) SetIfMatch(v string) *UpdateCachePolicyInput {
+	s.IfMatch = &v
+	return s
+}
+
+type UpdateCachePolicyOutput struct {
+	_ struct{} `type:"structure" payload:"CachePolicy"`
+
+	// A cache policy.
+	CachePolicy *CachePolicy `type:"structure"`
+
+	// The current version of the cache policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateCachePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateCachePolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetCachePolicy sets the CachePolicy field's value.
+func (s *UpdateCachePolicyOutput) SetCachePolicy(v *CachePolicy) *UpdateCachePolicyOutput {
+	s.CachePolicy = v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *UpdateCachePolicyOutput) SetETag(v string) *UpdateCachePolicyOutput {
+	s.ETag = &v
+	return s
+}
+
 // The request to update an origin access identity.
 type UpdateCloudFrontOriginAccessIdentityInput struct {
 	_ struct{} `locationName:"UpdateCloudFrontOriginAccessIdentityRequest" type:"structure" payload:"CloudFrontOriginAccessIdentityConfig"`
@@ -14502,7 +18488,7 @@ type UpdateCloudFrontOriginAccessIdentityInput struct {
 	// The identity's configuration information.
 	//
 	// CloudFrontOriginAccessIdentityConfig is a required field
-	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	CloudFrontOriginAccessIdentityConfig *OriginAccessIdentityConfig `locationName:"CloudFrontOriginAccessIdentityConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 
 	// The identity's id.
 	//
@@ -14606,7 +18592,7 @@ type UpdateDistributionInput struct {
 	// The distribution's configuration information.
 	//
 	// DistributionConfig is a required field
-	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	DistributionConfig *DistributionConfig `locationName:"DistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 
 	// The distribution's id.
 	//
@@ -14709,7 +18695,7 @@ type UpdateFieldLevelEncryptionConfigInput struct {
 	// Request to update a field-level encryption configuration.
 	//
 	// FieldLevelEncryptionConfig is a required field
-	FieldLevelEncryptionConfig *FieldLevelEncryptionConfig `locationName:"FieldLevelEncryptionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	FieldLevelEncryptionConfig *FieldLevelEncryptionConfig `locationName:"FieldLevelEncryptionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 
 	// The ID of the configuration you want to update.
 	//
@@ -14812,7 +18798,7 @@ type UpdateFieldLevelEncryptionProfileInput struct {
 	// Request to update a field-level encryption profile.
 	//
 	// FieldLevelEncryptionProfileConfig is a required field
-	FieldLevelEncryptionProfileConfig *FieldLevelEncryptionProfileConfig `locationName:"FieldLevelEncryptionProfileConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	FieldLevelEncryptionProfileConfig *FieldLevelEncryptionProfileConfig `locationName:"FieldLevelEncryptionProfileConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 
 	// The ID of the field-level encryption profile request.
 	//
@@ -14908,6 +18894,111 @@ func (s *UpdateFieldLevelEncryptionProfileOutput) SetFieldLevelEncryptionProfile
 	return s
 }
 
+type UpdateOriginRequestPolicyInput struct {
+	_ struct{} `locationName:"UpdateOriginRequestPolicyRequest" type:"structure" payload:"OriginRequestPolicyConfig"`
+
+	// The unique identifier for the origin request policy that you are updating.
+	// The identifier is returned in a cache behavior’s OriginRequestPolicyId
+	// field in the response to GetDistributionConfig.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"Id" type:"string" required:"true"`
+
+	// The version of the origin request policy that you are updating. The version
+	// is returned in the origin request policy’s ETag field in the response to
+	// GetOriginRequestPolicyConfig.
+	IfMatch *string `location:"header" locationName:"If-Match" type:"string"`
+
+	// An origin request policy configuration.
+	//
+	// OriginRequestPolicyConfig is a required field
+	OriginRequestPolicyConfig *OriginRequestPolicyConfig `locationName:"OriginRequestPolicyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+}
+
+// String returns the string representation
+func (s UpdateOriginRequestPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateOriginRequestPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateOriginRequestPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateOriginRequestPolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.OriginRequestPolicyConfig == nil {
+		invalidParams.Add(request.NewErrParamRequired("OriginRequestPolicyConfig"))
+	}
+	if s.OriginRequestPolicyConfig != nil {
+		if err := s.OriginRequestPolicyConfig.Validate(); err != nil {
+			invalidParams.AddNested("OriginRequestPolicyConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *UpdateOriginRequestPolicyInput) SetId(v string) *UpdateOriginRequestPolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetIfMatch sets the IfMatch field's value.
+func (s *UpdateOriginRequestPolicyInput) SetIfMatch(v string) *UpdateOriginRequestPolicyInput {
+	s.IfMatch = &v
+	return s
+}
+
+// SetOriginRequestPolicyConfig sets the OriginRequestPolicyConfig field's value.
+func (s *UpdateOriginRequestPolicyInput) SetOriginRequestPolicyConfig(v *OriginRequestPolicyConfig) *UpdateOriginRequestPolicyInput {
+	s.OriginRequestPolicyConfig = v
+	return s
+}
+
+type UpdateOriginRequestPolicyOutput struct {
+	_ struct{} `type:"structure" payload:"OriginRequestPolicy"`
+
+	// The current version of the origin request policy.
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	// An origin request policy.
+	OriginRequestPolicy *OriginRequestPolicy `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateOriginRequestPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateOriginRequestPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetETag sets the ETag field's value.
+func (s *UpdateOriginRequestPolicyOutput) SetETag(v string) *UpdateOriginRequestPolicyOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetOriginRequestPolicy sets the OriginRequestPolicy field's value.
+func (s *UpdateOriginRequestPolicyOutput) SetOriginRequestPolicy(v *OriginRequestPolicy) *UpdateOriginRequestPolicyOutput {
+	s.OriginRequestPolicy = v
+	return s
+}
+
 type UpdatePublicKeyInput struct {
 	_ struct{} `locationName:"UpdatePublicKeyRequest" type:"structure" payload:"PublicKeyConfig"`
 
@@ -14923,7 +19014,7 @@ type UpdatePublicKeyInput struct {
 	// Request to update public key information.
 	//
 	// PublicKeyConfig is a required field
-	PublicKeyConfig *PublicKeyConfig `locationName:"PublicKeyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	PublicKeyConfig *PublicKeyConfig `locationName:"PublicKeyConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -15026,7 +19117,7 @@ type UpdateStreamingDistributionInput struct {
 	// The streaming distribution's configuration information.
 	//
 	// StreamingDistributionConfig is a required field
-	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2019-03-26/"`
+	StreamingDistributionConfig *StreamingDistributionConfig `locationName:"StreamingDistributionConfig" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
 }
 
 // String returns the string representation
@@ -15129,10 +19220,10 @@ func (s *UpdateStreamingDistributionOutput) SetStreamingDistribution(v *Streamin
 //    viewers that support server name indication (SNI) (https://en.wikipedia.org/wiki/Server_Name_Indication)
 //    (recommended), or all viewers including those that don’t support SNI.
 //    To accept HTTPS connections from only viewers that support SNI, set SSLSupportMethod
-//    to sni-only. This is recommended. Most browsers and clients released after
-//    2010 support SNI. To accept HTTPS connections from all viewers, including
-//    those that don’t support SNI, set SSLSupportMethod to vip. This is not
-//    recommended, and results in additional monthly charges from CloudFront.
+//    to sni-only. This is recommended. Most browsers and clients support SNI.
+//    To accept HTTPS connections from all viewers, including those that don’t
+//    support SNI, set SSLSupportMethod to vip. This is not recommended, and
+//    results in additional monthly charges from CloudFront.
 //
 //    * The minimum SSL/TLS protocol version that the distribution can use to
 //    communicate with viewers. To specify a minimum version, choose a value
@@ -15227,9 +19318,6 @@ type ViewerCertificate struct {
 	//
 	// On the CloudFront console, this setting is called Security Policy.
 	//
-	// We recommend that you specify TLSv1.2_2018 unless your viewers are using
-	// browsers or devices that don’t support TLSv1.2.
-	//
 	// When you’re using SNI only (you set SSLSupportMethod to sni-only), you
 	// must specify TLSv1 or higher.
 	//
@@ -15243,8 +19331,7 @@ type ViewerCertificate struct {
 	//
 	//    * sni-only – The distribution accepts HTTPS connections from only viewers
 	//    that support server name indication (SNI) (https://en.wikipedia.org/wiki/Server_Name_Indication).
-	//    This is recommended. Most browsers and clients released after 2010 support
-	//    SNI.
+	//    This is recommended. Most browsers and clients support SNI.
 	//
 	//    * vip – The distribution accepts HTTPS connections from all viewers
 	//    including those that don’t support SNI. This is not recommended, and
@@ -15306,6 +19393,50 @@ func (s *ViewerCertificate) SetSSLSupportMethod(v string) *ViewerCertificate {
 	s.SSLSupportMethod = &v
 	return s
 }
+
+const (
+	// CachePolicyCookieBehaviorNone is a CachePolicyCookieBehavior enum value
+	CachePolicyCookieBehaviorNone = "none"
+
+	// CachePolicyCookieBehaviorWhitelist is a CachePolicyCookieBehavior enum value
+	CachePolicyCookieBehaviorWhitelist = "whitelist"
+
+	// CachePolicyCookieBehaviorAllExcept is a CachePolicyCookieBehavior enum value
+	CachePolicyCookieBehaviorAllExcept = "allExcept"
+
+	// CachePolicyCookieBehaviorAll is a CachePolicyCookieBehavior enum value
+	CachePolicyCookieBehaviorAll = "all"
+)
+
+const (
+	// CachePolicyHeaderBehaviorNone is a CachePolicyHeaderBehavior enum value
+	CachePolicyHeaderBehaviorNone = "none"
+
+	// CachePolicyHeaderBehaviorWhitelist is a CachePolicyHeaderBehavior enum value
+	CachePolicyHeaderBehaviorWhitelist = "whitelist"
+)
+
+const (
+	// CachePolicyQueryStringBehaviorNone is a CachePolicyQueryStringBehavior enum value
+	CachePolicyQueryStringBehaviorNone = "none"
+
+	// CachePolicyQueryStringBehaviorWhitelist is a CachePolicyQueryStringBehavior enum value
+	CachePolicyQueryStringBehaviorWhitelist = "whitelist"
+
+	// CachePolicyQueryStringBehaviorAllExcept is a CachePolicyQueryStringBehavior enum value
+	CachePolicyQueryStringBehaviorAllExcept = "allExcept"
+
+	// CachePolicyQueryStringBehaviorAll is a CachePolicyQueryStringBehavior enum value
+	CachePolicyQueryStringBehaviorAll = "all"
+)
+
+const (
+	// CachePolicyTypeManaged is a CachePolicyType enum value
+	CachePolicyTypeManaged = "managed"
+
+	// CachePolicyTypeCustom is a CachePolicyType enum value
+	CachePolicyTypeCustom = "custom"
+)
 
 const (
 	// CertificateSourceCloudfront is a CertificateSource enum value
@@ -15416,6 +19547,9 @@ const (
 
 	// MinimumProtocolVersionTlsv122018 is a MinimumProtocolVersion enum value
 	MinimumProtocolVersionTlsv122018 = "TLSv1.2_2018"
+
+	// MinimumProtocolVersionTlsv122019 is a MinimumProtocolVersion enum value
+	MinimumProtocolVersionTlsv122019 = "TLSv1.2_2019"
 )
 
 const (
@@ -15427,6 +19561,50 @@ const (
 
 	// OriginProtocolPolicyHttpsOnly is a OriginProtocolPolicy enum value
 	OriginProtocolPolicyHttpsOnly = "https-only"
+)
+
+const (
+	// OriginRequestPolicyCookieBehaviorNone is a OriginRequestPolicyCookieBehavior enum value
+	OriginRequestPolicyCookieBehaviorNone = "none"
+
+	// OriginRequestPolicyCookieBehaviorWhitelist is a OriginRequestPolicyCookieBehavior enum value
+	OriginRequestPolicyCookieBehaviorWhitelist = "whitelist"
+
+	// OriginRequestPolicyCookieBehaviorAll is a OriginRequestPolicyCookieBehavior enum value
+	OriginRequestPolicyCookieBehaviorAll = "all"
+)
+
+const (
+	// OriginRequestPolicyHeaderBehaviorNone is a OriginRequestPolicyHeaderBehavior enum value
+	OriginRequestPolicyHeaderBehaviorNone = "none"
+
+	// OriginRequestPolicyHeaderBehaviorWhitelist is a OriginRequestPolicyHeaderBehavior enum value
+	OriginRequestPolicyHeaderBehaviorWhitelist = "whitelist"
+
+	// OriginRequestPolicyHeaderBehaviorAllViewer is a OriginRequestPolicyHeaderBehavior enum value
+	OriginRequestPolicyHeaderBehaviorAllViewer = "allViewer"
+
+	// OriginRequestPolicyHeaderBehaviorAllViewerAndWhitelistCloudFront is a OriginRequestPolicyHeaderBehavior enum value
+	OriginRequestPolicyHeaderBehaviorAllViewerAndWhitelistCloudFront = "allViewerAndWhitelistCloudFront"
+)
+
+const (
+	// OriginRequestPolicyQueryStringBehaviorNone is a OriginRequestPolicyQueryStringBehavior enum value
+	OriginRequestPolicyQueryStringBehaviorNone = "none"
+
+	// OriginRequestPolicyQueryStringBehaviorWhitelist is a OriginRequestPolicyQueryStringBehavior enum value
+	OriginRequestPolicyQueryStringBehaviorWhitelist = "whitelist"
+
+	// OriginRequestPolicyQueryStringBehaviorAll is a OriginRequestPolicyQueryStringBehavior enum value
+	OriginRequestPolicyQueryStringBehaviorAll = "all"
+)
+
+const (
+	// OriginRequestPolicyTypeManaged is a OriginRequestPolicyType enum value
+	OriginRequestPolicyTypeManaged = "managed"
+
+	// OriginRequestPolicyTypeCustom is a OriginRequestPolicyType enum value
+	OriginRequestPolicyTypeCustom = "custom"
 )
 
 const (
