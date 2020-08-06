@@ -95,7 +95,7 @@ resource "aws_sqs_queue" "test" {
 }
 
 data "aws_sqs_queue" "by_name" {
-  name = "${aws_sqs_queue.test.name}"
+  name = aws_sqs_queue.test.name
 }
 `, rName)
 }
@@ -113,7 +113,7 @@ resource "aws_sqs_queue" "test" {
 }
 
 data "aws_sqs_queue" "by_name" {
-  name = "${aws_sqs_queue.test.name}"
+  name = aws_sqs_queue.test.name
 }
 `, rName)
 }

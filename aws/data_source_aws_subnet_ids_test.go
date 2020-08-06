@@ -59,7 +59,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test_public_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.123.0/24"
   availability_zone = "us-west-2a"
 
@@ -70,7 +70,7 @@ resource "aws_subnet" "test_public_a" {
 }
 
 resource "aws_subnet" "test_private_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.125.0/24"
   availability_zone = "us-west-2a"
 
@@ -81,7 +81,7 @@ resource "aws_subnet" "test_private_a" {
 }
 
 resource "aws_subnet" "test_private_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.126.0/24"
   availability_zone = "us-west-2b"
 
@@ -92,11 +92,11 @@ resource "aws_subnet" "test_private_b" {
 }
 
 data "aws_subnet_ids" "selected" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 data "aws_subnet_ids" "private" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Tier = "Private"
@@ -116,7 +116,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test_public_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.123.0/24"
   availability_zone = "us-west-2a"
 
@@ -127,7 +127,7 @@ resource "aws_subnet" "test_public_a" {
 }
 
 resource "aws_subnet" "test_private_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.125.0/24"
   availability_zone = "us-west-2a"
 
@@ -138,7 +138,7 @@ resource "aws_subnet" "test_private_a" {
 }
 
 resource "aws_subnet" "test_private_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.126.0/24"
   availability_zone = "us-west-2b"
 
@@ -161,29 +161,29 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test_a_one" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.1.0/24"
   availability_zone = "us-west-2a"
 }
 
 resource "aws_subnet" "test_a_two" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.2.0/24"
   availability_zone = "us-west-2a"
 }
 
 resource "aws_subnet" "test_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.%d.3.0/24"
   availability_zone = "us-west-2b"
 }
 
 data "aws_subnet_ids" "test" {
-  vpc_id = "${aws_subnet.test_a_two.vpc_id}"
+  vpc_id = aws_subnet.test_a_two.vpc_id
 
   filter {
     name   = "availabilityZone"
-    values = ["${aws_subnet.test_a_one.availability_zone}"]
+    values = [aws_subnet.test_a_one.availability_zone]
   }
 }
 `, rInt, rInt, rInt, rInt)

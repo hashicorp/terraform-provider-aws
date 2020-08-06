@@ -76,7 +76,7 @@ resource "aws_ssm_parameter" "test" {
 }
 
 data "aws_ssm_parameter" "test" {
-  name            = "${aws_ssm_parameter.test.name}"
+  name            = aws_ssm_parameter.test.name
   with_decryption = %s
 }
 `, name, withDecryption)

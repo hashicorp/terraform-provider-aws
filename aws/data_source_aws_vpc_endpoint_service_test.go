@@ -170,8 +170,8 @@ resource "aws_lb" "test" {
   name = %[1]q
 
   subnets = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
+    aws_subnet.test1.id,
+    aws_subnet.test2.id,
   ]
 
   load_balancer_type         = "network"
@@ -194,9 +194,9 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -204,9 +204,9 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -217,7 +217,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.test.id}",
+    aws_lb.test.id,
   ]
 
   tags = {
@@ -230,7 +230,7 @@ resource "aws_vpc_endpoint_service" "test" {
 func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
 	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
-  service_name = "${aws_vpc_endpoint_service.test.service_name}"
+  service_name = aws_vpc_endpoint_service.test.service_name
 }
 `
 }
@@ -240,7 +240,7 @@ func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName string) stri
 data "aws_vpc_endpoint_service" "test" {
   filter {
     name   = "service-name"
-    values = ["${aws_vpc_endpoint_service.test.service_name}"]
+    values = [aws_vpc_endpoint_service.test.service_name]
   }
 }
 `
@@ -250,7 +250,7 @@ func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName string) 
 	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   tags = {
-    Name  = "${aws_vpc_endpoint_service.test.tags["Name"]}"
+    Name = aws_vpc_endpoint_service.test.tags["Name"]
   }
 }
 `
