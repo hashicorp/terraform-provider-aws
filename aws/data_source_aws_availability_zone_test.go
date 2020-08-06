@@ -133,7 +133,6 @@ data "aws_availability_zones" "test" {
 }
 
 data "aws_availability_zone" "test" {
-
   filter {
     name   = "zone-name"
     values = [data.aws_availability_zones.test.names[0]]

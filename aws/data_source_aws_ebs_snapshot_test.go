@@ -134,7 +134,6 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 data "aws_ebs_snapshot" "test" {
-
   filter {
     name   = "snapshot-id"
     values = [aws_ebs_snapshot.test.id]

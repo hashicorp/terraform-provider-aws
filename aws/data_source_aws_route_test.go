@@ -155,6 +155,7 @@ resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = "10.0.1.0/24"
   instance_id            = aws_instance.web.id
+
   timeouts {
     create = "5m"
   }
