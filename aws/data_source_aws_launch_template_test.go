@@ -161,7 +161,6 @@ func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 }
 
 func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

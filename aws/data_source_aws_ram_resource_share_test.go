@@ -66,7 +66,7 @@ resource "aws_ram_resource_share" "test" {
 }
 
 data "aws_ram_resource_share" "test" {
-  name           = "${aws_ram_resource_share.test.name}"
+  name           = aws_ram_resource_share.test.name
   resource_owner = "SELF"
 }
 `, rName, rName)
@@ -83,7 +83,7 @@ resource "aws_ram_resource_share" "test" {
 }
 
 data "aws_ram_resource_share" "test" {
-  name           = "${aws_ram_resource_share.test.name}"
+  name           = aws_ram_resource_share.test.name
   resource_owner = "SELF"
 
   filter {
@@ -96,7 +96,7 @@ data "aws_ram_resource_share" "test" {
 
 const testAccDataSourceAwsRamResourceShareConfig_NonExistent = `
 data "aws_ram_resource_share" "test" {
-	name = "tf-acc-test-does-not-exist"
-	resource_owner = "SELF"
+  name           = "tf-acc-test-does-not-exist"
+  resource_owner = "SELF"
 }
 `

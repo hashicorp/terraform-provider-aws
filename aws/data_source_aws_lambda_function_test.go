@@ -453,6 +453,7 @@ resource "aws_efs_access_point" "access_point_1" {
 
   root_directory {
     path = "/lambda"
+
     creation_info {
       owner_gid   = 1000
       owner_uid   = 1000

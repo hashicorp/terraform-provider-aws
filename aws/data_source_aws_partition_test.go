@@ -61,5 +61,5 @@ func testAccCheckAwsDnsSuffix(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsPartitionConfig_basic = `
-data "aws_partition" "current" { }
+data "aws_partition" "current" {}
 `
