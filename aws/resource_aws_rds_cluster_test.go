@@ -669,12 +669,12 @@ func TestAccAWSRDSCluster_copyTagsToSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCluster_EncryptedCrossRegionReplication(t *testing.T) {
+func TestAccAWSRDSCluster_ReplicationSourceIdentifier_KmsKeyId(t *testing.T) {
 	var primaryCluster rds.DBCluster
 	var replicaCluster rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 	resourceName2 := "aws_rds_cluster.alternate"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	// record the initialized providers so that we can use them to
 	// check for the cluster in each region
@@ -683,21 +683,20 @@ func TestAccAWSRDSCluster_EncryptedCrossRegionReplication(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSClusterDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfigEncryptedCrossRegionReplica(rInt),
+				Config: testAccAWSClusterConfigReplicationSourceIdentifierKmsKeyId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExistsWithProvider(resourceName, &primaryCluster, testAccAwsRegionProviderFunc(testAccGetRegion(), &providers)),
 					testAccCheckAWSClusterExistsWithProvider(resourceName2, &replicaCluster, testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers)),
 				),
 			},
 			{
-				Config:            testAccAWSClusterConfigEncryptedCrossRegionReplica(rInt),
+				Config:            testAccAWSClusterConfigReplicationSourceIdentifierKmsKeyId(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -2910,8 +2909,10 @@ resource "aws_rds_cluster" "test" {
 `, n, n, n)
 }
 
-func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+func testAccAWSClusterConfigReplicationSourceIdentifierKmsKeyId(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
   provider = "awsalternate"
 
@@ -2928,7 +2929,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "tf-aurora-prm-grp-%[1]d"
+  name        = %[1]q
   family      = "aurora5.6"
   description = "RDS default cluster parameter group"
 
@@ -2940,7 +2941,7 @@ resource "aws_rds_cluster_parameter_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-test-primary-%[1]d"
+  cluster_identifier              = "%[1]s-primary"
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
   database_name                   = "mydb"
   master_username                 = "foo"
@@ -2950,14 +2951,14 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "tf-aurora-instance-%[1]d"
+  identifier         = "%[1]s-primary"
   cluster_identifier = aws_rds_cluster.test.id
   instance_class     = "db.t2.small"
 }
 
 resource "aws_kms_key" "alternate" {
   provider    = "awsalternate"
-  description = "Terraform acc test %[1]d"
+  description = %[1]q
 
   policy = <<POLICY
   {
@@ -3001,17 +3002,14 @@ resource "aws_subnet" "alternate" {
 
 resource "aws_db_subnet_group" "alternate" {
   provider   = "awsalternate"
-  name       = "test_replica-subnet-%[1]d"
+  name       = %[1]q
   subnet_ids = aws_subnet.alternate[*].id
 }
 
 resource "aws_rds_cluster" "alternate" {
   provider                      = "awsalternate"
-  cluster_identifier            = "tf-test-replica-%[1]d"
+  cluster_identifier            = "%[1]s-replica"
   db_subnet_group_name          = aws_db_subnet_group.alternate.name
-  database_name                 = "mydb"
-  master_username               = "foo"
-  master_password               = "mustbeeightcharaters"
   kms_key_id                    = aws_kms_key.alternate.arn
   storage_encrypted             = true
   skip_final_snapshot           = true
@@ -3022,7 +3020,7 @@ resource "aws_rds_cluster" "alternate" {
     aws_rds_cluster_instance.test,
   ]
 }
-`, n)
+`, rName))
 }
 
 func testAccAWSRDSClusterConfig_DeletionProtection(rName string, deletionProtection bool) string {
