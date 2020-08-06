@@ -621,6 +621,9 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.RedshiftDestinationDescription.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
+			if err := d.Set("extended_s3_configuration", nil); err != nil {
+				return fmt.Errorf("error unsetting extended_s3_configuration: %s", err)
+			}
 		} else if destination.ElasticsearchDestinationDescription != nil {
 			d.Set("destination", "elasticsearch")
 			if err := d.Set("elasticsearch_configuration", flattenFirehoseElasticsearchConfiguration(destination.ElasticsearchDestinationDescription)); err != nil {
@@ -628,6 +631,9 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			}
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.ElasticsearchDestinationDescription.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
+			}
+			if err := d.Set("extended_s3_configuration", nil); err != nil {
+				return fmt.Errorf("error unsetting extended_s3_configuration: %s", err)
 			}
 		} else if destination.SplunkDestinationDescription != nil {
 			d.Set("destination", "splunk")
@@ -637,15 +643,24 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.SplunkDestinationDescription.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
+			if err := d.Set("extended_s3_configuration", nil); err != nil {
+				return fmt.Errorf("error unsetting extended_s3_configuration: %s", err)
+			}
 		} else if d.Get("destination").(string) == "s3" {
 			d.Set("destination", "s3")
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
+			if err := d.Set("extended_s3_configuration", nil); err != nil {
+				return fmt.Errorf("error unsetting extended_s3_configuration: %s", err)
+			}
 		} else {
 			d.Set("destination", "extended_s3")
 			if err := d.Set("extended_s3_configuration", flattenFirehoseExtendedS3Configuration(destination.ExtendedS3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting extended_s3_configuration: %s", err)
+			}
+			if err := d.Set("s3_configuration", nil); err != nil {
+				return fmt.Errorf("error unsetting s3_configuration: %s", err)
 			}
 		}
 		d.Set("destination_id", destination.DestinationId)
@@ -754,7 +769,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			"extended_s3_configuration": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				ConflictsWith: []string{"s3_configuration"},
+				// ConflictsWith: []string{"s3_configuration"},
 				MaxItems:      1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
