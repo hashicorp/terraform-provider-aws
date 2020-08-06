@@ -41,7 +41,7 @@ resource "aws_wafregional_rule" "wafrule" {
 }
 
 data "aws_wafregional_rule" "wafrule" {
-  name = "${aws_wafregional_rule.wafrule.name}"
+  name = aws_wafregional_rule.wafrule.name
 }
 `, name)
 }

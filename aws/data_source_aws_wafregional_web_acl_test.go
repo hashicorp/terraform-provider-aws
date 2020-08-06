@@ -38,13 +38,14 @@ func testAccDataSourceAwsWafRegionalWebAclConfig_Name(name string) string {
 resource "aws_wafregional_web_acl" "web_acl" {
   name        = %[1]q
   metric_name = "tfWebACL"
+
   default_action {
     type = "ALLOW"
   }
 }
 
 data "aws_wafregional_web_acl" "web_acl" {
-  name = "${aws_wafregional_web_acl.web_acl.name}"
+  name = aws_wafregional_web_acl.web_acl.name
 }
 `, name)
 }

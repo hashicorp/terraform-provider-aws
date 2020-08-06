@@ -94,8 +94,8 @@ func testAccDataSourceAwsWorkspaceBundleConfig_bundleIDAndOwnerNameConflict(bund
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
-  owner = %q
-  name  = %q
+  owner     = %q
+  name      = %q
 }
 `, bundleID, owner, name)
 }
