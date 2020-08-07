@@ -722,11 +722,6 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
   role       = aws_iam_role.cluster.name
 }
 
-resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSServicePolicy" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSServicePolicy"
-  role       = aws_iam_role.cluster.name
-}
-
 resource "aws_iam_role" "node" {
   name = "%[1]s-node"
   
@@ -835,7 +830,6 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [
     "aws_iam_role_policy_attachment.cluster-AmazonEKSClusterPolicy",
-    "aws_iam_role_policy_attachment.cluster-AmazonEKSServicePolicy",
     "aws_main_route_table_association.test",
   ]
 }
@@ -857,7 +851,6 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [
     "aws_iam_role_policy_attachment.cluster-AmazonEKSClusterPolicy",
-    "aws_iam_role_policy_attachment.cluster-AmazonEKSServicePolicy",
     "aws_main_route_table_association.test",
   ]
 }
