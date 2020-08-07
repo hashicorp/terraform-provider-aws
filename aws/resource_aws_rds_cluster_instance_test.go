@@ -947,16 +947,7 @@ resource "aws_db_parameter_group" "bar" {
 }
 
 func testAccAWSClusterInstanceConfig_az(n int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
   cluster_identifier  = "tf-aurora-cluster-test-%d"
   availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]

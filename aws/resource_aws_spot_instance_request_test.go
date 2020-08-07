@@ -661,17 +661,7 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 }
 
 func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo_VPC" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -719,17 +709,7 @@ tags = {
 }
 
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 %v
 
 resource "aws_spot_instance_request" "foo" {

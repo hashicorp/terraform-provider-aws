@@ -3394,18 +3394,9 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_VpcConfig1(rName string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # InvalidInputException: CodeBuild currently doesn't support VPC in us-west-2d, please select subnets in other availability zones.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
+		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) +
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -3455,18 +3446,9 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_VpcConfig2(rName string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # InvalidInputException: CodeBuild currently doesn't support VPC in us-west-2d, please select subnets in other availability zones.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
+		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) +
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }

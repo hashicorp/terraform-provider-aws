@@ -1265,7 +1265,7 @@ func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -1330,15 +1330,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1386,7 +1377,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_forwardWeighted(lbName, targetGroupName1 string, targetGroupName2 string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -1478,15 +1469,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1534,7 +1516,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_changeForwardWeightedStickiness(lbName, targetGroupName1 string, targetGroupName2 string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -1630,15 +1612,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1686,7 +1659,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_changeForwardWeightedToBasic(lbName, targetGroupName1 string, targetGroupName2 string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -1769,15 +1742,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1825,7 +1789,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_alb_listener_rule" "static" {
   listener_arn = "${aws_alb_listener.front_end.arn}"
   priority     = 100
@@ -1890,15 +1854,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1946,7 +1901,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -2003,15 +1958,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -2059,7 +2005,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_fixedResponse(lbName, response string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -2116,15 +2062,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -2172,7 +2109,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 101
@@ -2237,15 +2174,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -2293,7 +2221,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_changeRuleArn(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end_ruleupdate.arn}"
   priority     = 101
@@ -2369,15 +2297,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -2425,7 +2344,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
   protocol          = "HTTP"
@@ -2472,15 +2391,6 @@ resource "aws_lb_target_group" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2687,7 +2597,7 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
 }
 
 func testAccAWSLBListenerRuleConfig_cognito(rName, key, certificate string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "cognito" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -2774,15 +2684,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -2851,7 +2752,7 @@ resource "aws_cognito_user_pool_domain" "test" {
 }
 
 func testAccAWSLBListenerRuleConfig_oidc(rName, key, certificate string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "oidc" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -2941,15 +2842,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -2997,18 +2889,9 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_Action_Order(rName, key, certificate string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 variable "rName" {
   default = %[1]q
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_lb_listener_rule" "test" {
@@ -3219,7 +3102,7 @@ condition {
 }
 
 func testAccAWSLBListenerRuleConfig_condition_base(condition, name, lbName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 100
@@ -3270,15 +3153,6 @@ resource "aws_lb" "alb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {

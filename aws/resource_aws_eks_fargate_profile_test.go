@@ -349,16 +349,7 @@ https://docs.aws.amazon.com/eks/latest/userguide/fargate.html
 }
 
 func testAccAWSEksFargateProfileConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "cluster" {

@@ -498,7 +498,7 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 }
 
 func testAccAWSENIConfig() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -506,15 +506,6 @@ resource "aws_vpc" "foo" {
     Name = "terraform-testacc-network-interface"
   }
 }
-
-data "aws_availability_zones" "available" {
-   state = "available"
-
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
 
 resource "aws_subnet" "foo" {
   vpc_id            = "${aws_vpc.foo.id}"
@@ -551,21 +542,12 @@ resource "aws_network_interface" "bar" {
 }
 
 func testAccAWSENIConfigUpdatedDescription() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "terraform-testacc-network-interface-update-desc"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -604,21 +586,12 @@ resource "aws_network_interface" "bar" {
 }
 
 func testAccAWSENIConfigWithSourceDestCheck() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "terraform-testacc-network-interface-w-source-dest-check"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -640,21 +613,12 @@ resource "aws_network_interface" "bar" {
 }
 
 func testAccAWSENIConfigWithNoPrivateIPs() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "terraform-testacc-network-interface-w-no-private-ips"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -675,7 +639,7 @@ resource "aws_network_interface" "bar" {
 }
 
 func testAccAWSENIConfigWithAttachment() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -683,15 +647,6 @@ resource "aws_vpc" "foo" {
     Name = "terraform-testacc-network-interface-w-attachment"
   }
 }
-
-data "aws_availability_zones" "available" {
-   state = "available"
-
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
 
 resource "aws_subnet" "foo" {
   vpc_id            = "${aws_vpc.foo.id}"
@@ -743,7 +698,7 @@ resource "aws_network_interface" "bar" {
 }
 
 func testAccAWSENIConfigExternalAttachment() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -751,15 +706,6 @@ resource "aws_vpc" "foo" {
     Name = "terraform-testacc-network-interface-external-attachment"
   }
 }
-
-data "aws_availability_zones" "available" {
-   state = "available"
-
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
 
 resource "aws_subnet" "foo" {
   vpc_id            = "${aws_vpc.foo.id}"

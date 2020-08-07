@@ -720,19 +720,10 @@ func describeBeanstalkEnv(conn *elasticbeanstalk.ElasticBeanstalk,
 }
 
 func testAccBeanstalkEnvConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Default instance type of t2.micro is not available in this Availability Zone
-  # The failure will occur during Elastic Beanstalk CloudFormation Template handling
-  # after waiting upwards of one hour to initialize the Auto Scaling Group.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
+# Default instance type of t2.micro is not available in this Availability Zone
+# The failure will occur during Elastic Beanstalk CloudFormation Template handling
+# after waiting upwards of one hour to initialize the Auto Scaling Group.	
 
 data "aws_elastic_beanstalk_solution_stack" "test" {
   most_recent = true

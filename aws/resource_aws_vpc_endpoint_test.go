@@ -788,7 +788,7 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVpcEndpointConfig_interfaceWithSubnet(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -800,15 +800,6 @@ resource "aws_vpc" "test" {
 }
 
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_subnet" "test1" {
   vpc_id            = "${aws_vpc.test.id}"
@@ -879,7 +870,7 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVpcEndpointConfig_interfaceWithSubnetModified(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -891,15 +882,6 @@ resource "aws_vpc" "test" {
 }
 
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_subnet" "test1" {
   vpc_id            = "${aws_vpc.test.id}"
@@ -971,7 +953,7 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVpcEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -999,15 +981,6 @@ resource "aws_lb" "test" {
 }
 
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_subnet" "test1" {
   vpc_id            = "${aws_vpc.test.id}"

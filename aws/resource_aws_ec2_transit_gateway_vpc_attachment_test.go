@@ -542,18 +542,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentNotRecreated(i, j *ec2.Transit
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -583,18 +572,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigDnsSupport(dnsSupport string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -625,18 +603,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigIpv6Support(ipv6Support string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
   cidr_block                       = "10.0.0.0/16"
@@ -669,18 +636,9 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSharedTransitGateway(rName string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAlternateAccountProviderConfig() +
+		testAccAvailableAZsNoOptInDefaultExcludeConfig() +
+		fmt.Sprintf(`
 data "aws_organizations_organization" "test" {}
 
 resource "aws_ec2_transit_gateway" "test" {
@@ -736,18 +694,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSubnetIds1() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -779,18 +726,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSubnetIds2() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -822,18 +758,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -867,18 +792,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -913,18 +827,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTableAssociationAndPropagationDisabled() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -959,18 +862,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTableAssociation(transitGatewayDefaultRouteTableAssociation bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1001,18 +893,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTablePropagation(transitGatewayDefaultRouteTablePropagation bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

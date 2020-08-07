@@ -326,16 +326,7 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 }
 
 func testAccAWSDocDBClusterInstanceConfig_az(n int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = "tf-docdb-cluster-test-%d"
   availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]

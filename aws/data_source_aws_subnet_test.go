@@ -135,16 +135,7 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 }
 
 func testAccDataSourceAwsSubnetConfig(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
@@ -199,16 +190,7 @@ data "aws_subnet" "by_az_id" {
 }
 
 func testAccDataSourceAwsSubnetConfigIpv6(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -232,16 +214,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -272,16 +245,7 @@ data "aws_subnet" "by_ipv6_cidr" {
 }
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true

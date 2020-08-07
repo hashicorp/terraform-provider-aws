@@ -337,7 +337,7 @@ func testAccAWSAutoscalingPolicyImportStateIdFunc(resourceName string) resource.
 }
 
 func testAccAWSAutoscalingPolicyConfig_base(name string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "amzn" {
   most_recent = true
   owners      = ["amazon"]
@@ -345,15 +345,6 @@ data "aws_ami" "amzn" {
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

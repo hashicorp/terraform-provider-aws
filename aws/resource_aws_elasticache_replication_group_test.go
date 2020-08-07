@@ -848,16 +848,7 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheReplicationGroupConfig_Uppercase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
@@ -982,16 +973,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSElasticacheReplicationGroupInVPCConfig = testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
     cidr_block = "192.168.0.0/16"
   tags = {
@@ -1039,15 +1021,7 @@ resource "aws_elasticache_replication_group" "test" {
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
-var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
+var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
     cidr_block = "192.168.0.0/16"
   tags = {
@@ -1104,17 +1078,9 @@ resource "aws_elasticache_replication_group" "test" {
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
-var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  exclude_zone_ids = ["use1-az1"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
+var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = testAccAvailableAZsNoOptInExcludeConfig("usw2-az4", "usgw1-az2", "use1-az1") +
+	fmt.Sprintf(`
+# InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ use1-az1.	
   resource "aws_vpc" "test" {
 	  cidr_block = "192.168.0.0/16"
 	tags = {
@@ -1174,16 +1140,7 @@ data "aws_availability_zones" "available" {
   `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 func testAccAWSElasticacheReplicationGroupNativeRedisClusterErrorConfig(rInt int, rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
@@ -1255,16 +1212,7 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName string, numNodeGroups, replicasPerNodeGroup int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
@@ -1334,16 +1282,7 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheReplicationGroup_UseCmkKmsKeyId(rInt int, rString string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
 
@@ -1406,16 +1345,7 @@ resource "aws_elasticache_replication_group" "bar" {
 }
 
 func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
@@ -1473,16 +1403,7 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rInt int, rString10 string, rString16 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
@@ -1541,17 +1462,9 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName string, numberCacheClusters int, autoFailover bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  exclude_zone_ids = ["use1-az1"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
+	return testAccAvailableAZsNoOptInExcludeConfig("usw2-az4", "usgw1-az2", "use1-az1") +
+		fmt.Sprintf(`
+# InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ use1-az1.		
 
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"

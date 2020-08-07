@@ -774,18 +774,9 @@ resource "aws_ssm_association" "test" {
 }
 
 func testAccAWSSSMAssociationBasicConfig(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 variable "name" {
   default = "%s"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 data "aws_ami" "amzn" {

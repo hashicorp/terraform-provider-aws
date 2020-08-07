@@ -106,16 +106,7 @@ func testAccAWSSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *st
 }
 
 func testAccAWSSnapshotCreateVolumePermissionConfig(includeCreateVolumePermission bool, accountID string) string {
-	base := `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	base := testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1

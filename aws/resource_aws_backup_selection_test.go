@@ -327,16 +327,7 @@ resource "aws_backup_selection" "test" {
 func testAccBackupSelectionConfigWithResources(rName string) string {
 	return composeConfig(
 		testAccBackupSelectionConfigBase(rName),
-		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   count = 2
 

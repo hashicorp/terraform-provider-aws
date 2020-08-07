@@ -284,16 +284,7 @@ func testAccCheckEfsMountTarget(resourceID string, mount *efs.MountTargetDescrip
 }
 
 func testAccAWSEFSMountTargetConfig(ct string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = "%s"
 
@@ -328,16 +319,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAWSEFSMountTargetConfigModified(ct string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = "%s"
 
@@ -387,16 +369,7 @@ resource "aws_subnet" "test2" {
 }
 
 func testAccAWSEFSMountTargetConfigIpAddress(ipAddress string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

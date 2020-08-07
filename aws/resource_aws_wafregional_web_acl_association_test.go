@@ -183,7 +183,7 @@ func testAccCheckWafRegionalWebAclAssociationDisappears(resourceName string) res
 	}
 }
 
-const testAccCheckWafRegionalWebAclAssociationConfig_basic = `
+var testAccCheckWafRegionalWebAclAssociationConfig_basic = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_wafregional_rule" "foo" {
   name = "foo"
   metric_name = "foo"
@@ -206,15 +206,6 @@ resource "aws_wafregional_web_acl" "foo" {
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_subnet" "foo" {

@@ -992,16 +992,7 @@ func testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZo
 		preferredAvailabilityZones[i] = `"${data.aws_availability_zones.available.names[0]}"`
 	}
 
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
   apply_immediately            = true
   cluster_id                   = "%s"
@@ -1013,16 +1004,7 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, numCacheNodes, strings.Join(preferredAvailabilityZones, ","))
 }
 
-var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSElasticacheClusterInVPCConfig = testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
     cidr_block = "192.168.0.0/16"
     tags = {
@@ -1079,16 +1061,7 @@ resource "aws_sns_topic" "test" {
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
-var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSElasticacheClusterMultiAZInVPCConfig = testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
     cidr_block = "192.168.0.0/16"
     tags = {
@@ -1282,16 +1255,7 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
     replication_group_description = "Terraform Acceptance Testing"
     replication_group_id          = "%[1]s"

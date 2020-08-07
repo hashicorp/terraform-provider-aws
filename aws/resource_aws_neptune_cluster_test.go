@@ -570,16 +570,7 @@ func testAccCheckAWSNeptuneClusterSnapshot(rName string) resource.TestCheckFunc 
 	}
 }
 
-var testAccAWSNeptuneClusterConfigBase = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSNeptuneClusterConfigBase = testAccAvailableAZsNoOptInConfig() + `
 locals {
 	availability_zone_names = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
 }

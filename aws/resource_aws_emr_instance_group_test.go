@@ -341,18 +341,7 @@ func testAccAWSEMRInstanceGroupRecreated(t *testing.T, before, after *emr.Instan
 	}
 }
 
-const testAccAWSEmrInstanceGroupBase = `
-data "aws_availability_zones" "available" {
-  # Many instance types are not available in this availability zone
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSEmrInstanceGroupBase = testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 data "aws_partition" "current" {}
 
 resource "aws_security_group" "allow_all" {

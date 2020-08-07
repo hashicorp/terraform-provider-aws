@@ -214,16 +214,7 @@ func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
 }
 
 func testAccAwsEbsSnapshotConfigBasic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
@@ -245,16 +236,7 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 func testAccAwsEbsSnapshotConfigBasicTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
@@ -277,16 +259,7 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 func testAccAwsEbsSnapshotConfigBasicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
@@ -310,16 +283,7 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 func testAccAwsEbsSnapshotConfigWithDescription(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ebs_volume" "description_test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
@@ -333,16 +297,7 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 func testAccAwsEbsSnapshotConfigWithKms(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 

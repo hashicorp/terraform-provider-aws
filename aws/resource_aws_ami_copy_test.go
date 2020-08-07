@@ -212,15 +212,7 @@ func testAccCheckAWSAMICopyAttributes(image *ec2.Image, expectedName string) res
 }
 
 func testAccAWSAMICopyConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {

@@ -40,7 +40,7 @@ func TestAccAWSNetworkInterfaceAttachment_basic(t *testing.T) {
 }
 
 func testAccAWSNetworkInterfaceAttachmentConfig_basic(rInt int) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"
 
@@ -48,15 +48,6 @@ resource "aws_vpc" "foo" {
     Name = "terraform-testacc-network-iface-attachment-basic"
   }
 }
-
-data "aws_availability_zones" "available" {
-  state            = "available"
-  
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}	
 
 resource "aws_subnet" "foo" {
   vpc_id            = "${aws_vpc.foo.id}"

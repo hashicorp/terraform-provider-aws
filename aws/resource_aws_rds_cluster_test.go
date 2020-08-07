@@ -2252,16 +2252,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccAWSClusterConfig_AvailabilityZones(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
   availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -2298,16 +2289,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccAWSClusterConfig_DbSubnetGroupName(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   master_username      = "root"
@@ -2352,16 +2334,7 @@ resource "aws_db_subnet_group" "test" {
 }
 
 func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = %[1]q
 }
@@ -3082,16 +3055,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

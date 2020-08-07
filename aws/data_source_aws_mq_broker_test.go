@@ -92,18 +92,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 }
 
 func testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 variable "prefix" {
   default = "%s"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "acctest" {

@@ -614,7 +614,7 @@ resource "aws_route" "igw" {
 func testAccAWSRouteConfigIpv6NetworkInterface() string {
 	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.router-network.availability_zone", "t2.small", "t3.small") +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		fmt.Sprintf(`
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "examplevpc" {
   cidr_block                       = "10.100.0.0/16"
   enable_dns_hostnames             = true
@@ -622,15 +622,6 @@ resource "aws_vpc" "examplevpc" {
   
   tags = {
     Name = "terraform-testacc-route-ipv6-network-interface"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -723,7 +714,7 @@ resource "aws_route" "internal-default-route-ipv6" {
 func testAccAWSRouteConfigIpv6Instance() string {
 	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.router-network.availability_zone", "t2.small", "t3.small") +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		fmt.Sprintf(`
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "examplevpc" {
   cidr_block                       = "10.100.0.0/16"
   enable_dns_hostnames             = true
@@ -731,15 +722,6 @@ resource "aws_vpc" "examplevpc" {
 
   tags = {
     Name = "terraform-testacc-route-ipv6-instance"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -821,7 +803,7 @@ resource "aws_route" "internal-default-route-ipv6" {
 func testAccAWSRouteConfigIpv6InstanceExpanded() string {
 	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.router-network.availability_zone", "t2.small", "t3.small") +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		fmt.Sprintf(`
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "examplevpc" {
   cidr_block                       = "10.100.0.0/16"
   enable_dns_hostnames             = true
@@ -829,15 +811,6 @@ resource "aws_vpc" "examplevpc" {
   
   tags = {
     Name = "terraform-testacc-route-ipv6-instance"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -1035,18 +1008,10 @@ resource "aws_route" "bar" {
 }
 
 func testAccAWSRouteNoopChange() string {
-	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t2.nano", "t3.nano") +
+	return testAccAvailableAZsNoOptInConfig() +
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t2.nano", "t3.nano") +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
 		fmt.Sprint(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
   

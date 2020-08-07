@@ -157,7 +157,7 @@ data "aws_vpc_endpoint_service" "test" {
 `
 
 func testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -181,15 +181,6 @@ resource "aws_lb" "test" {
 
   tags = {
     Name = %[1]q
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

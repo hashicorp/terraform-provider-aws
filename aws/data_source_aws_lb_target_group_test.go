@@ -128,7 +128,7 @@ func TestAccDataSourceAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBasic(lbName string, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
@@ -179,15 +179,6 @@ resource "aws_lb_target_group" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -245,7 +236,7 @@ data "aws_lb_target_group" "alb_tg_test_with_name" {
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBackwardsCompatibility(lbName string, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_alb_listener" "front_end" {
   load_balancer_arn = aws_alb.alb_test.id
   protocol          = "HTTP"
@@ -296,15 +287,6 @@ resource "aws_alb_target_group" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {

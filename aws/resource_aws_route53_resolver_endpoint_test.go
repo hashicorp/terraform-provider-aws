@@ -210,7 +210,7 @@ func testAccPreCheckAWSRoute53Resolver(t *testing.T) {
 }
 
 func testAccRoute53ResolverEndpointConfig_base(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -218,15 +218,6 @@ resource "aws_vpc" "foo" {
 
   tags = {
     Name = "terraform-testacc-r53-resolver-vpc-%d"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

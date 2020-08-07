@@ -125,7 +125,7 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 	}
 }
 
-const testAccVpcEndpointSubnetAssociationConfig_basic = `
+var testAccVpcEndpointSubnetAssociationConfig_basic = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -139,15 +139,6 @@ data "aws_security_group" "default" {
 }
 
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_vpc_endpoint" "ec2" {
   vpc_id              = "${aws_vpc.foo.id}"
@@ -172,7 +163,7 @@ resource "aws_vpc_endpoint_subnet_association" "a" {
 }
 `
 
-const testAccVpcEndpointSubnetAssociationConfig_multiple = `
+var testAccVpcEndpointSubnetAssociationConfig_multiple = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -186,15 +177,6 @@ data "aws_security_group" "default" {
 }
 
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_vpc_endpoint" "ec2" {
   vpc_id              = "${aws_vpc.foo.id}"

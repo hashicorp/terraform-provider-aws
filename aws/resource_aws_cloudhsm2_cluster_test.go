@@ -157,19 +157,10 @@ func TestAccAWSCloudHsmV2Cluster_Tags(t *testing.T) {
 }
 
 func testAccAWSCloudHsmV2ClusterConfigBase() string {
-	return `
+	return testAccAvailableAZsNoOptInConfig() + `
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "cloudhsm_v2_test_vpc" {

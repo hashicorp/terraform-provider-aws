@@ -122,16 +122,7 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 
 // add one attachment
 func testAccAWSELBAttachmentConfig1() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "bar" {
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -161,16 +152,7 @@ resource "aws_elb_attachment" "foo1" {
 
 // add a second attachment
 func testAccAWSELBAttachmentConfig2() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "bar" {
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -210,16 +192,7 @@ resource "aws_elb_attachment" "foo2" {
 
 // swap attachments between resources
 func testAccAWSELBAttachmentConfig3() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "bar" {
   availability_zones = [
     data.aws_availability_zones.available.names[0],
@@ -259,16 +232,7 @@ resource "aws_elb_attachment" "foo2" {
 
 // destroy attachments
 func testAccAWSELBAttachmentConfig4() string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "bar" {
   availability_zones = [
     data.aws_availability_zones.available.names[0],

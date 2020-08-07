@@ -512,7 +512,7 @@ resource "aws_route53_resolver_rule" "example" {
 }
 
 func testAccRoute53ResolverRuleConfig_resolverVpc(name string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -520,15 +520,6 @@ resource "aws_vpc" "foo" {
 
   tags = {
     Name = %q
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

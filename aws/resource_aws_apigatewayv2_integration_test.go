@@ -717,16 +717,7 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName),
-		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 

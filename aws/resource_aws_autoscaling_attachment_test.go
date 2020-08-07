@@ -176,16 +176,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 }
 
 func testAccAWSAutoscalingAttachment_alb(rInt int) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-	state            = "available"
-	
-	filter {
-		name   = "opt-in-status"
-		values = ["opt-in-not-required"]
-	}
-}	
-	
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = "test-alb-%d"
   port     = 443
@@ -282,16 +273,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSAutoscalingAttachment_elb(rInt int) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-	state            = "available"
-	
-	filter {
-		name   = "opt-in-status"
-		values = ["opt-in-not-required"]
-	}
-}	
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "foo" {
   availability_zones = data.aws_availability_zones.available.names
 

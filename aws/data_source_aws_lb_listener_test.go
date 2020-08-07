@@ -108,7 +108,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBListenerConfigBasic(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
@@ -155,15 +155,6 @@ resource "aws_lb_target_group" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -234,7 +225,7 @@ output "from_lb_and_port_arn" {
 }
 
 func testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_alb_listener" "front_end" {
   load_balancer_arn = aws_alb.alb_test.id
   protocol          = "HTTP"
@@ -281,15 +272,6 @@ resource "aws_alb_target_group" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -348,7 +330,7 @@ data "aws_alb_listener" "from_lb_and_port" {
 }
 
 func testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName, certificate, key string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTPS"
@@ -399,15 +381,6 @@ resource "aws_lb_target_group" "test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {

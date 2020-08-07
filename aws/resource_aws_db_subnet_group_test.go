@@ -263,16 +263,7 @@ func testAccCheckDBSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Te
 }
 
 func testAccDBSubnetGroupConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -313,16 +304,7 @@ resource "aws_db_subnet_group" "test" {
 }
 
 func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -363,16 +345,7 @@ resource "aws_db_subnet_group" "test" {
 `, rName)
 }
 
-const testAccDBSubnetGroupConfig_namePrefix = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccDBSubnetGroupConfig_namePrefix = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -403,16 +376,7 @@ resource "aws_db_subnet_group" "test" {
 	subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }`
 
-const testAccDBSubnetGroupConfig_generatedName = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccDBSubnetGroupConfig_generatedName = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -442,16 +406,7 @@ resource "aws_db_subnet_group" "test" {
 	subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }`
 
-const testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "main" {
     cidr_block = "192.168.0.0/16"
 	tags = {

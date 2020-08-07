@@ -161,16 +161,7 @@ func testAccCheckAwsLbListenerCertificateNotExists(name string) resource.TestChe
 }
 
 func testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

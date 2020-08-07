@@ -95,7 +95,7 @@ data "aws_availability_zones" "test" {
 
 resource "aws_ec2_availability_zone_group" "test" {
   # The above group-name filter should ensure one Availability Zone Group per Region
-  group_name    = tolist(data.aws_availability_zones.test.group_names)[0]
+  group_name    = tolist(data.aws_availability_zones.available.group_names)[0]
   opt_in_status = %[1]q
 }
 `, optInStatus)

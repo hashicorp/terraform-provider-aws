@@ -530,16 +530,7 @@ func testAccCheckFsxLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.Tes
 }
 
 func testAccAwsFsxLustreFileSystemConfigBase() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
   cidr_block  = "10.0.0.0/16"
 }

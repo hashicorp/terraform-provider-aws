@@ -281,16 +281,7 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSEIPAssociationConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSEIPAssociationConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
 	cidr_block = "192.168.0.0/24"
 	tags = {
@@ -356,16 +347,7 @@ resource "aws_network_interface" "test" {
 }
 `
 
-const testAccAWSEIPAssociationConfigDisappears = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSEIPAssociationConfigDisappears = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "amzn-ami-minimal-pv" {
 	most_recent = true
 	owners      = ["amazon"]
@@ -407,21 +389,12 @@ resource "aws_eip_association" "by_allocation_id" {
 	instance_id = "${aws_instance.foo.id}"
 }`
 
-const testAccAWSEIPAssociationConfig_ec2Classic = `
+var testAccAWSEIPAssociationConfig_ec2Classic = testAccAvailableAZsNoOptInConfig() + `
 provider "aws" {
   region = "us-east-1"
 }
 
 resource "aws_eip" "test" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 data "aws_ami" "ubuntu" {
   most_recent = true

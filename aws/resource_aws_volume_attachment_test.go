@@ -272,16 +272,7 @@ func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
-		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami               = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"

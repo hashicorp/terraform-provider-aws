@@ -183,16 +183,7 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 
 // Sets the SSL Negotiation policy with attributes.
 func testAccSslNegotiationPolicyConfig(rName, key, certificate string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test" {
   name             = "%[1]s"
   certificate_body = "%[2]s"

@@ -2935,7 +2935,7 @@ resource "aws_codedeploy_deployment_group" "test" {
 }
 
 func test_config_blue_green_deployment_config_create_with_asg(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
@@ -2985,15 +2985,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 data "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   default_for_az    = "true"
@@ -3027,7 +3018,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func test_config_blue_green_deployment_config_update_with_asg(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
@@ -3073,15 +3064,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   filter {
     name   = "root-device-type"
     values = ["ebs"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -3261,16 +3243,7 @@ resource "aws_codedeploy_deployment_group" "test" {
 }
 
 func testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

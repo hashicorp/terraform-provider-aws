@@ -267,20 +267,11 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 }
 
 func testAccAWSAutoscalingScheduleConfig(r, start, end string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
@@ -314,20 +305,11 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_recurrence(r string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
@@ -360,20 +342,11 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
@@ -407,20 +380,11 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_autoscaling_group" "foobar" {

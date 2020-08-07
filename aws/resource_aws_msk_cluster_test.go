@@ -666,21 +666,12 @@ func testAccPreCheckAWSMsk(t *testing.T) {
 }
 
 func testAccMskClusterBaseConfig() string {
-	return `
+	return testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/22"
 
   tags = {
     Name = "tf-testacc-msk-cluster-vpc"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

@@ -3000,17 +3000,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 func testAccAWSEmrClusterConfigBaseVpc(mapPublicIPOnLaunch bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Many instance types are not available in this availability zone
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true

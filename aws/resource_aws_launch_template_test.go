@@ -1196,7 +1196,7 @@ resource "aws_launch_template" "test" {
 }
 
 func testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
@@ -1209,15 +1209,6 @@ data "aws_ami" "test" {
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -1253,7 +1244,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeleteOnTermination(rName string, deleteOnTermination bool) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
@@ -1266,15 +1257,6 @@ data "aws_ami" "test" {
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -1433,16 +1415,7 @@ resource "aws_launch_template" "test" {
 }
 
 func testAccAWSLaunchTemplateConfig_capacityReservation_target(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   instance_count    = 1
@@ -1641,7 +1614,7 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
-const testAccAWSLaunchTemplateConfig_asg_basic = `
+var testAccAWSLaunchTemplateConfig_asg_basic = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -1658,15 +1631,6 @@ resource "aws_launch_template" "test" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
   desired_capacity = 0
@@ -1679,7 +1643,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 `
 
-const testAccAWSLaunchTemplateConfig_asg_update = `
+var testAccAWSLaunchTemplateConfig_asg_update = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -1696,15 +1660,6 @@ resource "aws_launch_template" "test" {
   instance_type = "t2.nano"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
   desired_capacity = 0
@@ -1717,7 +1672,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 `
 
-const testAccAWSLaunchTemplateConfig_instanceMarketOptions_basic = `
+var testAccAWSLaunchTemplateConfig_instanceMarketOptions_basic = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "test" {
   most_recent = true
   owners      = ["amazon"]
@@ -1741,15 +1696,6 @@ resource "aws_launch_template" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
   desired_capacity = 0
@@ -1763,7 +1709,7 @@ resource "aws_autoscaling_group" "test" {
 }
 `
 
-const testAccAWSLaunchTemplateConfig_instanceMarketOptions_update = `
+var testAccAWSLaunchTemplateConfig_instanceMarketOptions_update = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "test" {
   most_recent = true
   owners      = ["amazon"]
@@ -1785,15 +1731,6 @@ resource "aws_launch_template" "test" {
       max_price          = "0.5"
       spot_instance_type = "one-time"
     }
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

@@ -221,16 +221,7 @@ func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestC
 	}
 }
 
-const testAccAwsEbsSnapshotCopyConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsSnapshotCopyConfig = testAccAvailableAZsNoOptInConfig() + `
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
@@ -253,16 +244,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 `
 
 func testAccAwsEbsSnapshotCopyConfigTags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
@@ -291,16 +273,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 }
 
 func testAccAwsEbsSnapshotCopyConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
@@ -329,16 +302,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccAwsEbsSnapshotCopyConfigWithDescription = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsSnapshotCopyConfigWithDescription = testAccAvailableAZsNoOptInConfig() + `
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
@@ -387,7 +351,7 @@ data "aws_region" "alternate" {
 
 resource "aws_ebs_volume" "test" {
   provider          = "awsalternate"
-  availability_zone = "${data.aws_availability_zones.alternate_available.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
 
   tags = {
@@ -414,16 +378,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 }
 `
 
-const testAccAwsEbsSnapshotCopyConfigWithKms = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsSnapshotCopyConfigWithKms = testAccAvailableAZsNoOptInConfig() + `
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {

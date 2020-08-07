@@ -230,18 +230,7 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
 }
 
 func testAccAppautoscalingScheduledActionConfig_EMR(rName, ts string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # The requested instance type c4.large is not supported in the requested availability zone.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_emr_cluster" "hoge" {

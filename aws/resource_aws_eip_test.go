@@ -930,16 +930,7 @@ resource "aws_eip" "test" {
 }
 `
 
-const testAccAWSEIPNetworkInterfaceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSEIPNetworkInterfaceConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/24"
 	tags = {
@@ -973,16 +964,7 @@ resource "aws_eip" "test" {
 }
 `
 
-const testAccAWSEIPMultiNetworkInterfaceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSEIPMultiNetworkInterfaceConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
 	tags = {

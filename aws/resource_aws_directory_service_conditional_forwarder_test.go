@@ -135,16 +135,7 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 }
 
 func testAccDirectoryServiceConditionalForwarderConfig(ip1, ip2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_directory_service_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"

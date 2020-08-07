@@ -1121,16 +1121,7 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 	}
 }
 
-const testAccAWSELBConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1146,16 +1137,7 @@ resource "aws_elb" "test" {
 `
 
 func testAccAWSELBConfigTags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1176,16 +1158,7 @@ resource "aws_elb" "test" {
 }
 
 func testAccAWSELBConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1206,16 +1179,7 @@ resource "aws_elb" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccAWSELBFullRangeOfCharacters = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBFullRangeOfCharacters = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   name = "%s"
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -1229,16 +1193,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBAccessLogs = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBAccessLogs = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1252,7 +1207,7 @@ resource "aws_elb" "test" {
 `
 
 func testAccAWSELBAccessLogsOn(r string) string {
-	return `
+	return testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1269,19 +1224,11 @@ resource "aws_elb" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 ` + testAccAWSELBAccessLogsCommon(r)
 }
 
 func testAccAWSELBAccessLogsDisabled(r string) string {
-	return `
+	return testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1299,14 +1246,6 @@ resource "aws_elb" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 ` + testAccAWSELBAccessLogsCommon(r)
 }
 
@@ -1342,16 +1281,7 @@ EOF
 `, r)
 }
 
-const testAccAWSELB_namePrefix = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELB_namePrefix = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   name_prefix = "test-"
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -1365,16 +1295,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBGeneratedName = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBGeneratedName = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1387,16 +1308,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELB_zeroValueName = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELB_zeroValueName = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   name               = ""
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
@@ -1415,16 +1327,7 @@ output "lb_name" {
 }
 `
 
-const testAccAWSELBConfig_AvailabilityZonesUpdate = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfig_AvailabilityZonesUpdate = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
 
@@ -1437,7 +1340,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigNewInstance = `
+var testAccAWSELBConfigNewInstance = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -1450,15 +1353,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   filter {
     name   = "root-device-type"
     values = ["ebs"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -1481,16 +1375,7 @@ resource "aws_instance" "test" {
 }
 `
 
-const testAccAWSELBConfigHealthCheck = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigHealthCheck = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1511,16 +1396,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigHealthCheck_update = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigHealthCheck_update = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
@@ -1541,16 +1417,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigListener_update = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigListener_update = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1563,16 +1430,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigListener_multipleListeners = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigListener_multipleListeners = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1592,16 +1450,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigIdleTimeout = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigIdleTimeout = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
 	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
@@ -1616,16 +1465,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigIdleTimeout_update = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigIdleTimeout_update = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
 	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
@@ -1640,16 +1480,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigConnectionDraining = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigConnectionDraining = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
 	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
@@ -1665,16 +1496,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigConnectionDraining_update_timeout = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigConnectionDraining_update_timeout = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
 	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
@@ -1690,16 +1512,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigConnectionDraining_update_disable = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigConnectionDraining_update_disable = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
 	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
@@ -1714,16 +1527,7 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfigSecurityGroups = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfigSecurityGroups = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1752,16 +1556,7 @@ resource "aws_security_group" "test" {
 `
 
 func testAccELBConfig_Listener_IAMServerCertificate(certName, certificate, key, lbProtocol string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
   certificate_body = "%[2]s"
@@ -1783,16 +1578,7 @@ resource "aws_elb" "test" {
 }
 
 func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
   certificate_body = "%[2]s"
@@ -1822,16 +1608,7 @@ resource "aws_elb" "test" {
 `, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-const testAccAWSELBConfig_subnets = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfig_subnets = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "azelb" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -1898,16 +1675,7 @@ resource "aws_internet_gateway" "gw" {
 }
 `
 
-const testAccAWSELBConfig_subnet_swap = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAWSELBConfig_subnet_swap = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "azelb" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true

@@ -1973,17 +1973,8 @@ func createTempFile(prefix string) (string, *os.File, error) {
 }
 
 func baseAccAWSLambdaConfig(policyName, roleName, sgName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"

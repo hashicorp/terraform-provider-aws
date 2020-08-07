@@ -464,16 +464,7 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 	}
 }
 
-const testAccAwsEbsVolumeConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
@@ -481,7 +472,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsAttachedVolumeConfig = `
+var testAccAwsEbsAttachedVolumeConfig = testAccAvailableAZsNoOptInConfig() + `
 data "aws_ami" "debian_jessie_latest" {
   most_recent = true
 
@@ -520,15 +511,6 @@ resource "aws_instance" "test" {
 
   tags = {
     Name    = "test-terraform"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -604,16 +586,7 @@ resource "aws_volume_attachment" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigUpdateSize = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigUpdateSize = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
@@ -624,16 +597,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigUpdateType = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigUpdateType = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "sc1"
@@ -644,16 +608,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIops = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigWithIops = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "io1"
@@ -665,16 +620,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIopsUpdated = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigWithIopsUpdated = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "io1"
@@ -686,7 +632,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithKmsKey = `
+var testAccAwsEbsVolumeConfigWithKmsKey = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %d"
   policy = <<POLICY
@@ -708,15 +654,6 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
@@ -725,16 +662,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithTags = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigWithTags = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
@@ -744,16 +672,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithNoIops = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigWithNoIops = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 10
@@ -765,16 +684,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithInvalidIopsForType = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccAwsEbsVolumeConfigWithInvalidIopsForType = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 10
@@ -805,16 +715,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 func testAccAwsEbsVolumeConfigMultiAttach(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type                 = "io1"

@@ -135,16 +135,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 }
 
 func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_lightsail_static_ip_attachment" "test" {
   static_ip_name = "${aws_lightsail_static_ip.test.name}"
   instance_name  = "${aws_lightsail_instance.test.name}"

@@ -211,7 +211,7 @@ func testAccCheckAWSASGNotificationAttributes(n string, asgn *autoscaling.Descri
 }
 
 func testAccASGNotificationConfig_basic(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
@@ -220,15 +220,6 @@ resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -258,7 +249,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_update(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
@@ -269,15 +260,6 @@ resource "aws_launch_configuration" "foobar" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-  
 resource "aws_autoscaling_group" "bar" {
   availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "foobar1-terraform-test-%s"
@@ -322,7 +304,7 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_pagination() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
@@ -330,15 +312,6 @@ resource "aws_sns_topic" "user_updates" {
 resource "aws_launch_configuration" "foobar" {
   image_id = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_autoscaling_group" "bar" {

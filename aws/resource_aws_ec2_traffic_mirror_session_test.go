@@ -183,16 +183,7 @@ func testAccCheckAWSEc2TrafficMirrorSessionExists(name string, session *ec2.Traf
 }
 
 func testAccTrafficMirrorSessionConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "azs" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "amzn-linux" {
   most_recent = true
 
@@ -220,7 +211,7 @@ resource "aws_vpc" "vpc" {
 resource "aws_subnet" "sub1" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.0.0/24"
-  availability_zone = "${data.aws_availability_zones.azs.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name = %[1]q
@@ -230,7 +221,7 @@ resource "aws_subnet" "sub1" {
 resource "aws_subnet" "sub2" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.azs.names[1]}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
   tags = {
     Name = %[1]q

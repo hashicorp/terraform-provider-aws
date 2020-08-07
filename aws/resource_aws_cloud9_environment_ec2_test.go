@@ -290,18 +290,7 @@ func testAccPreCheckAWSCloud9(t *testing.T) {
 }
 
 func testAccAWSCloud9EnvironmentEc2ConfigBase() string {
-	return `
-data "aws_availability_zones" "available" {
-  # t2.micro instance type is not available in these Availability Zones
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

@@ -677,7 +677,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "11.0.0.0/16"
   enable_dns_support   = true
@@ -691,15 +691,6 @@ resource "aws_vpc" "test" {
 data "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
   name   = "default"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_subnet" "test" {
@@ -741,7 +732,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration2(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "11.0.0.0/16"
   enable_dns_support   = true
@@ -755,15 +746,6 @@ resource "aws_vpc" "test" {
 data "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
   name   = "default"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_subnet" "test" {

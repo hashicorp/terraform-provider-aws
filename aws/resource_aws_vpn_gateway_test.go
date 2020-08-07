@@ -609,16 +609,7 @@ resource "aws_vpn_gateway" "test2" {
 }
 `
 
-const testAccVpnGatewayConfigWithAZ = `
-data "aws_availability_zones" "azs" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccVpnGatewayConfigWithAZ = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -628,7 +619,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpn_gateway" "test" {
   vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.azs.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name = "terraform-testacc-vpn-gateway-with-az"

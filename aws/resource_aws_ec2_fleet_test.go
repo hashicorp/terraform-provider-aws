@@ -1473,16 +1473,7 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName string, availabilityZoneIndex int) string {
-	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {

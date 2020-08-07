@@ -717,18 +717,9 @@ resource "aws_api_gateway_integration" "test" {
 }
 
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 variable "name" {
   default = "%s"
-}
-
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "test" {
@@ -742,7 +733,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.10.0.0/24"
-  availability_zone = "${data.aws_availability_zones.test.names[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_api_gateway_rest_api" "test" {

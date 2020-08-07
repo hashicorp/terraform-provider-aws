@@ -377,17 +377,8 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 
 // Extract common infra
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 locals {
   region_workspaces_az_ids = {

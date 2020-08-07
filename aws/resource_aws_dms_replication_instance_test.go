@@ -683,16 +683,7 @@ resource "aws_dms_replication_instance" "test" {
 }
 
 func testAccAWSDmsReplicationInstanceConfig_AvailabilityZone(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
@@ -784,16 +775,7 @@ resource "aws_dms_replication_instance" "test" {
 }
 
 func testAccAWSDmsReplicationInstanceConfig_ReplicationSubnetGroupId(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
@@ -865,16 +847,7 @@ resource "aws_dms_replication_instance" "test" {
 }
 
 func testAccAWSDmsReplicationInstanceConfig_VpcSecurityGroupIds(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {

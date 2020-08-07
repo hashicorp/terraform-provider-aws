@@ -115,16 +115,7 @@ data "aws_directory_service_directory" "test" {
 `
 
 func testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites(adType string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -204,16 +195,7 @@ data "aws_directory_service_directory" "test-microsoft-ad" {
 `, alias)
 }
 
-const testAccDataSourceDirectoryServiceDirectoryConfig_connector = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccDataSourceDirectoryServiceDirectoryConfig_connector = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_directory_service_directory" "test" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"

@@ -1552,16 +1552,7 @@ resource "aws_route53_record" "ap-northeast-1" {
 }
 `
 
-const testAccRoute53RecordConfigAliasElb = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccRoute53RecordConfigAliasElb = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -1591,16 +1582,7 @@ resource "aws_elb" "main" {
 }
 `
 
-const testAccRoute53RecordConfigAliasElbUppercase = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccRoute53RecordConfigAliasElbUppercase = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -1841,16 +1823,7 @@ resource "aws_route53_record" "test" {
 `
 }
 
-const testAccRoute53WeightedElbAliasRecord = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccRoute53WeightedElbAliasRecord = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -2058,16 +2031,7 @@ resource "aws_route53_record" "basic_to_weighted" {
 }
 `
 
-const testAccRoute53RecordAliasChangePre = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccRoute53RecordAliasChangePre = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_route53_zone" "main" {
 	name = "notexample.com"
 }
