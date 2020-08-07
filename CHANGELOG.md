@@ -13,7 +13,9 @@ ENHANCEMENTS
 
 * data-source/aws_ecr_repository: Allow `registry_id` as an argument [GH-14368]
 * data-source/aws_ecr_repository: Add `image_scanning_configuration` and `image_tag_mutability` attributes [GH-14368]
+* data-source/aws_ecr_repository: Add `encryption_configuration` attribute [GH-14520]
 * resource/aws_api_gateway_method_settings: Plan-time validation added to `settings` `unauthorized_cache_control_header_strategy` and `logging_level` arguments [GH-12651]
+* resource/aws_ecr_repository: Add `encryption_configuration` attribute [GH-14520]
 * resource/aws_lb: Add `subnet_mapping` configuration block `private_ipv4_address` argument [GH-11404]
 * resource/aws_rds_global_cluster: Add `force_destroy` and `source_db_cluster_identifier` arguments [GH-14487]
 * resource/aws_rds_global_cluster: Add `global_cluster_members` attribute [GH-14487]
