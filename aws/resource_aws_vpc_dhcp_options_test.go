@@ -34,7 +34,7 @@ func testSweepVpcDhcpOptions(region string) error {
 			var defaultDomainNameFound, defaultDomainNameServersFound bool
 
 			domainName := region + ".compute.internal"
-			if region == "us-east-1" {
+			if region == "us-east-1" { //lintignore:AWSAT003
 				domainName = "ec2.internal"
 			}
 
@@ -296,11 +296,11 @@ func testAccCheckDHCPOptionsDelete(n string) resource.TestCheckFunc {
 func testAccDHCPOptionsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
-	domain_name = "service.%s"
-	domain_name_servers = ["127.0.0.1", "10.0.0.2"]
-	ntp_servers = ["127.0.0.1"]
-	netbios_name_servers = ["127.0.0.1"]
-	netbios_node_type = 2
+  domain_name          = "service.%s"
+  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
+  ntp_servers          = ["127.0.0.1"]
+  netbios_name_servers = ["127.0.0.1"]
+  netbios_node_type    = 2
 }
 `, rName)
 }
@@ -308,11 +308,11 @@ resource "aws_vpc_dhcp_options" "test" {
 func testAccDHCPOptionsConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
-	domain_name = "service.%[1]s"
-	domain_name_servers = ["127.0.0.1", "10.0.0.2"]
-	ntp_servers = ["127.0.0.1"]
-	netbios_name_servers = ["127.0.0.1"]
-	netbios_node_type = 2
+  domain_name          = "service.%[1]s"
+  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
+  ntp_servers          = ["127.0.0.1"]
+  netbios_name_servers = ["127.0.0.1"]
+  netbios_node_type    = 2
 
   tags = {
     %[2]q = %[3]q
@@ -324,11 +324,11 @@ resource "aws_vpc_dhcp_options" "test" {
 func testAccDHCPOptionsConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
-	domain_name = "service.%[1]s"
-	domain_name_servers = ["127.0.0.1", "10.0.0.2"]
-	ntp_servers = ["127.0.0.1"]
-	netbios_name_servers = ["127.0.0.1"]
-	netbios_node_type = 2
+  domain_name          = "service.%[1]s"
+  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
+  ntp_servers          = ["127.0.0.1"]
+  netbios_name_servers = ["127.0.0.1"]
+  netbios_node_type    = 2
 
   tags = {
     %[2]q = %[3]q
