@@ -693,6 +693,7 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
@@ -1701,6 +1702,7 @@ func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
 func TestAccAWSSecurityGroup_tags(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1708,11 +1710,11 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupConfigTags,
+				Config: testAccAWSAWSSecurityGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -1722,12 +1724,20 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config: testAccAWSSecurityGroupConfigTagsUpdate,
+				Config: testAccAWSAWSSecurityGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSAWSSecurityGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -2846,10 +2856,6 @@ resource "aws_security_group" "test" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
-
-  tags = {
-    Name = "tf-acc-revoke-test"
-  }
 }
 `
 
@@ -3206,46 +3212,50 @@ resource "aws_security_group" "test2" {
 }
 `
 
-const testAccAWSSecurityGroupConfigTags = `
-resource "aws_vpc" "foo" {
+func testAccAWSAWSSecurityGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-tags"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  vpc_id      = aws_vpc.test.id
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`
+`, rName, tagKey1, tagValue1)
+}
 
-const testAccAWSSecurityGroupConfigTagsUpdate = `
-resource "aws_vpc" "foo" {
+func testAccAWSAWSSecurityGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-tags"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  vpc_id      = aws_vpc.test.id
 
   tags = {
-    bar = "baz"
-    env = "Production"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 const testAccAWSSecurityGroupConfig_generatedName = `
 resource "aws_vpc" "foo" {
