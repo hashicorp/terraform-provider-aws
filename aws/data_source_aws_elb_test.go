@@ -37,7 +37,7 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 }
 
 func testAccDataSourceAWSELBConfigBasic(rName, testName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "elb_test" {
   name            = "%[1]s"
   internal        = true
@@ -61,15 +61,6 @@ resource "aws_elb" "elb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "elb_test" {
