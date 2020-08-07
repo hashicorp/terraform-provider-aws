@@ -474,6 +474,14 @@ resource "aws_subnet" "test" {
   }
 }
 
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
@@ -504,8 +512,9 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   listener_arn = aws_globalaccelerator_listener.test.id
 
   endpoint_configuration {
-    endpoint_id = aws_instance.test.id
-    weight      = 20
+    endpoint_id                    = aws_instance.test.id
+	weight                         = 20
+    client_ip_preservation_enabled = true
   }
 
   health_check_interval_seconds = 30
