@@ -159,6 +159,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -169,7 +170,7 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 				Config: testAccVpnGatewayConfigWithAZ,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone", "us-west-2a"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 				),
 			},
 			{
@@ -475,6 +476,7 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 const testAccNoVpnGatewayConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-removed"
   }
@@ -484,26 +486,29 @@ resource "aws_vpc" "test" {
 const testAccVpnGatewayConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 
 const testAccVpnGatewayConfigChangeVPC = `
 resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-change-vpc"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test2.id}"
+  vpc_id = aws_vpc.test2.id
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-basic"
   }
@@ -514,13 +519,14 @@ func testAccCheckVpnGatewayConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-tags"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     %[1]q = %[2]q
@@ -533,13 +539,14 @@ func testAccCheckVpnGatewayConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 st
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-tags"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     %[1]q = %[2]q
@@ -552,6 +559,7 @@ resource "aws_vpn_gateway" "test" {
 const testAccCheckVpnGatewayConfigReattach = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach-test"
   }
@@ -559,20 +567,23 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach-test2"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 
 resource "aws_vpn_gateway" "test2" {
-  vpc_id = "${aws_vpc.test2.id}"
+  vpc_id = aws_vpc.test2.id
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
@@ -582,6 +593,7 @@ resource "aws_vpn_gateway" "test2" {
 const testAccCheckVpnGatewayConfigReattachChange = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach-test"
   }
@@ -589,20 +601,23 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach-test2"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test2.id}"
+  vpc_id = aws_vpc.test2.id
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 
 resource "aws_vpn_gateway" "test2" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
@@ -612,14 +627,15 @@ resource "aws_vpn_gateway" "test2" {
 var testAccVpnGatewayConfigWithAZ = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-with-az"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "terraform-testacc-vpn-gateway-with-az"
@@ -630,13 +646,14 @@ resource "aws_vpn_gateway" "test" {
 const testAccVpnGatewayConfigWithASN = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-vpn-gateway-with-asn"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id          = aws_vpc.test.id
   amazon_side_asn = 4294967294
 }
 `

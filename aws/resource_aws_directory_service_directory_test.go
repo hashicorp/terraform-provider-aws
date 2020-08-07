@@ -506,7 +506,7 @@ resource "aws_subnet" "test2" {
 }
 `
 
-const testAccDirectoryServiceDirectoryConfig = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryConfig = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -519,7 +519,7 @@ resource "aws_directory_service_directory" "test" {
 }
 `
 
-const testAccDirectoryServiceDirectoryTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -537,7 +537,7 @@ resource "aws_directory_service_directory" "test" {
 }
 `
 
-const testAccDirectoryServiceDirectoryUpdateTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryUpdateTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -556,7 +556,7 @@ resource "aws_directory_service_directory" "test" {
 }
 `
 
-const testAccDirectoryServiceDirectoryRemoveTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryRemoveTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -573,7 +573,7 @@ resource "aws_directory_service_directory" "test" {
 }
 `
 
-const testAccDirectoryServiceDirectoryConfig_connector = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryConfig_connector = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "base" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -600,7 +600,7 @@ resource "aws_directory_service_directory" "test" {
 }
 `
 
-const testAccDirectoryServiceDirectoryConfig_microsoft = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryConfig_microsoft = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -613,7 +613,7 @@ resource "aws_directory_service_directory" "test" {
 }
 `
 
-const testAccDirectoryServiceDirectoryConfig_microsoftStandard = testAccDirectoryServiceDirectoryConfigBase + `
+var testAccDirectoryServiceDirectoryConfig_microsoftStandard = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"

@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
-	availabilityZonesDataSourceName := "data.aws_availability_zones.test"
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,7 +32,7 @@ func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
 }
 
 func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
-	availabilityZonesDataSourceName := "data.aws_availability_zones.test"
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
 }
 
 func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
-	availabilityZonesDataSourceName := "data.aws_availability_zones.test"
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +80,7 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 }
 
 func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
-	availabilityZonesDataSourceName := "data.aws_availability_zones.test"
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -327,7 +327,7 @@ resource "aws_backup_selection" "test" {
 func testAccBackupSelectionConfigWithResources(rName string) string {
 	return composeConfig(
 		testAccBackupSelectionConfigBase(rName),
-		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+		testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   count = 2
 

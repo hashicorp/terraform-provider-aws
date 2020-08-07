@@ -231,7 +231,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 `
 
-const testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations = testAccCheckWafRegionalWebAclAssociationConfig_basic + `
+var testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations = testAccCheckWafRegionalWebAclAssociationConfig_basic + `
 resource "aws_alb" "bar" {
   internal = true
   subnets = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]

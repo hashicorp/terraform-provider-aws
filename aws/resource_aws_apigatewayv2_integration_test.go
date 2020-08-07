@@ -717,7 +717,7 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName),
-		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+		testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 

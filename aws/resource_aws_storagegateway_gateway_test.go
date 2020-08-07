@@ -702,7 +702,7 @@ func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName stri
 	return composeConfig(
 		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.xlarge", "m4.xlarge"),
-		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+		testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 # Directory Service Directories must be deployed across multiple EC2 Availability Zones
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
