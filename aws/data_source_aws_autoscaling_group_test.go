@@ -41,7 +41,7 @@ func TestAccAwsAutoScalingGroupDataSource_basic(t *testing.T) {
 
 // Lookup based on AutoScalingGroupName
 func testAccAutoScalingGroupDataResourceConfig(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -56,15 +56,6 @@ data "aws_ami" "ubuntu" {
   }
 
   owners = ["099720109477"] # Canonical
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_launch_configuration" "data_source_aws_autoscaling_group_test" {
