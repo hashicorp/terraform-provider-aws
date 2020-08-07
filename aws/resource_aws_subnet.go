@@ -272,14 +272,11 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 		// This could be an issue as, we could error out when we try to add the new one
 		// We may need to roll back the state and reattach the old one if this is the case
 
-		_, newIpv6 := d.GetChange("ipv6_cidr_block")
-		n := newIpv6.(string)
+		newIpv6 := d.Get("ipv6_cidr_block").(string)
 
 		if v, ok := d.GetOk("ipv6_cidr_block_association_id"); ok {
 
-			_, newIpv6AssignOnCreate := d.GetChange("assign_ipv6_address_on_creation")
-
-			ipv6AssignOnCreate := newIpv6AssignOnCreate.(bool)
+			ipv6AssignOnCreate := d.Get("assign_ipv6_address_on_creation").(bool)
 
 			if !ipv6AssignOnCreate {
 				modifyOpts := &ec2.ModifySubnetAttributeInput{
@@ -294,7 +291,7 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 				_, err := conn.ModifySubnetAttribute(modifyOpts)
 
 				if err != nil {
-					return err
+					return fmt.Errorf("error modifying EC2 Subnet (%s) attribute: %w", d.Id(), err)
 				}
 			}
 			//Firstly we have to disassociate the old IPv6 CIDR Block
@@ -316,24 +313,22 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 				Timeout: 3 * time.Minute,
 			}
 			if _, err := stateConf.WaitForState(); err != nil {
-				return fmt.Errorf(
-					"Error waiting for IPv6 CIDR (%s) to become disassociated: %w",
-					d.Id(), err)
+				return fmt.Errorf("Error waiting for IPv6 CIDR (%s) to become disassociated: %w", d.Id(), err)
 			}
 		}
 
-		if n != "" {
+		if newIpv6 != "" {
 			//Now we need to try to associate the new CIDR block
 			associatesOpts := &ec2.AssociateSubnetCidrBlockInput{
 				SubnetId:      aws.String(d.Id()),
-				Ipv6CidrBlock: aws.String(newIpv6.(string)),
+				Ipv6CidrBlock: aws.String(newIpv6),
 			}
 
 			resp, err := conn.AssociateSubnetCidrBlock(associatesOpts)
 			if err != nil {
 				//The big question here is, do we want to try to reassociate the old one??
 				//If we have a failure here, then we may be in a situation that we have nothing associated
-				return err
+				return fmt.Errorf("error associating EC2 Subnet (%s) CIDR block: %w", d.Id(), err)
 			}
 
 			// Wait for the CIDR to become associated
