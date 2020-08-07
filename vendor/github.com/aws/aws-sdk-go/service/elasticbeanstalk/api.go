@@ -1950,6 +1950,12 @@ func (c *ElasticBeanstalk) DescribeEnvironmentManagedActionHistoryRequest(input 
 		Name:       opDescribeEnvironmentManagedActionHistory,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1996,6 +2002,58 @@ func (c *ElasticBeanstalk) DescribeEnvironmentManagedActionHistoryWithContext(ct
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeEnvironmentManagedActionHistoryPages iterates over the pages of a DescribeEnvironmentManagedActionHistory operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeEnvironmentManagedActionHistory method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeEnvironmentManagedActionHistory operation.
+//    pageNum := 0
+//    err := client.DescribeEnvironmentManagedActionHistoryPages(params,
+//        func(page *elasticbeanstalk.DescribeEnvironmentManagedActionHistoryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticBeanstalk) DescribeEnvironmentManagedActionHistoryPages(input *DescribeEnvironmentManagedActionHistoryInput, fn func(*DescribeEnvironmentManagedActionHistoryOutput, bool) bool) error {
+	return c.DescribeEnvironmentManagedActionHistoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeEnvironmentManagedActionHistoryPagesWithContext same as DescribeEnvironmentManagedActionHistoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticBeanstalk) DescribeEnvironmentManagedActionHistoryPagesWithContext(ctx aws.Context, input *DescribeEnvironmentManagedActionHistoryInput, fn func(*DescribeEnvironmentManagedActionHistoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeEnvironmentManagedActionHistoryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeEnvironmentManagedActionHistoryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEnvironmentManagedActionHistoryOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeEnvironmentManagedActions = "DescribeEnvironmentManagedActions"
@@ -2863,6 +2921,12 @@ func (c *ElasticBeanstalk) ListPlatformVersionsRequest(input *ListPlatformVersio
 		Name:       opListPlatformVersions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2918,6 +2982,58 @@ func (c *ElasticBeanstalk) ListPlatformVersionsWithContext(ctx aws.Context, inpu
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListPlatformVersionsPages iterates over the pages of a ListPlatformVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPlatformVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPlatformVersions operation.
+//    pageNum := 0
+//    err := client.ListPlatformVersionsPages(params,
+//        func(page *elasticbeanstalk.ListPlatformVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticBeanstalk) ListPlatformVersionsPages(input *ListPlatformVersionsInput, fn func(*ListPlatformVersionsOutput, bool) bool) error {
+	return c.ListPlatformVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPlatformVersionsPagesWithContext same as ListPlatformVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticBeanstalk) ListPlatformVersionsPagesWithContext(ctx aws.Context, input *ListPlatformVersionsInput, fn func(*ListPlatformVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPlatformVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPlatformVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPlatformVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListTagsForResource = "ListTagsForResource"

@@ -110,6 +110,108 @@ func (c *QuickSight) CancelIngestionWithContext(ctx aws.Context, input *CancelIn
 	return out, req.Send()
 }
 
+const opCreateAccountCustomization = "CreateAccountCustomization"
+
+// CreateAccountCustomizationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateAccountCustomization operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateAccountCustomization for more information on using the CreateAccountCustomization
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateAccountCustomizationRequest method.
+//    req, resp := client.CreateAccountCustomizationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateAccountCustomization
+func (c *QuickSight) CreateAccountCustomizationRequest(input *CreateAccountCustomizationInput) (req *request.Request, output *CreateAccountCustomizationOutput) {
+	op := &request.Operation{
+		Name:       opCreateAccountCustomization,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/customizations",
+	}
+
+	if input == nil {
+		input = &CreateAccountCustomizationInput{}
+	}
+
+	output = &CreateAccountCustomizationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateAccountCustomization API operation for Amazon QuickSight.
+//
+// Creates a customization for the Amazon QuickSight subscription associated
+// with your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation CreateAccountCustomization for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateAccountCustomization
+func (c *QuickSight) CreateAccountCustomization(input *CreateAccountCustomizationInput) (*CreateAccountCustomizationOutput, error) {
+	req, out := c.CreateAccountCustomizationRequest(input)
+	return out, req.Send()
+}
+
+// CreateAccountCustomizationWithContext is the same as CreateAccountCustomization with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateAccountCustomization for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) CreateAccountCustomizationWithContext(ctx aws.Context, input *CreateAccountCustomizationInput, opts ...request.Option) (*CreateAccountCustomizationOutput, error) {
+	req, out := c.CreateAccountCustomizationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateDashboard = "CreateDashboard"
 
 // CreateDashboardRequest generates a "aws/request.Request" representing the
@@ -855,6 +957,125 @@ func (c *QuickSight) CreateIngestionWithContext(ctx aws.Context, input *CreateIn
 	return out, req.Send()
 }
 
+const opCreateNamespace = "CreateNamespace"
+
+// CreateNamespaceRequest generates a "aws/request.Request" representing the
+// client's request for the CreateNamespace operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateNamespace for more information on using the CreateNamespace
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateNamespaceRequest method.
+//    req, resp := client.CreateNamespaceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateNamespace
+func (c *QuickSight) CreateNamespaceRequest(input *CreateNamespaceInput) (req *request.Request, output *CreateNamespaceOutput) {
+	op := &request.Operation{
+		Name:       opCreateNamespace,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}",
+	}
+
+	if input == nil {
+		input = &CreateNamespaceInput{}
+	}
+
+	output = &CreateNamespaceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateNamespace API operation for Amazon QuickSight.
+//
+// (Enterprise edition only) Creates a new namespace for you to use with Amazon
+// QuickSight.
+//
+// A namespace allows you to isolate the QuickSight users and groups that are
+// registered for that namespace. Users that access the namespace can share
+// assets only with other users or groups in the same namespace. They can't
+// see users and groups in other namespaces. You can create a namespace after
+// your AWS account is subscribed to QuickSight. The namespace must be unique
+// within the AWS account. By default, there is a limit of 100 namespaces per
+// AWS account. To increase your limit, create a ticket with AWS Support.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation CreateNamespace for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * LimitExceededException
+//   A limit is exceeded.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateNamespace
+func (c *QuickSight) CreateNamespace(input *CreateNamespaceInput) (*CreateNamespaceOutput, error) {
+	req, out := c.CreateNamespaceRequest(input)
+	return out, req.Send()
+}
+
+// CreateNamespaceWithContext is the same as CreateNamespace with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateNamespace for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) CreateNamespaceWithContext(ctx aws.Context, input *CreateNamespaceInput, opts ...request.Option) (*CreateNamespaceOutput, error) {
+	req, out := c.CreateNamespaceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateTemplate = "CreateTemplate"
 
 // CreateTemplateRequest generates a "aws/request.Request" representing the
@@ -944,6 +1165,9 @@ func (c *QuickSight) CreateTemplateRequest(input *CreateTemplateInput) (req *req
 //   subscription where the edition doesn't include support for that operation.
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -1045,6 +1269,9 @@ func (c *QuickSight) CreateTemplateAliasRequest(input *CreateTemplateAliasInput)
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
 //   * InternalFailureException
 //   An internal failure occurred.
 //
@@ -1065,6 +1292,319 @@ func (c *QuickSight) CreateTemplateAlias(input *CreateTemplateAliasInput) (*Crea
 // for more information on using Contexts.
 func (c *QuickSight) CreateTemplateAliasWithContext(ctx aws.Context, input *CreateTemplateAliasInput, opts ...request.Option) (*CreateTemplateAliasOutput, error) {
 	req, out := c.CreateTemplateAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTheme = "CreateTheme"
+
+// CreateThemeRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTheme operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTheme for more information on using the CreateTheme
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateThemeRequest method.
+//    req, resp := client.CreateThemeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateTheme
+func (c *QuickSight) CreateThemeRequest(input *CreateThemeInput) (req *request.Request, output *CreateThemeOutput) {
+	op := &request.Operation{
+		Name:       opCreateTheme,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}",
+	}
+
+	if input == nil {
+		input = &CreateThemeInput{}
+	}
+
+	output = &CreateThemeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTheme API operation for Amazon QuickSight.
+//
+// Creates a theme.
+//
+// A theme is set of configuration options for color and layout. Themes apply
+// to analyses and dashboards. For more information, see Using Themes in Amazon
+// QuickSight (https://docs.aws.amazon.com/quicksight/latest/user/themes-in-quicksight.html)
+// in the Amazon QuickSight User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation CreateTheme for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * LimitExceededException
+//   A limit is exceeded.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateTheme
+func (c *QuickSight) CreateTheme(input *CreateThemeInput) (*CreateThemeOutput, error) {
+	req, out := c.CreateThemeRequest(input)
+	return out, req.Send()
+}
+
+// CreateThemeWithContext is the same as CreateTheme with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTheme for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) CreateThemeWithContext(ctx aws.Context, input *CreateThemeInput, opts ...request.Option) (*CreateThemeOutput, error) {
+	req, out := c.CreateThemeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateThemeAlias = "CreateThemeAlias"
+
+// CreateThemeAliasRequest generates a "aws/request.Request" representing the
+// client's request for the CreateThemeAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateThemeAlias for more information on using the CreateThemeAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateThemeAliasRequest method.
+//    req, resp := client.CreateThemeAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateThemeAlias
+func (c *QuickSight) CreateThemeAliasRequest(input *CreateThemeAliasInput) (req *request.Request, output *CreateThemeAliasOutput) {
+	op := &request.Operation{
+		Name:       opCreateThemeAlias,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}",
+	}
+
+	if input == nil {
+		input = &CreateThemeAliasInput{}
+	}
+
+	output = &CreateThemeAliasOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateThemeAlias API operation for Amazon QuickSight.
+//
+// Creates a theme alias for a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation CreateThemeAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * LimitExceededException
+//   A limit is exceeded.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateThemeAlias
+func (c *QuickSight) CreateThemeAlias(input *CreateThemeAliasInput) (*CreateThemeAliasOutput, error) {
+	req, out := c.CreateThemeAliasRequest(input)
+	return out, req.Send()
+}
+
+// CreateThemeAliasWithContext is the same as CreateThemeAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateThemeAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) CreateThemeAliasWithContext(ctx aws.Context, input *CreateThemeAliasInput, opts ...request.Option) (*CreateThemeAliasOutput, error) {
+	req, out := c.CreateThemeAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteAccountCustomization = "DeleteAccountCustomization"
+
+// DeleteAccountCustomizationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAccountCustomization operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteAccountCustomization for more information on using the DeleteAccountCustomization
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteAccountCustomizationRequest method.
+//    req, resp := client.DeleteAccountCustomizationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteAccountCustomization
+func (c *QuickSight) DeleteAccountCustomizationRequest(input *DeleteAccountCustomizationInput) (req *request.Request, output *DeleteAccountCustomizationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteAccountCustomization,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/accounts/{AwsAccountId}/customizations",
+	}
+
+	if input == nil {
+		input = &DeleteAccountCustomizationInput{}
+	}
+
+	output = &DeleteAccountCustomizationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteAccountCustomization API operation for Amazon QuickSight.
+//
+// Deletes customizations for the QuickSight subscription on your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DeleteAccountCustomization for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteAccountCustomization
+func (c *QuickSight) DeleteAccountCustomization(input *DeleteAccountCustomizationInput) (*DeleteAccountCustomizationOutput, error) {
+	req, out := c.DeleteAccountCustomizationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteAccountCustomizationWithContext is the same as DeleteAccountCustomization with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAccountCustomization for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DeleteAccountCustomizationWithContext(ctx aws.Context, input *DeleteAccountCustomizationInput, opts ...request.Option) (*DeleteAccountCustomizationOutput, error) {
+	req, out := c.DeleteAccountCustomizationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1663,6 +2203,110 @@ func (c *QuickSight) DeleteIAMPolicyAssignmentWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+const opDeleteNamespace = "DeleteNamespace"
+
+// DeleteNamespaceRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteNamespace operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteNamespace for more information on using the DeleteNamespace
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteNamespaceRequest method.
+//    req, resp := client.DeleteNamespaceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteNamespace
+func (c *QuickSight) DeleteNamespaceRequest(input *DeleteNamespaceInput) (req *request.Request, output *DeleteNamespaceOutput) {
+	op := &request.Operation{
+		Name:       opDeleteNamespace,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/accounts/{AwsAccountId}/namespaces/{Namespace}",
+	}
+
+	if input == nil {
+		input = &DeleteNamespaceInput{}
+	}
+
+	output = &DeleteNamespaceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteNamespace API operation for Amazon QuickSight.
+//
+// Deletes a namespace and the users and groups that are associated with the
+// namespace. This is an asynchronous process. Assets including dashboards,
+// analyses, datasets and data sources are not deleted. To delete these assets,
+// you use the APIs for the relevant asset.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DeleteNamespace for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteNamespace
+func (c *QuickSight) DeleteNamespace(input *DeleteNamespaceInput) (*DeleteNamespaceOutput, error) {
+	req, out := c.DeleteNamespaceRequest(input)
+	return out, req.Send()
+}
+
+// DeleteNamespaceWithContext is the same as DeleteNamespace with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteNamespace for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DeleteNamespaceWithContext(ctx aws.Context, input *DeleteNamespaceInput, opts ...request.Option) (*DeleteNamespaceOutput, error) {
+	req, out := c.DeleteNamespaceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteTemplate = "DeleteTemplate"
 
 // DeleteTemplateRequest generates a "aws/request.Request" representing the
@@ -1831,6 +2475,9 @@ func (c *QuickSight) DeleteTemplateAliasRequest(input *DeleteTemplateAliasInput)
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
 //   * InternalFailureException
 //   An internal failure occurred.
 //
@@ -1851,6 +2498,209 @@ func (c *QuickSight) DeleteTemplateAlias(input *DeleteTemplateAliasInput) (*Dele
 // for more information on using Contexts.
 func (c *QuickSight) DeleteTemplateAliasWithContext(ctx aws.Context, input *DeleteTemplateAliasInput, opts ...request.Option) (*DeleteTemplateAliasOutput, error) {
 	req, out := c.DeleteTemplateAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTheme = "DeleteTheme"
+
+// DeleteThemeRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTheme operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTheme for more information on using the DeleteTheme
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteThemeRequest method.
+//    req, resp := client.DeleteThemeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteTheme
+func (c *QuickSight) DeleteThemeRequest(input *DeleteThemeInput) (req *request.Request, output *DeleteThemeOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTheme,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}",
+	}
+
+	if input == nil {
+		input = &DeleteThemeInput{}
+	}
+
+	output = &DeleteThemeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTheme API operation for Amazon QuickSight.
+//
+// Deletes a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DeleteTheme for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteTheme
+func (c *QuickSight) DeleteTheme(input *DeleteThemeInput) (*DeleteThemeOutput, error) {
+	req, out := c.DeleteThemeRequest(input)
+	return out, req.Send()
+}
+
+// DeleteThemeWithContext is the same as DeleteTheme with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTheme for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DeleteThemeWithContext(ctx aws.Context, input *DeleteThemeInput, opts ...request.Option) (*DeleteThemeOutput, error) {
+	req, out := c.DeleteThemeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteThemeAlias = "DeleteThemeAlias"
+
+// DeleteThemeAliasRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteThemeAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteThemeAlias for more information on using the DeleteThemeAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteThemeAliasRequest method.
+//    req, resp := client.DeleteThemeAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteThemeAlias
+func (c *QuickSight) DeleteThemeAliasRequest(input *DeleteThemeAliasInput) (req *request.Request, output *DeleteThemeAliasOutput) {
+	op := &request.Operation{
+		Name:       opDeleteThemeAlias,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}",
+	}
+
+	if input == nil {
+		input = &DeleteThemeAliasInput{}
+	}
+
+	output = &DeleteThemeAliasOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteThemeAlias API operation for Amazon QuickSight.
+//
+// Deletes the version of the theme that the specified theme alias points to.
+// If you provide a specific alias, you delete the version of the theme that
+// the alias points to.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DeleteThemeAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteThemeAlias
+func (c *QuickSight) DeleteThemeAlias(input *DeleteThemeAliasInput) (*DeleteThemeAliasOutput, error) {
+	req, out := c.DeleteThemeAliasRequest(input)
+	return out, req.Send()
+}
+
+// DeleteThemeAliasWithContext is the same as DeleteThemeAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteThemeAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DeleteThemeAliasWithContext(ctx aws.Context, input *DeleteThemeAliasInput, opts ...request.Option) (*DeleteThemeAliasOutput, error) {
+	req, out := c.DeleteThemeAliasRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1927,6 +2777,9 @@ func (c *QuickSight) DeleteUserRequest(input *DeleteUserInput) (req *request.Req
 //
 //   * ThrottlingException
 //   Access is throttled.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -2026,6 +2879,9 @@ func (c *QuickSight) DeleteUserByPrincipalIdRequest(input *DeleteUserByPrincipal
 //   * ThrottlingException
 //   Access is throttled.
 //
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
+//
 //   * InternalFailureException
 //   An internal failure occurred.
 //
@@ -2049,6 +2905,203 @@ func (c *QuickSight) DeleteUserByPrincipalId(input *DeleteUserByPrincipalIdInput
 // for more information on using Contexts.
 func (c *QuickSight) DeleteUserByPrincipalIdWithContext(ctx aws.Context, input *DeleteUserByPrincipalIdInput, opts ...request.Option) (*DeleteUserByPrincipalIdOutput, error) {
 	req, out := c.DeleteUserByPrincipalIdRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAccountCustomization = "DescribeAccountCustomization"
+
+// DescribeAccountCustomizationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAccountCustomization operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAccountCustomization for more information on using the DescribeAccountCustomization
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAccountCustomizationRequest method.
+//    req, resp := client.DescribeAccountCustomizationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAccountCustomization
+func (c *QuickSight) DescribeAccountCustomizationRequest(input *DescribeAccountCustomizationInput) (req *request.Request, output *DescribeAccountCustomizationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAccountCustomization,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/customizations",
+	}
+
+	if input == nil {
+		input = &DescribeAccountCustomizationInput{}
+	}
+
+	output = &DescribeAccountCustomizationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAccountCustomization API operation for Amazon QuickSight.
+//
+// Describes the customizations associated with your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeAccountCustomization for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAccountCustomization
+func (c *QuickSight) DescribeAccountCustomization(input *DescribeAccountCustomizationInput) (*DescribeAccountCustomizationOutput, error) {
+	req, out := c.DescribeAccountCustomizationRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAccountCustomizationWithContext is the same as DescribeAccountCustomization with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAccountCustomization for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeAccountCustomizationWithContext(ctx aws.Context, input *DescribeAccountCustomizationInput, opts ...request.Option) (*DescribeAccountCustomizationOutput, error) {
+	req, out := c.DescribeAccountCustomizationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAccountSettings = "DescribeAccountSettings"
+
+// DescribeAccountSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAccountSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAccountSettings for more information on using the DescribeAccountSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAccountSettingsRequest method.
+//    req, resp := client.DescribeAccountSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAccountSettings
+func (c *QuickSight) DescribeAccountSettingsRequest(input *DescribeAccountSettingsInput) (req *request.Request, output *DescribeAccountSettingsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAccountSettings,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/settings",
+	}
+
+	if input == nil {
+		input = &DescribeAccountSettingsInput{}
+	}
+
+	output = &DescribeAccountSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAccountSettings API operation for Amazon QuickSight.
+//
+// Describes the settings that were used when your QuickSight subscription was
+// first created in this AWS Account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeAccountSettings for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAccountSettings
+func (c *QuickSight) DescribeAccountSettings(input *DescribeAccountSettingsInput) (*DescribeAccountSettingsOutput, error) {
+	req, out := c.DescribeAccountSettingsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAccountSettingsWithContext is the same as DescribeAccountSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAccountSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeAccountSettingsWithContext(ctx aws.Context, input *DescribeAccountSettingsInput, opts ...request.Option) (*DescribeAccountSettingsOutput, error) {
+	req, out := c.DescribeAccountSettingsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2930,6 +3983,104 @@ func (c *QuickSight) DescribeIngestionWithContext(ctx aws.Context, input *Descri
 	return out, req.Send()
 }
 
+const opDescribeNamespace = "DescribeNamespace"
+
+// DescribeNamespaceRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeNamespace operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeNamespace for more information on using the DescribeNamespace
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeNamespaceRequest method.
+//    req, resp := client.DescribeNamespaceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeNamespace
+func (c *QuickSight) DescribeNamespaceRequest(input *DescribeNamespaceInput) (req *request.Request, output *DescribeNamespaceOutput) {
+	op := &request.Operation{
+		Name:       opDescribeNamespace,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/namespaces/{Namespace}",
+	}
+
+	if input == nil {
+		input = &DescribeNamespaceInput{}
+	}
+
+	output = &DescribeNamespaceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeNamespace API operation for Amazon QuickSight.
+//
+// Describes the current namespace.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeNamespace for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeNamespace
+func (c *QuickSight) DescribeNamespace(input *DescribeNamespaceInput) (*DescribeNamespaceOutput, error) {
+	req, out := c.DescribeNamespaceRequest(input)
+	return out, req.Send()
+}
+
+// DescribeNamespaceWithContext is the same as DescribeNamespace with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeNamespace for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeNamespaceWithContext(ctx aws.Context, input *DescribeNamespaceInput, opts ...request.Option) (*DescribeNamespaceOutput, error) {
+	req, out := c.DescribeNamespaceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeTemplate = "DescribeTemplate"
 
 // DescribeTemplateRequest generates a "aws/request.Request" representing the
@@ -3225,6 +4376,308 @@ func (c *QuickSight) DescribeTemplatePermissionsWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
+const opDescribeTheme = "DescribeTheme"
+
+// DescribeThemeRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTheme operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTheme for more information on using the DescribeTheme
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeThemeRequest method.
+//    req, resp := client.DescribeThemeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeTheme
+func (c *QuickSight) DescribeThemeRequest(input *DescribeThemeInput) (req *request.Request, output *DescribeThemeOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTheme,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}",
+	}
+
+	if input == nil {
+		input = &DescribeThemeInput{}
+	}
+
+	output = &DescribeThemeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTheme API operation for Amazon QuickSight.
+//
+// Describes a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeTheme for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeTheme
+func (c *QuickSight) DescribeTheme(input *DescribeThemeInput) (*DescribeThemeOutput, error) {
+	req, out := c.DescribeThemeRequest(input)
+	return out, req.Send()
+}
+
+// DescribeThemeWithContext is the same as DescribeTheme with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTheme for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeThemeWithContext(ctx aws.Context, input *DescribeThemeInput, opts ...request.Option) (*DescribeThemeOutput, error) {
+	req, out := c.DescribeThemeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeThemeAlias = "DescribeThemeAlias"
+
+// DescribeThemeAliasRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeThemeAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeThemeAlias for more information on using the DescribeThemeAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeThemeAliasRequest method.
+//    req, resp := client.DescribeThemeAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeThemeAlias
+func (c *QuickSight) DescribeThemeAliasRequest(input *DescribeThemeAliasInput) (req *request.Request, output *DescribeThemeAliasOutput) {
+	op := &request.Operation{
+		Name:       opDescribeThemeAlias,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}",
+	}
+
+	if input == nil {
+		input = &DescribeThemeAliasInput{}
+	}
+
+	output = &DescribeThemeAliasOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeThemeAlias API operation for Amazon QuickSight.
+//
+// Describes the alias for a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeThemeAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeThemeAlias
+func (c *QuickSight) DescribeThemeAlias(input *DescribeThemeAliasInput) (*DescribeThemeAliasOutput, error) {
+	req, out := c.DescribeThemeAliasRequest(input)
+	return out, req.Send()
+}
+
+// DescribeThemeAliasWithContext is the same as DescribeThemeAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeThemeAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeThemeAliasWithContext(ctx aws.Context, input *DescribeThemeAliasInput, opts ...request.Option) (*DescribeThemeAliasOutput, error) {
+	req, out := c.DescribeThemeAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeThemePermissions = "DescribeThemePermissions"
+
+// DescribeThemePermissionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeThemePermissions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeThemePermissions for more information on using the DescribeThemePermissions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeThemePermissionsRequest method.
+//    req, resp := client.DescribeThemePermissionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeThemePermissions
+func (c *QuickSight) DescribeThemePermissionsRequest(input *DescribeThemePermissionsInput) (req *request.Request, output *DescribeThemePermissionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeThemePermissions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/permissions",
+	}
+
+	if input == nil {
+		input = &DescribeThemePermissionsInput{}
+	}
+
+	output = &DescribeThemePermissionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeThemePermissions API operation for Amazon QuickSight.
+//
+// Describes the read and write permissions for a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeThemePermissions for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeThemePermissions
+func (c *QuickSight) DescribeThemePermissions(input *DescribeThemePermissionsInput) (*DescribeThemePermissionsOutput, error) {
+	req, out := c.DescribeThemePermissionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeThemePermissionsWithContext is the same as DescribeThemePermissions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeThemePermissions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeThemePermissionsWithContext(ctx aws.Context, input *DescribeThemePermissionsInput, opts ...request.Option) (*DescribeThemePermissionsOutput, error) {
+	req, out := c.DescribeThemePermissionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeUser = "DescribeUser"
 
 // DescribeUserRequest generates a "aws/request.Request" representing the
@@ -3294,6 +4747,9 @@ func (c *QuickSight) DescribeUserRequest(input *DescribeUserInput) (req *request
 //
 //   * ThrottlingException
 //   Access is throttled.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -3458,6 +4914,120 @@ func (c *QuickSight) GetDashboardEmbedUrl(input *GetDashboardEmbedUrlInput) (*Ge
 // for more information on using Contexts.
 func (c *QuickSight) GetDashboardEmbedUrlWithContext(ctx aws.Context, input *GetDashboardEmbedUrlInput, opts ...request.Option) (*GetDashboardEmbedUrlOutput, error) {
 	req, out := c.GetDashboardEmbedUrlRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetSessionEmbedUrl = "GetSessionEmbedUrl"
+
+// GetSessionEmbedUrlRequest generates a "aws/request.Request" representing the
+// client's request for the GetSessionEmbedUrl operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetSessionEmbedUrl for more information on using the GetSessionEmbedUrl
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetSessionEmbedUrlRequest method.
+//    req, resp := client.GetSessionEmbedUrlRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/GetSessionEmbedUrl
+func (c *QuickSight) GetSessionEmbedUrlRequest(input *GetSessionEmbedUrlInput) (req *request.Request, output *GetSessionEmbedUrlOutput) {
+	op := &request.Operation{
+		Name:       opGetSessionEmbedUrl,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/session-embed-url",
+	}
+
+	if input == nil {
+		input = &GetSessionEmbedUrlInput{}
+	}
+
+	output = &GetSessionEmbedUrlOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSessionEmbedUrl API operation for Amazon QuickSight.
+//
+// Generates a session URL and authorization code that you can embed in your
+// web server code.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation GetSessionEmbedUrl for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UserNotFoundException
+//   The user with the provided name isn't found. This error can happen in any
+//   operation that requires finding a user based on a provided user name, such
+//   as DeleteUser, DescribeUser, and so on.
+//
+//   * SessionLifetimeInMinutesInvalidException
+//   The number of minutes specified for the lifetime of a session isn't valid.
+//   The session lifetime must be 15-600 minutes.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/GetSessionEmbedUrl
+func (c *QuickSight) GetSessionEmbedUrl(input *GetSessionEmbedUrlInput) (*GetSessionEmbedUrlOutput, error) {
+	req, out := c.GetSessionEmbedUrlRequest(input)
+	return out, req.Send()
+}
+
+// GetSessionEmbedUrlWithContext is the same as GetSessionEmbedUrl with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSessionEmbedUrl for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) GetSessionEmbedUrlWithContext(ctx aws.Context, input *GetSessionEmbedUrlInput, opts ...request.Option) (*GetSessionEmbedUrlOutput, error) {
+	req, out := c.GetSessionEmbedUrlRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4645,6 +6215,168 @@ func (c *QuickSight) ListIngestionsPagesWithContext(ctx aws.Context, input *List
 	return p.Err()
 }
 
+const opListNamespaces = "ListNamespaces"
+
+// ListNamespacesRequest generates a "aws/request.Request" representing the
+// client's request for the ListNamespaces operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListNamespaces for more information on using the ListNamespaces
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListNamespacesRequest method.
+//    req, resp := client.ListNamespacesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListNamespaces
+func (c *QuickSight) ListNamespacesRequest(input *ListNamespacesInput) (req *request.Request, output *ListNamespacesOutput) {
+	op := &request.Operation{
+		Name:       opListNamespaces,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/namespaces",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListNamespacesInput{}
+	}
+
+	output = &ListNamespacesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListNamespaces API operation for Amazon QuickSight.
+//
+// Lists the namespaces for the specified AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation ListNamespaces for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListNamespaces
+func (c *QuickSight) ListNamespaces(input *ListNamespacesInput) (*ListNamespacesOutput, error) {
+	req, out := c.ListNamespacesRequest(input)
+	return out, req.Send()
+}
+
+// ListNamespacesWithContext is the same as ListNamespaces with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListNamespaces for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListNamespacesWithContext(ctx aws.Context, input *ListNamespacesInput, opts ...request.Option) (*ListNamespacesOutput, error) {
+	req, out := c.ListNamespacesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListNamespacesPages iterates over the pages of a ListNamespaces operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListNamespaces method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListNamespaces operation.
+//    pageNum := 0
+//    err := client.ListNamespacesPages(params,
+//        func(page *quicksight.ListNamespacesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *QuickSight) ListNamespacesPages(input *ListNamespacesInput, fn func(*ListNamespacesOutput, bool) bool) error {
+	return c.ListNamespacesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListNamespacesPagesWithContext same as ListNamespacesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListNamespacesPagesWithContext(ctx aws.Context, input *ListNamespacesInput, fn func(*ListNamespacesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListNamespacesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListNamespacesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListNamespacesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
@@ -4800,6 +6532,9 @@ func (c *QuickSight) ListTemplateAliasesRequest(input *ListTemplateAliasesInput)
 // API operation ListTemplateAliases for usage and error information.
 //
 // Returned Error Types:
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
 //   * ThrottlingException
 //   Access is throttled.
 //
@@ -5200,6 +6935,314 @@ func (c *QuickSight) ListTemplatesPagesWithContext(ctx aws.Context, input *ListT
 	return p.Err()
 }
 
+const opListThemeAliases = "ListThemeAliases"
+
+// ListThemeAliasesRequest generates a "aws/request.Request" representing the
+// client's request for the ListThemeAliases operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListThemeAliases for more information on using the ListThemeAliases
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListThemeAliasesRequest method.
+//    req, resp := client.ListThemeAliasesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListThemeAliases
+func (c *QuickSight) ListThemeAliasesRequest(input *ListThemeAliasesInput) (req *request.Request, output *ListThemeAliasesOutput) {
+	op := &request.Operation{
+		Name:       opListThemeAliases,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/aliases",
+	}
+
+	if input == nil {
+		input = &ListThemeAliasesInput{}
+	}
+
+	output = &ListThemeAliasesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListThemeAliases API operation for Amazon QuickSight.
+//
+// Lists all the aliases of a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation ListThemeAliases for usage and error information.
+//
+// Returned Error Types:
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListThemeAliases
+func (c *QuickSight) ListThemeAliases(input *ListThemeAliasesInput) (*ListThemeAliasesOutput, error) {
+	req, out := c.ListThemeAliasesRequest(input)
+	return out, req.Send()
+}
+
+// ListThemeAliasesWithContext is the same as ListThemeAliases with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListThemeAliases for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListThemeAliasesWithContext(ctx aws.Context, input *ListThemeAliasesInput, opts ...request.Option) (*ListThemeAliasesOutput, error) {
+	req, out := c.ListThemeAliasesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListThemeVersions = "ListThemeVersions"
+
+// ListThemeVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListThemeVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListThemeVersions for more information on using the ListThemeVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListThemeVersionsRequest method.
+//    req, resp := client.ListThemeVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListThemeVersions
+func (c *QuickSight) ListThemeVersionsRequest(input *ListThemeVersionsInput) (req *request.Request, output *ListThemeVersionsOutput) {
+	op := &request.Operation{
+		Name:       opListThemeVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/versions",
+	}
+
+	if input == nil {
+		input = &ListThemeVersionsInput{}
+	}
+
+	output = &ListThemeVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListThemeVersions API operation for Amazon QuickSight.
+//
+// Lists all the versions of the themes in the current AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation ListThemeVersions for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListThemeVersions
+func (c *QuickSight) ListThemeVersions(input *ListThemeVersionsInput) (*ListThemeVersionsOutput, error) {
+	req, out := c.ListThemeVersionsRequest(input)
+	return out, req.Send()
+}
+
+// ListThemeVersionsWithContext is the same as ListThemeVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListThemeVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListThemeVersionsWithContext(ctx aws.Context, input *ListThemeVersionsInput, opts ...request.Option) (*ListThemeVersionsOutput, error) {
+	req, out := c.ListThemeVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListThemes = "ListThemes"
+
+// ListThemesRequest generates a "aws/request.Request" representing the
+// client's request for the ListThemes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListThemes for more information on using the ListThemes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListThemesRequest method.
+//    req, resp := client.ListThemesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListThemes
+func (c *QuickSight) ListThemesRequest(input *ListThemesInput) (req *request.Request, output *ListThemesOutput) {
+	op := &request.Operation{
+		Name:       opListThemes,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes",
+	}
+
+	if input == nil {
+		input = &ListThemesInput{}
+	}
+
+	output = &ListThemesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListThemes API operation for Amazon QuickSight.
+//
+// Lists all the themes in the current AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation ListThemes for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListThemes
+func (c *QuickSight) ListThemes(input *ListThemesInput) (*ListThemesOutput, error) {
+	req, out := c.ListThemesRequest(input)
+	return out, req.Send()
+}
+
+// ListThemesWithContext is the same as ListThemes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListThemes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListThemesWithContext(ctx aws.Context, input *ListThemesInput, opts ...request.Option) (*ListThemesOutput, error) {
+	req, out := c.ListThemesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListUserGroups = "ListUserGroups"
 
 // ListUserGroupsRequest generates a "aws/request.Request" representing the
@@ -5270,6 +7313,9 @@ func (c *QuickSight) ListUserGroupsRequest(input *ListUserGroupsInput) (req *req
 //
 //   * ThrottlingException
 //   Access is throttled.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -5371,6 +7417,9 @@ func (c *QuickSight) ListUsersRequest(input *ListUsersInput) (req *request.Reque
 //
 //   * InvalidNextTokenException
 //   The NextToken value isn't valid.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -5874,6 +7923,203 @@ func (c *QuickSight) UntagResource(input *UntagResourceInput) (*UntagResourceOut
 // for more information on using Contexts.
 func (c *QuickSight) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
 	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateAccountCustomization = "UpdateAccountCustomization"
+
+// UpdateAccountCustomizationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAccountCustomization operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAccountCustomization for more information on using the UpdateAccountCustomization
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAccountCustomizationRequest method.
+//    req, resp := client.UpdateAccountCustomizationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAccountCustomization
+func (c *QuickSight) UpdateAccountCustomizationRequest(input *UpdateAccountCustomizationInput) (req *request.Request, output *UpdateAccountCustomizationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAccountCustomization,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/customizations",
+	}
+
+	if input == nil {
+		input = &UpdateAccountCustomizationInput{}
+	}
+
+	output = &UpdateAccountCustomizationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateAccountCustomization API operation for Amazon QuickSight.
+//
+// Updates customizations associated with the QuickSight subscription on your
+// AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateAccountCustomization for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAccountCustomization
+func (c *QuickSight) UpdateAccountCustomization(input *UpdateAccountCustomizationInput) (*UpdateAccountCustomizationOutput, error) {
+	req, out := c.UpdateAccountCustomizationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAccountCustomizationWithContext is the same as UpdateAccountCustomization with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAccountCustomization for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateAccountCustomizationWithContext(ctx aws.Context, input *UpdateAccountCustomizationInput, opts ...request.Option) (*UpdateAccountCustomizationOutput, error) {
+	req, out := c.UpdateAccountCustomizationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateAccountSettings = "UpdateAccountSettings"
+
+// UpdateAccountSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAccountSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAccountSettings for more information on using the UpdateAccountSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAccountSettingsRequest method.
+//    req, resp := client.UpdateAccountSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAccountSettings
+func (c *QuickSight) UpdateAccountSettingsRequest(input *UpdateAccountSettingsInput) (req *request.Request, output *UpdateAccountSettingsOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAccountSettings,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/settings",
+	}
+
+	if input == nil {
+		input = &UpdateAccountSettingsInput{}
+	}
+
+	output = &UpdateAccountSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateAccountSettings API operation for Amazon QuickSight.
+//
+// Updates the settings for the Amazon QuickSight subscription in your AWS Account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateAccountSettings for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+//   * ResourceUnavailableException
+//   This resource is currently unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAccountSettings
+func (c *QuickSight) UpdateAccountSettings(input *UpdateAccountSettingsInput) (*UpdateAccountSettingsOutput, error) {
+	req, out := c.UpdateAccountSettingsRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAccountSettingsWithContext is the same as UpdateAccountSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAccountSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateAccountSettingsWithContext(ctx aws.Context, input *UpdateAccountSettingsInput, opts ...request.Option) (*UpdateAccountSettingsOutput, error) {
+	req, out := c.UpdateAccountSettingsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6953,6 +9199,9 @@ func (c *QuickSight) UpdateTemplateAliasRequest(input *UpdateTemplateAliasInput)
 //   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
 //   Not every operation and capability is available in every edition.
 //
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
 //   * InternalFailureException
 //   An internal failure occurred.
 //
@@ -7075,6 +9324,328 @@ func (c *QuickSight) UpdateTemplatePermissionsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+const opUpdateTheme = "UpdateTheme"
+
+// UpdateThemeRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateTheme operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateTheme for more information on using the UpdateTheme
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateThemeRequest method.
+//    req, resp := client.UpdateThemeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateTheme
+func (c *QuickSight) UpdateThemeRequest(input *UpdateThemeInput) (req *request.Request, output *UpdateThemeOutput) {
+	op := &request.Operation{
+		Name:       opUpdateTheme,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}",
+	}
+
+	if input == nil {
+		input = &UpdateThemeInput{}
+	}
+
+	output = &UpdateThemeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateTheme API operation for Amazon QuickSight.
+//
+// Updates a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateTheme for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * LimitExceededException
+//   A limit is exceeded.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateTheme
+func (c *QuickSight) UpdateTheme(input *UpdateThemeInput) (*UpdateThemeOutput, error) {
+	req, out := c.UpdateThemeRequest(input)
+	return out, req.Send()
+}
+
+// UpdateThemeWithContext is the same as UpdateTheme with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateTheme for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateThemeWithContext(ctx aws.Context, input *UpdateThemeInput, opts ...request.Option) (*UpdateThemeOutput, error) {
+	req, out := c.UpdateThemeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateThemeAlias = "UpdateThemeAlias"
+
+// UpdateThemeAliasRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateThemeAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateThemeAlias for more information on using the UpdateThemeAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateThemeAliasRequest method.
+//    req, resp := client.UpdateThemeAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateThemeAlias
+func (c *QuickSight) UpdateThemeAliasRequest(input *UpdateThemeAliasInput) (req *request.Request, output *UpdateThemeAliasOutput) {
+	op := &request.Operation{
+		Name:       opUpdateThemeAlias,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/aliases/{AliasName}",
+	}
+
+	if input == nil {
+		input = &UpdateThemeAliasInput{}
+	}
+
+	output = &UpdateThemeAliasOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateThemeAlias API operation for Amazon QuickSight.
+//
+// Updates an alias of a theme.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateThemeAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateThemeAlias
+func (c *QuickSight) UpdateThemeAlias(input *UpdateThemeAliasInput) (*UpdateThemeAliasOutput, error) {
+	req, out := c.UpdateThemeAliasRequest(input)
+	return out, req.Send()
+}
+
+// UpdateThemeAliasWithContext is the same as UpdateThemeAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateThemeAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateThemeAliasWithContext(ctx aws.Context, input *UpdateThemeAliasInput, opts ...request.Option) (*UpdateThemeAliasOutput, error) {
+	req, out := c.UpdateThemeAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateThemePermissions = "UpdateThemePermissions"
+
+// UpdateThemePermissionsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateThemePermissions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateThemePermissions for more information on using the UpdateThemePermissions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateThemePermissionsRequest method.
+//    req, resp := client.UpdateThemePermissionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateThemePermissions
+func (c *QuickSight) UpdateThemePermissionsRequest(input *UpdateThemePermissionsInput) (req *request.Request, output *UpdateThemePermissionsOutput) {
+	op := &request.Operation{
+		Name:       opUpdateThemePermissions,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/themes/{ThemeId}/permissions",
+	}
+
+	if input == nil {
+		input = &UpdateThemePermissionsInput{}
+	}
+
+	output = &UpdateThemePermissionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateThemePermissions API operation for Amazon QuickSight.
+//
+// Updates the resource permissions for a theme. Permissions apply to the action
+// to grant or revoke permissions on, for example "quicksight:DescribeTheme".
+//
+// Theme permissions apply in groupings. Valid groupings include the following
+// for the three levels of permissions, which are user, owner, or no permissions:
+//
+//    * User "quicksight:DescribeTheme" "quicksight:DescribeThemeAlias" "quicksight:ListThemeAliases"
+//    "quicksight:ListThemeVersions"
+//
+//    * Owner "quicksight:DescribeTheme" "quicksight:DescribeThemeAlias" "quicksight:ListThemeAliases"
+//    "quicksight:ListThemeVersions" "quicksight:DeleteTheme" "quicksight:UpdateTheme"
+//    "quicksight:CreateThemeAlias" "quicksight:DeleteThemeAlias" "quicksight:UpdateThemeAlias"
+//    "quicksight:UpdateThemePermissions" "quicksight:DescribeThemePermissions"
+//
+//    * To specify no permissions, omit the permissions list.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateThemePermissions for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateThemePermissions
+func (c *QuickSight) UpdateThemePermissions(input *UpdateThemePermissionsInput) (*UpdateThemePermissionsOutput, error) {
+	req, out := c.UpdateThemePermissionsRequest(input)
+	return out, req.Send()
+}
+
+// UpdateThemePermissionsWithContext is the same as UpdateThemePermissions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateThemePermissions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateThemePermissionsWithContext(ctx aws.Context, input *UpdateThemePermissionsInput, opts ...request.Option) (*UpdateThemePermissionsOutput, error) {
+	req, out := c.UpdateThemePermissionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateUser = "UpdateUser"
 
 // UpdateUserRequest generates a "aws/request.Request" representing the
@@ -7144,6 +9715,9 @@ func (c *QuickSight) UpdateUserRequest(input *UpdateUserInput) (req *request.Req
 //
 //   * ThrottlingException
 //   Access is throttled.
+//
+//   * PreconditionNotMetException
+//   One or more preconditions aren't met.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -7234,6 +9808,81 @@ func (s *AccessDeniedException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *AccessDeniedException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// The customizations associated with your AWS account for QuickSight.
+type AccountCustomization struct {
+	_ struct{} `type:"structure"`
+
+	// The default theme for this QuickSight subscription.
+	DefaultTheme *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AccountCustomization) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountCustomization) GoString() string {
+	return s.String()
+}
+
+// SetDefaultTheme sets the DefaultTheme field's value.
+func (s *AccountCustomization) SetDefaultTheme(v string) *AccountCustomization {
+	s.DefaultTheme = &v
+	return s
+}
+
+// The QuickSight settings associated with your AWS account.
+type AccountSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The name associated with the QuickSight subscription in your AWS account.
+	AccountName *string `type:"string"`
+
+	// The default QuickSight namespace for your AWS account.
+	DefaultNamespace *string `type:"string"`
+
+	// The edition of QuickSight that you're currently subscribed to.
+	Edition *string `type:"string" enum:"Edition"`
+
+	// The main notification email for your QuickSight subscription.
+	NotificationEmail *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AccountSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountSettings) GoString() string {
+	return s.String()
+}
+
+// SetAccountName sets the AccountName field's value.
+func (s *AccountSettings) SetAccountName(v string) *AccountSettings {
+	s.AccountName = &v
+	return s
+}
+
+// SetDefaultNamespace sets the DefaultNamespace field's value.
+func (s *AccountSettings) SetDefaultNamespace(v string) *AccountSettings {
+	s.DefaultNamespace = &v
+	return s
+}
+
+// SetEdition sets the Edition field's value.
+func (s *AccountSettings) SetEdition(v string) *AccountSettings {
+	s.Edition = &v
+	return s
+}
+
+// SetNotificationEmail sets the NotificationEmail field's value.
+func (s *AccountSettings) SetNotificationEmail(v string) *AccountSettings {
+	s.NotificationEmail = &v
+	return s
 }
 
 // The active AWS Identity and Access Management (IAM) policy assignment.
@@ -7563,6 +10212,30 @@ func (s *AwsIotAnalyticsParameters) Validate() error {
 // SetDataSetName sets the DataSetName field's value.
 func (s *AwsIotAnalyticsParameters) SetDataSetName(v string) *AwsIotAnalyticsParameters {
 	s.DataSetName = &v
+	return s
+}
+
+// The display options for tile borders for visuals.
+type BorderStyle struct {
+	_ struct{} `type:"structure"`
+
+	// The option to enable display of borders for visuals.
+	Show *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s BorderStyle) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BorderStyle) GoString() string {
+	return s.String()
+}
+
+// SetShow sets the Show field's value.
+func (s *BorderStyle) SetShow(v bool) *BorderStyle {
+	s.Show = &v
 	return s
 }
 
@@ -8119,6 +10792,133 @@ func (s *ConflictException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+type CreateAccountCustomizationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The customizations you're adding to the QuickSight subscription for the AWS
+	// account. For example, you could add a default theme by setting AccountCustomization
+	// to the midnight theme (DefaultTheme="arn:aws:quicksight::aws:theme/MIDNIGHT")
+	// or to a custom theme (DefaultTheme="arn:aws:quicksight:us-west-2:111122223333:theme/bdb844d0-0fe9-4d9d-b520-0fe602d93639").
+	//
+	// AccountCustomization is a required field
+	AccountCustomization *AccountCustomization `type:"structure" required:"true"`
+
+	// The ID for the AWS account that you want to customize QuickSight for.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The namespace associated with the customization that you're creating.
+	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateAccountCustomizationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateAccountCustomizationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateAccountCustomizationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateAccountCustomizationInput"}
+	if s.AccountCustomization == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountCustomization"))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccountCustomization sets the AccountCustomization field's value.
+func (s *CreateAccountCustomizationInput) SetAccountCustomization(v *AccountCustomization) *CreateAccountCustomizationInput {
+	s.AccountCustomization = v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *CreateAccountCustomizationInput) SetAwsAccountId(v string) *CreateAccountCustomizationInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *CreateAccountCustomizationInput) SetNamespace(v string) *CreateAccountCustomizationInput {
+	s.Namespace = &v
+	return s
+}
+
+type CreateAccountCustomizationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The customizations you're adding to the QuickSight subscription for the AWS
+	// account.
+	AccountCustomization *AccountCustomization `type:"structure"`
+
+	// The ID for the AWS account that you want to customize QuickSight for.
+	AwsAccountId *string `min:"12" type:"string"`
+
+	// The namespace associated with the customization you're creating.
+	Namespace *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateAccountCustomizationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateAccountCustomizationOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccountCustomization sets the AccountCustomization field's value.
+func (s *CreateAccountCustomizationOutput) SetAccountCustomization(v *AccountCustomization) *CreateAccountCustomizationOutput {
+	s.AccountCustomization = v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *CreateAccountCustomizationOutput) SetAwsAccountId(v string) *CreateAccountCustomizationOutput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *CreateAccountCustomizationOutput) SetNamespace(v string) *CreateAccountCustomizationOutput {
+	s.Namespace = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateAccountCustomizationOutput) SetRequestId(v string) *CreateAccountCustomizationOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CreateAccountCustomizationOutput) SetStatus(v int64) *CreateAccountCustomizationOutput {
+	s.Status = &v
+	return s
+}
+
 // A transform operation that creates calculated columns. Columns created in
 // one such operation form a lexical closure.
 type CreateColumnsOperation struct {
@@ -8205,9 +11005,9 @@ type CreateDashboardInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// A structure that contains the parameters of the dashboard. These are parameter
-	// overrides for a dashboard. A dashboard can have any type of parameters, and
-	// some parameters might accept multiple values.
+	// The parameters for the creation of the dashboard, which you want to use to
+	// override the default settings. A dashboard can have any type of parameters,
+	// and some parameters might accept multiple values.
 	Parameters *Parameters `type:"structure"`
 
 	// A structure that contains the permissions of the dashboard. You can use this
@@ -8233,6 +11033,12 @@ type CreateDashboardInput struct {
 	// Contains a map of the key-value pairs for the resource tag or tags assigned
 	// to the dashboard.
 	Tags []*Tag `min:"1" type:"list"`
+
+	// The Amazon Resource Name (ARN) of the theme that is being used for this dashboard.
+	// If you add a value for this field, it overrides the value that is used in
+	// the source entity. The theme ARN must exist in the same AWS account where
+	// you create the dashboard.
+	ThemeArn *string `type:"string"`
 
 	// A description for the first version of the dashboard being created.
 	VersionDescription *string `min:"1" type:"string"`
@@ -8366,6 +11172,12 @@ func (s *CreateDashboardInput) SetTags(v []*Tag) *CreateDashboardInput {
 	return s
 }
 
+// SetThemeArn sets the ThemeArn field's value.
+func (s *CreateDashboardInput) SetThemeArn(v string) *CreateDashboardInput {
+	s.ThemeArn = &v
+	return s
+}
+
 // SetVersionDescription sets the VersionDescription field's value.
 func (s *CreateDashboardInput) SetVersionDescription(v string) *CreateDashboardInput {
 	s.VersionDescription = &v
@@ -8375,7 +11187,7 @@ func (s *CreateDashboardInput) SetVersionDescription(v string) *CreateDashboardI
 type CreateDashboardOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the dashboard.
+	// The ARN of the dashboard.
 	Arn *string `type:"string"`
 
 	// The status of the dashboard creation request.
@@ -9583,6 +12395,181 @@ func (s *CreateIngestionOutput) SetStatus(v int64) *CreateIngestionOutput {
 	return s
 }
 
+type CreateNamespaceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that you want to create the QuickSight namespace
+	// in.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// Specifies the type of your user identity directory. Currently, this supports
+	// users with an identity type of QUICKSIGHT.
+	//
+	// IdentityStore is a required field
+	IdentityStore *string `type:"string" required:"true" enum:"IdentityStore"`
+
+	// The name that you want to use to describe the new namespace.
+	//
+	// Namespace is a required field
+	Namespace *string `type:"string" required:"true"`
+
+	// The tags that you want to associate with the namespace that you're creating.
+	Tags []*Tag `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateNamespaceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateNamespaceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateNamespaceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateNamespaceInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.IdentityStore == nil {
+		invalidParams.Add(request.NewErrParamRequired("IdentityStore"))
+	}
+	if s.Namespace == nil {
+		invalidParams.Add(request.NewErrParamRequired("Namespace"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *CreateNamespaceInput) SetAwsAccountId(v string) *CreateNamespaceInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetIdentityStore sets the IdentityStore field's value.
+func (s *CreateNamespaceInput) SetIdentityStore(v string) *CreateNamespaceInput {
+	s.IdentityStore = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *CreateNamespaceInput) SetNamespace(v string) *CreateNamespaceInput {
+	s.Namespace = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateNamespaceInput) SetTags(v []*Tag) *CreateNamespaceInput {
+	s.Tags = v
+	return s
+}
+
+type CreateNamespaceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the QuickSight namespace you created.
+	Arn *string `type:"string"`
+
+	// The AWS Region that you want to use for the free SPICE capacity for the new
+	// namespace. This is set to the region that you run CreateNamespace in.
+	CapacityRegion *string `type:"string"`
+
+	// The status of the creation of the namespace. This is an asynchronous process.
+	// A status of CREATED means that your namespace is ready to use. If an error
+	// occurs, it indicates if the process is retryable or non-retryable. In the
+	// case of a non-retryable error, refer to the error message for follow-up actions.
+	CreationStatus *string `type:"string" enum:"NamespaceStatus"`
+
+	// Specifies the type of your user identity directory. Currently, this supports
+	// users with an identity type of QUICKSIGHT.
+	IdentityStore *string `type:"string" enum:"IdentityStore"`
+
+	// The name of the new namespace that you created.
+	Name *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateNamespaceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateNamespaceOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateNamespaceOutput) SetArn(v string) *CreateNamespaceOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCapacityRegion sets the CapacityRegion field's value.
+func (s *CreateNamespaceOutput) SetCapacityRegion(v string) *CreateNamespaceOutput {
+	s.CapacityRegion = &v
+	return s
+}
+
+// SetCreationStatus sets the CreationStatus field's value.
+func (s *CreateNamespaceOutput) SetCreationStatus(v string) *CreateNamespaceOutput {
+	s.CreationStatus = &v
+	return s
+}
+
+// SetIdentityStore sets the IdentityStore field's value.
+func (s *CreateNamespaceOutput) SetIdentityStore(v string) *CreateNamespaceOutput {
+	s.IdentityStore = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateNamespaceOutput) SetName(v string) *CreateNamespaceOutput {
+	s.Name = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateNamespaceOutput) SetRequestId(v string) *CreateNamespaceOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CreateNamespaceOutput) SetStatus(v int64) *CreateNamespaceOutput {
+	s.Status = &v
+	return s
+}
+
 type CreateTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9945,6 +12932,378 @@ func (s *CreateTemplateOutput) SetTemplateId(v string) *CreateTemplateOutput {
 
 // SetVersionArn sets the VersionArn field's value.
 func (s *CreateTemplateOutput) SetVersionArn(v string) *CreateTemplateOutput {
+	s.VersionArn = &v
+	return s
+}
+
+type CreateThemeAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name that you want to give to the theme alias that you are creating.
+	// The alias name can't begin with a $. Alias names that start with $ are reserved
+	// by Amazon QuickSight.
+	//
+	// AliasName is a required field
+	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the theme for the new theme alias.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// An ID for the theme alias.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+
+	// The version number of the theme.
+	//
+	// ThemeVersionNumber is a required field
+	ThemeVersionNumber *int64 `min:"1" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateThemeAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateThemeAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateThemeAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateThemeAliasInput"}
+	if s.AliasName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasName"))
+	}
+	if s.AliasName != nil && len(*s.AliasName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasName", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.ThemeVersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeVersionNumber"))
+	}
+	if s.ThemeVersionNumber != nil && *s.ThemeVersionNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ThemeVersionNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *CreateThemeAliasInput) SetAliasName(v string) *CreateThemeAliasInput {
+	s.AliasName = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *CreateThemeAliasInput) SetAwsAccountId(v string) *CreateThemeAliasInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *CreateThemeAliasInput) SetThemeId(v string) *CreateThemeAliasInput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetThemeVersionNumber sets the ThemeVersionNumber field's value.
+func (s *CreateThemeAliasInput) SetThemeVersionNumber(v int64) *CreateThemeAliasInput {
+	s.ThemeVersionNumber = &v
+	return s
+}
+
+type CreateThemeAliasOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// Information about the theme alias.
+	ThemeAlias *ThemeAlias `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateThemeAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateThemeAliasOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateThemeAliasOutput) SetRequestId(v string) *CreateThemeAliasOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CreateThemeAliasOutput) SetStatus(v int64) *CreateThemeAliasOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeAlias sets the ThemeAlias field's value.
+func (s *CreateThemeAliasOutput) SetThemeAlias(v *ThemeAlias) *CreateThemeAliasOutput {
+	s.ThemeAlias = v
+	return s
+}
+
+type CreateThemeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account where you want to store the new theme.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The ID of the theme that a custom theme will inherit from. All themes inherit
+	// from one of the starting themes defined by Amazon QuickSight. For a list
+	// of the starting themes, use ListThemes or choose Themes from within a QuickSight
+	// analysis.
+	//
+	// BaseThemeId is a required field
+	BaseThemeId *string `min:"1" type:"string" required:"true"`
+
+	// The theme configuration, which contains the theme display properties.
+	//
+	// Configuration is a required field
+	Configuration *ThemeConfiguration `type:"structure" required:"true"`
+
+	// A display name for the theme.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A valid grouping of resource permissions to apply to the new theme.
+	Permissions []*ResourcePermission `min:"1" type:"list"`
+
+	// A map of the key-value pairs for the resource tag or tags that you want to
+	// add to the resource.
+	Tags []*Tag `min:"1" type:"list"`
+
+	// An ID for the theme that you want to create. The theme ID is unique per AWS
+	// Region in each AWS account.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+
+	// A description of the first version of the theme that you're creating. Every
+	// time UpdateTheme is called, a new version is created. Each version of the
+	// theme has a description of the version in the VersionDescription field.
+	VersionDescription *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateThemeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateThemeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateThemeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateThemeInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.BaseThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("BaseThemeId"))
+	}
+	if s.BaseThemeId != nil && len(*s.BaseThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BaseThemeId", 1))
+	}
+	if s.Configuration == nil {
+		invalidParams.Add(request.NewErrParamRequired("Configuration"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Permissions != nil && len(s.Permissions) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Permissions", 1))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.VersionDescription != nil && len(*s.VersionDescription) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VersionDescription", 1))
+	}
+	if s.Permissions != nil {
+		for i, v := range s.Permissions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Permissions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *CreateThemeInput) SetAwsAccountId(v string) *CreateThemeInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetBaseThemeId sets the BaseThemeId field's value.
+func (s *CreateThemeInput) SetBaseThemeId(v string) *CreateThemeInput {
+	s.BaseThemeId = &v
+	return s
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *CreateThemeInput) SetConfiguration(v *ThemeConfiguration) *CreateThemeInput {
+	s.Configuration = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateThemeInput) SetName(v string) *CreateThemeInput {
+	s.Name = &v
+	return s
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *CreateThemeInput) SetPermissions(v []*ResourcePermission) *CreateThemeInput {
+	s.Permissions = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateThemeInput) SetTags(v []*Tag) *CreateThemeInput {
+	s.Tags = v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *CreateThemeInput) SetThemeId(v string) *CreateThemeInput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetVersionDescription sets the VersionDescription field's value.
+func (s *CreateThemeInput) SetVersionDescription(v string) *CreateThemeInput {
+	s.VersionDescription = &v
+	return s
+}
+
+type CreateThemeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the theme.
+	Arn *string `type:"string"`
+
+	// The theme creation status.
+	CreationStatus *string `type:"string" enum:"ResourceStatus"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// The ID of the theme.
+	ThemeId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) for the new theme.
+	VersionArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateThemeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateThemeOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateThemeOutput) SetArn(v string) *CreateThemeOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationStatus sets the CreationStatus field's value.
+func (s *CreateThemeOutput) SetCreationStatus(v string) *CreateThemeOutput {
+	s.CreationStatus = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateThemeOutput) SetRequestId(v string) *CreateThemeOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CreateThemeOutput) SetStatus(v int64) *CreateThemeOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *CreateThemeOutput) SetThemeId(v string) *CreateThemeOutput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetVersionArn sets the VersionArn field's value.
+func (s *CreateThemeOutput) SetVersionArn(v string) *CreateThemeOutput {
 	s.VersionArn = &v
 	return s
 }
@@ -10683,6 +14042,51 @@ func (s *DashboardVersionSummary) SetStatus(v string) *DashboardVersionSummary {
 // SetVersionNumber sets the VersionNumber field's value.
 func (s *DashboardVersionSummary) SetVersionNumber(v int64) *DashboardVersionSummary {
 	s.VersionNumber = &v
+	return s
+}
+
+// The theme colors that are used for data colors in charts. The colors description
+// is a hexidecimal color code that consists of six alphanumerical characters,
+// prefixed with #, for example #37BFF5.
+type DataColorPalette struct {
+	_ struct{} `type:"structure"`
+
+	// The hexadecimal codes for the colors.
+	Colors []*string `type:"list"`
+
+	// The hexadecimal code of a color that applies to charts where a lack of data
+	// is highlighted.
+	EmptyFillColor *string `type:"string"`
+
+	// The minimum and maximum hexadecimal codes that describe a color gradient.
+	MinMaxGradient []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DataColorPalette) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataColorPalette) GoString() string {
+	return s.String()
+}
+
+// SetColors sets the Colors field's value.
+func (s *DataColorPalette) SetColors(v []*string) *DataColorPalette {
+	s.Colors = v
+	return s
+}
+
+// SetEmptyFillColor sets the EmptyFillColor field's value.
+func (s *DataColorPalette) SetEmptyFillColor(v string) *DataColorPalette {
+	s.EmptyFillColor = &v
+	return s
+}
+
+// SetMinMaxGradient sets the MinMaxGradient field's value.
+func (s *DataColorPalette) SetMinMaxGradient(v []*string) *DataColorPalette {
+	s.MinMaxGradient = v
 	return s
 }
 
@@ -11632,6 +15036,89 @@ func (s *DecimalParameter) SetValues(v []*float64) *DecimalParameter {
 	return s
 }
 
+type DeleteAccountCustomizationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that you want to delete QuickSight customizations
+	// from.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The namespace associated with the customization that you're deleting.
+	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteAccountCustomizationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAccountCustomizationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAccountCustomizationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAccountCustomizationInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DeleteAccountCustomizationInput) SetAwsAccountId(v string) *DeleteAccountCustomizationInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DeleteAccountCustomizationInput) SetNamespace(v string) *DeleteAccountCustomizationInput {
+	s.Namespace = &v
+	return s
+}
+
+type DeleteAccountCustomizationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DeleteAccountCustomizationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAccountCustomizationOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DeleteAccountCustomizationOutput) SetRequestId(v string) *DeleteAccountCustomizationOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DeleteAccountCustomizationOutput) SetStatus(v int64) *DeleteAccountCustomizationOutput {
+	s.Status = &v
+	return s
+}
+
 type DeleteDashboardInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12322,6 +15809,97 @@ func (s *DeleteIAMPolicyAssignmentOutput) SetStatus(v int64) *DeleteIAMPolicyAss
 	return s
 }
 
+type DeleteNamespaceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that you want to delete the QuickSight namespace
+	// from.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The namespace that you want to delete.
+	//
+	// Namespace is a required field
+	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteNamespaceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteNamespaceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteNamespaceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteNamespaceInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Namespace == nil {
+		invalidParams.Add(request.NewErrParamRequired("Namespace"))
+	}
+	if s.Namespace != nil && len(*s.Namespace) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DeleteNamespaceInput) SetAwsAccountId(v string) *DeleteNamespaceInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DeleteNamespaceInput) SetNamespace(v string) *DeleteNamespaceInput {
+	s.Namespace = &v
+	return s
+}
+
+type DeleteNamespaceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DeleteNamespaceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteNamespaceOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DeleteNamespaceOutput) SetRequestId(v string) *DeleteNamespaceOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DeleteNamespaceOutput) SetStatus(v int64) *DeleteNamespaceOutput {
+	s.Status = &v
+	return s
+}
+
 type DeleteTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12580,6 +16158,263 @@ func (s *DeleteTemplateOutput) SetTemplateId(v string) *DeleteTemplateOutput {
 	return s
 }
 
+type DeleteThemeAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique name for the theme alias to delete.
+	//
+	// AliasName is a required field
+	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the theme alias to delete.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The ID for the theme that the specified alias is for.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteThemeAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteThemeAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteThemeAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteThemeAliasInput"}
+	if s.AliasName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasName"))
+	}
+	if s.AliasName != nil && len(*s.AliasName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasName", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *DeleteThemeAliasInput) SetAliasName(v string) *DeleteThemeAliasInput {
+	s.AliasName = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DeleteThemeAliasInput) SetAwsAccountId(v string) *DeleteThemeAliasInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DeleteThemeAliasInput) SetThemeId(v string) *DeleteThemeAliasInput {
+	s.ThemeId = &v
+	return s
+}
+
+type DeleteThemeAliasOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The name for the theme alias.
+	AliasName *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the theme resource using the deleted alias.
+	Arn *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// An ID for the theme associated with the deletion.
+	ThemeId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteThemeAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteThemeAliasOutput) GoString() string {
+	return s.String()
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *DeleteThemeAliasOutput) SetAliasName(v string) *DeleteThemeAliasOutput {
+	s.AliasName = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteThemeAliasOutput) SetArn(v string) *DeleteThemeAliasOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DeleteThemeAliasOutput) SetRequestId(v string) *DeleteThemeAliasOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DeleteThemeAliasOutput) SetStatus(v int64) *DeleteThemeAliasOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DeleteThemeAliasOutput) SetThemeId(v string) *DeleteThemeAliasOutput {
+	s.ThemeId = &v
+	return s
+}
+
+type DeleteThemeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the theme that you're deleting.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// An ID for the theme that you want to delete.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+
+	// The version of the theme that you want to delete.
+	//
+	// Note: If you don't provide a version number, you're using this call to DeleteTheme
+	// to delete all versions of the theme.
+	VersionNumber *int64 `location:"querystring" locationName:"version-number" min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s DeleteThemeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteThemeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteThemeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteThemeInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.VersionNumber != nil && *s.VersionNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("VersionNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DeleteThemeInput) SetAwsAccountId(v string) *DeleteThemeInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DeleteThemeInput) SetThemeId(v string) *DeleteThemeInput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *DeleteThemeInput) SetVersionNumber(v int64) *DeleteThemeInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type DeleteThemeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	Arn *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// An ID for the theme.
+	ThemeId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteThemeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteThemeOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteThemeOutput) SetArn(v string) *DeleteThemeOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DeleteThemeOutput) SetRequestId(v string) *DeleteThemeOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DeleteThemeOutput) SetStatus(v int64) *DeleteThemeOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DeleteThemeOutput) SetThemeId(v string) *DeleteThemeOutput {
+	s.ThemeId = &v
+	return s
+}
+
 type DeleteUserByPrincipalIdInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12792,6 +16627,215 @@ func (s *DeleteUserOutput) SetRequestId(v string) *DeleteUserOutput {
 
 // SetStatus sets the Status field's value.
 func (s *DeleteUserOutput) SetStatus(v int64) *DeleteUserOutput {
+	s.Status = &v
+	return s
+}
+
+type DescribeAccountCustomizationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that you want to describe QuickSight customizations
+	// for.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The namespace associated with the customization that you're describing.
+	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
+
+	// The status of the creation of the customization. This is an asynchronous
+	// process. A status of CREATED means that your customization is ready to use.
+	Resolved *bool `location:"querystring" locationName:"resolved" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DescribeAccountCustomizationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountCustomizationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAccountCustomizationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAccountCustomizationInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeAccountCustomizationInput) SetAwsAccountId(v string) *DescribeAccountCustomizationInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DescribeAccountCustomizationInput) SetNamespace(v string) *DescribeAccountCustomizationInput {
+	s.Namespace = &v
+	return s
+}
+
+// SetResolved sets the Resolved field's value.
+func (s *DescribeAccountCustomizationInput) SetResolved(v bool) *DescribeAccountCustomizationInput {
+	s.Resolved = &v
+	return s
+}
+
+type DescribeAccountCustomizationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The customizations associated with QuickSight.
+	AccountCustomization *AccountCustomization `type:"structure"`
+
+	// The ID for the AWS account that you want to describe QuickSight customizations
+	// for.
+	AwsAccountId *string `min:"12" type:"string"`
+
+	// The namespace associated with the customization that you're describing.
+	Namespace *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeAccountCustomizationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountCustomizationOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccountCustomization sets the AccountCustomization field's value.
+func (s *DescribeAccountCustomizationOutput) SetAccountCustomization(v *AccountCustomization) *DescribeAccountCustomizationOutput {
+	s.AccountCustomization = v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeAccountCustomizationOutput) SetAwsAccountId(v string) *DescribeAccountCustomizationOutput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DescribeAccountCustomizationOutput) SetNamespace(v string) *DescribeAccountCustomizationOutput {
+	s.Namespace = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeAccountCustomizationOutput) SetRequestId(v string) *DescribeAccountCustomizationOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeAccountCustomizationOutput) SetStatus(v int64) *DescribeAccountCustomizationOutput {
+	s.Status = &v
+	return s
+}
+
+type DescribeAccountSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that contains the QuickSight namespaces that you
+	// want to list.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAccountSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAccountSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAccountSettingsInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeAccountSettingsInput) SetAwsAccountId(v string) *DescribeAccountSettingsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+type DescribeAccountSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The settings associated with the QuickSight subscription associated with
+	// this AWS account. This information includes the edition of Amazon QuickSight
+	// that you subscribed to (Standard or Enterprise) and the notification email
+	// for the QuickSight subscription. The QuickSight console, the QuickSight subscription
+	// is sometimes referred to as a QuickSight "account" even though it is technically
+	// not an account, but a subscription in your AWS account.
+	AccountSettings *AccountSettings `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeAccountSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccountSettings sets the AccountSettings field's value.
+func (s *DescribeAccountSettingsOutput) SetAccountSettings(v *AccountSettings) *DescribeAccountSettingsOutput {
+	s.AccountSettings = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeAccountSettingsOutput) SetRequestId(v string) *DescribeAccountSettingsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeAccountSettingsOutput) SetStatus(v int64) *DescribeAccountSettingsOutput {
 	s.Status = &v
 	return s
 }
@@ -13825,6 +17869,110 @@ func (s *DescribeIngestionOutput) SetStatus(v int64) *DescribeIngestionOutput {
 	return s
 }
 
+type DescribeNamespaceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that contains the QuickSight namespace that you
+	// want to describe.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The namespace that you want to describe.
+	//
+	// Namespace is a required field
+	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeNamespaceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNamespaceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNamespaceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNamespaceInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Namespace == nil {
+		invalidParams.Add(request.NewErrParamRequired("Namespace"))
+	}
+	if s.Namespace != nil && len(*s.Namespace) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeNamespaceInput) SetAwsAccountId(v string) *DescribeNamespaceInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DescribeNamespaceInput) SetNamespace(v string) *DescribeNamespaceInput {
+	s.Namespace = &v
+	return s
+}
+
+type DescribeNamespaceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The information about the namespace that you're describing. The response
+	// includes the namespace ARN, name, AWS Region, creation status, and identity
+	// store. DescribeNamespace also works for namespaces that are in the process
+	// of being created. For incomplete namespaces, this API lists the namespace
+	// error types and messages associated with the creation process.
+	Namespace *NamespaceInfoV2 `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeNamespaceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNamespaceOutput) GoString() string {
+	return s.String()
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DescribeNamespaceOutput) SetNamespace(v *NamespaceInfoV2) *DescribeNamespaceOutput {
+	s.Namespace = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeNamespaceOutput) SetRequestId(v string) *DescribeNamespaceOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeNamespaceOutput) SetStatus(v int64) *DescribeNamespaceOutput {
+	s.Status = &v
+	return s
+}
+
 type DescribeTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14033,6 +18181,9 @@ func (s *DescribeTemplateInput) SetVersionNumber(v int64) *DescribeTemplateInput
 type DescribeTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
 	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
@@ -14048,6 +18199,12 @@ func (s DescribeTemplateOutput) String() string {
 // GoString returns the string representation
 func (s DescribeTemplateOutput) GoString() string {
 	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeTemplateOutput) SetRequestId(v string) *DescribeTemplateOutput {
+	s.RequestId = &v
+	return s
 }
 
 // SetStatus sets the Status field's value.
@@ -14176,6 +18333,366 @@ func (s *DescribeTemplatePermissionsOutput) SetTemplateArn(v string) *DescribeTe
 // SetTemplateId sets the TemplateId field's value.
 func (s *DescribeTemplatePermissionsOutput) SetTemplateId(v string) *DescribeTemplatePermissionsOutput {
 	s.TemplateId = &v
+	return s
+}
+
+type DescribeThemeAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the theme alias that you want to describe.
+	//
+	// AliasName is a required field
+	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the theme alias that you're describing.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeThemeAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeThemeAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeThemeAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeThemeAliasInput"}
+	if s.AliasName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasName"))
+	}
+	if s.AliasName != nil && len(*s.AliasName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasName", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *DescribeThemeAliasInput) SetAliasName(v string) *DescribeThemeAliasInput {
+	s.AliasName = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeThemeAliasInput) SetAwsAccountId(v string) *DescribeThemeAliasInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DescribeThemeAliasInput) SetThemeId(v string) *DescribeThemeAliasInput {
+	s.ThemeId = &v
+	return s
+}
+
+type DescribeThemeAliasOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// Information about the theme alias.
+	ThemeAlias *ThemeAlias `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeThemeAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeThemeAliasOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeThemeAliasOutput) SetRequestId(v string) *DescribeThemeAliasOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeThemeAliasOutput) SetStatus(v int64) *DescribeThemeAliasOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeAlias sets the ThemeAlias field's value.
+func (s *DescribeThemeAliasOutput) SetThemeAlias(v *ThemeAlias) *DescribeThemeAliasOutput {
+	s.ThemeAlias = v
+	return s
+}
+
+type DescribeThemeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The alias of the theme that you want to describe. If you name a specific
+	// alias, you describe the version that the alias points to. You can specify
+	// the latest version of the theme by providing the keyword $LATEST in the AliasName
+	// parameter. The keyword $PUBLISHED doesn't apply to themes.
+	AliasName *string `location:"querystring" locationName:"alias-name" min:"1" type:"string"`
+
+	// The ID of the AWS account that contains the theme that you're describing.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" type:"string" required:"true"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+
+	// The version number for the version to describe. If a VersionNumber parameter
+	// value isn't provided, the latest version of the theme is described.
+	VersionNumber *int64 `location:"querystring" locationName:"version-number" min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s DescribeThemeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeThemeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeThemeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeThemeInput"}
+	if s.AliasName != nil && len(*s.AliasName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasName", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 1))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.VersionNumber != nil && *s.VersionNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("VersionNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *DescribeThemeInput) SetAliasName(v string) *DescribeThemeInput {
+	s.AliasName = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeThemeInput) SetAwsAccountId(v string) *DescribeThemeInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DescribeThemeInput) SetThemeId(v string) *DescribeThemeInput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *DescribeThemeInput) SetVersionNumber(v int64) *DescribeThemeInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type DescribeThemeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// The information about the theme that you are describing.
+	Theme *Theme `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeThemeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeThemeOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeThemeOutput) SetRequestId(v string) *DescribeThemeOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeThemeOutput) SetStatus(v int64) *DescribeThemeOutput {
+	s.Status = &v
+	return s
+}
+
+// SetTheme sets the Theme field's value.
+func (s *DescribeThemeOutput) SetTheme(v *Theme) *DescribeThemeOutput {
+	s.Theme = v
+	return s
+}
+
+type DescribeThemePermissionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the theme that you're describing.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The ID for the theme that you want to describe permissions for.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeThemePermissionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeThemePermissionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeThemePermissionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeThemePermissionsInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeThemePermissionsInput) SetAwsAccountId(v string) *DescribeThemePermissionsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DescribeThemePermissionsInput) SetThemeId(v string) *DescribeThemePermissionsInput {
+	s.ThemeId = &v
+	return s
+}
+
+type DescribeThemePermissionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of resource permissions set on the theme.
+	Permissions []*ResourcePermission `min:"1" type:"list"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the theme.
+	ThemeArn *string `type:"string"`
+
+	// The ID for the theme.
+	ThemeId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeThemePermissionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeThemePermissionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *DescribeThemePermissionsOutput) SetPermissions(v []*ResourcePermission) *DescribeThemePermissionsOutput {
+	s.Permissions = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeThemePermissionsOutput) SetRequestId(v string) *DescribeThemePermissionsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeThemePermissionsOutput) SetStatus(v int64) *DescribeThemePermissionsOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *DescribeThemePermissionsOutput) SetThemeArn(v string) *DescribeThemePermissionsOutput {
+	s.ThemeArn = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *DescribeThemePermissionsOutput) SetThemeId(v string) *DescribeThemePermissionsOutput {
+	s.ThemeId = &v
 	return s
 }
 
@@ -14696,6 +19213,135 @@ func (s *GetDashboardEmbedUrlOutput) SetStatus(v int64) *GetDashboardEmbedUrlOut
 	return s
 }
 
+type GetSessionEmbedUrlInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that contains the QuickSight session that you're
+	// embedding.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The entry point for the embedded session.
+	EntryPoint *string `location:"querystring" locationName:"entry-point" min:"1" type:"string"`
+
+	// How many minutes the session is valid. The session lifetime must be 15-600
+	// minutes.
+	SessionLifetimeInMinutes *int64 `location:"querystring" locationName:"session-lifetime" min:"15" type:"long"`
+
+	// The Amazon QuickSight user's Amazon Resource Name (ARN), for use with QUICKSIGHT
+	// identity type. You can use this for any Amazon QuickSight users in your account
+	// (readers, authors, or admins) authenticated as one of the following:
+	//
+	//    * Active Directory (AD) users or group members
+	//
+	//    * Invited nonfederated users
+	//
+	//    * IAM users and IAM role-based sessions authenticated through Federated
+	//    Single Sign-On using SAML, OpenID Connect, or IAM federation.
+	UserArn *string `location:"querystring" locationName:"user-arn" type:"string"`
+}
+
+// String returns the string representation
+func (s GetSessionEmbedUrlInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSessionEmbedUrlInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetSessionEmbedUrlInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetSessionEmbedUrlInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.EntryPoint != nil && len(*s.EntryPoint) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EntryPoint", 1))
+	}
+	if s.SessionLifetimeInMinutes != nil && *s.SessionLifetimeInMinutes < 15 {
+		invalidParams.Add(request.NewErrParamMinValue("SessionLifetimeInMinutes", 15))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *GetSessionEmbedUrlInput) SetAwsAccountId(v string) *GetSessionEmbedUrlInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetEntryPoint sets the EntryPoint field's value.
+func (s *GetSessionEmbedUrlInput) SetEntryPoint(v string) *GetSessionEmbedUrlInput {
+	s.EntryPoint = &v
+	return s
+}
+
+// SetSessionLifetimeInMinutes sets the SessionLifetimeInMinutes field's value.
+func (s *GetSessionEmbedUrlInput) SetSessionLifetimeInMinutes(v int64) *GetSessionEmbedUrlInput {
+	s.SessionLifetimeInMinutes = &v
+	return s
+}
+
+// SetUserArn sets the UserArn field's value.
+func (s *GetSessionEmbedUrlInput) SetUserArn(v string) *GetSessionEmbedUrlInput {
+	s.UserArn = &v
+	return s
+}
+
+type GetSessionEmbedUrlOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A single-use URL that you can put into your server-side web page to embed
+	// your QuickSight session. This URL is valid for 5 minutes. The API provides
+	// the URL with an auth_code value that enables one (and only one) sign-on to
+	// a user session that is valid for 10 hours.
+	EmbedUrl *string `type:"string" sensitive:"true"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s GetSessionEmbedUrlOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSessionEmbedUrlOutput) GoString() string {
+	return s.String()
+}
+
+// SetEmbedUrl sets the EmbedUrl field's value.
+func (s *GetSessionEmbedUrlOutput) SetEmbedUrl(v string) *GetSessionEmbedUrlOutput {
+	s.EmbedUrl = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *GetSessionEmbedUrlOutput) SetRequestId(v string) *GetSessionEmbedUrlOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *GetSessionEmbedUrlOutput) SetStatus(v int64) *GetSessionEmbedUrlOutput {
+	s.Status = &v
+	return s
+}
+
 // A group in Amazon QuickSight consists of a set of users. You can use groups
 // to make it easier to manage access and security. Currently, an Amazon QuickSight
 // subscription can't contain more than 500 Amazon QuickSight groups.
@@ -14783,7 +19429,32 @@ func (s *GroupMember) SetMemberName(v string) *GroupMember {
 	return s
 }
 
-// An IAM policy assignment.
+// The display options for gutter spacing between tiles on a sheet.
+type GutterStyle struct {
+	_ struct{} `type:"structure"`
+
+	// This Boolean value controls whether to display a gutter space between sheet
+	// tiles.
+	Show *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s GutterStyle) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GutterStyle) GoString() string {
+	return s.String()
+}
+
+// SetShow sets the Show field's value.
+func (s *GutterStyle) SetShow(v bool) *GutterStyle {
+	s.Show = &v
+	return s
+}
+
+// An AWS Identity and Access Management (IAM) policy assignment.
 type IAMPolicyAssignment struct {
 	_ struct{} `type:"structure"`
 
@@ -16702,6 +21373,121 @@ func (s *ListIngestionsOutput) SetStatus(v int64) *ListIngestionsOutput {
 	return s
 }
 
+type ListNamespacesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that contains the QuickSight namespaces that you
+	// want to list.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The maximum number of results to return.
+	MaxResults *int64 `location:"querystring" locationName:"max-results" min:"1" type:"integer"`
+
+	// A pagination token that can be used in a subsequent request.
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+}
+
+// String returns the string representation
+func (s ListNamespacesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNamespacesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListNamespacesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListNamespacesInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *ListNamespacesInput) SetAwsAccountId(v string) *ListNamespacesInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListNamespacesInput) SetMaxResults(v int64) *ListNamespacesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListNamespacesInput) SetNextToken(v string) *ListNamespacesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListNamespacesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The information about the namespaces in this AWS account. The response includes
+	// the namespace ARN, name, AWS Region, notification email address, creation
+	// status, and identity store.
+	Namespaces []*NamespaceInfoV2 `type:"list"`
+
+	// A pagination token that can be used in a subsequent request.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListNamespacesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNamespacesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNamespaces sets the Namespaces field's value.
+func (s *ListNamespacesOutput) SetNamespaces(v []*NamespaceInfoV2) *ListNamespacesOutput {
+	s.Namespaces = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListNamespacesOutput) SetNextToken(v string) *ListNamespacesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *ListNamespacesOutput) SetRequestId(v string) *ListNamespacesOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListNamespacesOutput) SetStatus(v int64) *ListNamespacesOutput {
+	s.Status = &v
+	return s
+}
+
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17154,6 +21940,391 @@ func (s *ListTemplatesOutput) SetStatus(v int64) *ListTemplatesOutput {
 // SetTemplateSummaryList sets the TemplateSummaryList field's value.
 func (s *ListTemplatesOutput) SetTemplateSummaryList(v []*TemplateSummary) *ListTemplatesOutput {
 	s.TemplateSummaryList = v
+	return s
+}
+
+type ListThemeAliasesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the theme aliases that you're listing.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The maximum number of results to be returned per request.
+	MaxResults *int64 `location:"querystring" locationName:"max-result" min:"1" type:"integer"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListThemeAliasesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListThemeAliasesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListThemeAliasesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListThemeAliasesInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *ListThemeAliasesInput) SetAwsAccountId(v string) *ListThemeAliasesInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListThemeAliasesInput) SetMaxResults(v int64) *ListThemeAliasesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListThemeAliasesInput) SetNextToken(v string) *ListThemeAliasesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *ListThemeAliasesInput) SetThemeId(v string) *ListThemeAliasesInput {
+	s.ThemeId = &v
+	return s
+}
+
+type ListThemeAliasesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// A structure containing the list of the theme's aliases.
+	ThemeAliasList []*ThemeAlias `type:"list"`
+}
+
+// String returns the string representation
+func (s ListThemeAliasesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListThemeAliasesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListThemeAliasesOutput) SetNextToken(v string) *ListThemeAliasesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *ListThemeAliasesOutput) SetRequestId(v string) *ListThemeAliasesOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListThemeAliasesOutput) SetStatus(v int64) *ListThemeAliasesOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeAliasList sets the ThemeAliasList field's value.
+func (s *ListThemeAliasesOutput) SetThemeAliasList(v []*ThemeAlias) *ListThemeAliasesOutput {
+	s.ThemeAliasList = v
+	return s
+}
+
+type ListThemeVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the themes that you're listing.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The maximum number of results to be returned per request.
+	MaxResults *int64 `location:"querystring" locationName:"max-results" min:"1" type:"integer"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListThemeVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListThemeVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListThemeVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListThemeVersionsInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *ListThemeVersionsInput) SetAwsAccountId(v string) *ListThemeVersionsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListThemeVersionsInput) SetMaxResults(v int64) *ListThemeVersionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListThemeVersionsInput) SetNextToken(v string) *ListThemeVersionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *ListThemeVersionsInput) SetThemeId(v string) *ListThemeVersionsInput {
+	s.ThemeId = &v
+	return s
+}
+
+type ListThemeVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// A structure containing a list of all the versions of the specified theme.
+	ThemeVersionSummaryList []*ThemeVersionSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListThemeVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListThemeVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListThemeVersionsOutput) SetNextToken(v string) *ListThemeVersionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *ListThemeVersionsOutput) SetRequestId(v string) *ListThemeVersionsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListThemeVersionsOutput) SetStatus(v int64) *ListThemeVersionsOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeVersionSummaryList sets the ThemeVersionSummaryList field's value.
+func (s *ListThemeVersionsOutput) SetThemeVersionSummaryList(v []*ThemeVersionSummary) *ListThemeVersionsOutput {
+	s.ThemeVersionSummaryList = v
+	return s
+}
+
+type ListThemesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the themes that you're listing.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The maximum number of results to be returned per request.
+	MaxResults *int64 `location:"querystring" locationName:"max-results" min:"1" type:"integer"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+
+	// The type of themes that you want to list. Valid options include the following:
+	//
+	//    * ALL (default)- Display all existing themes.
+	//
+	//    * CUSTOM - Display only the themes created by people using Amazon QuickSight.
+	//
+	//    * QUICKSIGHT - Display only the starting themes defined by QuickSight.
+	Type *string `location:"querystring" locationName:"type" type:"string" enum:"ThemeType"`
+}
+
+// String returns the string representation
+func (s ListThemesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListThemesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListThemesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListThemesInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *ListThemesInput) SetAwsAccountId(v string) *ListThemesInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListThemesInput) SetMaxResults(v int64) *ListThemesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListThemesInput) SetNextToken(v string) *ListThemesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ListThemesInput) SetType(v string) *ListThemesInput {
+	s.Type = &v
+	return s
+}
+
+type ListThemesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of results, or null if there are no more results.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// Information about the themes in the list.
+	ThemeSummaryList []*ThemeSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListThemesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListThemesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListThemesOutput) SetNextToken(v string) *ListThemesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *ListThemesOutput) SetRequestId(v string) *ListThemesOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListThemesOutput) SetStatus(v int64) *ListThemesOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeSummaryList sets the ThemeSummaryList field's value.
+func (s *ListThemesOutput) SetThemeSummaryList(v []*ThemeSummary) *ListThemesOutput {
+	s.ThemeSummaryList = v
 	return s
 }
 
@@ -17631,6 +22802,30 @@ func (s *ManifestFileLocation) SetKey(v string) *ManifestFileLocation {
 	return s
 }
 
+// The display options for margins around the outside edge of sheets.
+type MarginStyle struct {
+	_ struct{} `type:"structure"`
+
+	// This Boolean value controls whether to display sheet margins.
+	Show *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s MarginStyle) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MarginStyle) GoString() string {
+	return s.String()
+}
+
+// SetShow sets the Show field's value.
+func (s *MarginStyle) SetShow(v bool) *MarginStyle {
+	s.Show = &v
+	return s
+}
+
 // MariaDB parameters.
 type MariaDbParameters struct {
 	_ struct{} `type:"structure"`
@@ -17780,6 +22975,108 @@ func (s *MySqlParameters) SetHost(v string) *MySqlParameters {
 // SetPort sets the Port field's value.
 func (s *MySqlParameters) SetPort(v int64) *MySqlParameters {
 	s.Port = &v
+	return s
+}
+
+// Errors that occur during namespace creation.
+type NamespaceError struct {
+	_ struct{} `type:"structure"`
+
+	// The message for the error.
+	Message *string `type:"string"`
+
+	// The error type.
+	Type *string `type:"string" enum:"NamespaceErrorType"`
+}
+
+// String returns the string representation
+func (s NamespaceError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NamespaceError) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *NamespaceError) SetMessage(v string) *NamespaceError {
+	s.Message = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *NamespaceError) SetType(v string) *NamespaceError {
+	s.Type = &v
+	return s
+}
+
+// The error type.
+type NamespaceInfoV2 struct {
+	_ struct{} `type:"structure"`
+
+	// The namespace ARN.
+	Arn *string `type:"string"`
+
+	// The namespace AWS Region.
+	CapacityRegion *string `type:"string"`
+
+	// The creation status of a namespace that is not yet completely created.
+	CreationStatus *string `type:"string" enum:"NamespaceStatus"`
+
+	// The identity store used for the namespace.
+	IdentityStore *string `type:"string" enum:"IdentityStore"`
+
+	// The name of the error.
+	Name *string `type:"string"`
+
+	// An error that occured when the namespace was created.
+	NamespaceError *NamespaceError `type:"structure"`
+}
+
+// String returns the string representation
+func (s NamespaceInfoV2) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NamespaceInfoV2) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *NamespaceInfoV2) SetArn(v string) *NamespaceInfoV2 {
+	s.Arn = &v
+	return s
+}
+
+// SetCapacityRegion sets the CapacityRegion field's value.
+func (s *NamespaceInfoV2) SetCapacityRegion(v string) *NamespaceInfoV2 {
+	s.CapacityRegion = &v
+	return s
+}
+
+// SetCreationStatus sets the CreationStatus field's value.
+func (s *NamespaceInfoV2) SetCreationStatus(v string) *NamespaceInfoV2 {
+	s.CreationStatus = &v
+	return s
+}
+
+// SetIdentityStore sets the IdentityStore field's value.
+func (s *NamespaceInfoV2) SetIdentityStore(v string) *NamespaceInfoV2 {
+	s.IdentityStore = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *NamespaceInfoV2) SetName(v string) *NamespaceInfoV2 {
+	s.Name = &v
+	return s
+}
+
+// SetNamespaceError sets the NamespaceError field's value.
+func (s *NamespaceInfoV2) SetNamespaceError(v *NamespaceError) *NamespaceInfoV2 {
+	s.NamespaceError = v
 	return s
 }
 
@@ -18420,6 +23717,30 @@ type RegisterUserInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
+	// (Enterprise edition only) The name of the custom permissions profile that
+	// you want to assign to this user. Currently, custom permissions profile names
+	// are assigned to permissions profiles in the QuickSight console. You use this
+	// API to assign the named set of permissions to a QuickSight user.
+	//
+	// Customizing permissions in the QuickSight UI allows you to control a user's
+	// access to the following operations:
+	//
+	//    *
+	//
+	//    *
+	//
+	//    *
+	//
+	//    *
+	//
+	// QuickSight custom permissions are applied through IAM policies. Therefore,
+	// they override the permissions typically granted by assigning QuickSight users
+	// to one of the default security cohorts (admin, author, reader) in QuickSight.
+	//
+	// This feature is available only to QuickSight Enterprise edition subscriptions
+	// that use SAML 2.0-Based Federation for Single Sign-On (SSO).
+	CustomPermissionsName *string `min:"1" type:"string"`
+
 	// The email address of the user that you want to register.
 	//
 	// Email is a required field
@@ -18495,6 +23816,9 @@ func (s *RegisterUserInput) Validate() error {
 	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
 		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
 	}
+	if s.CustomPermissionsName != nil && len(*s.CustomPermissionsName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomPermissionsName", 1))
+	}
 	if s.Email == nil {
 		invalidParams.Add(request.NewErrParamRequired("Email"))
 	}
@@ -18526,6 +23850,12 @@ func (s *RegisterUserInput) Validate() error {
 // SetAwsAccountId sets the AwsAccountId field's value.
 func (s *RegisterUserInput) SetAwsAccountId(v string) *RegisterUserInput {
 	s.AwsAccountId = &v
+	return s
+}
+
+// SetCustomPermissionsName sets the CustomPermissionsName field's value.
+func (s *RegisterUserInput) SetCustomPermissionsName(v string) *RegisterUserInput {
+	s.CustomPermissionsName = &v
 	return s
 }
 
@@ -18906,10 +24236,14 @@ type ResourcePermission struct {
 	// Actions is a required field
 	Actions []*string `min:"1" type:"list" required:"true"`
 
-	// The Amazon Resource Name (ARN) of an Amazon QuickSight user or group, or
-	// an IAM ARN. If you are using cross-account resource sharing, this is the
-	// IAM ARN of an account root. Otherwise, it is the ARN of a QuickSight user
-	// or group. .
+	// The Amazon Resource Name (ARN) of the principal. This can be one of the following:
+	//
+	//    * The ARN of an Amazon QuickSight user, group, or namespace. (This is
+	//    most common.)
+	//
+	//    * The ARN of an AWS account root: This is an IAM ARN rather than a QuickSight
+	//    ARN. Use this option only to share resources (templates) across AWS accounts.
+	//    (This is less common.)
 	//
 	// Principal is a required field
 	Principal *string `min:"1" type:"string" required:"true"`
@@ -19063,6 +24397,9 @@ type RowLevelPermissionDataSet struct {
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
 
+	// The namespace associated with the row-level permissions dataset.
+	Namespace *string `type:"string"`
+
 	// Permission policy.
 	//
 	// PermissionPolicy is a required field
@@ -19098,6 +24435,12 @@ func (s *RowLevelPermissionDataSet) Validate() error {
 // SetArn sets the Arn field's value.
 func (s *RowLevelPermissionDataSet) SetArn(v string) *RowLevelPermissionDataSet {
 	s.Arn = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *RowLevelPermissionDataSet) SetNamespace(v string) *RowLevelPermissionDataSet {
+	s.Namespace = &v
 	return s
 }
 
@@ -19495,6 +24838,39 @@ func (s SheetControlsOption) GoString() string {
 // SetVisibilityState sets the VisibilityState field's value.
 func (s *SheetControlsOption) SetVisibilityState(v string) *SheetControlsOption {
 	s.VisibilityState = &v
+	return s
+}
+
+// The theme display options for sheets.
+type SheetStyle struct {
+	_ struct{} `type:"structure"`
+
+	// The display options for tiles.
+	Tile *TileStyle `type:"structure"`
+
+	// The layout options for tiles.
+	TileLayout *TileLayoutStyle `type:"structure"`
+}
+
+// String returns the string representation
+func (s SheetStyle) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SheetStyle) GoString() string {
+	return s.String()
+}
+
+// SetTile sets the Tile field's value.
+func (s *SheetStyle) SetTile(v *TileStyle) *SheetStyle {
+	s.Tile = v
+	return s
+}
+
+// SetTileLayout sets the TileLayout field's value.
+func (s *SheetStyle) SetTileLayout(v *TileLayoutStyle) *SheetStyle {
+	s.TileLayout = v
 	return s
 }
 
@@ -20603,6 +25979,420 @@ func (s *TeradataParameters) SetPort(v int64) *TeradataParameters {
 	return s
 }
 
+type Theme struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the theme.
+	Arn *string `type:"string"`
+
+	// The date and time that the theme was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The date and time that the theme was last updated.
+	LastUpdatedTime *time.Time `type:"timestamp"`
+
+	// The name that the user gives to the theme.
+	Name *string `min:"1" type:"string"`
+
+	// The identifier that the user gives to the theme.
+	ThemeId *string `min:"1" type:"string"`
+
+	// The type of theme, based on how it was created. Valid values include: QUICKSIGHT
+	// and CUSTOM.
+	Type *string `type:"string" enum:"ThemeType"`
+
+	// A version of a theme.
+	Version *ThemeVersion `type:"structure"`
+}
+
+// String returns the string representation
+func (s Theme) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Theme) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Theme) SetArn(v string) *Theme {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *Theme) SetCreatedTime(v time.Time) *Theme {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetLastUpdatedTime sets the LastUpdatedTime field's value.
+func (s *Theme) SetLastUpdatedTime(v time.Time) *Theme {
+	s.LastUpdatedTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Theme) SetName(v string) *Theme {
+	s.Name = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *Theme) SetThemeId(v string) *Theme {
+	s.ThemeId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Theme) SetType(v string) *Theme {
+	s.Type = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *Theme) SetVersion(v *ThemeVersion) *Theme {
+	s.Version = v
+	return s
+}
+
+// An alias for a theme.
+type ThemeAlias struct {
+	_ struct{} `type:"structure"`
+
+	// The display name of the theme alias.
+	AliasName *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the theme alias.
+	Arn *string `type:"string"`
+
+	// The version number of the theme alias.
+	ThemeVersionNumber *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ThemeAlias) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThemeAlias) GoString() string {
+	return s.String()
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *ThemeAlias) SetAliasName(v string) *ThemeAlias {
+	s.AliasName = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *ThemeAlias) SetArn(v string) *ThemeAlias {
+	s.Arn = &v
+	return s
+}
+
+// SetThemeVersionNumber sets the ThemeVersionNumber field's value.
+func (s *ThemeAlias) SetThemeVersionNumber(v int64) *ThemeAlias {
+	s.ThemeVersionNumber = &v
+	return s
+}
+
+// The theme configuration. This configuration contains all of the display properties
+// for a theme.
+type ThemeConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Color properties that apply to chart data colors.
+	DataColorPalette *DataColorPalette `type:"structure"`
+
+	// Display options related to sheets.
+	Sheet *SheetStyle `type:"structure"`
+
+	// Color properties that apply to the UI and to charts, excluding the colors
+	// that apply to data.
+	UIColorPalette *UIColorPalette `type:"structure"`
+}
+
+// String returns the string representation
+func (s ThemeConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThemeConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetDataColorPalette sets the DataColorPalette field's value.
+func (s *ThemeConfiguration) SetDataColorPalette(v *DataColorPalette) *ThemeConfiguration {
+	s.DataColorPalette = v
+	return s
+}
+
+// SetSheet sets the Sheet field's value.
+func (s *ThemeConfiguration) SetSheet(v *SheetStyle) *ThemeConfiguration {
+	s.Sheet = v
+	return s
+}
+
+// SetUIColorPalette sets the UIColorPalette field's value.
+func (s *ThemeConfiguration) SetUIColorPalette(v *UIColorPalette) *ThemeConfiguration {
+	s.UIColorPalette = v
+	return s
+}
+
+// Theme error.
+type ThemeError struct {
+	_ struct{} `type:"structure"`
+
+	// The error message.
+	Message *string `type:"string"`
+
+	// The type of error.
+	Type *string `type:"string" enum:"ThemeErrorType"`
+}
+
+// String returns the string representation
+func (s ThemeError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThemeError) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *ThemeError) SetMessage(v string) *ThemeError {
+	s.Message = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ThemeError) SetType(v string) *ThemeError {
+	s.Type = &v
+	return s
+}
+
+// The theme summary.
+type ThemeSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	Arn *string `type:"string"`
+
+	// The date and time that this theme was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The last date and time that this theme was updated.
+	LastUpdatedTime *time.Time `type:"timestamp"`
+
+	// The latest version number for the theme.
+	LatestVersionNumber *int64 `min:"1" type:"long"`
+
+	// the display name for the theme.
+	Name *string `min:"1" type:"string"`
+
+	// The ID of the theme. This ID is unique per AWS Region for each AWS account.
+	ThemeId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ThemeSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThemeSummary) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *ThemeSummary) SetArn(v string) *ThemeSummary {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *ThemeSummary) SetCreatedTime(v time.Time) *ThemeSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetLastUpdatedTime sets the LastUpdatedTime field's value.
+func (s *ThemeSummary) SetLastUpdatedTime(v time.Time) *ThemeSummary {
+	s.LastUpdatedTime = &v
+	return s
+}
+
+// SetLatestVersionNumber sets the LatestVersionNumber field's value.
+func (s *ThemeSummary) SetLatestVersionNumber(v int64) *ThemeSummary {
+	s.LatestVersionNumber = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ThemeSummary) SetName(v string) *ThemeSummary {
+	s.Name = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *ThemeSummary) SetThemeId(v string) *ThemeSummary {
+	s.ThemeId = &v
+	return s
+}
+
+// A version of a theme.
+type ThemeVersion struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	Arn *string `type:"string"`
+
+	// The Amazon QuickSight-defined ID of the theme that a custom theme inherits
+	// from. All themes initially inherit from a default QuickSight theme.
+	BaseThemeId *string `min:"1" type:"string"`
+
+	// The theme configuration, which contains all the theme display properties.
+	Configuration *ThemeConfiguration `type:"structure"`
+
+	// The date and time that this theme version was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The description of the theme.
+	Description *string `min:"1" type:"string"`
+
+	// Errors associated with the theme.
+	Errors []*ThemeError `min:"1" type:"list"`
+
+	// The status of the theme version.
+	Status *string `type:"string" enum:"ResourceStatus"`
+
+	// The version number of the theme.
+	VersionNumber *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ThemeVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThemeVersion) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *ThemeVersion) SetArn(v string) *ThemeVersion {
+	s.Arn = &v
+	return s
+}
+
+// SetBaseThemeId sets the BaseThemeId field's value.
+func (s *ThemeVersion) SetBaseThemeId(v string) *ThemeVersion {
+	s.BaseThemeId = &v
+	return s
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *ThemeVersion) SetConfiguration(v *ThemeConfiguration) *ThemeVersion {
+	s.Configuration = v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *ThemeVersion) SetCreatedTime(v time.Time) *ThemeVersion {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ThemeVersion) SetDescription(v string) *ThemeVersion {
+	s.Description = &v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *ThemeVersion) SetErrors(v []*ThemeError) *ThemeVersion {
+	s.Errors = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ThemeVersion) SetStatus(v string) *ThemeVersion {
+	s.Status = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *ThemeVersion) SetVersionNumber(v int64) *ThemeVersion {
+	s.VersionNumber = &v
+	return s
+}
+
+// The theme version.
+type ThemeVersionSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the theme version.
+	Arn *string `type:"string"`
+
+	// The date and time that this theme version was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The description of the theme version.
+	Description *string `min:"1" type:"string"`
+
+	// The status of the theme version.
+	Status *string `type:"string" enum:"ResourceStatus"`
+
+	// The version number of the theme version.
+	VersionNumber *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s ThemeVersionSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThemeVersionSummary) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *ThemeVersionSummary) SetArn(v string) *ThemeVersionSummary {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *ThemeVersionSummary) SetCreatedTime(v time.Time) *ThemeVersionSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ThemeVersionSummary) SetDescription(v string) *ThemeVersionSummary {
+	s.Description = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ThemeVersionSummary) SetStatus(v string) *ThemeVersionSummary {
+	s.Status = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *ThemeVersionSummary) SetVersionNumber(v int64) *ThemeVersionSummary {
+	s.VersionNumber = &v
+	return s
+}
+
 // Access is throttled.
 type ThrottlingException struct {
 	_            struct{}                  `type:"structure"`
@@ -20660,6 +26450,63 @@ func (s *ThrottlingException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ThrottlingException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// The display options for the layout of tiles on a sheet.
+type TileLayoutStyle struct {
+	_ struct{} `type:"structure"`
+
+	// The gutter settings that apply between tiles.
+	Gutter *GutterStyle `type:"structure"`
+
+	// The margin settings that apply around the outside edge of sheets.
+	Margin *MarginStyle `type:"structure"`
+}
+
+// String returns the string representation
+func (s TileLayoutStyle) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TileLayoutStyle) GoString() string {
+	return s.String()
+}
+
+// SetGutter sets the Gutter field's value.
+func (s *TileLayoutStyle) SetGutter(v *GutterStyle) *TileLayoutStyle {
+	s.Gutter = v
+	return s
+}
+
+// SetMargin sets the Margin field's value.
+func (s *TileLayoutStyle) SetMargin(v *MarginStyle) *TileLayoutStyle {
+	s.Margin = v
+	return s
+}
+
+// Display options related to tiles on a sheet.
+type TileStyle struct {
+	_ struct{} `type:"structure"`
+
+	// The border around a tile.
+	Border *BorderStyle `type:"structure"`
+}
+
+// String returns the string representation
+func (s TileStyle) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TileStyle) GoString() string {
+	return s.String()
+}
+
+// SetBorder sets the Border field's value.
+func (s *TileStyle) SetBorder(v *BorderStyle) *TileStyle {
+	s.Border = v
+	return s
 }
 
 // A data transformation on a logical table. This is a variant type structure.
@@ -20833,6 +26680,179 @@ func (s *TwitterParameters) SetQuery(v string) *TwitterParameters {
 	return s
 }
 
+// The theme colors that apply to UI and to charts, excluding data colors. The
+// colors description is a hexidecimal color code that consists of six alphanumerical
+// characters, prefixed with #, for example #37BFF5. For more information, see
+// Using Themes in Amazon QuickSight (https://docs.aws.amazon.com/quicksight/latest/user/themes-in-quicksight.html)
+// in the Amazon QuickSight User Guide.
+type UIColorPalette struct {
+	_ struct{} `type:"structure"`
+
+	// This color is that applies to selected states and buttons.
+	Accent *string `type:"string"`
+
+	// The foreground color that applies to any text or other elements that appear
+	// over the accent color.
+	AccentForeground *string `type:"string"`
+
+	// The color that applies to error messages.
+	Danger *string `type:"string"`
+
+	// The foreground color that applies to any text or other elements that appear
+	// over the error color.
+	DangerForeground *string `type:"string"`
+
+	// The color that applies to the names of fields that are identified as dimensions.
+	Dimension *string `type:"string"`
+
+	// The foreground color that applies to any text or other elements that appear
+	// over the dimension color.
+	DimensionForeground *string `type:"string"`
+
+	// The color that applies to the names of fields that are identified as measures.
+	Measure *string `type:"string"`
+
+	// The foreground color that applies to any text or other elements that appear
+	// over the measure color.
+	MeasureForeground *string `type:"string"`
+
+	// The background color that applies to visuals and other high emphasis UI.
+	PrimaryBackground *string `type:"string"`
+
+	// The color of text and other foreground elements that appear over the primary
+	// background regions, such as grid lines, borders, table banding, icons, and
+	// so on.
+	PrimaryForeground *string `type:"string"`
+
+	// The background color that applies to the sheet background and sheet controls.
+	SecondaryBackground *string `type:"string"`
+
+	// The foreground color that applies to any sheet title, sheet control text,
+	// or UI that appears over the secondary background.
+	SecondaryForeground *string `type:"string"`
+
+	// The color that applies to success messages, for example the check mark for
+	// a successful download.
+	Success *string `type:"string"`
+
+	// The foreground color that applies to any text or other elements that appear
+	// over the success color.
+	SuccessForeground *string `type:"string"`
+
+	// This color that applies to warning and informational messages.
+	Warning *string `type:"string"`
+
+	// The foreground color that applies to any text or other elements that appear
+	// over the warning color.
+	WarningForeground *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UIColorPalette) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UIColorPalette) GoString() string {
+	return s.String()
+}
+
+// SetAccent sets the Accent field's value.
+func (s *UIColorPalette) SetAccent(v string) *UIColorPalette {
+	s.Accent = &v
+	return s
+}
+
+// SetAccentForeground sets the AccentForeground field's value.
+func (s *UIColorPalette) SetAccentForeground(v string) *UIColorPalette {
+	s.AccentForeground = &v
+	return s
+}
+
+// SetDanger sets the Danger field's value.
+func (s *UIColorPalette) SetDanger(v string) *UIColorPalette {
+	s.Danger = &v
+	return s
+}
+
+// SetDangerForeground sets the DangerForeground field's value.
+func (s *UIColorPalette) SetDangerForeground(v string) *UIColorPalette {
+	s.DangerForeground = &v
+	return s
+}
+
+// SetDimension sets the Dimension field's value.
+func (s *UIColorPalette) SetDimension(v string) *UIColorPalette {
+	s.Dimension = &v
+	return s
+}
+
+// SetDimensionForeground sets the DimensionForeground field's value.
+func (s *UIColorPalette) SetDimensionForeground(v string) *UIColorPalette {
+	s.DimensionForeground = &v
+	return s
+}
+
+// SetMeasure sets the Measure field's value.
+func (s *UIColorPalette) SetMeasure(v string) *UIColorPalette {
+	s.Measure = &v
+	return s
+}
+
+// SetMeasureForeground sets the MeasureForeground field's value.
+func (s *UIColorPalette) SetMeasureForeground(v string) *UIColorPalette {
+	s.MeasureForeground = &v
+	return s
+}
+
+// SetPrimaryBackground sets the PrimaryBackground field's value.
+func (s *UIColorPalette) SetPrimaryBackground(v string) *UIColorPalette {
+	s.PrimaryBackground = &v
+	return s
+}
+
+// SetPrimaryForeground sets the PrimaryForeground field's value.
+func (s *UIColorPalette) SetPrimaryForeground(v string) *UIColorPalette {
+	s.PrimaryForeground = &v
+	return s
+}
+
+// SetSecondaryBackground sets the SecondaryBackground field's value.
+func (s *UIColorPalette) SetSecondaryBackground(v string) *UIColorPalette {
+	s.SecondaryBackground = &v
+	return s
+}
+
+// SetSecondaryForeground sets the SecondaryForeground field's value.
+func (s *UIColorPalette) SetSecondaryForeground(v string) *UIColorPalette {
+	s.SecondaryForeground = &v
+	return s
+}
+
+// SetSuccess sets the Success field's value.
+func (s *UIColorPalette) SetSuccess(v string) *UIColorPalette {
+	s.Success = &v
+	return s
+}
+
+// SetSuccessForeground sets the SuccessForeground field's value.
+func (s *UIColorPalette) SetSuccessForeground(v string) *UIColorPalette {
+	s.SuccessForeground = &v
+	return s
+}
+
+// SetWarning sets the Warning field's value.
+func (s *UIColorPalette) SetWarning(v string) *UIColorPalette {
+	s.Warning = &v
+	return s
+}
+
+// SetWarningForeground sets the WarningForeground field's value.
+func (s *UIColorPalette) SetWarningForeground(v string) *UIColorPalette {
+	s.WarningForeground = &v
+	return s
+}
+
 // This error indicates that you are calling an operation on an Amazon QuickSight
 // subscription where the edition doesn't include support for that operation.
 // Amazon QuickSight currently has Standard Edition and Enterprise Edition.
@@ -20986,6 +27006,230 @@ func (s *UntagResourceOutput) SetStatus(v int64) *UntagResourceOutput {
 	return s
 }
 
+type UpdateAccountCustomizationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The customizations you want to update in QuickSight.
+	//
+	// AccountCustomization is a required field
+	AccountCustomization *AccountCustomization `type:"structure" required:"true"`
+
+	// The ID for the AWS account that you want to update QuickSight customizations
+	// for.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The namespace associated with the customization that you're updating.
+	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateAccountCustomizationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountCustomizationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAccountCustomizationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAccountCustomizationInput"}
+	if s.AccountCustomization == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountCustomization"))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccountCustomization sets the AccountCustomization field's value.
+func (s *UpdateAccountCustomizationInput) SetAccountCustomization(v *AccountCustomization) *UpdateAccountCustomizationInput {
+	s.AccountCustomization = v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateAccountCustomizationInput) SetAwsAccountId(v string) *UpdateAccountCustomizationInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *UpdateAccountCustomizationInput) SetNamespace(v string) *UpdateAccountCustomizationInput {
+	s.Namespace = &v
+	return s
+}
+
+type UpdateAccountCustomizationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The customizations associated with your QuickSight subscription.
+	AccountCustomization *AccountCustomization `type:"structure"`
+
+	// The ID for the AWS account that you want to update QuickSight customizations
+	// for.
+	AwsAccountId *string `min:"12" type:"string"`
+
+	// The namespace associated with the customization that you're updating.
+	Namespace *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s UpdateAccountCustomizationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountCustomizationOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccountCustomization sets the AccountCustomization field's value.
+func (s *UpdateAccountCustomizationOutput) SetAccountCustomization(v *AccountCustomization) *UpdateAccountCustomizationOutput {
+	s.AccountCustomization = v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateAccountCustomizationOutput) SetAwsAccountId(v string) *UpdateAccountCustomizationOutput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *UpdateAccountCustomizationOutput) SetNamespace(v string) *UpdateAccountCustomizationOutput {
+	s.Namespace = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateAccountCustomizationOutput) SetRequestId(v string) *UpdateAccountCustomizationOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateAccountCustomizationOutput) SetStatus(v int64) *UpdateAccountCustomizationOutput {
+	s.Status = &v
+	return s
+}
+
+type UpdateAccountSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the AWS account that contains the QuickSight namespaces that you
+	// want to list.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The default namespace for this AWS Account. Currently, the default is default.
+	// IAM users who register for the first time with QuickSight provide an email
+	// that becomes associated with the default namespace.
+	//
+	// DefaultNamespace is a required field
+	DefaultNamespace *string `type:"string" required:"true"`
+
+	// Email address used to send notifications regarding administration of QuickSight.
+	NotificationEmail *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateAccountSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAccountSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAccountSettingsInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.DefaultNamespace == nil {
+		invalidParams.Add(request.NewErrParamRequired("DefaultNamespace"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateAccountSettingsInput) SetAwsAccountId(v string) *UpdateAccountSettingsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetDefaultNamespace sets the DefaultNamespace field's value.
+func (s *UpdateAccountSettingsInput) SetDefaultNamespace(v string) *UpdateAccountSettingsInput {
+	s.DefaultNamespace = &v
+	return s
+}
+
+// SetNotificationEmail sets the NotificationEmail field's value.
+func (s *UpdateAccountSettingsInput) SetNotificationEmail(v string) *UpdateAccountSettingsInput {
+	s.NotificationEmail = &v
+	return s
+}
+
+type UpdateAccountSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s UpdateAccountSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateAccountSettingsOutput) SetRequestId(v string) *UpdateAccountSettingsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateAccountSettingsOutput) SetStatus(v int64) *UpdateAccountSettingsOutput {
+	s.Status = &v
+	return s
+}
+
 type UpdateDashboardInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21039,6 +27283,12 @@ type UpdateDashboardInput struct {
 	//
 	// SourceEntity is a required field
 	SourceEntity *DashboardSourceEntity `type:"structure" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the theme that is being used for this dashboard.
+	// If you add a value for this field, it overrides the value that was originally
+	// associated with the entity. The theme ARN must exist in the same AWS account
+	// where you create the dashboard.
+	ThemeArn *string `type:"string"`
 
 	// A description for the first version of the dashboard being created.
 	VersionDescription *string `min:"1" type:"string"`
@@ -21134,6 +27384,12 @@ func (s *UpdateDashboardInput) SetSourceEntity(v *DashboardSourceEntity) *Update
 	return s
 }
 
+// SetThemeArn sets the ThemeArn field's value.
+func (s *UpdateDashboardInput) SetThemeArn(v string) *UpdateDashboardInput {
+	s.ThemeArn = &v
+	return s
+}
+
 // SetVersionDescription sets the VersionDescription field's value.
 func (s *UpdateDashboardInput) SetVersionDescription(v string) *UpdateDashboardInput {
 	s.VersionDescription = &v
@@ -21223,10 +27479,10 @@ type UpdateDashboardPermissionsInput struct {
 	DashboardId *string `location:"uri" locationName:"DashboardId" min:"1" type:"string" required:"true"`
 
 	// The permissions that you want to grant on this resource.
-	GrantPermissions []*ResourcePermission `min:"1" type:"list"`
+	GrantPermissions []*ResourcePermission `type:"list"`
 
 	// The permissions that you want to revoke from this resource.
-	RevokePermissions []*ResourcePermission `min:"1" type:"list"`
+	RevokePermissions []*ResourcePermission `type:"list"`
 }
 
 // String returns the string representation
@@ -21253,12 +27509,6 @@ func (s *UpdateDashboardPermissionsInput) Validate() error {
 	}
 	if s.DashboardId != nil && len(*s.DashboardId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("DashboardId", 1))
-	}
-	if s.GrantPermissions != nil && len(s.GrantPermissions) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("GrantPermissions", 1))
-	}
-	if s.RevokePermissions != nil && len(s.RevokePermissions) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("RevokePermissions", 1))
 	}
 	if s.GrantPermissions != nil {
 		for i, v := range s.GrantPermissions {
@@ -22896,10 +29146,10 @@ type UpdateTemplatePermissionsInput struct {
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
 	// A list of resource permissions to be granted on the template.
-	GrantPermissions []*ResourcePermission `min:"1" type:"list"`
+	GrantPermissions []*ResourcePermission `type:"list"`
 
 	// A list of resource permissions to be revoked from the template.
-	RevokePermissions []*ResourcePermission `min:"1" type:"list"`
+	RevokePermissions []*ResourcePermission `type:"list"`
 
 	// The ID for the template.
 	//
@@ -22925,12 +29175,6 @@ func (s *UpdateTemplatePermissionsInput) Validate() error {
 	}
 	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
 		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
-	}
-	if s.GrantPermissions != nil && len(s.GrantPermissions) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("GrantPermissions", 1))
-	}
-	if s.RevokePermissions != nil && len(s.RevokePermissions) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("RevokePermissions", 1))
 	}
 	if s.TemplateId == nil {
 		invalidParams.Add(request.NewErrParamRequired("TemplateId"))
@@ -23048,6 +29292,473 @@ func (s *UpdateTemplatePermissionsOutput) SetTemplateId(v string) *UpdateTemplat
 	return s
 }
 
+type UpdateThemeAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the theme alias that you want to update.
+	//
+	// AliasName is a required field
+	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the theme alias that you're updating.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+
+	// The version number of the theme that the alias should reference.
+	//
+	// ThemeVersionNumber is a required field
+	ThemeVersionNumber *int64 `min:"1" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateThemeAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThemeAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateThemeAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateThemeAliasInput"}
+	if s.AliasName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasName"))
+	}
+	if s.AliasName != nil && len(*s.AliasName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasName", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.ThemeVersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeVersionNumber"))
+	}
+	if s.ThemeVersionNumber != nil && *s.ThemeVersionNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ThemeVersionNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasName sets the AliasName field's value.
+func (s *UpdateThemeAliasInput) SetAliasName(v string) *UpdateThemeAliasInput {
+	s.AliasName = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateThemeAliasInput) SetAwsAccountId(v string) *UpdateThemeAliasInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *UpdateThemeAliasInput) SetThemeId(v string) *UpdateThemeAliasInput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetThemeVersionNumber sets the ThemeVersionNumber field's value.
+func (s *UpdateThemeAliasInput) SetThemeVersionNumber(v int64) *UpdateThemeAliasInput {
+	s.ThemeVersionNumber = &v
+	return s
+}
+
+type UpdateThemeAliasOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// Information about the theme alias.
+	ThemeAlias *ThemeAlias `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateThemeAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThemeAliasOutput) GoString() string {
+	return s.String()
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateThemeAliasOutput) SetRequestId(v string) *UpdateThemeAliasOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateThemeAliasOutput) SetStatus(v int64) *UpdateThemeAliasOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeAlias sets the ThemeAlias field's value.
+func (s *UpdateThemeAliasOutput) SetThemeAlias(v *ThemeAlias) *UpdateThemeAliasOutput {
+	s.ThemeAlias = v
+	return s
+}
+
+type UpdateThemeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the theme that you're updating.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The theme ID, defined by Amazon QuickSight, that a custom theme inherits
+	// from. All themes initially inherit from a default QuickSight theme.
+	//
+	// BaseThemeId is a required field
+	BaseThemeId *string `min:"1" type:"string" required:"true"`
+
+	// The theme configuration, which contains the theme display properties.
+	Configuration *ThemeConfiguration `type:"structure"`
+
+	// The name for the theme.
+	Name *string `min:"1" type:"string"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+
+	// A description of the theme version that you're updating Every time that you
+	// call UpdateTheme, you create a new version of the theme. Each version of
+	// the theme maintains a description of the version in VersionDescription.
+	VersionDescription *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateThemeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThemeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateThemeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateThemeInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.BaseThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("BaseThemeId"))
+	}
+	if s.BaseThemeId != nil && len(*s.BaseThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BaseThemeId", 1))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.VersionDescription != nil && len(*s.VersionDescription) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VersionDescription", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateThemeInput) SetAwsAccountId(v string) *UpdateThemeInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetBaseThemeId sets the BaseThemeId field's value.
+func (s *UpdateThemeInput) SetBaseThemeId(v string) *UpdateThemeInput {
+	s.BaseThemeId = &v
+	return s
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *UpdateThemeInput) SetConfiguration(v *ThemeConfiguration) *UpdateThemeInput {
+	s.Configuration = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateThemeInput) SetName(v string) *UpdateThemeInput {
+	s.Name = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *UpdateThemeInput) SetThemeId(v string) *UpdateThemeInput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetVersionDescription sets the VersionDescription field's value.
+func (s *UpdateThemeInput) SetVersionDescription(v string) *UpdateThemeInput {
+	s.VersionDescription = &v
+	return s
+}
+
+type UpdateThemeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the theme.
+	Arn *string `type:"string"`
+
+	// The creation status of the theme.
+	CreationStatus *string `type:"string" enum:"ResourceStatus"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// The ID for the theme.
+	ThemeId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) for the new version of the theme.
+	VersionArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateThemeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThemeOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateThemeOutput) SetArn(v string) *UpdateThemeOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationStatus sets the CreationStatus field's value.
+func (s *UpdateThemeOutput) SetCreationStatus(v string) *UpdateThemeOutput {
+	s.CreationStatus = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateThemeOutput) SetRequestId(v string) *UpdateThemeOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateThemeOutput) SetStatus(v int64) *UpdateThemeOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *UpdateThemeOutput) SetThemeId(v string) *UpdateThemeOutput {
+	s.ThemeId = &v
+	return s
+}
+
+// SetVersionArn sets the VersionArn field's value.
+func (s *UpdateThemeOutput) SetVersionArn(v string) *UpdateThemeOutput {
+	s.VersionArn = &v
+	return s
+}
+
+type UpdateThemePermissionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the theme.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// A list of resource permissions to be granted for the theme.
+	GrantPermissions []*ResourcePermission `type:"list"`
+
+	// A list of resource permissions to be revoked from the theme.
+	RevokePermissions []*ResourcePermission `type:"list"`
+
+	// The ID for the theme.
+	//
+	// ThemeId is a required field
+	ThemeId *string `location:"uri" locationName:"ThemeId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateThemePermissionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThemePermissionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateThemePermissionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateThemePermissionsInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.ThemeId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThemeId"))
+	}
+	if s.ThemeId != nil && len(*s.ThemeId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThemeId", 1))
+	}
+	if s.GrantPermissions != nil {
+		for i, v := range s.GrantPermissions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GrantPermissions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.RevokePermissions != nil {
+		for i, v := range s.RevokePermissions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RevokePermissions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateThemePermissionsInput) SetAwsAccountId(v string) *UpdateThemePermissionsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetGrantPermissions sets the GrantPermissions field's value.
+func (s *UpdateThemePermissionsInput) SetGrantPermissions(v []*ResourcePermission) *UpdateThemePermissionsInput {
+	s.GrantPermissions = v
+	return s
+}
+
+// SetRevokePermissions sets the RevokePermissions field's value.
+func (s *UpdateThemePermissionsInput) SetRevokePermissions(v []*ResourcePermission) *UpdateThemePermissionsInput {
+	s.RevokePermissions = v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *UpdateThemePermissionsInput) SetThemeId(v string) *UpdateThemePermissionsInput {
+	s.ThemeId = &v
+	return s
+}
+
+type UpdateThemePermissionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The resulting list of resource permissions for the theme.
+	Permissions []*ResourcePermission `min:"1" type:"list"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the theme.
+	ThemeArn *string `type:"string"`
+
+	// The ID for the theme.
+	ThemeId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateThemePermissionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThemePermissionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *UpdateThemePermissionsOutput) SetPermissions(v []*ResourcePermission) *UpdateThemePermissionsOutput {
+	s.Permissions = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateThemePermissionsOutput) SetRequestId(v string) *UpdateThemePermissionsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateThemePermissionsOutput) SetStatus(v int64) *UpdateThemePermissionsOutput {
+	s.Status = &v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *UpdateThemePermissionsOutput) SetThemeArn(v string) *UpdateThemePermissionsOutput {
+	s.ThemeArn = &v
+	return s
+}
+
+// SetThemeId sets the ThemeId field's value.
+func (s *UpdateThemePermissionsOutput) SetThemeId(v string) *UpdateThemePermissionsOutput {
+	s.ThemeId = &v
+	return s
+}
+
 type UpdateUserInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23056,6 +29767,12 @@ type UpdateUserInput struct {
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The name of the custom permissions profile that you want to assign to this
+	// user. Currently, custom permissions profile names are assigned to permissions
+	// profiles in the QuickSight console. You use this API to assign the named
+	// set of permissions to a QuickSight user.
+	CustomPermissionsName *string `min:"1" type:"string"`
 
 	// The email address of the user that you want to update.
 	//
@@ -23079,6 +29796,12 @@ type UpdateUserInput struct {
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true" enum:"UserRole"`
+
+	// A flag that you use to indicate that you want to remove all custom permissions
+	// from this user. Using this parameter resets the user to the state it was
+	// in before a custom permissions profile was applied. This parameter defaults
+	// to NULL and it doesn't accept any other value.
+	UnapplyCustomPermissions *bool `type:"boolean"`
 
 	// The Amazon QuickSight user name that you want to update.
 	//
@@ -23104,6 +29827,9 @@ func (s *UpdateUserInput) Validate() error {
 	}
 	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
 		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.CustomPermissionsName != nil && len(*s.CustomPermissionsName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CustomPermissionsName", 1))
 	}
 	if s.Email == nil {
 		invalidParams.Add(request.NewErrParamRequired("Email"))
@@ -23136,6 +29862,12 @@ func (s *UpdateUserInput) SetAwsAccountId(v string) *UpdateUserInput {
 	return s
 }
 
+// SetCustomPermissionsName sets the CustomPermissionsName field's value.
+func (s *UpdateUserInput) SetCustomPermissionsName(v string) *UpdateUserInput {
+	s.CustomPermissionsName = &v
+	return s
+}
+
 // SetEmail sets the Email field's value.
 func (s *UpdateUserInput) SetEmail(v string) *UpdateUserInput {
 	s.Email = &v
@@ -23151,6 +29883,12 @@ func (s *UpdateUserInput) SetNamespace(v string) *UpdateUserInput {
 // SetRole sets the Role field's value.
 func (s *UpdateUserInput) SetRole(v string) *UpdateUserInput {
 	s.Role = &v
+	return s
+}
+
+// SetUnapplyCustomPermissions sets the UnapplyCustomPermissions field's value.
+func (s *UpdateUserInput) SetUnapplyCustomPermissions(v bool) *UpdateUserInput {
+	s.UnapplyCustomPermissions = &v
 	return s
 }
 
@@ -23290,6 +30028,9 @@ type User struct {
 	// The Amazon Resource Name (ARN) for the user.
 	Arn *string `type:"string"`
 
+	// The custom permissions profile associated with this user.
+	CustomPermissionsName *string `min:"1" type:"string"`
+
 	// The user's email address.
 	Email *string `type:"string"`
 
@@ -23338,6 +30079,12 @@ func (s *User) SetActive(v bool) *User {
 // SetArn sets the Arn field's value.
 func (s *User) SetArn(v string) *User {
 	s.Arn = &v
+	return s
+}
+
+// SetCustomPermissionsName sets the CustomPermissionsName field's value.
+func (s *User) SetCustomPermissionsName(v string) *User {
+	s.CustomPermissionsName = &v
 	return s
 }
 
@@ -23649,6 +30396,14 @@ const (
 )
 
 const (
+	// EditionStandard is a Edition enum value
+	EditionStandard = "STANDARD"
+
+	// EditionEnterprise is a Edition enum value
+	EditionEnterprise = "ENTERPRISE"
+)
+
+const (
 	// ExceptionResourceTypeUser is a ExceptionResourceType enum value
 	ExceptionResourceTypeUser = "USER"
 
@@ -23728,6 +30483,11 @@ const (
 
 	// GeoSpatialDataRoleLatitude is a GeoSpatialDataRole enum value
 	GeoSpatialDataRoleLatitude = "LATITUDE"
+)
+
+const (
+	// IdentityStoreQuicksight is a IdentityStore enum value
+	IdentityStoreQuicksight = "QUICKSIGHT"
 )
 
 const (
@@ -23940,6 +30700,31 @@ const (
 )
 
 const (
+	// NamespaceErrorTypePermissionDenied is a NamespaceErrorType enum value
+	NamespaceErrorTypePermissionDenied = "PERMISSION_DENIED"
+
+	// NamespaceErrorTypeInternalServiceError is a NamespaceErrorType enum value
+	NamespaceErrorTypeInternalServiceError = "INTERNAL_SERVICE_ERROR"
+)
+
+const (
+	// NamespaceStatusCreated is a NamespaceStatus enum value
+	NamespaceStatusCreated = "CREATED"
+
+	// NamespaceStatusCreating is a NamespaceStatus enum value
+	NamespaceStatusCreating = "CREATING"
+
+	// NamespaceStatusDeleting is a NamespaceStatus enum value
+	NamespaceStatusDeleting = "DELETING"
+
+	// NamespaceStatusRetryableFailure is a NamespaceStatus enum value
+	NamespaceStatusRetryableFailure = "RETRYABLE_FAILURE"
+
+	// NamespaceStatusNonRetryableFailure is a NamespaceStatus enum value
+	NamespaceStatusNonRetryableFailure = "NON_RETRYABLE_FAILURE"
+)
+
+const (
 	// ResourceStatusCreationInProgress is a ResourceStatus enum value
 	ResourceStatusCreationInProgress = "CREATION_IN_PROGRESS"
 
@@ -23984,6 +30769,22 @@ const (
 
 	// TextQualifierSingleQuote is a TextQualifier enum value
 	TextQualifierSingleQuote = "SINGLE_QUOTE"
+)
+
+const (
+	// ThemeErrorTypeInternalFailure is a ThemeErrorType enum value
+	ThemeErrorTypeInternalFailure = "INTERNAL_FAILURE"
+)
+
+const (
+	// ThemeTypeQuicksight is a ThemeType enum value
+	ThemeTypeQuicksight = "QUICKSIGHT"
+
+	// ThemeTypeCustom is a ThemeType enum value
+	ThemeTypeCustom = "CUSTOM"
+
+	// ThemeTypeAll is a ThemeType enum value
+	ThemeTypeAll = "ALL"
 )
 
 const (

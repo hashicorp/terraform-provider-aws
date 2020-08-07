@@ -1620,10 +1620,8 @@ func (c *DirectConnect) CreateDirectConnectGatewayAssociationProposalRequest(inp
 // Creates a proposal to associate the specified virtual private gateway or
 // transit gateway with the specified Direct Connect gateway.
 //
-// You can only associate a Direct Connect gateway and virtual private gateway
-// or transit gateway when the account that owns the Direct Connect gateway
-// and the account that owns the virtual private gateway or transit gateway
-// have the same AWS Payer ID.
+// You can associate a Direct Connect gateway and virtual private gateway or
+// transit gateway that is owned by any AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about

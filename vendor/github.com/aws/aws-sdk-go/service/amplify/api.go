@@ -3382,7 +3382,7 @@ type App struct {
 	// EnableBranchAutoBuild is a required field
 	EnableBranchAutoBuild *bool `locationName:"enableBranchAutoBuild" type:"boolean" required:"true"`
 
-	// Automatically disconnects a branch in the Amplify Console when you delete
+	// Automatically disconnect a branch in the Amplify Console when you delete
 	// a branch from your Git repository.
 	EnableBranchAutoDeletion *bool `locationName:"enableBranchAutoDeletion" type:"boolean"`
 

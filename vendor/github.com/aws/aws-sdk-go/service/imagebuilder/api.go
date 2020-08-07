@@ -4859,6 +4859,9 @@ type AmiDistributionConfiguration struct {
 	// The description of the distribution configuration.
 	Description *string `locationName:"description" min:"1" type:"string"`
 
+	// The KMS key identifier used to encrypt the distributed image.
+	KmsKeyId *string `locationName:"kmsKeyId" min:"1" type:"string"`
+
 	// Launch permissions can be used to configure which AWS accounts can use the
 	// AMI to launch instances.
 	LaunchPermission *LaunchPermissionConfiguration `locationName:"launchPermission" type:"structure"`
@@ -4886,6 +4889,9 @@ func (s *AmiDistributionConfiguration) Validate() error {
 	if s.Description != nil && len(*s.Description) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
 	}
+	if s.KmsKeyId != nil && len(*s.KmsKeyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKeyId", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -4905,6 +4911,12 @@ func (s *AmiDistributionConfiguration) SetAmiTags(v map[string]*string) *AmiDist
 // SetDescription sets the Description field's value.
 func (s *AmiDistributionConfiguration) SetDescription(v string) *AmiDistributionConfiguration {
 	s.Description = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *AmiDistributionConfiguration) SetKmsKeyId(v string) *AmiDistributionConfiguration {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -9877,7 +9889,9 @@ func (s *InvalidVersionNumberException) RequestID() string {
 // Describes the configuration for a launch permission. The launch permission
 // modification request is sent to the EC2 ModifyImageAttribute (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyImageAttribute.html)
 // API on behalf of the user for each Region they have selected to distribute
-// the AMI.
+// the AMI. To make an AMI public, set the launch permission authorized accounts
+// to all. See the examples for making an AMI public at EC2 ModifyImageAttribute
+// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyImageAttribute.html).
 type LaunchPermissionConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -10147,6 +10161,8 @@ type ListDistributionConfigurationsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The filters.
+	//
+	//    * name - The name of this distribution configuration.
 	Filters []*Filter `locationName:"filters" min:"1" type:"list"`
 
 	// The maximum items to return in a request.

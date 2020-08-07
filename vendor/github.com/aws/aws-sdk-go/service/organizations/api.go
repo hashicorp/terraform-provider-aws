@@ -310,6 +310,8 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 // account. How the policy affects accounts depends on the type of policy. Refer
 // to the AWS Organizations User Guide for information about each policy type:
 //
+//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
+//
 //    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 //
 //    * SERVICE_CONTROL_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
@@ -3316,6 +3318,11 @@ func (c *Organizations) DeregisterDelegatedAdministratorRequest(input *Deregiste
 //
 // Removes the specified member AWS account as a delegated administrator for
 // the specified AWS service.
+//
+// Deregistering a delegated administrator can have unintended impacts on the
+// functionality of the enabled AWS service. See the documentation for the enabled
+// service before you deregister a delegated administrator so that you understand
+// any potential impacts.
 //
 // You can run this action only for AWS services that support this feature.
 // For a current list of services that support it, see the column Supports Delegated
@@ -15295,6 +15302,8 @@ type CreatePolicyInput struct {
 
 	// The type of policy to create. You can specify one of the following values:
 	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
+	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
 	//    * SERVICE_CONTROL_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
@@ -15937,6 +15946,8 @@ type DescribeEffectivePolicyInput struct {
 	// The type of policy that you want information about. You can specify one of
 	// the following values:
 	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
+	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
 	//    * TAG_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html)
@@ -16092,6 +16103,11 @@ type DescribeOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A structure that contains information about the organization.
+	//
+	// The AvailablePolicyTypes part of the response is deprecated, and you shouldn't
+	// use it in your apps. It doesn't include any policy type supported by Organizations
+	// other than SCPs. To determine which policy types are enabled in your organization,
+	// use the ListRoots operation.
 	Organization *Organization `type:"structure"`
 }
 
@@ -16449,6 +16465,8 @@ type DisablePolicyTypeInput struct {
 
 	// The policy type that you want to disable in this root. You can specify one
 	// of the following values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -17026,6 +17044,8 @@ type EnablePolicyTypeInput struct {
 
 	// The policy type that you want to enable. You can specify one of the following
 	// values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -19195,6 +19215,8 @@ type ListPoliciesForTargetInput struct {
 	// The type of policy that you want to include in the returned list. You must
 	// specify one of the following values:
 	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
+	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
 	//    * SERVICE_CONTROL_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
@@ -19334,6 +19356,8 @@ type ListPoliciesInput struct {
 
 	// Specifies the type of policy that you want to include in the response. You
 	// must specify one of the following values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -19967,14 +19991,12 @@ type Organization struct {
 	// in the AWS Organizations User Guide.
 	Arn *string `type:"string"`
 
-	// A list of policy types that are enabled for this organization. For example,
-	// if your organization has all features enabled, then service control policies
-	// (SCPs) are included in the list.
 	//
-	// Even if a policy type is shown as available in the organization, you can
-	// separately enable and disable them at the root level by using EnablePolicyType
-	// and DisablePolicyType. Use ListRoots to see the status of a policy type in
-	// that root.
+	// Do not use. This field is deprecated and doesn't provide complete information
+	// about the policies in your organization.
+	//
+	// To determine the policies that are enabled and available for use in your
+	// organization, use the ListRoots operation instead.
 	AvailablePolicyTypes []*PolicyTypeSummary `type:"list"`
 
 	// Specifies the functionality that currently is available to the organization.
@@ -22124,6 +22146,9 @@ const (
 
 	// EffectivePolicyTypeBackupPolicy is a EffectivePolicyType enum value
 	EffectivePolicyTypeBackupPolicy = "BACKUP_POLICY"
+
+	// EffectivePolicyTypeAiservicesOptOutPolicy is a EffectivePolicyType enum value
+	EffectivePolicyTypeAiservicesOptOutPolicy = "AISERVICES_OPT_OUT_POLICY"
 )
 
 const (
@@ -22310,6 +22335,9 @@ const (
 
 	// PolicyTypeBackupPolicy is a PolicyType enum value
 	PolicyTypeBackupPolicy = "BACKUP_POLICY"
+
+	// PolicyTypeAiservicesOptOutPolicy is a PolicyType enum value
+	PolicyTypeAiservicesOptOutPolicy = "AISERVICES_OPT_OUT_POLICY"
 )
 
 const (

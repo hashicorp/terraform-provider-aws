@@ -369,7 +369,7 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 //   repository and ensure that you are performing operations on the correct registry.
 //
 //   * UploadNotFoundException
-//   The upload could not be found, or the specified upload id is not valid for
+//   The upload could not be found, or the specified upload ID is not valid for
 //   this repository.
 //
 //   * InvalidLayerException
@@ -384,6 +384,9 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 //
 //   * EmptyUploadException
 //   The specified layer upload does not contain any layer parts.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CompleteLayerUpload
 func (c *ECR) CompleteLayerUpload(input *CompleteLayerUploadInput) (*CompleteLayerUploadOutput, error) {
@@ -485,6 +488,9 @@ func (c *ECR) CreateRepositoryRequest(input *CreateRepositoryInput) (req *reques
 //   The operation did not succeed because it would have exceeded a service limit
 //   for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
 //   in the Amazon Elastic Container Registry User Guide.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CreateRepository
 func (c *ECR) CreateRepository(input *CreateRepositoryInput) (*CreateRepositoryOutput, error) {
@@ -668,6 +674,9 @@ func (c *ECR) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req *reques
 //   * RepositoryNotEmptyException
 //   The specified repository contains images. To delete a repository that contains
 //   images, you must force the deletion with the force parameter.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRepository
 func (c *ECR) DeleteRepository(input *DeleteRepositoryInput) (*DeleteRepositoryOutput, error) {
@@ -1830,6 +1839,9 @@ func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *
 //   The specified repository could not be found. Check the spelling of the specified
 //   repository and ensure that you are performing operations on the correct registry.
 //
+//   * KmsException
+//   The operation failed due to a KMS exception.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/InitiateLayerUpload
 func (c *ECR) InitiateLayerUpload(input *InitiateLayerUploadInput) (*InitiateLayerUploadOutput, error) {
 	req, out := c.InitiateLayerUploadRequest(input)
@@ -2183,6 +2195,13 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 //   * ImageTagAlreadyExistsException
 //   The specified image is tagged with a tag that already exists. The repository
 //   is configured for tag immutability.
+//
+//   * ImageDigestDoesNotMatchException
+//   The specified image digest does not match the digest that Amazon ECR calculated
+//   for the image.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImage
 func (c *ECR) PutImage(input *PutImageInput) (*PutImageOutput, error) {
@@ -2731,8 +2750,8 @@ func (c *ECR) StartLifecyclePolicyPreviewRequest(input *StartLifecyclePolicyPrev
 //   The lifecycle policy could not be found, and no policy is set to the repository.
 //
 //   * LifecyclePolicyPreviewInProgressException
-//   The previous lifecycle policy preview request has not completed. Please try
-//   again later.
+//   The previous lifecycle policy preview request has not completed. Wait and
+//   try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/StartLifecyclePolicyPreview
 func (c *ECR) StartLifecyclePolicyPreview(input *StartLifecyclePolicyPreviewInput) (*StartLifecyclePolicyPreviewOutput, error) {
@@ -3029,13 +3048,16 @@ func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.
 //   repository and ensure that you are performing operations on the correct registry.
 //
 //   * UploadNotFoundException
-//   The upload could not be found, or the specified upload id is not valid for
+//   The upload could not be found, or the specified upload ID is not valid for
 //   this repository.
 //
 //   * LimitExceededException
 //   The operation did not succeed because it would have exceeded a service limit
 //   for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
 //   in the Amazon Elastic Container Registry User Guide.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/UploadLayerPart
 func (c *ECR) UploadLayerPart(input *UploadLayerPartInput) (*UploadLayerPartOutput, error) {
@@ -3617,9 +3639,12 @@ func (s *CompleteLayerUploadOutput) SetUploadId(v string) *CompleteLayerUploadOu
 type CreateRepositoryInput struct {
 	_ struct{} `type:"structure"`
 
-	// The image scanning configuration for the repository. This setting determines
-	// whether images are scanned for known vulnerabilities after being pushed to
-	// the repository.
+	// The encryption configuration for the repository. This determines how the
+	// contents of your repository are encrypted at rest.
+	EncryptionConfiguration *EncryptionConfiguration `locationName:"encryptionConfiguration" type:"structure"`
+
+	// The image scanning configuration for the repository. This determines whether
+	// images are scanned for known vulnerabilities after being pushed to the repository.
 	ImageScanningConfiguration *ImageScanningConfiguration `locationName:"imageScanningConfiguration" type:"structure"`
 
 	// The tag mutability setting for the repository. If this parameter is omitted,
@@ -3661,11 +3686,22 @@ func (s *CreateRepositoryInput) Validate() error {
 	if s.RepositoryName != nil && len(*s.RepositoryName) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 2))
 	}
+	if s.EncryptionConfiguration != nil {
+		if err := s.EncryptionConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("EncryptionConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEncryptionConfiguration sets the EncryptionConfiguration field's value.
+func (s *CreateRepositoryInput) SetEncryptionConfiguration(v *EncryptionConfiguration) *CreateRepositoryInput {
+	s.EncryptionConfiguration = v
+	return s
 }
 
 // SetImageScanningConfiguration sets the ImageScanningConfiguration field's value.
@@ -4518,6 +4554,87 @@ func (s *EmptyUploadException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The encryption configuration for the repository. This determines how the
+// contents of your repository are encrypted at rest.
+//
+// By default, when no encryption configuration is set or the AES256 encryption
+// type is used, Amazon ECR uses server-side encryption with Amazon S3-managed
+// encryption keys which encrypts your data at rest using an AES-256 encryption
+// algorithm. This does not require any action on your part.
+//
+// For more control over the encryption of the contents of your repository,
+// you can use server-side encryption with customer master keys (CMKs) stored
+// in AWS Key Management Service (AWS KMS) to encrypt your images. For more
+// information, see Amazon ECR encryption at rest (https://docs.aws.amazon.com/AmazonECR/latest/userguide/encryption-at-rest.html)
+// in the Amazon Elastic Container Registry User Guide.
+type EncryptionConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption type to use.
+	//
+	// If you use the KMS encryption type, the contents of the repository will be
+	// encrypted using server-side encryption with customer master keys (CMKs) stored
+	// in AWS KMS. When you use AWS KMS to encrypt your data, you can either use
+	// the default AWS managed CMK for Amazon ECR, or specify your own CMK, which
+	// you already created. For more information, see Protecting Data Using Server-Side
+	// Encryption with CMKs Stored in AWS Key Management Service (SSE-KMS) (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
+	// in the Amazon Simple Storage Service Console Developer Guide..
+	//
+	// If you use the AES256 encryption type, Amazon ECR uses server-side encryption
+	// with Amazon S3-managed encryption keys which encrypts the images in the repository
+	// using an AES-256 encryption algorithm. For more information, see Protecting
+	// Data Using Server-Side Encryption with Amazon S3-Managed Encryption Keys
+	// (SSE-S3) (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html)
+	// in the Amazon Simple Storage Service Console Developer Guide..
+	//
+	// EncryptionType is a required field
+	EncryptionType *string `locationName:"encryptionType" type:"string" required:"true" enum:"EncryptionType"`
+
+	// If you use the KMS encryption type, specify the CMK to use for encryption.
+	// The alias, key ID, or full ARN of the CMK can be specified. The key must
+	// exist in the same Region as the repository. If no key is specified, the default
+	// AWS managed CMK for Amazon ECR will be used.
+	KmsKey *string `locationName:"kmsKey" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s EncryptionConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionConfiguration"}
+	if s.EncryptionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("EncryptionType"))
+	}
+	if s.KmsKey != nil && len(*s.KmsKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *EncryptionConfiguration) SetEncryptionType(v string) *EncryptionConfiguration {
+	s.EncryptionType = &v
+	return s
+}
+
+// SetKmsKey sets the KmsKey field's value.
+func (s *EncryptionConfiguration) SetKmsKey(v string) *EncryptionConfiguration {
+	s.KmsKey = &v
+	return s
+}
+
 type GetAuthorizationTokenInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5280,6 +5397,63 @@ func (s *ImageDetail) SetRepositoryName(v string) *ImageDetail {
 	return s
 }
 
+// The specified image digest does not match the digest that Amazon ECR calculated
+// for the image.
+type ImageDigestDoesNotMatchException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ImageDigestDoesNotMatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImageDigestDoesNotMatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorImageDigestDoesNotMatchException(v protocol.ResponseMetadata) error {
+	return &ImageDigestDoesNotMatchException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ImageDigestDoesNotMatchException) Code() string {
+	return "ImageDigestDoesNotMatchException"
+}
+
+// Message returns the exception's message.
+func (s *ImageDigestDoesNotMatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ImageDigestDoesNotMatchException) OrigErr() error {
+	return nil
+}
+
+func (s *ImageDigestDoesNotMatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ImageDigestDoesNotMatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ImageDigestDoesNotMatchException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing an Amazon ECR image failure.
 type ImageFailure struct {
 	_ struct{} `type:"structure"`
@@ -6025,6 +6199,65 @@ func (s *InvalidTagParameterException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The operation failed due to a KMS exception.
+type KmsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The error code returned by AWS KMS.
+	KmsError *string `locationName:"kmsError" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KmsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KmsException) GoString() string {
+	return s.String()
+}
+
+func newErrorKmsException(v protocol.ResponseMetadata) error {
+	return &KmsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *KmsException) Code() string {
+	return "KmsException"
+}
+
+// Message returns the exception's message.
+func (s *KmsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *KmsException) OrigErr() error {
+	return nil
+}
+
+func (s *KmsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *KmsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *KmsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing an Amazon ECR image layer.
 type Layer struct {
 	_ struct{} `type:"structure"`
@@ -6429,8 +6662,8 @@ func (s *LifecyclePolicyPreviewFilter) SetTagStatus(v string) *LifecyclePolicyPr
 	return s
 }
 
-// The previous lifecycle policy preview request has not completed. Please try
-// again later.
+// The previous lifecycle policy preview request has not completed. Wait and
+// try again.
 type LifecyclePolicyPreviewInProgressException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -6929,6 +7162,9 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 type PutImageInput struct {
 	_ struct{} `type:"structure"`
 
+	// The image digest of the image manifest corresponding to the image.
+	ImageDigest *string `locationName:"imageDigest" type:"string"`
+
 	// The image manifest corresponding to the image to be uploaded.
 	//
 	// ImageManifest is a required field
@@ -6940,7 +7176,8 @@ type PutImageInput struct {
 	ImageManifestMediaType *string `locationName:"imageManifestMediaType" type:"string"`
 
 	// The tag to associate with the image. This parameter is required for images
-	// that use the Docker Image Manifest V2 Schema 2 or OCI formats.
+	// that use the Docker Image Manifest V2 Schema 2 or Open Container Initiative
+	// (OCI) formats.
 	ImageTag *string `locationName:"imageTag" min:"1" type:"string"`
 
 	// The AWS account ID associated with the registry that contains the repository
@@ -6987,6 +7224,12 @@ func (s *PutImageInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetImageDigest sets the ImageDigest field's value.
+func (s *PutImageInput) SetImageDigest(v string) *PutImageInput {
+	s.ImageDigest = &v
+	return s
 }
 
 // SetImageManifest sets the ImageManifest field's value.
@@ -7433,6 +7676,10 @@ type Repository struct {
 	// The date and time, in JavaScript date format, when the repository was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
+	// The encryption configuration for the repository. This determines how the
+	// contents of your repository are encrypted at rest.
+	EncryptionConfiguration *EncryptionConfiguration `locationName:"encryptionConfiguration" type:"structure"`
+
 	// The image scanning configuration for a repository.
 	ImageScanningConfiguration *ImageScanningConfiguration `locationName:"imageScanningConfiguration" type:"structure"`
 
@@ -7451,8 +7698,8 @@ type Repository struct {
 	// The name of the repository.
 	RepositoryName *string `locationName:"repositoryName" min:"2" type:"string"`
 
-	// The URI for the repository. You can use this URI for Docker push or pull
-	// operations.
+	// The URI for the repository. You can use this URI for container image push
+	// and pull operations.
 	RepositoryUri *string `locationName:"repositoryUri" type:"string"`
 }
 
@@ -7469,6 +7716,12 @@ func (s Repository) GoString() string {
 // SetCreatedAt sets the CreatedAt field's value.
 func (s *Repository) SetCreatedAt(v time.Time) *Repository {
 	s.CreatedAt = &v
+	return s
+}
+
+// SetEncryptionConfiguration sets the EncryptionConfiguration field's value.
+func (s *Repository) SetEncryptionConfiguration(v *EncryptionConfiguration) *Repository {
+	s.EncryptionConfiguration = v
 	return s
 }
 
@@ -8656,7 +8909,7 @@ func (s *UploadLayerPartOutput) SetUploadId(v string) *UploadLayerPartOutput {
 	return s
 }
 
-// The upload could not be found, or the specified upload id is not valid for
+// The upload could not be found, or the specified upload ID is not valid for
 // this repository.
 type UploadNotFoundException struct {
 	_            struct{}                  `type:"structure"`
@@ -8715,6 +8968,14 @@ func (s *UploadNotFoundException) RequestID() string {
 }
 
 const (
+	// EncryptionTypeAes256 is a EncryptionType enum value
+	EncryptionTypeAes256 = "AES256"
+
+	// EncryptionTypeKms is a EncryptionType enum value
+	EncryptionTypeKms = "KMS"
+)
+
+const (
 	// FindingSeverityInformational is a FindingSeverity enum value
 	FindingSeverityInformational = "INFORMATIONAL"
 
@@ -8757,6 +9018,9 @@ const (
 
 	// ImageFailureCodeImageReferencedByManifestList is a ImageFailureCode enum value
 	ImageFailureCodeImageReferencedByManifestList = "ImageReferencedByManifestList"
+
+	// ImageFailureCodeKmsError is a ImageFailureCode enum value
+	ImageFailureCodeKmsError = "KmsError"
 )
 
 const (

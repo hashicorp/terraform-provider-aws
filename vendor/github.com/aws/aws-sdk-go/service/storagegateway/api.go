@@ -5733,7 +5733,7 @@ func (c *StorageGateway) RefreshCacheRequest(input *RefreshCacheInput) (req *req
 // RefreshCache API operation for AWS Storage Gateway.
 //
 // Refreshes the cache for the specified file share. This operation finds objects
-// in the Amazon S3 bucket that were added, removed or replaced since the gateway
+// in the Amazon S3 bucket that were added, removed, or replaced since the gateway
 // last listed the bucket's contents and cached the results. This operation
 // is only supported in the file gateway type. You can subscribe to be notified
 // through an Amazon CloudWatch event when your RefreshCache operation completes.
@@ -8594,6 +8594,35 @@ func (s *AutomaticTapeCreationRule) SetTapeSizeInBytes(v int64) *AutomaticTapeCr
 	return s
 }
 
+// Lists refresh cache information.
+type CacheAttributes struct {
+	_ struct{} `type:"structure"`
+
+	// Refreshes a file share's cache by using Time To Live (TTL). TTL is the length
+	// of time since the last refresh after which access to the directory would
+	// cause the file gateway to first refresh that directory's contents from the
+	// Amazon S3 bucket. The TTL duration is in seconds.
+	//
+	// Valid Values: 300 to 2,592,000 seconds (5 minutes to 30 days)
+	CacheStaleTimeoutInSeconds *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s CacheAttributes) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CacheAttributes) GoString() string {
+	return s.String()
+}
+
+// SetCacheStaleTimeoutInSeconds sets the CacheStaleTimeoutInSeconds field's value.
+func (s *CacheAttributes) SetCacheStaleTimeoutInSeconds(v int64) *CacheAttributes {
+	s.CacheStaleTimeoutInSeconds = &v
+	return s
+}
+
 // Describes an iSCSI cached volume.
 type CachediSCSIVolume struct {
 	_ struct{} `type:"structure"`
@@ -9209,6 +9238,9 @@ func (s *CreateCachediSCSIVolumeOutput) SetVolumeARN(v string) *CreateCachediSCS
 type CreateNFSFileShareInput struct {
 	_ struct{} `type:"structure"`
 
+	// Refresh cache information.
+	CacheAttributes *CacheAttributes `type:"structure"`
+
 	// The list of clients that are allowed to access the file gateway. The list
 	// must contain either valid IP addresses or valid CIDR blocks.
 	ClientList []*string `min:"1" type:"list"`
@@ -9224,6 +9256,11 @@ type CreateNFSFileShareInput struct {
 	//
 	// Valid Values: S3_STANDARD | S3_INTELLIGENT_TIERING | S3_STANDARD_IA | S3_ONEZONE_IA
 	DefaultStorageClass *string `min:"5" type:"string"`
+
+	// The name of the file share. Optional.
+	//
+	// FileShareName must be set if an S3 prefix name is set in LocationARN.
+	FileShareName *string `min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the file gateway on which you want to create
 	// a file share.
@@ -9249,7 +9286,8 @@ type CreateNFSFileShareInput struct {
 	// CMKs. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
-	// The ARN of the backed storage used for storing file data.
+	// The ARN of the backend storage used for storing file data. A prefix name
+	// can be added to the S3 bucket name. It must end with a "/".
 	//
 	// LocationARN is a required field
 	LocationARN *string `min:"16" type:"string" required:"true"`
@@ -9332,6 +9370,9 @@ func (s *CreateNFSFileShareInput) Validate() error {
 	if s.DefaultStorageClass != nil && len(*s.DefaultStorageClass) < 5 {
 		invalidParams.Add(request.NewErrParamMinLen("DefaultStorageClass", 5))
 	}
+	if s.FileShareName != nil && len(*s.FileShareName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileShareName", 1))
+	}
 	if s.GatewayARN == nil {
 		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
 	}
@@ -9378,6 +9419,12 @@ func (s *CreateNFSFileShareInput) Validate() error {
 	return nil
 }
 
+// SetCacheAttributes sets the CacheAttributes field's value.
+func (s *CreateNFSFileShareInput) SetCacheAttributes(v *CacheAttributes) *CreateNFSFileShareInput {
+	s.CacheAttributes = v
+	return s
+}
+
 // SetClientList sets the ClientList field's value.
 func (s *CreateNFSFileShareInput) SetClientList(v []*string) *CreateNFSFileShareInput {
 	s.ClientList = v
@@ -9393,6 +9440,12 @@ func (s *CreateNFSFileShareInput) SetClientToken(v string) *CreateNFSFileShareIn
 // SetDefaultStorageClass sets the DefaultStorageClass field's value.
 func (s *CreateNFSFileShareInput) SetDefaultStorageClass(v string) *CreateNFSFileShareInput {
 	s.DefaultStorageClass = &v
+	return s
+}
+
+// SetFileShareName sets the FileShareName field's value.
+func (s *CreateNFSFileShareInput) SetFileShareName(v string) *CreateNFSFileShareInput {
+	s.FileShareName = &v
 	return s
 }
 
@@ -9496,9 +9549,10 @@ func (s *CreateNFSFileShareOutput) SetFileShareARN(v string) *CreateNFSFileShare
 type CreateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users in the Active Directory that will be granted administrator
+	// A list of users or groups in the Active Directory that will be granted administrator
 	// privileges on the file share. These users can do all file operations as the
-	// super-user.
+	// super-user. Acceptable formats include: DOMAIN\User1, user1, @group1, and
+	// @DOMAIN\group1.
 	//
 	// Use this option very carefully, because any user in this list can do anything
 	// they like on the file share, regardless of file permissions.
@@ -9513,6 +9567,14 @@ type CreateSMBFileShareInput struct {
 	// Valid Values: ActiveDirectory | GuestAccess
 	Authentication *string `min:"5" type:"string"`
 
+	// Refresh cache information.
+	CacheAttributes *CacheAttributes `type:"structure"`
+
+	// The case of an object name in an Amazon S3 bucket. For ClientSpecified, the
+	// client determines the case sensitivity. For CaseSensitive, the gateway determines
+	// the case sensitivity. The default value is ClientSpecified.
+	CaseSensitivity *string `type:"string" enum:"CaseSensitivity"`
+
 	// A unique string value that you supply that is used by file gateway to ensure
 	// idempotent file share creation.
 	//
@@ -9524,6 +9586,11 @@ type CreateSMBFileShareInput struct {
 	//
 	// Valid Values: S3_STANDARD | S3_INTELLIGENT_TIERING | S3_STANDARD_IA | S3_ONEZONE_IA
 	DefaultStorageClass *string `min:"5" type:"string"`
+
+	// The name of the file share. Optional.
+	//
+	// FileShareName must be set if an S3 prefix name is set in LocationARN.
+	FileShareName *string `min:"1" type:"string"`
 
 	// The ARN of the file gateway on which you want to create a file share.
 	//
@@ -9538,8 +9605,9 @@ type CreateSMBFileShareInput struct {
 	GuessMIMETypeEnabled *bool `type:"boolean"`
 
 	// A list of users or groups in the Active Directory that are not allowed to
-	// access the file share. A group must be prefixed with the @ character. For
-	// example, @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// access the file share. A group must be prefixed with the @ character. Acceptable
+	// formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1. Can only
+	// be set if Authentication is set to ActiveDirectory.
 	InvalidUserList []*string `type:"list"`
 
 	// Set to true to use Amazon S3 server-side encryption with your own AWS KMS
@@ -9553,7 +9621,8 @@ type CreateSMBFileShareInput struct {
 	// CMKs. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
-	// The ARN of the backed storage used for storing file data.
+	// The ARN of the backend storage used for storing file data. A prefix name
+	// can be added to the S3 bucket name. It must end with a "/".
 	//
 	// LocationARN is a required field
 	LocationARN *string `min:"16" type:"string" required:"true"`
@@ -9608,8 +9677,9 @@ type CreateSMBFileShareInput struct {
 	Tags []*Tag `type:"list"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
-	// the file share. A group must be prefixed with the @ character. For example,
-	// @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// the file share. A group must be prefixed with the @ character. Acceptable
+	// formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1. Can only
+	// be set if Authentication is set to ActiveDirectory.
 	ValidUserList []*string `type:"list"`
 }
 
@@ -9637,6 +9707,9 @@ func (s *CreateSMBFileShareInput) Validate() error {
 	}
 	if s.DefaultStorageClass != nil && len(*s.DefaultStorageClass) < 5 {
 		invalidParams.Add(request.NewErrParamMinLen("DefaultStorageClass", 5))
+	}
+	if s.FileShareName != nil && len(*s.FileShareName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileShareName", 1))
 	}
 	if s.GatewayARN == nil {
 		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
@@ -9694,6 +9767,18 @@ func (s *CreateSMBFileShareInput) SetAuthentication(v string) *CreateSMBFileShar
 	return s
 }
 
+// SetCacheAttributes sets the CacheAttributes field's value.
+func (s *CreateSMBFileShareInput) SetCacheAttributes(v *CacheAttributes) *CreateSMBFileShareInput {
+	s.CacheAttributes = v
+	return s
+}
+
+// SetCaseSensitivity sets the CaseSensitivity field's value.
+func (s *CreateSMBFileShareInput) SetCaseSensitivity(v string) *CreateSMBFileShareInput {
+	s.CaseSensitivity = &v
+	return s
+}
+
 // SetClientToken sets the ClientToken field's value.
 func (s *CreateSMBFileShareInput) SetClientToken(v string) *CreateSMBFileShareInput {
 	s.ClientToken = &v
@@ -9703,6 +9788,12 @@ func (s *CreateSMBFileShareInput) SetClientToken(v string) *CreateSMBFileShareIn
 // SetDefaultStorageClass sets the DefaultStorageClass field's value.
 func (s *CreateSMBFileShareInput) SetDefaultStorageClass(v string) *CreateSMBFileShareInput {
 	s.DefaultStorageClass = &v
+	return s
+}
+
+// SetFileShareName sets the FileShareName field's value.
+func (s *CreateSMBFileShareInput) SetFileShareName(v string) *CreateSMBFileShareInput {
+	s.FileShareName = &v
 	return s
 }
 
@@ -11873,6 +11964,10 @@ type DescribeGatewayInformationOutput struct {
 	// used to monitor events in the gateway.
 	CloudWatchLogGroupARN *string `type:"string"`
 
+	// Date after which this gateway will not receive software updates for new features
+	// and bug fixes.
+	DeprecationDate *string `min:"1" type:"string"`
+
 	// The ID of the Amazon EC2 instance that was used to launch the gateway.
 	Ec2InstanceId *string `type:"string"`
 
@@ -11922,6 +12017,9 @@ type DescribeGatewayInformationOutput struct {
 	// this field is not returned in the response.
 	NextUpdateAvailabilityDate *string `min:"1" type:"string"`
 
+	// Date after which this gateway will not receive software updates for new features.
+	SoftwareUpdatesEndDate *string `min:"1" type:"string"`
+
 	// A list of up to 50 tags assigned to the gateway, sorted alphabetically by
 	// key name. Each tag is a key-value pair. For a gateway with more than 10 tags
 	// assigned, you can view all tags using the ListTagsForResource API operation.
@@ -11945,6 +12043,12 @@ func (s DescribeGatewayInformationOutput) GoString() string {
 // SetCloudWatchLogGroupARN sets the CloudWatchLogGroupARN field's value.
 func (s *DescribeGatewayInformationOutput) SetCloudWatchLogGroupARN(v string) *DescribeGatewayInformationOutput {
 	s.CloudWatchLogGroupARN = &v
+	return s
+}
+
+// SetDeprecationDate sets the DeprecationDate field's value.
+func (s *DescribeGatewayInformationOutput) SetDeprecationDate(v string) *DescribeGatewayInformationOutput {
+	s.DeprecationDate = &v
 	return s
 }
 
@@ -12023,6 +12127,12 @@ func (s *DescribeGatewayInformationOutput) SetLastSoftwareUpdate(v string) *Desc
 // SetNextUpdateAvailabilityDate sets the NextUpdateAvailabilityDate field's value.
 func (s *DescribeGatewayInformationOutput) SetNextUpdateAvailabilityDate(v string) *DescribeGatewayInformationOutput {
 	s.NextUpdateAvailabilityDate = &v
+	return s
+}
+
+// SetSoftwareUpdatesEndDate sets the SoftwareUpdatesEndDate field's value.
+func (s *DescribeGatewayInformationOutput) SetSoftwareUpdatesEndDate(v string) *DescribeGatewayInformationOutput {
+	s.SoftwareUpdatesEndDate = &v
 	return s
 }
 
@@ -15020,6 +15130,9 @@ func (s *NFSFileShareDefaults) SetOwnerId(v int64) *NFSFileShareDefaults {
 type NFSFileShareInfo struct {
 	_ struct{} `type:"structure"`
 
+	// Refresh cache information.
+	CacheAttributes *CacheAttributes `type:"structure"`
+
 	// The list of clients that are allowed to access the file gateway. The list
 	// must contain either valid IP addresses or valid CIDR blocks.
 	ClientList []*string `min:"1" type:"list"`
@@ -15035,6 +15148,11 @@ type NFSFileShareInfo struct {
 
 	// The ID of the file share.
 	FileShareId *string `min:"12" type:"string"`
+
+	// The name of the file share. Optional.
+	//
+	// FileShareName must be set if an S3 prefix name is set in LocationARN.
+	FileShareName *string `min:"1" type:"string"`
 
 	// The status of the file share.
 	//
@@ -15063,7 +15181,8 @@ type NFSFileShareInfo struct {
 	// CMKs. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
-	// The ARN of the backend storage used for storing file data.
+	// The ARN of the backend storage used for storing file data. A prefix name
+	// can be added to the S3 bucket name. It must end with a "/".
 	LocationARN *string `min:"16" type:"string"`
 
 	// Describes Network File System (NFS) file share default values. Files and
@@ -15129,6 +15248,12 @@ func (s NFSFileShareInfo) GoString() string {
 	return s.String()
 }
 
+// SetCacheAttributes sets the CacheAttributes field's value.
+func (s *NFSFileShareInfo) SetCacheAttributes(v *CacheAttributes) *NFSFileShareInfo {
+	s.CacheAttributes = v
+	return s
+}
+
 // SetClientList sets the ClientList field's value.
 func (s *NFSFileShareInfo) SetClientList(v []*string) *NFSFileShareInfo {
 	s.ClientList = v
@@ -15150,6 +15275,12 @@ func (s *NFSFileShareInfo) SetFileShareARN(v string) *NFSFileShareInfo {
 // SetFileShareId sets the FileShareId field's value.
 func (s *NFSFileShareInfo) SetFileShareId(v string) *NFSFileShareInfo {
 	s.FileShareId = &v
+	return s
+}
+
+// SetFileShareName sets the FileShareName field's value.
+func (s *NFSFileShareInfo) SetFileShareName(v string) *NFSFileShareInfo {
+	s.FileShareName = &v
 	return s
 }
 
@@ -15796,7 +15927,8 @@ type SMBFileShareInfo struct {
 
 	// A list of users or groups in the Active Directory that have administrator
 	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// Acceptable formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1.
+	// Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
@@ -15806,6 +15938,14 @@ type SMBFileShareInfo struct {
 	//
 	// Valid Values: ActiveDirectory | GuestAccess
 	Authentication *string `min:"5" type:"string"`
+
+	// Refresh cache information.
+	CacheAttributes *CacheAttributes `type:"structure"`
+
+	// The case of an object name in an Amazon S3 bucket. For ClientSpecified, the
+	// client determines the case sensitivity. For CaseSensitive, the gateway determines
+	// the case sensitivity. The default value is ClientSpecified.
+	CaseSensitivity *string `type:"string" enum:"CaseSensitivity"`
 
 	// The default storage class for objects put into an Amazon S3 bucket by the
 	// file gateway. The default value is S3_INTELLIGENT_TIERING. Optional.
@@ -15818,6 +15958,11 @@ type SMBFileShareInfo struct {
 
 	// The ID of the file share.
 	FileShareId *string `min:"12" type:"string"`
+
+	// The name of the file share. Optional.
+	//
+	// FileShareName must be set if an S3 prefix name is set in LocationARN.
+	FileShareName *string `min:"1" type:"string"`
 
 	// The status of the file share.
 	//
@@ -15836,8 +15981,9 @@ type SMBFileShareInfo struct {
 	GuessMIMETypeEnabled *bool `type:"boolean"`
 
 	// A list of users or groups in the Active Directory that are not allowed to
-	// access the file share. A group must be prefixed with the @ character. For
-	// example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// access the file share. A group must be prefixed with the @ character. Acceptable
+	// formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1. Can only
+	// be set if Authentication is set to ActiveDirectory.
 	InvalidUserList []*string `type:"list"`
 
 	// Set to true to use Amazon S3 server-side encryption with your own AWS KMS
@@ -15851,7 +15997,8 @@ type SMBFileShareInfo struct {
 	// CMKs. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
-	// The ARN of the backend storage used for storing file data.
+	// The ARN of the backend storage used for storing file data. A prefix name
+	// can be added to the S3 bucket name. It must end with a "/".
 	LocationARN *string `min:"16" type:"string"`
 
 	// A value that sets the access control list (ACL) permission for objects in
@@ -15899,8 +16046,9 @@ type SMBFileShareInfo struct {
 	Tags []*Tag `type:"list"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
-	// the file share. A group must be prefixed with the @ character. For example,
-	// @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// the file share. A group must be prefixed with the @ character. Acceptable
+	// formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1. Can only
+	// be set if Authentication is set to ActiveDirectory.
 	ValidUserList []*string `type:"list"`
 }
 
@@ -15932,6 +16080,18 @@ func (s *SMBFileShareInfo) SetAuthentication(v string) *SMBFileShareInfo {
 	return s
 }
 
+// SetCacheAttributes sets the CacheAttributes field's value.
+func (s *SMBFileShareInfo) SetCacheAttributes(v *CacheAttributes) *SMBFileShareInfo {
+	s.CacheAttributes = v
+	return s
+}
+
+// SetCaseSensitivity sets the CaseSensitivity field's value.
+func (s *SMBFileShareInfo) SetCaseSensitivity(v string) *SMBFileShareInfo {
+	s.CaseSensitivity = &v
+	return s
+}
+
 // SetDefaultStorageClass sets the DefaultStorageClass field's value.
 func (s *SMBFileShareInfo) SetDefaultStorageClass(v string) *SMBFileShareInfo {
 	s.DefaultStorageClass = &v
@@ -15947,6 +16107,12 @@ func (s *SMBFileShareInfo) SetFileShareARN(v string) *SMBFileShareInfo {
 // SetFileShareId sets the FileShareId field's value.
 func (s *SMBFileShareInfo) SetFileShareId(v string) *SMBFileShareInfo {
 	s.FileShareId = &v
+	return s
+}
+
+// SetFileShareName sets the FileShareName field's value.
+func (s *SMBFileShareInfo) SetFileShareName(v string) *SMBFileShareInfo {
+	s.FileShareName = &v
 	return s
 }
 
@@ -17730,6 +17896,9 @@ func (s *UpdateMaintenanceStartTimeOutput) SetGatewayARN(v string) *UpdateMainte
 type UpdateNFSFileShareInput struct {
 	_ struct{} `type:"structure"`
 
+	// Refresh cache information.
+	CacheAttributes *CacheAttributes `type:"structure"`
+
 	// The list of clients that are allowed to access the file gateway. The list
 	// must contain either valid IP addresses or valid CIDR blocks.
 	ClientList []*string `min:"1" type:"list"`
@@ -17744,6 +17913,11 @@ type UpdateNFSFileShareInput struct {
 	//
 	// FileShareARN is a required field
 	FileShareARN *string `min:"50" type:"string" required:"true"`
+
+	// The name of the file share. Optional.
+	//
+	// FileShareName must be set if an S3 prefix name is set in LocationARN.
+	FileShareName *string `min:"1" type:"string"`
 
 	// A value that enables guessing of the MIME type for uploaded objects based
 	// on file extensions. Set this value to true to enable MIME type guessing,
@@ -17826,6 +18000,9 @@ func (s *UpdateNFSFileShareInput) Validate() error {
 	if s.FileShareARN != nil && len(*s.FileShareARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("FileShareARN", 50))
 	}
+	if s.FileShareName != nil && len(*s.FileShareName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileShareName", 1))
+	}
 	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
@@ -17844,6 +18021,12 @@ func (s *UpdateNFSFileShareInput) Validate() error {
 	return nil
 }
 
+// SetCacheAttributes sets the CacheAttributes field's value.
+func (s *UpdateNFSFileShareInput) SetCacheAttributes(v *CacheAttributes) *UpdateNFSFileShareInput {
+	s.CacheAttributes = v
+	return s
+}
+
 // SetClientList sets the ClientList field's value.
 func (s *UpdateNFSFileShareInput) SetClientList(v []*string) *UpdateNFSFileShareInput {
 	s.ClientList = v
@@ -17859,6 +18042,12 @@ func (s *UpdateNFSFileShareInput) SetDefaultStorageClass(v string) *UpdateNFSFil
 // SetFileShareARN sets the FileShareARN field's value.
 func (s *UpdateNFSFileShareInput) SetFileShareARN(v string) *UpdateNFSFileShareInput {
 	s.FileShareARN = &v
+	return s
+}
+
+// SetFileShareName sets the FileShareName field's value.
+func (s *UpdateNFSFileShareInput) SetFileShareName(v string) *UpdateNFSFileShareInput {
+	s.FileShareName = &v
 	return s
 }
 
@@ -17938,13 +18127,22 @@ func (s *UpdateNFSFileShareOutput) SetFileShareARN(v string) *UpdateNFSFileShare
 type UpdateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users in the Active Directory that have administrator rights to
-	// the file share. A group must be prefixed with the @ character. For example,
-	// @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// Acceptable formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1.
+	// Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
 	AuditDestinationARN *string `type:"string"`
+
+	// Refresh cache information.
+	CacheAttributes *CacheAttributes `type:"structure"`
+
+	// The case of an object name in an Amazon S3 bucket. For ClientSpecified, the
+	// client determines the case sensitivity. For CaseSensitive, the gateway determines
+	// the case sensitivity. The default value is ClientSpecified.
+	CaseSensitivity *string `type:"string" enum:"CaseSensitivity"`
 
 	// The default storage class for objects put into an Amazon S3 bucket by the
 	// file gateway. The default value is S3_INTELLIGENT_TIERING. Optional.
@@ -17957,6 +18155,11 @@ type UpdateSMBFileShareInput struct {
 	// FileShareARN is a required field
 	FileShareARN *string `min:"50" type:"string" required:"true"`
 
+	// The name of the file share. Optional.
+	//
+	// FileShareName must be set if an S3 prefix name is set in LocationARN.
+	FileShareName *string `min:"1" type:"string"`
+
 	// A value that enables guessing of the MIME type for uploaded objects based
 	// on file extensions. Set this value to true to enable MIME type guessing,
 	// otherwise set to false. The default value is true.
@@ -17965,8 +18168,9 @@ type UpdateSMBFileShareInput struct {
 	GuessMIMETypeEnabled *bool `type:"boolean"`
 
 	// A list of users or groups in the Active Directory that are not allowed to
-	// access the file share. A group must be prefixed with the @ character. For
-	// example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// access the file share. A group must be prefixed with the @ character. Acceptable
+	// formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1. Can only
+	// be set if Authentication is set to ActiveDirectory.
 	InvalidUserList []*string `type:"list"`
 
 	// Set to true to use Amazon S3 server-side encryption with your own AWS KMS
@@ -18015,8 +18219,9 @@ type UpdateSMBFileShareInput struct {
 	SMBACLEnabled *bool `type:"boolean"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
-	// the file share. A group must be prefixed with the @ character. For example,
-	// @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// the file share. A group must be prefixed with the @ character. Acceptable
+	// formats include: DOMAIN\User1, user1, @group1, and @DOMAIN\group1. Can only
+	// be set if Authentication is set to ActiveDirectory.
 	ValidUserList []*string `type:"list"`
 }
 
@@ -18042,6 +18247,9 @@ func (s *UpdateSMBFileShareInput) Validate() error {
 	if s.FileShareARN != nil && len(*s.FileShareARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("FileShareARN", 50))
 	}
+	if s.FileShareName != nil && len(*s.FileShareName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileShareName", 1))
+	}
 	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
@@ -18064,6 +18272,18 @@ func (s *UpdateSMBFileShareInput) SetAuditDestinationARN(v string) *UpdateSMBFil
 	return s
 }
 
+// SetCacheAttributes sets the CacheAttributes field's value.
+func (s *UpdateSMBFileShareInput) SetCacheAttributes(v *CacheAttributes) *UpdateSMBFileShareInput {
+	s.CacheAttributes = v
+	return s
+}
+
+// SetCaseSensitivity sets the CaseSensitivity field's value.
+func (s *UpdateSMBFileShareInput) SetCaseSensitivity(v string) *UpdateSMBFileShareInput {
+	s.CaseSensitivity = &v
+	return s
+}
+
 // SetDefaultStorageClass sets the DefaultStorageClass field's value.
 func (s *UpdateSMBFileShareInput) SetDefaultStorageClass(v string) *UpdateSMBFileShareInput {
 	s.DefaultStorageClass = &v
@@ -18073,6 +18293,12 @@ func (s *UpdateSMBFileShareInput) SetDefaultStorageClass(v string) *UpdateSMBFil
 // SetFileShareARN sets the FileShareARN field's value.
 func (s *UpdateSMBFileShareInput) SetFileShareARN(v string) *UpdateSMBFileShareInput {
 	s.FileShareARN = &v
+	return s
+}
+
+// SetFileShareName sets the FileShareName field's value.
+func (s *UpdateSMBFileShareInput) SetFileShareName(v string) *UpdateSMBFileShareInput {
+	s.FileShareName = &v
 	return s
 }
 
@@ -18782,6 +19008,14 @@ const (
 
 	// AvailabilityMonitorTestStatusPending is a AvailabilityMonitorTestStatus enum value
 	AvailabilityMonitorTestStatusPending = "PENDING"
+)
+
+const (
+	// CaseSensitivityClientSpecified is a CaseSensitivity enum value
+	CaseSensitivityClientSpecified = "ClientSpecified"
+
+	// CaseSensitivityCaseSensitive is a CaseSensitivity enum value
+	CaseSensitivityCaseSensitive = "CaseSensitive"
 )
 
 const (
