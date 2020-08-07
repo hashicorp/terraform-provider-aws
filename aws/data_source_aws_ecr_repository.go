@@ -15,26 +15,25 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 		Read: dataSourceAwsEcrRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"encryption_configuration": {
+				Type:     schema.TypeList,
 				Computed: true,
-			},
-			"repository_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_tag_mutability": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"encryption_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"kms_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"image_scanning_configuration": {
 				Type:     schema.TypeList,
@@ -47,6 +46,23 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 						},
 					},
 				},
+			},
+			"image_tag_mutability": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"registry_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"repository_url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
 		},
@@ -80,23 +96,25 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
 	d.Set("arn", arn)
-	d.Set("registry_id", repository.RegistryId)
 	d.Set("name", repository.RepositoryName)
+	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
 	tags, err := keyvaluetags.EcrListTags(conn, arn)
-
 	if err != nil {
 		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
 	}
-
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("error setting tags for ECR Repository (%s): %w", arn, err)
 	}
 
 	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
-		return fmt.Errorf("error setting image_scanning_configuration: %s", err)
+		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
+	}
+
+	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
 	return nil
