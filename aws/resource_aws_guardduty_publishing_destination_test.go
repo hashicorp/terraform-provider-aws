@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -81,7 +80,7 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 
 func TestAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
-	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 	detectorResourceName := "aws_guardduty_detector.test_gd"
 	bucketResourceName := "aws_s3_bucket.gd_bucket"
 	kmsKeyResourceName := "aws_kms_key.gd_key"
@@ -109,8 +108,29 @@ func TestAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
+	resourceName := "aws_guardduty_publishing_destination.test"
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyPublishingDestinationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyPublishingDestination(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName string) string {
-	testAccGuardDutyPublishingDestinationConfig_basic1 := `
+	return fmt.Sprintf(`
 
 data "aws_caller_identity" "current" {}
 
@@ -191,7 +211,7 @@ resource "aws_guardduty_detector" "test_gd" {
 }
 
 resource "aws_s3_bucket" "gd_bucket" {
-  bucket = "<<BUCKET_NAME>>"
+  bucket = %[1]q
   acl    = "private"
   force_destroy = true
 }
@@ -215,30 +235,7 @@ resource "aws_guardduty_publishing_destination" "test" {
 	depends_on = [
 		aws_s3_bucket_policy.gd_bucket_policy,
 	]
-}
-`
-	return strings.Replace(testAccGuardDutyPublishingDestinationConfig_basic1, "<<BUCKET_NAME>>", bucketName, 1)
-}
-
-func TestAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
-	resourceName := "aws_guardduty_publishing_destination.test"
-	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyPublishingDestinationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyPublishingDestination(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
+}`, bucketName)
 }
 
 func testAccCheckAwsGuardDutyPublishingDestinationExists(name string) resource.TestCheckFunc {

@@ -91,7 +91,7 @@ resource "aws_guardduty_detector" "test_gd" {
 }
 
 resource "aws_s3_bucket" "gd_bucket" {
-  bucket        = "<<BUCKET_NAME>>"
+  bucket        = "example"
   acl           = "private"
   force_destroy = true
 }
