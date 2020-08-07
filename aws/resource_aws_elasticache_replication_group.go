@@ -392,6 +392,8 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &elasticache.DescribeReplicationGroupsInput{
 		ReplicationGroupId: aws.String(d.Id()),
 	}
@@ -514,7 +516,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 		}
 
-		if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
