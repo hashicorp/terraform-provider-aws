@@ -99,7 +99,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Reading GuardDuty publishing destination: %s", input)
 	gdo, err := conn.DescribePublishingDestination(input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
 			log.Printf("[WARN] GuardDuty publishing destination: %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
