@@ -474,7 +474,7 @@ resource "aws_eip" "test" {
 
 resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
-  instance_id   = aws_spot_instance_request.foo.spot_instance_id
+  instance_id   = aws_spot_instance_request.test.spot_instance_id
 }
 `, testAccAWSSpotInstanceRequestConfig(rInt))
 }
