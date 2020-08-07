@@ -734,7 +734,7 @@ resource "aws_api_gateway_rest_api" "test" {
 
   endpoint_configuration {
     types            = ["PRIVATE"]
-    vpc_endpoint_ids = [aws_vpc_endpoint.test.id]
+	vpc_endpoint_ids = [aws_vpc_endpoint.test.id]
   }
 }
 `, rName)
@@ -776,7 +776,8 @@ resource "aws_subnet" "test" {
   }
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
@@ -888,6 +889,7 @@ resource "aws_api_gateway_rest_api" "test" {
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -913,6 +915,7 @@ resource "aws_api_gateway_rest_api" "test" {
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -977,6 +980,7 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 EOF
+
 }
 `, rName, rName)
 }
@@ -1019,6 +1023,7 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 EOF
+
 }
 `, rName, rName)
 }

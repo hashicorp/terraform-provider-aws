@@ -266,9 +266,9 @@ func testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, properties strin
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {
-    type   = "METHOD"
     method = "GET"
     path   = "/terraform-acc-test"
+    type   = "METHOD"
   }
 
   properties  = %v
@@ -285,11 +285,11 @@ func testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, properti
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {
-    type        = "RESPONSE_HEADER"
     method      = "GET"
     name        = "tfacc"
     path        = "/terraform-acc-test"
     status_code = "200"
+    type        = "RESPONSE_HEADER"
   }
 
   properties  = %v

@@ -253,8 +253,8 @@ resource "aws_appmesh_mesh" "foo" {
   name = "%s"
 
   tags = {
-	foo = "bar"
-	good = "bad"
+    foo  = "bar"
+    good = "bad"
   }
 }
 `, name)
@@ -266,9 +266,9 @@ resource "aws_appmesh_mesh" "foo" {
   name = "%s"
 
   tags = {
-	foo = "bar"
-	good = "bad2"
-	fizz = "buzz"
+    foo  = "bar"
+    good = "bad2"
+    fizz = "buzz"
   }
 }
 `, name)
@@ -280,7 +280,7 @@ resource "aws_appmesh_mesh" "foo" {
   name = "%s"
 
   tags = {
-	foo = "bar"
+    foo = "bar"
   }
 }
 `, name)

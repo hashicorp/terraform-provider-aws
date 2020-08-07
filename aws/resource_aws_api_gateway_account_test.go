@@ -143,6 +143,7 @@ resource "aws_iam_role" "cloudwatch" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
@@ -169,6 +170,7 @@ resource "aws_iam_role_policy" "cloudwatch" {
   ]
 }
 EOF
+
 }
 `, randName)
 }
@@ -197,6 +199,7 @@ resource "aws_iam_role" "second" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
@@ -223,6 +226,7 @@ resource "aws_iam_role_policy" "cloudwatch" {
   ]
 }
 EOF
+
 }
 `, randName)
 }

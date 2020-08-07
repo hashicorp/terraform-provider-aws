@@ -560,7 +560,7 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_router" "test" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     listener {
@@ -574,16 +574,18 @@ resource "aws_appmesh_virtual_router" "test" {
 
 resource "aws_appmesh_virtual_node" "foo" {
   name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
-  spec {}
+  spec {
+  }
 }
 
 resource "aws_appmesh_virtual_node" "bar" {
   name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
-  spec {}
+  spec {
+  }
 }
 `, meshName, vrName, vn1Name, vn2Name)
 }
@@ -617,8 +619,8 @@ func testAccAppmeshRouteConfig_httpRouteUpdated(meshName, vrName, vn1Name, vn2Na
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http_route {
@@ -628,12 +630,12 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 90
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 10
         }
       }
@@ -647,8 +649,8 @@ func testAccAppmeshRouteConfig_httpRouteUpdatedWithZeroWeight(meshName, vrName, 
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http_route {
@@ -658,12 +660,12 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 99
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 0
         }
       }
@@ -677,14 +679,14 @@ func testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rNam
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     tcp_route {
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
@@ -698,19 +700,19 @@ func testAccAppmeshRouteConfig_tcpRouteUpdated(meshName, vrName, vn1Name, vn2Nam
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     tcp_route {
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 90
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 10
         }
       }
@@ -724,19 +726,19 @@ func testAccAppmeshRouteConfig_tcpRouteUpdatedWithZeroWeight(meshName, vrName, v
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     tcp_route {
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 99
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 0
         }
       }
@@ -750,8 +752,8 @@ func testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http_route {
@@ -761,7 +763,7 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
@@ -780,8 +782,8 @@ func testAccAwsAppmeshRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name,
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http_route {
@@ -797,7 +799,7 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
@@ -811,8 +813,8 @@ func testAccAwsAppmeshRouteConfig_httpHeaderUpdated(meshName, vrName, vn1Name, v
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http_route {
@@ -841,7 +843,7 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
@@ -855,8 +857,8 @@ func testAccAwsAppmeshRouteConfig_routePriority(meshName, vrName, vn1Name, vn2Na
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http_route {
@@ -866,7 +868,7 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }

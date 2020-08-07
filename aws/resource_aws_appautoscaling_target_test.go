@@ -275,6 +275,7 @@ resource "aws_ecs_task_definition" "task" {
   }
 ]
 EOF
+
 }
 
 resource "aws_ecs_service" "service" {
@@ -318,6 +319,7 @@ resource "aws_ecs_task_definition" "task" {
   }
 ]
 EOF
+
 }
 
 resource "aws_ecs_service" "service" {
@@ -393,7 +395,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_main_route_table_association.a"]
+  depends_on = [aws_main_route_table_association.a]
 
   service_role     = aws_iam_role.iam_emr_default_role.arn
   autoscaling_role = aws_iam_role.emr-autoscaling-role.arn
@@ -424,7 +426,7 @@ resource "aws_security_group" "allow_all" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.main"]
+  depends_on = [aws_subnet.main]
 
   lifecycle {
     ignore_changes = ["ingress", "egress"]
@@ -690,7 +692,8 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   }
 }
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
@@ -710,6 +713,7 @@ resource "aws_iam_role" "fleet_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {

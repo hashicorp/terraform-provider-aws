@@ -906,11 +906,12 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
 	var stickinessBlock string
 
 	if addStickinessBlock {
-		stickinessBlock = fmt.Sprintf(`stickiness {
-	    enabled = "%t"
-	    type = "lb_cookie"
-	    cookie_duration = 10000
-	  }
+		stickinessBlock = fmt.Sprintf(`
+  stickiness {
+    enabled         = "%t"
+    type            = "lb_cookie"
+    cookie_duration = 10000
+  }
 `, enabled)
 	}
 
@@ -960,7 +961,6 @@ resource "aws_alb_target_group" "test" {
   port     = 443
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
-
   %s
 }
 

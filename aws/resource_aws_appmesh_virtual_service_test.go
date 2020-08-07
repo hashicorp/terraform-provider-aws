@@ -284,21 +284,21 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_node" "foo" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 }
 
 resource "aws_appmesh_virtual_node" "bar" {
   name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 }
 
 resource "aws_appmesh_virtual_service" "test" {
   name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     provider {
@@ -319,7 +319,7 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_router" "foo" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     listener {
@@ -333,7 +333,7 @@ resource "aws_appmesh_virtual_router" "foo" {
 
 resource "aws_appmesh_virtual_router" "bar" {
   name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     listener {
@@ -347,7 +347,7 @@ resource "aws_appmesh_virtual_router" "bar" {
 
 resource "aws_appmesh_virtual_service" "test" {
   name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     provider {
@@ -368,21 +368,21 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_node" "foo" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 }
 
 resource "aws_appmesh_virtual_node" "bar" {
   name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 }
 
 resource "aws_appmesh_virtual_service" "test" {
   name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     provider {

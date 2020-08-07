@@ -180,6 +180,7 @@ resource "aws_api_gateway_model" "test" {
   "type": "object"
 }
 EOF
+
 }
 `, rName, modelName)
 }

@@ -344,6 +344,7 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "invocation_policy" {
@@ -362,6 +363,7 @@ resource "aws_iam_role_policy" "invocation_policy" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -382,6 +384,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "authorizer" {
@@ -450,6 +453,7 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -470,6 +474,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_pool" "pool" {
@@ -535,6 +540,7 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -555,6 +561,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_pool" "pool" {

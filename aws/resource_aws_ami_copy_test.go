@@ -221,7 +221,9 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-data "aws_region" "current" {}
+
+data "aws_region" "current" {
+}
 
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]

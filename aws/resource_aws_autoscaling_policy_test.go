@@ -359,17 +359,17 @@ data "aws_availability_zones" "available" {
 
 resource "aws_launch_configuration" "test" {
   name          = "%s"
-  image_id      = "${data.aws_ami.amzn.id}"
+  image_id      = data.aws_ami.amzn.id
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  availability_zones   = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
   name                 = "%s"
   max_size             = 0
   min_size             = 0
   force_delete         = true
-  launch_configuration = "${aws_launch_configuration.test.name}"
+  launch_configuration = aws_launch_configuration.test.name
 }
 `, name, name)
 }
@@ -382,7 +382,7 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   cooldown               = 300
   policy_type            = "SimpleScaling"
   scaling_adjustment     = 2
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
 
 resource "aws_autoscaling_policy" "foobar_step" {
@@ -397,13 +397,13 @@ resource "aws_autoscaling_policy" "foobar_step" {
     metric_interval_lower_bound = 2.0
   }
 
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
 
 resource "aws_autoscaling_policy" "foobar_target_tracking" {
   name                   = "%s-foobar_target_tracking"
   policy_type            = "TargetTrackingScaling"
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 
   target_tracking_configuration {
     predefined_metric_specification {
@@ -424,7 +424,7 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   cooldown               = 30
   policy_type            = "SimpleScaling"
   scaling_adjustment     = 2
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
 
 resource "aws_autoscaling_policy" "foobar_step" {
@@ -439,13 +439,13 @@ resource "aws_autoscaling_policy" "foobar_step" {
     metric_interval_lower_bound = 2.0
   }
 
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
 
 resource "aws_autoscaling_policy" "foobar_target_tracking" {
   name                   = "%s-foobar_target_tracking"
   policy_type            = "TargetTrackingScaling"
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 
   target_tracking_configuration {
     customized_metric_specification {
@@ -473,7 +473,7 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   cooldown               = 300
   policy_type            = "SimpleScaling"
   scaling_adjustment     = 0
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
 `, name)
 }
@@ -483,7 +483,7 @@ func testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(name string) st
 resource "aws_autoscaling_policy" "test" {
   name                   = "%s-test"
   policy_type            = "TargetTrackingScaling"
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 
   target_tracking_configuration {
     predefined_metric_specification {
@@ -501,7 +501,7 @@ func testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(name string) string
 resource "aws_autoscaling_policy" "test" {
   name                   = "%s-test"
   policy_type            = "TargetTrackingScaling"
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 
   target_tracking_configuration {
     customized_metric_specification {
@@ -529,7 +529,7 @@ resource "aws_autoscaling_policy" "foobar_simple" {
   cooldown               = 0
   policy_type            = "SimpleScaling"
   scaling_adjustment     = 0
-  autoscaling_group_name = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
 
 resource "aws_autoscaling_policy" "foobar_step" {
@@ -545,7 +545,7 @@ resource "aws_autoscaling_policy" "foobar_step" {
   }
 
   min_adjustment_magnitude = 1
-  autoscaling_group_name   = "${aws_autoscaling_group.test.name}"
+  autoscaling_group_name   = aws_autoscaling_group.test.name
 }
 `, name, name)
 }

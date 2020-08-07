@@ -473,10 +473,11 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -494,6 +495,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 `, rName, rName)
 }
@@ -526,10 +528,11 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -547,6 +550,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 `, rName, rName)
 }
@@ -570,13 +574,14 @@ resource "aws_iam_role" "lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %q
   handler       = "exports.test"
-  role          = "${aws_iam_role.lambda.arn}"
+  role          = aws_iam_role.lambda.arn
   runtime       = "nodejs12.x"
 }
 
@@ -597,10 +602,11 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -618,6 +624,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 `, rName, rName, rName)
 }
@@ -630,7 +637,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   description = %q
   name        = %q
   type        = "HTTP"
@@ -671,13 +678,13 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
+  api_id           = aws_appsync_graphql_api.test.id
   name             = %q
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn = aws_iam_role.test.arn
   type             = "AMAZON_DYNAMODB"
 
   dynamodb_config {
-    table_name             = "${aws_dynamodb_table.test.name}"
+    table_name             = aws_dynamodb_table.test.name
     use_caller_credentials = %t
   }
 }
@@ -692,9 +699,9 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
+  api_id           = aws_appsync_graphql_api.test.id
   name             = %q
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn = aws_iam_role.test.arn
   type             = "AMAZON_ELASTICSEARCH"
 
   elasticsearch_config {
@@ -713,7 +720,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "HTTP"
 
@@ -732,13 +739,13 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
+  api_id           = aws_appsync_graphql_api.test.id
   name             = %q
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn = aws_iam_role.test.arn
   type             = "AMAZON_DYNAMODB"
 
   dynamodb_config {
-    table_name = "${aws_dynamodb_table.test.name}"
+    table_name = aws_dynamodb_table.test.name
   }
 }
 `, rName, rName)
@@ -752,9 +759,9 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
+  api_id           = aws_appsync_graphql_api.test.id
   name             = %q
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn = aws_iam_role.test.arn
   type             = "AMAZON_ELASTICSEARCH"
 
   elasticsearch_config {
@@ -772,7 +779,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "HTTP"
 
@@ -791,13 +798,13 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
+  api_id           = aws_appsync_graphql_api.test.id
   name             = %q
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn = aws_iam_role.test.arn
   type             = "AWS_LAMBDA"
 
   lambda_config {
-    function_arn = "${aws_lambda_function.test.arn}"
+    function_arn = aws_lambda_function.test.arn
   }
 }
 `, rName, rName)
@@ -811,7 +818,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "NONE"
 }

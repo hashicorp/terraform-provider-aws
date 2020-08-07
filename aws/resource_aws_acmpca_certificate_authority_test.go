@@ -571,7 +571,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = ["aws_s3_bucket_policy.test"]
+  depends_on = [aws_s3_bucket_policy.test]
 }
 `, testAccAwsAcmpcaCertificateAuthorityConfig_S3Bucket(rName), customCname)
 }
