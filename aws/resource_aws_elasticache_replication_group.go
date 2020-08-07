@@ -276,10 +276,8 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		params.EngineVersion = aws.String(v.(string))
 	}
 
-	preferred_azs := d.Get("availability_zones").(*schema.Set).List()
-	if len(preferred_azs) > 0 {
-		azs := expandStringList(preferred_azs)
-		params.PreferredCacheClusterAZs = azs
+	if preferredAzs := d.Get("availability_zones").(*schema.Set); preferredAzs.Len() > 0 {
+		params.PreferredCacheClusterAZs = expandStringSet(preferredAzs)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
@@ -294,19 +292,16 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		params.CacheSubnetGroupName = aws.String(v.(string))
 	}
 
-	security_group_names := d.Get("security_group_names").(*schema.Set).List()
-	if len(security_group_names) > 0 {
-		params.CacheSecurityGroupNames = expandStringList(security_group_names)
+	if SGNames := d.Get("security_group_names").(*schema.Set); SGNames.Len() > 0 {
+		params.CacheSecurityGroupNames = expandStringSet(SGNames)
 	}
 
-	security_group_ids := d.Get("security_group_ids").(*schema.Set).List()
-	if len(security_group_ids) > 0 {
-		params.SecurityGroupIds = expandStringList(security_group_ids)
+	if SGIds := d.Get("security_group_ids").(*schema.Set); SGIds.Len() > 0 {
+		params.SecurityGroupIds = expandStringSet(SGIds)
 	}
 
-	snaps := d.Get("snapshot_arns").(*schema.Set).List()
-	if len(snaps) > 0 {
-		params.SnapshotArns = expandStringList(snaps)
+	if snaps := d.Get("snapshot_arns").(*schema.Set); snaps.Len() > 0 {
+		params.SnapshotArns = expandStringSet(snaps)
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
@@ -414,7 +409,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	var rgp *elasticache.ReplicationGroup
 	for _, r := range res.ReplicationGroups {
-		if *r.ReplicationGroupId == d.Id() {
+		if aws.StringValue(r.ReplicationGroupId) == d.Id() {
 			rgp = r
 		}
 	}
@@ -425,20 +420,20 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		return nil
 	}
 
-	if *rgp.Status == "deleting" {
+	if aws.StringValue(rgp.Status) == "deleting" {
 		log.Printf("[WARN] The Replication Group %q is currently in the `deleting` state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if rgp.AutomaticFailover != nil {
-		switch strings.ToLower(*rgp.AutomaticFailover) {
+		switch strings.ToLower(aws.StringValue(rgp.AutomaticFailover)) {
 		case elasticache.AutomaticFailoverStatusDisabled, elasticache.AutomaticFailoverStatusDisabling:
 			d.Set("automatic_failover_enabled", false)
 		case elasticache.AutomaticFailoverStatusEnabled, elasticache.AutomaticFailoverStatusEnabling:
 			d.Set("automatic_failover_enabled", true)
 		default:
-			log.Printf("Unknown AutomaticFailover state %s", *rgp.AutomaticFailover)
+			log.Printf("Unknown AutomaticFailover state %s", aws.StringValue(rgp.AutomaticFailover))
 		}
 	}
 
@@ -446,7 +441,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
-	if err := d.Set("member_clusters", flattenStringList(rgp.MemberClusters)); err != nil {
+	if err := d.Set("member_clusters", flattenStringSet(rgp.MemberClusters)); err != nil {
 		return fmt.Errorf("error setting member_clusters: %s", err)
 	}
 	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(aws.BoolValue(rgp.ClusterEnabled), rgp.NodeGroups)); err != nil {
@@ -501,7 +496,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
-		if c.AuthTokenEnabled != nil && !*c.AuthTokenEnabled {
+		if c.AuthTokenEnabled != nil && !aws.BoolValue(c.AuthTokenEnabled) {
 			d.Set("auth_token", nil)
 		}
 
@@ -747,14 +742,14 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 	if d.HasChange("security_group_ids") {
 		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
-			params.SecurityGroupIds = expandStringList(attr.List())
+			params.SecurityGroupIds = expandStringSet(attr)
 			requestUpdate = true
 		}
 	}
 
 	if d.HasChange("security_group_names") {
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			params.CacheSecurityGroupNames = expandStringList(attr.List())
+			params.CacheSecurityGroupNames = expandStringSet(attr)
 			requestUpdate = true
 		}
 	}
@@ -867,8 +862,9 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 
 		var rg *elasticache.ReplicationGroup
 		for _, replicationGroup := range resp.ReplicationGroups {
-			if *replicationGroup.ReplicationGroupId == replicationGroupId {
-				log.Printf("[DEBUG] Found matching ElastiCache Replication Group: %s", *replicationGroup.ReplicationGroupId)
+			rgId := aws.StringValue(replicationGroup.ReplicationGroupId)
+			if rgId == replicationGroupId {
+				log.Printf("[DEBUG] Found matching ElastiCache Replication Group: %s", rgId)
 				rg = replicationGroup
 			}
 		}
@@ -877,19 +873,19 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 			return nil, "", fmt.Errorf("Error: no matching ElastiCache Replication Group for id (%s)", replicationGroupId)
 		}
 
-		log.Printf("[DEBUG] ElastiCache Replication Group (%s) status: %v", replicationGroupId, *rg.Status)
+		log.Printf("[DEBUG] ElastiCache Replication Group (%s) status: %v", replicationGroupId, aws.StringValue(rg.Status))
 
 		// return the current state if it's in the pending array
 		for _, p := range pending {
-			log.Printf("[DEBUG] ElastiCache: checking pending state (%s) for Replication Group (%s), Replication Group status: %s", pending, replicationGroupId, *rg.Status)
-			s := *rg.Status
+			log.Printf("[DEBUG] ElastiCache: checking pending state (%s) for Replication Group (%s), Replication Group status: %s", pending, replicationGroupId, aws.StringValue(rg.Status))
+			s := aws.StringValue(rg.Status)
 			if p == s {
-				log.Printf("[DEBUG] Return with status: %v", *rg.Status)
+				log.Printf("[DEBUG] Return with status: %v", aws.StringValue(rg.Status))
 				return s, p, nil
 			}
 		}
 
-		return rg, *rg.Status, nil
+		return rg, aws.StringValue(rg.Status), nil
 	}
 }
 
