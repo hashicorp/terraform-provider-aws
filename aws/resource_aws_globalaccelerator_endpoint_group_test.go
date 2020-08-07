@@ -44,6 +44,27 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorEndpointGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
