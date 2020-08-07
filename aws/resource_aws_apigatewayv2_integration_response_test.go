@@ -200,8 +200,8 @@ func testAccAWSAPIGatewayV2IntegrationResponseImportStateIdFunc(resourceName str
 func testAccAWSAPIGatewayV2IntegrationResponseConfig_basic(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_integration_response" "test" {
-  api_id                   = "${aws_apigatewayv2_api.test.id}"
-  integration_id           = "${aws_apigatewayv2_integration.test.id}"
+  api_id                   = aws_apigatewayv2_api.test.id
+  integration_id           = aws_apigatewayv2_integration.test.id
   integration_response_key = "/200/"
 }
 `
@@ -210,8 +210,8 @@ resource "aws_apigatewayv2_integration_response" "test" {
 func testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributes(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_integration_response" "test" {
-  api_id                   = "${aws_apigatewayv2_api.test.id}"
-  integration_id           = "${aws_apigatewayv2_integration.test.id}"
+  api_id                   = aws_apigatewayv2_api.test.id
+  integration_id           = aws_apigatewayv2_integration.test.id
   integration_response_key = "$default"
 
   content_handling_strategy     = "CONVERT_TO_TEXT"
@@ -227,8 +227,8 @@ resource "aws_apigatewayv2_integration_response" "test" {
 func testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributesUpdated(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + `
 resource "aws_apigatewayv2_integration_response" "test" {
-  api_id                   = "${aws_apigatewayv2_api.test.id}"
-  integration_id           = "${aws_apigatewayv2_integration.test.id}"
+  api_id                   = aws_apigatewayv2_api.test.id
+  integration_id           = aws_apigatewayv2_integration.test.id
   integration_response_key = "/404/"
 
   content_handling_strategy     = "CONVERT_TO_BINARY"

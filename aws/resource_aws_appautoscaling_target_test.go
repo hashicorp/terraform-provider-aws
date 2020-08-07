@@ -266,21 +266,21 @@ resource "aws_ecs_task_definition" "task" {
 
   container_definitions = <<EOF
 [
-    {
-        "name": "busybox",
-        "image": "busybox:latest",
-        "cpu": 10,
-        "memory": 128,
-        "essential": true
-    }
+  {
+    "name": "busybox",
+    "image": "busybox:latest",
+    "cpu": 10,
+    "memory": 128,
+    "essential": true
+  }
 ]
 EOF
 }
 
 resource "aws_ecs_service" "service" {
   name            = "foobar"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.task.arn}"
+  cluster         = aws_ecs_cluster.foo.id
+  task_definition = aws_ecs_task_definition.task.arn
   desired_count   = 1
 
   deployment_maximum_percent         = 200
@@ -309,21 +309,21 @@ resource "aws_ecs_task_definition" "task" {
 
   container_definitions = <<EOF
 [
-    {
-        "name": "busybox",
-        "image": "busybox:latest",
-        "cpu": 10,
-        "memory": 128,
-        "essential": true
-    }
+  {
+    "name": "busybox",
+    "image": "busybox:latest",
+    "cpu": 10,
+    "memory": 128,
+    "essential": true
+  }
 ]
 EOF
 }
 
 resource "aws_ecs_service" "service" {
   name            = "foobar"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.task.arn}"
+  cluster         = aws_ecs_cluster.foo.id
+  task_definition = aws_ecs_task_definition.task.arn
   desired_count   = 2
 
   deployment_maximum_percent         = 200
@@ -361,10 +361,10 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   applications  = ["Spark"]
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.allow_all.id
+    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_group {
@@ -395,12 +395,12 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role     = aws_iam_role.iam_emr_default_role.arn
+  autoscaling_role = aws_iam_role.emr-autoscaling-role.arn
 }
 
 resource "aws_emr_instance_group" "task" {
-  cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 1
   instance_type  = "m3.xlarge"
 }
@@ -408,7 +408,7 @@ resource "aws_emr_instance_group" "task" {
 resource "aws_security_group" "allow_all" {
   name        = "allow_all_%d"
   description = "Allow all inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port = 0
@@ -445,9 +445,9 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "168.31.0.0/20"
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-appautoscaling-target-emr-cluster"
@@ -455,21 +455,21 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.main.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.main.id
+  route_table_id = aws_route_table.r.id
 }
 
 resource "aws_iam_role" "iam_emr_default_role" {
@@ -493,8 +493,8 @@ EOT
 }
 
 resource "aws_iam_role_policy_attachment" "service-attach" {
-  role       = "${aws_iam_role.iam_emr_default_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+  role       = aws_iam_role.iam_emr_default_role.id
+  policy_arn = aws_iam_policy.iam_emr_default_policy.arn
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
@@ -502,66 +502,68 @@ resource "aws_iam_policy" "iam_emr_default_policy" {
 
   policy = <<EOT
 {
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "ec2:AuthorizeSecurityGroupEgress",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:CancelSpotInstanceRequests",
-            "ec2:CreateNetworkInterface",
-            "ec2:CreateSecurityGroup",
-            "ec2:CreateTags",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DeleteSecurityGroup",
-            "ec2:DeleteTags",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeAccountAttributes",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstances",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeNetworkAcls",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DescribePrefixLists",
-            "ec2:DescribeRouteTables",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeSpotInstanceRequests",
-            "ec2:DescribeSpotPriceHistory",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeVpcAttribute",
-            "ec2:DescribeVpcEndpoints",
-            "ec2:DescribeVpcEndpointServices",
-            "ec2:DescribeVpcs",
-            "ec2:DetachNetworkInterface",
-            "ec2:ModifyImageAttribute",
-            "ec2:ModifyInstanceAttribute",
-            "ec2:RequestSpotInstances",
-            "ec2:RevokeSecurityGroupEgress",
-            "ec2:RunInstances",
-            "ec2:TerminateInstances",
-            "ec2:DeleteVolume",
-            "ec2:DescribeVolumeStatus",
-            "ec2:DescribeVolumes",
-            "ec2:DetachVolume",
-            "iam:GetRole",
-            "iam:GetRolePolicy",
-            "iam:ListInstanceProfiles",
-            "iam:ListRolePolicies",
-            "iam:PassRole",
-            "s3:CreateBucket",
-            "s3:Get*",
-            "s3:List*",
-            "sdb:BatchPutAttributes",
-            "sdb:Select",
-            "sqs:CreateQueue",
-            "sqs:Delete*",
-            "sqs:GetQueue*",
-            "sqs:PurgeQueue",
-            "sqs:ReceiveMessage"
-        ]
-    }]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CancelSpotInstanceRequests",
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateTags",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteTags",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeAccountAttributes",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeInstances",
+        "ec2:DescribeKeyPairs",
+        "ec2:DescribeNetworkAcls",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribePrefixLists",
+        "ec2:DescribeRouteTables",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSpotInstanceRequests",
+        "ec2:DescribeSpotPriceHistory",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcAttribute",
+        "ec2:DescribeVpcEndpoints",
+        "ec2:DescribeVpcEndpointServices",
+        "ec2:DescribeVpcs",
+        "ec2:DetachNetworkInterface",
+        "ec2:ModifyImageAttribute",
+        "ec2:ModifyInstanceAttribute",
+        "ec2:RequestSpotInstances",
+        "ec2:RevokeSecurityGroupEgress",
+        "ec2:RunInstances",
+        "ec2:TerminateInstances",
+        "ec2:DeleteVolume",
+        "ec2:DescribeVolumeStatus",
+        "ec2:DescribeVolumes",
+        "ec2:DetachVolume",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListInstanceProfiles",
+        "iam:ListRolePolicies",
+        "iam:PassRole",
+        "s3:CreateBucket",
+        "s3:Get*",
+        "s3:List*",
+        "sdb:BatchPutAttributes",
+        "sdb:Select",
+        "sqs:CreateQueue",
+        "sqs:Delete*",
+        "sqs:GetQueue*",
+        "sqs:PurgeQueue",
+        "sqs:ReceiveMessage"
+      ]
+    }
+  ]
 }
 EOT
 }
@@ -593,8 +595,8 @@ resource "aws_iam_instance_profile" "emr_profile" {
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
-  role       = "${aws_iam_role.iam_emr_profile_role.id}"
-  policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+  role       = aws_iam_role.iam_emr_profile_role.id
+  policy_arn = aws_iam_policy.iam_emr_profile_policy.arn
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
@@ -602,35 +604,37 @@ resource "aws_iam_policy" "iam_emr_profile_policy" {
 
   policy = <<EOT
 {
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "cloudwatch:*",
-            "dynamodb:*",
-            "ec2:Describe*",
-            "elasticmapreduce:Describe*",
-            "elasticmapreduce:ListBootstrapActions",
-            "elasticmapreduce:ListClusters",
-            "elasticmapreduce:ListInstanceGroups",
-            "elasticmapreduce:ListInstances",
-            "elasticmapreduce:ListSteps",
-            "kinesis:CreateStream",
-            "kinesis:DeleteStream",
-            "kinesis:DescribeStream",
-            "kinesis:GetRecords",
-            "kinesis:GetShardIterator",
-            "kinesis:MergeShards",
-            "kinesis:PutRecord",
-            "kinesis:SplitShard",
-            "rds:Describe*",
-            "s3:*",
-            "sdb:*",
-            "sns:*",
-            "sqs:*"
-        ]
-    }]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+        "cloudwatch:*",
+        "dynamodb:*",
+        "ec2:Describe*",
+        "elasticmapreduce:Describe*",
+        "elasticmapreduce:ListBootstrapActions",
+        "elasticmapreduce:ListClusters",
+        "elasticmapreduce:ListInstanceGroups",
+        "elasticmapreduce:ListInstances",
+        "elasticmapreduce:ListSteps",
+        "kinesis:CreateStream",
+        "kinesis:DeleteStream",
+        "kinesis:DescribeStream",
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:MergeShards",
+        "kinesis:PutRecord",
+        "kinesis:SplitShard",
+        "rds:Describe*",
+        "s3:*",
+        "sdb:*",
+        "sns:*",
+        "sqs:*"
+      ]
+    }
+  ]
 }
 EOT
 }
@@ -638,7 +642,7 @@ EOT
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
   name               = "EMR_AutoScaling_DefaultRole_%d"
-  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.emr-autoscaling-role-policy.json
 }
 
 data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
@@ -654,7 +658,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
-  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+  role       = aws_iam_role.emr-autoscaling-role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 
@@ -662,7 +666,7 @@ resource "aws_appautoscaling_target" "bar" {
   service_namespace  = "elasticmapreduce"
   resource_id        = "instancegroup/${aws_emr_cluster.tf-test-cluster.id}/${aws_emr_instance_group.task.id}"
   scalable_dimension = "elasticmapreduce:instancegroup:InstanceCount"
-  role_arn           = "${aws_iam_role.emr-autoscaling-role.arn}"
+  role_arn           = aws_iam_role.emr-autoscaling-role.arn
   min_capacity       = 1
   max_capacity       = 8
 }
@@ -709,29 +713,29 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
-  role = "${aws_iam_role.fleet_role.name}"
+  role       = aws_iam_role.fleet_role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role = "${aws_iam_role.fleet_role.arn}"
-  spot_price = "0.005"
-  target_capacity = 2
-  valid_until = %[1]q
+  iam_fleet_role                      = aws_iam_role.fleet_role.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 }
 
 resource "aws_appautoscaling_target" "test" {
-  service_namespace = "ec2"
-  resource_id = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
+  service_namespace  = "ec2"
+  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  min_capacity = 1
-  max_capacity = 3
+  min_capacity       = 1
+  max_capacity       = 3
 }
 `, validUntil)
 }

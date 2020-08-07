@@ -18,8 +18,7 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
 	resourceName := "aws_apigatewayv2_model.test"
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
-	schema := `
-{
+	schema := `{
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "ExampleModel",
   "type": "object",
@@ -28,8 +27,7 @@ func TestAccAWSAPIGatewayV2Model_basic(t *testing.T) {
       "type": "string"
     }
   }
-}
-`
+}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -62,8 +60,7 @@ func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
 	resourceName := "aws_apigatewayv2_model.test"
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
-	schema := `
-{
+	schema := `{
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "ExampleModel",
   "type": "object",
@@ -72,8 +69,7 @@ func TestAccAWSAPIGatewayV2Model_disappears(t *testing.T) {
       "type": "string"
     }
   }
-}
-`
+}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -98,8 +94,7 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
 	resourceName := "aws_apigatewayv2_model.test"
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
-	schema1 := `
-{
+	schema1 := `{
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "ExampleModel1",
   "type": "object",
@@ -108,23 +103,21 @@ func TestAccAWSAPIGatewayV2Model_AllAttributes(t *testing.T) {
       "type": "string"
     }
   }
-}
-`
-	schema2 := `
-{
+}`
+
+	schema2 := `{
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "ExampleModel",
   "type": "object",
   "properties": {
     "ids": {
       "type": "array",
-        "items":{
-          "type": "integer"
-        }
+      "items": {
+        "type": "integer"
+      }
     }
   }
-}
-`
+}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -262,7 +255,7 @@ resource "aws_apigatewayv2_api" "test" {
 func testAccAWSAPIGatewayV2ModelConfig_basic(rName, schema string) string {
 	return testAccAWSAPIGatewayV2ModelConfig_api(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_model" "test" {
-  api_id       = "${aws_apigatewayv2_api.test.id}"
+  api_id       = aws_apigatewayv2_api.test.id
   content_type = "application/json"
   name         = %[1]q
   schema       = %[2]q
@@ -273,7 +266,7 @@ resource "aws_apigatewayv2_model" "test" {
 func testAccAWSAPIGatewayV2ModelConfig_allAttributes(rName, schema string) string {
 	return testAccAWSAPIGatewayV2ModelConfig_api(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_model" "test" {
-  api_id       = "${aws_apigatewayv2_api.test.id}"
+  api_id       = aws_apigatewayv2_api.test.id
   content_type = "text/x-json"
   name         = %[1]q
   description  = "test"
