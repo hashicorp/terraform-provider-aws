@@ -114,6 +114,7 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
 		CidrBlock:          aws.String(d.Get("cidr_block").(string)),
 		VpcId:              aws.String(d.Get("vpc_id").(string)),
+		TagSpecifications:  ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSubnet),
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
@@ -151,12 +152,6 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf(
 			"Error waiting for subnet (%s) to become ready: %s",
 			d.Id(), err)
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
 	}
 
 	// You cannot modify multiple subnet attributes in the same request.
