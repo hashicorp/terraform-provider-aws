@@ -256,12 +256,6 @@ func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("encryption_configuration") {
-		if err := resourceAwsEcrRepositoryUpdateImageScanningConfiguration(conn, d); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
