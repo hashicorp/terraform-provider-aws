@@ -140,6 +140,7 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &v),
 					testCheck,
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
