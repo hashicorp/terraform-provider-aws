@@ -116,6 +116,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					testAccCheckVpcExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestMatchResourceAttr(resourceName, "default_route_table_id", regexp.MustCompile(`^rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
@@ -571,10 +572,7 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 
 const testAccVpcConfig = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-vpc"
-	}
+  cidr_block = "10.1.0.0/16"
 }
 `
 
