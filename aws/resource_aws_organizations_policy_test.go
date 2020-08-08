@@ -113,6 +113,34 @@ func testAccAwsOrganizationsPolicy_description(t *testing.T) {
 	})
 }
 
+func testAccAwsOrganizationsPolicy_type_AI_OPT_OUT(t *testing.T) {
+	var policy organizations.Policy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out_syntax.html
+	AiOptOutPolicyContent := `{ "services": { "rekognition": { "opt_out_policy": { "@@assign": "optOut" } }, "lex": { "opt_out_policy": { "@@assign": "optIn" } } } }`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_Type(rName, AiOptOutPolicyContent, organizations.PolicyTypeAiservicesOptOutPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeAiservicesOptOutPolicy),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
 	var policy organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
