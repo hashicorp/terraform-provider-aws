@@ -1105,19 +1105,9 @@ resource "aws_route_table" "test" {
 func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1366,18 +1356,7 @@ resource "aws_route_table" "test" {
 }
 
 func testAccAWSRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az4"), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1424,7 +1403,7 @@ resource "aws_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName, destinationCidr)
+`, rName, destinationCidr))
 }
 
 func testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
@@ -1656,19 +1635,9 @@ func testAccAWSRouteTableConfigMultipleRoutes(rName,
 	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
