@@ -13,7 +13,7 @@ import (
 
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 	domain := fmt.Sprintf(
-		"%s.terraformtesting.com.",
+		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_ses_identity_policy.test"
 
@@ -65,7 +65,7 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 
 func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 	domain := fmt.Sprintf(
-		"%s.terraformtesting.com.",
+		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_ses_identity_policy.test"
 
