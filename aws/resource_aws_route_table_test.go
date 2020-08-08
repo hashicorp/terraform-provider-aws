@@ -1063,16 +1063,7 @@ resource "aws_route_table" "test" {
 }
 
 func testAccAWSRouteTableConfigSubnetAssociation(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1103,7 +1094,7 @@ resource "aws_route_table_association" "test" {
   route_table_id = aws_route_table.test.id
   subnet_id      = aws_subnet.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2 string) string {
@@ -1441,7 +1432,7 @@ resource "aws_route_table" "test" {
 }
 
 func testAccAWSRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
-	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az4"), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
