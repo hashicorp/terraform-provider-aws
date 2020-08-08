@@ -567,18 +567,7 @@ resource "aws_main_route_table_association" "test" {
 }
 
 func testAccDefaultRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az4"), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -625,7 +614,7 @@ resource "aws_default_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName, destinationCidr)
+`, rName, destinationCidr))
 }
 
 func testAccDefaultRouteTableConfigVpcEndpointAssociation(rName, destinationCidr string) string {
