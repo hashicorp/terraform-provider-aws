@@ -1356,7 +1356,7 @@ resource "aws_route_table" "test" {
 }
 
 func testAccAWSRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
-	return composeConfig(testAccAvailableAZsNoOptInExcludeConfig("usw2-az4"), fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
