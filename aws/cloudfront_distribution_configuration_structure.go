@@ -23,6 +23,14 @@ import (
 // is used to set the zone_id attribute.
 const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
+// CloudFront TTL defaults used to detect whether the values should be omitted
+// in favour of a cache policy.
+const (
+	cloudFrontDefaultTTL    = int(86400)
+	cloudFrontDefaultMaxTTL = int(31536000)
+	cloudFrontDefaultMinTTL = int(0)
+)
+
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
 // complex structures which are necessary to properly build the
@@ -190,13 +198,27 @@ func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) []interface{} {
 func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
 	dcb := &cloudfront.DefaultCacheBehavior{
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
-		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
-		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	// validateCloudFrontCachePolicy guarantees that when either of the cache
+	// policy attributes is set, cache_policy_id must be present, the TTL
+	// values are default, and forwarded_values is empty.
+	if v := m["cache_policy_id"]; v != "" && v != nil {
+		dcb.CachePolicyId = aws.String(v.(string))
+
+		if v := m["origin_request_policy_id"]; v != "" && v != nil {
+			dcb.OriginRequestPolicyId = aws.String(v.(string))
+		}
+	} else {
+		// legacy cache behavior parameters
+
+		dcb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
+		dcb.ForwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+		dcb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
+		dcb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
 	}
 
 	if v, ok := m["trusted_signers"]; ok {
@@ -225,13 +247,27 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	cb := &cloudfront.CacheBehavior{
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
-		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
-		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	// validateCloudFrontCachePolicy guarantees that when either of the cache
+	// policy attributes is set, cache_policy_id must be present, the TTL
+	// values are default, and forwarded_values is empty.
+	if v := m["cache_policy_id"]; v != "" && v != nil {
+		cb.CachePolicyId = aws.String(v.(string))
+
+		if v := m["origin_request_policy_id"]; v != "" && v != nil {
+			cb.OriginRequestPolicyId = aws.String(v.(string))
+		}
+	} else {
+		// legacy cache behavior parameters
+
+		cb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
+		cb.ForwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+		cb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
+		cb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
 	}
 
 	if v, ok := m["trusted_signers"]; ok {
@@ -256,6 +292,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	if v, ok := m["path_pattern"]; ok {
 		cb.PathPattern = aws.String(v.(string))
 	}
+
 	return cb
 }
 
@@ -265,9 +302,11 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		"field_level_encryption_id": aws.StringValue(dcb.FieldLevelEncryptionId),
 		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
 		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
-		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
 	}
 
+	if dcb.MinTTL != nil {
+		m["min_ttl"] = int(aws.Int64Value(dcb.MinTTL))
+	}
 	if dcb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(dcb.ForwardedValues)}
 	}
@@ -278,7 +317,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(dcb.LambdaFunctionAssociations)
 	}
 	if dcb.MaxTTL != nil {
-		m["max_ttl"] = aws.Int64Value(dcb.MaxTTL)
+		m["max_ttl"] = int(aws.Int64Value(dcb.MaxTTL))
 	}
 	if dcb.SmoothStreaming != nil {
 		m["smooth_streaming"] = aws.BoolValue(dcb.SmoothStreaming)
@@ -292,6 +331,26 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 	if dcb.AllowedMethods.CachedMethods != nil {
 		m["cached_methods"] = flattenCachedMethods(dcb.AllowedMethods.CachedMethods)
 	}
+	if dcb.CachePolicyId != nil {
+		m["cache_policy_id"] = aws.StringValue(dcb.CachePolicyId)
+
+		// API returned nil values, so set defaults to maintain state compatibility
+
+		if _, ok := m["min_ttl"]; !ok {
+			m["min_ttl"] = cloudFrontDefaultMinTTL
+		}
+
+		if _, ok := m["default_ttl"]; !ok {
+			m["default_ttl"] = cloudFrontDefaultTTL
+		}
+
+		if _, ok := m["max_ttl"]; !ok {
+			m["max_ttl"] = cloudFrontDefaultMaxTTL
+		}
+	}
+	if dcb.OriginRequestPolicyId != nil {
+		m["origin_request_policy_id"] = aws.StringValue(dcb.OriginRequestPolicyId)
+	}
 
 	return m
 }
@@ -303,8 +362,10 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m["field_level_encryption_id"] = aws.StringValue(cb.FieldLevelEncryptionId)
 	m["viewer_protocol_policy"] = aws.StringValue(cb.ViewerProtocolPolicy)
 	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
-	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
 
+	if cb.MinTTL != nil {
+		m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
+	}
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
 	}
@@ -314,14 +375,16 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	if len(cb.LambdaFunctionAssociations.Items) > 0 {
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(cb.LambdaFunctionAssociations)
 	}
+
 	if cb.MaxTTL != nil {
-		m["max_ttl"] = int(*cb.MaxTTL)
+		m["max_ttl"] = int(aws.Int64Value(cb.MaxTTL))
 	}
 	if cb.SmoothStreaming != nil {
 		m["smooth_streaming"] = *cb.SmoothStreaming
 	}
+
 	if cb.DefaultTTL != nil {
-		m["default_ttl"] = int(*cb.DefaultTTL)
+		m["default_ttl"] = int(aws.Int64Value(cb.DefaultTTL))
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = flattenAllowedMethods(cb.AllowedMethods)
@@ -332,6 +395,27 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	if cb.PathPattern != nil {
 		m["path_pattern"] = *cb.PathPattern
 	}
+	if cb.CachePolicyId != nil {
+		m["cache_policy_id"] = aws.StringValue(cb.CachePolicyId)
+
+		// API returned nil values, so set defaults to maintain state compatibility
+
+		if _, ok := m["min_ttl"]; !ok {
+			m["min_ttl"] = cloudFrontDefaultMinTTL
+		}
+
+		if _, ok := m["default_ttl"]; !ok {
+			m["default_ttl"] = cloudFrontDefaultTTL
+		}
+
+		if _, ok := m["max_ttl"]; !ok {
+			m["max_ttl"] = cloudFrontDefaultMaxTTL
+		}
+	}
+	if cb.OriginRequestPolicyId != nil {
+		m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
+	}
+
 	return m
 }
 

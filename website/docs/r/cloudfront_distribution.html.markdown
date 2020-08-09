@@ -268,6 +268,11 @@ of several sub-resources - these resources are laid out below.
 * `allowed_methods` (Required) - Controls which HTTP methods CloudFront
     processes and forwards to your Amazon S3 bucket or your custom origin.
 
+* `cache_policy_id` (Optional) - Use a managed or customer-provided
+    [Cache Policy](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html).
+
+    Conflicts with `min_ttl`, `max_ttl`, `default_ttl`, `forwarded_values`.
+
 * `cached_methods` (Required) - Controls whether CloudFront caches the
     response to requests using the specified HTTP methods.
 
@@ -277,13 +282,21 @@ of several sub-resources - these resources are laid out below.
 
 * `default_ttl` (Optional) - The default amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
-    in the absence of an `Cache-Control max-age` or `Expires` header. Defaults to
-    1 day.
+    in the absence of an `Cache-Control max-age` or `Expires` header.
+
+    Conflicts with
+    `cache_policy_id`, `origin_request_policy_id`. Defaults to 1 day.
+
+    _This field has been deprecated by AWS in favor of Cache Policies._
 
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
-* `forwarded_values` (Required) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
+* `forwarded_values` (Optional) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
     handles query strings, cookies and headers (maximum one).
+
+    Conflicts with `cache_policy_id`, `origin_request_policy_id`.
+
+    _This field has been deprecated by AWS in favor of Cache Policies and Origin Request Policies._
 
 * `lambda_function_association` (Optional) - A config block that triggers a lambda function with
   specific actions. Defined below, maximum 4.
@@ -292,11 +305,26 @@ of several sub-resources - these resources are laid out below.
     object is in a CloudFront cache before CloudFront forwards another request
     to your origin to determine whether the object has been updated. Only
     effective in the presence of `Cache-Control max-age`, `Cache-Control
-    s-maxage`, and `Expires` headers. Defaults to 365 days.
+    s-maxage`, and `Expires` headers.
 
-* `min_ttl` (Optional) - The minimum amount of time that you want objects to
+    Conflicts with `cache_policy_id`,
+    `origin_request_policy_id`. Defaults to 365 days.
+
+    _This field has been deprecated by AWS in favor of Cache Policies._
+
+* `min_ttl` (Optional, Conflicts with `cache_policy_id`, `origin_request_policy_id`) - The minimum amount of time that you want objects to
     stay in CloudFront caches before CloudFront queries your origin to see
-    whether the object has been updated. Defaults to 0 seconds.
+    whether the object has been updated.
+
+    Conflicts with `cache_policy_id`,
+    `origin_request_policy_id`. Defaults to 0 seconds.
+
+    _This field has been deprecated by AWS in favor of Cache Policies._
+
+* `origin_request_policy_id` (Optional) - Use a managed or customer-provided
+    [Origin Request Policy](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html).
+
+    Conflicts with `min_ttl`, `max_ttl`, `default_ttl`, `forwarded_values`.
 
 * `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
     specifies which requests you want this cache behavior to apply to.

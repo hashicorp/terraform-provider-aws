@@ -2524,3 +2524,54 @@ func MapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFu
 		return warnings, errors
 	}
 }
+
+// validateCloudFrontCachePolicy checks that when a cache policy or origin
+// request policy is set, the deprecated fields (min_ttl, default_ttl, max_ttl,
+// forwarded_values) have either not been set, or carry defaults.
+//
+// When no policies in use, enforce forwarded_values as a required attribute.
+func validateCloudFrontCachePolicy(v interface{}, k string) (errors []error) {
+	m := v.(map[string]interface{})
+
+	cachePolicyIdExists := false
+	if v := m["cache_policy_id"]; v != "" && v != nil {
+		cachePolicyIdExists = true
+	}
+
+	originRequestPolicyIdExists := false
+	if v := m["origin_request_policy_id"]; v != "" && v != nil {
+		originRequestPolicyIdExists = true
+	}
+
+	if !cachePolicyIdExists && !originRequestPolicyIdExists {
+		if v, ok := m["forwarded_values"]; !ok || len(v.([]interface{})) == 0 {
+			errors = append(errors, fmt.Errorf("%s: forwarded_values is required when cache policies not used", k))
+		}
+
+		return
+	}
+
+	if !cachePolicyIdExists && originRequestPolicyIdExists {
+		errors = append(errors, fmt.Errorf("%s: cache_policy_id is required when origin request policy in use", k))
+	}
+
+	const suffix = "not allowed when cache_policy_id or origin_request_policy_id set"
+
+	if v, ok := m["min_ttl"]; ok && v.(int) != cloudFrontDefaultMinTTL {
+		errors = append(errors, fmt.Errorf("%s: min_ttl %s", k, suffix))
+	}
+
+	if v, ok := m["max_ttl"]; ok && v.(int) != cloudFrontDefaultMaxTTL {
+		errors = append(errors, fmt.Errorf("%s: max_ttl %s", k, suffix))
+	}
+
+	if v, ok := m["default_ttl"]; ok && v.(int) != cloudFrontDefaultTTL {
+		errors = append(errors, fmt.Errorf("%s: default_ttl %s", k, suffix))
+	}
+
+	if v, ok := m["forwarded_values"]; ok && len(v.([]interface{})) > 0 {
+		errors = append(errors, fmt.Errorf("%s: forwarded_values %s", k, suffix))
+	}
+
+	return errors
+}

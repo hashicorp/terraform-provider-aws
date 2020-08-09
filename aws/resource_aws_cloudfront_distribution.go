@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -53,6 +55,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"cache_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"cached_methods": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -66,7 +72,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"default_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  86400,
+							Default:  cloudFrontDefaultTTL,
 						},
 						"field_level_encryption_id": {
 							Type:     schema.TypeString,
@@ -74,7 +80,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -144,12 +150,16 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  31536000,
+							Default:  cloudFrontDefaultMaxTTL,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  0,
+							Default:  cloudFrontDefaultMinTTL,
+						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"path_pattern": {
 							Type:     schema.TypeString,
@@ -215,6 +225,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"cache_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"cached_methods": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -228,7 +242,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"default_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  86400,
+							Default:  cloudFrontDefaultTTL,
 						},
 						"field_level_encryption_id": {
 							Type:     schema.TypeString,
@@ -236,7 +250,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -306,12 +320,16 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  31536000,
+							Default:  cloudFrontDefaultMaxTTL,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  0,
+							Default:  cloudFrontDefaultMinTTL,
+						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -653,6 +671,31 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(ctx context.Context, d *schema.ResourceDiff, v interface{}) error {
+				// ValidateFunc isn't supported on lists nor sets, so this
+				// has to be hacked in at the diff level.
+
+				keys := []string{"default_cache_behavior", "ordered_cache_behavior"}
+
+				for _, k := range keys {
+					v, ok := d.GetOk(k)
+					if !ok {
+						continue
+					}
+
+					for i, v := range v.([]interface{}) {
+						errors := validateCloudFrontCachePolicy(v, fmt.Sprintf("%s.%d", k, i))
+						if len(errors) > 0 {
+							return errors[0]
+						}
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 

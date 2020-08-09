@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Base64Encode encodes data if the input isn't already encoded using base64.StdEncoding.EncodeToString.
@@ -60,4 +61,73 @@ func appendUniqueString(slice []string, elem string) []string {
 		}
 	}
 	return append(slice, elem)
+}
+
+// attributesEqual compares two attributes or blocks for equality. This includes
+// blocks containing *schema.Set, which reflect.DeepEqual can't handle.
+func attributesEqual(a, b interface{}) bool {
+	equalMaps := func(a, b map[string]interface{}) bool {
+		// equal lengths?
+		if len(a) != len(b) {
+			return false
+		}
+
+		// equal keys?
+		for k := range a {
+			if _, ok := b[k]; !ok {
+				return false
+			}
+		}
+
+		// equal values?
+		for k := range a {
+			if !attributesEqual(a[k], b[k]) {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	equalSlices := func(a, b []interface{}) bool {
+		// equal lengths?
+		if len(a) != len(b) {
+			return false
+		}
+
+		// equal values?
+		for i := range a {
+			if !attributesEqual(a[i], b[i]) {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	if a, aIsMap := a.(map[string]interface{}); aIsMap {
+		if b, bIsMap := b.(map[string]interface{}); bIsMap {
+			return equalMaps(a, b)
+		} else {
+			return false
+		}
+	}
+
+	if a, aIsSlice := a.([]interface{}); aIsSlice {
+		if b, bIsSlice := b.([]interface{}); bIsSlice {
+			return equalSlices(a, b)
+		} else {
+			return false
+		}
+	}
+
+	if a, aIsSet := a.(*schema.Set); aIsSet {
+		if b, bIsSet := b.(*schema.Set); bIsSet {
+			return a.Equal(b)
+		} else {
+			return false
+		}
+	}
+
+	return reflect.DeepEqual(a, b)
 }

@@ -482,6 +482,82 @@ func TestAccAWSCloudFrontDistribution_noCustomErrorResponseConfig(t *testing.T) 
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_cachePolicies(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
+
+	const (
+		cachePolicyId         = "658327ea-f89d-4fab-a63d-7e88639e58f6" // Managed-CachingOptimized
+		originRequestPolicyId = "acba4595-bd28-49b8-b9fe-13317c0390fa" // Managed-UserAgentRefererHeaders
+	)
+
+	checkCachePolicyIds := func(expectCachePolicy, expectOriginRequestPolicy string) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			actualCachePolicyId := aws.StringValue(distribution.DistributionConfig.DefaultCacheBehavior.CachePolicyId)
+			actualOriginRequestPolicyId := aws.StringValue(distribution.DistributionConfig.DefaultCacheBehavior.OriginRequestPolicyId)
+
+			if actualCachePolicyId != expectCachePolicy {
+				return fmt.Errorf("CachePolicyId does not match expected value")
+			}
+
+			if actualOriginRequestPolicyId != expectOriginRequestPolicy {
+				return fmt.Errorf("OriginRequestPolicyId does not match expected value")
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfig_DefaultCacheBehavior_cachePolicies(retainOnDelete, cachePolicyId, originRequestPolicyId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					checkCachePolicyIds(cachePolicyId, originRequestPolicyId),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cache_policy_id", cachePolicyId),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.max_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.origin_request_policy_id", originRequestPolicyId),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			}, {
+				Config: testAccAWSCloudFrontDistributionConfig_DefaultCacheBehavior_cachePolicies(retainOnDelete, cachePolicyId, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					checkCachePolicyIds(cachePolicyId, ""),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cache_policy_id", cachePolicyId),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.max_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.origin_request_policy_id", ""),
+				),
+			},
+			{
+				Config:      testAccAWSCloudFrontDistributionConfig_DefaultCacheBehavior_cachePolicies_conflict(retainOnDelete, cachePolicyId),
+				ExpectError: regexp.MustCompile(`default_cache_behavior\.0: default_ttl not allowed`),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_ForwardedValues_Cookies_WhitelistedNames(t *testing.T) {
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
@@ -665,6 +741,82 @@ func TestAccAWSCloudFrontDistribution_RetainOnDelete(t *testing.T) {
 					testAccCheckCloudFrontDistributionDisabled(&distribution),
 					testAccCheckCloudFrontDistributionDisappears(&distribution),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_cachePolicies(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
+
+	const (
+		cachePolicyId         = "658327ea-f89d-4fab-a63d-7e88639e58f6" // Managed-CachingOptimized
+		originRequestPolicyId = "acba4595-bd28-49b8-b9fe-13317c0390fa" // Managed-UserAgentRefererHeaders
+	)
+
+	checkCachePolicyIds := func(expectCachePolicy, expectOriginRequestPolicy string) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			actualCachePolicyId := aws.StringValue(distribution.DistributionConfig.CacheBehaviors.Items[0].CachePolicyId)
+			actualOriginRequestPolicyId := aws.StringValue(distribution.DistributionConfig.CacheBehaviors.Items[0].OriginRequestPolicyId)
+
+			if actualCachePolicyId != expectCachePolicy {
+				return fmt.Errorf("CachePolicyId does not match expected value")
+			}
+
+			if actualOriginRequestPolicyId != expectOriginRequestPolicy {
+				return fmt.Errorf("OriginRequestPolicyId does not match expected value")
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfig_OrderedCacheBehavior_cachePolicies(retainOnDelete, cachePolicyId, originRequestPolicyId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					checkCachePolicyIds(cachePolicyId, originRequestPolicyId),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", cachePolicyId),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.max_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.min_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.origin_request_policy_id", originRequestPolicyId),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			}, {
+				Config: testAccAWSCloudFrontDistributionConfig_OrderedCacheBehavior_cachePolicies(retainOnDelete, cachePolicyId, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					checkCachePolicyIds(cachePolicyId, ""),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", cachePolicyId),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.max_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.min_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.origin_request_policy_id", ""),
+				),
+			},
+			{
+				Config:      testAccAWSCloudFrontDistributionConfig_OrderedCacheBehavior_cachePolicies_conflict(retainOnDelete, cachePolicyId),
+				ExpectError: regexp.MustCompile(`ordered_cache_behavior\.0: default_ttl not allowed`),
 			},
 		},
 	})
@@ -1979,6 +2131,97 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
 }
 `
 
+func testAccAWSCloudFrontDistributionConfig_DefaultCacheBehavior_cachePolicies(
+	retainOnDelete bool,
+	cachePolicyId string,
+	originRequestPolicyId string,
+) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods          = ["GET", "HEAD"]
+    cache_policy_id          = %[2]q
+    cached_methods           = ["GET", "HEAD"]
+    origin_request_policy_id = "%[3]s" == "" ? null : "%[3]s"
+    target_origin_id         = "test"
+    viewer_protocol_policy   = "allow-all"
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, retainOnDelete, cachePolicyId, originRequestPolicyId)
+}
+
+func testAccAWSCloudFrontDistributionConfig_DefaultCacheBehavior_cachePolicies_conflict(
+	retainOnDelete bool,
+	cachePolicyId string,
+) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cache_policy_id        = %[2]q
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    default_ttl            = 10
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, retainOnDelete, cachePolicyId)
+}
+
 func testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
@@ -2219,6 +2462,129 @@ resource "aws_cloudfront_distribution" "test" {
   }
 }
 `, enabled, retainOnDelete)
+}
+
+func testAccAWSCloudFrontDistributionConfig_OrderedCacheBehavior_cachePolicies(
+	retainOnDelete bool,
+	cachePolicyId string,
+	originRequestPolicyId string,
+) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    allowed_methods          = ["GET", "HEAD"]
+    cache_policy_id          = %[2]q
+    cached_methods           = ["GET", "HEAD"]
+    origin_request_policy_id = "%[3]s" == "" ? null : "%[3]s"
+    target_origin_id         = "test"
+    viewer_protocol_policy   = "allow-all"
+    path_pattern             = "/test/*"
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, retainOnDelete, cachePolicyId, originRequestPolicyId)
+}
+
+func testAccAWSCloudFrontDistributionConfig_OrderedCacheBehavior_cachePolicies_conflict(
+	retainOnDelete bool,
+	cachePolicyId string,
+) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cache_policy_id        = %[2]q
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    default_ttl            = 10
+    path_pattern           = "/test/*"
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, retainOnDelete, cachePolicyId)
 }
 
 func testAccAWSCloudFrontDistributionConfigOrderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered2(retainOnDelete bool) string {

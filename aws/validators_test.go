@@ -3247,3 +3247,85 @@ func TestValidateUTCTimestamp(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateCloudFrontCachePolicy(t *testing.T) {
+	tests := []struct {
+		Value    map[string]interface{}
+		ErrCount int
+	}{
+		{
+			Value:    map[string]interface{}{},
+			ErrCount: 1, // forwarded_values is required
+		},
+		{
+			Value: map[string]interface{}{
+				"forwarded_values": []interface{}{nil},
+			},
+			ErrCount: 0,
+		},
+		{
+			Value: map[string]interface{}{
+				"min_ttl":          cloudFrontDefaultMinTTL,
+				"max_ttl":          cloudFrontDefaultMaxTTL,
+				"default_ttl":      cloudFrontDefaultTTL,
+				"forwarded_values": []interface{}{nil},
+			},
+			ErrCount: 0,
+		},
+		{
+			Value: map[string]interface{}{
+				"cache_policy_id": "test",
+			},
+			ErrCount: 0,
+		},
+		{
+			Value: map[string]interface{}{
+				"min_ttl":         cloudFrontDefaultMinTTL,
+				"max_ttl":         cloudFrontDefaultMaxTTL,
+				"default_ttl":     cloudFrontDefaultTTL,
+				"cache_policy_id": "test",
+			},
+			ErrCount: 0, // ttl defaults ignored in this situation
+		},
+		{
+			Value: map[string]interface{}{
+				"origin_request_policy_id": "test",
+			},
+			ErrCount: 1, // cache_policy_id must be set
+		},
+		{
+			Value: map[string]interface{}{
+				"cache_policy_id":          "test",
+				"origin_request_policy_id": "test",
+			},
+			ErrCount: 0,
+		},
+		{
+			Value: map[string]interface{}{
+				"min_ttl":                  cloudFrontDefaultMinTTL,
+				"max_ttl":                  cloudFrontDefaultMaxTTL,
+				"default_ttl":              cloudFrontDefaultTTL,
+				"cache_policy_id":          "test",
+				"origin_request_policy_id": "test",
+			},
+			ErrCount: 0, // ttl defaults ignored in this situation
+		},
+		{
+			Value: map[string]interface{}{
+				"min_ttl":          cloudFrontDefaultMinTTL + 1,
+				"max_ttl":          cloudFrontDefaultMaxTTL + 1,
+				"default_ttl":      cloudFrontDefaultTTL + 1,
+				"forwarded_values": []interface{}{nil},
+				"cache_policy_id":  "test",
+			},
+			ErrCount: 4, // cannot use legacy settings when cache policy in use
+		},
+	}
+
+	for _, test := range tests {
+		errors := validateCloudFrontCachePolicy(test.Value, "default_cache_behavior")
+		if len(errors) != test.ErrCount {
+			t.Fatalf("Expected the AWS CloudFront Cache Behavior to result in %d validation errors", test.ErrCount)
+		}
+	}
+}

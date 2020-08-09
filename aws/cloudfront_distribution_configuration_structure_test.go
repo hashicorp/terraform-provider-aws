@@ -27,6 +27,25 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 	}
 }
 
+func cacheBehaviorConf() map[string]interface{} {
+	return map[string]interface{}{
+		"viewer_protocol_policy":      "allow-all",
+		"target_origin_id":            "myS3Origin",
+		"forwarded_values":            []interface{}{forwardedValuesConf()},
+		"min_ttl":                     0,
+		"trusted_signers":             trustedSignersConf(),
+		"lambda_function_association": lambdaFunctionAssociationsConf(),
+		"max_ttl":                     31536000,
+		"smooth_streaming":            false,
+		"default_ttl":                 86400,
+		"allowed_methods":             allowedMethodsConf(),
+		"cached_methods":              cachedMethodsConf(),
+		"compress":                    true,
+		"field_level_encryption_id":   "",
+		"path_pattern":                "/test/*",
+	}
+}
+
 func trustedSignersConf() []interface{} {
 	return []interface{}{"1234567890EX", "1234567891EX"}
 }
@@ -306,6 +325,206 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 	}
 	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf().List())) {
 		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
+	}
+}
+
+func TestCloudFrontStructure_flattenCloudFrontDefaultCacheBehavior(t *testing.T) {
+	in := defaultCacheBehaviorConf()
+	dcb := expandCloudFrontDefaultCacheBehavior(in)
+	out := flattenCloudFrontDefaultCacheBehavior(dcb)
+
+	if !attributesEqual(in, out) {
+		t.Fatalf("Expected flattened result to be:\n%#v\ngot:\n%#v", in, out)
+	}
+}
+
+func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior_cachePolicy(t *testing.T) {
+	data := defaultCacheBehaviorConf()
+	data["cache_policy_id"] = "2e5a1a84-7253-4817-9b68-5f0e2b2bc983"
+	data["origin_request_policy_id"] = "c18d5f2a-0aa3-4ec7-91c1-aa84e8385435"
+	dcb := expandCloudFrontDefaultCacheBehavior(data)
+	if dcb == nil {
+		t.Fatalf("ExpandDefaultCacheBehavior returned nil")
+	}
+	if !*dcb.Compress {
+		t.Fatalf("Expected Compress to be true, got %v", *dcb.Compress)
+	}
+	if *dcb.ViewerProtocolPolicy != "allow-all" {
+		t.Fatalf("Expected ViewerProtocolPolicy to be allow-all, got %v", *dcb.ViewerProtocolPolicy)
+	}
+	if *dcb.TargetOriginId != "myS3Origin" {
+		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
+	}
+	if dcb.ForwardedValues != nil {
+		t.Fatalf("Expected ForwardedValues to be nil, got %v", *dcb.ForwardedValues)
+	}
+	if dcb.MinTTL != nil {
+		t.Fatalf("Expected MinTTL to be nil, got %v", *dcb.MinTTL)
+	}
+	if !reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) {
+		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
+	}
+	if dcb.MaxTTL != nil {
+		t.Fatalf("Expected MaxTTL to be nil, got %v", *dcb.MaxTTL)
+	}
+	if *dcb.SmoothStreaming {
+		t.Fatalf("Expected SmoothStreaming to be false, got %v", *dcb.SmoothStreaming)
+	}
+	if dcb.DefaultTTL != nil {
+		t.Fatalf("Expected DefaultTTL to be nil, got %v", *dcb.DefaultTTL)
+	}
+	if *dcb.LambdaFunctionAssociations.Quantity != 2 {
+		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *dcb.LambdaFunctionAssociations.Quantity)
+	}
+	if !reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringList(allowedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf().List(), dcb.AllowedMethods.Items)
+	}
+	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
+	}
+	if *dcb.CachePolicyId != "2e5a1a84-7253-4817-9b68-5f0e2b2bc983" {
+		t.Fatalf("Expected CachePolicyId to be 2e5a1a84-7253-4817-9b68-5f0e2b2bc983, got %s", *dcb.CachePolicyId)
+	}
+	if *dcb.OriginRequestPolicyId != "c18d5f2a-0aa3-4ec7-91c1-aa84e8385435" {
+		t.Fatalf("Expected OriginRequestPolicyId to be c18d5f2a-0aa3-4ec7-91c1-aa84e8385435, got %s", *dcb.OriginRequestPolicyId)
+	}
+}
+
+func TestCloudFrontStructure_flattenCloudFrontDefaultCacheBehavior_cachePolicy(t *testing.T) {
+	in := defaultCacheBehaviorConf()
+	in["cache_policy_id"] = "2e5a1a84-7253-4817-9b68-5f0e2b2bc983"
+	in["origin_request_policy_id"] = "c18d5f2a-0aa3-4ec7-91c1-aa84e8385435"
+	delete(in, "forwarded_values")
+	dcb := expandCloudFrontDefaultCacheBehavior(in)
+	out := flattenCloudFrontDefaultCacheBehavior(dcb)
+
+	if !attributesEqual(in, out) {
+		t.Fatalf("Expected flattened result to be:\n%#v\ngot:\n%#v", in, out)
+	}
+}
+
+func TestCloudFrontStructure_expandCacheBehavior(t *testing.T) {
+	data := cacheBehaviorConf()
+	dcb := expandCacheBehavior(data)
+	if dcb == nil {
+		t.Fatalf("ExpandDefaultCacheBehavior returned nil")
+	}
+	if !*dcb.Compress {
+		t.Fatalf("Expected Compress to be true, got %v", *dcb.Compress)
+	}
+	if *dcb.ViewerProtocolPolicy != "allow-all" {
+		t.Fatalf("Expected ViewerProtocolPolicy to be allow-all, got %v", *dcb.ViewerProtocolPolicy)
+	}
+	if *dcb.TargetOriginId != "myS3Origin" {
+		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
+	}
+	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringSet(headersConf())) {
+		t.Fatalf("Expected Items to be %v, got %v", headersConf(), dcb.ForwardedValues.Headers.Items)
+	}
+	if *dcb.MinTTL != 0 {
+		t.Fatalf("Expected MinTTL to be 0, got %v", *dcb.MinTTL)
+	}
+	if !reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) {
+		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
+	}
+	if *dcb.MaxTTL != 31536000 {
+		t.Fatalf("Expected MaxTTL to be 31536000, got %v", *dcb.MaxTTL)
+	}
+	if *dcb.SmoothStreaming {
+		t.Fatalf("Expected SmoothStreaming to be false, got %v", *dcb.SmoothStreaming)
+	}
+	if *dcb.DefaultTTL != 86400 {
+		t.Fatalf("Expected DefaultTTL to be 86400, got %v", *dcb.DefaultTTL)
+	}
+	if *dcb.LambdaFunctionAssociations.Quantity != 2 {
+		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *dcb.LambdaFunctionAssociations.Quantity)
+	}
+	if !reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringList(allowedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf().List(), dcb.AllowedMethods.Items)
+	}
+	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
+	}
+	if *dcb.PathPattern != "/test/*" {
+		t.Fatalf("Expected PathPattern to be /test/*, got %v", *dcb.PathPattern)
+	}
+}
+
+func TestCloudFrontStructure_flattenCacheBehavior(t *testing.T) {
+	in := cacheBehaviorConf()
+	dcb := expandCacheBehavior(in)
+	out := flattenCacheBehavior(dcb)
+
+	if !attributesEqual(in, out) {
+		t.Fatalf("Expected flattened result to be:\n%#v\ngot:\n%#v", in, out)
+	}
+}
+
+func TestCloudFrontStructure_expandCacheBehavior_cachePolicy(t *testing.T) {
+	data := cacheBehaviorConf()
+	data["cache_policy_id"] = "2e5a1a84-7253-4817-9b68-5f0e2b2bc983"
+	data["origin_request_policy_id"] = "c18d5f2a-0aa3-4ec7-91c1-aa84e8385435"
+	dcb := expandCacheBehavior(data)
+	if dcb == nil {
+		t.Fatalf("ExpandDefaultCacheBehavior returned nil")
+	}
+	if !*dcb.Compress {
+		t.Fatalf("Expected Compress to be true, got %v", *dcb.Compress)
+	}
+	if *dcb.ViewerProtocolPolicy != "allow-all" {
+		t.Fatalf("Expected ViewerProtocolPolicy to be allow-all, got %v", *dcb.ViewerProtocolPolicy)
+	}
+	if *dcb.TargetOriginId != "myS3Origin" {
+		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
+	}
+	if dcb.ForwardedValues != nil {
+		t.Fatalf("Expected ForwardedValues to be nil, got %v", *dcb.ForwardedValues)
+	}
+	if dcb.MinTTL != nil {
+		t.Fatalf("Expected MinTTL to be nil, got %v", *dcb.MinTTL)
+	}
+	if !reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) {
+		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
+	}
+	if dcb.MaxTTL != nil {
+		t.Fatalf("Expected MaxTTL to be nil, got %v", *dcb.MaxTTL)
+	}
+	if *dcb.SmoothStreaming {
+		t.Fatalf("Expected SmoothStreaming to be false, got %v", *dcb.SmoothStreaming)
+	}
+	if dcb.DefaultTTL != nil {
+		t.Fatalf("Expected DefaultTTL to be nil, got %v", *dcb.DefaultTTL)
+	}
+	if *dcb.LambdaFunctionAssociations.Quantity != 2 {
+		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *dcb.LambdaFunctionAssociations.Quantity)
+	}
+	if !reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringList(allowedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf().List(), dcb.AllowedMethods.Items)
+	}
+	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
+	}
+	if *dcb.CachePolicyId != "2e5a1a84-7253-4817-9b68-5f0e2b2bc983" {
+		t.Fatalf("Expected CachePolicyId to be 2e5a1a84-7253-4817-9b68-5f0e2b2bc983, got %s", *dcb.CachePolicyId)
+	}
+	if *dcb.OriginRequestPolicyId != "c18d5f2a-0aa3-4ec7-91c1-aa84e8385435" {
+		t.Fatalf("Expected OriginRequestPolicyId to be c18d5f2a-0aa3-4ec7-91c1-aa84e8385435, got %s", *dcb.OriginRequestPolicyId)
+	}
+	if *dcb.PathPattern != "/test/*" {
+		t.Fatalf("Expected PathPattern to be /test/*, got %v", *dcb.PathPattern)
+	}
+}
+
+func TestCloudFrontStructure_flattenCacheBehavior_cachePolicy(t *testing.T) {
+	in := cacheBehaviorConf()
+	in["cache_policy_id"] = "2e5a1a84-7253-4817-9b68-5f0e2b2bc983"
+	in["origin_request_policy_id"] = "c18d5f2a-0aa3-4ec7-91c1-aa84e8385435"
+	delete(in, "forwarded_values")
+	dcb := expandCacheBehavior(in)
+	out := flattenCacheBehavior(dcb)
+
+	if !attributesEqual(in, out) {
+		t.Fatalf("Expected flattened result to be:\n%#v\ngot:\n%#v", in, out)
 	}
 }
 
