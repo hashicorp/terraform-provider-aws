@@ -931,18 +931,9 @@ resource "aws_route" "test" {
 }
 
 func testAccAWSRouteConfigIpv6NetworkInterfaceUnattached(rName, destinationCidr string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -984,25 +975,15 @@ resource "aws_route" "test" {
   destination_ipv6_cidr_block = %[2]q
   network_interface_id        = aws_network_interface.test.id
 }
-`, rName, destinationCidr)
+`, rName, destinationCidr))
 }
 
 func testAccAWSRouteConfigIpv6Instance(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -1178,18 +1159,9 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccAWSRouteConfigIpv4TransitGateway(rName, destinationCidr string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1237,7 +1209,7 @@ resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   transit_gateway_id     = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
 }
-`, rName, destinationCidr)
+`, rName, destinationCidr))
 }
 
 func testAccAWSRouteConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
@@ -1286,19 +1258,9 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1344,18 +1306,9 @@ resource "aws_route" "test" {
 }
 
 func testAccAWSRouteConfigIpv4NetworkInterfaceUnattached(rName, destinationCidr string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1395,25 +1348,15 @@ resource "aws_route" "test" {
   destination_cidr_block = %[2]q
   network_interface_id   = aws_network_interface.test.id
 }
-`, rName, destinationCidr)
+`, rName, destinationCidr))
 }
 
 func testAccAWSRouteConfigIpv4NetworkInterfaceAttached(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1477,19 +1420,9 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
