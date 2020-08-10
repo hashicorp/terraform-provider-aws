@@ -2313,20 +2313,9 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2458,20 +2447,9 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -2573,8 +2551,6 @@ resource "aws_route" "test" {
 }
 `, rName, destinationCidr, targetAttribute, targetValue))
 }
-
-//
 
 func testAccAWSRouteConfigIpv4NoRoute(rName string) string {
 	return fmt.Sprintf(`
