@@ -402,7 +402,7 @@ More details about this code generation, including fixes for potential error mes
       subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
   }
   `, rName, tagKey1, tagValue1)
   }
@@ -422,7 +422,7 @@ More details about this code generation, including fixes for potential error mes
       subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
   }
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
   }

@@ -552,11 +552,6 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
   role       = "${aws_iam_role.test.name}"
 }
 
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSServicePolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-  role       = "${aws_iam_role.test.name}"
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -593,7 +588,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName)
 }
@@ -611,7 +606,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, version)
 }
@@ -629,7 +624,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, strings.Join(logTypes, "\", \""))
 }
@@ -648,7 +643,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -668,7 +663,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -696,7 +691,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, rName)
 }
@@ -722,7 +717,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName)
 }
@@ -741,7 +736,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids              = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, endpointPrivateAccess)
 }
@@ -760,7 +755,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids              = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, endpointPublicAccess)
 }
@@ -780,7 +775,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids              = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, publicAccessCidr)
 }
