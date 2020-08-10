@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -72,6 +74,18 @@ func dataSourceAwsLb() *schema.Resource {
 							Computed: true,
 						},
 					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+					if m["allocation_id"] != "" {
+						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
+					}
+					if m["private_ipv4_address"] != "" {
+						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
+					}
+					return hashcode.String(buf.String())
 				},
 			},
 
