@@ -36,7 +36,7 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 }
 
 behavior "deprecated_import_commenter" "sdkv1" {
-  import_regexp = "github.com/hashicorp/terraform-plugin-sdk/helper/(schema|resource|acctest)"
+  import_regexp = "github.com/hashicorp/terraform-plugin-sdk/(helper/(acctest|customdiff|logging|resource|schema|structure|validation)|terraform)"
   marker_label  = "terraform-plugin-sdk-v1"
 
   message = <<-EOF
@@ -44,7 +44,7 @@ behavior "deprecated_import_commenter" "sdkv1" {
 
     This project recently upgraded to [V2 of the Terraform Plugin SDK](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html)
 
-    This pull request appears to include the V1 import path of the SDK. Please import the V2 path `github.com/hashicorp/terraform-plugin-sdk/v2/helper/pkg`
+    This pull request appears to include at least one V1 import path of the SDK (`${var.import_path}`). Please import the V2 path `github.com/hashicorp/terraform-plugin-sdk/v2/helper/PACKAGE`
 
     To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below); replacing any remaining old import paths with the newer ones.
 
