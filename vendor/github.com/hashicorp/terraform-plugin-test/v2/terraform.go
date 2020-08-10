@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -42,9 +43,11 @@ func (wd *WorkingDir) getTerraformEnv() []string {
 	return env
 }
 
-// RunTerraform runs the configured Terraform CLI executable with the given
+// runTerraform runs the configured Terraform CLI executable with the given
 // arguments, returning an error if it produces a non-successful exit status.
-func (wd *WorkingDir) runTerraform(args ...string) error {
+// if captureStdout is non-nil, the process will write it's stdout to the
+// provided io.Writer
+func (wd *WorkingDir) runTerraform(captureStdout io.Writer, args ...string) error {
 	allArgs := []string{"terraform"}
 	allArgs = append(allArgs, args...)
 
@@ -59,6 +62,11 @@ func (wd *WorkingDir) runTerraform(args ...string) error {
 		Stderr: &errBuf,
 		Env:    env,
 	}
+
+	if captureStdout != nil {
+		cmd.Stdout = captureStdout
+	}
+
 	err := cmd.Run()
 	if tErr, ok := err.(*exec.ExitError); ok {
 		err = fmt.Errorf("terraform failed: %s\n\nstderr:\n%s", tErr.ProcessState.String(), errBuf.String())

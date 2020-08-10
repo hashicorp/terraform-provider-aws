@@ -1,6 +1,7 @@
 package tftest
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -144,7 +145,7 @@ func (wd *WorkingDir) RequireClearPlan(t TestControl) {
 func (wd *WorkingDir) init() error {
 	args := []string{"init", wd.configDir}
 	args = append(args, wd.baseArgs...)
-	return wd.runTerraform(args...)
+	return wd.runTerraform(nil, args...)
 }
 
 // Init runs "terraform init" for the given working directory, forcing Terraform
@@ -176,7 +177,7 @@ func (wd *WorkingDir) CreatePlan() error {
 	args := []string{"plan", "-refresh=false"}
 	args = append(args, wd.baseArgs...)
 	args = append(args, "-out=tfplan", wd.configDir)
-	return wd.runTerraform(args...)
+	return wd.runTerraform(nil, args...)
 }
 
 // RequireCreatePlan is a variant of CreatePlan that will fail the test via
@@ -212,7 +213,7 @@ func (wd *WorkingDir) Apply() error {
 		args = append(args, configDir)
 	}
 
-	return wd.runTerraform(args...)
+	return wd.runTerraform(nil, args...)
 }
 
 // RequireApply is a variant of Apply that will fail the test via
@@ -235,7 +236,7 @@ func (wd *WorkingDir) Destroy() error {
 	args = append(args, wd.baseArgs...)
 
 	args = append(args, "-auto-approve", wd.configDir)
-	return wd.runTerraform(args...)
+	return wd.runTerraform(nil, args...)
 }
 
 // RequireDestroy is a variant of Destroy that will fail the test via
@@ -294,6 +295,41 @@ func (wd *WorkingDir) RequireSavedPlan(t TestControl) *tfjson.Plan {
 	return ret
 }
 
+// SavedPlanStdout returns a stdout capture of the current saved plan file, if any.
+//
+// If no plan is saved or if the plan file cannot be read, SavedPlanStdout returns
+// an error.
+func (wd *WorkingDir) SavedPlanStdout() (string, error) {
+	if !wd.HasSavedPlan() {
+		return "", fmt.Errorf("there is no current saved plan")
+	}
+
+	var ret bytes.Buffer
+
+	args := []string{"show"}
+	args = append(args, wd.baseArgs...)
+	args = append(args, wd.planFilename())
+
+	err := wd.runTerraform(&ret, args...)
+	if err != nil {
+		return "", err
+	}
+
+	return ret.String(), nil
+}
+
+// RequireSavedPlanStdout is a variant of SavedPlanStdout that will fail the test via
+// the given TestControl if the plan cannot be read.
+func (wd *WorkingDir) RequireSavedPlanStdout(t TestControl) string {
+	t.Helper()
+	ret, err := wd.SavedPlanStdout()
+	if err != nil {
+		t := testingT{t}
+		t.Fatalf("failed to read saved plan: %s", err)
+	}
+	return ret
+}
+
 // State returns an object describing the current state.
 //
 // If the state cannot be read, State returns an error.
@@ -329,7 +365,7 @@ func (wd *WorkingDir) Import(resource, id string) error {
 	args := []string{"import"}
 	args = append(args, wd.baseArgs...)
 	args = append(args, "-config="+wd.configDir, resource, id)
-	return wd.runTerraform(args...)
+	return wd.runTerraform(nil, args...)
 }
 
 // RequireImport is a variant of Import that will fail the test via
@@ -348,7 +384,7 @@ func (wd *WorkingDir) Refresh() error {
 	args = append(args, wd.baseArgs...)
 	args = append(args, "-state="+filepath.Join(wd.baseDir, "terraform.tfstate"))
 	args = append(args, wd.configDir)
-	return wd.runTerraform(args...)
+	return wd.runTerraform(nil, args...)
 }
 
 // RequireRefresh is a variant of Refresh that will fail the test via
