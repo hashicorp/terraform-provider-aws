@@ -23,11 +23,11 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  // Other arguments
+  # ... other configuration ...
 }
 
 resource "aws_instance" "test" {
-  // Other arguments
+  # ... other configuration ...
 }
 ```
 
@@ -48,7 +48,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_lambda_function" "test" {
-  // Other arguments
+  # ... other configuration ...
 }
 
 resource "aws_lb_target_group_attachment" "test" {

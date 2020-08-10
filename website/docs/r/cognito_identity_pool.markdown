@@ -15,7 +15,7 @@ Provides an AWS Cognito Identity Pool.
 ```hcl
 resource "aws_iam_saml_provider" "default" {
   name                   = "my-saml-provider"
-  saml_metadata_document = "${file("saml-metadata.xml")}"
+  saml_metadata_document = file("saml-metadata.xml")
 }
 
 resource "aws_cognito_identity_pool" "main" {
@@ -39,8 +39,8 @@ resource "aws_cognito_identity_pool" "main" {
     "accounts.google.com" = "123456789012.apps.googleusercontent.com"
   }
 
-  saml_provider_arns           = ["${aws_iam_saml_provider.default.arn}"]
-  openid_connect_provider_arns = ["arn:aws:iam::123456789012:oidc-provider/foo.example.com"]
+  saml_provider_arns           = [aws_iam_saml_provider.default.arn]
+  openid_connect_provider_arns = ["arn:aws:iam::123456789012:oidc-provider/id.example.com"]
 }
 ```
 
