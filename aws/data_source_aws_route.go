@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsRoute() *schema.Resource {
@@ -194,10 +195,13 @@ func getRoutes(table *ec2.RouteTable, d *schema.ResourceData) []*ec2.Route {
 
 // Helper: Create an ID for a route
 func resourceAwsRouteID(d *schema.ResourceData, r *ec2.Route) string {
+	routeTableID := d.Get("route_table_id").(string)
 
-	if r.DestinationIpv6CidrBlock != nil && *r.DestinationIpv6CidrBlock != "" {
-		return fmt.Sprintf("r-%s%d", d.Get("route_table_id").(string), hashcode.String(*r.DestinationIpv6CidrBlock))
+	if destination := aws.StringValue(r.DestinationCidrBlock); destination != "" {
+		return tfec2.RouteCreateID(routeTableID, destination)
+	} else if destination := aws.StringValue(r.DestinationIpv6CidrBlock); destination != "" {
+		return tfec2.RouteCreateID(routeTableID, destination)
 	}
 
-	return fmt.Sprintf("r-%s%d", d.Get("route_table_id").(string), hashcode.String(*r.DestinationCidrBlock))
+	return ""
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
@@ -36,7 +35,7 @@ func resourceAwsRoute() *schema.Resource {
 				} else {
 					d.Set("destination_cidr_block", destination)
 				}
-				d.SetId(fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination)))
+				d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -217,7 +216,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Route in Route Table (%s) with destination (%s) not found", routeTableID, destination)
 	}
 
-	d.SetId(routeCreateID(routeTableID, destination))
+	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 
 	return resourceAwsRouteRead(d, meta)
 }
@@ -475,14 +474,6 @@ func routeDestinationAndTargetAttributes(d *schema.ResourceData) (string, string
 	}
 
 	return destinationAttr, targetAttr, nil
-}
-
-// TODO
-// TODO Move these to a per-service internal package and auto-generate where possible.
-// TODO
-
-func routeCreateID(routeTableID, destination string) string {
-	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
 }
 
 // createRoute attempts to create a route.

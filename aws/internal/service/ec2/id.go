@@ -3,6 +3,8 @@ package ec2
 import (
 	"fmt"
 	"strings"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 const clientVpnAuthorizationRuleIDSeparator = ","
@@ -67,4 +69,9 @@ func ClientVpnRouteParseID(id string) (string, string, string, error) {
 	return "", "", "",
 		fmt.Errorf("unexpected format for ID (%q), expected endpoint-id"+clientVpnRouteIDSeparator+
 			"target-subnet-id"+clientVpnRouteIDSeparator+"destination-cidr-block", id)
+}
+
+// RouteCreateID returns a route resource ID.
+func RouteCreateID(routeTableID, destination string) string {
+	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
 }
