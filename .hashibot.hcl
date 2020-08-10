@@ -35,6 +35,30 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
   EOF
 }
 
+behavior "deprecated_import_commenter" "sdkv1" {
+  import_regexp = "github.com/hashicorp/terraform-plugin-sdk/helper/(schema|resource|acctest)"
+  marker_label  = "terraform-plugin-sdk-v1"
+
+  message = <<-EOF
+    Hello, and thank you for your contribution!
+
+    This project recently upgraded to [V2 of the Terraform Plugin SDK](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html)
+
+    This pull request appears to include the V1 import path of the SDK. Please import the V2 path `github.com/hashicorp/terraform-plugin-sdk/v2/helper/pkg`
+
+    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below); replacing any remaining old import paths with the newer ones.
+
+    ```console
+    $ git fetch --all
+    $ git rebase origin/master
+    ```
+
+    Another option is to create a new branch from the current master with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
+
+    We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
+  EOF
+}
+
 behavior "opened_pull_request_labeler" "triage" {
   labels             = ["needs-triage"]
   skip_collaborators = true
