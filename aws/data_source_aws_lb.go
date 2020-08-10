@@ -61,11 +61,15 @@ func dataSourceAwsLb() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"subnet_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"allocation_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
+						},
+						"private_ipv4_address": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
