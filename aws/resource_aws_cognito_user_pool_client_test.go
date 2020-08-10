@@ -297,7 +297,6 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 
 func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
@@ -507,19 +506,19 @@ resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.id
 
   policy = <<-EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": [
-          "mobiletargeting:UpdateEndpoint",
-          "mobiletargeting:PutItems"
-        ],
-        "Effect": "Allow",
-        "Resource": "arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
-      }
-    ]
-  }
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "mobiletargeting:UpdateEndpoint",
+        "mobiletargeting:PutItems"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+    }
+  ]
+}
 EOF
 
 }
@@ -529,8 +528,8 @@ EOF
 func testAccAWSCognitoUserPoolClientConfigAnalyticsConfig(userPoolName, clientName string) string {
 	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
-  name                = "%[1]s"
-  user_pool_id        = aws_cognito_user_pool.test.id
+  name         = "%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
     application_id = aws_pinpoint_app.test.application_id
@@ -544,8 +543,8 @@ resource "aws_cognito_user_pool_client" "test" {
 func testAccAWSCognitoUserPoolClientConfigAnalyticsConfigShareUserData(userPoolName, clientName string) string {
 	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
-  name                = "%[1]s"
-  user_pool_id        = aws_cognito_user_pool.test.id
+  name         = "%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
 
   analytics_configuration {
     application_id   = aws_pinpoint_app.test.application_id

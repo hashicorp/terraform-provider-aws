@@ -651,6 +651,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   metric_query {
     id          = "m1"
     return_data = "true"
+
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"

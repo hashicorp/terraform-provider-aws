@@ -648,6 +648,7 @@ resource "aws_iam_role" "test2" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test2" {
@@ -670,6 +671,7 @@ resource "aws_iam_role_policy" "test2" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "test" {

@@ -338,7 +338,7 @@ EOF
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_basic(name string) string {
 	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   roles = {
     "authenticated" = aws_iam_role.authenticated.arn
@@ -350,7 +350,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappings(name string) string {
 	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
@@ -375,12 +375,12 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsUpdated(name string) string {
 	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
     ambiguous_role_resolution = "AuthenticatedRole"
-    type                    = "Rules"
+    type                      = "Rules"
 
     mapping_rule {
       claim      = "isPaid"
@@ -407,7 +407,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name string) string {
 	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   role_mapping {
     identity_provider = "graph.facebook.com"
@@ -431,7 +431,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name string) string {
 	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"
@@ -449,7 +449,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "test" {
 func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name string) string {
 	return fmt.Sprintf(baseAWSCognitoIdentityPoolRolesAttachmentConfig(name) + `
 resource "aws_cognito_identity_pool_roles_attachment" "test" {
-  identity_pool_id = "${aws_cognito_identity_pool.main.id}"
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   role_mapping {
     identity_provider         = "graph.facebook.com"

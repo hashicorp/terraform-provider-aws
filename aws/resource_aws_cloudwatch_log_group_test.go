@@ -569,7 +569,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 const testAccAWSCloudWatchLogGroup_namePrefix = `
 resource "aws_cloudwatch_log_group" "test" {
-    name_prefix = "tf-test-"
+  name_prefix = "tf-test-"
 }
 `
 

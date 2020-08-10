@@ -368,7 +368,7 @@ resource "aws_iam_role_policy" "test" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect":"Allow",
+      "Effect": "Allow",
       "Action": [
         "s3:GetObject",
         "s3:GetObjectVersion",
@@ -419,10 +419,10 @@ resource "aws_codepipeline" "test" {
       output_artifacts = ["test"]
 
       configuration = {
-        Owner  = "lifesum-terraform"
-        Repo   = "test"
-		Branch = "master"
-		OAuthToken = %[2]q
+        Owner      = "lifesum-terraform"
+        Repo       = "test"
+        Branch     = "master"
+        OAuthToken = %[2]q
       }
     }
   }

@@ -172,9 +172,9 @@ resource "aws_config_aggregate_authorization" "example" {
   region     = "eu-west-1"
 
   tags = {
-	Name  = %[1]q
-	%[2]s = %[3]q
-	%[4]s = %[5]q
+    Name  = %[1]q
+    %[2]s = %[3]q
+    %[4]s = %[5]q
   }
 }
 `, rString, tagKey1, tagValue1, tagKey2, tagValue2)

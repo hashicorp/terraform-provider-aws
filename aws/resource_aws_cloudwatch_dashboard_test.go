@@ -177,29 +177,33 @@ func testAccCheckAWSCloudWatchDashboardDestroyPrevious(dashboardName string) res
 
 const (
 	basicWidget = `{
-  "widgets": [{
-    "type": "text",
-    "x": 0,
-    "y": 0,
-    "width": 6,
-    "height": 6,
-    "properties": {
-      "markdown": "Hi there from Terraform: CloudWatch"
+  "widgets": [
+    {
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 6,
+      "properties": {
+        "markdown": "Hi there from Terraform: CloudWatch"
+      }
     }
-  }]
+  ]
 }`
 
 	updatedWidget = `{
-  "widgets": [{
-    "type": "text",
-    "x": 0,
-    "y": 0,
-    "width": 6,
-    "height": 6,
-    "properties": {
-      "markdown": "Hi there from Terraform: CloudWatch - updated"
+  "widgets": [
+    {
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 6,
+      "height": 6,
+      "properties": {
+        "markdown": "Hi there from Terraform: CloudWatch - updated"
+      }
     }
-  }]
+  ]
 }`
 )
 
@@ -214,7 +218,6 @@ resource "aws_cloudwatch_dashboard" "test" {
 
   dashboard_body = <<EOF
   %s
-  
 EOF
 
 }
@@ -228,7 +231,6 @@ resource "aws_cloudwatch_dashboard" "test" {
 
   dashboard_body = <<EOF
   %s
-  
 EOF
 
 }

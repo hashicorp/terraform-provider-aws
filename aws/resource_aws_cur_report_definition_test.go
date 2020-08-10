@@ -121,31 +121,31 @@ resource "aws_s3_bucket_policy" "test" {
 
   policy = <<POLICY
 {
-    "Version": "2008-10-17",
-    "Id": "s3policy",
-    "Statement": [
-        {
-            "Sid": "AllowCURBillingACLPolicy",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": [
-                "s3:GetBucketAcl",
-                "s3:GetBucketPolicy"
-            ],
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
-        },
-        {
-            "Sid": "AllowCURPutObject",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
-        }
-    ]
+  "Version": "2008-10-17",
+  "Id": "s3policy",
+  "Statement": [
+    {
+      "Sid": "AllowCURBillingACLPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::386209384616:root"
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
+    },
+    {
+      "Sid": "AllowCURPutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::386209384616:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+    }
+  ]
 }
 POLICY
 

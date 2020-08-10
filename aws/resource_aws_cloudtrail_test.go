@@ -681,28 +681,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -726,28 +726,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -959,28 +959,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1006,28 +1006,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1051,28 +1051,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1094,28 +1094,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1163,25 +1163,25 @@ resource "aws_s3_bucket" "foo" {
 {
   "Version": "2012-10-17",
   "Statement": [
-   {
-     "Sid": "AWSCloudTrailAclCheck",
-     "Effect": "Allow",
-     "Principal": "*",
-     "Action": "s3:GetBucketAcl",
-     "Resource": "arn:aws:s3:::tf-test-trail-%d"
-   },
-   {
-     "Sid": "AWSCloudTrailWrite",
-     "Effect": "Allow",
-     "Principal": "*",
-     "Action": "s3:PutObject",
-     "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-     "Condition": {
-       "StringEquals": {
-         "s3:x-amz-acl": "bucket-owner-full-control"
-       }
-     }
-   }
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
   ]
 }
 POLICY
@@ -1200,32 +1200,34 @@ resource "aws_cloudtrail" "foobar" {
 resource "aws_s3_bucket" "foo" {
   bucket        = "tf-test-trail-%d"
   force_destroy = true
-  policy        = <<POLICY
+
+  policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
+
 }
 `
 
@@ -1243,28 +1245,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1273,10 +1275,13 @@ POLICY
 }
 
 func testAccAWSCloudTrailConfig_tags(cloudTrailRandInt int) string {
-	tagsString := `tags = {
-		Foo = "moo"
-		Pooh = "hi"
-	}`
+	tagsString := `
+tags = {
+  Foo  = "moo"
+  Pooh = "hi"
+}
+`
+
 	return fmt.Sprintf(testAccAWSCloudTrailConfig_tags_tpl,
 		cloudTrailRandInt,
 		tagsString,
@@ -1286,11 +1291,14 @@ func testAccAWSCloudTrailConfig_tags(cloudTrailRandInt int) string {
 }
 
 func testAccAWSCloudTrailConfig_tagsModified(cloudTrailRandInt int) string {
-	tagsString := `tags = {
-		Foo = "moo"
-		Pooh = "hi"
-		Moo = "boom"
-	}`
+	tagsString := `
+tags = {
+  Foo  = "moo"
+  Pooh = "hi"
+  Moo  = "boom"
+}
+`
+
 	return fmt.Sprintf(testAccAWSCloudTrailConfig_tags_tpl,
 		cloudTrailRandInt,
 		tagsString,
@@ -1331,28 +1339,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1380,30 +1388,31 @@ resource "aws_cloudtrail" "foobar" {
 resource "aws_s3_bucket" "foo" {
   bucket        = "tf-test-trail-%d"
   force_destroy = true
-  policy        = <<POLICY
+
+  policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1460,28 +1469,28 @@ resource "aws_s3_bucket" "foo" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AWSCloudTrailAclCheck",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
-		},
-		{
-			"Sid": "AWSCloudTrailWrite",
-			"Effect": "Allow",
-			"Principal": "*",
-			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
-			"Condition": {
-				"StringEquals": {
-					"s3:x-amz-acl": "bucket-owner-full-control"
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
 }
 POLICY
 
@@ -1533,7 +1542,8 @@ resource "aws_cloudtrail" "foobar" {
 resource "aws_s3_bucket" "foo" {
   bucket        = "tf-test-trail-%d"
   force_destroy = true
-  policy        = <<POLICY
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [

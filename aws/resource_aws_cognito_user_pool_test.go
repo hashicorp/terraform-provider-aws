@@ -1234,13 +1234,14 @@ resource "aws_iam_role" "test" {
 
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
+      Action = "sts:AssumeRole"
       Condition = {
         "StringEquals" = {
           "sts:ExternalId" = %[2]q
         }
       }
-      Effect    = "Allow"
+
+      Effect = "Allow"
       Principal = {
         Service = "cognito-idp.${data.aws_partition.current.dns_suffix}"
       }
@@ -1486,16 +1487,16 @@ resource "aws_cognito_user_pool" "test" {
 func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, email, arn, from, account string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-    name = "terraform-test-pool-%[1]s"
+  name = "terraform-test-pool-%[1]s"
 
-
-    email_configuration {
-      reply_to_email_address = %[2]q
-      source_arn = %[3]q
-      from_email_address = %[4]q
-      email_sending_account = %[5]q
-    }
-  }`, name, email, arn, from, account)
+  email_configuration {
+    reply_to_email_address = %[2]q
+    source_arn             = %[3]q
+    from_email_address     = %[4]q
+    email_sending_account  = %[5]q
+  }
+}
+`, name, email, arn, from, account)
 }
 
 func testAccAWSCognitoUserPoolConfig_withAliasAttributes(name string) string {
@@ -1790,6 +1791,7 @@ resource "aws_cognito_user_pool" "test" {
   # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
   # will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
   # attributes.
+
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
     email_message         = "foo {####} bar"

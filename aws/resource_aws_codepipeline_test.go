@@ -606,7 +606,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect":"Allow",
+      "Effect": "Allow",
       "Action": [
         "s3:GetObject",
         "s3:GetObjectVersion",
@@ -705,7 +705,7 @@ func testAccAWSCodePipelineConfig_basic(rName, githubToken string) string {
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
     location = aws_s3_bucket.test.bucket
@@ -824,7 +824,7 @@ func testAccAWSCodePipelineConfig_emptyStageArtifacts(rName, githubToken string)
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
     location = aws_s3_bucket.test.bucket
@@ -906,7 +906,7 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect":"Allow",
+      "Effect": "Allow",
       "Action": [
         "s3:GetObject",
         "s3:GetObjectVersion",
@@ -1194,7 +1194,7 @@ resource "aws_codepipeline" "test" {
       type = "KMS"
     }
 
-    region   = "%[3]s"
+    region = "%[3]s"
   }
 
   stage {
@@ -1235,7 +1235,7 @@ resource "aws_codepipeline" "test" {
     }
 
     action {
-     region          = "%[3]s"
+      region          = "%[3]s"
       name            = "%[3]s-BuildUpdated"
       category        = "Build"
       owner           = "AWS"

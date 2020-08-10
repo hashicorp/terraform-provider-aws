@@ -330,9 +330,9 @@ resource "aws_config_configuration_aggregator" "example" {
   }
 
   tags = {
-	Name  = %[1]q
-	%[2]s = %[3]q
-	%[4]s = %[5]q
+    Name  = %[1]q
+    %[2]s = %[3]q
+    %[4]s = %[5]q
   }
 }
 

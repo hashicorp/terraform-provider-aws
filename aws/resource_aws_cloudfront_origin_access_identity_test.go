@@ -141,7 +141,7 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloud
 
 const testAccAWSCloudFrontOriginAccessIdentityConfig = `
 resource "aws_cloudfront_origin_access_identity" "test" {
-	comment = "some comment"
+  comment = "some comment"
 }
 `
 

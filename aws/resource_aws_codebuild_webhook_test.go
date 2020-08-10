@@ -339,27 +339,27 @@ resource "aws_codebuild_webhook" "test" {
 func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
 	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
 resource "aws_codebuild_webhook" "test" {
-	project_name = aws_codebuild_project.test.name
+  project_name = aws_codebuild_project.test.name
 
-	filter_group {
-		filter {
-			type = "EVENT"
-			pattern = "PUSH"
-		}
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PUSH"
+    }
 
-		filter {
-			type = "HEAD_REF"
-			pattern = "refs/heads/master"
-			exclude_matched_pattern = true
-		}
-	}
+    filter {
+      type                    = "HEAD_REF"
+      pattern                 = "refs/heads/master"
+      exclude_matched_pattern = true
+    }
+  }
 
-	filter_group {
-		filter {
-			type = "EVENT"
-			pattern = "PULL_REQUEST_UPDATED"
-		}
-	}
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PULL_REQUEST_UPDATED"
+    }
+  }
 }
 `)
 }
