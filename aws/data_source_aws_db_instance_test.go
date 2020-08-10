@@ -68,7 +68,7 @@ resource "aws_db_instance" "bar" {
   identifier = "datasource-test-terraform-%d"
 
   allocated_storage = 10
-  engine            = "MySQL"
+  engine            = "mariadb"
   instance_class    = "db.t2.micro"
   name              = "baz"
   password          = "barbarbarbar"
