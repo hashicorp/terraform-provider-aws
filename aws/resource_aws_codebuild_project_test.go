@@ -1305,6 +1305,38 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_WindowsServer2019Container(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_WindowsServer2019Container(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", codebuild.ComputeTypeBuildGeneral1Medium),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", codebuild.ImagePullCredentialsTypeCodebuild),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.type", codebuild.EnvironmentTypeWindowsServer2019Container),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_ARMContainer(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -3529,6 +3561,30 @@ resource "aws_codebuild_project" "test" {
     compute_type = "BUILD_GENERAL1_MEDIUM"
     image        = "2"
     type         = "WINDOWS_CONTAINER"
+  }
+
+  source {
+    location = "%s"
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccAWSCodeBuildGitHubSourceLocationFromEnv())
+}
+
+func testAccAWSCodeBuildProjectConfig_WindowsServer2019Container(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_MEDIUM"
+    image        = "2"
+    type         = "WINDOWS_SERVER_2019_CONTAINER"
   }
 
   source {
