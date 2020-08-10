@@ -10,7 +10,7 @@ on:
       - website/docs/**
 
 jobs:
-  validate-code:
+  validate-terraform:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
