@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -402,6 +403,13 @@ func (c *Config) Client() (interface{}, error) {
 		},
 	}
 
+	if v := os.Getenv("TF_APPEND_USER_AGENT"); v != "" {
+		if customAgentInfo := parseTerraformAppendUserAgentEnvVar(v); len(customAgentInfo) > 0 {
+			log.Printf("[DEBUG] Using additional User-Agent Info: %s", v)
+			awsbaseConfig.UserAgentProducts = append(awsbaseConfig.UserAgentProducts, customAgentInfo...)
+		}
+	}
+
 	sess, accountID, partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring Terraform AWS Provider: %w", err)
@@ -795,4 +803,42 @@ func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
 	}
 
 	return platforms, nil
+}
+
+// parseTerraformAppendUserAgentEnvVar determines User-Agent Information exported as TF_APPEND_USER_AGENT.
+// To represent a User-Agent, the string must include the Name and optionally the Version and any Extra Information e.g.
+// 		name
+//		name/version
+//		name/version/extra0
+//		name/version/extra0,extra1...
+//
+// Multiple User-Agents can be provided when delimited by a " " e.g.
+// 		name/version name2/version2/extra0
+func parseTerraformAppendUserAgentEnvVar(v string) []*awsbase.UserAgentProduct {
+	var products []*awsbase.UserAgentProduct
+	parts := strings.Split(v, " ")
+	if len(parts) > 0 {
+		for _, part := range parts {
+			infoParts := strings.SplitN(part, "/", 3)
+			ua := &awsbase.UserAgentProduct{}
+			if infoParts[0] != "" {
+				ua.Name = infoParts[0]
+			}
+			if len(infoParts) > 1 {
+				if infoParts[1] != "" {
+					ua.Version = infoParts[1]
+				}
+			}
+			if len(infoParts) > 2 {
+				if infoParts[2] != "" {
+					ua.Extra = strings.Split(infoParts[2], ",")
+				}
+			}
+
+			if ua != nil {
+				products = append(products, ua)
+			}
+		}
+	}
+	return products
 }

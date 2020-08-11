@@ -130,3 +130,58 @@ var test_ec2_describeAccountAttributes_response = `<DescribeAccountAttributesRes
     </item>
   </accountAttributeSet>
 </DescribeAccountAttributesResponse>`
+
+func TestAWSConfigCustomUserAgentInfo(t *testing.T) {
+	testCases := []struct {
+		UserAgentInfo string
+		Expected      []*awsbase.UserAgentProduct
+	}{
+		{
+			UserAgentInfo: "Test",
+			Expected: []*awsbase.UserAgentProduct{
+				{Name: "Test"},
+			},
+		},
+		{
+			UserAgentInfo: "Test/1.0",
+			Expected: []*awsbase.UserAgentProduct{
+				{Name: "Test", Version: "1.0"},
+			},
+		},
+		{
+			UserAgentInfo: "Test,1.0",
+			Expected: []*awsbase.UserAgentProduct{
+				{Name: "Test,1.0"},
+			},
+		},
+		{
+			UserAgentInfo: "Test/1.0/extra0",
+			Expected: []*awsbase.UserAgentProduct{
+				{Name: "Test", Version: "1.0", Extra: []string{"extra0"}},
+			},
+		},
+		{
+			UserAgentInfo: "Test Test2",
+			Expected: []*awsbase.UserAgentProduct{
+				{Name: "Test"},
+				{Name: "Test2"},
+			},
+		},
+		{
+			UserAgentInfo: "Test/1.0 Test2/2.0 Test3/3.0/extra0,extra1",
+			Expected: []*awsbase.UserAgentProduct{
+				{Name: "Test", Version: "1.0"},
+				{Name: "Test2", Version: "2.0"},
+				{Name: "Test3", Version: "3.0", Extra: []string{"extra0", "extra1"}},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		got := parseTerraformAppendUserAgentEnvVar(testCase.UserAgentInfo)
+
+		if !reflect.DeepEqual(got, testCase.Expected) {
+			t.Errorf("got %v, expected %v", got, testCase.Expected)
+		}
+	}
+}

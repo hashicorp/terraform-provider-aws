@@ -104,6 +104,19 @@ If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task
 
 If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform will use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
 
+### Custom User-Agent Information
+
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about
+the requester i.e. HashiCorp and the Terraform Version and Homepage. To provide additional configuration information in the User-Agent headers,
+the `TF_APPEND_USER_AGENT` environment variable can be set with the format: `name/version/extra0...`.
+Multiple User-Agent configurations can be provided by including a space between each e.g.
+
+```sh
+$ export TF_APPEND_USER_AGENT="JenkinsAgent1234/1.0"
+$ export TF_APPEND_USER_AGENT="JenkinsAgent1234/1.0 JobID1234/1.0"
+$ export TF_APPEND_USER_AGENT="JenkinsAgent1234/1.0 JobID1234/1.0/extra0,extra1"
+```
+
 ### EC2 Instance Metadata Service
 
 If you're running Terraform from an EC2 instance with IAM Instance Profile
