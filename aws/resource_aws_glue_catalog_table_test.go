@@ -418,8 +418,8 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name          =  %[1]q
-  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
 }
 `, rName)
 }
@@ -432,7 +432,7 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_catalog_table" "test" {
   name               = %[1]q
-  database_name      = "${aws_glue_catalog_database.test.name}"
+  database_name      = aws_glue_catalog_database.test.name
   description        = %[2]q
   owner              = "my_owner"
   retention          = 1
@@ -522,7 +522,7 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_catalog_table" "test" {
   name               = %[1]q
-  database_name      = "${aws_glue_catalog_database.test.name}"
+  database_name      = aws_glue_catalog_database.test.name
   description        = "A test table from terraform2"
   owner              = "my_owner2"
   retention          = 2
@@ -653,7 +653,8 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     skewed_info {
-      skewed_column_names               = []
+      skewed_column_names = []
+
       skewed_column_value_location_maps = {}
       skewed_column_values              = []
     }

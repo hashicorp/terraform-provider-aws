@@ -683,11 +683,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "${data.aws_iam_policy.AWSGlueServiceRole.arn}"
-  role       = "${aws_iam_role.test.name}"
+  policy_arn = data.aws_iam_policy.AWSGlueServiceRole.arn
+  role       = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -857,7 +858,7 @@ func testAccAWSGlueJobConfigTags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_glue_job" "test" {
   name              = %[1]q
   number_of_workers = 2
-  role_arn          = "${aws_iam_role.test.arn}"
+  role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
   command {
@@ -878,7 +879,7 @@ func testAccAWSGlueJobConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 
 resource "aws_glue_job" "test" {
   name              = %[1]q
   number_of_workers = 2
-  role_arn          = "${aws_iam_role.test.arn}"
+  role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
   command {
@@ -938,10 +939,10 @@ func testAccAWSGlueJobConfig_WorkerType(rName string, workerType string) string 
 %s
 
 resource "aws_glue_job" "test" {
-  name                   = "%s"
-  role_arn               = "${aws_iam_role.test.arn}"
-  worker_type 			 = "%s"
-  number_of_workers      = 10
+  name              = "%s"
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "%s"
+  number_of_workers = 10
 
   command {
     script_location = "testscriptlocation"
@@ -958,7 +959,7 @@ func testAccAWSGlueJobConfig_PythonShell(rName string) string {
 
 resource "aws_glue_job" "test" {
   name         = "%s"
-  role_arn     = "${aws_iam_role.test.arn}"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = 0.0625
 
   command {
@@ -977,13 +978,13 @@ func testAccAWSGlueJobConfig_PythonShellWithVersion(rName string, pythonVersion 
 
 resource "aws_glue_job" "test" {
   name         = "%s"
-  role_arn     = "${aws_iam_role.test.arn}"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = 0.0625
 
   command {
     name            = "pythonshell"
     script_location = "testscriptlocation"
-		python_version  = "%s"
+    python_version  = "%s"
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test"]
@@ -996,12 +997,12 @@ func testAccAWSGlueJobConfig_MaxCapacity(rName string, maxCapacity float64) stri
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = %g
 
   command {
-	script_location = "testscriptlocation"
+    script_location = "testscriptlocation"
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test"]
