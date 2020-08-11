@@ -171,7 +171,7 @@ func testAccAWSCognitoResourceServerConfig_basic(identifier string, name string,
 resource "aws_cognito_resource_server" "main" {
   identifier   = "%s"
   name         = "%s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -196,7 +196,7 @@ resource "aws_cognito_resource_server" "main" {
     scope_description = "scope_2_description"
   }
 
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -216,7 +216,7 @@ resource "aws_cognito_resource_server" "main" {
     scope_description = "scope_1_description"
   }
 
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 resource "aws_cognito_user_pool" "main" {

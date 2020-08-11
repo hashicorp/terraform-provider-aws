@@ -1141,7 +1141,8 @@ version: 0.2
 phases:
   build:
     commands:
-      - rspec hello_world_spec.rb`
+      - rspec hello_world_spec.rb
+`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
@@ -1171,7 +1172,8 @@ version: 0.2
 phases:
   build:
     commands:
-      - rspec hello_world_spec.rb`
+      - rspec hello_world_spec.rb
+`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
@@ -2247,6 +2249,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -2290,6 +2293,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
+
 }
 `, rName)
 }
@@ -2297,8 +2301,8 @@ POLICY
 func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name           = "%s"
-  service_role   = aws_iam_role.test.arn
+  name         = "%s"
+  service_role = aws_iam_role.test.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -2372,8 +2376,8 @@ func testAccAWSCodeBuildProjectConfig_QueuedTimeout(rName string, queuedTimeout 
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   queued_timeout = %d
-  name          = "%s"
-  service_role  = aws_iam_role.test.arn
+  name           = "%s"
+  service_role   = aws_iam_role.test.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -2433,8 +2437,8 @@ resource "aws_codebuild_project" "test" {
   }
 
   cache {
-		type     = "LOCAL"
-		modes    = ["%s"]
+    type  = "LOCAL"
+    modes = ["%s"]
   }
 
   environment {
@@ -2493,6 +2497,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   source_version = "%s"
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -2504,7 +2509,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodeBuildProjectConfig_EncryptionKey(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test"
+  description             = "Terraform acc test"
   deletion_window_in_days = 7
 }
 
@@ -2782,14 +2787,14 @@ resource "aws_codebuild_project" "test" {
 
   source {
     location = "https://github.com/hashicorp/packer.git"
-	type     = "GITHUB"
+    type     = "GITHUB"
   }
 
   logs_config {
     cloudwatch_logs {
-	  status = %q
-	  group_name  = %q
-	  stream_name = %q
+      status      = %q
+      group_name  = %q
+      stream_name = %q
     }
   }
 }
@@ -2814,14 +2819,14 @@ resource "aws_codebuild_project" "test" {
 
   source {
     location = "https://github.com/hashicorp/packer.git"
-	type     = "GITHUB"
+    type     = "GITHUB"
   }
 
   logs_config {
     s3_logs {
-	  status   = %q
-	  location = %q
-	  encryption_disabled = %t
+      status              = %q
+      location            = %q
+      encryption_disabled = %t
     }
   }
 }
@@ -2845,8 +2850,8 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    type            = "GITHUB"
-    location        = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
 
     auth {
       resource = "%s"
@@ -2992,8 +2997,8 @@ resource "aws_codebuild_project" "test" {
   }
 
   secondary_sources {
-    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
-    type     = "CODECOMMIT"
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
+    type              = "CODECOMMIT"
     source_identifier = "secondarySource1"
 
     git_submodules_config {
@@ -3002,8 +3007,8 @@ resource "aws_codebuild_project" "test" {
   }
 
   secondary_sources {
-    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
-    type     = "CODECOMMIT"
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
+    type              = "CODECOMMIT"
     source_identifier = "secondarySource2"
 
     git_submodules_config {
@@ -3387,7 +3392,7 @@ resource "aws_codebuild_project" "test" {
 
   tags = {
     tag1 = "tag1value"
-    %s = "%s"
+    %s   = "%s"
   }
 }
 `, rName, tagKey, tagValue)
@@ -3566,7 +3571,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_Artifacts_ArtifactIdentifier(rName string, bName string, artifactIdentifier string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         =  %[1]q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -3592,8 +3597,8 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_Artifacts_EncryptionDisabled(rName string, bName string, encryptionDisabled bool) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name          = "%s"
-  service_role  = aws_iam_role.test.arn
+  name         = "%s"
+  service_role = aws_iam_role.test.arn
 
   artifacts {
     encryption_disabled = %t
@@ -3618,12 +3623,12 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_Artifacts_Location(rName, bName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name          = %[1]q
-  service_role  = aws_iam_role.test.arn
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
 
   artifacts {
-    location  = aws_s3_bucket.test.bucket
-    type      = "S3"
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
   }
 
   environment {
@@ -3643,7 +3648,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_Artifacts_Name(rName string, bName string, name string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         =  %[1]q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -3773,12 +3778,12 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_Artifacts_Type(rName string, bName string, artifactType string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         =  %[1]q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
-    type        = %[2]q
-    location    = aws_s3_bucket.test.bucket
+    type     = %[2]q
+    location = aws_s3_bucket.test.bucket
   }
 
   environment {
@@ -3802,8 +3807,8 @@ resource "aws_codebuild_project" "test" {
   service_role = aws_iam_role.test.arn
 
   artifacts {
-    location            = aws_s3_bucket.test.bucket
-    type                = "S3"
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
   }
 
   secondary_artifacts {
@@ -3835,7 +3840,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName string, bName string, artifactIdentifier string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         =  %[1]q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -3929,7 +3934,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName string, bName string, name string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         =  %[1]q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -4089,7 +4094,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Type(rName string, bName string, artifactType string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         =  %[1]q
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -4139,14 +4144,14 @@ resource "aws_codebuild_project" "test" {
   }
 
   secondary_sources {
-    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
-    type     = "CODECOMMIT"
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
+    type              = "CODECOMMIT"
     source_identifier = "secondarySource1"
   }
 
   secondary_sources {
-    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
-    type     = "CODECOMMIT"
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
+    type              = "CODECOMMIT"
     source_identifier = "secondarySource2"
   }
 }

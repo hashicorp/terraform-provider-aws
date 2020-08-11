@@ -441,14 +441,14 @@ func testAccAWSCognitoIdentityPoolConfig_samlProviderArns(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "default" {
   name                   = "myprovider-%s"
-  saml_metadata_document = "${file("./test-fixtures/saml-metadata.xml")}"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
-  saml_provider_arns = ["${aws_iam_saml_provider.default.arn}"]
+  saml_provider_arns = [aws_iam_saml_provider.default.arn]
 }
 `, name, name)
 }
@@ -457,19 +457,19 @@ func testAccAWSCognitoIdentityPoolConfig_samlProviderArnsModified(name string) s
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "default" {
   name                   = "default-%s"
-  saml_metadata_document = "${file("./test-fixtures/saml-metadata.xml")}"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 
 resource "aws_iam_saml_provider" "secondary" {
   name                   = "secondary-%s"
-  saml_metadata_document = "${file("./test-fixtures/saml-metadata.xml")}"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
-  saml_provider_arns = ["${aws_iam_saml_provider.secondary.arn}"]
+  saml_provider_arns = [aws_iam_saml_provider.secondary.arn]
 }
 `, name, name, name)
 }

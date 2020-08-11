@@ -188,7 +188,7 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_cognito_user_group" "main" {
   name         = "%s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 `, poolName, groupName)
 }
@@ -201,6 +201,7 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_iam_role" "group_role" {
   name = "%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -224,14 +225,15 @@ resource "aws_iam_role" "group_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_group" "main" {
   name         = "%s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
   description  = "%s"
   precedence   = %v
-  role_arn     = "${aws_iam_role.group_role.arn}"
+  role_arn     = aws_iam_role.group_role.arn
 }
 `, poolName, groupName, groupName, groupDescription, precedence)
 }
@@ -260,12 +262,13 @@ resource "aws_iam_role" "group_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_group" "main" {
   name         = "%[1]s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
-  role_arn     = "${aws_iam_role.group_role.arn}"
+  user_pool_id = aws_cognito_user_pool.main.id
+  role_arn     = aws_iam_role.group_role.arn
 }
 `, rName)
 }
@@ -294,12 +297,13 @@ resource "aws_iam_role" "group_role_updated" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_group" "main" {
   name         = "%[1]s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
-  role_arn     = "${aws_iam_role.group_role_updated.arn}"
+  user_pool_id = aws_cognito_user_pool.main.id
+  role_arn     = aws_iam_role.group_role_updated.arn
 }
 `, rName)
 }

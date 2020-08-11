@@ -131,7 +131,7 @@ func testAccAWSCloudFrontPublicKeyConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key"
-  encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
+  encoded_key = file("test-fixtures/cloudfront-public-key.pem")
   name        = "tf-acc-test-%d"
 }
 `, rInt)
@@ -141,7 +141,7 @@ func testAccAWSCloudFrontPublicKeyConfig_namePrefix() string {
 	return `
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key"
-  encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
+  encoded_key = file("test-fixtures/cloudfront-public-key.pem")
   name_prefix = "tf-acc-test-"
 }
 `
@@ -151,7 +151,7 @@ func testAccAWSCloudFrontPublicKeyConfigUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key1"
-  encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
+  encoded_key = file("test-fixtures/cloudfront-public-key.pem")
   name        = "tf-acc-test-%d"
 }
 `, rInt)

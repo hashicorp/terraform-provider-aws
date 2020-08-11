@@ -651,6 +651,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   metric_query {
     id          = "m1"
     return_data = "true"
+
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
@@ -841,7 +842,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["${aws_sns_topic.test.arn}"]
+  alarm_actions       = [aws_sns_topic.test.arn]
   alarm_description   = "Status checks have failed for system"
   alarm_name          = %q
   comparison_operator = "GreaterThanThreshold"
@@ -862,11 +863,14 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
 func testAccAWSCloudWatchMetricAlarmConfigAlarmActionsSWFAction(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_actions       = ["arn:${data.aws_partition.current.partition}:swf:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"]

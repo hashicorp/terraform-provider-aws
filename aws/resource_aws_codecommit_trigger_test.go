@@ -102,6 +102,6 @@ resource "aws_codecommit_trigger" "test" {
     events          = ["all"]
     destination_arn = aws_sns_topic.test.arn
   }
- }
+}
 `, rName)
 }

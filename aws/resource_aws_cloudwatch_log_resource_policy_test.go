@@ -165,7 +165,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
   policy_name     = "%s"
-  policy_document = "${data.aws_iam_policy_document.test.json}"
+  policy_document = data.aws_iam_policy_document.test.json
 }
 `, name)
 }
@@ -190,7 +190,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
   policy_name     = "%s"
-  policy_document = "${data.aws_iam_policy_document.test.json}"
+  policy_document = data.aws_iam_policy_document.test.json
 }
 `, name)
 }

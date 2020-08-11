@@ -263,20 +263,24 @@ resource "aws_codecommit_repository" "test" {
 func testAccAWSCodeCommitRepositoryConfigTags1(r, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
-	repository_name = "terraform-test-%s"
-	tags = {
-		%q = %q
-	}
-	}`, r, tag1Key, tag1Value)
+  repository_name = "terraform-test-%s"
+
+  tags = {
+    %q = %q
+  }
+}
+`, r, tag1Key, tag1Value)
 }
 
 func testAccAWSCodeCommitRepositoryConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
-	repository_name = "terraform-test-%s"
-	tags = {
-		%q = %q
-		%q = %q
-	  }
-	}`, r, tag1Key, tag1Value, tag2Key, tag2Value)
+  repository_name = "terraform-test-%s"
+
+  tags = {
+    %q = %q
+    %q = %q
+  }
+}
+`, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

@@ -398,7 +398,6 @@ resource "aws_cloud9_environment_ec2" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-
   }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
