@@ -323,79 +323,88 @@ func testAccCheckInternetGatewayExists(n string, ig *ec2.InternetGateway) resour
 
 const testAccNoInternetGatewayConfig = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-no-internet-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-no-internet-gateway"
+  }
 }
 `
 
 const testAccInternetGatewayConfig = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-internet-gateway"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
-	vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 
 const testAccInternetGatewayConfigChangeVPC = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-change-vpc"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-change-vpc"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.2.0.0/16"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-change-vpc-other"
-	}
+  cidr_block = "10.2.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-change-vpc-other"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
-	vpc_id = "${aws_vpc.bar.id}"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-change-vpc-other"
-	}
+  vpc_id = aws_vpc.bar.id
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-change-vpc-other"
+  }
 }
 `
 
 const testAccCheckInternetGatewayConfigTags = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-tags"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-tags"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
-	vpc_id = "${aws_vpc.test.id}"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-tags"
-		test = "bar"
-	}
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-tags"
+    test = "bar"
+  }
 }
 `
 
 const testAccCheckInternetGatewayConfigTagsUpdate = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-tags"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-tags"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
-	vpc_id = "${aws_vpc.test.id}"
-	tags = {
-		Name = "terraform-testacc-internet-gateway-tags"
-		bar = "baz"
-	}
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-internet-gateway-tags"
+    bar  = "baz"
+  }
 }
 `
