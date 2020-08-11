@@ -8,7 +8,7 @@ set -eo pipefail
 #   "--enable-rule=terraform_deprecated_interpolation"
 #   "--enable-rule=terraform_deprecated_index"
 # )
-# ./scripts/validate-terraform.sh "$filename"  "${rules[@]}"
+# ./scripts/validate-terraform-file.sh "$filename"  "${rules[@]}"
 
 filename=$1
 shift
