@@ -165,7 +165,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading GuardDuty Filter '%s' failed: %s", name, err.Error())
+		return fmt.Errorf("error reading GuardDuty Filter '%s': %w", name, err)
 	}
 
 	err = d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria))
