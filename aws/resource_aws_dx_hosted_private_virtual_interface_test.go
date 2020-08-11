@@ -169,12 +169,12 @@ resource "aws_dx_hosted_private_virtual_interface" "test" {
   bgp_asn          = %[3]d
   connection_id    = %[1]q
   name             = %[2]q
-  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  owner_account_id = data.aws_caller_identity.accepter.account_id
   vlan             = %[4]d
 
   # The aws_dx_hosted_private_virtual_interface
   # must be destroyed before the aws_vpn_gateway.
-  depends_on = ["aws_vpn_gateway.test"]
+  depends_on = [aws_vpn_gateway.test]
 }
 
 # Accepter
@@ -197,8 +197,8 @@ func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAs
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
-  vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
+  virtual_interface_id = aws_dx_hosted_private_virtual_interface.test.id
+  vpn_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }
@@ -208,8 +208,8 @@ func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(cid, rName string
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
-  vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
+  virtual_interface_id = aws_dx_hosted_private_virtual_interface.test.id
+  vpn_gateway_id       = aws_vpn_gateway.test.id
 
   tags = {
     Name = %[1]q
@@ -225,8 +225,8 @@ func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(cid, rName
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
-  vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
+  virtual_interface_id = aws_dx_hosted_private_virtual_interface.test.id
+  vpn_gateway_id       = aws_vpn_gateway.test.id
 
   tags = {
     Name = %[1]q

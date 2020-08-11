@@ -138,13 +138,13 @@ func testAccCheckAWSDefaultSecurityGroupAttributes(group *ec2.SecurityGroup) res
 const testAccAWSDefaultSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-default-security-group"
-	}
+  tags = {
+    Name = "terraform-testacc-default-security-group"
+  }
 }
 
 resource "aws_default_security_group" "web" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   ingress {
     protocol    = "6"

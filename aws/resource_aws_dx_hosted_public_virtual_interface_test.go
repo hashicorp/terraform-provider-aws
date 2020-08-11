@@ -177,7 +177,7 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
   connection_id    = %[1]q
   customer_address = %[4]q
   name             = %[2]q
-  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  owner_account_id = data.aws_caller_identity.accepter.account_id
   vlan             = %[6]d
 
   route_filter_prefixes = [
@@ -198,7 +198,7 @@ func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, cust
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 }
 `
 }
@@ -208,7 +208,7 @@ func testAccDxHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAdd
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 
   tags = {
     Name = %[1]q
@@ -224,7 +224,7 @@ func testAccDxHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName,
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 
   tags = {
     Name = %[1]q

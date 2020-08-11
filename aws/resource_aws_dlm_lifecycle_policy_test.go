@@ -229,11 +229,12 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_dlm_lifecycle_policy" "basic" {
   description        = "tf-acc-basic"
-  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
+  execution_role_arn = aws_iam_role.dlm_lifecycle_role.arn
 
   policy_details {
     resource_types = ["VOLUME"]
@@ -278,11 +279,12 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_dlm_lifecycle_policy" "full" {
   description        = "tf-acc-full"
-  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
+  execution_role_arn = aws_iam_role.dlm_lifecycle_role.arn
   state              = "ENABLED"
 
   policy_details {
@@ -336,6 +338,7 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_dlm_lifecycle_policy" "full" {

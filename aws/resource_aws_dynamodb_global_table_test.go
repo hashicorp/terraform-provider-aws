@@ -155,7 +155,8 @@ func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
 
 func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_dynamodb_table" "test" {
   hash_key         = "myAttribute"
@@ -172,12 +173,12 @@ resource "aws_dynamodb_table" "test" {
 }
 
 resource "aws_dynamodb_global_table" "test" {
-  depends_on = ["aws_dynamodb_table.test"]
+  depends_on = [aws_dynamodb_table.test]
 
   name = "%s"
 
   replica {
-    region_name = "${data.aws_region.current.name}"
+    region_name = data.aws_region.current.name
   }
 }
 `, tableName, tableName)

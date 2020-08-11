@@ -272,7 +272,7 @@ resource "aws_db_instance" "test" {
 func testAccAwsDbSnapshotConfig(rName string) string {
 	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 }
 `, rName)
@@ -281,7 +281,7 @@ resource "aws_db_snapshot" "test" {
 func testAccAwsDbSnapshotConfigTags1(rName, tag1Key, tag1Value string) string {
 	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 
   tags = {
@@ -294,7 +294,7 @@ resource "aws_db_snapshot" "test" {
 func testAccAwsDbSnapshotConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 
   tags = {

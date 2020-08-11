@@ -185,12 +185,12 @@ resource "aws_dx_hosted_transit_virtual_interface" "test" {
   bgp_asn          = %[4]d
   connection_id    = %[1]q
   name             = %[2]q
-  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  owner_account_id = data.aws_caller_identity.accepter.account_id
   vlan             = %[5]d
 
   # The aws_dx_hosted_transit_virtual_interface
   # must be destroyed before the aws_dx_gateway.
-  depends_on = ["aws_dx_gateway.test"]
+  depends_on = [aws_dx_gateway.test]
 }
 
 # Accepter
@@ -212,8 +212,8 @@ func testAccDxHostedTransitVirtualInterfaceConfig_basic(cid, rName string, amzAs
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  dx_gateway_id        = "${aws_dx_gateway.test.id}"
-  virtual_interface_id = "${aws_dx_hosted_transit_virtual_interface.test.id}"
+  dx_gateway_id        = aws_dx_gateway.test.id
+  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.test.id
 }
 `
 }
@@ -223,8 +223,8 @@ func testAccDxHostedTransitVirtualInterfaceConfig_accepterTags(cid, rName string
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  dx_gateway_id        = "${aws_dx_gateway.test.id}"
-  virtual_interface_id = "${aws_dx_hosted_transit_virtual_interface.test.id}"
+  dx_gateway_id        = aws_dx_gateway.test.id
+  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.test.id
 
   tags = {
     Name = %[1]q
@@ -240,8 +240,8 @@ func testAccDxHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(cid, rName
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
-  dx_gateway_id        = "${aws_dx_gateway.test.id}"
-  virtual_interface_id = "${aws_dx_hosted_transit_virtual_interface.test.id}"
+  dx_gateway_id        = aws_dx_gateway.test.id
+  virtual_interface_id = aws_dx_hosted_transit_virtual_interface.test.id
 
   tags = {
     Name = %[1]q
