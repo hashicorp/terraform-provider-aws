@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
@@ -33,6 +34,7 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := "data.aws_launch_configuration.foo"
@@ -45,6 +47,29 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(rName, "security_groups.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
+	resourceName := "aws_launch_configuration.test"
+	datasourceName := "data.aws_launch_configuration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "image_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*", datasourceName, "device_name"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*", datasourceName, "no_device"),
 				),
 			},
 		},
@@ -111,4 +136,25 @@ data "aws_launch_configuration" "foo" {
   name = aws_launch_configuration.test.name
 }
 `, rInt, rInt)
+}
+
+func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "m1.small"
+
+  ebs_block_device {
+    device_name = "/dev/sda2"
+    no_device   = true
+  }
+}
+
+data "aws_launch_configuration" "test" {
+  name = aws_launch_configuration.test.name
+}
+`, rName))
 }
