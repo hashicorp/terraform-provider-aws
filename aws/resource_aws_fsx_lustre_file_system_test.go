@@ -541,13 +541,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block  = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 `
 }
@@ -563,7 +563,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   export_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   import_path      = "s3://${aws_s3_bucket.test.bucket}"
   storage_capacity = 1200
-  subnet_ids       = ["${aws_subnet.test1.id}"]
+  subnet_ids       = [aws_subnet.test1.id]
 }
 `, rName, exportPrefix)
 }
@@ -578,7 +578,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_fsx_lustre_file_system" "test" {
   import_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   storage_capacity = 1200
-  subnet_ids       = ["${aws_subnet.test1.id}"]
+  subnet_ids       = [aws_subnet.test1.id]
 }
 `, rName, importPrefix)
 }
@@ -594,7 +594,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   import_path              = "s3://${aws_s3_bucket.test.bucket}"
   imported_file_chunk_size = %[2]d
   storage_capacity         = 1200
-  subnet_ids               = ["${aws_subnet.test1.id}"]
+  subnet_ids               = [aws_subnet.test1.id]
 }
 `, rName, importedFileChunkSize)
 }
@@ -603,10 +603,10 @@ func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds1() string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = -1
     to_port     = 0
@@ -621,9 +621,9 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
-  security_group_ids = ["${aws_security_group.test1.id}"]
+  security_group_ids = [aws_security_group.test1.id]
   storage_capacity   = 1200
-  subnet_ids         = ["${aws_subnet.test1.id}"]
+  subnet_ids         = [aws_subnet.test1.id]
 }
 `
 }
@@ -632,10 +632,10 @@ func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds2() string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = -1
     to_port     = 0
@@ -651,10 +651,10 @@ resource "aws_security_group" "test1" {
 
 resource "aws_security_group" "test2" {
   description = "security group for FSx testing"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = -1
     to_port     = 0
@@ -669,9 +669,9 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
-  security_group_ids = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
+  security_group_ids = [aws_security_group.test1.id, aws_security_group.test2.id]
   storage_capacity   = 1200
-  subnet_ids         = ["${aws_subnet.test1.id}"]
+  subnet_ids         = [aws_subnet.test1.id]
 }
 `
 }
@@ -680,7 +680,7 @@ func testAccAwsFsxLustreFileSystemConfigStorageCapacity(storageCapacity int) str
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = %[1]d
-  subnet_ids       = ["${aws_subnet.test1.id}"]
+  subnet_ids       = [aws_subnet.test1.id]
 }
 `, storageCapacity)
 }
@@ -689,7 +689,7 @@ func testAccAwsFsxLustreFileSystemConfigSubnetIds1() string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
-  subnet_ids       = ["${aws_subnet.test1.id}"]
+  subnet_ids       = [aws_subnet.test1.id]
 }
 `
 }
@@ -698,7 +698,7 @@ func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string 
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
-  subnet_ids       = ["${aws_subnet.test1.id}"]
+  subnet_ids       = [aws_subnet.test1.id]
 
   tags = {
     %[1]q = %[2]q
@@ -711,7 +711,7 @@ func testAccAwsFsxLustreFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagVa
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
-  subnet_ids       = ["${aws_subnet.test1.id}"]
+  subnet_ids       = [aws_subnet.test1.id]
 
   tags = {
     %[1]q = %[2]q
@@ -725,7 +725,7 @@ func testAccAwsFsxLustreFileSystemConfigWeeklyMaintenanceStartTime(weeklyMainten
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity              = 1200
-  subnet_ids                    = ["${aws_subnet.test1.id}"]
+  subnet_ids                    = [aws_subnet.test1.id]
   weekly_maintenance_start_time = %[1]q
 }
 `, weeklyMaintenanceStartTime)
@@ -734,9 +734,9 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccAwsFsxLustreFileSystemDeploymentType(deploymentType string) string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity              = 1200
-  subnet_ids                    = ["${aws_subnet.test1.id}"]
-  deployment_type               = %[1]q
+  storage_capacity = 1200
+  subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = %[1]q
 }
 `, deploymentType)
 }
@@ -744,10 +744,10 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccAwsFsxLustreFileSystemPersistentDeploymentType(perUnitStorageThroughput int) string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity              = 1200
-  subnet_ids                    = ["${aws_subnet.test1.id}"]
-  deployment_type               = "PERSISTENT_1"
-  per_unit_storage_throughput   = %[1]d
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = %[1]d
 }
 `, perUnitStorageThroughput)
 }
