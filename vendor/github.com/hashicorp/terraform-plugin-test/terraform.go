@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	getter "github.com/hashicorp/go-getter"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	getter "github.com/hashicorp/go-getter"
 )
 
 const releaseHost = "https://releases.hashicorp.com"
@@ -82,7 +83,7 @@ func InstallTerraform(tfVersion string) (string, error) {
 }
 
 // getTerraformEnv returns the appropriate Env for the Terraform command.
-func getTerraformEnv() []string {
+func (wd *WorkingDir) getTerraformEnv() []string {
 	var env []string
 	for _, e := range os.Environ() {
 		env = append(env, e)
@@ -100,9 +101,16 @@ func getTerraformEnv() []string {
 	env = append(env, "TF_LOG=") // so logging can't pollute our stderr output
 	env = append(env, "TF_INPUT=0")
 
+	// don't propagate the magic cookie
+	env = append(env, "TF_PLUGIN_MAGIC_COOKIE=")
+
 	if p := os.Getenv("TF_ACC_LOG_PATH"); p != "" {
 		env = append(env, "TF_LOG=TRACE")
 		env = append(env, "TF_LOG_PATH="+p)
+	}
+
+	for k, v := range wd.env {
+		env = append(env, k+"="+v)
 	}
 	return env
 }
@@ -113,7 +121,7 @@ func (wd *WorkingDir) runTerraform(args ...string) error {
 	allArgs := []string{"terraform"}
 	allArgs = append(allArgs, args...)
 
-	env := getTerraformEnv()
+	env := wd.getTerraformEnv()
 
 	var errBuf strings.Builder
 
@@ -138,7 +146,7 @@ func (wd *WorkingDir) runTerraformJSON(target interface{}, args ...string) error
 	allArgs := []string{"terraform"}
 	allArgs = append(allArgs, args...)
 
-	env := getTerraformEnv()
+	env := wd.getTerraformEnv()
 
 	var outBuf bytes.Buffer
 	var errBuf strings.Builder

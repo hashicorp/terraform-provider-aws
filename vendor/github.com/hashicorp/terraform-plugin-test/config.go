@@ -27,7 +27,7 @@ func DiscoverConfig(pluginName string, sourceDir string) (*Config, error) {
 	if tfVersion == "" {
 		tfExec = FindTerraform()
 		if tfExec == "" {
-			return nil, fmt.Errorf("unable to find 'terraform' executable for testing; either place it in PATH or set TF_ACC_TERRAFORM_PATH explicitly to a direct executable path")
+			return nil, fmt.Errorf("unable to find 'terraform' executable for testing; either set a version with TF_ACC_TERRAFORM_VERSION, place it in PATH, or set TF_ACC_TERRAFORM_PATH explicitly to a direct executable path")
 		}
 	} else {
 		tfExec, err = InstallTerraform(tfVersion)
