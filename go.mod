@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-version v1.2.1
-	github.com/hashicorp/terraform-plugin-sdk v1.14.0
+	github.com/hashicorp/terraform-plugin-sdk/v2/v2 v2.0.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.1
 	github.com/hashicorp/terraform-plugin-test v1.4.0 // indirect
 	github.com/hashicorp/vault v0.10.4
