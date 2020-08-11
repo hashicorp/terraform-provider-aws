@@ -569,7 +569,7 @@ github.com/hashicorp/terraform-config-inspect/tfconfig
 github.com/hashicorp/terraform-exec/tfinstall
 # github.com/hashicorp/terraform-json v0.5.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.14.0
+# github.com/hashicorp/terraform-plugin-sdk v1.15.0
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
@@ -641,8 +641,7 @@ github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfplugin5
 github.com/hashicorp/terraform-plugin-sdk/v2/meta
 github.com/hashicorp/terraform-plugin-sdk/v2/plugin
 github.com/hashicorp/terraform-plugin-sdk/v2/terraform
-# github.com/hashicorp/terraform-plugin-test v1.4.0
-## explicit
+# github.com/hashicorp/terraform-plugin-test v1.4.3
 github.com/hashicorp/terraform-plugin-test
 # github.com/hashicorp/terraform-plugin-test/v2 v2.0.0
 github.com/hashicorp/terraform-plugin-test/v2
