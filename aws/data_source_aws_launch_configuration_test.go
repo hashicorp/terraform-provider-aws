@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
@@ -68,8 +67,7 @@ func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "image_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*", datasourceName, "device_name"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*", datasourceName, "no_device"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_block_device.#", resourceName, "ebs_block_device.#"),
 				),
 			},
 		},
