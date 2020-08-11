@@ -334,7 +334,22 @@ func testAccAWSIAMPolicyConfigDescription(rName, description string) string {
 resource "aws_iam_policy" "test" {
   description = %q
   name        = %q
-  policy      = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:Describe*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
 }
 `, description, rName)
 }
@@ -342,8 +357,23 @@ resource "aws_iam_policy" "test" {
 func testAccAWSIAMPolicyConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name   = %q
-  policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:Describe*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
 }
 `, rName)
 }
@@ -352,7 +382,22 @@ func testAccAWSIAMPolicyConfigNamePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name_prefix = %q
-  policy      = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:Describe*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
 }
 `, namePrefix)
 }
@@ -360,9 +405,24 @@ resource "aws_iam_policy" "test" {
 func testAccAWSIAMPolicyConfigPath(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name   = %q
-  path   = %q
-  policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:Describe*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+  name = %q
+  path = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
 }
 `, rName, path)
 }

@@ -388,6 +388,7 @@ resource "aws_iam_user_policy" "foo_%[1]s" {
   }
 }
 EOF
+
 }
 `, suffix)
 }
@@ -397,8 +398,8 @@ func testAccIAMUserPolicyConfig_name(rInt int, policy string) string {
 %s
 
 resource "aws_iam_user_policy" "foo" {
-  name = "foo_policy_%d"
-  user = "${aws_iam_user.user.name}"
+  name   = "foo_policy_%d"
+  user   = aws_iam_user.user.name
   policy = %v
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy)
@@ -410,8 +411,8 @@ func testAccIAMUserPolicyConfig_namePrefix(rInt int, policy string) string {
 
 resource "aws_iam_user_policy" "foo" {
   name_prefix = "foo_policy_"
-  user = "${aws_iam_user.user.name}"
-  policy = %v
+  user        = aws_iam_user.user.name
+  policy      = %v
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
 }
@@ -421,7 +422,7 @@ func testAccIAMUserPolicyConfig_generatedName(rInt int, policy string) string {
 %s
 
 resource "aws_iam_user_policy" "foo" {
-  user = "${aws_iam_user.user.name}"
+  user   = aws_iam_user.user.name
   policy = %v
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
@@ -432,14 +433,14 @@ func testAccIAMUserPolicyConfig_multiplePolicies(rInt int, policy1, policy2 stri
 %[1]s
 
 resource "aws_iam_user_policy" "foo" {
-  name = "foo_policy_%[2]d"
-  user = "${aws_iam_user.user.name}"
+  name   = "foo_policy_%[2]d"
+  user   = aws_iam_user.user.name
   policy = %[3]v
 }
 
 resource "aws_iam_user_policy" "bar" {
-  name = "bar_policy_%[2]d"
-  user = "${aws_iam_user.user.name}"
+  name   = "bar_policy_%[2]d"
+  user   = aws_iam_user.user.name
   policy = %[4]v
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy1, policy2)
