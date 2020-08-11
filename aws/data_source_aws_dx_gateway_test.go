@@ -23,7 +23,7 @@ func TestAccDataSourceAwsDxGateway_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`Direct Connect Gateway not found`),
 			},
 			{
-				Config: testAccDataSourceAwsDxGatewayConfig_Name(rName, randIntRange(64512, 65534)),
+				Config: testAccDataSourceAwsDxGatewayConfig_Name(rName, acctest.RandIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "amazon_side_asn", resourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),

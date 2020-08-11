@@ -10,7 +10,7 @@ import (
 
 func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayId(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"
@@ -37,7 +37,7 @@ func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 
 func TestAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"

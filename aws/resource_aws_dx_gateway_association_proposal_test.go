@@ -81,7 +81,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -119,7 +119,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -159,7 +159,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
@@ -186,7 +186,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 

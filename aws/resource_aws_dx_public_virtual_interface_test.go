@@ -31,8 +31,8 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 	// DirectConnectClientException: Amazon Address is the broadcast address on its subnet.
 	amazonAddress := "175.45.176.1/28"
 	customerAddress := "175.45.176.2/28"
-	bgpAsn := randIntRange(64512, 65534)
-	vlan := randIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
+	vlan := acctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -82,8 +82,8 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(10))
 	amazonAddress := "175.45.176.3/28"
 	customerAddress := "175.45.176.4/28"
-	bgpAsn := randIntRange(64512, 65534)
-	vlan := randIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
+	vlan := acctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

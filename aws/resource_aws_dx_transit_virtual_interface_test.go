@@ -39,9 +39,9 @@ func testAccAwsDxTransitVirtualInterface_basic(t *testing.T) {
 	resourceName := "aws_dx_transit_virtual_interface.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-transit-vif-%s", acctest.RandString(9))
-	amzAsn := randIntRange(64512, 65534)
-	bgpAsn := randIntRange(64512, 65534)
-	vlan := randIntRange(2049, 4094)
+	amzAsn := acctest.RandIntRange(64512, 65534)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
+	vlan := acctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -111,9 +111,9 @@ func testAccAwsDxTransitVirtualInterface_Tags(t *testing.T) {
 	resourceName := "aws_dx_transit_virtual_interface.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-transit-vif-%s", acctest.RandString(9))
-	amzAsn := randIntRange(64512, 65534)
-	bgpAsn := randIntRange(64512, 65534)
-	vlan := randIntRange(2049, 4094)
+	amzAsn := acctest.RandIntRange(64512, 65534)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
+	vlan := acctest.RandIntRange(2049, 4094)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
