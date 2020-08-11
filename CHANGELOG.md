@@ -1,4 +1,9 @@
 ## 3.2.0 (Unreleased)
+
+ENHANCEMENTS
+
+* Provider upgrade to the Terraform Plugin SDK V2. There should be no breaking changes from a practitioner's perspective. Some validation errors should now feature enhanced messaging. [GH-14432]
+
 ## 3.1.0 (August 07, 2020)
 
 NOTES:
