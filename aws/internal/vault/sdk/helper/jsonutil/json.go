@@ -8,7 +8,7 @@ import (
 	"io"
 
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform-plugin-sdk/internal/vault/sdk/helper/compressutil"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/vault/sdk/helper/compressutil"
 )
 
 // Encodes/Marshals the given object into JSON

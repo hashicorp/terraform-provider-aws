@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/errwrap"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/terraform-plugin-sdk/internal/vault/sdk/helper/jsonutil"
 	"github.com/keybase/go-crypto/openpgp"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/vault/sdk/helper/jsonutil"
 )
 
 const (
