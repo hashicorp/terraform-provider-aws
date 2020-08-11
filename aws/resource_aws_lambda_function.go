@@ -1193,7 +1193,9 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 
 			// Return the newly published values as the read is eventually consistent
-			d.Set("arn", result.FunctionArn)
+			// Return the newly published values as the read is eventually consistent
+			re := regexp.MustCompile(`:[0-9]+$`)
+			d.Set("arn", re.ReplaceAllString(*result.FunctionArn, ""))
 			d.Set("description", result.Description)
 			d.Set("handler", result.Handler)
 			d.Set("memory_size", result.MemorySize)
