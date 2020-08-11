@@ -236,7 +236,7 @@ func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
 			ResourceName:            resourceName,
 			ImportState:             true,
 			ImportStateVerify:       true,
-			ImportStateVerifyIgnore: []string{"apply_immediately"},
+			ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", "apply_immediately"},
 		},
 	}
 
@@ -714,6 +714,7 @@ data "aws_partition" "current" {
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately          = true
+  allow_major_version_upgrade = true
   engine_version             = %q
   replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
   replication_instance_id    = %q

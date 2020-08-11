@@ -91,6 +91,7 @@ resource "aws_dms_replication_instance" "test" {
 The following arguments are supported:
 
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
+* `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
 * `apply_immediately` - (Optional, Default: false) Indicates whether the changes should be applied immediately or during the next maintenance window. Only used when updating an existing resource.
 * `auto_minor_version_upgrade` - (Optional, Default: false) Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availability_zone` - (Optional) The EC2 Availability Zone that the replication instance will be created in.
