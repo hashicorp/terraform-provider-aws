@@ -1180,7 +1180,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		err := resource.Retry(waiter.LambdaFunctionPublishTimeout, func() *resource.RetryError {
-			_, err := conn.PublishVersion(versionReq)
+			//_, err := conn.PublishVersion(versionReq)
+			result, err := conn.PublishVersion(versionReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "in progress") {
 				log.Printf("[DEBUG] Retrying publish of Lambda function (%s) version after error: %s", d.Id(), err)
@@ -1190,6 +1191,19 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
+
+			// Return the newly published values as the read is eventually consistent
+			d.Set("arn", result.FunctionArn)
+			d.Set("description", result.Description)
+			d.Set("handler", result.Handler)
+			d.Set("memory_size", result.MemorySize)
+			d.Set("last_modified", result.LastModified)
+			d.Set("role", result.Role)
+			d.Set("runtime", result.Runtime)
+			d.Set("timeout", result.Timeout)
+			d.Set("source_code_hash", result.CodeSha256)
+			d.Set("source_code_size", result.CodeSize)
+			d.Set("version", result.Version)
 
 			return nil
 		})
@@ -1201,6 +1215,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("error publishing Lambda Function (%s) version: %w", d.Id(), err)
 		}
+
+		return nil
 	}
 
 	return resourceAwsLambdaFunctionRead(d, meta)
