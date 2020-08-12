@@ -2,7 +2,8 @@
 
 ENHANCEMENTS
 
-* Provider upgrade to the Terraform Plugin SDK V2. There should be no breaking changes from a practitioner's perspective. Some validation errors should now feature enhanced messaging. [GH-14432]
+* provider: Upgrade to Terraform Plugin SDK V2. There should be no breaking changes from a practitioner's perspective. Some validation errors should now feature enhanced messaging. [GH-14432]
+* resource/aws_accessanalyzer_analyzer: Support `ORGANIZATION` value in `type` argument [GH-14493]
 
 ## 3.1.0 (August 07, 2020)
 
