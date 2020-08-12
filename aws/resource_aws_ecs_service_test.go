@@ -2811,8 +2811,9 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern {
+      values = ["/static/*"]
+    }
   }
 }
 
