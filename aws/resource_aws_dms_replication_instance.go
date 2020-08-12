@@ -299,7 +299,6 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 	if d.HasChange("engine_version") {
 		if v, ok := d.GetOk("engine_version"); ok {
 			request.EngineVersion = aws.String(v.(string))
-			request.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 			hasChanges = true
 		}
 	}
