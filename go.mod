@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.33.21
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderdocs v0.7.0
-	github.com/bflad/tfproviderlint v0.16.0
+	github.com/bflad/tfproviderlint v0.17.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.29.0
 	github.com/hashicorp/aws-sdk-go-base v0.5.0

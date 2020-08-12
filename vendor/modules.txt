@@ -236,7 +236,7 @@ github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/check/sidenavigation
 github.com/bflad/tfproviderdocs/command
 github.com/bflad/tfproviderdocs/version
-# github.com/bflad/tfproviderlint v0.16.0
+# github.com/bflad/tfproviderlint v0.17.0
 ## explicit
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/analysisutils
@@ -269,6 +269,9 @@ github.com/bflad/tfproviderlint/passes/R011
 github.com/bflad/tfproviderlint/passes/R012
 github.com/bflad/tfproviderlint/passes/R013
 github.com/bflad/tfproviderlint/passes/R014
+github.com/bflad/tfproviderlint/passes/R015
+github.com/bflad/tfproviderlint/passes/R016
+github.com/bflad/tfproviderlint/passes/R017
 github.com/bflad/tfproviderlint/passes/S001
 github.com/bflad/tfproviderlint/passes/S002
 github.com/bflad/tfproviderlint/passes/S003
@@ -325,6 +328,7 @@ github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetokexistscall
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr
+github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetidcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfo
