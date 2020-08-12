@@ -429,8 +429,6 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/golang/snappy v0.0.1
-github.com/golang/snappy
 # github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2
 github.com/golangci/check/cmd/structcheck
 github.com/golangci/check/cmd/varcheck
@@ -510,7 +508,6 @@ github.com/gostaticanalysis/analysisutil
 ## explicit
 github.com/hashicorp/aws-sdk-go-base
 # github.com/hashicorp/errwrap v1.0.0
-## explicit
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-checkpoint v0.5.0
 github.com/hashicorp/go-checkpoint
@@ -589,11 +586,6 @@ github.com/hashicorp/terraform-plugin-sdk/v2/plugin
 github.com/hashicorp/terraform-plugin-sdk/v2/terraform
 # github.com/hashicorp/terraform-plugin-test/v2 v2.0.0
 github.com/hashicorp/terraform-plugin-test/v2
-# github.com/hashicorp/vault v0.10.4
-## explicit
-github.com/hashicorp/vault/helper/compressutil
-github.com/hashicorp/vault/helper/jsonutil
-github.com/hashicorp/vault/helper/pgpkeys
 # github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 github.com/hashicorp/yamux
 # github.com/inconshreveable/mousetrap v1.0.0
