@@ -1,13 +1,12 @@
-// Copyright 2013 The Go Authors. All rights reserved.
+// Copyright 2016 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package edwards25519 implements operations in GF(2**255-19) and on an
-// Edwards curve that is isomorphic to curve25519. See
-// http://ed25519.cr.yp.to/.
 package edwards25519
 
-// This code is a port of the public domain, "ref10" implementation of ed25519
+import "encoding/binary"
+
+// This code is a port of the public domain, “ref10” implementation of ed25519
 // from SUPERCOP.
 
 // FieldElement represents an element of the field GF(2^255 - 19).  An element
@@ -373,7 +372,7 @@ func FeCombine(h *FieldElement, h0, h1, h2, h3, h4, h5, h6, h7, h8, h9 int64) {
 // 10 of them are 2-way parallelizable and vectorizable.
 // Can get away with 11 carries, but then data flow is much deeper.
 //
-// With tighter constraints on inputs can squeeze carries into int32.
+// With tighter constraints on inputs, can squeeze carries into int32.
 func FeMul(h, f, g *FieldElement) {
 	f0 := int64(f[0])
 	f1 := int64(f[1])
@@ -928,7 +927,8 @@ func GeDoubleScalarMultVartime(r *ProjectiveGroupElement, a *[32]byte, A *Extend
 	}
 }
 
-// equal returns 1 if b == c and 0 otherwise.
+// equal returns 1 if b == c and 0 otherwise, assuming that b and c are
+// non-negative.
 func equal(b, c int32) int32 {
 	x := uint32(b ^ c)
 	x--
@@ -1770,4 +1770,24 @@ func ScReduce(out *[32]byte, s *[64]byte) {
 	out[29] = byte(s11 >> 1)
 	out[30] = byte(s11 >> 9)
 	out[31] = byte(s11 >> 17)
+}
+
+// order is the order of Curve25519 in little-endian form.
+var order = [4]uint64{0x5812631a5cf5d3ed, 0x14def9dea2f79cd6, 0, 0x1000000000000000}
+
+// ScMinimal returns true if the given scalar is less than the order of the
+// curve.
+func ScMinimal(scalar *[32]byte) bool {
+	for i := 3; ; i-- {
+		v := binary.LittleEndian.Uint64(scalar[i*8:])
+		if v > order[i] {
+			return false
+		} else if v < order[i] {
+			break
+		} else if i == 0 {
+			return false
+		}
+	}
+
+	return true
 }

@@ -1,25 +1,34 @@
-// Copyright 2013 The Go Authors. All rights reserved.
+// Copyright 2016 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package edwards25519
 
+// These values are from the public domain, “ref10” implementation of ed25519
+// from SUPERCOP.
+
+// d is a constant in the Edwards curve equation.
 var d = FieldElement{
 	-10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116,
 }
 
+// d2 is 2*d.
 var d2 = FieldElement{
 	-21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199,
 }
 
+// SqrtM1 is the square-root of -1 in the field.
 var SqrtM1 = FieldElement{
 	-32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482,
 }
 
+// A is a constant in the Montgomery-form of curve25519.
 var A = FieldElement{
 	486662, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 }
 
+// bi contains precomputed multiples of the base-point. See the Ed25519 paper
+// for a discussion about how these values are used.
 var bi = [8]PreComputedGroupElement{
 	{
 		FieldElement{25967493, -14356035, 29566456, 3660896, -12694345, 4014787, 27544626, -11754271, -6079156, 2047605},
@@ -63,6 +72,8 @@ var bi = [8]PreComputedGroupElement{
 	},
 }
 
+// base contains precomputed multiples of the base-point. See the Ed25519 paper
+// for a discussion about how these values are used.
 var base = [32][8]PreComputedGroupElement{
 	{
 		{
