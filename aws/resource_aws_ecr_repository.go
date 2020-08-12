@@ -230,6 +230,10 @@ func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.Encrypt
 }
 
 func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
+	if ec == nil {
+		return nil
+	}
+
 	config := map[string]interface{}{
 		"encryption_type": aws.StringValue(ec.EncryptionType),
 		"kms_key":         aws.StringValue(ec.KmsKey),
