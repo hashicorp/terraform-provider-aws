@@ -43,7 +43,7 @@ The following arguments are supported:
 
 * `type` - (Required) The type of rule being created. Valid options are `ingress` (inbound)
 or `egress` (outbound).
-* `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id`.
+* `cidr_blocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefix_list_ids` - (Optional) List of prefix list IDs (for allowing access to VPC endpoints).
 Only valid with `egress`.
@@ -53,7 +53,7 @@ Only valid with `egress`.
 * `source_security_group_id` - (Optional) The security group id to allow access to/from,
      depending on the `type`. Cannot be specified with `cidr_blocks` and `self`.
 * `self` - (Optional) If true, the security group itself will be added as
-     a source to this ingress rule. Cannot be specified with `source_security_group_id`.
+     a source to this ingress rule. Cannot be specified with `source_security_group_id`, `cidr_blocks`, or `ipv6_cidr_blocks`.
 * `to_port` - (Required) The end port (or ICMP code if protocol is "icmp").
 * `description` - (Optional) Description of the rule.
 
