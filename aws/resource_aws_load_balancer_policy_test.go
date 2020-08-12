@@ -256,7 +256,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-policy-%d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -287,7 +287,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-policy-%d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -298,11 +298,11 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
-    "${aws_load_balancer_policy.test-policy.policy_name}",
+    aws_load_balancer_policy.test-policy.policy_name,
   ]
 }
 `, rInt, rInt)
@@ -327,7 +327,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-policy-%d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -338,11 +338,11 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
-    "${aws_load_balancer_policy.test-policy.policy_name}",
+    aws_load_balancer_policy.test-policy.policy_name,
   ]
 }
 `, rInt, rInt)

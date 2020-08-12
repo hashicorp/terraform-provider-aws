@@ -37,7 +37,6 @@ func TestAccAWSLightsailDomain_disappears(t *testing.T) {
 	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(5))
 
 	domainDestroy := func(*terraform.State) error {
-
 		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
 		_, err := conn.DeleteDomain(&lightsail.DeleteDomainInput{
 			DomainName: aws.String(lightsailDomainName),
@@ -97,7 +96,6 @@ func testAccCheckAWSLightsailDomainExists(n string, domain *lightsail.Domain) re
 }
 
 func testAccCheckAWSLightsailDomainDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_domain" {
 			continue

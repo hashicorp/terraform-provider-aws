@@ -797,41 +797,43 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "kinesis:GetRecords",
-            "kinesis:GetShardIterator",
-            "kinesis:DescribeStream"
-          ],
-          "Resource": "*"
-      },
-      {
-          "Effect": "Allow",
-          "Action": [
-            "kinesis:ListStreams"
-          ],
-          "Resource": "*"
-      },
-      {
-        "Effect": "Allow",
-        "Action": [
-          "sqs:SendMessage"
-        ],
-        "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:DescribeStream"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:ListStreams"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_kinesis_stream" "test" {
@@ -843,7 +845,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %q
   handler       = "exports.example"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   runtime       = "nodejs12.x"
 }
 `, rName, rName, rName)
@@ -854,8 +856,8 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisStartingPositionTimestamp(rN
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                  = 100
   enabled                     = true
-  event_source_arn            = "${aws_kinesis_stream.test.arn}"
-  function_name               = "${aws_lambda_function.test.arn}"
+  event_source_arn            = aws_kinesis_stream.test.arn
+  function_name               = aws_lambda_function.test.arn
   starting_position           = "AT_TIMESTAMP"
   starting_position_timestamp = %q
 }
@@ -865,12 +867,12 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName string, batchWindow int64) string {
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size                          = 100
-  maximum_batching_window_in_seconds  = %v
-  enabled                             = true
-  event_source_arn                    = "${aws_kinesis_stream.test.arn}"
-  function_name                       = "${aws_lambda_function.test.arn}"
-  starting_position                   = "TRIM_HORIZON"
+  batch_size                         = 100
+  maximum_batching_window_in_seconds = %v
+  enabled                            = true
+  event_source_arn                   = aws_kinesis_stream.test.arn
+  function_name                      = aws_lambda_function.test.arn
+  starting_position                  = "TRIM_HORIZON"
 }
 `, batchWindow)
 }
@@ -878,12 +880,12 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName string, parallelizationFactor int64) string {
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size              = 100
-  parallelization_factor  = %v
-  enabled                 = true
-  event_source_arn        = "${aws_kinesis_stream.test.arn}"
-  function_name           = "${aws_lambda_function.test.arn}"
-  starting_position       = "TRIM_HORIZON"
+  batch_size             = 100
+  parallelization_factor = %v
+  enabled                = true
+  event_source_arn       = aws_kinesis_stream.test.arn
+  function_name          = aws_lambda_function.test.arn
+  starting_position      = "TRIM_HORIZON"
 }
 `, parallelizationFactor)
 }
@@ -891,12 +893,12 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName string, maximumRetryAttempts int64) string {
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size              = 100
-  maximum_retry_attempts  = %v
-  enabled                 = true
-  event_source_arn        = "${aws_kinesis_stream.test.arn}"
-  function_name           = "${aws_lambda_function.test.arn}"
-  starting_position       = "TRIM_HORIZON"
+  batch_size             = 100
+  maximum_retry_attempts = %v
+  enabled                = true
+  event_source_arn       = aws_kinesis_stream.test.arn
+  function_name          = aws_lambda_function.test.arn
+  starting_position      = "TRIM_HORIZON"
 }
 `, maximumRetryAttempts)
 }
@@ -904,12 +906,12 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccAWSLambdaEventSourceMappingConfigKinesisBisectBatch(rName string, bisectBatch bool) string {
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size                      = 100
-  bisect_batch_on_function_error  = %t
-  enabled                         = true
-  event_source_arn                = "${aws_kinesis_stream.test.arn}"
-  function_name                   = "${aws_lambda_function.test.arn}"
-  starting_position               = "TRIM_HORIZON"
+  batch_size                     = 100
+  bisect_batch_on_function_error = %t
+  enabled                        = true
+  event_source_arn               = aws_kinesis_stream.test.arn
+  function_name                  = aws_lambda_function.test.arn
+  starting_position              = "TRIM_HORIZON"
 }
 `, bisectBatch)
 }
@@ -920,8 +922,8 @@ resource "aws_lambda_event_source_mapping" "test" {
   batch_size                    = 100
   maximum_record_age_in_seconds = %v
   enabled                       = true
-  event_source_arn              = "${aws_kinesis_stream.test.arn}"
-  function_name                 = "${aws_lambda_function.test.arn}"
+  event_source_arn              = aws_kinesis_stream.test.arn
+  function_name                 = aws_lambda_function.test.arn
   starting_position             = "TRIM_HORIZON"
 }
 `, maximumRecordAgeInSeconds)
@@ -933,14 +935,15 @@ resource "aws_sqs_queue" "sqs_queue_test" {
   name = "%s"
 }
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size                    = 100
-  enabled                       = true
-  event_source_arn              = "${aws_kinesis_stream.test.arn}"
-  function_name                 = "${aws_lambda_function.test.arn}"
-  starting_position             = "TRIM_HORIZON"
+  batch_size        = 100
+  enabled           = true
+  event_source_arn  = aws_kinesis_stream.test.arn
+  function_name     = aws_lambda_function.test.arn
+  starting_position = "TRIM_HORIZON"
+
   destination_config {
     on_failure {
-      destination_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+      destination_arn = aws_sqs_queue.sqs_queue_test.arn
     }
   }
 }
@@ -968,6 +971,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -979,31 +983,32 @@ resource "aws_iam_policy" "policy_for_role" {
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "kinesis:GetRecords",
-            "kinesis:GetShardIterator",
-            "kinesis:DescribeStream"
-          ],
-          "Resource": "*"
-      },
-      {
-          "Effect": "Allow",
-          "Action": [
-            "kinesis:ListStreams"
-          ],
-          "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:DescribeStream"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:ListStreams"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
 }
 
 resource "aws_kinesis_stream" "kinesis_stream_test" {
@@ -1014,7 +1019,7 @@ resource "aws_kinesis_stream" "kinesis_stream_test" {
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1022,17 +1027,17 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size        = 100
-  event_source_arn  = "${aws_kinesis_stream.kinesis_stream_test.arn}"
+  event_source_arn  = aws_kinesis_stream.kinesis_stream_test.arn
   enabled           = true
   depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-  function_name     = "${aws_lambda_function.lambda_function_test_create.arn}"
+  function_name     = aws_lambda_function.lambda_function_test_create.arn
   starting_position = "TRIM_HORIZON"
 }
 `, roleName, policyName, attName, streamName, funcName, uFuncName)
@@ -1040,97 +1045,6 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
 
 func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName,
 	funcName, uFuncName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-	{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		"Service": "lambda.amazonaws.com"
-		},
-		"Effect": "Allow",
-		"Sid": ""
-	}
-	]
-}
-EOF
-}
-
-resource "aws_iam_policy" "policy_for_role" {
-  name        = "%s"
-  path        = "/"
-  description = "IAM policy for Lambda event mapping testing"
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-			"kinesis:GetRecords",
-			"kinesis:GetShardIterator",
-			"kinesis:DescribeStream"
-			],
-			"Resource": "*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-			"kinesis:ListStreams"
-			],
-			"Resource": "*"
-		}
-	]
-}
-EOF
-}
-
-resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
-  name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
-}
-
-resource "aws_kinesis_stream" "kinesis_stream_test" {
-  name        = "%s"
-  shard_count = 1
-}
-
-resource "aws_lambda_function" "lambda_function_test_create" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-}
-
-resource "aws_lambda_function" "lambda_function_test_update" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-}
-
-resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
-  event_source_arn  = "${aws_kinesis_stream.kinesis_stream_test.arn}"
-  enabled           = true
-  depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-  function_name     = "${aws_lambda_function.lambda_function_test_create.arn}"
-  starting_position = "TRIM_HORIZON"
-}
-`, roleName, policyName, attName, streamName, funcName, uFuncName)
-}
-
-func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName,
-	funcName, uFuncName string) string {
-
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
@@ -1150,6 +1064,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1161,31 +1076,32 @@ resource "aws_iam_policy" "policy_for_role" {
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "kinesis:GetRecords",
-            "kinesis:GetShardIterator",
-            "kinesis:DescribeStream"
-          ],
-          "Resource": "*"
-      },
-      {
-          "Effect": "Allow",
-          "Action": [
-            "kinesis:ListStreams"
-          ],
-          "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:DescribeStream"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:ListStreams"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
 }
 
 resource "aws_kinesis_stream" "kinesis_stream_test" {
@@ -1196,7 +1112,7 @@ resource "aws_kinesis_stream" "kinesis_stream_test" {
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1204,17 +1120,109 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
+  event_source_arn  = aws_kinesis_stream.kinesis_stream_test.arn
+  enabled           = true
+  depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  function_name     = aws_lambda_function.lambda_function_test_create.arn
+  starting_position = "TRIM_HORIZON"
+}
+`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName,
+	funcName, uFuncName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "iam_for_lambda" {
+  name = "%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_policy" "policy_for_role" {
+  name        = "%s"
+  path        = "/"
+  description = "IAM policy for Lambda event mapping testing"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:GetRecords",
+        "kinesis:GetShardIterator",
+        "kinesis:DescribeStream"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:ListStreams"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
+  name       = "%s"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
+}
+
+resource "aws_kinesis_stream" "kinesis_stream_test" {
+  name        = "%s"
+  shard_count = 1
+}
+
+resource "aws_lambda_function" "lambda_function_test_create" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_lambda_function" "lambda_function_test_update" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size        = 200
-  event_source_arn  = "${aws_kinesis_stream.kinesis_stream_test.arn}"
+  event_source_arn  = aws_kinesis_stream.kinesis_stream_test.arn
   enabled           = false
   depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-  function_name     = "${aws_lambda_function.lambda_function_test_update.arn}"
+  function_name     = aws_lambda_function.lambda_function_test_update.arn
   starting_position = "TRIM_HORIZON"
 }
 `, roleName, policyName, attName, streamName, funcName, uFuncName)
@@ -1241,6 +1249,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1252,22 +1261,23 @@ resource "aws_iam_policy" "policy_for_role" {
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "sqs:*"
-          ],
-          "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:*"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
 }
 
 resource "aws_sqs_queue" "sqs_queue_test" {
@@ -1277,7 +1287,7 @@ resource "aws_sqs_queue" "sqs_queue_test" {
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1285,24 +1295,23 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 10
-  event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+  event_source_arn = aws_sqs_queue.sqs_queue_test.arn
   enabled          = true
   depends_on       = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-  function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
+  function_name    = aws_lambda_function.lambda_function_test_create.arn
 }
 `, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName,
 	funcName, uFuncName string) string {
-
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
@@ -1322,6 +1331,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1333,22 +1343,23 @@ resource "aws_iam_policy" "policy_for_role" {
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "sqs:*"
-          ],
-          "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:*"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
 }
 
 resource "aws_sqs_queue" "sqs_queue_test" {
@@ -1358,7 +1369,7 @@ resource "aws_sqs_queue" "sqs_queue_test" {
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1366,17 +1377,17 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 5
-  event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+  event_source_arn = aws_sqs_queue.sqs_queue_test.arn
   enabled          = false
   depends_on       = ["aws_iam_policy_attachment.policy_attachment_for_role"]
-  function_name    = "${aws_lambda_function.lambda_function_test_update.arn}"
+  function_name    = aws_lambda_function.lambda_function_test_update.arn
 }
 `, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
@@ -1401,6 +1412,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1412,22 +1424,23 @@ resource "aws_iam_policy" "policy_for_role" {
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "sqs:*"
-          ],
-          "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:*"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%[3]s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
 }
 
 resource "aws_sqs_queue" "sqs_queue_test" {
@@ -1437,14 +1450,14 @@ resource "aws_sqs_queue" "sqs_queue_test" {
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[5]s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 5
-  event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
+  event_source_arn = aws_sqs_queue.sqs_queue_test.arn
   depends_on       = ["aws_iam_policy_attachment.policy_attachment_for_role"]
   enabled          = false
   function_name    = "%[5]s"

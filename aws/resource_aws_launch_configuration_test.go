@@ -623,7 +623,7 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
-  
+
   filter {
     name   = "root-device-type"
     values = ["ebs"]
@@ -639,12 +639,12 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
 
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
@@ -710,8 +710,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
   availability_zone = "us-west-2a"
 
   tags = {
@@ -720,10 +720,10 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_launch_configuration" "test" {
-  name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t3.nano"
-  user_data = "testtest-user-data"
+  name_prefix                 = "tf-acc-test-%d"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t3.nano"
+  user_data                   = "testtest-user-data"
   associate_public_ip_address = true
 
   root_block_device {
@@ -738,28 +738,31 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationConfig() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "m1.small"
-  user_data = "testtest-user-data"
+  name                        = "tf-acc-test-%d"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "m1.small"
+  user_data                   = "testtest-user-data"
   associate_public_ip_address = true
 
   root_block_device {
     volume_type = "gp2"
     volume_size = 11
   }
+
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 9
   }
+
   ebs_block_device {
     device_name = "/dev/sdc"
     volume_size = 10
     volume_type = "io1"
-    iops = 100
+    iops        = 100
   }
+
   ephemeral_block_device {
-    device_name = "/dev/sde"
+    device_name  = "/dev/sde"
     virtual_name = "ephemeral0"
   }
 }
@@ -769,10 +772,10 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationWithSpotPriceConfig() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu.id}"
+  name          = "tf-acc-test-%d"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
-  spot_price = "0.01"
+  spot_price    = "0.01"
 }
 `, acctest.RandInt())
 }
@@ -780,9 +783,9 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationNoNameConfig() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
-  user_data = "testtest-user-data-change"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  user_data                   = "testtest-user-data-change"
   associate_public_ip_address = false
 }
 `
@@ -791,10 +794,10 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationPrefixNameConfig() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
-  name_prefix = "tf-acc-test-"
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
-  user_data = "testtest-user-data-change"
+  name_prefix                 = "tf-acc-test-"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  user_data                   = "testtest-user-data-change"
   associate_public_ip_address = false
 }
 `
@@ -803,18 +806,19 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationWithEncryption() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
   associate_public_ip_address = false
 
   root_block_device {
     volume_type = "gp2"
     volume_size = 11
   }
+
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 9
-    encrypted = true
+    encrypted   = true
   }
 }
 `
@@ -823,18 +827,19 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationWithEncryptionUpdated() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
   associate_public_ip_address = false
 
   root_block_device {
     volume_type = "gp2"
     volume_size = 11
   }
+
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 10
-    encrypted = true
+    encrypted   = true
   }
 }
 `
@@ -843,25 +848,26 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
-    cidr_block = "10.0.0.0/16"
-    enable_classiclink = true
+  cidr_block         = "10.0.0.0/16"
+  enable_classiclink = true
+
   tags = {
-        Name = "terraform-testacc-launch-configuration-with-vpc-classic-link"
-    }
+    Name = "terraform-testacc-launch-configuration-with-vpc-classic-link"
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "tf-acc-test-%[1]d"
-  vpc_id = "${aws_vpc.test.id}"
+  name   = "tf-acc-test-%[1]d"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_launch_configuration" "test" {
-  name = "tf-acc-test-%[1]d"
-  image_id = "${data.aws_ami.ubuntu.id}"
+  name          = "tf-acc-test-%[1]d"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
 
-  vpc_classic_link_id = "${aws_vpc.test.id}"
-  vpc_classic_link_security_groups = ["${aws_security_group.test.id}"]
+  vpc_classic_link_id              = aws_vpc.test.id
+  vpc_classic_link_security_groups = [aws_security_group.test.id]
 }
 `, rInt)
 }
@@ -869,7 +875,8 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationConfig_withIAMProfile(rInt int) string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-  name  = "tf-acc-test-%[1]d"
+  name = "tf-acc-test-%[1]d"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -885,6 +892,7 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_instance_profile" "profile" {
@@ -893,9 +901,9 @@ resource "aws_iam_instance_profile" "profile" {
 }
 
 resource "aws_launch_configuration" "test" {
-  image_id             = "${data.aws_ami.ubuntu.id}"
+  image_id             = data.aws_ami.ubuntu.id
   instance_type        = "t2.nano"
-  iam_instance_profile = "${aws_iam_instance_profile.profile.name}"
+  iam_instance_profile = aws_iam_instance_profile.profile.name
 }
 `, rInt)
 }
@@ -903,12 +911,13 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt int) string {
 	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix = "tf-acc-test-%d"
-  image_id = "${data.aws_ami.ubuntu.id}"
+  name_prefix   = "tf-acc-test-%d"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "m1.small"
+
   ebs_block_device {
     device_name = "/dev/sda2"
-    no_device = true
+    no_device   = true
   }
 }
 `, rInt)
@@ -917,9 +926,9 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationConfig_userData() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
-  user_data = "foo:-with-character's"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  user_data                   = "foo:-with-character's"
   associate_public_ip_address = false
 }
 `
@@ -928,9 +937,9 @@ resource "aws_launch_configuration" "test" {
 func testAccAWSLaunchConfigurationConfig_userDataBase64() string {
 	return testAccAWSLaunchConfigurationConfig_ami() + `
 resource "aws_launch_configuration" "test" {
-  image_id = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
-  user_data_base64 = "${base64encode("hello world")}"
+  image_id                    = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  user_data_base64            = base64encode("hello world")
   associate_public_ip_address = false
 }
 `
