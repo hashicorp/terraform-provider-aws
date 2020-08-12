@@ -6,20 +6,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccAwsOrganizationsAccount_basic(t *testing.T) {
-	t.Skip("AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
 	rInt := acctest.RandInt()
@@ -55,14 +55,14 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 }
 
 func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
-	t.Skip("AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
 	rInt := acctest.RandInt()
@@ -101,14 +101,14 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 }
 
 func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
-	t.Skip("AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+	TestAccSkip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 
 	if !ok {
-		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+		TestAccSkip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
 	}
 
 	rInt := acctest.RandInt()

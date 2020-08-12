@@ -10,9 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	apigatewayv2DefaultStageName = "$default"
 )
 
 func resourceAwsApiGatewayV2Stage() *schema.Resource {
@@ -37,9 +41,6 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateArn,
-							StateFunc: func(v interface{}) string {
-								return strings.TrimSuffix(v.(string), ":*")
-							},
 						},
 						"format": {
 							Type:     schema.TypeString,
@@ -87,7 +88,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 						"logging_level": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  apigatewayv2.LoggingLevelOff,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								apigatewayv2.LoggingLevelError,
 								apigatewayv2.LoggingLevelInfo,
@@ -108,6 +109,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 			"deployment_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -147,7 +149,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 						"logging_level": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  apigatewayv2.LoggingLevelOff,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								apigatewayv2.LoggingLevelError,
 								apigatewayv2.LoggingLevelInfo,
@@ -183,8 +185,19 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
+	apiId := d.Get("api_id").(string)
+
+	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
+		ApiId: aws.String(apiId),
+	})
+	if err != nil {
+		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+	}
+
+	protocolType := aws.StringValue(apiOutput.ProtocolType)
+
 	req := &apigatewayv2.CreateStageInput{
-		ApiId:      aws.String(d.Get("api_id").(string)),
+		ApiId:      aws.String(apiId),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
 		StageName:  aws.String(d.Get("name").(string)),
 		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Apigatewayv2Tags(),
@@ -196,7 +209,7 @@ func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}
 		req.ClientCertificateId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("default_route_settings"); ok {
-		req.DefaultRouteSettings = expandApiGatewayV2DefaultRouteSettings(v.([]interface{}))
+		req.DefaultRouteSettings = expandApiGatewayV2DefaultRouteSettings(v.([]interface{}), protocolType)
 	}
 	if v, ok := d.GetOk("deployment_id"); ok {
 		req.DeploymentId = aws.String(v.(string))
@@ -205,7 +218,7 @@ func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}
 		req.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_settings"); ok {
-		req.RouteSettings = expandApiGatewayV2RouteSettings(v.(*schema.Set))
+		req.RouteSettings = expandApiGatewayV2RouteSettings(v.(*schema.Set), protocolType)
 	}
 	if v, ok := d.GetOk("stage_variables"); ok {
 		req.StageVariables = stringMapToPointers(v.(map[string]interface{}))
@@ -261,15 +274,6 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
-	executionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "execute-api",
-		Region:    region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
-	}.String()
-	d.Set("execution_arn", executionArn)
-	d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
 	d.Set("name", stageName)
 	err = d.Set("route_settings", flattenApiGatewayV2RouteSettings(resp.RouteSettings))
 	if err != nil {
@@ -283,6 +287,33 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
+	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
+		ApiId: aws.String(apiId),
+	})
+	if err != nil {
+		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+	}
+
+	switch aws.StringValue(apiOutput.ProtocolType) {
+	case apigatewayv2.ProtocolTypeWebsocket:
+		executionArn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "execute-api",
+			Region:    region,
+			AccountID: meta.(*AWSClient).accountid,
+			Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
+		}.String()
+		d.Set("execution_arn", executionArn)
+		d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
+	case apigatewayv2.ProtocolTypeHttp:
+		d.Set("execution_arn", "")
+		if stageName == apigatewayv2DefaultStageName {
+			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/", apiId, region))
+		} else {
+			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
+		}
+	}
+
 	return nil
 }
 
@@ -292,8 +323,19 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
 		"route_settings", "stage_variables") {
+		apiId := d.Get("api_id").(string)
+
+		apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
+			ApiId: aws.String(apiId),
+		})
+		if err != nil {
+			return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+		}
+
+		protocolType := aws.StringValue(apiOutput.ProtocolType)
+
 		req := &apigatewayv2.UpdateStageInput{
-			ApiId:     aws.String(d.Get("api_id").(string)),
+			ApiId:     aws.String(apiId),
 			StageName: aws.String(d.Id()),
 		}
 		if d.HasChange("access_log_settings") {
@@ -306,7 +348,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 			req.ClientCertificateId = aws.String(d.Get("client_certificate_id").(string))
 		}
 		if d.HasChange("default_route_settings") {
-			req.DefaultRouteSettings = expandApiGatewayV2DefaultRouteSettings(d.Get("default_route_settings").([]interface{}))
+			req.DefaultRouteSettings = expandApiGatewayV2DefaultRouteSettings(d.Get("default_route_settings").([]interface{}), protocolType)
 		}
 		if d.HasChange("deployment_id") {
 			req.DeploymentId = aws.String(d.Get("deployment_id").(string))
@@ -315,7 +357,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 			req.Description = aws.String(d.Get("description").(string))
 		}
 		if d.HasChange("route_settings") {
-			req.RouteSettings = expandApiGatewayV2RouteSettings(d.Get("route_settings").(*schema.Set))
+			req.RouteSettings = expandApiGatewayV2RouteSettings(d.Get("route_settings").(*schema.Set), protocolType)
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
@@ -332,7 +374,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		log.Printf("[DEBUG] Updating API Gateway v2 stage: %s", req)
-		_, err := conn.UpdateStage(req)
+		_, err = conn.UpdateStage(req)
 		if err != nil {
 			return fmt.Errorf("error updating API Gateway v2 stage (%s): %s", d.Id(), err)
 		}
@@ -424,7 +466,7 @@ func flattenApiGatewayV2AccessLogSettings(settings *apigatewayv2.AccessLogSettin
 	}}
 }
 
-func expandApiGatewayV2DefaultRouteSettings(vSettings []interface{}) *apigatewayv2.RouteSettings {
+func expandApiGatewayV2DefaultRouteSettings(vSettings []interface{}, protocolType string) *apigatewayv2.RouteSettings {
 	routeSettings := &apigatewayv2.RouteSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
@@ -432,13 +474,13 @@ func expandApiGatewayV2DefaultRouteSettings(vSettings []interface{}) *apigateway
 	}
 	mSettings := vSettings[0].(map[string]interface{})
 
-	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok {
+	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 		routeSettings.DataTraceEnabled = aws.Bool(vDataTraceEnabled)
 	}
 	if vDetailedMetricsEnabled, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
 		routeSettings.DetailedMetricsEnabled = aws.Bool(vDetailedMetricsEnabled)
 	}
-	if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" {
+	if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 		routeSettings.LoggingLevel = aws.String(vLoggingLevel)
 	}
 	if vThrottlingBurstLimit, ok := mSettings["throttling_burst_limit"].(int); ok {
@@ -465,7 +507,7 @@ func flattenApiGatewayV2DefaultRouteSettings(routeSettings *apigatewayv2.RouteSe
 	}}
 }
 
-func expandApiGatewayV2RouteSettings(vSettings *schema.Set) map[string]*apigatewayv2.RouteSettings {
+func expandApiGatewayV2RouteSettings(vSettings *schema.Set, protocolType string) map[string]*apigatewayv2.RouteSettings {
 	settings := map[string]*apigatewayv2.RouteSettings{}
 
 	for _, v := range vSettings.List() {
@@ -473,13 +515,13 @@ func expandApiGatewayV2RouteSettings(vSettings *schema.Set) map[string]*apigatew
 
 		mSettings := v.(map[string]interface{})
 
-		if v, ok := mSettings["data_trace_enabled"].(bool); ok {
+		if v, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 			routeSettings.DataTraceEnabled = aws.Bool(v)
 		}
 		if v, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
 			routeSettings.DetailedMetricsEnabled = aws.Bool(v)
 		}
-		if v, ok := mSettings["logging_level"].(string); ok {
+		if v, ok := mSettings["logging_level"].(string); ok && v != "" && protocolType == apigatewayv2.ProtocolTypeWebsocket {
 			routeSettings.LoggingLevel = aws.String(v)
 		}
 		if v, ok := mSettings["throttling_burst_limit"].(int); ok {

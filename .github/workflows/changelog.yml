@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - 'release/**'
   pull_request:
     paths:
       - CHANGELOG.md
@@ -37,7 +38,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2
         continue-on-error: true
         timeout-minutes: 2
         with:

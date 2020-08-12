@@ -22,14 +22,14 @@ resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
 resource "aws_ec2_traffic_mirror_target" "target" {
-  network_load_balancer_arn = "${aws_lb.lb.arn}"
+  network_load_balancer_arn = aws_lb.lb.arn
 }
 
 resource "aws_ec2_traffic_mirror_session" "session" {
   description              = "traffic mirror session - terraform example"
-  network_interface_id     = "${aws_instance.test.primary_network_interface_id}"
-  traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.filter.id}"
-  traffic_mirror_target_id = "${aws_ec2_traffic_mirror_target.target.id}"
+  network_interface_id     = aws_instance.test.primary_network_interface_id
+  traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
+  traffic_mirror_target_id = aws_ec2_traffic_mirror_target.target.id
 }
 ```
 
@@ -50,6 +50,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the traffic mirror session.
 * `id` - The name of the session.
 
 ## Import

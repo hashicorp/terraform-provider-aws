@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsAcmCertificateValidation() *schema.Resource {
@@ -78,7 +78,10 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
-		return resource.NonRetryableError(resourceAwsAcmCertificateValidationRead(d, meta))
+		if err := resourceAwsAcmCertificateValidationRead(d, meta); err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = acmconn.DescribeCertificate(params)

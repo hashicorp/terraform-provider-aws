@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
+func TestAccDataSourceAwsDxGateway_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway.test"
 	datasourceName := "data.aws_dx_gateway.test"
@@ -48,7 +48,7 @@ resource "aws_dx_gateway" "test" {
 }
 
 data "aws_dx_gateway" "test" {
-  name = "${aws_dx_gateway.test.name}"
+  name = aws_dx_gateway.test.name
 }
 `, rBgpAsn+1, rName, rBgpAsn, rName)
 }

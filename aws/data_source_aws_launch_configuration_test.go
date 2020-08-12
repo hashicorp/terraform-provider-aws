@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
@@ -52,10 +52,10 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foo" {
   name                        = "terraform-test-%d"
-  image_id                    = "ami-21f78e11"
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "m1.small"
   associate_public_ip_address = true
   user_data                   = "foobar-user-data"
@@ -84,31 +84,31 @@ resource "aws_launch_configuration" "foo" {
 }
 
 data "aws_launch_configuration" "foo" {
-  name = "${aws_launch_configuration.foo.name}"
+  name = aws_launch_configuration.foo.name
 }
 `, rInt)
 }
 
 func testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
 
 resource "aws_security_group" "test" {
   name   = "terraform-test_%d"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_launch_configuration" "test" {
   name            = "terraform-test-%d"
-  image_id        = "ami-21f78e11"
+  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "m1.small"
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups = [aws_security_group.test.id]
 }
 
 data "aws_launch_configuration" "foo" {
-  name = "${aws_launch_configuration.test.name}"
+  name = aws_launch_configuration.test.name
 }
 `, rInt, rInt)
 }

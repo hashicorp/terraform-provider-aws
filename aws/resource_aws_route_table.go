@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -50,15 +50,21 @@ func resourceAwsRouteTable() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validateIpv4CIDRNetworkAddress,
+							),
 						},
 
 						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validateIpv6CIDRNetworkAddress,
+							),
 						},
 
 						"egress_only_gateway_id": {
@@ -228,6 +234,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("route", route)
 
+	// Tags
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}

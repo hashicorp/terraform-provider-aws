@@ -327,6 +327,8 @@ func (c *ServiceCatalog) AssociateProductWithPortfolioRequest(input *AssociatePr
 //
 // Associates the specified product with the specified portfolio.
 //
+// A delegated admin is authorized to invoke this command.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -851,6 +853,8 @@ func (c *ServiceCatalog) CreateConstraintRequest(input *CreateConstraintInput) (
 //
 // Creates a constraint.
 //
+// A delegated admin is authorized to invoke this command.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -941,6 +945,8 @@ func (c *ServiceCatalog) CreatePortfolioRequest(input *CreatePortfolioInput) (re
 //
 // Creates a portfolio.
 //
+// A delegated admin is authorized to invoke this command.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1030,8 +1036,17 @@ func (c *ServiceCatalog) CreatePortfolioShareRequest(input *CreatePortfolioShare
 //
 // Shares the specified portfolio with the specified account or organization
 // node. Shares to an organization node can only be created by the master account
-// of an Organization. AWSOrganizationsAccess must be enabled in order to create
-// a portfolio share to an organization node.
+// of an organization or by a delegated administrator. You can share portfolios
+// to an organization, an organizational unit, or a specific account.
+//
+// Note that if a delegated admin is de-registered, they can no longer create
+// portfolio shares.
+//
+// AWSOrganizationsAccess must be enabled in order to create a portfolio share
+// to an organization node.
+//
+// You can't share a shared resource. This includes portfolios that contain
+// a shared product.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1127,6 +1142,8 @@ func (c *ServiceCatalog) CreateProductRequest(input *CreateProductInput) (req *r
 // CreateProduct API operation for AWS Service Catalog.
 //
 // Creates a product.
+//
+// A delegated admin is authorized to invoke this command.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1577,6 +1594,8 @@ func (c *ServiceCatalog) DeleteConstraintRequest(input *DeleteConstraintInput) (
 //
 // Deletes the specified constraint.
 //
+// A delegated admin is authorized to invoke this command.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1662,6 +1681,8 @@ func (c *ServiceCatalog) DeletePortfolioRequest(input *DeletePortfolioInput) (re
 //
 // You cannot delete a portfolio if it was shared with you or if it has associated
 // products, users, constraints, or shared accounts.
+//
+// A delegated admin is authorized to invoke this command.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1754,7 +1775,10 @@ func (c *ServiceCatalog) DeletePortfolioShareRequest(input *DeletePortfolioShare
 //
 // Stops sharing the specified portfolio with the specified account or organization
 // node. Shares to an organization node can only be deleted by the master account
-// of an Organization.
+// of an organization or by a delegated administrator.
+//
+// Note that if a delegated admin is de-registered, portfolio shares created
+// from that account are removed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1849,6 +1873,8 @@ func (c *ServiceCatalog) DeleteProductRequest(input *DeleteProductInput) (req *r
 //
 // You cannot delete a product if it was shared with you or is associated with
 // a portfolio.
+//
+// A delegated admin is authorized to invoke this command.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2449,6 +2475,8 @@ func (c *ServiceCatalog) DescribePortfolioRequest(input *DescribePortfolioInput)
 //
 // Gets information about the specified portfolio.
 //
+// A delegated admin is authorized to invoke this command.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2527,7 +2555,8 @@ func (c *ServiceCatalog) DescribePortfolioShareStatusRequest(input *DescribePort
 // DescribePortfolioShareStatus API operation for AWS Service Catalog.
 //
 // Gets the status of the specified portfolio share operation. This API can
-// only be called by the master account in the organization.
+// only be called by the master account in the organization or by a delegated
+// admin.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2707,6 +2736,9 @@ func (c *ServiceCatalog) DescribeProductAsAdminRequest(input *DescribeProductAsA
 // Returned Error Types:
 //   * ResourceNotFoundException
 //   The specified resource was not found.
+//
+//   * InvalidParametersException
+//   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductAsAdmin
 func (c *ServiceCatalog) DescribeProductAsAdmin(input *DescribeProductAsAdminInput) (*DescribeProductAsAdminOutput, error) {
@@ -3030,6 +3062,9 @@ func (c *ServiceCatalog) DescribeProvisioningArtifactRequest(input *DescribeProv
 // Returned Error Types:
 //   * ResourceNotFoundException
 //   The specified resource was not found.
+//
+//   * InvalidParametersException
+//   One or more parameters provided to the operation are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningArtifact
 func (c *ServiceCatalog) DescribeProvisioningArtifact(input *DescribeProvisioningArtifactInput) (*DescribeProvisioningArtifactOutput, error) {
@@ -3528,6 +3563,11 @@ func (c *ServiceCatalog) DisableAWSOrganizationsAccessRequest(input *DisableAWSO
 // with your organization structure if it changes after calling this API. This
 // API can only be called by the master account in the organization.
 //
+// This API can't be invoked if there are active delegated administrators in
+// the organization.
+//
+// Note that a delegated administrator is not authorized to invoke DisableAWSOrganizationsAccess.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3778,6 +3818,8 @@ func (c *ServiceCatalog) DisassociateProductFromPortfolioRequest(input *Disassoc
 // DisassociateProductFromPortfolio API operation for AWS Service Catalog.
 //
 // Disassociates the specified product from the specified portfolio.
+//
+// A delegated admin is authorized to invoke this command.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4038,6 +4080,8 @@ func (c *ServiceCatalog) EnableAWSOrganizationsAccessRequest(input *EnableAWSOrg
 // By calling this API Service Catalog will make a call to organizations:EnableAWSServiceAccess
 // on your behalf so that your shares can be in sync with any changes in your
 // AWS Organizations structure.
+//
+// Note that a delegated administrator is not authorized to invoke EnableAWSOrganizationsAccess.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4300,7 +4344,8 @@ func (c *ServiceCatalog) GetAWSOrganizationsAccessStatusRequest(input *GetAWSOrg
 // GetAWSOrganizationsAccessStatus API operation for AWS Service Catalog.
 //
 // Get the Access Status for AWS Organization portfolio share feature. This
-// API can only be called by the master account in the organization.
+// API can only be called by the master account in the organization or by a
+// delegated admin.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4951,7 +4996,10 @@ func (c *ServiceCatalog) ListOrganizationPortfolioAccessRequest(input *ListOrgan
 // ListOrganizationPortfolioAccess API operation for AWS Service Catalog.
 //
 // Lists the organization nodes that have access to the specified portfolio.
-// This API can only be called by the master account in the organization.
+// This API can only be called by the master account in the organization or
+// by a delegated admin.
+//
+// If a delegated admin is de-registered, they can no longer perform this operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5095,6 +5143,10 @@ func (c *ServiceCatalog) ListPortfolioAccessRequest(input *ListPortfolioAccessIn
 // ListPortfolioAccess API operation for AWS Service Catalog.
 //
 // Lists the account IDs that have access to the specified portfolio.
+//
+// A delegated admin can list the accounts that have access to the shared portfolio.
+// Note that if a delegated admin is de-registered, they can no longer perform
+// this operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10256,7 +10308,11 @@ type CreateServiceActionInput struct {
 	//
 	// Name
 	//
-	// The name of the AWS Systems Manager Document. For example, AWS-RestartEC2Instance.
+	// The name of the AWS Systems Manager document (SSM document). For example,
+	// AWS-RestartEC2Instance.
+	//
+	// If you are using a shared SSM document, you must provide the ARN instead
+	// of the name.
 	//
 	// Version
 	//
@@ -11491,9 +11547,10 @@ type DescribeProductAsAdminInput struct {
 	AcceptLanguage *string `type:"string"`
 
 	// The product identifier.
-	//
-	// Id is a required field
-	Id *string `min:"1" type:"string" required:"true"`
+	Id *string `min:"1" type:"string"`
+
+	// The product name.
+	Name *string `type:"string"`
 }
 
 // String returns the string representation
@@ -11509,9 +11566,6 @@ func (s DescribeProductAsAdminInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeProductAsAdminInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeProductAsAdminInput"}
-	if s.Id == nil {
-		invalidParams.Add(request.NewErrParamRequired("Id"))
-	}
 	if s.Id != nil && len(*s.Id) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
@@ -11531,6 +11585,12 @@ func (s *DescribeProductAsAdminInput) SetAcceptLanguage(v string) *DescribeProdu
 // SetId sets the Id field's value.
 func (s *DescribeProductAsAdminInput) SetId(v string) *DescribeProductAsAdminInput {
 	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeProductAsAdminInput) SetName(v string) *DescribeProductAsAdminInput {
+	s.Name = &v
 	return s
 }
 
@@ -11607,9 +11667,10 @@ type DescribeProductInput struct {
 	AcceptLanguage *string `type:"string"`
 
 	// The product identifier.
-	//
-	// Id is a required field
-	Id *string `min:"1" type:"string" required:"true"`
+	Id *string `min:"1" type:"string"`
+
+	// The product name.
+	Name *string `type:"string"`
 }
 
 // String returns the string representation
@@ -11625,9 +11686,6 @@ func (s DescribeProductInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeProductInput"}
-	if s.Id == nil {
-		invalidParams.Add(request.NewErrParamRequired("Id"))
-	}
 	if s.Id != nil && len(*s.Id) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
@@ -11650,11 +11708,20 @@ func (s *DescribeProductInput) SetId(v string) *DescribeProductInput {
 	return s
 }
 
+// SetName sets the Name field's value.
+func (s *DescribeProductInput) SetName(v string) *DescribeProductInput {
+	s.Name = &v
+	return s
+}
+
 type DescribeProductOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the associated budgets.
 	Budgets []*BudgetDetail `type:"list"`
+
+	// Information about the associated launch paths.
+	LaunchPaths []*LaunchPath `type:"list"`
 
 	// Summary information about the product view.
 	ProductViewSummary *ProductViewSummary `type:"structure"`
@@ -11676,6 +11743,12 @@ func (s DescribeProductOutput) GoString() string {
 // SetBudgets sets the Budgets field's value.
 func (s *DescribeProductOutput) SetBudgets(v []*BudgetDetail) *DescribeProductOutput {
 	s.Budgets = v
+	return s
+}
+
+// SetLaunchPaths sets the LaunchPaths field's value.
+func (s *DescribeProductOutput) SetLaunchPaths(v []*LaunchPath) *DescribeProductOutput {
+	s.LaunchPaths = v
 	return s
 }
 
@@ -11997,14 +12070,16 @@ type DescribeProvisioningArtifactInput struct {
 	AcceptLanguage *string `type:"string"`
 
 	// The product identifier.
-	//
-	// ProductId is a required field
-	ProductId *string `min:"1" type:"string" required:"true"`
+	ProductId *string `min:"1" type:"string"`
+
+	// The product name.
+	ProductName *string `type:"string"`
 
 	// The identifier of the provisioning artifact.
-	//
-	// ProvisioningArtifactId is a required field
-	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The provisioning artifact name.
+	ProvisioningArtifactName *string `type:"string"`
 
 	// Indicates whether a verbose level of detail is enabled.
 	Verbose *bool `type:"boolean"`
@@ -12023,14 +12098,8 @@ func (s DescribeProvisioningArtifactInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeProvisioningArtifactInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeProvisioningArtifactInput"}
-	if s.ProductId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProductId"))
-	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
-	}
-	if s.ProvisioningArtifactId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
 	}
 	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
@@ -12054,9 +12123,21 @@ func (s *DescribeProvisioningArtifactInput) SetProductId(v string) *DescribeProv
 	return s
 }
 
+// SetProductName sets the ProductName field's value.
+func (s *DescribeProvisioningArtifactInput) SetProductName(v string) *DescribeProvisioningArtifactInput {
+	s.ProductName = &v
+	return s
+}
+
 // SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
 func (s *DescribeProvisioningArtifactInput) SetProvisioningArtifactId(v string) *DescribeProvisioningArtifactInput {
 	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *DescribeProvisioningArtifactInput) SetProvisioningArtifactName(v string) *DescribeProvisioningArtifactInput {
+	s.ProvisioningArtifactName = &v
 	return s
 }
 
@@ -12121,18 +12202,27 @@ type DescribeProvisioningParametersInput struct {
 
 	// The path identifier of the product. This value is optional if the product
 	// has a default path, and required if the product has more than one path. To
-	// list the paths for a product, use ListLaunchPaths.
+	// list the paths for a product, use ListLaunchPaths. You must provide the name
+	// or ID, but not both.
 	PathId *string `min:"1" type:"string"`
 
-	// The product identifier.
-	//
-	// ProductId is a required field
-	ProductId *string `min:"1" type:"string" required:"true"`
+	// The name of the path. You must provide the name or ID, but not both.
+	PathName *string `min:"1" type:"string"`
 
-	// The identifier of the provisioning artifact.
-	//
-	// ProvisioningArtifactId is a required field
-	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+	// The product identifier. You must provide the product name or ID, but not
+	// both.
+	ProductId *string `min:"1" type:"string"`
+
+	// The name of the product. You must provide the name or ID, but not both.
+	ProductName *string `type:"string"`
+
+	// The identifier of the provisioning artifact. You must provide the name or
+	// ID, but not both.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact. You must provide the name or ID, but
+	// not both.
+	ProvisioningArtifactName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12151,14 +12241,11 @@ func (s *DescribeProvisioningParametersInput) Validate() error {
 	if s.PathId != nil && len(*s.PathId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
 	}
-	if s.ProductId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	if s.PathName != nil && len(*s.PathName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathName", 1))
 	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
-	}
-	if s.ProvisioningArtifactId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
 	}
 	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
@@ -12182,9 +12269,21 @@ func (s *DescribeProvisioningParametersInput) SetPathId(v string) *DescribeProvi
 	return s
 }
 
+// SetPathName sets the PathName field's value.
+func (s *DescribeProvisioningParametersInput) SetPathName(v string) *DescribeProvisioningParametersInput {
+	s.PathName = &v
+	return s
+}
+
 // SetProductId sets the ProductId field's value.
 func (s *DescribeProvisioningParametersInput) SetProductId(v string) *DescribeProvisioningParametersInput {
 	s.ProductId = &v
+	return s
+}
+
+// SetProductName sets the ProductName field's value.
+func (s *DescribeProvisioningParametersInput) SetProductName(v string) *DescribeProvisioningParametersInput {
+	s.ProductName = &v
 	return s
 }
 
@@ -12194,11 +12293,20 @@ func (s *DescribeProvisioningParametersInput) SetProvisioningArtifactId(v string
 	return s
 }
 
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *DescribeProvisioningParametersInput) SetProvisioningArtifactName(v string) *DescribeProvisioningParametersInput {
+	s.ProvisioningArtifactName = &v
+	return s
+}
+
 type DescribeProvisioningParametersOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the constraints used to provision the product.
 	ConstraintSummaries []*ConstraintSummary `type:"list"`
+
+	// The output of the provisioning artifact.
+	ProvisioningArtifactOutputs []*ProvisioningArtifactOutput `type:"list"`
 
 	// Information about the parameters used to provision the product.
 	ProvisioningArtifactParameters []*ProvisioningArtifactParameter `type:"list"`
@@ -12228,6 +12336,12 @@ func (s DescribeProvisioningParametersOutput) GoString() string {
 // SetConstraintSummaries sets the ConstraintSummaries field's value.
 func (s *DescribeProvisioningParametersOutput) SetConstraintSummaries(v []*ConstraintSummary) *DescribeProvisioningParametersOutput {
 	s.ConstraintSummaries = v
+	return s
+}
+
+// SetProvisioningArtifactOutputs sets the ProvisioningArtifactOutputs field's value.
+func (s *DescribeProvisioningParametersOutput) SetProvisioningArtifactOutputs(v []*ProvisioningArtifactOutput) *DescribeProvisioningParametersOutput {
+	s.ProvisioningArtifactOutputs = v
 	return s
 }
 
@@ -13617,6 +13731,39 @@ func (s *InvalidStateException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *InvalidStateException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// A launch path object.
+type LaunchPath struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the launch path.
+	Id *string `min:"1" type:"string"`
+
+	// The name of the launch path.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchPath) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchPath) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *LaunchPath) SetId(v string) *LaunchPath {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LaunchPath) SetName(v string) *LaunchPath {
+	s.Name = &v
+	return s
 }
 
 // Summary information about a product path for a user.
@@ -16172,13 +16319,18 @@ type ProvisionProductInput struct {
 
 	// The path identifier of the product. This value is optional if the product
 	// has a default path, and required if the product has more than one path. To
-	// list the paths for a product, use ListLaunchPaths.
+	// list the paths for a product, use ListLaunchPaths. You must provide the name
+	// or ID, but not both.
 	PathId *string `min:"1" type:"string"`
 
-	// The product identifier.
-	//
-	// ProductId is a required field
-	ProductId *string `min:"1" type:"string" required:"true"`
+	// The name of the path. You must provide the name or ID, but not both.
+	PathName *string `min:"1" type:"string"`
+
+	// The product identifier. You must provide the name or ID, but not both.
+	ProductId *string `min:"1" type:"string"`
+
+	// The name of the product. You must provide the name or ID, but not both.
+	ProductName *string `type:"string"`
 
 	// An idempotency token that uniquely identifies the provisioning request.
 	ProvisionToken *string `min:"1" type:"string" idempotencyToken:"true"`
@@ -16189,10 +16341,13 @@ type ProvisionProductInput struct {
 	// ProvisionedProductName is a required field
 	ProvisionedProductName *string `min:"1" type:"string" required:"true"`
 
-	// The identifier of the provisioning artifact.
-	//
-	// ProvisioningArtifactId is a required field
-	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+	// The identifier of the provisioning artifact. You must provide the name or
+	// ID, but not both.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact. You must provide the name or ID, but
+	// not both.
+	ProvisioningArtifactName *string `type:"string"`
 
 	// Parameters specified by the administrator that are required for provisioning
 	// the product.
@@ -16222,8 +16377,8 @@ func (s *ProvisionProductInput) Validate() error {
 	if s.PathId != nil && len(*s.PathId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
 	}
-	if s.ProductId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	if s.PathName != nil && len(*s.PathName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathName", 1))
 	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
@@ -16236,9 +16391,6 @@ func (s *ProvisionProductInput) Validate() error {
 	}
 	if s.ProvisionedProductName != nil && len(*s.ProvisionedProductName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductName", 1))
-	}
-	if s.ProvisioningArtifactId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
 	}
 	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
@@ -16293,9 +16445,21 @@ func (s *ProvisionProductInput) SetPathId(v string) *ProvisionProductInput {
 	return s
 }
 
+// SetPathName sets the PathName field's value.
+func (s *ProvisionProductInput) SetPathName(v string) *ProvisionProductInput {
+	s.PathName = &v
+	return s
+}
+
 // SetProductId sets the ProductId field's value.
 func (s *ProvisionProductInput) SetProductId(v string) *ProvisionProductInput {
 	s.ProductId = &v
+	return s
+}
+
+// SetProductName sets the ProductName field's value.
+func (s *ProvisionProductInput) SetProductName(v string) *ProvisionProductInput {
+	s.ProductName = &v
 	return s
 }
 
@@ -16314,6 +16478,12 @@ func (s *ProvisionProductInput) SetProvisionedProductName(v string) *ProvisionPr
 // SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
 func (s *ProvisionProductInput) SetProvisioningArtifactId(v string) *ProvisionProductInput {
 	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *ProvisionProductInput) SetProvisioningArtifactName(v string) *ProvisionProductInput {
+	s.ProvisioningArtifactName = &v
 	return s
 }
 
@@ -17036,6 +17206,39 @@ func (s *ProvisioningArtifactDetail) SetName(v string) *ProvisioningArtifactDeta
 // SetType sets the Type field's value.
 func (s *ProvisioningArtifactDetail) SetType(v string) *ProvisioningArtifactDetail {
 	s.Type = &v
+	return s
+}
+
+// Provisioning artifact output.
+type ProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Description of the provisioning artifact output key.
+	Description *string `type:"string"`
+
+	// The provisioning artifact output key.
+	Key *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *ProvisioningArtifactOutput) SetDescription(v string) *ProvisioningArtifactOutput {
+	s.Description = &v
+	return s
+}
+
+// SetKey sets the Key field's value.
+func (s *ProvisioningArtifactOutput) SetKey(v string) *ProvisioningArtifactOutput {
+	s.Key = &v
 	return s
 }
 
@@ -19841,15 +20044,22 @@ type UpdateProvisionedProductInput struct {
 	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
-	// The new path identifier. This value is optional if the product has a default
-	// path, and required if the product has more than one path.
+	// The path identifier. This value is optional if the product has a default
+	// path, and required if the product has more than one path. You must provide
+	// the name or ID, but not both.
 	PathId *string `min:"1" type:"string"`
 
-	// The identifier of the product.
+	// The name of the path. You must provide the name or ID, but not both.
+	PathName *string `min:"1" type:"string"`
+
+	// The identifier of the product. You must provide the name or ID, but not both.
 	ProductId *string `min:"1" type:"string"`
 
-	// The identifier of the provisioned product. You cannot specify both ProvisionedProductName
-	// and ProvisionedProductId.
+	// The name of the product. You must provide the name or ID, but not both.
+	ProductName *string `type:"string"`
+
+	// The identifier of the provisioned product. You must provide the name or ID,
+	// but not both.
 	ProvisionedProductId *string `min:"1" type:"string"`
 
 	// The name of the provisioned product. You cannot specify both ProvisionedProductName
@@ -19858,6 +20068,10 @@ type UpdateProvisionedProductInput struct {
 
 	// The identifier of the provisioning artifact.
 	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact. You must provide the name or ID, but
+	// not both.
+	ProvisioningArtifactName *string `type:"string"`
 
 	// The new parameters.
 	ProvisioningParameters []*UpdateProvisioningParameter `type:"list"`
@@ -19889,6 +20103,9 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateProvisionedProductInput"}
 	if s.PathId != nil && len(*s.PathId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
+	}
+	if s.PathName != nil && len(*s.PathName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathName", 1))
 	}
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
@@ -19949,9 +20166,21 @@ func (s *UpdateProvisionedProductInput) SetPathId(v string) *UpdateProvisionedPr
 	return s
 }
 
+// SetPathName sets the PathName field's value.
+func (s *UpdateProvisionedProductInput) SetPathName(v string) *UpdateProvisionedProductInput {
+	s.PathName = &v
+	return s
+}
+
 // SetProductId sets the ProductId field's value.
 func (s *UpdateProvisionedProductInput) SetProductId(v string) *UpdateProvisionedProductInput {
 	s.ProductId = &v
+	return s
+}
+
+// SetProductName sets the ProductName field's value.
+func (s *UpdateProvisionedProductInput) SetProductName(v string) *UpdateProvisionedProductInput {
+	s.ProductName = &v
 	return s
 }
 
@@ -19970,6 +20199,12 @@ func (s *UpdateProvisionedProductInput) SetProvisionedProductName(v string) *Upd
 // SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
 func (s *UpdateProvisionedProductInput) SetProvisioningArtifactId(v string) *UpdateProvisionedProductInput {
 	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *UpdateProvisionedProductInput) SetProvisioningArtifactName(v string) *UpdateProvisionedProductInput {
+	s.ProvisioningArtifactName = &v
 	return s
 }
 
@@ -20043,9 +20278,9 @@ type UpdateProvisionedProductPropertiesInput struct {
 
 	// A map that contains the provisioned product properties to be updated.
 	//
-	// The OWNER key only accepts user ARNs. The owner is the user that is allowed
-	// to see, update, terminate, and execute service actions in the provisioned
-	// product.
+	// The OWNER key accepts user ARNs and role ARNs. The owner is the user that
+	// is allowed to see, update, terminate, and execute service actions in the
+	// provisioned product.
 	//
 	// The administrator can change the owner of a provisioned product to another
 	// IAM user within the same account. Both end user owners and administrators

@@ -31,7 +31,7 @@ The following arguments are supported:
 
 * `availability_zone` - (Required) The AZ where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
-* `iops` - (Optional) The amount of IOPS to provision for the disk.
+* `iops` - (Optional) The amount of IOPS to provision for the disk. Only valid for `type` of `io1`.
 * `multi_attach_enabled` - (Optional) Specifies whether to enable Amazon EBS Multi-Attach. Multi-Attach is supported exclusively on `io1` volumes.
 * `size` - (Optional) The size of the drive in GiBs.
 * `snapshot_id` (Optional) A snapshot to base the EBS volume off of.

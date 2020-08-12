@@ -6,9 +6,9 @@ import (
 	"net"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -192,7 +192,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		updateHealthCheck.SearchString = aws.String(d.Get("search_string").(string))
 	}
 
-	if d.HasChange("cloudwatch_alarm_name") || d.HasChange("cloudwatch_alarm_region") {
+	if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
 		cloudwatchAlarm := &route53.AlarmIdentifier{
 			Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
 			Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),

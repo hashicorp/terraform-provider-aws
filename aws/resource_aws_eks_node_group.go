@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -57,6 +57,10 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"force_update_version": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"instance_types": {
 				Type:     schema.TypeList,
@@ -338,7 +342,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if d.HasChange("labels") || d.HasChange("scaling_config") {
+	if d.HasChanges("labels", "scaling_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 
 		input := &eks.UpdateNodegroupConfigInput{
@@ -370,15 +374,15 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("release_version") || d.HasChange("version") {
+	if d.HasChanges("release_version", "version") {
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),
-			Force:              aws.Bool(false),
+			Force:              aws.Bool(d.Get("force_update_version").(bool)),
 			NodegroupName:      aws.String(nodeGroupName),
 		}
 
-		if v, ok := d.GetOk("release_version"); ok {
+		if v, ok := d.GetOk("release_version"); ok && d.HasChange("release_version") {
 			input.ReleaseVersion = aws.String(v.(string))
 		}
 

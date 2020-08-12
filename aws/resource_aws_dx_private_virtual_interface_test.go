@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
@@ -238,7 +238,7 @@ resource "aws_dx_private_virtual_interface" "test" {
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[4]d
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 `, cid, rName, bgpAsn, vlan)
 }
@@ -252,7 +252,7 @@ resource "aws_dx_private_virtual_interface" "test" {
   mtu            = 9001
   name           = %[2]q
   vlan           = %[4]d
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 `, cid, rName, bgpAsn, vlan)
 }
@@ -265,7 +265,7 @@ resource "aws_dx_private_virtual_interface" "test" {
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[4]d
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpn_gateway_id = aws_vpn_gateway.test.id
 
   tags = {
     Name = %[2]q
@@ -284,7 +284,7 @@ resource "aws_dx_private_virtual_interface" "test" {
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[4]d
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpn_gateway_id = aws_vpn_gateway.test.id
 
   tags = {
     Name = %[2]q
@@ -305,7 +305,7 @@ resource "aws_dx_gateway" "test" {
 resource "aws_dx_private_virtual_interface" "test" {
   address_family = "ipv4"
   bgp_asn        = %[4]d
-  dx_gateway_id  = "${aws_dx_gateway.test.id}"
+  dx_gateway_id  = aws_dx_gateway.test.id
   connection_id  = %[1]q
   name           = %[2]q
   vlan           = %[5]d

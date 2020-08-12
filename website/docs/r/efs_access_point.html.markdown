@@ -14,7 +14,7 @@ Provides an Elastic File System (EFS) access point.
 
 ```hcl
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.foo.id}"
+  file_system_id = aws_efs_file_system.foo.id
 }
 ```
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 The `posix_user` block supports the following:
 
 * `gid` - (Required) The POSIX group ID used for all file system operations using this access point.
-* `uid` - (Required) he POSIX user ID used for all file system operations using this access point.
+* `uid` - (Required) The POSIX user ID used for all file system operations using this access point.
 * `secondary_gids` - (Optional) Secondary POSIX group IDs used for all file system operations using this access point.
 
 ### Root Directory

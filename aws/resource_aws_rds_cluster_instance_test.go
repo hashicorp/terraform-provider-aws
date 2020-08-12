@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -192,7 +192,7 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 
 func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_rds_cluster_instance.cluster_instances"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +204,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 				Config: testAccAWSClusterInstanceConfigKmsKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_id", keyRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{

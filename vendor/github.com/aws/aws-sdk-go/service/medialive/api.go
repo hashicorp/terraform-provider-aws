@@ -4,6 +4,8 @@ package medialive
 
 import (
 	"fmt"
+	"io"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
@@ -1549,6 +1551,186 @@ func (c *MediaLive) DescribeInputWithContext(ctx aws.Context, input *DescribeInp
 	return out, req.Send()
 }
 
+const opDescribeInputDevice = "DescribeInputDevice"
+
+// DescribeInputDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeInputDevice operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeInputDevice for more information on using the DescribeInputDevice
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeInputDeviceRequest method.
+//    req, resp := client.DescribeInputDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputDevice
+func (c *MediaLive) DescribeInputDeviceRequest(input *DescribeInputDeviceInput) (req *request.Request, output *DescribeInputDeviceOutput) {
+	op := &request.Operation{
+		Name:       opDescribeInputDevice,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/inputDevices/{inputDeviceId}",
+	}
+
+	if input == nil {
+		input = &DescribeInputDeviceInput{}
+	}
+
+	output = &DescribeInputDeviceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeInputDevice API operation for AWS Elemental MediaLive.
+//
+// Gets the details for the input device
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeInputDevice for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputDevice
+func (c *MediaLive) DescribeInputDevice(input *DescribeInputDeviceInput) (*DescribeInputDeviceOutput, error) {
+	req, out := c.DescribeInputDeviceRequest(input)
+	return out, req.Send()
+}
+
+// DescribeInputDeviceWithContext is the same as DescribeInputDevice with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeInputDevice for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeInputDeviceWithContext(ctx aws.Context, input *DescribeInputDeviceInput, opts ...request.Option) (*DescribeInputDeviceOutput, error) {
+	req, out := c.DescribeInputDeviceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeInputDeviceThumbnail = "DescribeInputDeviceThumbnail"
+
+// DescribeInputDeviceThumbnailRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeInputDeviceThumbnail operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeInputDeviceThumbnail for more information on using the DescribeInputDeviceThumbnail
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeInputDeviceThumbnailRequest method.
+//    req, resp := client.DescribeInputDeviceThumbnailRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputDeviceThumbnail
+func (c *MediaLive) DescribeInputDeviceThumbnailRequest(input *DescribeInputDeviceThumbnailInput) (req *request.Request, output *DescribeInputDeviceThumbnailOutput) {
+	op := &request.Operation{
+		Name:       opDescribeInputDeviceThumbnail,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/inputDevices/{inputDeviceId}/thumbnailData",
+	}
+
+	if input == nil {
+		input = &DescribeInputDeviceThumbnailInput{}
+	}
+
+	output = &DescribeInputDeviceThumbnailOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeInputDeviceThumbnail API operation for AWS Elemental MediaLive.
+//
+// Get the latest thumbnail data for the input device.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeInputDeviceThumbnail for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputDeviceThumbnail
+func (c *MediaLive) DescribeInputDeviceThumbnail(input *DescribeInputDeviceThumbnailInput) (*DescribeInputDeviceThumbnailOutput, error) {
+	req, out := c.DescribeInputDeviceThumbnailRequest(input)
+	return out, req.Send()
+}
+
+// DescribeInputDeviceThumbnailWithContext is the same as DescribeInputDeviceThumbnail with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeInputDeviceThumbnail for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeInputDeviceThumbnailWithContext(ctx aws.Context, input *DescribeInputDeviceThumbnailInput, opts ...request.Option) (*DescribeInputDeviceThumbnailOutput, error) {
+	req, out := c.DescribeInputDeviceThumbnailRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeInputSecurityGroup = "DescribeInputSecurityGroup"
 
 // DescribeInputSecurityGroupRequest generates a "aws/request.Request" representing the
@@ -2286,6 +2468,152 @@ func (c *MediaLive) ListChannelsPagesWithContext(ctx aws.Context, input *ListCha
 
 	for p.Next() {
 		if !fn(p.Page().(*ListChannelsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListInputDevices = "ListInputDevices"
+
+// ListInputDevicesRequest generates a "aws/request.Request" representing the
+// client's request for the ListInputDevices operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListInputDevices for more information on using the ListInputDevices
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListInputDevicesRequest method.
+//    req, resp := client.ListInputDevicesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputDevices
+func (c *MediaLive) ListInputDevicesRequest(input *ListInputDevicesInput) (req *request.Request, output *ListInputDevicesOutput) {
+	op := &request.Operation{
+		Name:       opListInputDevices,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/inputDevices",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListInputDevicesInput{}
+	}
+
+	output = &ListInputDevicesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListInputDevices API operation for AWS Elemental MediaLive.
+//
+// List input devices
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation ListInputDevices for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputDevices
+func (c *MediaLive) ListInputDevices(input *ListInputDevicesInput) (*ListInputDevicesOutput, error) {
+	req, out := c.ListInputDevicesRequest(input)
+	return out, req.Send()
+}
+
+// ListInputDevicesWithContext is the same as ListInputDevices with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListInputDevices for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListInputDevicesWithContext(ctx aws.Context, input *ListInputDevicesInput, opts ...request.Option) (*ListInputDevicesOutput, error) {
+	req, out := c.ListInputDevicesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListInputDevicesPages iterates over the pages of a ListInputDevices operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListInputDevices method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListInputDevices operation.
+//    pageNum := 0
+//    err := client.ListInputDevicesPages(params,
+//        func(page *medialive.ListInputDevicesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaLive) ListInputDevicesPages(input *ListInputDevicesInput, fn func(*ListInputDevicesOutput, bool) bool) error {
+	return c.ListInputDevicesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListInputDevicesPagesWithContext same as ListInputDevicesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListInputDevicesPagesWithContext(ctx aws.Context, input *ListInputDevicesInput, fn func(*ListInputDevicesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListInputDevicesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListInputDevicesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListInputDevicesOutput), !p.HasNextPage()) {
 			break
 		}
 	}
@@ -3991,6 +4319,98 @@ func (c *MediaLive) UpdateInputWithContext(ctx aws.Context, input *UpdateInputIn
 	return out, req.Send()
 }
 
+const opUpdateInputDevice = "UpdateInputDevice"
+
+// UpdateInputDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateInputDevice operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateInputDevice for more information on using the UpdateInputDevice
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateInputDeviceRequest method.
+//    req, resp := client.UpdateInputDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputDevice
+func (c *MediaLive) UpdateInputDeviceRequest(input *UpdateInputDeviceInput) (req *request.Request, output *UpdateInputDeviceOutput) {
+	op := &request.Operation{
+		Name:       opUpdateInputDevice,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/inputDevices/{inputDeviceId}",
+	}
+
+	if input == nil {
+		input = &UpdateInputDeviceInput{}
+	}
+
+	output = &UpdateInputDeviceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateInputDevice API operation for AWS Elemental MediaLive.
+//
+// Updates the parameters for the input device.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateInputDevice for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * UnprocessableEntityException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputDevice
+func (c *MediaLive) UpdateInputDevice(input *UpdateInputDeviceInput) (*UpdateInputDeviceOutput, error) {
+	req, out := c.UpdateInputDeviceRequest(input)
+	return out, req.Send()
+}
+
+// UpdateInputDeviceWithContext is the same as UpdateInputDevice with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateInputDevice for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateInputDeviceWithContext(ctx aws.Context, input *UpdateInputDeviceInput, opts ...request.Option) (*UpdateInputDeviceOutput, error) {
+	req, out := c.UpdateInputDeviceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateInputSecurityGroup = "UpdateInputSecurityGroup"
 
 // UpdateInputSecurityGroupRequest generates a "aws/request.Request" representing the
@@ -4918,9 +5338,10 @@ type AudioDescription struct {
 	// Audio codec settings.
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure"`
 
-	// Indicates the language of the audio output track. Only used if languageControlMode
-	// is useConfigured, or there is no ISO 639 language code specified in the input.
-	LanguageCode *string `locationName:"languageCode" min:"3" type:"string"`
+	// RFC 5646 language code representing the language of the audio output track.
+	// Only used if languageControlMode is useConfigured, or there is no ISO 639
+	// language code specified in the input.
+	LanguageCode *string `locationName:"languageCode" min:"1" type:"string"`
 
 	// Choosing followInput will cause the ISO 639 language code of the output to
 	// follow the ISO 639 language code of the input. The languageCode will be used
@@ -4960,8 +5381,8 @@ func (s *AudioDescription) Validate() error {
 	if s.AudioSelectorName == nil {
 		invalidParams.Add(request.NewErrParamRequired("AudioSelectorName"))
 	}
-	if s.LanguageCode != nil && len(*s.LanguageCode) < 3 {
-		invalidParams.Add(request.NewErrParamMinLen("LanguageCode", 3))
+	if s.LanguageCode != nil && len(*s.LanguageCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LanguageCode", 1))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
@@ -6441,6 +6862,9 @@ type CaptionDestinationSettings struct {
 	// Dvb Sub Destination Settings
 	DvbSubDestinationSettings *DvbSubDestinationSettings `locationName:"dvbSubDestinationSettings" type:"structure"`
 
+	// Ebu Tt DDestination Settings
+	EbuTtDDestinationSettings *EbuTtDDestinationSettings `locationName:"ebuTtDDestinationSettings" type:"structure"`
+
 	// Embedded Destination Settings
 	EmbeddedDestinationSettings *EmbeddedDestinationSettings `locationName:"embeddedDestinationSettings" type:"structure"`
 
@@ -6514,6 +6938,12 @@ func (s *CaptionDestinationSettings) SetBurnInDestinationSettings(v *BurnInDesti
 // SetDvbSubDestinationSettings sets the DvbSubDestinationSettings field's value.
 func (s *CaptionDestinationSettings) SetDvbSubDestinationSettings(v *DvbSubDestinationSettings) *CaptionDestinationSettings {
 	s.DvbSubDestinationSettings = v
+	return s
+}
+
+// SetEbuTtDDestinationSettings sets the EbuTtDDestinationSettings field's value.
+func (s *CaptionDestinationSettings) SetEbuTtDDestinationSettings(v *EbuTtDDestinationSettings) *CaptionDestinationSettings {
+	s.EbuTtDDestinationSettings = v
 	return s
 }
 
@@ -7360,6 +7790,8 @@ type CreateInputInput struct {
 
 	Destinations []*InputDestinationRequest `locationName:"destinations" type:"list"`
 
+	InputDevices []*InputDeviceSettings `locationName:"inputDevices" type:"list"`
+
 	InputSecurityGroups []*string `locationName:"inputSecurityGroups" type:"list"`
 
 	MediaConnectFlows []*MediaConnectFlowRequest `locationName:"mediaConnectFlows" type:"list"`
@@ -7411,6 +7843,12 @@ func (s *CreateInputInput) Validate() error {
 // SetDestinations sets the Destinations field's value.
 func (s *CreateInputInput) SetDestinations(v []*InputDestinationRequest) *CreateInputInput {
 	s.Destinations = v
+	return s
+}
+
+// SetInputDevices sets the InputDevices field's value.
+func (s *CreateInputInput) SetInputDevices(v []*InputDeviceSettings) *CreateInputInput {
+	s.InputDevices = v
 	return s
 }
 
@@ -8827,6 +9265,257 @@ func (s *DescribeChannelOutput) SetTags(v map[string]*string) *DescribeChannelOu
 	return s
 }
 
+type DescribeInputDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// InputDeviceId is a required field
+	InputDeviceId *string `location:"uri" locationName:"inputDeviceId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeInputDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInputDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInputDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInputDeviceInput"}
+	if s.InputDeviceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputDeviceId"))
+	}
+	if s.InputDeviceId != nil && len(*s.InputDeviceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputDeviceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputDeviceId sets the InputDeviceId field's value.
+func (s *DescribeInputDeviceInput) SetInputDeviceId(v string) *DescribeInputDeviceInput {
+	s.InputDeviceId = &v
+	return s
+}
+
+type DescribeInputDeviceOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The state of the connection between the input device and AWS.
+	ConnectionState *string `locationName:"connectionState" type:"string" enum:"InputDeviceConnectionState"`
+
+	// The status of the action to synchronize the device configuration. If you
+	// change the configuration of the input device (for example, the maximum bitrate),
+	// MediaLive sends the new data to the device. The device might not update itself
+	// immediately. SYNCED means the device has updated its configuration. SYNCING
+	// means that it has not updated its configuration.
+	DeviceSettingsSyncState *string `locationName:"deviceSettingsSyncState" type:"string" enum:"DeviceSettingsSyncState"`
+
+	// Settings that describe the active source from the input device, and the video
+	// characteristics of that source.
+	HdDeviceSettings *InputDeviceHdSettings `locationName:"hdDeviceSettings" type:"structure"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	MacAddress *string `locationName:"macAddress" type:"string"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	// The network settings for the input device.
+	NetworkSettings *InputDeviceNetworkSettings `locationName:"networkSettings" type:"structure"`
+
+	SerialNumber *string `locationName:"serialNumber" type:"string"`
+
+	// The type of the input device. For an AWS Elemental Link device that outputs
+	// resolutions up to 1080, choose "HD".
+	Type *string `locationName:"type" type:"string" enum:"InputDeviceType"`
+}
+
+// String returns the string representation
+func (s DescribeInputDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInputDeviceOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeInputDeviceOutput) SetArn(v string) *DescribeInputDeviceOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetConnectionState sets the ConnectionState field's value.
+func (s *DescribeInputDeviceOutput) SetConnectionState(v string) *DescribeInputDeviceOutput {
+	s.ConnectionState = &v
+	return s
+}
+
+// SetDeviceSettingsSyncState sets the DeviceSettingsSyncState field's value.
+func (s *DescribeInputDeviceOutput) SetDeviceSettingsSyncState(v string) *DescribeInputDeviceOutput {
+	s.DeviceSettingsSyncState = &v
+	return s
+}
+
+// SetHdDeviceSettings sets the HdDeviceSettings field's value.
+func (s *DescribeInputDeviceOutput) SetHdDeviceSettings(v *InputDeviceHdSettings) *DescribeInputDeviceOutput {
+	s.HdDeviceSettings = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *DescribeInputDeviceOutput) SetId(v string) *DescribeInputDeviceOutput {
+	s.Id = &v
+	return s
+}
+
+// SetMacAddress sets the MacAddress field's value.
+func (s *DescribeInputDeviceOutput) SetMacAddress(v string) *DescribeInputDeviceOutput {
+	s.MacAddress = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeInputDeviceOutput) SetName(v string) *DescribeInputDeviceOutput {
+	s.Name = &v
+	return s
+}
+
+// SetNetworkSettings sets the NetworkSettings field's value.
+func (s *DescribeInputDeviceOutput) SetNetworkSettings(v *InputDeviceNetworkSettings) *DescribeInputDeviceOutput {
+	s.NetworkSettings = v
+	return s
+}
+
+// SetSerialNumber sets the SerialNumber field's value.
+func (s *DescribeInputDeviceOutput) SetSerialNumber(v string) *DescribeInputDeviceOutput {
+	s.SerialNumber = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DescribeInputDeviceOutput) SetType(v string) *DescribeInputDeviceOutput {
+	s.Type = &v
+	return s
+}
+
+type DescribeInputDeviceThumbnailInput struct {
+	_ struct{} `type:"structure"`
+
+	// Accept Header
+	//
+	// Accept is a required field
+	Accept *string `location:"header" locationName:"accept" type:"string" required:"true" enum:"AcceptHeader"`
+
+	// InputDeviceId is a required field
+	InputDeviceId *string `location:"uri" locationName:"inputDeviceId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeInputDeviceThumbnailInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInputDeviceThumbnailInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInputDeviceThumbnailInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInputDeviceThumbnailInput"}
+	if s.Accept == nil {
+		invalidParams.Add(request.NewErrParamRequired("Accept"))
+	}
+	if s.InputDeviceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputDeviceId"))
+	}
+	if s.InputDeviceId != nil && len(*s.InputDeviceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputDeviceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccept sets the Accept field's value.
+func (s *DescribeInputDeviceThumbnailInput) SetAccept(v string) *DescribeInputDeviceThumbnailInput {
+	s.Accept = &v
+	return s
+}
+
+// SetInputDeviceId sets the InputDeviceId field's value.
+func (s *DescribeInputDeviceThumbnailInput) SetInputDeviceId(v string) *DescribeInputDeviceThumbnailInput {
+	s.InputDeviceId = &v
+	return s
+}
+
+type DescribeInputDeviceThumbnailOutput struct {
+	_ struct{} `type:"structure" payload:"Body"`
+
+	Body io.ReadCloser `locationName:"body" type:"blob"`
+
+	ContentLength *int64 `location:"header" locationName:"Content-Length" type:"long"`
+
+	ContentType *string `location:"header" locationName:"Content-Type" type:"string" enum:"ContentType"`
+
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s DescribeInputDeviceThumbnailOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInputDeviceThumbnailOutput) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetBody(v io.ReadCloser) *DescribeInputDeviceThumbnailOutput {
+	s.Body = v
+	return s
+}
+
+// SetContentLength sets the ContentLength field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetContentLength(v int64) *DescribeInputDeviceThumbnailOutput {
+	s.ContentLength = &v
+	return s
+}
+
+// SetContentType sets the ContentType field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetContentType(v string) *DescribeInputDeviceThumbnailOutput {
+	s.ContentType = &v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetETag(v string) *DescribeInputDeviceThumbnailOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetLastModified(v time.Time) *DescribeInputDeviceThumbnailOutput {
+	s.LastModified = &v
+	return s
+}
+
 type DescribeInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8879,6 +9568,8 @@ type DescribeInputOutput struct {
 
 	// A standard input has two sources and a single pipeline input only has one.
 	InputClass *string `locationName:"inputClass" type:"string" enum:"InputClass"`
+
+	InputDevices []*InputDeviceSettings `locationName:"inputDevices" type:"list"`
 
 	// There are two types of input sources, static and dynamic. If an input source
 	// is dynamic you canchange the source url of the input dynamically using an
@@ -8940,6 +9631,12 @@ func (s *DescribeInputOutput) SetId(v string) *DescribeInputOutput {
 // SetInputClass sets the InputClass field's value.
 func (s *DescribeInputOutput) SetInputClass(v string) *DescribeInputOutput {
 	s.InputClass = &v
+	return s
+}
+
+// SetInputDevices sets the InputDevices field's value.
+func (s *DescribeInputOutput) SetInputDevices(v []*InputDeviceSettings) *DescribeInputOutput {
+	s.InputDevices = v
 	return s
 }
 
@@ -10448,6 +11145,66 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 	return s
 }
 
+// Ebu Tt DDestination Settings
+type EbuTtDDestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies how to handle the gap between the lines (in multi-line captions).-
+	// enabled: Fill with the captions background color (as specified in the input
+	// captions).- disabled: Leave the gap unfilled.
+	FillLineGap *string `locationName:"fillLineGap" type:"string" enum:"EbuTtDFillLineGapControl"`
+
+	// Specifies the font family to include in the font data attached to the EBU-TT
+	// captions. Valid only if styleControl is set to include. If you leave this
+	// field empty, the font family is set to "monospaced". (If styleControl is
+	// set to exclude, the font family is always set to "monospaced".)You specify
+	// only the font family. All other style information (color, bold, position
+	// and so on) is copied from the input captions. The size is always set to 100%
+	// to allow the downstream player to choose the size.- Enter a list of font
+	// families, as a comma-separated list of font names, in order of preference.
+	// The name can be a font family (such as “Arial”), or a generic font family
+	// (such as “serif”), or “default” (to let the downstream player choose
+	// the font).- Leave blank to set the family to “monospace”.
+	FontFamily *string `locationName:"fontFamily" type:"string"`
+
+	// Specifies the style information (font color, font position, and so on) to
+	// include in the font data that is attached to the EBU-TT captions.- include:
+	// Take the style information (font color, font position, and so on) from the
+	// source captions and include that information in the font data attached to
+	// the EBU-TT captions. This option is valid only if the source captions are
+	// Embedded or Teletext.- exclude: In the font data attached to the EBU-TT captions,
+	// set the font family to "monospaced". Do not include any other style information.
+	StyleControl *string `locationName:"styleControl" type:"string" enum:"EbuTtDDestinationStyleControl"`
+}
+
+// String returns the string representation
+func (s EbuTtDDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EbuTtDDestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetFillLineGap sets the FillLineGap field's value.
+func (s *EbuTtDDestinationSettings) SetFillLineGap(v string) *EbuTtDDestinationSettings {
+	s.FillLineGap = &v
+	return s
+}
+
+// SetFontFamily sets the FontFamily field's value.
+func (s *EbuTtDDestinationSettings) SetFontFamily(v string) *EbuTtDDestinationSettings {
+	s.FontFamily = &v
+	return s
+}
+
+// SetStyleControl sets the StyleControl field's value.
+func (s *EbuTtDDestinationSettings) SetStyleControl(v string) *EbuTtDDestinationSettings {
+	s.StyleControl = &v
+	return s
+}
+
 // Embedded Destination Settings
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
@@ -10567,6 +11324,9 @@ type EncoderSettings struct {
 
 	// Settings for caption decriptions
 	CaptionDescriptions []*CaptionDescription `locationName:"captionDescriptions" type:"list"`
+
+	// Feature Activations
+	FeatureActivations *FeatureActivations `locationName:"featureActivations" type:"structure"`
 
 	// Configuration settings that apply to the event as a whole.
 	GlobalConfiguration *GlobalConfiguration `locationName:"globalConfiguration" type:"structure"`
@@ -10713,6 +11473,12 @@ func (s *EncoderSettings) SetCaptionDescriptions(v []*CaptionDescription) *Encod
 	return s
 }
 
+// SetFeatureActivations sets the FeatureActivations field's value.
+func (s *EncoderSettings) SetFeatureActivations(v *FeatureActivations) *EncoderSettings {
+	s.FeatureActivations = v
+	return s
+}
+
 // SetGlobalConfiguration sets the GlobalConfiguration field's value.
 func (s *EncoderSettings) SetGlobalConfiguration(v *GlobalConfiguration) *EncoderSettings {
 	s.GlobalConfiguration = v
@@ -10740,6 +11506,33 @@ func (s *EncoderSettings) SetTimecodeConfig(v *TimecodeConfig) *EncoderSettings 
 // SetVideoDescriptions sets the VideoDescriptions field's value.
 func (s *EncoderSettings) SetVideoDescriptions(v []*VideoDescription) *EncoderSettings {
 	s.VideoDescriptions = v
+	return s
+}
+
+// Feature Activations
+type FeatureActivations struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the Input Prepare feature. You can create Input Prepare actions in
+	// the schedule only if this feature is enabled.If you disable the feature on
+	// an existing schedule, make sure that you first delete all input prepare actions
+	// from the schedule.
+	InputPrepareScheduleActions *string `locationName:"inputPrepareScheduleActions" type:"string" enum:"FeatureActivationsInputPrepareScheduleActions"`
+}
+
+// String returns the string representation
+func (s FeatureActivations) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FeatureActivations) GoString() string {
+	return s.String()
+}
+
+// SetInputPrepareScheduleActions sets the InputPrepareScheduleActions field's value.
+func (s *FeatureActivations) SetInputPrepareScheduleActions(v string) *FeatureActivations {
+	s.InputPrepareScheduleActions = &v
 	return s
 }
 
@@ -11200,8 +11993,8 @@ type GlobalConfiguration struct {
 	// Settings for system actions when input is lost.
 	InputLossBehavior *InputLossBehavior `locationName:"inputLossBehavior" type:"structure"`
 
-	// Indicates how MediaLive pipelines are synchronized.PIPELINELOCKING - MediaLive
-	// will attempt to synchronize the output of each pipeline to the other.EPOCHLOCKING
+	// Indicates how MediaLive pipelines are synchronized.PIPELINE_LOCKING - MediaLive
+	// will attempt to synchronize the output of each pipeline to the other.EPOCH_LOCKING
 	// - MediaLive will attempt to synchronize the output of each pipeline to the
 	// Unix epoch.
 	OutputLockingMode *string `locationName:"outputLockingMode" type:"string" enum:"GlobalConfigurationOutputLockingMode"`
@@ -11383,7 +12176,7 @@ type H264Settings struct {
 	// Entropy encoding mode. Use cabac (must be in Main or High profile) or cavlc.
 	EntropyEncoding *string `locationName:"entropyEncoding" type:"string" enum:"H264EntropyEncoding"`
 
-	// Settings associated with the specified filter.
+	// Optional filters that you can apply to an encode.
 	FilterSettings *H264FilterSettings `locationName:"filterSettings" type:"structure"`
 
 	// Four bit AFD value to write on all frames of video in the output stream.
@@ -11474,14 +12267,17 @@ type H264Settings struct {
 	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
 	// Pixel Aspect Ratio numerator.
-	ParNumerator *int64 `locationName:"parNumerator" type:"integer"`
+	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
 	// H.264 Profile.
 	Profile *string `locationName:"profile" type:"string" enum:"H264Profile"`
 
-	// If set to "ENHANCEDQUALITY," improves visual quality at an increased output
-	// cost. If this video is being delivered to a MediaLive Multiplex, "ENHANCEDQUALITY"
-	// is always used.
+	// Leave as STANDARD_QUALITY or choose a different value (which might result
+	// in additional costs to run the channel).- ENHANCED_QUALITY: Produces a slightly
+	// better video quality without an increase in the bitrate. Has an effect only
+	// when the Rate control mode is QVBR or CBR. If this channel is in a MediaLive
+	// multiplex, the value must be ENHANCED_QUALITY.- STANDARD_QUALITY: Valid for
+	// any Rate control mode.
 	QualityLevel *string `locationName:"qualityLevel" type:"string" enum:"H264QualityLevel"`
 
 	// Controls the target quality for the video encode. Applies only when the rate
@@ -11573,6 +12369,9 @@ func (s *H264Settings) Validate() error {
 	}
 	if s.ParDenominator != nil && *s.ParDenominator < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ParDenominator", 1))
+	}
+	if s.ParNumerator != nil && *s.ParNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParNumerator", 1))
 	}
 	if s.QvbrQualityLevel != nil && *s.QvbrQualityLevel < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("QvbrQualityLevel", 1))
@@ -11884,6 +12683,30 @@ func (s *H265ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H265Color
 	return s
 }
 
+// H265 Filter Settings
+type H265FilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Temporal Filter Settings
+	TemporalFilterSettings *TemporalFilterSettings `locationName:"temporalFilterSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H265FilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H265FilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetTemporalFilterSettings sets the TemporalFilterSettings field's value.
+func (s *H265FilterSettings) SetTemporalFilterSettings(v *TemporalFilterSettings) *H265FilterSettings {
+	s.TemporalFilterSettings = v
+	return s
+}
+
 // H265 Settings
 type H265Settings struct {
 	_ struct{} `type:"structure"`
@@ -11916,6 +12739,9 @@ type H265Settings struct {
 
 	// Color Space settings
 	ColorSpaceSettings *H265ColorSpaceSettings `locationName:"colorSpaceSettings" type:"structure"`
+
+	// Optional filters that you can apply to an encode.
+	FilterSettings *H265FilterSettings `locationName:"filterSettings" type:"structure"`
 
 	// Four bit AFD value to write on all frames of video in the output stream.
 	// Only valid when afdSignaling is set to 'Fixed'.
@@ -11991,7 +12817,10 @@ type H265Settings struct {
 	// when it is constrained by themaximum bitrate. Recommended if you or your
 	// viewers pay for bandwidth.CBR: Quality varies, depending on the video complexity.
 	// Recommended only if you distributeyour assets to devices that cannot handle
-	// variable bitrates.
+	// variable bitrates.Multiplex: This rate control mode is only supported (and
+	// is required) when the video is beingdelivered to a MediaLive Multiplex in
+	// which case the rate control configuration is controlledby the properties
+	// within the Multiplex Program.
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H265RateControlMode"`
 
 	// Sets the scan type of the output to progressive or top-field-first interlaced.
@@ -12108,6 +12937,12 @@ func (s *H265Settings) SetColorMetadata(v string) *H265Settings {
 // SetColorSpaceSettings sets the ColorSpaceSettings field's value.
 func (s *H265Settings) SetColorSpaceSettings(v *H265ColorSpaceSettings) *H265Settings {
 	s.ColorSpaceSettings = v
+	return s
+}
+
+// SetFilterSettings sets the FilterSettings field's value.
+func (s *H265Settings) SetFilterSettings(v *H265FilterSettings) *H265Settings {
+	s.FilterSettings = v
 	return s
 }
 
@@ -12604,9 +13439,9 @@ type HlsGroupSettings struct {
 	// converting it to a "VOD" type manifest on completion of the stream.
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
-	// MANIFESTSANDSEGMENTS: Generates manifests (master manifest, if applicable,
-	// and media manifests) for this output group.VARIANTMANIFESTSANDSEGMENTS: Generates
-	// media manifests for this output group, but not a master manifest.SEGMENTSONLY:
+	// MANIFESTS_AND_SEGMENTS: Generates manifests (master manifest, if applicable,
+	// and media manifests) for this output group.VARIANT_MANIFESTS_AND_SEGMENTS:
+	// Generates media manifests for this output group, but not a master manifest.SEGMENTS_ONLY:
 	// Does not generate any manifests for this output group.
 	OutputSelection *string `locationName:"outputSelection" type:"string" enum:"HlsOutputSelection"`
 
@@ -12659,7 +13494,7 @@ type HlsGroupSettings struct {
 	// Provides an extra millisecond delta offset to fine tune the timestamps.
 	TimestampDeltaMilliseconds *int64 `locationName:"timestampDeltaMilliseconds" type:"integer"`
 
-	// SEGMENTEDFILES: Emit the program as segments - multiple .ts media files.SINGLEFILE:
+	// SEGMENTED_FILES: Emit the program as segments - multiple .ts media files.SINGLE_FILE:
 	// Applies only if Mode field is VOD. Emit the program as a single .ts media
 	// file. The media manifest includes #EXT-X-BYTERANGE tags to index segments
 	// for playback. A typical use for this value is when sending the output to
@@ -13405,6 +14240,9 @@ type Input struct {
 	// value is not valid because the channel requires two sources in the input.
 	InputClass *string `locationName:"inputClass" type:"string" enum:"InputClass"`
 
+	// Settings for the input devices.
+	InputDevices []*InputDeviceSettings `locationName:"inputDevices" type:"list"`
+
 	// Certain pull input sources can be dynamic, meaning that they can have their
 	// URL's dynamically changesduring input switch actions. Presently, this functionality
 	// only works with MP4_FILE inputs.
@@ -13471,6 +14309,12 @@ func (s *Input) SetId(v string) *Input {
 // SetInputClass sets the InputClass field's value.
 func (s *Input) SetInputClass(v string) *Input {
 	s.InputClass = &v
+	return s
+}
+
+// SetInputDevices sets the InputDevices field's value.
+func (s *Input) SetInputDevices(v []*InputDeviceSettings) *Input {
+	s.InputDevices = v
 	return s
 }
 
@@ -13824,6 +14668,352 @@ func (s *InputDestinationVpc) SetNetworkInterfaceId(v string) *InputDestinationV
 	return s
 }
 
+// Configurable settings for the input device.
+type InputDeviceConfigurableSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The input source that you want to use. If the device has a source connected
+	// to only one of its input ports, or if you don't care which source the device
+	// sends, specify Auto. If the device has sources connected to both its input
+	// ports, and you want to use a specific source, specify the source.
+	ConfiguredInput *string `locationName:"configuredInput" type:"string" enum:"InputDeviceConfiguredInput"`
+
+	// The maximum bitrate in bits per second. Set a value here to throttle the
+	// bitrate of the source video.
+	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
+}
+
+// String returns the string representation
+func (s InputDeviceConfigurableSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDeviceConfigurableSettings) GoString() string {
+	return s.String()
+}
+
+// SetConfiguredInput sets the ConfiguredInput field's value.
+func (s *InputDeviceConfigurableSettings) SetConfiguredInput(v string) *InputDeviceConfigurableSettings {
+	s.ConfiguredInput = &v
+	return s
+}
+
+// SetMaxBitrate sets the MaxBitrate field's value.
+func (s *InputDeviceConfigurableSettings) SetMaxBitrate(v int64) *InputDeviceConfigurableSettings {
+	s.MaxBitrate = &v
+	return s
+}
+
+// Settings that describe the active source from the input device, and the video
+// characteristics of that source.
+type InputDeviceHdSettings struct {
+	_ struct{} `type:"structure"`
+
+	// If you specified Auto as the configured input, specifies which of the sources
+	// is currently active (SDI or HDMI).
+	ActiveInput *string `locationName:"activeInput" type:"string" enum:"InputDeviceActiveInput"`
+
+	// The source at the input device that is currently active. You can specify
+	// this source.
+	ConfiguredInput *string `locationName:"configuredInput" type:"string" enum:"InputDeviceConfiguredInput"`
+
+	// The state of the input device.
+	DeviceState *string `locationName:"deviceState" type:"string" enum:"InputDeviceState"`
+
+	// The frame rate of the video source.
+	Framerate *float64 `locationName:"framerate" type:"double"`
+
+	// The height of the video source, in pixels.
+	Height *int64 `locationName:"height" type:"integer"`
+
+	// The current maximum bitrate for ingesting this source, in bits per second.
+	// You can specify this maximum.
+	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
+
+	// The scan type of the video source.
+	ScanType *string `locationName:"scanType" type:"string" enum:"InputDeviceScanType"`
+
+	// The width of the video source, in pixels.
+	Width *int64 `locationName:"width" type:"integer"`
+}
+
+// String returns the string representation
+func (s InputDeviceHdSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDeviceHdSettings) GoString() string {
+	return s.String()
+}
+
+// SetActiveInput sets the ActiveInput field's value.
+func (s *InputDeviceHdSettings) SetActiveInput(v string) *InputDeviceHdSettings {
+	s.ActiveInput = &v
+	return s
+}
+
+// SetConfiguredInput sets the ConfiguredInput field's value.
+func (s *InputDeviceHdSettings) SetConfiguredInput(v string) *InputDeviceHdSettings {
+	s.ConfiguredInput = &v
+	return s
+}
+
+// SetDeviceState sets the DeviceState field's value.
+func (s *InputDeviceHdSettings) SetDeviceState(v string) *InputDeviceHdSettings {
+	s.DeviceState = &v
+	return s
+}
+
+// SetFramerate sets the Framerate field's value.
+func (s *InputDeviceHdSettings) SetFramerate(v float64) *InputDeviceHdSettings {
+	s.Framerate = &v
+	return s
+}
+
+// SetHeight sets the Height field's value.
+func (s *InputDeviceHdSettings) SetHeight(v int64) *InputDeviceHdSettings {
+	s.Height = &v
+	return s
+}
+
+// SetMaxBitrate sets the MaxBitrate field's value.
+func (s *InputDeviceHdSettings) SetMaxBitrate(v int64) *InputDeviceHdSettings {
+	s.MaxBitrate = &v
+	return s
+}
+
+// SetScanType sets the ScanType field's value.
+func (s *InputDeviceHdSettings) SetScanType(v string) *InputDeviceHdSettings {
+	s.ScanType = &v
+	return s
+}
+
+// SetWidth sets the Width field's value.
+func (s *InputDeviceHdSettings) SetWidth(v int64) *InputDeviceHdSettings {
+	s.Width = &v
+	return s
+}
+
+// The network settings for the input device.
+type InputDeviceNetworkSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The DNS addresses of the input device.
+	DnsAddresses []*string `locationName:"dnsAddresses" type:"list"`
+
+	// The network gateway IP address.
+	Gateway *string `locationName:"gateway" type:"string"`
+
+	// The IP address of the input device.
+	IpAddress *string `locationName:"ipAddress" type:"string"`
+
+	// Specifies whether the input device has been configured (outside of MediaLive)
+	// to use a dynamic IP address assignment (DHCP) or a static IP address.
+	IpScheme *string `locationName:"ipScheme" type:"string" enum:"InputDeviceIpScheme"`
+
+	// The subnet mask of the input device.
+	SubnetMask *string `locationName:"subnetMask" type:"string"`
+}
+
+// String returns the string representation
+func (s InputDeviceNetworkSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDeviceNetworkSettings) GoString() string {
+	return s.String()
+}
+
+// SetDnsAddresses sets the DnsAddresses field's value.
+func (s *InputDeviceNetworkSettings) SetDnsAddresses(v []*string) *InputDeviceNetworkSettings {
+	s.DnsAddresses = v
+	return s
+}
+
+// SetGateway sets the Gateway field's value.
+func (s *InputDeviceNetworkSettings) SetGateway(v string) *InputDeviceNetworkSettings {
+	s.Gateway = &v
+	return s
+}
+
+// SetIpAddress sets the IpAddress field's value.
+func (s *InputDeviceNetworkSettings) SetIpAddress(v string) *InputDeviceNetworkSettings {
+	s.IpAddress = &v
+	return s
+}
+
+// SetIpScheme sets the IpScheme field's value.
+func (s *InputDeviceNetworkSettings) SetIpScheme(v string) *InputDeviceNetworkSettings {
+	s.IpScheme = &v
+	return s
+}
+
+// SetSubnetMask sets the SubnetMask field's value.
+func (s *InputDeviceNetworkSettings) SetSubnetMask(v string) *InputDeviceNetworkSettings {
+	s.SubnetMask = &v
+	return s
+}
+
+// Settings for an input device.
+type InputDeviceRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ID for the device.
+	Id *string `locationName:"id" type:"string"`
+}
+
+// String returns the string representation
+func (s InputDeviceRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDeviceRequest) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *InputDeviceRequest) SetId(v string) *InputDeviceRequest {
+	s.Id = &v
+	return s
+}
+
+// Settings for an input device.
+type InputDeviceSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ID for the device.
+	Id *string `locationName:"id" type:"string"`
+}
+
+// String returns the string representation
+func (s InputDeviceSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDeviceSettings) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *InputDeviceSettings) SetId(v string) *InputDeviceSettings {
+	s.Id = &v
+	return s
+}
+
+// Details of the input device.
+type InputDeviceSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ARN of the input device.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The state of the connection between the input device and AWS.
+	ConnectionState *string `locationName:"connectionState" type:"string" enum:"InputDeviceConnectionState"`
+
+	// The status of the action to synchronize the device configuration. If you
+	// change the configuration of the input device (for example, the maximum bitrate),
+	// MediaLive sends the new data to the device. The device might not update itself
+	// immediately. SYNCED means the device has updated its configuration. SYNCING
+	// means that it has not updated its configuration.
+	DeviceSettingsSyncState *string `locationName:"deviceSettingsSyncState" type:"string" enum:"DeviceSettingsSyncState"`
+
+	// Settings that describe an input device that is type HD.
+	HdDeviceSettings *InputDeviceHdSettings `locationName:"hdDeviceSettings" type:"structure"`
+
+	// The unique ID of the input device.
+	Id *string `locationName:"id" type:"string"`
+
+	// The network MAC address of the input device.
+	MacAddress *string `locationName:"macAddress" type:"string"`
+
+	// A name that you specify for the input device.
+	Name *string `locationName:"name" type:"string"`
+
+	// Network settings for the input device.
+	NetworkSettings *InputDeviceNetworkSettings `locationName:"networkSettings" type:"structure"`
+
+	// The unique serial number of the input device.
+	SerialNumber *string `locationName:"serialNumber" type:"string"`
+
+	// The type of the input device.
+	Type *string `locationName:"type" type:"string" enum:"InputDeviceType"`
+}
+
+// String returns the string representation
+func (s InputDeviceSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDeviceSummary) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *InputDeviceSummary) SetArn(v string) *InputDeviceSummary {
+	s.Arn = &v
+	return s
+}
+
+// SetConnectionState sets the ConnectionState field's value.
+func (s *InputDeviceSummary) SetConnectionState(v string) *InputDeviceSummary {
+	s.ConnectionState = &v
+	return s
+}
+
+// SetDeviceSettingsSyncState sets the DeviceSettingsSyncState field's value.
+func (s *InputDeviceSummary) SetDeviceSettingsSyncState(v string) *InputDeviceSummary {
+	s.DeviceSettingsSyncState = &v
+	return s
+}
+
+// SetHdDeviceSettings sets the HdDeviceSettings field's value.
+func (s *InputDeviceSummary) SetHdDeviceSettings(v *InputDeviceHdSettings) *InputDeviceSummary {
+	s.HdDeviceSettings = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *InputDeviceSummary) SetId(v string) *InputDeviceSummary {
+	s.Id = &v
+	return s
+}
+
+// SetMacAddress sets the MacAddress field's value.
+func (s *InputDeviceSummary) SetMacAddress(v string) *InputDeviceSummary {
+	s.MacAddress = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *InputDeviceSummary) SetName(v string) *InputDeviceSummary {
+	s.Name = &v
+	return s
+}
+
+// SetNetworkSettings sets the NetworkSettings field's value.
+func (s *InputDeviceSummary) SetNetworkSettings(v *InputDeviceNetworkSettings) *InputDeviceSummary {
+	s.NetworkSettings = v
+	return s
+}
+
+// SetSerialNumber sets the SerialNumber field's value.
+func (s *InputDeviceSummary) SetSerialNumber(v string) *InputDeviceSummary {
+	s.SerialNumber = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *InputDeviceSummary) SetType(v string) *InputDeviceSummary {
+	s.Type = &v
+	return s
+}
+
 // Input Location
 type InputLocation struct {
 	_ struct{} `type:"structure"`
@@ -13972,6 +15162,69 @@ func (s *InputLossBehavior) SetRepeatFrameMsec(v int64) *InputLossBehavior {
 	return s
 }
 
+// Action to prepare an input for a future immediate input switch.
+type InputPrepareScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the input attachment that should be prepared by this action.
+	// If no name is provided, the action will stop the most recent prepare (if
+	// any) when activated.
+	InputAttachmentNameReference *string `locationName:"inputAttachmentNameReference" type:"string"`
+
+	// Settings to let you create a clip of the file input, in order to set up the
+	// input to ingest only a portion of the file.
+	InputClippingSettings *InputClippingSettings `locationName:"inputClippingSettings" type:"structure"`
+
+	// The value for the variable portion of the URL for the dynamic input, for
+	// this instance of the input. Each time you use the same dynamic input in an
+	// input switch action, you can provide a different value, in order to connect
+	// the input to a different content source.
+	UrlPath []*string `locationName:"urlPath" type:"list"`
+}
+
+// String returns the string representation
+func (s InputPrepareScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputPrepareScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputPrepareScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputPrepareScheduleActionSettings"}
+	if s.InputClippingSettings != nil {
+		if err := s.InputClippingSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputClippingSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
+func (s *InputPrepareScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputPrepareScheduleActionSettings {
+	s.InputAttachmentNameReference = &v
+	return s
+}
+
+// SetInputClippingSettings sets the InputClippingSettings field's value.
+func (s *InputPrepareScheduleActionSettings) SetInputClippingSettings(v *InputClippingSettings) *InputPrepareScheduleActionSettings {
+	s.InputClippingSettings = v
+	return s
+}
+
+// SetUrlPath sets the UrlPath field's value.
+func (s *InputPrepareScheduleActionSettings) SetUrlPath(v []*string) *InputPrepareScheduleActionSettings {
+	s.UrlPath = v
+	return s
+}
+
 // An Input Security Group
 type InputSecurityGroup struct {
 	_ struct{} `type:"structure"`
@@ -14070,6 +15323,13 @@ type InputSettings struct {
 	// Input settings.
 	NetworkInputSettings *NetworkInputSettings `locationName:"networkInputSettings" type:"structure"`
 
+	// Specifies whether to extract applicable ancillary data from a SMPTE-2038
+	// source in this input. Applicable data types are captions, timecode, AFD,
+	// and SCTE-104 messages.- PREFER: Extract from SMPTE-2038 if present in this
+	// input, otherwise extract from another source (if any).- IGNORE: Never extract
+	// any ancillary data from SMPTE-2038.
+	Smpte2038DataPreference *string `locationName:"smpte2038DataPreference" type:"string" enum:"Smpte2038DataPreference"`
+
 	// Loop input if it is a file. This allows a file input to be streamed indefinitely.
 	SourceEndBehavior *string `locationName:"sourceEndBehavior" type:"string" enum:"InputSourceEndBehavior"`
 
@@ -14160,6 +15420,12 @@ func (s *InputSettings) SetInputFilter(v string) *InputSettings {
 // SetNetworkInputSettings sets the NetworkInputSettings field's value.
 func (s *InputSettings) SetNetworkInputSettings(v *NetworkInputSettings) *InputSettings {
 	s.NetworkInputSettings = v
+	return s
+}
+
+// SetSmpte2038DataPreference sets the Smpte2038DataPreference field's value.
+func (s *InputSettings) SetSmpte2038DataPreference(v string) *InputSettings {
+	s.Smpte2038DataPreference = &v
 	return s
 }
 
@@ -14633,6 +15899,79 @@ func (s *ListChannelsOutput) SetChannels(v []*ChannelSummary) *ListChannelsOutpu
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListChannelsOutput) SetNextToken(v string) *ListChannelsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListInputDevicesInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListInputDevicesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListInputDevicesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListInputDevicesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListInputDevicesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListInputDevicesInput) SetMaxResults(v int64) *ListInputDevicesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListInputDevicesInput) SetNextToken(v string) *ListInputDevicesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListInputDevicesOutput struct {
+	_ struct{} `type:"structure"`
+
+	InputDevices []*InputDeviceSummary `locationName:"inputDevices" type:"list"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListInputDevicesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListInputDevicesOutput) GoString() string {
+	return s.String()
+}
+
+// SetInputDevices sets the InputDevices field's value.
+func (s *ListInputDevicesOutput) SetInputDevices(v []*InputDeviceSummary) *ListInputDevicesOutput {
+	s.InputDevices = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListInputDevicesOutput) SetNextToken(v string) *ListInputDevicesOutput {
 	s.NextToken = &v
 	return s
 }
@@ -15505,7 +16844,7 @@ type M2tsSettings struct {
 	SegmentationStyle *string `locationName:"segmentationStyle" type:"string" enum:"M2tsSegmentationStyle"`
 
 	// The length in seconds of each segment. Required unless markers is set to
-	// None_.
+	// _none_.
 	SegmentationTime *float64 `locationName:"segmentationTime" type:"double"`
 
 	// When set to passthrough, timed metadata will be passed through from input
@@ -16218,8 +17557,8 @@ func (s *Mp2Settings) SetSampleRate(v float64) *Mp2Settings {
 type MsSmoothGroupSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The value of the "Acquisition Point Identity" element used in each message
-	// placed in the sparse track. Only enabled if sparseTrackType is not "none".
+	// The ID to include in each message in the sparse track. Ignored if sparseTrackType
+	// is NONE.
 	AcquisitionPointId *string `locationName:"acquisitionPointId" type:"string"`
 
 	// If set to passthrough for an audio-only MS Smooth output, the fragment absolute
@@ -16282,10 +17621,12 @@ type MsSmoothGroupSettings struct {
 	// Number of milliseconds to delay the output from the second pipeline.
 	SendDelayMs *int64 `locationName:"sendDelayMs" type:"integer"`
 
-	// If set to scte35, use incoming SCTE-35 messages to generate a sparse track
-	// in this group of MS-Smooth outputs. scte35WithoutSegmentation is the same
-	// as scte35, except EML will not start a new segment at a SCTE-35 marker. It
-	// will still encode an IDR frame at a SCTE-35 marker.
+	// Identifies the type of data to place in the sparse track:- SCTE35: Insert
+	// SCTE-35 messages from the source content. With each message, insert an IDR
+	// frame to start a new segment.- SCTE35_WITHOUT_SEGMENTATION: Insert SCTE-35
+	// messages from the source content. With each message, insert an IDR frame
+	// but don't start a new segment.- NONE: Don't generate a sparse track for any
+	// outputs in this output group.
 	SparseTrackType *string `locationName:"sparseTrackType" type:"string" enum:"SmoothGroupSparseTrackType"`
 
 	// When set to send, send stream manifest so publishing point doesn't start
@@ -19062,6 +20403,9 @@ type ScheduleActionSettings struct {
 	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
+	// Action to prepare an input for a future immediate input switch
+	InputPrepareSettings *InputPrepareScheduleActionSettings `locationName:"inputPrepareSettings" type:"structure"`
+
 	// Action to switch the input
 	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
 
@@ -19105,6 +20449,11 @@ func (s *ScheduleActionSettings) Validate() error {
 	if s.HlsTimedMetadataSettings != nil {
 		if err := s.HlsTimedMetadataSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsTimedMetadataSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.InputPrepareSettings != nil {
+		if err := s.InputPrepareSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputPrepareSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.InputSwitchSettings != nil {
@@ -19153,6 +20502,12 @@ func (s *ScheduleActionSettings) SetHlsId3SegmentTaggingSettings(v *HlsId3Segmen
 // SetHlsTimedMetadataSettings sets the HlsTimedMetadataSettings field's value.
 func (s *ScheduleActionSettings) SetHlsTimedMetadataSettings(v *HlsTimedMetadataScheduleActionSettings) *ScheduleActionSettings {
 	s.HlsTimedMetadataSettings = v
+	return s
+}
+
+// SetInputPrepareSettings sets the InputPrepareSettings field's value.
+func (s *ScheduleActionSettings) SetInputPrepareSettings(v *InputPrepareScheduleActionSettings) *ScheduleActionSettings {
+	s.InputPrepareSettings = v
 	return s
 }
 
@@ -21008,12 +22363,14 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 type TemporalFilterSettings struct {
 	_ struct{} `type:"structure"`
 
-	// If set to "ENABLED," applies post-filter sharpening to improve visual quality.
-	// This is most beneficial when using a noisy or compressed input source and
-	// low output bitrates.
+	// If you enable this filter, the results are the following:- If the source
+	// content is noisy (it contains excessive digital artifacts), the filter cleans
+	// up the source.- If the source content is already clean, the filter tends
+	// to decrease the bitrate, especially when the rate control mode is QVBR.
 	PostFilterSharpening *string `locationName:"postFilterSharpening" type:"string" enum:"TemporalFilterPostFilterSharpening"`
 
-	// Filter strength. A higher value produces stronger filtering.
+	// Choose a filter strength. We recommend a strength of 1 or 2. A higher strength
+	// might take out good information, resulting in an image that is overly soft.
 	Strength *string `locationName:"strength" type:"string" enum:"TemporalFilterStrength"`
 }
 
@@ -21646,10 +23003,173 @@ func (s *UpdateChannelOutput) SetChannel(v *Channel) *UpdateChannelOutput {
 	return s
 }
 
+type UpdateInputDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// Configurable settings for the input device.
+	HdDeviceSettings *InputDeviceConfigurableSettings `locationName:"hdDeviceSettings" type:"structure"`
+
+	// InputDeviceId is a required field
+	InputDeviceId *string `location:"uri" locationName:"inputDeviceId" type:"string" required:"true"`
+
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateInputDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateInputDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateInputDeviceInput"}
+	if s.InputDeviceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputDeviceId"))
+	}
+	if s.InputDeviceId != nil && len(*s.InputDeviceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputDeviceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHdDeviceSettings sets the HdDeviceSettings field's value.
+func (s *UpdateInputDeviceInput) SetHdDeviceSettings(v *InputDeviceConfigurableSettings) *UpdateInputDeviceInput {
+	s.HdDeviceSettings = v
+	return s
+}
+
+// SetInputDeviceId sets the InputDeviceId field's value.
+func (s *UpdateInputDeviceInput) SetInputDeviceId(v string) *UpdateInputDeviceInput {
+	s.InputDeviceId = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateInputDeviceInput) SetName(v string) *UpdateInputDeviceInput {
+	s.Name = &v
+	return s
+}
+
+type UpdateInputDeviceOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The state of the connection between the input device and AWS.
+	ConnectionState *string `locationName:"connectionState" type:"string" enum:"InputDeviceConnectionState"`
+
+	// The status of the action to synchronize the device configuration. If you
+	// change the configuration of the input device (for example, the maximum bitrate),
+	// MediaLive sends the new data to the device. The device might not update itself
+	// immediately. SYNCED means the device has updated its configuration. SYNCING
+	// means that it has not updated its configuration.
+	DeviceSettingsSyncState *string `locationName:"deviceSettingsSyncState" type:"string" enum:"DeviceSettingsSyncState"`
+
+	// Settings that describe the active source from the input device, and the video
+	// characteristics of that source.
+	HdDeviceSettings *InputDeviceHdSettings `locationName:"hdDeviceSettings" type:"structure"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	MacAddress *string `locationName:"macAddress" type:"string"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	// The network settings for the input device.
+	NetworkSettings *InputDeviceNetworkSettings `locationName:"networkSettings" type:"structure"`
+
+	SerialNumber *string `locationName:"serialNumber" type:"string"`
+
+	// The type of the input device. For an AWS Elemental Link device that outputs
+	// resolutions up to 1080, choose "HD".
+	Type *string `locationName:"type" type:"string" enum:"InputDeviceType"`
+}
+
+// String returns the string representation
+func (s UpdateInputDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateInputDeviceOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateInputDeviceOutput) SetArn(v string) *UpdateInputDeviceOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetConnectionState sets the ConnectionState field's value.
+func (s *UpdateInputDeviceOutput) SetConnectionState(v string) *UpdateInputDeviceOutput {
+	s.ConnectionState = &v
+	return s
+}
+
+// SetDeviceSettingsSyncState sets the DeviceSettingsSyncState field's value.
+func (s *UpdateInputDeviceOutput) SetDeviceSettingsSyncState(v string) *UpdateInputDeviceOutput {
+	s.DeviceSettingsSyncState = &v
+	return s
+}
+
+// SetHdDeviceSettings sets the HdDeviceSettings field's value.
+func (s *UpdateInputDeviceOutput) SetHdDeviceSettings(v *InputDeviceHdSettings) *UpdateInputDeviceOutput {
+	s.HdDeviceSettings = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *UpdateInputDeviceOutput) SetId(v string) *UpdateInputDeviceOutput {
+	s.Id = &v
+	return s
+}
+
+// SetMacAddress sets the MacAddress field's value.
+func (s *UpdateInputDeviceOutput) SetMacAddress(v string) *UpdateInputDeviceOutput {
+	s.MacAddress = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateInputDeviceOutput) SetName(v string) *UpdateInputDeviceOutput {
+	s.Name = &v
+	return s
+}
+
+// SetNetworkSettings sets the NetworkSettings field's value.
+func (s *UpdateInputDeviceOutput) SetNetworkSettings(v *InputDeviceNetworkSettings) *UpdateInputDeviceOutput {
+	s.NetworkSettings = v
+	return s
+}
+
+// SetSerialNumber sets the SerialNumber field's value.
+func (s *UpdateInputDeviceOutput) SetSerialNumber(v string) *UpdateInputDeviceOutput {
+	s.SerialNumber = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *UpdateInputDeviceOutput) SetType(v string) *UpdateInputDeviceOutput {
+	s.Type = &v
+	return s
+}
+
 type UpdateInputInput struct {
 	_ struct{} `type:"structure"`
 
 	Destinations []*InputDestinationRequest `locationName:"destinations" type:"list"`
+
+	InputDevices []*InputDeviceRequest `locationName:"inputDevices" type:"list"`
 
 	// InputId is a required field
 	InputId *string `location:"uri" locationName:"inputId" type:"string" required:"true"`
@@ -21694,6 +23214,12 @@ func (s *UpdateInputInput) Validate() error {
 // SetDestinations sets the Destinations field's value.
 func (s *UpdateInputInput) SetDestinations(v []*InputDestinationRequest) *UpdateInputInput {
 	s.Destinations = v
+	return s
+}
+
+// SetInputDevices sets the InputDevices field's value.
+func (s *UpdateInputInput) SetInputDevices(v []*InputDeviceRequest) *UpdateInputInput {
+	s.InputDevices = v
 	return s
 }
 
@@ -22081,8 +23607,10 @@ func (s *UpdateReservationOutput) SetReservation(v *Reservation) *UpdateReservat
 type ValidationError struct {
 	_ struct{} `type:"structure"`
 
+	// Path to the source of the error.
 	ElementPath *string `locationName:"elementPath" type:"string"`
 
+	// The error message.
 	ErrorMessage *string `locationName:"errorMessage" type:"string"`
 }
 
@@ -22197,15 +23725,15 @@ type VideoDescription struct {
 
 	// Indicates how to respond to the AFD values in the input stream. RESPOND causes
 	// input video to be clipped, depending on the AFD value, input display aspect
-	// ratio, and output display aspect ratio, and (except for FRAMECAPTURE codec)
-	// includes the values in the output. PASSTHROUGH (does not apply to FRAMECAPTURE
+	// ratio, and output display aspect ratio, and (except for FRAME_CAPTURE codec)
+	// includes the values in the output. PASSTHROUGH (does not apply to FRAME_CAPTURE
 	// codec) ignores the AFD values and includes the values in the output, so input
 	// video is not clipped. NONE ignores the AFD values and does not include the
 	// values through to the output, so input video is not clipped.
 	RespondToAfd *string `locationName:"respondToAfd" type:"string" enum:"VideoDescriptionRespondToAfd"`
 
-	// STRETCHTOOUTPUT configures the output position to stretch the video to the
-	// specified output resolution (height and width). This option will override
+	// STRETCH_TO_OUTPUT configures the output position to stretch the video to
+	// the specified output resolution (height and width). This option will override
 	// any position value. DEFAULT may insert black boxes (pillar boxes or letter
 	// boxes) around the video to provide the specified output resolution.
 	ScalingBehavior *string `locationName:"scalingBehavior" type:"string" enum:"VideoDescriptionScalingBehavior"`
@@ -22592,6 +24120,12 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Accept Header
+const (
+	// AcceptHeaderImageJpeg is a AcceptHeader enum value
+	AcceptHeaderImageJpeg = "image/jpeg"
+)
+
 // Afd Signaling
 const (
 	// AfdSignalingAuto is a AfdSignaling enum value
@@ -22851,6 +24385,24 @@ const (
 
 	// ChannelStateUpdateFailed is a ChannelState enum value
 	ChannelStateUpdateFailed = "UPDATE_FAILED"
+)
+
+const (
+	// ContentTypeImageJpeg is a ContentType enum value
+	ContentTypeImageJpeg = "image/jpeg"
+)
+
+// The status of the action to synchronize the device configuration. If you
+// change the configuration of the input device (for example, the maximum bitrate),
+// MediaLive sends the new data to the device. The device might not update itself
+// immediately. SYNCED means the device has updated its configuration. SYNCING
+// means that it has not updated its configuration.
+const (
+	// DeviceSettingsSyncStateSynced is a DeviceSettingsSyncState enum value
+	DeviceSettingsSyncStateSynced = "SYNCED"
+
+	// DeviceSettingsSyncStateSyncing is a DeviceSettingsSyncState enum value
+	DeviceSettingsSyncStateSyncing = "SYNCING"
 )
 
 // Dvb Sdt Output Sdt
@@ -23129,6 +24681,24 @@ const (
 	Eac3SurroundModeNotIndicated = "NOT_INDICATED"
 )
 
+// Ebu Tt DDestination Style Control
+const (
+	// EbuTtDDestinationStyleControlExclude is a EbuTtDDestinationStyleControl enum value
+	EbuTtDDestinationStyleControlExclude = "EXCLUDE"
+
+	// EbuTtDDestinationStyleControlInclude is a EbuTtDDestinationStyleControl enum value
+	EbuTtDDestinationStyleControlInclude = "INCLUDE"
+)
+
+// Ebu Tt DFill Line Gap Control
+const (
+	// EbuTtDFillLineGapControlDisabled is a EbuTtDFillLineGapControl enum value
+	EbuTtDFillLineGapControlDisabled = "DISABLED"
+
+	// EbuTtDFillLineGapControlEnabled is a EbuTtDFillLineGapControl enum value
+	EbuTtDFillLineGapControlEnabled = "ENABLED"
+)
+
 // Embedded Convert608 To708
 const (
 	// EmbeddedConvert608To708Disabled is a EmbeddedConvert608To708 enum value
@@ -23145,6 +24715,15 @@ const (
 
 	// EmbeddedScte20DetectionOff is a EmbeddedScte20Detection enum value
 	EmbeddedScte20DetectionOff = "OFF"
+)
+
+// Feature Activations Input Prepare Schedule Actions
+const (
+	// FeatureActivationsInputPrepareScheduleActionsDisabled is a FeatureActivationsInputPrepareScheduleActions enum value
+	FeatureActivationsInputPrepareScheduleActionsDisabled = "DISABLED"
+
+	// FeatureActivationsInputPrepareScheduleActionsEnabled is a FeatureActivationsInputPrepareScheduleActions enum value
+	FeatureActivationsInputPrepareScheduleActionsEnabled = "ENABLED"
 )
 
 // Fec Output Include Fec
@@ -23668,6 +25247,9 @@ const (
 
 // H265 Scan Type
 const (
+	// H265ScanTypeInterlaced is a H265ScanType enum value
+	H265ScanTypeInterlaced = "INTERLACED"
+
 	// H265ScanTypeProgressive is a H265ScanType enum value
 	H265ScanTypeProgressive = "PROGRESSIVE"
 )
@@ -23844,6 +25426,9 @@ const (
 
 	// HlsOutputSelectionSegmentsOnly is a HlsOutputSelection enum value
 	HlsOutputSelectionSegmentsOnly = "SEGMENTS_ONLY"
+
+	// HlsOutputSelectionVariantManifestsAndSegments is a HlsOutputSelection enum value
+	HlsOutputSelectionVariantManifestsAndSegments = "VARIANT_MANIFESTS_AND_SEGMENTS"
 )
 
 // Hls Program Date Time
@@ -23960,6 +25545,71 @@ const (
 
 	// InputDenoiseFilterEnabled is a InputDenoiseFilter enum value
 	InputDenoiseFilterEnabled = "ENABLED"
+)
+
+// The source at the input device that is currently active.
+const (
+	// InputDeviceActiveInputHdmi is a InputDeviceActiveInput enum value
+	InputDeviceActiveInputHdmi = "HDMI"
+
+	// InputDeviceActiveInputSdi is a InputDeviceActiveInput enum value
+	InputDeviceActiveInputSdi = "SDI"
+)
+
+// The source to activate (use) from the input device.
+const (
+	// InputDeviceConfiguredInputAuto is a InputDeviceConfiguredInput enum value
+	InputDeviceConfiguredInputAuto = "AUTO"
+
+	// InputDeviceConfiguredInputHdmi is a InputDeviceConfiguredInput enum value
+	InputDeviceConfiguredInputHdmi = "HDMI"
+
+	// InputDeviceConfiguredInputSdi is a InputDeviceConfiguredInput enum value
+	InputDeviceConfiguredInputSdi = "SDI"
+)
+
+// The state of the connection between the input device and AWS.
+const (
+	// InputDeviceConnectionStateDisconnected is a InputDeviceConnectionState enum value
+	InputDeviceConnectionStateDisconnected = "DISCONNECTED"
+
+	// InputDeviceConnectionStateConnected is a InputDeviceConnectionState enum value
+	InputDeviceConnectionStateConnected = "CONNECTED"
+)
+
+// Specifies whether the input device has been configured (outside of MediaLive)
+// to use a dynamic IP address assignment (DHCP) or a static IP address.
+const (
+	// InputDeviceIpSchemeStatic is a InputDeviceIpScheme enum value
+	InputDeviceIpSchemeStatic = "STATIC"
+
+	// InputDeviceIpSchemeDhcp is a InputDeviceIpScheme enum value
+	InputDeviceIpSchemeDhcp = "DHCP"
+)
+
+// The scan type of the video source.
+const (
+	// InputDeviceScanTypeInterlaced is a InputDeviceScanType enum value
+	InputDeviceScanTypeInterlaced = "INTERLACED"
+
+	// InputDeviceScanTypeProgressive is a InputDeviceScanType enum value
+	InputDeviceScanTypeProgressive = "PROGRESSIVE"
+)
+
+// The state of the input device.
+const (
+	// InputDeviceStateIdle is a InputDeviceState enum value
+	InputDeviceStateIdle = "IDLE"
+
+	// InputDeviceStateStreaming is a InputDeviceState enum value
+	InputDeviceStateStreaming = "STREAMING"
+)
+
+// The type of the input device. For an AWS Elemental Link device that outputs
+// resolutions up to 1080, choose "HD".
+const (
+	// InputDeviceTypeHd is a InputDeviceType enum value
+	InputDeviceTypeHd = "HD"
 )
 
 // Input Filter
@@ -24148,6 +25798,9 @@ const (
 
 	// InputTypeMediaconnect is a InputType enum value
 	InputTypeMediaconnect = "MEDIACONNECT"
+
+	// InputTypeInputDevice is a InputType enum value
+	InputTypeInputDevice = "INPUT_DEVICE"
 )
 
 // If you specify a StopTimecode in an input (in order to clip the file), you
@@ -24821,6 +26474,15 @@ const (
 	SmoothGroupTimestampOffsetModeUseEventStartDate = "USE_EVENT_START_DATE"
 )
 
+// Smpte2038 Data Preference
+const (
+	// Smpte2038DataPreferenceIgnore is a Smpte2038DataPreference enum value
+	Smpte2038DataPreferenceIgnore = "IGNORE"
+
+	// Smpte2038DataPreferencePrefer is a Smpte2038DataPreference enum value
+	Smpte2038DataPreferencePrefer = "PREFER"
+)
+
 // Temporal Filter Post Filter Sharpening
 const (
 	// TemporalFilterPostFilterSharpeningAuto is a TemporalFilterPostFilterSharpening enum value
@@ -24840,27 +26502,6 @@ const (
 
 	// TemporalFilterStrengthStrength1 is a TemporalFilterStrength enum value
 	TemporalFilterStrengthStrength1 = "STRENGTH_1"
-
-	// TemporalFilterStrengthStrength10 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength10 = "STRENGTH_10"
-
-	// TemporalFilterStrengthStrength11 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength11 = "STRENGTH_11"
-
-	// TemporalFilterStrengthStrength12 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength12 = "STRENGTH_12"
-
-	// TemporalFilterStrengthStrength13 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength13 = "STRENGTH_13"
-
-	// TemporalFilterStrengthStrength14 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength14 = "STRENGTH_14"
-
-	// TemporalFilterStrengthStrength15 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength15 = "STRENGTH_15"
-
-	// TemporalFilterStrengthStrength16 is a TemporalFilterStrength enum value
-	TemporalFilterStrengthStrength16 = "STRENGTH_16"
 
 	// TemporalFilterStrengthStrength2 is a TemporalFilterStrength enum value
 	TemporalFilterStrengthStrength2 = "STRENGTH_2"
@@ -24885,6 +26526,27 @@ const (
 
 	// TemporalFilterStrengthStrength9 is a TemporalFilterStrength enum value
 	TemporalFilterStrengthStrength9 = "STRENGTH_9"
+
+	// TemporalFilterStrengthStrength10 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength10 = "STRENGTH_10"
+
+	// TemporalFilterStrengthStrength11 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength11 = "STRENGTH_11"
+
+	// TemporalFilterStrengthStrength12 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength12 = "STRENGTH_12"
+
+	// TemporalFilterStrengthStrength13 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength13 = "STRENGTH_13"
+
+	// TemporalFilterStrengthStrength14 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength14 = "STRENGTH_14"
+
+	// TemporalFilterStrengthStrength15 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength15 = "STRENGTH_15"
+
+	// TemporalFilterStrengthStrength16 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength16 = "STRENGTH_16"
 )
 
 // Timecode Config Source

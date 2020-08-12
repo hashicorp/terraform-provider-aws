@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSESReceiptRule_basic(t *testing.T) {
@@ -108,6 +108,39 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 				ResourceName:      "aws_ses_receipt_rule.actions",
 				ImportState:       true,
 				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc("aws_ses_receipt_rule.actions"),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_ses_receipt_rule.basic"
+	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleBasicConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), ruleSetResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSSESReceiptRuleBasicConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

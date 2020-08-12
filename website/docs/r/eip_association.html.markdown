@@ -20,8 +20,8 @@ pre-existing or distributed to customers or users and therefore cannot be change
 
 ```hcl
 resource "aws_eip_association" "eip_assoc" {
-  instance_id   = "${aws_instance.web.id}"
-  allocation_id = "${aws_eip.example.id}"
+  instance_id   = aws_instance.web.id
+  allocation_id = aws_eip.example.id
 }
 
 resource "aws_instance" "web" {

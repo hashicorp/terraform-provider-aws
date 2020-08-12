@@ -3508,6 +3508,9 @@ type Entitlement struct {
 	// EntitlementArn is a required field
 	EntitlementArn *string `locationName:"entitlementArn" type:"string" required:"true"`
 
+	// An indication of whether the entitlement is enabled.
+	EntitlementStatus *string `locationName:"entitlementStatus" type:"string" enum:"EntitlementStatus"`
+
 	// The name of the entitlement.
 	//
 	// Name is a required field
@@ -3552,6 +3555,12 @@ func (s *Entitlement) SetEncryption(v *Encryption) *Entitlement {
 // SetEntitlementArn sets the EntitlementArn field's value.
 func (s *Entitlement) SetEntitlementArn(v string) *Entitlement {
 	s.EntitlementArn = &v
+	return s
+}
+
+// SetEntitlementStatus sets the EntitlementStatus field's value.
+func (s *Entitlement) SetEntitlementStatus(v string) *Entitlement {
+	s.EntitlementStatus = &v
 	return s
 }
 
@@ -3812,6 +3821,11 @@ type GrantEntitlementRequest struct {
 	// with this entitlement.
 	Encryption *Encryption `locationName:"encryption" type:"structure"`
 
+	// An indication of whether the new entitlement should be enabled or disabled
+	// as soon as it is created. If you don’t specify the entitlementStatus field
+	// in your request, MediaConnect sets it to ENABLED.
+	EntitlementStatus *string `locationName:"entitlementStatus" type:"string" enum:"EntitlementStatus"`
+
 	// The name of the entitlement. This value must be unique within the current
 	// flow.
 	Name *string `locationName:"name" type:"string"`
@@ -3867,6 +3881,12 @@ func (s *GrantEntitlementRequest) SetDescription(v string) *GrantEntitlementRequ
 // SetEncryption sets the Encryption field's value.
 func (s *GrantEntitlementRequest) SetEncryption(v *Encryption) *GrantEntitlementRequest {
 	s.Encryption = v
+	return s
+}
+
+// SetEntitlementStatus sets the EntitlementStatus field's value.
+func (s *GrantEntitlementRequest) SetEntitlementStatus(v string) *GrantEntitlementRequest {
+	s.EntitlementStatus = &v
 	return s
 }
 
@@ -5918,6 +5938,12 @@ type UpdateFlowEntitlementInput struct {
 	// EntitlementArn is a required field
 	EntitlementArn *string `location:"uri" locationName:"entitlementArn" type:"string" required:"true"`
 
+	// An indication of whether you want to enable the entitlement to allow access,
+	// or disable it to stop streaming content to the subscriber’s flow temporarily.
+	// If you don’t specify the entitlementStatus field in your request, MediaConnect
+	// leaves the value unchanged.
+	EntitlementStatus *string `locationName:"entitlementStatus" type:"string" enum:"EntitlementStatus"`
+
 	// FlowArn is a required field
 	FlowArn *string `location:"uri" locationName:"flowArn" type:"string" required:"true"`
 
@@ -5974,6 +6000,12 @@ func (s *UpdateFlowEntitlementInput) SetEncryption(v *UpdateEncryption) *UpdateF
 // SetEntitlementArn sets the EntitlementArn field's value.
 func (s *UpdateFlowEntitlementInput) SetEntitlementArn(v string) *UpdateFlowEntitlementInput {
 	s.EntitlementArn = &v
+	return s
+}
+
+// SetEntitlementStatus sets the EntitlementStatus field's value.
+func (s *UpdateFlowEntitlementInput) SetEntitlementStatus(v string) *UpdateFlowEntitlementInput {
+	s.EntitlementStatus = &v
 	return s
 }
 
@@ -6660,6 +6692,14 @@ const (
 
 	// AlgorithmAes256 is a Algorithm enum value
 	AlgorithmAes256 = "aes256"
+)
+
+const (
+	// EntitlementStatusEnabled is a EntitlementStatus enum value
+	EntitlementStatusEnabled = "ENABLED"
+
+	// EntitlementStatusDisabled is a EntitlementStatus enum value
+	EntitlementStatusDisabled = "DISABLED"
 )
 
 const (

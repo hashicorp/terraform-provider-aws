@@ -38,7 +38,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  role = "${aws_iam_role.example.name}"
+  role = aws_iam_role.example.name
 
   policy = <<POLICY
 {
@@ -105,7 +105,7 @@ resource "aws_codebuild_project" "example" {
   name          = "test-project"
   description   = "test_codebuild_project"
   build_timeout = "5"
-  service_role  = "${aws_iam_role.example.arn}"
+  service_role  = aws_iam_role.example.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -113,7 +113,7 @@ resource "aws_codebuild_project" "example" {
 
   cache {
     type     = "S3"
-    location = "${aws_s3_bucket.example.bucket}"
+    location = aws_s3_bucket.example.bucket
   }
 
   environment {
@@ -159,16 +159,16 @@ resource "aws_codebuild_project" "example" {
   source_version = "master"
 
   vpc_config {
-    vpc_id = "${aws_vpc.example.id}"
+    vpc_id = aws_vpc.example.id
 
     subnets = [
-      "${aws_subnet.example1.id}",
-      "${aws_subnet.example2.id}",
+      aws_subnet.example1.id,
+      aws_subnet.example2.id,
     ]
 
     security_group_ids = [
-      "${aws_security_group.example1.id}",
-      "${aws_security_group.example2.id}",
+      aws_security_group.example1.id,
+      aws_security_group.example2.id,
     ]
   }
 
@@ -183,7 +183,7 @@ resource "aws_codebuild_project" "project-with-cache" {
   build_timeout  = "5"
   queued_timeout = "5"
 
-  service_role = "${aws_iam_role.example.arn}"
+  service_role = aws_iam_role.example.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -273,7 +273,7 @@ The following arguments are supported:
 
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
-* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
+* `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`, and `SECRETS_MANAGER`.
 
 `logs_config` supports the following:
 

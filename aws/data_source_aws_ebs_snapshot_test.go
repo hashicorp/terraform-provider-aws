@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
@@ -21,6 +21,7 @@ func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsSnapshotDataSourceID(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", resourceName, "kms_key_id"),
@@ -98,17 +99,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 1
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 }
 
 data "aws_ebs_snapshot" "test" {
-  snapshot_ids = ["${aws_ebs_snapshot.test.id}"]
+  snapshot_ids = [aws_ebs_snapshot.test.id]
 }
 `
 
@@ -123,19 +124,19 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 1
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 }
 
 data "aws_ebs_snapshot" "test" {
   filter {
-    name = "snapshot-id"
-    values = ["${aws_ebs_snapshot.test.id}"]
+    name   = "snapshot-id"
+    values = [aws_ebs_snapshot.test.id]
   }
 }
 `
@@ -151,13 +152,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 1
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
 }
 
 resource "aws_ebs_snapshot" "incorrect" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-ebs-snapshot-data-source-most-recent"
@@ -165,7 +166,7 @@ resource "aws_ebs_snapshot" "incorrect" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_snapshot.incorrect.volume_id}"
+  volume_id = aws_ebs_snapshot.incorrect.volume_id
 
   tags = {
     Name = "tf-acc-test-ec2-ebs-snapshot-data-source-most-recent"
@@ -177,7 +178,7 @@ data "aws_ebs_snapshot" "test" {
 
   filter {
     name   = "tag:Name"
-    values = ["${aws_ebs_snapshot.test.tags.Name}"]
+    values = [aws_ebs_snapshot.test.tags.Name]
   }
 }
 `

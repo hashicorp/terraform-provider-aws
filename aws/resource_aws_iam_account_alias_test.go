@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSIAMAccountAlias(t *testing.T) {
+func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Basic": {
 			"basic": testAccAWSIAMAccountAlias_basic_with_datasource,
