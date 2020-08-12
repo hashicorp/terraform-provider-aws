@@ -244,7 +244,7 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						"delete_on_termination": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"description": {
