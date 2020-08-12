@@ -290,8 +290,8 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("allow_major_version_upgrade") {
-		request.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		request.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
 	}
