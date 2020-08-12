@@ -88,7 +88,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
-  repository = "${aws_ecr_repository.test.name}"
+  repository = aws_ecr_repository.test.name
 
   policy = <<EOF
 {
@@ -109,6 +109,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
   ]
 }
 EOF
+
 }
 `, rName)
 }

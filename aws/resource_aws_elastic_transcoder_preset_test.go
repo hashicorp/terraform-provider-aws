@@ -423,8 +423,8 @@ resource "aws_elastictranscoder_preset" "test" {
 func testAccAwsElasticTranscoderPresetConfigVideoFrameRate(rName string, frameRate string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
-  container   = "mp4"
-  name        = %[1]q
+  container = "mp4"
+  name      = %[1]q
 
   thumbnails {
     format         = "png"

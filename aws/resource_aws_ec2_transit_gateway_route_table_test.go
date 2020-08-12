@@ -226,7 +226,7 @@ func testAccAWSEc2TransitGatewayRouteTableConfig() string {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
 }
 `
 }
@@ -236,7 +236,7 @@ func testAccAWSEc2TransitGatewayRouteTableConfigTags1(tagKey1, tagValue1 string)
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
 
   tags = {
     %q = %q
@@ -250,7 +250,7 @@ func testAccAWSEc2TransitGatewayRouteTableConfigTags2(tagKey1, tagValue1, tagKey
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
 
   tags = {
     %q = %q
