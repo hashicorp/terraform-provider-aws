@@ -104,8 +104,8 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_vpc_peering_connection" "test" {
-	vpc_id = "${aws_vpc.foo.id}"
-	peer_vpc_id = "${aws_vpc.bar.id}"
+	vpc_id = aws_vpc.foo.id
+	peer_vpc_id = aws_vpc.bar.id
 	auto_accept = true
 
   tags = {
@@ -116,17 +116,17 @@ resource "aws_vpc_peering_connection" "test" {
 data "aws_caller_identity" "current" {}
 
 data "aws_vpc_peering_connection" "test_by_id" {
-	id = "${aws_vpc_peering_connection.test.id}"
+	id = aws_vpc_peering_connection.test.id
 }
 
 data "aws_vpc_peering_connection" "test_by_requester_vpc_id" {
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = aws_vpc.foo.id
 
 	depends_on = ["aws_vpc_peering_connection.test"]
 }
 
 data "aws_vpc_peering_connection" "test_by_accepter_vpc_id" {
-	peer_vpc_id = "${aws_vpc.bar.id}"
+	peer_vpc_id = aws_vpc.bar.id
 
 	depends_on = ["aws_vpc_peering_connection.test"]
 }
@@ -146,8 +146,8 @@ data "aws_vpc_peering_connection" "test_by_accepter_cidr_block" {
 }
 
 data "aws_vpc_peering_connection" "test_by_owner_ids" {
-	owner_id = "${data.aws_caller_identity.current.account_id}"
-	peer_owner_id = "${data.aws_caller_identity.current.account_id}"
+	owner_id = data.aws_caller_identity.current.account_id
+	peer_owner_id = data.aws_caller_identity.current.account_id
 	status = "active"
 
 	depends_on = ["aws_vpc_peering_connection.test"]
@@ -164,7 +164,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "foo_secondary_cidr" {
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
   cidr_block = "10.5.0.0/16"
 }
 
@@ -177,13 +177,13 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "bar_secondary_cidr" {
-  vpc_id     = "${aws_vpc.bar.id}"
+  vpc_id     = aws_vpc.bar.id
   cidr_block = "10.7.0.0/16"
 }
 
 resource "aws_vpc_peering_connection" "test" {
-	vpc_id = "${aws_vpc.foo.id}"
-	peer_vpc_id = "${aws_vpc.bar.id}"
+	vpc_id = aws_vpc.foo.id
+	peer_vpc_id = aws_vpc.bar.id
 	auto_accept = true
 
   tags = {
@@ -194,6 +194,6 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 data "aws_vpc_peering_connection" "test_by_id" {
-	id = "${aws_vpc_peering_connection.test.id}"
+	id = aws_vpc_peering_connection.test.id
 }
 `
