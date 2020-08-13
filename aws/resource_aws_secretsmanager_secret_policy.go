@@ -36,6 +36,10 @@ func resourceAwsSecretsManagerSecretPolicy() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
+			"block_public_policy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -46,6 +50,10 @@ func resourceAwsSecretsManagerSecretPolicyCreate(d *schema.ResourceData, meta in
 	input := &secretsmanager.PutResourcePolicyInput{
 		ResourcePolicy: aws.String(d.Get("policy").(string)),
 		SecretId:       aws.String(d.Get("secret_arn").(string)),
+	}
+
+	if v, ok := d.GetOk("block_public_policy"); ok {
+		input.BlockPublicPolicy = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
@@ -109,14 +117,15 @@ func resourceAwsSecretsManagerSecretPolicyRead(d *schema.ResourceData, meta inte
 func resourceAwsSecretsManagerSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
 
-	if d.HasChange("policy") {
+	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 		if err != nil {
 			return fmt.Errorf("policy contains an invalid JSON: %s", err)
 		}
 		input := &secretsmanager.PutResourcePolicyInput{
-			ResourcePolicy: aws.String(policy),
-			SecretId:       aws.String(d.Id()),
+			ResourcePolicy:    aws.String(policy),
+			SecretId:          aws.String(d.Id()),
+			BlockPublicPolicy: aws.Bool(d.Get("block_public_policy").(bool)),
 		}
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)

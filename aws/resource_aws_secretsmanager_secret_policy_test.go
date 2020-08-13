@@ -82,9 +82,10 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
 				Config: testAccAwsSecretsManagerSecretPolicyUpdatedConfig(rName),
@@ -92,6 +93,47 @@ func TestAccAwsSecretsManagerSecretPolicy_basic(t *testing.T) {
 					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(`{"Action":"secretsmanager:\*".+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
+	var policy secretsmanager.GetResourcePolicyOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecretsManagerSecretPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretPolicyBlockConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"block_public_policy"},
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretPolicyBlockConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
+				),
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretPolicyBlockConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
 		},
@@ -289,4 +331,53 @@ resource "aws_secretsmanager_secret_policy" "test" {
 POLICY
 }
 `, rName)
+}
+
+func testAccAwsSecretsManagerSecretPolicyBlockConfig(rName string, block bool) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q 
+  assume_role_policy   = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_policy" "test" {
+  secret_arn          = aws_secretsmanager_secret.test.arn
+  block_public_policy = %[2]t
+  
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+	{
+	  "Sid": "EnableAllPermissions",
+	  "Effect": "Allow",
+	  "Principal": {
+		"AWS": "${aws_iam_role.test.arn}"
+	  },
+	  "Action": "secretsmanager:GetSecretValue",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
+}
+`, rName, block)
 }
