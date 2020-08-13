@@ -9,6 +9,7 @@ ENHANCEMENTS
 * resource/aws_codebuild_project: Support `WINDOWS_SERVER_2019_CONTAINER` value in `environment` `type` argument plan-time validation [GH-14532]
 * resource/aws_organizations_policy: Support `AISERVICES_OPT_OUT_POLICY` value in `type` argument plan-time validation (Support AI Opt Out policies) [GH-14528]
 * resource/aws_route53_health_check: Add `disabled` argument [GH-14614]
+
 BUG FIXES
 
 * data-source/aws_launch_template: Prevent type error with `network_interfaces` `delete_on_termination` attribute [GH-14599]
