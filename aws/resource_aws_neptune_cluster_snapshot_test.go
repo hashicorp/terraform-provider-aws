@@ -118,7 +118,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_neptune_cluster.test.id}"
+  db_cluster_identifier          = aws_neptune_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
 }
 `, rName)
