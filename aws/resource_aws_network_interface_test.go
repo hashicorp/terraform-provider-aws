@@ -892,7 +892,7 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENITagsConfig1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -901,15 +901,6 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-
-data "aws_availability_zones" "available" {
-   state = "available"
-
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
 
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
@@ -952,7 +943,7 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENITagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -961,15 +952,6 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-
-data "aws_availability_zones" "available" {
-   state = "available"
-
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
 
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
