@@ -213,13 +213,13 @@ resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
   name    = "%s"
-  type = "%s"
+  type    = "%s"
   content = %s
 }
 
 resource "aws_organizations_policy_attachment" "test" {
-  policy_id = "${aws_organizations_policy.test.id}"
-  target_id = "${aws_organizations_organization.test.master_account_id}"
+  policy_id = aws_organizations_policy.test.id
+  target_id = aws_organizations_organization.test.master_account_id
 }
 `, rName, policyType, strconv.Quote(policyContent))
 }
@@ -232,19 +232,29 @@ resource "aws_organizations_organization" "test" {
 
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
-  parent_id = "${aws_organizations_organization.test.roots.0.id}"
+  parent_id = aws_organizations_organization.test.roots.0.id
 }
 
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name    = %[1]q
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_organizations_policy_attachment" "test" {
-  policy_id = "${aws_organizations_policy.test.id}"
-  target_id = "${aws_organizations_organizational_unit.test.id}"
+  policy_id = aws_organizations_policy.test.id
+  target_id = aws_organizations_organizational_unit.test.id
 }
 `, rName)
 }
@@ -258,13 +268,23 @@ resource "aws_organizations_organization" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name    = %[1]q
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_organizations_policy_attachment" "test" {
-  policy_id = "${aws_organizations_policy.test.id}"
-  target_id = "${aws_organizations_organization.test.roots.0.id}"
+  policy_id = aws_organizations_policy.test.id
+  target_id = aws_organizations_organization.test.roots.0.id
 }
 `, rName)
 }

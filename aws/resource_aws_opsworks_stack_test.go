@@ -231,8 +231,8 @@ provider "aws" {
 resource "aws_opsworks_stack" "main" {
   name                         = "%s"
   region                       = "us-west-2"
-  service_role_arn             = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
 
   configuration_manager_version = "12"
   default_availability_zone     = "us-west-2b"
@@ -256,11 +256,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "tf_opsworks_service_%d"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -274,11 +275,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -299,11 +303,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_profile"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_profile"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, rName, rInt, rInt, rInt, rName)
 }
@@ -317,8 +322,8 @@ provider "aws" {
 resource "aws_opsworks_stack" "main" {
   name                         = "%s"
   region                       = "us-west-2"
-  service_role_arn             = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
 
   configuration_manager_version = "12"
   default_availability_zone     = "us-west-2b"
@@ -342,11 +347,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "tf_opsworks_service_%d"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -360,11 +366,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -385,11 +394,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_profile"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_profile"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, rName, rInt, rInt, rInt, rName)
 }
@@ -724,14 +734,20 @@ provider "aws" {
 }
 
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-east-1"
-  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_availability_zone     = "us-east-1a"
-  default_os                    = "Amazon Linux 2016.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-east-1"
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_availability_zone    = "us-east-1a"
+  default_os                   = "Amazon Linux 2016.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
 }
@@ -754,11 +770,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -772,11 +789,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -797,11 +817,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, name, name, name, name)
 }
@@ -809,14 +830,20 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 func testAccAwsOpsworksStackConfigNoVpcCreateTags(name string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-west-2"
-  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_availability_zone     = "us-west-2a"
-  default_os                    = "Amazon Linux 2016.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-west-2"
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_availability_zone    = "us-west-2a"
+  default_os                   = "Amazon Linux 2016.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
 
@@ -843,11 +870,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -861,11 +889,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -886,11 +917,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, name, name, name, name)
 }
@@ -898,14 +930,20 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 func testAccAwsOpsworksStackConfigNoVpcUpdateTags(name string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-west-2"
-  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_availability_zone     = "us-west-2a"
-  default_os                    = "Amazon Linux 2016.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-west-2"
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_availability_zone    = "us-west-2a"
+  default_os                   = "Amazon Linux 2016.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
 
@@ -932,11 +970,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -950,11 +989,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -975,11 +1017,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, name, name, name, name)
 }
@@ -991,14 +1034,20 @@ provider "aws" {
 }
 
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-east-1"
-  service_role_arn              = "${aws_iam_role.opsworks_service_new.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_availability_zone     = "us-east-1a"
-  default_os                    = "Amazon Linux 2016.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-east-1"
+  service_role_arn             = aws_iam_role.opsworks_service_new.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_availability_zone    = "us-east-1a"
+  default_os                   = "Amazon Linux 2016.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
 }
@@ -1021,6 +1070,7 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_service_new" {
@@ -1041,11 +1091,12 @@ resource "aws_iam_role" "opsworks_service_new" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service_new" {
   name = "%s_opsworks_service_new"
-  role = "${aws_iam_role.opsworks_service_new.id}"
+  role = aws_iam_role.opsworks_service_new.id
 
   policy = <<EOT
 {
@@ -1059,16 +1110,19 @@ resource "aws_iam_role_policy" "opsworks_service_new" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -1082,11 +1136,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1107,11 +1164,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, name, name, name, name, name, name)
 }
@@ -1131,8 +1189,8 @@ resource "aws_vpc" "tf-acc" {
 }
 
 resource "aws_subnet" "tf-acc" {
-  vpc_id            = "${aws_vpc.tf-acc.id}"
-  cidr_block        = "${aws_vpc.tf-acc.cidr_block}"
+  vpc_id            = aws_vpc.tf-acc.id
+  cidr_block        = aws_vpc.tf-acc.cidr_block
   availability_zone = "us-west-2a"
 
   tags = {
@@ -1141,15 +1199,21 @@ resource "aws_subnet" "tf-acc" {
 }
 
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-west-2"
-  vpc_id                        = "${aws_vpc.tf-acc.id}"
-  default_subnet_id             = "${aws_subnet.tf-acc.id}"
-  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_os                    = "Amazon Linux 2016.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-west-2"
+  vpc_id                       = aws_vpc.tf-acc.id
+  default_subnet_id            = aws_subnet.tf-acc.id
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_os                   = "Amazon Linux 2016.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
 }
@@ -1172,11 +1236,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -1190,11 +1255,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1215,11 +1283,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, name, name, name, name)
 }
@@ -1235,8 +1304,8 @@ resource "aws_vpc" "tf-acc" {
 }
 
 resource "aws_subnet" "tf-acc" {
-  vpc_id            = "${aws_vpc.tf-acc.id}"
-  cidr_block        = "${aws_vpc.tf-acc.cidr_block}"
+  vpc_id            = aws_vpc.tf-acc.id
+  cidr_block        = aws_vpc.tf-acc.cidr_block
   availability_zone = "us-west-2a"
 
   tags = {
@@ -1245,15 +1314,21 @@ resource "aws_subnet" "tf-acc" {
 }
 
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-west-2"
-  vpc_id                        = "${aws_vpc.tf-acc.id}"
-  default_subnet_id             = "${aws_subnet.tf-acc.id}"
-  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_os                    = "Amazon Linux 2015.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-west-2"
+  vpc_id                       = aws_vpc.tf-acc.id
+  default_subnet_id            = aws_subnet.tf-acc.id
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_os                   = "Amazon Linux 2015.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
   use_custom_cookbooks          = true
@@ -1284,11 +1359,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -1302,11 +1378,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1327,11 +1406,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, name, name, name, name)
 }
@@ -1351,8 +1431,8 @@ resource "aws_vpc" "tf-acc" {
 }
 
 resource "aws_subnet" "tf-acc" {
-  vpc_id            = "${aws_vpc.tf-acc.id}"
-  cidr_block        = "${aws_vpc.tf-acc.cidr_block}"
+  vpc_id            = aws_vpc.tf-acc.id
+  cidr_block        = aws_vpc.tf-acc.cidr_block
   availability_zone = "us-west-2a"
 
   tags = {
@@ -1361,15 +1441,21 @@ resource "aws_subnet" "tf-acc" {
 }
 
 resource "aws_opsworks_stack" "tf-acc" {
-  name                          = "%s"
-  region                        = "us-west-2"
-  vpc_id                        = "${aws_vpc.tf-acc.id}"
-  default_subnet_id             = "${aws_subnet.tf-acc.id}"
-  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_os                    = "Amazon Linux 2016.09"
-  default_root_device_type      = "ebs"
-  custom_json                   = "{\"key\": \"value\"}"
+  name                         = "%s"
+  region                       = "us-west-2"
+  vpc_id                       = aws_vpc.tf-acc.id
+  default_subnet_id            = aws_subnet.tf-acc.id
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  default_os                   = "Amazon Linux 2016.09"
+  default_root_device_type     = "ebs"
+
+  custom_json = <<EOF
+{
+  "key": "value"
+}
+EOF
+
   configuration_manager_version = "11.10"
   use_opsworks_security_groups  = false
   use_custom_cookbooks          = true
@@ -1403,11 +1489,12 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
-  role = "${aws_iam_role.opsworks_service.id}"
+  role = aws_iam_role.opsworks_service.id
 
   policy = <<EOT
 {
@@ -1421,11 +1508,14 @@ resource "aws_iam_role_policy" "opsworks_service" {
         "rds:*"
       ],
       "Effect": "Allow",
-      "Resource": ["*"]
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1446,11 +1536,12 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
+
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name  = "%s_opsworks_instance"
-  role  = "${aws_iam_role.opsworks_instance.name}"
+  name = "%s_opsworks_instance"
+  role = aws_iam_role.opsworks_instance.name
 }
 `, name, sshKey, name, name, name, name)
 }

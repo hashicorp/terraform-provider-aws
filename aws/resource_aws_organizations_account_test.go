@@ -228,18 +228,18 @@ resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test1" {
   name      = "test1"
-  parent_id = "${aws_organizations_organization.test.roots.0.id}"
+  parent_id = aws_organizations_organization.test.roots.0.id
 }
 
 resource "aws_organizations_organizational_unit" "test2" {
   name      = "test2"
-  parent_id = "${aws_organizations_organization.test.roots.0.id}"
+  parent_id = aws_organizations_organization.test.roots.0.id
 }
 
 resource "aws_organizations_account" "test" {
   name      = %[1]q
   email     = %[2]q
-  parent_id = "${aws_organizations_organizational_unit.test1.id}"
+  parent_id = aws_organizations_organizational_unit.test1.id
 }
 `, name, email)
 }
@@ -250,18 +250,18 @@ resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test1" {
   name      = "test1"
-  parent_id = "${aws_organizations_organization.test.roots.0.id}"
+  parent_id = aws_organizations_organization.test.roots.0.id
 }
 
 resource "aws_organizations_organizational_unit" "test2" {
   name      = "test2"
-  parent_id = "${aws_organizations_organization.test.roots.0.id}"
+  parent_id = aws_organizations_organization.test.roots.0.id
 }
 
 resource "aws_organizations_account" "test" {
   name      = %[1]q
   email     = %[2]q
-  parent_id = "${aws_organizations_organizational_unit.test2.id}"
+  parent_id = aws_organizations_organizational_unit.test2.id
 }
 `, name, email)
 }
