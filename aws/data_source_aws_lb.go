@@ -75,18 +75,6 @@ func dataSourceAwsLb() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
-					if m["allocation_id"] != "" {
-						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
-					}
-					if m["private_ipv4_address"] != "" {
-						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
-					}
-					return hashcode.String(buf.String())
-				},
 			},
 
 			"access_logs": {
