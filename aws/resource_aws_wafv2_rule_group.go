@@ -95,7 +95,6 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"priority": {
