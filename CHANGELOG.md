@@ -15,7 +15,7 @@ BUG FIXES
 * data-source/aws_launch_template: Prevent type error with `network_interfaces` `delete_on_termination` attribute [GH-14599]
 * resource/aws_acm_certificate_validation: Prevent panic with missing `DomainValidationOptions` `ResourceRecord` attribute in API response [GH-14590] 
 * resource/aws_ecr_repository: Prevent panic with missing `EncryptionConfiguration` attribute in API response [GH-14584]
-
+* resource/aws_wafv2_web_acl: Prevent unnecessary resource recreation with `rule` updates [GH-14616]
 ## 3.1.0 (August 07, 2020)
 
 NOTES:
