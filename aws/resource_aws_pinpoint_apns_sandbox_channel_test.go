@@ -190,7 +190,7 @@ func testAccAWSPinpointAPNSSandboxChannelConfig_basicCertificate(conf *testAccAw
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
-  application_id                = "${aws_pinpoint_app.test_app.application_id}"
+  application_id                = aws_pinpoint_app.test_app.application_id
   enabled                       = false
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
@@ -204,7 +204,7 @@ func testAccAWSPinpointAPNSSandboxChannelConfig_basicToken(conf *testAccAwsPinpo
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
-  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  application_id = aws_pinpoint_app.test_app.application_id
   enabled        = false
 
   default_authentication_method = "TOKEN"

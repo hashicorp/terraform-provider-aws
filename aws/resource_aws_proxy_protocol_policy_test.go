@@ -92,7 +92,7 @@ resource "aws_elb" "lb" {
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = "${aws_elb.lb.name}"
+  load_balancer  = aws_elb.lb.name
   instance_ports = ["25"]
 }
 `, rName)
@@ -120,7 +120,7 @@ resource "aws_elb" "lb" {
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = "${aws_elb.lb.name}"
+  load_balancer  = aws_elb.lb.name
   instance_ports = ["25", "587"]
 }
 `, rName)
