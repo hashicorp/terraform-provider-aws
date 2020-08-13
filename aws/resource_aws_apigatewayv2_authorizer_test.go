@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
@@ -19,10 +20,9 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
@@ -32,7 +32,7 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -79,10 +79,9 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2AuthorizerConfig_credentials(rName),
@@ -92,7 +91,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -111,8 +110,8 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.4138478046", "route.request.querystring.Name"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.querystring.Name"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-updated", rName)),
 				),
@@ -125,7 +124,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.645907014", "route.request.header.Auth"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -141,10 +140,9 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName),
@@ -154,10 +152,10 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "JWT"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.2786136151", "$request.header.Authorization"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.1785148924", "test"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "test"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -175,11 +173,11 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "JWT"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.2786136151", "$request.header.Authorization"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.1785148924", "test"),
-					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.0.audience.2323796166", "testing"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "test"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "jwt_configuration.0.audience.*", "testing"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},

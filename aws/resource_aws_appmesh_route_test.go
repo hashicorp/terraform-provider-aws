@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -160,6 +161,29 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAppmeshRouteConfig_httpRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
@@ -203,6 +227,24 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 			},
 			{
 				Config: testAccAppmeshRouteConfig_tcpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.0.action.0.weighted_target.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfig_tcpRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshRouteExists(resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -295,10 +337,9 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAppmeshRouteDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAppmeshRouteConfig_httpHeader(meshName, vrName, vn1Name, vn2Name, rName),
@@ -313,9 +354,11 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2366200004.invert", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2366200004.match.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2366200004.name", "X-Testing1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http_route.0.match.0.header.*", map[string]string{
+						"invert":  "false",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", "http"),
@@ -339,19 +382,23 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2971741486.invert", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2971741486.match.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.2971741486.name", "X-Testing1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.invert", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.exact", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.range.0.end", "7"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.range.0.start", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.regex", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.match.0.suffix", ""),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.3147536248.name", "X-Testing2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http_route.0.match.0.header.*", map[string]string{
+						"invert":  "true",
+						"match.#": "0",
+						"name":    "X-Testing1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http_route.0.match.0.header.*", map[string]string{
+						"invert":              "false",
+						"match.#":             "1",
+						"match.0.exact":       "",
+						"match.0.prefix":      "",
+						"match.0.range.#":     "1",
+						"match.0.range.0.end": "7",
+						"range.0.start":       "2",
+						"match.0.regex":       "",
+						"match.0.suffix":      "",
+						"name":                "X-Testing2",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", "PUT"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/path"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", "https"),
@@ -596,6 +643,36 @@ resource "aws_appmesh_route" "test" {
 `, rName)
 }
 
+func testAccAppmeshRouteConfig_httpRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/path"
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 99
+        }
+
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          weight       = 0
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
 func testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
 	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
@@ -635,6 +712,32 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = "${aws_appmesh_virtual_node.bar.name}"
           weight       = 10
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppmeshRouteConfig_tcpRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    tcp_route {
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 99
+        }
+
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          weight       = 0
         }
       }
     }

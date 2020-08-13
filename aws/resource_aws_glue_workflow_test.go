@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -44,7 +44,7 @@ func testSweepGlueWorkflow(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueWorkflow_Basic(t *testing.T) {
+func TestAccAWSGlueWorkflow_basic(t *testing.T) {
 	var workflow glue.Workflow
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))

@@ -4,6 +4,8 @@ package medialive
 
 import (
 	"fmt"
+	"io"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
@@ -1634,6 +1636,96 @@ func (c *MediaLive) DescribeInputDevice(input *DescribeInputDeviceInput) (*Descr
 // for more information on using Contexts.
 func (c *MediaLive) DescribeInputDeviceWithContext(ctx aws.Context, input *DescribeInputDeviceInput, opts ...request.Option) (*DescribeInputDeviceOutput, error) {
 	req, out := c.DescribeInputDeviceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeInputDeviceThumbnail = "DescribeInputDeviceThumbnail"
+
+// DescribeInputDeviceThumbnailRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeInputDeviceThumbnail operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeInputDeviceThumbnail for more information on using the DescribeInputDeviceThumbnail
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeInputDeviceThumbnailRequest method.
+//    req, resp := client.DescribeInputDeviceThumbnailRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputDeviceThumbnail
+func (c *MediaLive) DescribeInputDeviceThumbnailRequest(input *DescribeInputDeviceThumbnailInput) (req *request.Request, output *DescribeInputDeviceThumbnailOutput) {
+	op := &request.Operation{
+		Name:       opDescribeInputDeviceThumbnail,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/inputDevices/{inputDeviceId}/thumbnailData",
+	}
+
+	if input == nil {
+		input = &DescribeInputDeviceThumbnailInput{}
+	}
+
+	output = &DescribeInputDeviceThumbnailOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeInputDeviceThumbnail API operation for AWS Elemental MediaLive.
+//
+// Get the latest thumbnail data for the input device.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeInputDeviceThumbnail for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputDeviceThumbnail
+func (c *MediaLive) DescribeInputDeviceThumbnail(input *DescribeInputDeviceThumbnailInput) (*DescribeInputDeviceThumbnailOutput, error) {
+	req, out := c.DescribeInputDeviceThumbnailRequest(input)
+	return out, req.Send()
+}
+
+// DescribeInputDeviceThumbnailWithContext is the same as DescribeInputDeviceThumbnail with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeInputDeviceThumbnail for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeInputDeviceThumbnailWithContext(ctx aws.Context, input *DescribeInputDeviceThumbnailInput, opts ...request.Option) (*DescribeInputDeviceThumbnailOutput, error) {
+	req, out := c.DescribeInputDeviceThumbnailRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5246,9 +5338,10 @@ type AudioDescription struct {
 	// Audio codec settings.
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure"`
 
-	// Indicates the language of the audio output track. Only used if languageControlMode
-	// is useConfigured, or there is no ISO 639 language code specified in the input.
-	LanguageCode *string `locationName:"languageCode" min:"3" type:"string"`
+	// RFC 5646 language code representing the language of the audio output track.
+	// Only used if languageControlMode is useConfigured, or there is no ISO 639
+	// language code specified in the input.
+	LanguageCode *string `locationName:"languageCode" min:"1" type:"string"`
 
 	// Choosing followInput will cause the ISO 639 language code of the output to
 	// follow the ISO 639 language code of the input. The languageCode will be used
@@ -5288,8 +5381,8 @@ func (s *AudioDescription) Validate() error {
 	if s.AudioSelectorName == nil {
 		invalidParams.Add(request.NewErrParamRequired("AudioSelectorName"))
 	}
-	if s.LanguageCode != nil && len(*s.LanguageCode) < 3 {
-		invalidParams.Add(request.NewErrParamMinLen("LanguageCode", 3))
+	if s.LanguageCode != nil && len(*s.LanguageCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LanguageCode", 1))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
@@ -6769,6 +6862,9 @@ type CaptionDestinationSettings struct {
 	// Dvb Sub Destination Settings
 	DvbSubDestinationSettings *DvbSubDestinationSettings `locationName:"dvbSubDestinationSettings" type:"structure"`
 
+	// Ebu Tt DDestination Settings
+	EbuTtDDestinationSettings *EbuTtDDestinationSettings `locationName:"ebuTtDDestinationSettings" type:"structure"`
+
 	// Embedded Destination Settings
 	EmbeddedDestinationSettings *EmbeddedDestinationSettings `locationName:"embeddedDestinationSettings" type:"structure"`
 
@@ -6842,6 +6938,12 @@ func (s *CaptionDestinationSettings) SetBurnInDestinationSettings(v *BurnInDesti
 // SetDvbSubDestinationSettings sets the DvbSubDestinationSettings field's value.
 func (s *CaptionDestinationSettings) SetDvbSubDestinationSettings(v *DvbSubDestinationSettings) *CaptionDestinationSettings {
 	s.DvbSubDestinationSettings = v
+	return s
+}
+
+// SetEbuTtDDestinationSettings sets the EbuTtDDestinationSettings field's value.
+func (s *CaptionDestinationSettings) SetEbuTtDDestinationSettings(v *EbuTtDDestinationSettings) *CaptionDestinationSettings {
+	s.EbuTtDDestinationSettings = v
 	return s
 }
 
@@ -9307,6 +9409,113 @@ func (s *DescribeInputDeviceOutput) SetType(v string) *DescribeInputDeviceOutput
 	return s
 }
 
+type DescribeInputDeviceThumbnailInput struct {
+	_ struct{} `type:"structure"`
+
+	// Accept Header
+	//
+	// Accept is a required field
+	Accept *string `location:"header" locationName:"accept" type:"string" required:"true" enum:"AcceptHeader"`
+
+	// InputDeviceId is a required field
+	InputDeviceId *string `location:"uri" locationName:"inputDeviceId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeInputDeviceThumbnailInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInputDeviceThumbnailInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInputDeviceThumbnailInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInputDeviceThumbnailInput"}
+	if s.Accept == nil {
+		invalidParams.Add(request.NewErrParamRequired("Accept"))
+	}
+	if s.InputDeviceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputDeviceId"))
+	}
+	if s.InputDeviceId != nil && len(*s.InputDeviceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputDeviceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccept sets the Accept field's value.
+func (s *DescribeInputDeviceThumbnailInput) SetAccept(v string) *DescribeInputDeviceThumbnailInput {
+	s.Accept = &v
+	return s
+}
+
+// SetInputDeviceId sets the InputDeviceId field's value.
+func (s *DescribeInputDeviceThumbnailInput) SetInputDeviceId(v string) *DescribeInputDeviceThumbnailInput {
+	s.InputDeviceId = &v
+	return s
+}
+
+type DescribeInputDeviceThumbnailOutput struct {
+	_ struct{} `type:"structure" payload:"Body"`
+
+	Body io.ReadCloser `locationName:"body" type:"blob"`
+
+	ContentLength *int64 `location:"header" locationName:"Content-Length" type:"long"`
+
+	ContentType *string `location:"header" locationName:"Content-Type" type:"string" enum:"ContentType"`
+
+	ETag *string `location:"header" locationName:"ETag" type:"string"`
+
+	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s DescribeInputDeviceThumbnailOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInputDeviceThumbnailOutput) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetBody(v io.ReadCloser) *DescribeInputDeviceThumbnailOutput {
+	s.Body = v
+	return s
+}
+
+// SetContentLength sets the ContentLength field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetContentLength(v int64) *DescribeInputDeviceThumbnailOutput {
+	s.ContentLength = &v
+	return s
+}
+
+// SetContentType sets the ContentType field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetContentType(v string) *DescribeInputDeviceThumbnailOutput {
+	s.ContentType = &v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetETag(v string) *DescribeInputDeviceThumbnailOutput {
+	s.ETag = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *DescribeInputDeviceThumbnailOutput) SetLastModified(v time.Time) *DescribeInputDeviceThumbnailOutput {
+	s.LastModified = &v
+	return s
+}
+
 type DescribeInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10936,6 +11145,66 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 	return s
 }
 
+// Ebu Tt DDestination Settings
+type EbuTtDDestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies how to handle the gap between the lines (in multi-line captions).-
+	// enabled: Fill with the captions background color (as specified in the input
+	// captions).- disabled: Leave the gap unfilled.
+	FillLineGap *string `locationName:"fillLineGap" type:"string" enum:"EbuTtDFillLineGapControl"`
+
+	// Specifies the font family to include in the font data attached to the EBU-TT
+	// captions. Valid only if styleControl is set to include. If you leave this
+	// field empty, the font family is set to "monospaced". (If styleControl is
+	// set to exclude, the font family is always set to "monospaced".)You specify
+	// only the font family. All other style information (color, bold, position
+	// and so on) is copied from the input captions. The size is always set to 100%
+	// to allow the downstream player to choose the size.- Enter a list of font
+	// families, as a comma-separated list of font names, in order of preference.
+	// The name can be a font family (such as “Arial”), or a generic font family
+	// (such as “serif”), or “default” (to let the downstream player choose
+	// the font).- Leave blank to set the family to “monospace”.
+	FontFamily *string `locationName:"fontFamily" type:"string"`
+
+	// Specifies the style information (font color, font position, and so on) to
+	// include in the font data that is attached to the EBU-TT captions.- include:
+	// Take the style information (font color, font position, and so on) from the
+	// source captions and include that information in the font data attached to
+	// the EBU-TT captions. This option is valid only if the source captions are
+	// Embedded or Teletext.- exclude: In the font data attached to the EBU-TT captions,
+	// set the font family to "monospaced". Do not include any other style information.
+	StyleControl *string `locationName:"styleControl" type:"string" enum:"EbuTtDDestinationStyleControl"`
+}
+
+// String returns the string representation
+func (s EbuTtDDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EbuTtDDestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetFillLineGap sets the FillLineGap field's value.
+func (s *EbuTtDDestinationSettings) SetFillLineGap(v string) *EbuTtDDestinationSettings {
+	s.FillLineGap = &v
+	return s
+}
+
+// SetFontFamily sets the FontFamily field's value.
+func (s *EbuTtDDestinationSettings) SetFontFamily(v string) *EbuTtDDestinationSettings {
+	s.FontFamily = &v
+	return s
+}
+
+// SetStyleControl sets the StyleControl field's value.
+func (s *EbuTtDDestinationSettings) SetStyleControl(v string) *EbuTtDDestinationSettings {
+	s.StyleControl = &v
+	return s
+}
+
 // Embedded Destination Settings
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
@@ -11055,6 +11324,9 @@ type EncoderSettings struct {
 
 	// Settings for caption decriptions
 	CaptionDescriptions []*CaptionDescription `locationName:"captionDescriptions" type:"list"`
+
+	// Feature Activations
+	FeatureActivations *FeatureActivations `locationName:"featureActivations" type:"structure"`
 
 	// Configuration settings that apply to the event as a whole.
 	GlobalConfiguration *GlobalConfiguration `locationName:"globalConfiguration" type:"structure"`
@@ -11201,6 +11473,12 @@ func (s *EncoderSettings) SetCaptionDescriptions(v []*CaptionDescription) *Encod
 	return s
 }
 
+// SetFeatureActivations sets the FeatureActivations field's value.
+func (s *EncoderSettings) SetFeatureActivations(v *FeatureActivations) *EncoderSettings {
+	s.FeatureActivations = v
+	return s
+}
+
 // SetGlobalConfiguration sets the GlobalConfiguration field's value.
 func (s *EncoderSettings) SetGlobalConfiguration(v *GlobalConfiguration) *EncoderSettings {
 	s.GlobalConfiguration = v
@@ -11228,6 +11506,33 @@ func (s *EncoderSettings) SetTimecodeConfig(v *TimecodeConfig) *EncoderSettings 
 // SetVideoDescriptions sets the VideoDescriptions field's value.
 func (s *EncoderSettings) SetVideoDescriptions(v []*VideoDescription) *EncoderSettings {
 	s.VideoDescriptions = v
+	return s
+}
+
+// Feature Activations
+type FeatureActivations struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the Input Prepare feature. You can create Input Prepare actions in
+	// the schedule only if this feature is enabled.If you disable the feature on
+	// an existing schedule, make sure that you first delete all input prepare actions
+	// from the schedule.
+	InputPrepareScheduleActions *string `locationName:"inputPrepareScheduleActions" type:"string" enum:"FeatureActivationsInputPrepareScheduleActions"`
+}
+
+// String returns the string representation
+func (s FeatureActivations) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FeatureActivations) GoString() string {
+	return s.String()
+}
+
+// SetInputPrepareScheduleActions sets the InputPrepareScheduleActions field's value.
+func (s *FeatureActivations) SetInputPrepareScheduleActions(v string) *FeatureActivations {
+	s.InputPrepareScheduleActions = &v
 	return s
 }
 
@@ -11962,7 +12267,7 @@ type H264Settings struct {
 	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
 
 	// Pixel Aspect Ratio numerator.
-	ParNumerator *int64 `locationName:"parNumerator" type:"integer"`
+	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
 	// H.264 Profile.
 	Profile *string `locationName:"profile" type:"string" enum:"H264Profile"`
@@ -12064,6 +12369,9 @@ func (s *H264Settings) Validate() error {
 	}
 	if s.ParDenominator != nil && *s.ParDenominator < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ParDenominator", 1))
+	}
+	if s.ParNumerator != nil && *s.ParNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParNumerator", 1))
 	}
 	if s.QvbrQualityLevel != nil && *s.QvbrQualityLevel < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("QvbrQualityLevel", 1))
@@ -12375,6 +12683,30 @@ func (s *H265ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H265Color
 	return s
 }
 
+// H265 Filter Settings
+type H265FilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Temporal Filter Settings
+	TemporalFilterSettings *TemporalFilterSettings `locationName:"temporalFilterSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H265FilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H265FilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetTemporalFilterSettings sets the TemporalFilterSettings field's value.
+func (s *H265FilterSettings) SetTemporalFilterSettings(v *TemporalFilterSettings) *H265FilterSettings {
+	s.TemporalFilterSettings = v
+	return s
+}
+
 // H265 Settings
 type H265Settings struct {
 	_ struct{} `type:"structure"`
@@ -12407,6 +12739,9 @@ type H265Settings struct {
 
 	// Color Space settings
 	ColorSpaceSettings *H265ColorSpaceSettings `locationName:"colorSpaceSettings" type:"structure"`
+
+	// Optional filters that you can apply to an encode.
+	FilterSettings *H265FilterSettings `locationName:"filterSettings" type:"structure"`
 
 	// Four bit AFD value to write on all frames of video in the output stream.
 	// Only valid when afdSignaling is set to 'Fixed'.
@@ -12482,7 +12817,10 @@ type H265Settings struct {
 	// when it is constrained by themaximum bitrate. Recommended if you or your
 	// viewers pay for bandwidth.CBR: Quality varies, depending on the video complexity.
 	// Recommended only if you distributeyour assets to devices that cannot handle
-	// variable bitrates.
+	// variable bitrates.Multiplex: This rate control mode is only supported (and
+	// is required) when the video is beingdelivered to a MediaLive Multiplex in
+	// which case the rate control configuration is controlledby the properties
+	// within the Multiplex Program.
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H265RateControlMode"`
 
 	// Sets the scan type of the output to progressive or top-field-first interlaced.
@@ -12599,6 +12937,12 @@ func (s *H265Settings) SetColorMetadata(v string) *H265Settings {
 // SetColorSpaceSettings sets the ColorSpaceSettings field's value.
 func (s *H265Settings) SetColorSpaceSettings(v *H265ColorSpaceSettings) *H265Settings {
 	s.ColorSpaceSettings = v
+	return s
+}
+
+// SetFilterSettings sets the FilterSettings field's value.
+func (s *H265Settings) SetFilterSettings(v *H265FilterSettings) *H265Settings {
+	s.FilterSettings = v
 	return s
 }
 
@@ -14815,6 +15159,69 @@ func (s *InputLossBehavior) SetInputLossImageType(v string) *InputLossBehavior {
 // SetRepeatFrameMsec sets the RepeatFrameMsec field's value.
 func (s *InputLossBehavior) SetRepeatFrameMsec(v int64) *InputLossBehavior {
 	s.RepeatFrameMsec = &v
+	return s
+}
+
+// Action to prepare an input for a future immediate input switch.
+type InputPrepareScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the input attachment that should be prepared by this action.
+	// If no name is provided, the action will stop the most recent prepare (if
+	// any) when activated.
+	InputAttachmentNameReference *string `locationName:"inputAttachmentNameReference" type:"string"`
+
+	// Settings to let you create a clip of the file input, in order to set up the
+	// input to ingest only a portion of the file.
+	InputClippingSettings *InputClippingSettings `locationName:"inputClippingSettings" type:"structure"`
+
+	// The value for the variable portion of the URL for the dynamic input, for
+	// this instance of the input. Each time you use the same dynamic input in an
+	// input switch action, you can provide a different value, in order to connect
+	// the input to a different content source.
+	UrlPath []*string `locationName:"urlPath" type:"list"`
+}
+
+// String returns the string representation
+func (s InputPrepareScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputPrepareScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputPrepareScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputPrepareScheduleActionSettings"}
+	if s.InputClippingSettings != nil {
+		if err := s.InputClippingSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputClippingSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
+func (s *InputPrepareScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputPrepareScheduleActionSettings {
+	s.InputAttachmentNameReference = &v
+	return s
+}
+
+// SetInputClippingSettings sets the InputClippingSettings field's value.
+func (s *InputPrepareScheduleActionSettings) SetInputClippingSettings(v *InputClippingSettings) *InputPrepareScheduleActionSettings {
+	s.InputClippingSettings = v
+	return s
+}
+
+// SetUrlPath sets the UrlPath field's value.
+func (s *InputPrepareScheduleActionSettings) SetUrlPath(v []*string) *InputPrepareScheduleActionSettings {
+	s.UrlPath = v
 	return s
 }
 
@@ -19996,6 +20403,9 @@ type ScheduleActionSettings struct {
 	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
+	// Action to prepare an input for a future immediate input switch
+	InputPrepareSettings *InputPrepareScheduleActionSettings `locationName:"inputPrepareSettings" type:"structure"`
+
 	// Action to switch the input
 	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
 
@@ -20039,6 +20449,11 @@ func (s *ScheduleActionSettings) Validate() error {
 	if s.HlsTimedMetadataSettings != nil {
 		if err := s.HlsTimedMetadataSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsTimedMetadataSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.InputPrepareSettings != nil {
+		if err := s.InputPrepareSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputPrepareSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.InputSwitchSettings != nil {
@@ -20087,6 +20502,12 @@ func (s *ScheduleActionSettings) SetHlsId3SegmentTaggingSettings(v *HlsId3Segmen
 // SetHlsTimedMetadataSettings sets the HlsTimedMetadataSettings field's value.
 func (s *ScheduleActionSettings) SetHlsTimedMetadataSettings(v *HlsTimedMetadataScheduleActionSettings) *ScheduleActionSettings {
 	s.HlsTimedMetadataSettings = v
+	return s
+}
+
+// SetInputPrepareSettings sets the InputPrepareSettings field's value.
+func (s *ScheduleActionSettings) SetInputPrepareSettings(v *InputPrepareScheduleActionSettings) *ScheduleActionSettings {
+	s.InputPrepareSettings = v
 	return s
 }
 
@@ -23699,6 +24120,12 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Accept Header
+const (
+	// AcceptHeaderImageJpeg is a AcceptHeader enum value
+	AcceptHeaderImageJpeg = "image/jpeg"
+)
+
 // Afd Signaling
 const (
 	// AfdSignalingAuto is a AfdSignaling enum value
@@ -23958,6 +24385,11 @@ const (
 
 	// ChannelStateUpdateFailed is a ChannelState enum value
 	ChannelStateUpdateFailed = "UPDATE_FAILED"
+)
+
+const (
+	// ContentTypeImageJpeg is a ContentType enum value
+	ContentTypeImageJpeg = "image/jpeg"
 )
 
 // The status of the action to synchronize the device configuration. If you
@@ -24249,6 +24681,24 @@ const (
 	Eac3SurroundModeNotIndicated = "NOT_INDICATED"
 )
 
+// Ebu Tt DDestination Style Control
+const (
+	// EbuTtDDestinationStyleControlExclude is a EbuTtDDestinationStyleControl enum value
+	EbuTtDDestinationStyleControlExclude = "EXCLUDE"
+
+	// EbuTtDDestinationStyleControlInclude is a EbuTtDDestinationStyleControl enum value
+	EbuTtDDestinationStyleControlInclude = "INCLUDE"
+)
+
+// Ebu Tt DFill Line Gap Control
+const (
+	// EbuTtDFillLineGapControlDisabled is a EbuTtDFillLineGapControl enum value
+	EbuTtDFillLineGapControlDisabled = "DISABLED"
+
+	// EbuTtDFillLineGapControlEnabled is a EbuTtDFillLineGapControl enum value
+	EbuTtDFillLineGapControlEnabled = "ENABLED"
+)
+
 // Embedded Convert608 To708
 const (
 	// EmbeddedConvert608To708Disabled is a EmbeddedConvert608To708 enum value
@@ -24265,6 +24715,15 @@ const (
 
 	// EmbeddedScte20DetectionOff is a EmbeddedScte20Detection enum value
 	EmbeddedScte20DetectionOff = "OFF"
+)
+
+// Feature Activations Input Prepare Schedule Actions
+const (
+	// FeatureActivationsInputPrepareScheduleActionsDisabled is a FeatureActivationsInputPrepareScheduleActions enum value
+	FeatureActivationsInputPrepareScheduleActionsDisabled = "DISABLED"
+
+	// FeatureActivationsInputPrepareScheduleActionsEnabled is a FeatureActivationsInputPrepareScheduleActions enum value
+	FeatureActivationsInputPrepareScheduleActionsEnabled = "ENABLED"
 )
 
 // Fec Output Include Fec
@@ -24788,6 +25247,9 @@ const (
 
 // H265 Scan Type
 const (
+	// H265ScanTypeInterlaced is a H265ScanType enum value
+	H265ScanTypeInterlaced = "INTERLACED"
+
 	// H265ScanTypeProgressive is a H265ScanType enum value
 	H265ScanTypeProgressive = "PROGRESSIVE"
 )
@@ -24964,6 +25426,9 @@ const (
 
 	// HlsOutputSelectionSegmentsOnly is a HlsOutputSelection enum value
 	HlsOutputSelectionSegmentsOnly = "SEGMENTS_ONLY"
+
+	// HlsOutputSelectionVariantManifestsAndSegments is a HlsOutputSelection enum value
+	HlsOutputSelectionVariantManifestsAndSegments = "VARIANT_MANIFESTS_AND_SEGMENTS"
 )
 
 // Hls Program Date Time

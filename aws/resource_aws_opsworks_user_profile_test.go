@@ -7,12 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSOpsworksUserProfile(t *testing.T) {
+func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	updateRName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{

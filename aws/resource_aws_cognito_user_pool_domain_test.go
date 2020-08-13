@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
@@ -139,7 +139,7 @@ func testAccAWSCognitoUserPoolDomainConfig_basic(domainName, poolName string) st
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = "%s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -152,7 +152,7 @@ func testAccAWSCognitoUserPoolDomainConfig_custom(customSubDomainName, poolName,
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool_domain" "main" {
   domain          = "%s"
-  user_pool_id    = "${aws_cognito_user_pool.main.id}"
+  user_pool_id    = aws_cognito_user_pool.main.id
   certificate_arn = "%s"
 }
 

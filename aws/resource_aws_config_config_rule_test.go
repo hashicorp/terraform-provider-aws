@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func testAccConfigConfigRule_basic(t *testing.T) {
@@ -43,10 +44,9 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckConfigConfigRuleDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfigRuleConfig_ownerAws(rName),
@@ -64,7 +64,7 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_id", "blablah"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.3865728585", "AWS::EC2::Instance"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "scope.0.compliance_resource_types.*", "AWS::EC2::Instance"),
 				),
 			},
 		},
@@ -80,10 +80,9 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 	path := "test-fixtures/lambdatest.zip"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckConfigConfigRuleDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfigRuleConfig_customLambda(rInt, path),
@@ -99,9 +98,11 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.f", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.event_source", "aws.config"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.message_type", "ConfigurationSnapshotDeliveryCompleted"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.maximum_execution_frequency", ""),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail", map[string]string{
+						"event_source":                "aws.config",
+						"message_type":                "ConfigurationSnapshotDeliveryCompleted",
+						"maximum_execution_frequency": "",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "IsTemporary"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "yes"),
@@ -350,11 +351,12 @@ func testAccCheckConfigConfigRuleDestroy(s *terraform.State) error {
 
 func testAccConfigConfigRuleConfig_base(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_config_configuration_recorder" "test" {
   name     = %q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -375,11 +377,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRole"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 `, rName, rName)
 }
@@ -394,9 +397,8 @@ resource "aws_config_config_rule" "test" {
     source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
   }
 
-  depends_on = ["aws_config_configuration_recorder.test"]
+  depends_on = [aws_config_configuration_recorder.test]
 }
-
 `, rName)
 }
 
@@ -417,12 +419,14 @@ resource "aws_config_config_rule" "test" {
   }
 
   input_parameters = <<PARAMS
-{"tag1Key":"CostCenter", "tag2Key":"Owner"}
+{
+  "tag1Key": "CostCenter",
+  "tag2Key": "Owner"
+}
 PARAMS
 
-  depends_on = ["aws_config_configuration_recorder.test"]
+  depends_on = [aws_config_configuration_recorder.test]
 }
-
 `, rName)
 }
 
@@ -435,7 +439,7 @@ resource "aws_config_config_rule" "test" {
 
   source {
     owner             = "CUSTOM_LAMBDA"
-    source_identifier = "${aws_lambda_function.f.arn}"
+    source_identifier = aws_lambda_function.f.arn
 
     source_detail {
       event_source = "aws.config"
@@ -449,15 +453,15 @@ resource "aws_config_config_rule" "test" {
   }
 
   depends_on = [
-    "aws_config_configuration_recorder.foo",
-    "aws_config_delivery_channel.foo",
+    aws_config_configuration_recorder.foo,
+    aws_config_delivery_channel.foo,
   ]
 }
 
 resource "aws_lambda_function" "f" {
   filename      = "%s"
   function_name = "tf_acc_lambda_awsconfig_%d"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -465,7 +469,7 @@ resource "aws_lambda_function" "f" {
 resource "aws_lambda_permission" "p" {
   statement_id  = "AllowExecutionFromConfig"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.f.arn}"
+  function_name = aws_lambda_function.f.arn
   principal     = "config.amazonaws.com"
 }
 
@@ -487,22 +491,23 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy_attachment" "a" {
-  role       = "${aws_iam_role.iam_for_lambda.name}"
+  role       = aws_iam_role.iam_for_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole"
 }
 
 resource "aws_config_delivery_channel" "foo" {
   name           = "tf-acc-test-%d"
-  s3_bucket_name = "${aws_s3_bucket.b.bucket}"
+  s3_bucket_name = aws_s3_bucket.b.bucket
 
   snapshot_delivery_properties {
     delivery_frequency = "Six_Hours"
   }
 
-  depends_on = ["aws_config_configuration_recorder.foo"]
+  depends_on = [aws_config_configuration_recorder.foo]
 }
 
 resource "aws_s3_bucket" "b" {
@@ -512,7 +517,7 @@ resource "aws_s3_bucket" "b" {
 
 resource "aws_config_configuration_recorder" "foo" {
   name     = "tf-acc-test-%d"
-  role_arn = "${aws_iam_role.r.arn}"
+  role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "r" {
@@ -533,11 +538,12 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy" "p" {
   name = "tf-acc-test-awsconfig-%d"
-  role = "${aws_iam_role.r.id}"
+  role = aws_iam_role.r.id
 
   policy = <<POLICY
 {
@@ -564,6 +570,7 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 POLICY
+
 }
 `, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
@@ -578,11 +585,11 @@ resource "aws_config_config_rule" "test" {
   }
 
   source {
-    owner = "AWS"
+    owner             = "AWS"
     source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
   }
 
-  depends_on = ["aws_config_configuration_recorder.test"]
+  depends_on = [aws_config_configuration_recorder.test]
 }
 `, rName, tagKey)
 }
@@ -598,11 +605,11 @@ resource "aws_config_config_rule" "test" {
   }
 
   source {
-    owner = "AWS"
+    owner             = "AWS"
     source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
   }
 
-  depends_on = ["aws_config_configuration_recorder.test"]
+  depends_on = [aws_config_configuration_recorder.test]
 }
 `, rName, tagValue)
 }
@@ -613,17 +620,17 @@ resource "aws_config_config_rule" "test" {
   name = %[1]q
 
   source {
-    owner = "AWS"
+    owner             = "AWS"
     source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
   }
 
   tags = {
-	Name  = %[1]q
-	%[2]s = %[3]q
-	%[4]s = %[5]q
+    Name  = %[1]q
+    %[2]s = %[3]q
+    %[4]s = %[5]q
   }
 
-  depends_on = ["aws_config_configuration_recorder.test"]
+  depends_on = [aws_config_configuration_recorder.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

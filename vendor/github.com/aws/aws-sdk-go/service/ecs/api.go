@@ -89,6 +89,13 @@ func (c *ECS) CreateCapacityProviderRequest(input *CreateCapacityProviderInput) 
 //   * LimitExceededException
 //   The limit for the resource has been exceeded.
 //
+//   * UpdateInProgressException
+//   There is already a current Amazon ECS container agent update in progress
+//   on the specified container instance. If the container agent becomes disconnected
+//   while it is in a transitional stage, such as PENDING or STAGING, the update
+//   process can get stuck in that state. However, when the agent reconnects,
+//   it resumes where it stopped previously.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/CreateCapacityProvider
 func (c *ECS) CreateCapacityProvider(input *CreateCapacityProviderInput) (*CreateCapacityProviderOutput, error) {
 	req, out := c.CreateCapacityProviderRequest(input)
@@ -703,6 +710,108 @@ func (c *ECS) DeleteAttributes(input *DeleteAttributesInput) (*DeleteAttributesO
 // for more information on using Contexts.
 func (c *ECS) DeleteAttributesWithContext(ctx aws.Context, input *DeleteAttributesInput, opts ...request.Option) (*DeleteAttributesOutput, error) {
 	req, out := c.DeleteAttributesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteCapacityProvider = "DeleteCapacityProvider"
+
+// DeleteCapacityProviderRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteCapacityProvider operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteCapacityProvider for more information on using the DeleteCapacityProvider
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteCapacityProviderRequest method.
+//    req, resp := client.DeleteCapacityProviderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/DeleteCapacityProvider
+func (c *ECS) DeleteCapacityProviderRequest(input *DeleteCapacityProviderInput) (req *request.Request, output *DeleteCapacityProviderOutput) {
+	op := &request.Operation{
+		Name:       opDeleteCapacityProvider,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteCapacityProviderInput{}
+	}
+
+	output = &DeleteCapacityProviderOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteCapacityProvider API operation for Amazon EC2 Container Service.
+//
+// Deletes the specified capacity provider.
+//
+// The FARGATE and FARGATE_SPOT capacity providers are reserved and cannot be
+// deleted. You can disassociate them from a cluster using either the PutClusterCapacityProviders
+// API or by deleting the cluster.
+//
+// Prior to a capacity provider being deleted, the capacity provider must be
+// removed from the capacity provider strategy from all services. The UpdateService
+// API can be used to remove a capacity provider from a service's capacity provider
+// strategy. When updating a service, the forceNewDeployment option can be used
+// to ensure that any tasks using the Amazon EC2 instance capacity provided
+// by the capacity provider are transitioned to use the capacity from the remaining
+// capacity providers. Only capacity providers that are not associated with
+// a cluster can be deleted. To remove a capacity provider from a cluster, you
+// can either use PutClusterCapacityProviders or delete the cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Service's
+// API operation DeleteCapacityProvider for usage and error information.
+//
+// Returned Error Types:
+//   * ServerException
+//   These errors are usually caused by a server issue.
+//
+//   * ClientException
+//   These errors are usually caused by a client action, such as using an action
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
+//
+//   * InvalidParameterException
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/DeleteCapacityProvider
+func (c *ECS) DeleteCapacityProvider(input *DeleteCapacityProviderInput) (*DeleteCapacityProviderOutput, error) {
+	req, out := c.DeleteCapacityProviderRequest(input)
+	return out, req.Send()
+}
+
+// DeleteCapacityProviderWithContext is the same as DeleteCapacityProvider with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteCapacityProvider for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) DeleteCapacityProviderWithContext(ctx aws.Context, input *DeleteCapacityProviderInput, opts ...request.Option) (*DeleteCapacityProviderOutput, error) {
+	req, out := c.DeleteCapacityProviderRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6033,7 +6142,8 @@ type CapacityProvider struct {
 	Name *string `locationName:"name" type:"string"`
 
 	// The current status of the capacity provider. Only capacity providers in an
-	// ACTIVE state can be used in a cluster.
+	// ACTIVE state can be used in a cluster. When a capacity provider is successfully
+	// deleted, it will have an INACTIVE status.
 	Status *string `locationName:"status" type:"string" enum:"CapacityProviderStatus"`
 
 	// The metadata that you apply to the capacity provider to help you categorize
@@ -6063,6 +6173,28 @@ type CapacityProvider struct {
 	//    cannot edit or delete tag keys or values with this prefix. Tags with this
 	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
+
+	// The update status of the capacity provider. The following are the possible
+	// states that will be returned.
+	//
+	// DELETE_IN_PROGRESS
+	//
+	// The capacity provider is in the process of being deleted.
+	//
+	// DELETE_COMPLETE
+	//
+	// The capacity provider has been successfully deleted and will have an INACTIVE
+	// status.
+	//
+	// DELETE_FAILED
+	//
+	// The capacity provider was unable to be deleted. The update status reason
+	// will provide further details about why the delete failed.
+	UpdateStatus *string `locationName:"updateStatus" type:"string" enum:"CapacityProviderUpdateStatus"`
+
+	// The update status reason. This provides further details about the update
+	// status for the capacity provider.
+	UpdateStatusReason *string `locationName:"updateStatusReason" type:"string"`
 }
 
 // String returns the string representation
@@ -6102,6 +6234,18 @@ func (s *CapacityProvider) SetStatus(v string) *CapacityProvider {
 // SetTags sets the Tags field's value.
 func (s *CapacityProvider) SetTags(v []*Tag) *CapacityProvider {
 	s.Tags = v
+	return s
+}
+
+// SetUpdateStatus sets the UpdateStatus field's value.
+func (s *CapacityProvider) SetUpdateStatus(v string) *CapacityProvider {
+	s.UpdateStatus = &v
+	return s
+}
+
+// SetUpdateStatusReason sets the UpdateStatusReason field's value.
+func (s *CapacityProvider) SetUpdateStatusReason(v string) *CapacityProvider {
+	s.UpdateStatusReason = &v
 	return s
 }
 
@@ -7421,8 +7565,9 @@ type ContainerDefinition struct {
 	// namespaced kernel parameters as well as the containers.
 	SystemControls []*SystemControl `locationName:"systemControls" type:"list"`
 
-	// A list of ulimits to set in the container. This parameter maps to Ulimits
-	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
+	// A list of ulimits to set in the container. If a ulimit value is specified
+	// in a task definition, it will override the default values set by Docker.
+	// This parameter maps to Ulimits in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --ulimit option to docker run (https://docs.docker.com/engine/reference/run/).
 	// Valid naming values are displayed in the Ulimit data type. This parameter
@@ -9546,6 +9691,68 @@ func (s DeleteAttributesOutput) GoString() string {
 // SetAttributes sets the Attributes field's value.
 func (s *DeleteAttributesOutput) SetAttributes(v []*Attribute) *DeleteAttributesOutput {
 	s.Attributes = v
+	return s
+}
+
+type DeleteCapacityProviderInput struct {
+	_ struct{} `type:"structure"`
+
+	// The short name or full Amazon Resource Name (ARN) of the capacity provider
+	// to delete.
+	//
+	// CapacityProvider is a required field
+	CapacityProvider *string `locationName:"capacityProvider" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteCapacityProviderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteCapacityProviderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteCapacityProviderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteCapacityProviderInput"}
+	if s.CapacityProvider == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityProvider"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityProvider sets the CapacityProvider field's value.
+func (s *DeleteCapacityProviderInput) SetCapacityProvider(v string) *DeleteCapacityProviderInput {
+	s.CapacityProvider = &v
+	return s
+}
+
+type DeleteCapacityProviderOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The details of a capacity provider.
+	CapacityProvider *CapacityProvider `locationName:"capacityProvider" type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteCapacityProviderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteCapacityProviderOutput) GoString() string {
+	return s.String()
+}
+
+// SetCapacityProvider sets the CapacityProvider field's value.
+func (s *DeleteCapacityProviderOutput) SetCapacityProvider(v *CapacityProvider) *DeleteCapacityProviderOutput {
+	s.CapacityProvider = v
 	return s
 }
 
@@ -12157,7 +12364,7 @@ type ListAccountSettingsInput struct {
 	// returns up to 10 results and a nextToken value if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The resource name you want to list the account settings for.
+	// The name of the account setting you want to list the settings for.
 	Name *string `locationName:"name" type:"string" enum:"SettingName"`
 
 	// The nextToken value returned from a ListAccountSettings request indicating
@@ -14821,8 +15028,11 @@ type RegisterTaskDefinitionInput struct {
 	//    (30 GB) in increments of 1024 (1 GB)
 	Cpu *string `locationName:"cpu" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the task execution role that the Amazon
-	// ECS container agent and the Docker daemon can assume.
+	// The Amazon Resource Name (ARN) of the task execution role that grants the
+	// Amazon ECS container agent permission to make AWS API calls on your behalf.
+	// The task execution IAM role is required depending on the requirements of
+	// your task. For more information, see Amazon ECS task execution IAM role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	ExecutionRoleArn *string `locationName:"executionRoleArn" type:"string"`
 
 	// You must specify a family for a task definition, which allows you to track
@@ -18001,9 +18211,11 @@ type TaskDefinition struct {
 	//    (30 GB) in increments of 1024 (1 GB)
 	Cpu *string `locationName:"cpu" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the task execution role that containers
-	// in this task can assume. All containers in this task are granted the permissions
-	// that are specified in this role.
+	// The Amazon Resource Name (ARN) of the task execution role that grants the
+	// Amazon ECS container agent permission to make AWS API calls on your behalf.
+	// The task execution IAM role is required depending on the requirements of
+	// your task. For more information, see Amazon ECS task execution IAM role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	ExecutionRoleArn *string `locationName:"executionRoleArn" type:"string"`
 
 	// The name of a family that this task definition is registered to. Up to 255
@@ -18366,8 +18578,8 @@ type TaskOverride struct {
 	// The cpu override for the task.
 	Cpu *string `locationName:"cpu" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the task execution role that the Amazon
-	// ECS container agent and the Docker daemon can assume.
+	// The Amazon Resource Name (ARN) of the task execution IAM role override for
+	// the task.
 	ExecutionRoleArn *string `locationName:"executionRoleArn" type:"string"`
 
 	// The Elastic Inference accelerator override for the task.
@@ -19866,10 +20078,11 @@ func (s *VersionInfo) SetDockerVersion(v string) *VersionInfo {
 	return s
 }
 
-// A data volume used in a task definition. For tasks that use a Docker volume,
-// specify a DockerVolumeConfiguration. For tasks that use a bind mount host
-// volume, specify a host and optional sourcePath. For more information, see
-// Using Data Volumes in Tasks (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_data_volumes.html).
+// A data volume used in a task definition. For tasks that use Amazon Elastic
+// File System (Amazon EFS) file storage, specify an efsVolumeConfiguration.
+// For tasks that use a Docker volume, specify a DockerVolumeConfiguration.
+// For tasks that use a bind mount host volume, specify a host and optional
+// sourcePath. For more information, see Using Data Volumes in Tasks (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_data_volumes.html).
 type Volume struct {
 	_ struct{} `type:"structure"`
 
@@ -19880,23 +20093,15 @@ type Volume struct {
 	DockerVolumeConfiguration *DockerVolumeConfiguration `locationName:"dockerVolumeConfiguration" type:"structure"`
 
 	// This parameter is specified when you are using an Amazon Elastic File System
-	// (Amazon EFS) file storage. Amazon EFS file systems are only supported when
-	// you are using the EC2 launch type.
-	//
-	// EFSVolumeConfiguration remains in preview and is a Beta Service as defined
-	// by and subject to the Beta Service Participation Service Terms located at
-	// https://aws.amazon.com/service-terms (https://aws.amazon.com/service-terms)
-	// ("Beta Terms"). These Beta Terms apply to your participation in this preview
-	// of EFSVolumeConfiguration.
+	// file system for task storage.
 	EfsVolumeConfiguration *EFSVolumeConfiguration `locationName:"efsVolumeConfiguration" type:"structure"`
 
-	// This parameter is specified when you are using bind mount host volumes. Bind
-	// mount host volumes are supported when you are using either the EC2 or Fargate
-	// launch types. The contents of the host parameter determine whether your bind
-	// mount host volume persists on the host container instance and where it is
-	// stored. If the host parameter is empty, then the Docker daemon assigns a
-	// host path for your data volume. However, the data is not guaranteed to persist
-	// after the containers associated with it stop running.
+	// This parameter is specified when you are using bind mount host volumes. The
+	// contents of the host parameter determine whether your bind mount host volume
+	// persists on the host container instance and where it is stored. If the host
+	// parameter is empty, then the Docker daemon assigns a host path for your data
+	// volume. However, the data is not guaranteed to persist after the containers
+	// associated with it stop running.
 	//
 	// Windows containers can mount whole directories on the same drive as $env:ProgramData.
 	// Windows containers cannot mount directories on a different drive, and mount
@@ -20031,6 +20236,20 @@ const (
 const (
 	// CapacityProviderStatusActive is a CapacityProviderStatus enum value
 	CapacityProviderStatusActive = "ACTIVE"
+
+	// CapacityProviderStatusInactive is a CapacityProviderStatus enum value
+	CapacityProviderStatusInactive = "INACTIVE"
+)
+
+const (
+	// CapacityProviderUpdateStatusDeleteInProgress is a CapacityProviderUpdateStatus enum value
+	CapacityProviderUpdateStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+
+	// CapacityProviderUpdateStatusDeleteComplete is a CapacityProviderUpdateStatus enum value
+	CapacityProviderUpdateStatusDeleteComplete = "DELETE_COMPLETE"
+
+	// CapacityProviderUpdateStatusDeleteFailed is a CapacityProviderUpdateStatus enum value
+	CapacityProviderUpdateStatusDeleteFailed = "DELETE_FAILED"
 )
 
 const (

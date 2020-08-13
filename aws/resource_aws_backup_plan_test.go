@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsBackupPlan_basic(t *testing.T) {
@@ -547,7 +547,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
 }
@@ -565,7 +565,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
 
@@ -589,7 +589,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
 
@@ -613,12 +613,12 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = "%[1]s_1"
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
   rule {
     rule_name         = "%[1]s_2"
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 6 * * ? *)"
   }
 }
@@ -636,17 +636,17 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = "%[1]s_1"
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 6 * * ? *)"
   }
   rule {
     rule_name         = "%[1]s_2"
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
   }
   rule {
     rule_name         = "%[1]s_3"
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 18 * * ? *)"
   }
 }
@@ -664,7 +664,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
 
     lifecycle {
@@ -686,7 +686,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
 
     lifecycle {
@@ -708,7 +708,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
 
     lifecycle {
@@ -731,7 +731,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
 
     recovery_point_tags = {
@@ -755,7 +755,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
 
     recovery_point_tags = {
@@ -860,7 +860,7 @@ resource "aws_backup_vault" "test" {
 }
 
 resource "aws_backup_vault" "test2" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
   name     = "%[1]s-2"
 }
 
@@ -869,7 +869,7 @@ resource "aws_backup_plan" "test" {
 
   rule {
     rule_name         = %[1]q
-    target_vault_name = "${aws_backup_vault.test.name}"
+    target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
 
     lifecycle {
@@ -883,7 +883,7 @@ resource "aws_backup_plan" "test" {
         delete_after       = 180
       }
 
-      destination_vault_arn = "${aws_backup_vault.test2.arn}"
+      destination_vault_arn = aws_backup_vault.test2.arn
     }
   }
 }

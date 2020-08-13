@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
@@ -749,7 +749,6 @@ resource "aws_api_gateway_authorizer" "test" {
   name                             = "tf-acc-test-api-gw-authorizer-%d"
   rest_api_id                      = "${aws_api_gateway_rest_api.test.id}"
   authorizer_uri                   = "${aws_lambda_function.authorizer.invoke_arn}"
-  authorizer_result_ttl_in_seconds = "0"
   authorizer_credentials           = "${aws_iam_role.invocation_role.arn}"
 }
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsLb() *schema.Resource {
@@ -93,6 +93,11 @@ func dataSourceAwsLb() *schema.Resource {
 			},
 
 			"enable_deletion_protection": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
+			"enable_http2": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},

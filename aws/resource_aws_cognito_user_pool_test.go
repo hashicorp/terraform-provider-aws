@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -115,7 +116,6 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfiguration(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
@@ -128,20 +128,8 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdatedError(name),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "false"),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
@@ -778,17 +766,16 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCognitoUserPoolDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributes(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alias_attributes.1888159429", "preferred_username"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "alias_attributes.*", "preferred_username"),
 					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
 				),
 			},
@@ -801,10 +788,10 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "alias_attributes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "alias_attributes.881205744", "email"),
-					resource.TestCheckResourceAttr(resourceName, "alias_attributes.1888159429", "preferred_username"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "alias_attributes.*", "email"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "alias_attributes.*", "preferred_username"),
 					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.881205744", "email"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "auto_verified_attributes.*", "email"),
 				),
 			},
 		},
@@ -944,32 +931,35 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCognitoUserPoolDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributes(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.attribute_data_type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.developer_only_attribute", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.mutable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.name", "email"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.number_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.string_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.string_attribute_constraints.0.min_length", "5"),
-					resource.TestCheckResourceAttr(resourceName, "schema.145451252.string_attribute_constraints.0.max_length", "10"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.attribute_data_type", "Boolean"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.developer_only_attribute", "true"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.mutable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.name", "mybool"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.number_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.770828826.string_attribute_constraints.#", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "String",
+						"developer_only_attribute":       "false",
+						"mutable":                        "false",
+						"name":                           "email",
+						"number_attribute_constraints.#": "0",
+						"required":                       "true",
+						"string_attribute_constraints.#": "1",
+						"string_attribute_constraints.0.min_length": "5",
+						"string_attribute_constraints.0.max_length": "10",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Boolean",
+						"developer_only_attribute":       "true",
+						"mutable":                        "false",
+						"name":                           "mybool",
+						"number_attribute_constraints.#": "0",
+						"required":                       "false",
+						"string_attribute_constraints.#": "0",
+					}),
 				),
 			},
 			{
@@ -981,33 +971,39 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "schema.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.attribute_data_type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.developer_only_attribute", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.mutable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.name", "email"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.number_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.string_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.string_attribute_constraints.0.min_length", "7"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.string_attribute_constraints.0.max_length", "15"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.attribute_data_type", "Number"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.developer_only_attribute", "true"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.mutable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.name", "mynumber"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.number_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.number_attribute_constraints.0.min_value", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.number_attribute_constraints.0.max_value", "6"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.string_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.attribute_data_type", "Number"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.developer_only_attribute", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.mutable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.name", "mynondevnumber"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.number_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.number_attribute_constraints.0.min_value", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.number_attribute_constraints.0.max_value", "6"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.string_attribute_constraints.#", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "String",
+						"developer_only_attribute":       "false",
+						"mutable":                        "false",
+						"name":                           "email",
+						"number_attribute_constraints.#": "0",
+						"required":                       "true",
+						"string_attribute_constraints.#": "1",
+						"string_attribute_constraints.0.min_length": "7",
+						"string_attribute_constraints.0.max_length": "15",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Number",
+						"developer_only_attribute":       "true",
+						"mutable":                        "true",
+						"name":                           "mynumber",
+						"number_attribute_constraints.#": "1",
+						"number_attribute_constraints.0.min_value": "2",
+						"number_attribute_constraints.0.max_value": "6",
+						"required":                       "false",
+						"string_attribute_constraints.#": "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Number",
+						"developer_only_attribute":       "false",
+						"mutable":                        "true",
+						"name":                           "mynondevnumber",
+						"number_attribute_constraints.#": "1",
+						"number_attribute_constraints.0.min_value": "2",
+						"number_attribute_constraints.0.max_value": "6",
+						"required":                       "false",
+						"string_attribute_constraints.#": "0",
+					}),
 				),
 			},
 			{
@@ -1095,7 +1091,6 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "FooBar {####}"),
 					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} Baz"),
 					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", authenticationMessage),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
@@ -1124,7 +1119,6 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "FooBar {####}"),
 					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} Baz"),
 					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", updatedAuthenticationMessage),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
@@ -1148,7 +1142,6 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "FooBar {####}"),
 					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} Baz"),
 					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", updatedAuthenticationMessage),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
@@ -1241,13 +1234,14 @@ resource "aws_iam_role" "test" {
 
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
+      Action = "sts:AssumeRole"
       Condition = {
         "StringEquals" = {
           "sts:ExternalId" = %[2]q
         }
       }
-      Effect    = "Allow"
+
+      Effect = "Allow"
       Principal = {
         Service = "cognito-idp.${data.aws_partition.current.dns_suffix}"
       }
@@ -1286,31 +1280,11 @@ resource "aws_cognito_user_pool" "test" {
 
   admin_create_user_config {
     allow_admin_create_user_only = true
-    unused_account_validity_days = 6
 
     invite_message_template {
       email_message = "Your username is {username} and temporary password is {####}. "
       email_subject = "FooBar {####}"
       sms_message   = "Your username is {username} and temporary password is {####}."
-    }
-  }
-}
-`, name)
-}
-
-func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdatedError(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = "terraform-test-pool-%s"
-
-  admin_create_user_config {
-    allow_admin_create_user_only = false
-    unused_account_validity_days = 7
-
-    invite_message_template {
-      email_message = "Your username is {username} and constant password is {####}. "
-      email_subject = "Foo{####}BaBaz"
-      sms_message   = "Your username is {username} and constant password is {####}."
     }
   }
 }
@@ -1324,7 +1298,6 @@ resource "aws_cognito_user_pool" "test" {
 
   admin_create_user_config {
     allow_admin_create_user_only = false
-    unused_account_validity_days = 6
 
     invite_message_template {
       email_message = "Your username is {username} and constant password is {####}. "
@@ -1514,16 +1487,16 @@ resource "aws_cognito_user_pool" "test" {
 func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, email, arn, from, account string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-    name = "terraform-test-pool-%[1]s"
+  name = "terraform-test-pool-%[1]s"
 
-
-    email_configuration {
-      reply_to_email_address = %[2]q
-      source_arn = %[3]q
-      from_email_address = %[4]q
-      email_sending_account = %[5]q
-    }
-  }`, name, email, arn, from, account)
+  email_configuration {
+    reply_to_email_address = %[2]q
+    source_arn             = %[3]q
+    from_email_address     = %[4]q
+    email_sending_account  = %[5]q
+  }
+}
+`, name, email, arn, from, account)
 }
 
 func testAccAWSCognitoUserPoolConfig_withAliasAttributes(name string) string {
@@ -1646,12 +1619,13 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1660,16 +1634,16 @@ resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   lambda_config {
-    create_auth_challenge          = "${aws_lambda_function.test.arn}"
-    custom_message                 = "${aws_lambda_function.test.arn}"
-    define_auth_challenge          = "${aws_lambda_function.test.arn}"
-    post_authentication            = "${aws_lambda_function.test.arn}"
-    post_confirmation              = "${aws_lambda_function.test.arn}"
-    pre_authentication             = "${aws_lambda_function.test.arn}"
-    pre_sign_up                    = "${aws_lambda_function.test.arn}"
-    pre_token_generation           = "${aws_lambda_function.test.arn}"
-    user_migration                 = "${aws_lambda_function.test.arn}"
-    verify_auth_challenge_response = "${aws_lambda_function.test.arn}"
+    create_auth_challenge          = aws_lambda_function.test.arn
+    custom_message                 = aws_lambda_function.test.arn
+    define_auth_challenge          = aws_lambda_function.test.arn
+    post_authentication            = aws_lambda_function.test.arn
+    post_confirmation              = aws_lambda_function.test.arn
+    pre_authentication             = aws_lambda_function.test.arn
+    pre_sign_up                    = aws_lambda_function.test.arn
+    pre_token_generation           = aws_lambda_function.test.arn
+    user_migration                 = aws_lambda_function.test.arn
+    verify_auth_challenge_response = aws_lambda_function.test.arn
   }
 }
 `, name)
@@ -1695,12 +1669,13 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1708,7 +1683,7 @@ resource "aws_lambda_function" "test" {
 resource "aws_lambda_function" "second" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s_second"
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -1717,16 +1692,16 @@ resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   lambda_config {
-    create_auth_challenge          = "${aws_lambda_function.second.arn}"
-    custom_message                 = "${aws_lambda_function.second.arn}"
-    define_auth_challenge          = "${aws_lambda_function.second.arn}"
-    post_authentication            = "${aws_lambda_function.second.arn}"
-    post_confirmation              = "${aws_lambda_function.second.arn}"
-    pre_authentication             = "${aws_lambda_function.second.arn}"
-    pre_sign_up                    = "${aws_lambda_function.second.arn}"
-    pre_token_generation           = "${aws_lambda_function.second.arn}"
-    user_migration                 = "${aws_lambda_function.second.arn}"
-    verify_auth_challenge_response = "${aws_lambda_function.second.arn}"
+    create_auth_challenge          = aws_lambda_function.second.arn
+    custom_message                 = aws_lambda_function.second.arn
+    define_auth_challenge          = aws_lambda_function.second.arn
+    post_authentication            = aws_lambda_function.second.arn
+    post_confirmation              = aws_lambda_function.second.arn
+    pre_authentication             = aws_lambda_function.second.arn
+    pre_sign_up                    = aws_lambda_function.second.arn
+    pre_token_generation           = aws_lambda_function.second.arn
+    user_migration                 = aws_lambda_function.second.arn
+    verify_auth_challenge_response = aws_lambda_function.second.arn
   }
 }
 `, name)
@@ -1816,11 +1791,12 @@ resource "aws_cognito_user_pool" "test" {
   # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
   # will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
   # attributes.
+
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message = "foo {####} bar"
+    email_message         = "foo {####} bar"
     email_message_by_link = "{##foobar##}"
-    email_subject = "foobar {####}"
+    email_subject         = "foobar {####}"
     email_subject_by_link = "foobar"
     sms_message           = "{####} baz"
   }
@@ -1846,7 +1822,8 @@ resource "aws_cognito_user_pool" "test" {
 
 func testAccAWSCognitoUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
 resource "aws_iam_role" "test" {
   name = "test-role-%s"
@@ -1872,11 +1849,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = "test-role-policy-%s"
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -1894,6 +1872,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -1908,7 +1887,6 @@ resource "aws_cognito_user_pool" "test" {
 
   admin_create_user_config {
     allow_admin_create_user_only = true
-    unused_account_validity_days = 6
 
     invite_message_template {
       email_message = "Your username is {username} and temporary password is {####}. "
@@ -1927,8 +1905,8 @@ resource "aws_cognito_user_pool" "test" {
   }
 
   sms_configuration {
-    external_id    = "${data.aws_caller_identity.current.account_id}"
-    sns_caller_arn = "${aws_iam_role.test.arn}"
+    external_id    = data.aws_caller_identity.current.account_id
+    sns_caller_arn = aws_iam_role.test.arn
   }
 
   tags = {

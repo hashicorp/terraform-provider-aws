@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
@@ -324,11 +324,14 @@ func testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName str
 
 func testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisDataFirehoseBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -358,10 +361,11 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "firehose" {
-  role = "${aws_iam_role.firehose.name}"
+  role = aws_iam_role.firehose.name
 
   policy = <<EOF
 {
@@ -386,6 +390,7 @@ resource "aws_iam_role_policy" "firehose" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "cloudwatchlogs" {
@@ -406,10 +411,11 @@ resource "aws_iam_role" "cloudwatchlogs" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "cloudwatchlogs" {
-  role = "${aws_iam_role.cloudwatchlogs.name}"
+  role = aws_iam_role.cloudwatchlogs.name
 
   policy = <<EOF
 {
@@ -428,6 +434,7 @@ resource "aws_iam_role_policy" "cloudwatchlogs" {
   ]
 }
 EOF
+
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -435,8 +442,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
 
   extended_s3_configuration {
-    bucket_arn = "${aws_s3_bucket.test.arn}"
-    role_arn   = "${aws_iam_role.firehose.arn}"
+    bucket_arn = aws_s3_bucket.test.arn
+    role_arn   = aws_iam_role.firehose.arn
   }
 }
 
@@ -450,7 +457,8 @@ resource "aws_s3_bucket" "test" {
 
 func testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -475,10 +483,11 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -497,6 +506,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_kinesis_stream" "test" {
@@ -508,7 +518,8 @@ resource "aws_kinesis_stream" "test" {
 
 func testAccAWSCloudwatchLogSubscriptionFilterConfigLambdaBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -533,17 +544,18 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   runtime       = "nodejs12.x"
   handler       = "exports.handler"
 }
@@ -551,7 +563,7 @@ resource "aws_lambda_function" "test" {
 resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromCloudWatchLogs"
   action        = "lambda:*"
-  function_name = "${aws_lambda_function.test.arn}"
+  function_name = aws_lambda_function.test.arn
   principal     = "logs.amazonaws.com"
 }
 `, rName)
@@ -560,11 +572,11 @@ resource "aws_lambda_permission" "test" {
 func testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnKinesisDataFirehose(rName string) string {
 	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisDataFirehoseBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
+  destination_arn = aws_kinesis_firehose_delivery_stream.test.arn
   filter_pattern  = "logtype test"
-  log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
-  role_arn        = "${aws_iam_role.cloudwatchlogs.arn}"
+  role_arn        = aws_iam_role.cloudwatchlogs.arn
 }
 `, rName)
 }
@@ -572,11 +584,11 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 func testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnKinesisStream(rName string) string {
 	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = "${aws_kinesis_stream.test.arn}"
+  destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
-  log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
-  role_arn        = "${aws_iam_role.test.arn}"
+  role_arn        = aws_iam_role.test.arn
 }
 `, rName)
 }
@@ -584,9 +596,9 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 func testAccAWSCloudwatchLogSubscriptionFilterConfigDestinationArnLambda(rName string) string {
 	return testAccAWSCloudwatchLogSubscriptionFilterConfigLambdaBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = "${aws_lambda_function.test.arn}"
+  destination_arn = aws_lambda_function.test.arn
   filter_pattern  = "logtype test"
-  log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
 }
 `, rName)
@@ -595,10 +607,10 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 func testAccAWSCloudwatchLogSubscriptionFilterConfigDistribution(rName, distribution string) string {
 	return testAccAWSCloudwatchLogSubscriptionFilterConfigLambdaBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = "${aws_lambda_function.test.arn}"
+  destination_arn = aws_lambda_function.test.arn
   distribution    = %[2]q
   filter_pattern  = "logtype test"
-  log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
 }
 `, rName, distribution)
@@ -607,11 +619,11 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 func testAccAWSCloudwatchLogSubscriptionFilterConfigRoleArn1(rName string) string {
 	return testAccAWSCloudwatchLogSubscriptionFilterConfigKinesisStreamBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = "${aws_kinesis_stream.test.arn}"
+  destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
-  log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
-  role_arn        = "${aws_iam_role.test.arn}"
+  role_arn        = aws_iam_role.test.arn
 }
 `, rName)
 }
@@ -636,10 +648,11 @@ resource "aws_iam_role" "test2" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test2" {
-  role = "${aws_iam_role.test2.name}"
+  role = aws_iam_role.test2.name
 
   policy = <<EOF
 {
@@ -658,14 +671,15 @@ resource "aws_iam_role_policy" "test2" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  destination_arn = "${aws_kinesis_stream.test.arn}"
+  destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
-  log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
-  role_arn        = "${aws_iam_role.test2.arn}"
+  role_arn        = aws_iam_role.test2.arn
 }
 `, rName)
 }

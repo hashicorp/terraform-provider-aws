@@ -107,6 +107,7 @@ var serviceNames = []string{
 	"sagemaker",
 	"secretsmanager",
 	"securityhub",
+	"servicediscovery",
 	"sfn",
 	"sns",
 	"sqs",
@@ -118,6 +119,7 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
+	"worklink",
 	"workspaces",
 }
 

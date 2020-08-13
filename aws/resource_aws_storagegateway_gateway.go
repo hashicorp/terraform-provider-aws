@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -27,7 +28,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 		Update: resourceAwsStorageGatewayGatewayUpdate,
 		Delete: resourceAwsStorageGatewayGatewayDelete,
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("smb_active_directory_settings", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
 			}),
 		),
@@ -404,7 +405,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
-	if d.HasChange("gateway_name") || d.HasChange("gateway_timezone") || d.HasChange("cloudwatch_log_group_arn") {
+	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
 			GatewayARN:            aws.String(d.Id()),
 			GatewayName:           aws.String(d.Get("gateway_name").(string)),

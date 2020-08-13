@@ -23,11 +23,21 @@ test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
+	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
+		echo ""; \
+		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo ""; \
+		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
+		echo ""; \
+		echo "See the contributing guide for more information: https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		exit 1; \
+	fi
+	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME)
+	gofmt -s -w ./$(PKG_NAME) ./awsproviderlint
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -49,6 +59,22 @@ depscheck:
 	@git diff --compact-summary --exit-code -- vendor || \
 		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
 
+docs-lint:
+	@echo "==> Checking docs against linters..."
+	@misspell -error -source=text docs/ || (echo; \
+		echo "Unexpected misspelling found in docs files."; \
+		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
+		exit 1)
+	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
+		echo "Unexpected issues found in docs Markdown files."; \
+		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
+		exit 1)
+
+docs-lint-fix:
+	@echo "==> Applying automatic docs linter fixes..."
+	@misspell -w -source=text docs/
+	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+
 docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
@@ -66,19 +92,24 @@ awsproviderlint:
 		-c 1 \
 		-AT001 \
 		-AT002 \
+		-AT003 \
 		-AT005 \
 		-AT006 \
 		-AT007 \
 		-AT008 \
+		-AWSAT001 \
+		-AWSAT004 \
 		-AWSR001 \
 		-AWSR002 \
 		-R002 \
 		-R003 \
 		-R004 \
+		-R005 \
 		-R006 \
 		-R007 \
 		-R008 \
 		-R009 \
+		-R011 \
 		-R012 \
 		-R013 \
 		-R014 \
@@ -99,6 +130,7 @@ awsproviderlint:
 		-S015 \
 		-S016 \
 		-S017 \
+		-S018 \
 		-S019 \
 		-S020 \
 		-S021 \
@@ -182,4 +214,3 @@ endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 .PHONY: awsproviderlint build gen golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
-

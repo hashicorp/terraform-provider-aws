@@ -306,14 +306,10 @@ func (c *SageMaker) CreateAppRequest(input *CreateAppInput) (req *request.Reques
 
 // CreateApp API operation for Amazon SageMaker Service.
 //
-// Creates a running App for the specified UserProfile. Supported Apps are JupyterServer,
-// KernelGateway, and TensorBoard. This operation is automatically invoked by
-// Amazon SageMaker Studio upon access to the associated Studio Domain, and
-// when new kernel configurations are selected by the user. A user may have
-// multiple Apps active simultaneously. Apps will automatically terminate and
-// be deleted when stopped from within Studio, or when the DeleteApp API is
-// manually called. UserProfiles are limited to 5 concurrently running Apps
-// at a time.
+// Creates a running App for the specified UserProfile. Supported Apps are JupyterServer
+// and KernelGateway. This operation is automatically invoked by Amazon SageMaker
+// Studio upon access to the associated Domain, and when new kernel configurations
+// are selected by the user. A user may have multiple Apps active simultaneously.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -587,7 +583,7 @@ func (c *SageMaker) CreateCompilationJobRequest(input *CreateCompilationJobInput
 //    the model runs on
 //
 //    * The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker
-//    assumes to perform the model compilation job
+//    assumes to perform the model compilation job.
 //
 // You can also provide a Tag to track the model compilation job's resource
 // use and costs. The response body contains the CompilationJobArn for the compiled
@@ -678,15 +674,24 @@ func (c *SageMaker) CreateDomainRequest(input *CreateDomainInput) (req *request.
 
 // CreateDomain API operation for Amazon SageMaker Service.
 //
-// Creates a Domain for Amazon SageMaker Studio, which can be accessed by end-users
-// in a web browser. A Domain has an associated directory, list of authorized
-// users, and a variety of security, application, policies, and Amazon Virtual
-// Private Cloud configurations. An AWS account is limited to one Domain, per
-// region. Users within a domain can share notebook files and other artifacts
-// with each other. When a Domain is created, an Amazon Elastic File System
-// (EFS) is also created for use by all of the users within the Domain. Each
-// user receives a private home directory within the EFS for notebooks, Git
-// repositories, and data files.
+// Creates a Domain used by SageMaker Studio. A domain consists of an associated
+// directory, a list of authorized users, and a variety of security, application,
+// policy, and Amazon Virtual Private Cloud (VPC) configurations. An AWS account
+// is limited to one domain per region. Users within a domain can share notebook
+// files and other artifacts with each other.
+//
+// When a domain is created, an Amazon Elastic File System (EFS) volume is also
+// created for use by all of the users within the domain. Each user receives
+// a private home directory within the EFS for notebooks, Git repositories,
+// and data files.
+//
+// All traffic between the domain and the EFS volume is communicated through
+// the specified subnet IDs. All other traffic goes over the Internet through
+// an Amazon SageMaker system VPC. The EFS traffic uses the NFS/TCP protocol
+// over port 2049.
+//
+// NFS traffic over TCP on port 2049 needs to be allowed in both inbound and
+// outbound rules in order to launch a SageMaker Studio app successfully.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -787,6 +792,17 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 //
 // When it receives the request, Amazon SageMaker creates the endpoint, launches
 // the resources (ML compute instances), and deploys the model(s) on them.
+//
+// When you call CreateEndpoint, a load call is made to DynamoDB to verify that
+// your endpoint configuration exists. When you read data from a DynamoDB table
+// supporting Eventually Consistent Reads (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadConsistency.html),
+// the response might not reflect the results of a recently completed write
+// operation. The response might include some stale data. If the dependent entities
+// are not yet in DynamoDB, this causes a validation error. If you repeat your
+// read request after a short time, the response should return the latest data.
+// So retry logic is recommended to handle these possible issues. We also recommend
+// that customers call DescribeEndpointConfig before calling CreateEndpoint
+// to minimize the potential impact of a DynamoDB eventually consistent read.
 //
 // When Amazon SageMaker receives the request, it sets the endpoint status to
 // Creating. After it creates the endpoint, it sets the status to InService.
@@ -902,6 +918,17 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
 // (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
 //
+// When you call CreateEndpoint, a load call is made to DynamoDB to verify that
+// your endpoint configuration exists. When you read data from a DynamoDB table
+// supporting Eventually Consistent Reads (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.ReadConsistency.html),
+// the response might not reflect the results of a recently completed write
+// operation. The response might include some stale data. If the dependent entities
+// are not yet in DynamoDB, this causes a validation error. If you repeat your
+// read request after a short time, the response should return the latest data.
+// So retry logic is recommended to handle these possible issues. We also recommend
+// that customers call DescribeEndpointConfig before calling CreateEndpoint
+// to minimize the potential impact of a DynamoDB eventually consistent read.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -980,9 +1007,9 @@ func (c *SageMaker) CreateExperimentRequest(input *CreateExperimentInput) (req *
 
 // CreateExperiment API operation for Amazon SageMaker Service.
 //
-// Creates an Amazon SageMaker experiment. An experiment is a collection of
-// trials that are observed, compared and evaluated as a group. A trial is a
-// set of steps, called trial components, that produce a machine learning model.
+// Creates an SageMaker experiment. An experiment is a collection of trials
+// that are observed, compared and evaluated as a group. A trial is a set of
+// steps, called trial components, that produce a machine learning model.
 //
 // The goal of an experiment is to determine the components that produce the
 // best model. Multiple trials are performed, each one isolating and measuring
@@ -1941,9 +1968,9 @@ func (c *SageMaker) CreatePresignedDomainUrlRequest(input *CreatePresignedDomain
 //
 // Creates a URL for a specified UserProfile in a Domain. When accessed in a
 // web browser, the user will be automatically signed in to Amazon SageMaker
-// Studio, and granted access to all of the Apps and files associated with that
-// Amazon Elastic File System (EFS). This operation can only be called when
-// AuthMode equals IAM.
+// Studio, and granted access to all of the Apps and files associated with the
+// Domain's Amazon Elastic File System (EFS) volume. This operation can only
+// be called when the authentication mode equals IAM.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2028,13 +2055,17 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // home page from the notebook instance. The console uses this API to get the
 // URL and show the page.
 //
-// IAM authorization policies for this API are also enforced for every HTTP
-// request and WebSocket frame that attempts to connect to the notebook instance.For
-// example, you can restrict access to this API and to the URL that it returns
-// to a list of IP addresses that you specify. Use the NotIpAddress condition
-// operator and the aws:SourceIP condition context key to specify the list of
-// IP addresses that you want to have access to the notebook instance. For more
-// information, see Limit Access to a Notebook Instance by IP Address (https://docs.aws.amazon.com/sagemaker/latest/dg/security_iam_id-based-policy-examples.html#nbi-ip-filter).
+// The IAM role or user used to call this API defines the permissions to access
+// the notebook instance. Once the presigned URL is created, no additional permission
+// is required to access this URL. IAM authorization policies for this API are
+// also enforced for every HTTP request and WebSocket frame that attempts to
+// connect to the notebook instance.
+//
+// You can restrict access to this API and to the URL that it returns to a list
+// of IP addresses that you specify. Use the NotIpAddress condition operator
+// and the aws:SourceIP condition context key to specify the list of IP addresses
+// that you want to have access to the notebook instance. For more information,
+// see Limit Access to a Notebook Instance by IP Address (https://docs.aws.amazon.com/sagemaker/latest/dg/security_iam_id-based-policy-examples.html#nbi-ip-filter).
 //
 // The URL that you get from a call to CreatePresignedNotebookInstanceUrl is
 // valid only for 5 minutes. If you try to use the URL after the 5-minute limit
@@ -2632,14 +2663,13 @@ func (c *SageMaker) CreateUserProfileRequest(input *CreateUserProfileInput) (req
 // CreateUserProfile API operation for Amazon SageMaker Service.
 //
 // Creates a user profile. A user profile represents a single user within a
-// Domain, and is the main way to reference a "person" for the purposes of sharing,
-// reporting and other user-oriented features. This entity is created during
-// on-boarding to Amazon SageMaker Studio. If an administrator invites a person
-// by email or imports them from SSO, a UserProfile is automatically created.
-//
-// This entity is the primary holder of settings for an individual user and,
-// through the domain, has a reference to the user's private Amazon Elastic
-// File System (EFS) home directory.
+// domain, and is the main way to reference a "person" for the purposes of sharing,
+// reporting, and other user-oriented features. This entity is created when
+// a user onboards to Amazon SageMaker Studio. If an administrator invites a
+// person by email or imports them from SSO, a user profile is automatically
+// created. A user profile is the primary holder of settings for an individual
+// user and has a reference to the user's private Amazon Elastic File System
+// (EFS) home directory.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2673,6 +2703,96 @@ func (c *SageMaker) CreateUserProfile(input *CreateUserProfileInput) (*CreateUse
 // for more information on using Contexts.
 func (c *SageMaker) CreateUserProfileWithContext(ctx aws.Context, input *CreateUserProfileInput, opts ...request.Option) (*CreateUserProfileOutput, error) {
 	req, out := c.CreateUserProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateWorkforce = "CreateWorkforce"
+
+// CreateWorkforceRequest generates a "aws/request.Request" representing the
+// client's request for the CreateWorkforce operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateWorkforce for more information on using the CreateWorkforce
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateWorkforceRequest method.
+//    req, resp := client.CreateWorkforceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateWorkforce
+func (c *SageMaker) CreateWorkforceRequest(input *CreateWorkforceInput) (req *request.Request, output *CreateWorkforceOutput) {
+	op := &request.Operation{
+		Name:       opCreateWorkforce,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateWorkforceInput{}
+	}
+
+	output = &CreateWorkforceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateWorkforce API operation for Amazon SageMaker Service.
+//
+// Use this operation to create a workforce. This operation will return an error
+// if a workforce already exists in the AWS Region that you specify. You can
+// only create one workforce in each AWS Region.
+//
+// If you want to create a new workforce in an AWS Region where the a workforce
+// already exists, use the API operation to delete the existing workforce and
+// then use this operation to create a new workforce.
+//
+// To create a private workforce using Amazon Cognito, you must specify a Cognito
+// user pool in CognitoConfig. You can also create an Amazon Cognito workforce
+// using the Amazon SageMaker console. For more information, see Create a Private
+// Workforce (Amazon Cognito) (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+//
+// To create a private workforce using your own OIDC Identity Provider (IdP),
+// specify your IdP configuration in OidcConfig. You must create a OIDC IdP
+// workforce using this API operation. For more information, see Create a Private
+// Workforce (OIDC IdP) (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private-oidc.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation CreateWorkforce for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/CreateWorkforce
+func (c *SageMaker) CreateWorkforce(input *CreateWorkforceInput) (*CreateWorkforceOutput, error) {
+	req, out := c.CreateWorkforceRequest(input)
+	return out, req.Send()
+}
+
+// CreateWorkforceWithContext is the same as CreateWorkforce with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateWorkforce for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) CreateWorkforceWithContext(ctx aws.Context, input *CreateWorkforceInput, opts ...request.Option) (*CreateWorkforceOutput, error) {
+	req, out := c.CreateWorkforceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3043,9 +3163,10 @@ func (c *SageMaker) DeleteDomainRequest(input *DeleteDomainInput) (req *request.
 
 // DeleteDomain API operation for Amazon SageMaker Service.
 //
-// Used to delete a domain. Use with caution. If RetentionPolicy is set to Delete,
-// all of the members of the domain will lose access to their EFS volume, including
-// data, notebooks, and other artifacts.
+// Used to delete a domain. If you onboarded with IAM mode, you will need to
+// delete your domain to onboard again using SSO. Use with caution. All of the
+// members of the domain will lose access to their EFS volume, including data,
+// notebooks, and other artifacts.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3212,6 +3333,13 @@ func (c *SageMaker) DeleteEndpointConfigRequest(input *DeleteEndpointConfigInput
 // the specified configuration. It does not delete endpoints created using the
 // configuration.
 //
+// You must not delete an EndpointConfig in use by an endpoint that is live
+// or while the UpdateEndpoint or CreateEndpoint operations are being performed
+// on the endpoint. If you delete the EndpointConfig of an endpoint that is
+// active or being created or updated you may lose visibility into the instance
+// type the endpoint is using. The endpoint must be deleted in order to stop
+// incurring charges.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3376,6 +3504,9 @@ func (c *SageMaker) DeleteFlowDefinitionRequest(input *DeleteFlowDefinitionInput
 // API operation DeleteFlowDefinition for usage and error information.
 //
 // Returned Error Types:
+//   * ResourceInUse
+//   Resource being accessed is in use.
+//
 //   * ResourceNotFound
 //   Resource being access is not found.
 //
@@ -3396,6 +3527,90 @@ func (c *SageMaker) DeleteFlowDefinition(input *DeleteFlowDefinitionInput) (*Del
 // for more information on using Contexts.
 func (c *SageMaker) DeleteFlowDefinitionWithContext(ctx aws.Context, input *DeleteFlowDefinitionInput, opts ...request.Option) (*DeleteFlowDefinitionOutput, error) {
 	req, out := c.DeleteFlowDefinitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteHumanTaskUi = "DeleteHumanTaskUi"
+
+// DeleteHumanTaskUiRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteHumanTaskUi operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteHumanTaskUi for more information on using the DeleteHumanTaskUi
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteHumanTaskUiRequest method.
+//    req, resp := client.DeleteHumanTaskUiRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteHumanTaskUi
+func (c *SageMaker) DeleteHumanTaskUiRequest(input *DeleteHumanTaskUiInput) (req *request.Request, output *DeleteHumanTaskUiOutput) {
+	op := &request.Operation{
+		Name:       opDeleteHumanTaskUi,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteHumanTaskUiInput{}
+	}
+
+	output = &DeleteHumanTaskUiOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteHumanTaskUi API operation for Amazon SageMaker Service.
+//
+// Use this operation to delete a human task user interface (worker task template).
+//
+// To see a list of human task user interfaces (work task templates) in your
+// account, use . When you delete a worker task template, it no longer appears
+// when you call ListHumanTaskUis.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DeleteHumanTaskUi for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFound
+//   Resource being access is not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteHumanTaskUi
+func (c *SageMaker) DeleteHumanTaskUi(input *DeleteHumanTaskUiInput) (*DeleteHumanTaskUiOutput, error) {
+	req, out := c.DeleteHumanTaskUiRequest(input)
+	return out, req.Send()
+}
+
+// DeleteHumanTaskUiWithContext is the same as DeleteHumanTaskUi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteHumanTaskUi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DeleteHumanTaskUiWithContext(ctx aws.Context, input *DeleteHumanTaskUiInput, opts ...request.Option) (*DeleteHumanTaskUiOutput, error) {
+	req, out := c.DeleteHumanTaskUiRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4083,7 +4298,8 @@ func (c *SageMaker) DeleteUserProfileRequest(input *DeleteUserProfileInput) (req
 
 // DeleteUserProfile API operation for Amazon SageMaker Service.
 //
-// Deletes a user profile.
+// Deletes a user profile. When a user profile is deleted, the user loses access
+// to their EFS volume, including data, notebooks, and other artifacts.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4116,6 +4332,85 @@ func (c *SageMaker) DeleteUserProfile(input *DeleteUserProfileInput) (*DeleteUse
 // for more information on using Contexts.
 func (c *SageMaker) DeleteUserProfileWithContext(ctx aws.Context, input *DeleteUserProfileInput, opts ...request.Option) (*DeleteUserProfileOutput, error) {
 	req, out := c.DeleteUserProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteWorkforce = "DeleteWorkforce"
+
+// DeleteWorkforceRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteWorkforce operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteWorkforce for more information on using the DeleteWorkforce
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteWorkforceRequest method.
+//    req, resp := client.DeleteWorkforceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteWorkforce
+func (c *SageMaker) DeleteWorkforceRequest(input *DeleteWorkforceInput) (req *request.Request, output *DeleteWorkforceOutput) {
+	op := &request.Operation{
+		Name:       opDeleteWorkforce,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteWorkforceInput{}
+	}
+
+	output = &DeleteWorkforceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteWorkforce API operation for Amazon SageMaker Service.
+//
+// Use this operation to delete a workforce.
+//
+// If you want to create a new workforce in an AWS Region where the a workforce
+// already exists, use this operation to delete the existing workforce and then
+// use to create a new workforce.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DeleteWorkforce for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DeleteWorkforce
+func (c *SageMaker) DeleteWorkforce(input *DeleteWorkforceInput) (*DeleteWorkforceOutput, error) {
+	req, out := c.DeleteWorkforceRequest(input)
+	return out, req.Send()
+}
+
+// DeleteWorkforceWithContext is the same as DeleteWorkforce with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteWorkforce for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DeleteWorkforceWithContext(ctx aws.Context, input *DeleteWorkforceInput, opts ...request.Option) (*DeleteWorkforceOutput, error) {
+	req, out := c.DeleteWorkforceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4633,7 +4928,7 @@ func (c *SageMaker) DescribeDomainRequest(input *DescribeDomainInput) (req *requ
 
 // DescribeDomain API operation for Amazon SageMaker Service.
 //
-// The desciption of the domain.
+// The description of the domain.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5019,7 +5314,8 @@ func (c *SageMaker) DescribeHumanTaskUiRequest(input *DescribeHumanTaskUiInput) 
 
 // DescribeHumanTaskUi API operation for Amazon SageMaker Service.
 //
-// Returns information about the requested human task user interface.
+// Returns information about the requested human task user interface (worker
+// task template).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6108,7 +6404,7 @@ func (c *SageMaker) DescribeUserProfileRequest(input *DescribeUserProfileInput) 
 
 // DescribeUserProfile API operation for Amazon SageMaker Service.
 //
-// Describes the user profile.
+// Describes a user profile. For more information, see CreateUserProfile.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10471,6 +10767,139 @@ func (c *SageMaker) ListUserProfilesPagesWithContext(ctx aws.Context, input *Lis
 	return p.Err()
 }
 
+const opListWorkforces = "ListWorkforces"
+
+// ListWorkforcesRequest generates a "aws/request.Request" representing the
+// client's request for the ListWorkforces operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListWorkforces for more information on using the ListWorkforces
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListWorkforcesRequest method.
+//    req, resp := client.ListWorkforcesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListWorkforces
+func (c *SageMaker) ListWorkforcesRequest(input *ListWorkforcesInput) (req *request.Request, output *ListWorkforcesOutput) {
+	op := &request.Operation{
+		Name:       opListWorkforces,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListWorkforcesInput{}
+	}
+
+	output = &ListWorkforcesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListWorkforces API operation for Amazon SageMaker Service.
+//
+// Use this operation to list all private and vendor workforces in an AWS Region.
+// Note that you can only have one private workforce per AWS Region.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation ListWorkforces for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/ListWorkforces
+func (c *SageMaker) ListWorkforces(input *ListWorkforcesInput) (*ListWorkforcesOutput, error) {
+	req, out := c.ListWorkforcesRequest(input)
+	return out, req.Send()
+}
+
+// ListWorkforcesWithContext is the same as ListWorkforces with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListWorkforces for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListWorkforcesWithContext(ctx aws.Context, input *ListWorkforcesInput, opts ...request.Option) (*ListWorkforcesOutput, error) {
+	req, out := c.ListWorkforcesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListWorkforcesPages iterates over the pages of a ListWorkforces operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListWorkforces method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListWorkforces operation.
+//    pageNum := 0
+//    err := client.ListWorkforcesPages(params,
+//        func(page *sagemaker.ListWorkforcesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SageMaker) ListWorkforcesPages(input *ListWorkforcesInput, fn func(*ListWorkforcesOutput, bool) bool) error {
+	return c.ListWorkforcesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListWorkforcesPagesWithContext same as ListWorkforcesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) ListWorkforcesPagesWithContext(ctx aws.Context, input *ListWorkforcesInput, fn func(*ListWorkforcesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListWorkforcesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListWorkforcesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkforcesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListWorkteams = "ListWorkteams"
 
 // ListWorkteamsRequest generates a "aws/request.Request" representing the
@@ -10657,6 +11086,11 @@ func (c *SageMaker) RenderUiTemplateRequest(input *RenderUiTemplateInput) (req *
 //
 // See the AWS API reference guide for Amazon SageMaker Service's
 // API operation RenderUiTemplate for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFound
+//   Resource being access is not found.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/RenderUiTemplate
 func (c *SageMaker) RenderUiTemplate(input *RenderUiTemplateInput) (*RenderUiTemplateOutput, error) {
 	req, out := c.RenderUiTemplateRequest(input)
@@ -11854,7 +12288,7 @@ func (c *SageMaker) UpdateDomainRequest(input *UpdateDomainInput) (req *request.
 
 // UpdateDomain API operation for Amazon SageMaker Service.
 //
-// Updates a domain. Changes will impact all of the people in the domain.
+// Updates the default settings for new user profiles in the domain.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11951,6 +12385,10 @@ func (c *SageMaker) UpdateEndpointRequest(input *UpdateEndpointInput) (req *requ
 // You must not delete an EndpointConfig in use by an endpoint that is live
 // or while the UpdateEndpoint or CreateEndpoint operations are being performed
 // on the endpoint. To update an endpoint, you must create a new EndpointConfig.
+//
+// If you delete the EndpointConfig of an endpoint that is active or being created
+// or updated you may lose visibility into the instance type the endpoint is
+// using. The endpoint must be deleted in order to stop incurring charges.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12700,7 +13138,7 @@ func (c *SageMaker) UpdateWorkforceRequest(input *UpdateWorkforceInput) (req *re
 //
 // Restricts access to tasks assigned to workers in the specified workforce
 // to those within specific ranges of IP addresses. You specify allowed IP addresses
-// by creating a list of up to four CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html).
+// by creating a list of up to ten CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html).
 //
 // By default, a workforce isn't restricted to specific IP addresses. If you
 // specify a range of IP addresses, workers who attempt to access tasks using
@@ -13339,40 +13777,49 @@ func (s *AlgorithmValidationSpecification) SetValidationRole(v string) *Algorith
 	return s
 }
 
-// Configures how labels are consolidated across human workers.
+// Configures how labels are consolidated across human workers and processes
+// output data.
 type AnnotationConsolidationConfig struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of a Lambda function implements the logic
-	// for annotation consolidation.
+	// for annotation consolidation (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html)
+	// and to process output data.
 	//
-	// For the built-in bounding box, image classification, semantic segmentation,
-	// and text classification task types, Amazon SageMaker Ground Truth provides
-	// the following Lambda functions:
+	// This parameter is required for all labeling jobs. For built-in task types
+	// (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-task-types.html), use
+	// one of the following Amazon SageMaker Ground Truth Lambda function ARNs for
+	// AnnotationConsolidationLambdaArn. For custom labeling workflows, see Post-annotation
+	// Lambda (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step3.html#sms-custom-templates-step3-postlambda).
 	//
-	//    * Bounding box - Finds the most similar boxes from different workers based
-	//    on the Jaccard index of the boxes. arn:aws:lambda:us-east-1:432418664414:function:ACS-BoundingBox
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-BoundingBox arn:aws:lambda:us-west-2:081040173940:function:ACS-BoundingBox
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-BoundingBox arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-BoundingBox
-	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-BoundingBox arn:aws:lambda:ap-south-1:565803892007:function:ACS-BoundingBox
-	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-BoundingBox arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-BoundingBox
-	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-BoundingBox arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-BoundingBox
-	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-BoundingBox
+	// Bounding box - Finds the most similar boxes from different workers based
+	// on the Jaccard index of the boxes.
 	//
-	//    * Image classification - Uses a variant of the Expectation Maximization
-	//    approach to estimate the true class of an image based on annotations from
-	//    individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClass
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClass arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClass
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClass arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClass
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-BoundingBox arn:aws:lambda:us-east-2:266458841044:function:ACS-BoundingBox
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-BoundingBox arn:aws:lambda:eu-west-1:568282634449:function:ACS-BoundingBox
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-BoundingBox arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-BoundingBox
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-BoundingBox arn:aws:lambda:eu-central-1:203001061592:function:ACS-BoundingBox
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-BoundingBox arn:aws:lambda:eu-west-2:487402164563:function:ACS-BoundingBox
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-BoundingBox arn:aws:lambda:ca-central-1:918755190332:function:ACS-BoundingBox
+	//
+	// Image classification - Uses a variant of the Expectation Maximization approach
+	// to estimate the true class of an image based on annotations from individual
+	// workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClass arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClass
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClass arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClass
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-ImageMultiClass arn:aws:lambda:eu-central-1:203001061592:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClass
 	//
-	//    * Multi-label image classification - Uses a variant of the Expectation
-	//    Maximization approach to estimate the true classes of an image based on
-	//    annotations from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClassMultiLabel
+	// Multi-label image classification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true classes of an image based on annotations from
+	// individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClassMultiLabel
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClassMultiLabel
 	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClassMultiLabel
 	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClassMultiLabel
@@ -13385,9 +13832,10 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClassMultiLabel
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClassMultiLabel
 	//
-	//    * Semantic segmentation - Treats each pixel in an image as a multi-class
-	//    classification and treats pixel annotations from workers as "votes" for
-	//    the correct label. arn:aws:lambda:us-east-1:432418664414:function:ACS-SemanticSegmentation
+	// Semantic segmentation - Treats each pixel in an image as a multi-class classification
+	// and treats pixel annotations from workers as "votes" for the correct label.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-SemanticSegmentation
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-SemanticSegmentation
 	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-SemanticSegmentation
 	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-SemanticSegmentation
@@ -13400,20 +13848,23 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-SemanticSegmentation
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-SemanticSegmentation
 	//
-	//    * Text classification - Uses a variant of the Expectation Maximization
-	//    approach to estimate the true class of text based on annotations from
-	//    individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClass
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClass arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClass
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClass arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClass
+	// Text classification - Uses a variant of the Expectation Maximization approach
+	// to estimate the true class of text based on annotations from individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClass arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClass
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClass arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClass
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClass
 	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-TextMultiClass
 	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-TextMultiClass arn:aws:lambda:eu-central-1:203001061592:function:ACS-TextMultiClass
 	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClass
 	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClass
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClass
 	//
-	//    * Multi-label text classification - Uses a variant of the Expectation
-	//    Maximization approach to estimate the true classes of text based on annotations
-	//    from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClassMultiLabel
+	// Multi-label text classification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true classes of text based on annotations from individual
+	// workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClassMultiLabel
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClassMultiLabel
 	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClassMultiLabel
 	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClassMultiLabel
@@ -13426,8 +13877,10 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClassMultiLabel
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClassMultiLabel
 	//
-	//    * Named entity recognition - Groups similar selections and calculates
-	//    aggregate boundaries, resolving to most-assigned label. arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
+	// Named entity recognition - Groups similar selections and calculates aggregate
+	// boundaries, resolving to most-assigned label.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-NamedEntityRecognition
 	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-NamedEntityRecognition
 	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-NamedEntityRecognition
@@ -13440,54 +13893,136 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-NamedEntityRecognition
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-NamedEntityRecognition
 	//
-	//    * Bounding box verification - Uses a variant of the Expectation Maximization
-	//    approach to estimate the true class of verification judgement for bounding
-	//    box labels based on annotations from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VerificationBoundingBox
-	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationBoundingBox
+	// Named entity recognition - Groups similar selections and calculates aggregate
+	// boundaries, resolving to most-assigned label.
 	//
-	//    * Semantic segmentation verification - Uses a variant of the Expectation
-	//    Maximization approach to estimate the true class of verification judgment
-	//    for semantic segmentation labels based on annotations from individual
-	//    workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VerificationSemanticSegmentation
-	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationSemanticSegmentation
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-NamedEntityRecognition
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-NamedEntityRecognition
 	//
-	//    * Bounding box adjustment - Finds the most similar boxes from different
-	//    workers based on the Jaccard index of the adjusted annotations. arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentBoundingBox
-	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentBoundingBox
+	// Video Classification - Use this task type when you need workers to classify
+	// videos using predefined labels that you specify. Workers are shown videos
+	// and are asked to choose one label for each video.
 	//
-	//    * Semantic segmentation adjustment - Treats each pixel in an image as
-	//    a multi-class classification and treats pixel adjusted annotations from
-	//    workers as "votes" for the correct label. arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentSemanticSegmentation
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-VideoMultiClass arn:aws:lambda:us-east-2:266458841044:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VideoMultiClass arn:aws:lambda:eu-west-1:568282634449:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VideoMultiClass arn:aws:lambda:eu-central-1:203001061592:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VideoMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VideoMultiClass
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VideoMultiClass
+	//
+	// Video Frame Object Detection - Use this task type to have workers identify
+	// and locate objects in a sequence of video frames (images extracted from a
+	// video) using bounding boxes. For example, you can use this task to ask workers
+	// to identify and localize various objects in a series of video frames, such
+	// as cars, bikes, and pedestrians.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VideoObjectDetection
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VideoObjectDetection
+	//
+	// Video Frame Object Tracking - Use this task type to have workers track the
+	// movement of objects in a sequence of video frames (images extracted from
+	// a video) using bounding boxes. For example, you can use this task to ask
+	// workers to track the movement of objects, such as cars, bikes, and pedestrians.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VideoObjectTracking
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VideoObjectTracking
+	//
+	// 3D point cloud object detection - Use this task type when you want workers
+	// to classify objects in a 3D point cloud by drawing 3D cuboids around objects.
+	// For example, you can use this task type to ask workers to identify different
+	// types of objects in a point cloud, such as cars, bikes, and pedestrians.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-3DPointCloudObjectDetection
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-3DPointCloudObjectDetection
+	//
+	// 3D point cloud object tracking - Use this task type when you want workers
+	// to draw 3D cuboids around objects that appear in a sequence of 3D point cloud
+	// frames. For example, you can use this task type to ask workers to track the
+	// movement of vehicles across multiple point cloud frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-3DPointCloudObjectTracking
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-3DPointCloudObjectTracking
+	//
+	// 3D point cloud semantic segmentation - Use this task type when you want workers
+	// to create a point-level semantic segmentation masks by painting objects in
+	// a 3D point cloud using different colors where each color is assigned to one
+	// of the classes you specify.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-3DPointCloudSemanticSegmentation
+	//
+	// Use the following ARNs for Label Verification and Adjustment Jobs
+	//
+	// Use label verification and adjustment jobs to review and adjust labels. To
+	// learn more, see Verify and Adjust Labels (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-verification-data.html).
+	//
+	// Semantic segmentation adjustment - Treats each pixel in an image as a multi-class
+	// classification and treats pixel adjusted annotations from workers as "votes"
+	// for the correct label.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentSemanticSegmentation
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentSemanticSegmentation
 	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentSemanticSegmentation
 	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentSemanticSegmentation
@@ -13500,7 +14035,139 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentSemanticSegmentation
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentSemanticSegmentation
 	//
-	// For more information, see Annotation Consolidation (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html).
+	// Semantic segmentation verification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true class of verification judgment for semantic
+	// segmentation labels based on annotations from individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VerificationSemanticSegmentation
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationSemanticSegmentation
+	//
+	// Bounding box verification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true class of verification judgement for bounding
+	// box labels based on annotations from individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VerificationBoundingBox
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationBoundingBox
+	//
+	// Bounding box adjustment - Finds the most similar boxes from different workers
+	// based on the Jaccard index of the adjusted annotations.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentBoundingBox
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentBoundingBox
+	//
+	// Video Frame Object Detection Adjustment - Use this task type when you want
+	// workers to adjust bounding boxes that workers have added to video frames
+	// to classify and localize objects in a sequence of video frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentVideoObjectDetection
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentVideoObjectDetection
+	//
+	// Video Frame Object Tracking Adjustment - Use this task type when you want
+	// workers to adjust bounding boxes that workers have added to video frames
+	// to track object movement across a sequence of video frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentVideoObjectTracking
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentVideoObjectTracking
+	//
+	// 3D point cloud object detection adjustment - Use this task type when you
+	// want workers to adjust 3D cuboids around objects in a 3D point cloud.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-Adjustment3DPointCloudObjectDetection
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-Adjustment3DPointCloudObjectDetection
+	//
+	// 3D point cloud object tracking adjustment - Use this task type when you want
+	// workers to adjust 3D cuboids around objects that appear in a sequence of
+	// 3D point cloud frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-Adjustment3DPointCloudObjectTracking
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-Adjustment3DPointCloudObjectTracking
+	//
+	// 3D point cloud semantic segmentation adjustment - Use this task type when
+	// you want workers to adjust a point-level semantic segmentation masks using
+	// a paint tool.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-Adjustment3DPointCloudSemanticSegmentation
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-Adjustment3DPointCloudSemanticSegmentation
 	//
 	// AnnotationConsolidationLambdaArn is a required field
 	AnnotationConsolidationLambdaArn *string `type:"string" required:"true"`
@@ -15086,6 +15753,71 @@ func (s *CodeRepositorySummary) SetLastModifiedTime(v time.Time) *CodeRepository
 	return s
 }
 
+// Use this parameter to configure your Amazon Cognito workforce. A single Cognito
+// workforce is created using and corresponds to a single Amazon Cognito user
+// pool (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
+type CognitoConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The client ID for your Amazon Cognito user pool.
+	//
+	// ClientId is a required field
+	ClientId *string `min:"1" type:"string" required:"true"`
+
+	// A user pool (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html)
+	// is a user directory in Amazon Cognito. With a user pool, your users can sign
+	// in to your web or mobile app through Amazon Cognito. Your users can also
+	// sign in through social identity providers like Google, Facebook, Amazon,
+	// or Apple, and through SAML identity providers.
+	//
+	// UserPool is a required field
+	UserPool *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CognitoConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CognitoConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CognitoConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CognitoConfig"}
+	if s.ClientId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientId"))
+	}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+	if s.UserPool == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPool"))
+	}
+	if s.UserPool != nil && len(*s.UserPool) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPool", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientId sets the ClientId field's value.
+func (s *CognitoConfig) SetClientId(v string) *CognitoConfig {
+	s.ClientId = &v
+	return s
+}
+
+// SetUserPool sets the UserPool field's value.
+func (s *CognitoConfig) SetUserPool(v string) *CognitoConfig {
+	s.UserPool = &v
+	return s
+}
+
 // Identifies a Amazon Cognito user group. A user group can be used in on or
 // more work teams.
 type CognitoMemberDefinition struct {
@@ -15238,10 +15970,20 @@ type CompilationJobSummary struct {
 	// The time when the model compilation job started.
 	CompilationStartTime *time.Time `type:"timestamp"`
 
-	// The type of device that the model will run on after compilation has completed.
-	//
-	// CompilationTargetDevice is a required field
-	CompilationTargetDevice *string `type:"string" required:"true" enum:"TargetDevice"`
+	// The type of device that the model will run on after the compilation job has
+	// completed.
+	CompilationTargetDevice *string `type:"string" enum:"TargetDevice"`
+
+	// The type of accelerator that the model will run on after the compilation
+	// job has completed.
+	CompilationTargetPlatformAccelerator *string `type:"string" enum:"TargetPlatformAccelerator"`
+
+	// The type of architecture that the model will run on after the compilation
+	// job has completed.
+	CompilationTargetPlatformArch *string `type:"string" enum:"TargetPlatformArch"`
+
+	// The type of OS that the model will run on after the compilation job has completed.
+	CompilationTargetPlatformOs *string `type:"string" enum:"TargetPlatformOs"`
 
 	// The time when the model compilation job was created.
 	//
@@ -15295,6 +16037,24 @@ func (s *CompilationJobSummary) SetCompilationStartTime(v time.Time) *Compilatio
 // SetCompilationTargetDevice sets the CompilationTargetDevice field's value.
 func (s *CompilationJobSummary) SetCompilationTargetDevice(v string) *CompilationJobSummary {
 	s.CompilationTargetDevice = &v
+	return s
+}
+
+// SetCompilationTargetPlatformAccelerator sets the CompilationTargetPlatformAccelerator field's value.
+func (s *CompilationJobSummary) SetCompilationTargetPlatformAccelerator(v string) *CompilationJobSummary {
+	s.CompilationTargetPlatformAccelerator = &v
+	return s
+}
+
+// SetCompilationTargetPlatformArch sets the CompilationTargetPlatformArch field's value.
+func (s *CompilationJobSummary) SetCompilationTargetPlatformArch(v string) *CompilationJobSummary {
+	s.CompilationTargetPlatformArch = &v
+	return s
+}
+
+// SetCompilationTargetPlatformOs sets the CompilationTargetPlatformOs field's value.
+func (s *CompilationJobSummary) SetCompilationTargetPlatformOs(v string) *CompilationJobSummary {
+	s.CompilationTargetPlatformOs = &v
 	return s
 }
 
@@ -15916,7 +16676,7 @@ func (s *CreateAppInput) SetUserProfileName(v string) *CreateAppInput {
 type CreateAppOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The app's Amazon Resource Name (ARN).
+	// The App's Amazon Resource Name (ARN).
 	AppArn *string `type:"string"`
 }
 
@@ -16391,7 +17151,7 @@ func (s *CreateCompilationJobOutput) SetCompilationJobArn(v string) *CreateCompi
 type CreateDomainInput struct {
 	_ struct{} `type:"structure"`
 
-	// The mode of authentication that member use to access the domain.
+	// The mode of authentication that members use to access the domain.
 	//
 	// AuthMode is a required field
 	AuthMode *string `type:"string" required:"true" enum:"AuthMode"`
@@ -16410,17 +17170,18 @@ type CreateDomainInput struct {
 	// customer master key (CMK) is not supported.
 	HomeEfsFileSystemKmsKeyId *string `type:"string"`
 
-	// Security setting to limit to a set of subnets.
+	// The VPC subnets to use for communication with the EFS volume.
 	//
 	// SubnetIds is a required field
 	SubnetIds []*string `min:"1" type:"list" required:"true"`
 
-	// Each tag consists of a key and an optional value. Tag keys must be unique
-	// per resource.
+	// Tags to associated with the Domain. Each tag consists of a key and an optional
+	// value. Tag keys must be unique per resource. Tags are searchable using the
+	// Search API.
 	Tags []*Tag `type:"list"`
 
-	// Security setting to limit the domain's communication to a Amazon Virtual
-	// Private Cloud.
+	// The ID of the Amazon Virtual Private Cloud (VPC) to use for communication
+	// with the EFS volume.
 	//
 	// VpcId is a required field
 	VpcId *string `type:"string" required:"true"`
@@ -17240,6 +18001,8 @@ type CreateHyperParameterTuningJobInput struct {
 	// stopping condition.
 	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure"`
 
+	// A list of the HyperParameterTrainingJobDefinition objects launched for this
+	// tuning job.
 	TrainingJobDefinitions []*HyperParameterTrainingJobDefinition `min:"1" type:"list"`
 
 	// Specifies the configuration for starting the hyperparameter tuning job using
@@ -17418,7 +18181,14 @@ type CreateLabelingJobInput struct {
 	// The S3 URL of the file that defines the categories used to label the data
 	// objects.
 	//
-	// The file is a JSON structure in the following format:
+	// For 3D point cloud task types, see Create a Labeling Category Configuration
+	// File for 3D Point Cloud Labeling Jobs (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-point-cloud-label-category-config.html).
+	//
+	// For all other built-in task types (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-task-types.html)
+	// and custom tasks (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates.html),
+	// your label category configuration file must be a JSON file in the following
+	// format. Identify the labels you want to use by replacing label_1, label_2,...,label_n
+	// with your label categories.
 	//
 	// {
 	//
@@ -17428,13 +18198,13 @@ type CreateLabelingJobInput struct {
 	//
 	// {
 	//
-	// "label": "label 1"
+	// "label": "label_1"
 	//
 	// },
 	//
 	// {
 	//
-	// "label": "label 2"
+	// "label": "label_2"
 	//
 	// },
 	//
@@ -17442,7 +18212,7 @@ type CreateLabelingJobInput struct {
 	//
 	// {
 	//
-	// "label": "label n"
+	// "label": "label_n"
 	//
 	// }
 	//
@@ -18597,7 +19367,14 @@ type CreateProcessingJobInput struct {
 	// Sets the environment variables in the Docker container.
 	Environment map[string]*string `type:"map"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// Networking options for a processing job.
@@ -18869,7 +19646,14 @@ type CreateTrainingJobInput struct {
 	// have network access.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// Algorithm-specific parameters that influence the quality of the model. You
@@ -19250,7 +20034,14 @@ type CreateTransformJobInput struct {
 	// 16 key and values entries in the map.
 	Environment map[string]*string `type:"map"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// The maximum number of parallel requests that can be sent to each instance
@@ -19274,6 +20065,10 @@ type CreateTransformJobInput struct {
 	// in supported algorithms. Currently, Amazon SageMaker built-in algorithms
 	// do not support HTTP chunked encoding.
 	MaxPayloadInMB *int64 `type:"integer"`
+
+	// Configures the timeout and maximum number of retries for processing a transform
+	// job invocation.
+	ModelClientConfig *ModelClientConfig `type:"structure"`
 
 	// The name of the model that you want to use for the transform job. ModelName
 	// must be the name of an existing Amazon SageMaker model within an AWS Region
@@ -19346,6 +20141,11 @@ func (s *CreateTransformJobInput) Validate() error {
 			invalidParams.AddNested("ExperimentConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.ModelClientConfig != nil {
+		if err := s.ModelClientConfig.Validate(); err != nil {
+			invalidParams.AddNested("ModelClientConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -19411,6 +20211,12 @@ func (s *CreateTransformJobInput) SetMaxConcurrentTransforms(v int64) *CreateTra
 // SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
 func (s *CreateTransformJobInput) SetMaxPayloadInMB(v int64) *CreateTransformJobInput {
 	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelClientConfig sets the ModelClientConfig field's value.
+func (s *CreateTransformJobInput) SetModelClientConfig(v *ModelClientConfig) *CreateTransformJobInput {
+	s.ModelClientConfig = v
 	return s
 }
 
@@ -19903,6 +20709,142 @@ func (s *CreateUserProfileOutput) SetUserProfileArn(v string) *CreateUserProfile
 	return s
 }
 
+type CreateWorkforceInput struct {
+	_ struct{} `type:"structure"`
+
+	// Use this parameter to configure an Amazon Cognito private workforce. A single
+	// Cognito workforce is created using and corresponds to a single Amazon Cognito
+	// user pool (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
+	//
+	// Do not use OidcConfig if you specify values for CognitoConfig.
+	CognitoConfig *CognitoConfig `type:"structure"`
+
+	// Use this parameter to configure a private workforce using your own OIDC Identity
+	// Provider. Do not use CognitoConfig if you specify values for OidcConfig.
+	OidcConfig *OidcConfig `type:"structure"`
+
+	// A list of IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
+	// Used to create an allow list of IP addresses for a private workforce. For
+	// more information, see .
+	SourceIpConfig *SourceIpConfig `type:"structure"`
+
+	// An array of key-value pairs that contain metadata to help you categorize
+	// and organize our workforce. Each tag consists of a key and a value, both
+	// of which you define.
+	Tags []*Tag `type:"list"`
+
+	// The name of the private workforce.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateWorkforceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateWorkforceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateWorkforceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateWorkforceInput"}
+	if s.WorkforceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkforceName"))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
+	}
+	if s.CognitoConfig != nil {
+		if err := s.CognitoConfig.Validate(); err != nil {
+			invalidParams.AddNested("CognitoConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.OidcConfig != nil {
+		if err := s.OidcConfig.Validate(); err != nil {
+			invalidParams.AddNested("OidcConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SourceIpConfig != nil {
+		if err := s.SourceIpConfig.Validate(); err != nil {
+			invalidParams.AddNested("SourceIpConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCognitoConfig sets the CognitoConfig field's value.
+func (s *CreateWorkforceInput) SetCognitoConfig(v *CognitoConfig) *CreateWorkforceInput {
+	s.CognitoConfig = v
+	return s
+}
+
+// SetOidcConfig sets the OidcConfig field's value.
+func (s *CreateWorkforceInput) SetOidcConfig(v *OidcConfig) *CreateWorkforceInput {
+	s.OidcConfig = v
+	return s
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *CreateWorkforceInput) SetSourceIpConfig(v *SourceIpConfig) *CreateWorkforceInput {
+	s.SourceIpConfig = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateWorkforceInput) SetTags(v []*Tag) *CreateWorkforceInput {
+	s.Tags = v
+	return s
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *CreateWorkforceInput) SetWorkforceName(v string) *CreateWorkforceInput {
+	s.WorkforceName = &v
+	return s
+}
+
+type CreateWorkforceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the workforce.
+	//
+	// WorkforceArn is a required field
+	WorkforceArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateWorkforceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateWorkforceOutput) GoString() string {
+	return s.String()
+}
+
+// SetWorkforceArn sets the WorkforceArn field's value.
+func (s *CreateWorkforceOutput) SetWorkforceArn(v string) *CreateWorkforceOutput {
+	s.WorkforceArn = &v
+	return s
+}
+
 type CreateWorkteamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19930,6 +20872,9 @@ type CreateWorkteamInput struct {
 	// and Using Cost Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
+
+	// The name of the workforce.
+	WorkforceName *string `min:"1" type:"string"`
 
 	// The name of the work team. Use this name to identify the work team.
 	//
@@ -19961,6 +20906,9 @@ func (s *CreateWorkteamInput) Validate() error {
 	}
 	if s.MemberDefinitions != nil && len(s.MemberDefinitions) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MemberDefinitions", 1))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
 	}
 	if s.WorkteamName == nil {
 		invalidParams.Add(request.NewErrParamRequired("WorkteamName"))
@@ -20016,6 +20964,12 @@ func (s *CreateWorkteamInput) SetNotificationConfiguration(v *NotificationConfig
 // SetTags sets the Tags field's value.
 func (s *CreateWorkteamInput) SetTags(v []*Tag) *CreateWorkteamInput {
 	s.Tags = v
+	return s
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *CreateWorkteamInput) SetWorkforceName(v string) *CreateWorkteamInput {
+	s.WorkforceName = &v
 	return s
 }
 
@@ -21069,6 +22023,62 @@ func (s DeleteFlowDefinitionOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteHumanTaskUiInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the human task user interface (work task template) you want to
+	// delete.
+	//
+	// HumanTaskUiName is a required field
+	HumanTaskUiName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteHumanTaskUiInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteHumanTaskUiInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteHumanTaskUiInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteHumanTaskUiInput"}
+	if s.HumanTaskUiName == nil {
+		invalidParams.Add(request.NewErrParamRequired("HumanTaskUiName"))
+	}
+	if s.HumanTaskUiName != nil && len(*s.HumanTaskUiName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HumanTaskUiName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHumanTaskUiName sets the HumanTaskUiName field's value.
+func (s *DeleteHumanTaskUiInput) SetHumanTaskUiName(v string) *DeleteHumanTaskUiInput {
+	s.HumanTaskUiName = &v
+	return s
+}
+
+type DeleteHumanTaskUiOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteHumanTaskUiOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteHumanTaskUiOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteModelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21596,6 +22606,61 @@ func (s DeleteUserProfileOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteUserProfileOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteWorkforceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the workforce.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteWorkforceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteWorkforceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteWorkforceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteWorkforceInput"}
+	if s.WorkforceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkforceName"))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *DeleteWorkforceInput) SetWorkforceName(v string) *DeleteWorkforceInput {
+	s.WorkforceName = &v
+	return s
+}
+
+type DeleteWorkforceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteWorkforceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteWorkforceOutput) GoString() string {
 	return s.String()
 }
 
@@ -23298,6 +24363,7 @@ type DescribeFlowDefinitionOutput struct {
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
+	// The reason your flow definition failed.
 	FailureReason *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the flow defintion.
@@ -23413,7 +24479,8 @@ func (s *DescribeFlowDefinitionOutput) SetRoleArn(v string) *DescribeFlowDefinit
 type DescribeHumanTaskUiInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the human task user interface you want information about.
+	// The name of the human task user interface (worker task template) you want
+	// information about.
 	//
 	// HumanTaskUiName is a required field
 	HumanTaskUiName *string `min:"1" type:"string" required:"true"`
@@ -23459,15 +24526,20 @@ type DescribeHumanTaskUiOutput struct {
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
-	// The Amazon Resource Name (ARN) of the human task user interface.
+	// The Amazon Resource Name (ARN) of the human task user interface (worker task
+	// template).
 	//
 	// HumanTaskUiArn is a required field
 	HumanTaskUiArn *string `type:"string" required:"true"`
 
-	// The name of the human task user interface.
+	// The name of the human task user interface (worker task template).
 	//
 	// HumanTaskUiName is a required field
 	HumanTaskUiName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the human task user interface (worker task template). Valid
+	// values are listed below.
+	HumanTaskUiStatus *string `type:"string" enum:"HumanTaskUiStatus"`
 
 	// Container for user interface template information.
 	//
@@ -23503,6 +24575,12 @@ func (s *DescribeHumanTaskUiOutput) SetHumanTaskUiName(v string) *DescribeHumanT
 	return s
 }
 
+// SetHumanTaskUiStatus sets the HumanTaskUiStatus field's value.
+func (s *DescribeHumanTaskUiOutput) SetHumanTaskUiStatus(v string) *DescribeHumanTaskUiOutput {
+	s.HumanTaskUiStatus = &v
+	return s
+}
+
 // SetUiTemplate sets the UiTemplate field's value.
 func (s *DescribeHumanTaskUiOutput) SetUiTemplate(v *UiTemplateInfo) *DescribeHumanTaskUiOutput {
 	s.UiTemplate = v
@@ -23512,7 +24590,7 @@ func (s *DescribeHumanTaskUiOutput) SetUiTemplate(v *UiTemplateInfo) *DescribeHu
 type DescribeHyperParameterTuningJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the tuning job to describe.
+	// The name of the tuning job.
 	//
 	// HyperParameterTuningJobName is a required field
 	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
@@ -23610,6 +24688,8 @@ type DescribeHyperParameterTuningJobOutput struct {
 	// of the training jobs that this tuning job launches.
 	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure"`
 
+	// A list of the HyperParameterTrainingJobDefinition objects launched for this
+	// tuning job.
 	TrainingJobDefinitions []*HyperParameterTrainingJobDefinition `min:"1" type:"list"`
 
 	// The TrainingJobStatusCounters object that specifies the number of training
@@ -25203,6 +26283,7 @@ type DescribeTrainingJobOutput struct {
 	// AlgorithmSpecification is a required field
 	AlgorithmSpecification *AlgorithmSpecification `type:"structure" required:"true"`
 
+	// The Amazon Resource Name (ARN) of an AutoML job.
 	AutoMLJobArn *string `min:"1" type:"string"`
 
 	// The billable time in seconds.
@@ -25251,7 +26332,14 @@ type DescribeTrainingJobOutput struct {
 	// have network access.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// If the training job failed, the reason it failed.
@@ -25688,6 +26776,7 @@ func (s *DescribeTransformJobInput) SetTransformJobName(v string) *DescribeTrans
 type DescribeTransformJobOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the AutoML transform job.
 	AutoMLJobArn *string `min:"1" type:"string"`
 
 	// Specifies the number of records to include in a mini-batch for an HTTP inference
@@ -25716,7 +26805,14 @@ type DescribeTransformJobOutput struct {
 	// 16 key and values entries in the map.
 	Environment map[string]*string `type:"map"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// If the transform job failed, FailureReason describes why it failed. A transform
@@ -25735,6 +26831,10 @@ type DescribeTransformJobOutput struct {
 
 	// The maximum payload size, in MB, used in the transform job.
 	MaxPayloadInMB *int64 `type:"integer"`
+
+	// The timeout and maximum number of retries for processing a transform job
+	// invocation.
+	ModelClientConfig *ModelClientConfig `type:"structure"`
 
 	// The name of the model used in the transform job.
 	//
@@ -25849,6 +26949,12 @@ func (s *DescribeTransformJobOutput) SetMaxConcurrentTransforms(v int64) *Descri
 // SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
 func (s *DescribeTransformJobOutput) SetMaxPayloadInMB(v int64) *DescribeTransformJobOutput {
 	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelClientConfig sets the ModelClientConfig field's value.
+func (s *DescribeTransformJobOutput) SetModelClientConfig(v *ModelClientConfig) *DescribeTransformJobOutput {
+	s.ModelClientConfig = v
 	return s
 }
 
@@ -26298,13 +27404,13 @@ type DescribeUserProfileOutput struct {
 	// The creation time.
 	CreationTime *time.Time `type:"timestamp"`
 
-	// The domain ID.
+	// The ID of the domain that contains the profile.
 	DomainId *string `type:"string"`
 
 	// The failure reason.
 	FailureReason *string `type:"string"`
 
-	// The home Amazon Elastic File System (EFS) Uid.
+	// The ID of the user's profile in the Amazon Elastic File System (EFS) volume.
 	HomeEfsFileSystemUid *string `type:"string"`
 
 	// The last modified time.
@@ -27102,17 +28208,26 @@ func (s *Experiment) SetTags(v []*Tag) *Experiment {
 	return s
 }
 
-// Configuration for the experiment.
+// Associates a SageMaker job as a trial component with an experiment and trial.
+// Specified when you call the following APIs:
+//
+//    * CreateProcessingJob
+//
+//    * CreateTrainingJob
+//
+//    * CreateTransformJob
 type ExperimentConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the experiment.
+	// The name of an existing experiment to associate the trial component with.
 	ExperimentName *string `min:"1" type:"string"`
 
-	// Display name for the trial component.
+	// The display name for the trial component. If this key isn't specified, the
+	// display name is the trial component name.
 	TrialComponentDisplayName *string `min:"1" type:"string"`
 
-	// The name of the trial.
+	// The name of an existing trial to associate the trial component with. If not
+	// specified, a new trial is created.
 	TrialName *string `min:"1" type:"string"`
 }
 
@@ -27421,6 +28536,14 @@ type Filter struct {
 	//
 	// The value of Name doesn't equal Value.
 	//
+	// Exists
+	//
+	// The Name property exists.
+	//
+	// NotExists
+	//
+	// The Name property does not exist.
+	//
 	// GreaterThan
 	//
 	// The value of Name is greater than Value. Not supported for text properties.
@@ -27439,23 +28562,44 @@ type Filter struct {
 	// The value of Name is less than or equal to Value. Not supported for text
 	// properties.
 	//
-	// Contains
-	//
-	// The value of Name contains the string Value. A SearchExpression can include
-	// only one Contains operator. Only supported for text properties.
-	//
-	// Exists
-	//
-	// The Name property exists.
-	//
-	// NotExists
-	//
-	// The Name property does not exist.
-	//
 	// In
 	//
 	// The value of Name is one of the comma delimited strings in Value. Only supported
 	// for text properties.
+	//
+	// Contains
+	//
+	// The value of Name contains the string Value. Only supported for text properties.
+	//
+	// A SearchExpression can include the Contains operator multiple times when
+	// the value of Name is one of the following:
+	//
+	//    * Experiment.DisplayName
+	//
+	//    * Experiment.ExperimentName
+	//
+	//    * Experiment.Tags
+	//
+	//    * Trial.DisplayName
+	//
+	//    * Trial.TrialName
+	//
+	//    * Trial.Tags
+	//
+	//    * TrialComponent.DisplayName
+	//
+	//    * TrialComponent.TrialComponentName
+	//
+	//    * TrialComponent.Tags
+	//
+	//    * TrialComponent.InputArtifacts
+	//
+	//    * TrialComponent.OutputArtifacts
+	//
+	// A SearchExpression can include only one Contains operator for all other values
+	// of Name. In these cases, if you include multiple Contains operators in the
+	// SearchExpression, the result is the following error message: "'CONTAINS'
+	// operator usage limit of 1 exceeded."
 	Operator *string `type:"string" enum:"Operator"`
 
 	// A value used with Name and Operator to determine which resources satisfy
@@ -28421,297 +29565,635 @@ type HumanTaskConfig struct {
 	// data object is sent to a human worker. Use this function to provide input
 	// to a custom labeling job.
 	//
-	// For the built-in bounding box, image classification, semantic segmentation,
-	// and text classification task types, Amazon SageMaker Ground Truth provides
-	// the following Lambda functions:
+	// For built-in task types (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-task-types.html),
+	// use one of the following Amazon SageMaker Ground Truth Lambda function ARNs
+	// for PreHumanTaskLambdaArn. For custom labeling workflows, see Pre-annotation
+	// Lambda (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step3.html#sms-custom-templates-step3-prelambda).
 	//
-	// US East (Northern Virginia) (us-east-1):
+	// Bounding box - Finds the most similar boxes from different workers based
+	// on the Jaccard index of the boxes.
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-BoundingBox
 	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// US East (Ohio) (us-east-2):
-	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-BoundingBox
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// US West (Oregon) (us-west-2):
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-BoundingBox
 	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// Canada (Central) (ca-central-1):
-	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-BoundingBox
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// EU (Ireland) (eu-west-1):
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-BoundingBox
 	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// EU (London) (eu-west-2):
-	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-BoundingBox
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// EU Frankfurt (eu-central-1):
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-BoundingBox
 	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// Asia Pacific (Tokyo) (ap-northeast-1):
-	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-BoundingBox
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// Asia Pacific (Seoul) (ap-northeast-2):
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-BoundingBox
 	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// Asia Pacific (Mumbai) (ap-south-1):
-	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-BoundingBox
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// Asia Pacific (Singapore) (ap-southeast-1):
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-BoundingBox
 	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClass
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-SemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClass
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClassMultiLabel
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-VerificationBoundingBox
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-VerificationSemanticSegmentation
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-AdjustmentBoundingBox
-	//
-	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-AdjustmentSemanticSegmentation
-	//
-	// Asia Pacific (Sydney) (ap-southeast-2):
-	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-BoundingBox
+	//
+	// Image classification - Uses a variant of the Expectation Maximization approach
+	// to estimate the true class of an image based on annotations from individual
+	// workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClass
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClass
 	//
+	// Multi-label image classification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true classes of an image based on annotations from
+	// individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClassMultiLabel
+	//
+	// Semantic segmentation - Treats each pixel in an image as a multi-class classification
+	// and treats pixel annotations from workers as "votes" for the correct label.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-SemanticSegmentation
 	//
+	// Text classification - Uses a variant of the Expectation Maximization approach
+	// to estimate the true class of text based on annotations from individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClass
+	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClass
+	//
+	// Multi-label text classification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true classes of text based on annotations from individual
+	// workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClassMultiLabel
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClassMultiLabel
 	//
+	// Named entity recognition - Groups similar selections and calculates aggregate
+	// boundaries, resolving to most-assigned label.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-NamedEntityRecognition
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-NamedEntityRecognition
+	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-NamedEntityRecognition
 	//
-	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-VerificationBoundingBox
+	// Video Classification - Use this task type when you need workers to classify
+	// videos using predefined labels that you specify. Workers are shown videos
+	// and are asked to choose one label for each video.
 	//
-	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-VerificationSemanticSegmentation
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-VideoMultiClass
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-VideoMultiClass
+	//
+	// Video Frame Object Detection - Use this task type to have workers identify
+	// and locate objects in a sequence of video frames (images extracted from a
+	// video) using bounding boxes. For example, you can use this task to ask workers
+	// to identify and localize various objects in a series of video frames, such
+	// as cars, bikes, and pedestrians.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-VideoObjectDetection
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-VideoObjectDetection
+	//
+	// Video Frame Object Tracking - Use this task type to have workers track the
+	// movement of objects in a sequence of video frames (images extracted from
+	// a video) using bounding boxes. For example, you can use this task to ask
+	// workers to track the movement of objects, such as cars, bikes, and pedestrians.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-VideoObjectTracking
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-VideoObjectTracking
+	//
+	// 3D Point Cloud Modalities
+	//
+	// Use the following pre-annotation lambdas for 3D point cloud labeling modality
+	// tasks. See 3D Point Cloud Task types (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-point-cloud-task-types.html)
+	// to learn more.
+	//
+	// 3D Point Cloud Object Detection - Use this task type when you want workers
+	// to classify objects in a 3D point cloud by drawing 3D cuboids around objects.
+	// For example, you can use this task type to ask workers to identify different
+	// types of objects in a point cloud, such as cars, bikes, and pedestrians.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-3DPointCloudObjectDetection
+	//
+	// 3D Point Cloud Object Tracking - Use this task type when you want workers
+	// to draw 3D cuboids around objects that appear in a sequence of 3D point cloud
+	// frames. For example, you can use this task type to ask workers to track the
+	// movement of vehicles across multiple point cloud frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-3DPointCloudObjectTracking
+	//
+	// 3D Point Cloud Semantic Segmentation - Use this task type when you want workers
+	// to create a point-level semantic segmentation masks by painting objects in
+	// a 3D point cloud using different colors where each color is assigned to one
+	// of the classes you specify.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-3DPointCloudSemanticSegmentation
+	//
+	// Use the following ARNs for Label Verification and Adjustment Jobs
+	//
+	// Use label verification and adjustment jobs to review and adjust labels. To
+	// learn more, see Verify and Adjust Labels (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-verification-data.html).
+	//
+	// Bounding box verification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true class of verification judgement for bounding
+	// box labels based on annotations from individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	// Bounding box adjustment - Finds the most similar boxes from different workers
+	// based on the Jaccard index of the adjusted annotations.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-AdjustmentBoundingBox
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-AdjustmentBoundingBox
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-AdjustmentBoundingBox
 	//
+	// Semantic segmentation verification - Uses a variant of the Expectation Maximization
+	// approach to estimate the true class of verification judgment for semantic
+	// segmentation labels based on annotations from individual workers.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-VerificationSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-VerificationSemanticSegmentation
+	//
+	// Semantic segmentation adjustment - Treats each pixel in an image as a multi-class
+	// classification and treats pixel adjusted annotations from workers as "votes"
+	// for the correct label.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-AdjustmentSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-AdjustmentSemanticSegmentation
+	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-AdjustmentSemanticSegmentation
+	//
+	// Video Frame Object Detection Adjustment - Use this task type when you want
+	// workers to adjust bounding boxes that workers have added to video frames
+	// to classify and localize objects in a sequence of video frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-AdjustmentVideoObjectDetection
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-AdjustmentVideoObjectDetection
+	//
+	// Video Frame Object Tracking Adjustment - Use this task type when you want
+	// workers to adjust bounding boxes that workers have added to video frames
+	// to track object movement across a sequence of video frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-AdjustmentVideoObjectTracking
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-AdjustmentVideoObjectTracking
+	//
+	// 3D point cloud object detection adjustment - Adjust 3D cuboids in a point
+	// cloud frame.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-Adjustment3DPointCloudObjectDetection
+	//
+	// 3D point cloud object tracking adjustment - Adjust 3D cuboids across a sequence
+	// of point cloud frames.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-Adjustment3DPointCloudObjectTracking
+	//
+	// 3D point cloud semantic segmentation adjustment - Adjust semantic segmentation
+	// masks in a 3D point cloud.
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-Adjustment3DPointCloudSemanticSegmentation
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-Adjustment3DPointCloudSemanticSegmentation
 	//
 	// PreHumanTaskLambdaArn is a required field
 	PreHumanTaskLambdaArn *string `type:"string" required:"true"`
@@ -30644,9 +32126,7 @@ type LabelingJobDataSource struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon S3 location of the input data objects.
-	//
-	// S3DataSource is a required field
-	S3DataSource *LabelingJobS3DataSource `type:"structure" required:"true"`
+	S3DataSource *LabelingJobS3DataSource `type:"structure"`
 }
 
 // String returns the string representation
@@ -30662,9 +32142,6 @@ func (s LabelingJobDataSource) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *LabelingJobDataSource) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "LabelingJobDataSource"}
-	if s.S3DataSource == nil {
-		invalidParams.Add(request.NewErrParamRequired("S3DataSource"))
-	}
 	if s.S3DataSource != nil {
 		if err := s.S3DataSource.Validate(); err != nil {
 			invalidParams.AddNested("S3DataSource", err.(request.ErrInvalidParams))
@@ -35367,6 +36844,116 @@ func (s *ListUserProfilesOutput) SetUserProfiles(v []*UserProfileDetails) *ListU
 	return s
 }
 
+type ListWorkforcesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of workforces returned in the response.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A filter you can use to search for workforces using part of the workforce
+	// name.
+	NameContains *string `min:"1" type:"string"`
+
+	// A token to resume pagination.
+	NextToken *string `type:"string"`
+
+	// Sort workforces using the workforce name or creation date.
+	SortBy *string `type:"string" enum:"ListWorkforcesSortByOptions"`
+
+	// Sort workforces in ascending or descending order.
+	SortOrder *string `type:"string" enum:"SortOrder"`
+}
+
+// String returns the string representation
+func (s ListWorkforcesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListWorkforcesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListWorkforcesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListWorkforcesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NameContains != nil && len(*s.NameContains) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NameContains", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListWorkforcesInput) SetMaxResults(v int64) *ListWorkforcesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNameContains sets the NameContains field's value.
+func (s *ListWorkforcesInput) SetNameContains(v string) *ListWorkforcesInput {
+	s.NameContains = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListWorkforcesInput) SetNextToken(v string) *ListWorkforcesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListWorkforcesInput) SetSortBy(v string) *ListWorkforcesInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListWorkforcesInput) SetSortOrder(v string) *ListWorkforcesInput {
+	s.SortOrder = &v
+	return s
+}
+
+type ListWorkforcesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token to resume pagination.
+	NextToken *string `type:"string"`
+
+	// A list containing information about your workforce.
+	//
+	// Workforces is a required field
+	Workforces []*Workforce `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ListWorkforcesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListWorkforcesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListWorkforcesOutput) SetNextToken(v string) *ListWorkforcesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetWorkforces sets the Workforces field's value.
+func (s *ListWorkforcesOutput) SetWorkforces(v []*Workforce) *ListWorkforcesOutput {
+	s.Workforces = v
+	return s
+}
+
 type ListWorkteamsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -35486,6 +37073,13 @@ type MemberDefinition struct {
 
 	// The Amazon Cognito user group that is part of the work team.
 	CognitoMemberDefinition *CognitoMemberDefinition `type:"structure"`
+
+	// A list user groups that exist in your OIDC Identity Provider (IdP). One to
+	// ten groups can be used to create a single private work team. When you add
+	// a user group to the list of Groups, you can add that user group to one or
+	// more private work teams. If you add a user group to a private work team,
+	// all workers in that user group are added to the work team.
+	OidcMemberDefinition *OidcMemberDefinition `type:"structure"`
 }
 
 // String returns the string representation
@@ -35506,6 +37100,11 @@ func (s *MemberDefinition) Validate() error {
 			invalidParams.AddNested("CognitoMemberDefinition", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.OidcMemberDefinition != nil {
+		if err := s.OidcMemberDefinition.Validate(); err != nil {
+			invalidParams.AddNested("OidcMemberDefinition", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -35516,6 +37115,12 @@ func (s *MemberDefinition) Validate() error {
 // SetCognitoMemberDefinition sets the CognitoMemberDefinition field's value.
 func (s *MemberDefinition) SetCognitoMemberDefinition(v *CognitoMemberDefinition) *MemberDefinition {
 	s.CognitoMemberDefinition = v
+	return s
+}
+
+// SetOidcMemberDefinition sets the OidcMemberDefinition field's value.
+func (s *MemberDefinition) SetOidcMemberDefinition(v *OidcMemberDefinition) *MemberDefinition {
+	s.OidcMemberDefinition = v
 	return s
 }
 
@@ -35628,6 +37233,10 @@ func (s *MetricDefinition) SetRegex(v string) *MetricDefinition {
 
 // Provides information about the location that is configured for storing model
 // artifacts.
+//
+// Model artifacts are the output that results from training a model, and typically
+// consist of trained parameters, a model defintion that desribes how to compute
+// inferences, and other metadata.
 type ModelArtifacts struct {
 	_ struct{} `type:"structure"`
 
@@ -35651,6 +37260,53 @@ func (s ModelArtifacts) GoString() string {
 // SetS3ModelArtifacts sets the S3ModelArtifacts field's value.
 func (s *ModelArtifacts) SetS3ModelArtifacts(v string) *ModelArtifacts {
 	s.S3ModelArtifacts = &v
+	return s
+}
+
+// Configures the timeout and maximum number of retries for processing a transform
+// job invocation.
+type ModelClientConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of retries when invocation requests are failing.
+	InvocationsMaxRetries *int64 `type:"integer"`
+
+	// The timeout value in seconds for an invocation request.
+	InvocationsTimeoutInSeconds *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ModelClientConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModelClientConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModelClientConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModelClientConfig"}
+	if s.InvocationsTimeoutInSeconds != nil && *s.InvocationsTimeoutInSeconds < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("InvocationsTimeoutInSeconds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInvocationsMaxRetries sets the InvocationsMaxRetries field's value.
+func (s *ModelClientConfig) SetInvocationsMaxRetries(v int64) *ModelClientConfig {
+	s.InvocationsMaxRetries = &v
+	return s
+}
+
+// SetInvocationsTimeoutInSeconds sets the InvocationsTimeoutInSeconds field's value.
+func (s *ModelClientConfig) SetInvocationsTimeoutInSeconds(v int64) *ModelClientConfig {
+	s.InvocationsTimeoutInSeconds = &v
 	return s
 }
 
@@ -37503,22 +39159,349 @@ func (s *ObjectiveStatusCounters) SetSucceeded(v int64) *ObjectiveStatusCounters
 	return s
 }
 
+// Use this parameter to configure your OIDC Identity Provider (IdP).
+type OidcConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The OIDC IdP authorization endpoint used to configure your private workforce.
+	//
+	// AuthorizationEndpoint is a required field
+	AuthorizationEndpoint *string `type:"string" required:"true"`
+
+	// The OIDC IdP client ID used to configure your private workforce.
+	//
+	// ClientId is a required field
+	ClientId *string `min:"1" type:"string" required:"true"`
+
+	// The OIDC IdP client secret used to configure your private workforce.
+	//
+	// ClientSecret is a required field
+	ClientSecret *string `min:"1" type:"string" required:"true" sensitive:"true"`
+
+	// The OIDC IdP issuer used to configure your private workforce.
+	//
+	// Issuer is a required field
+	Issuer *string `type:"string" required:"true"`
+
+	// The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
+	//
+	// JwksUri is a required field
+	JwksUri *string `type:"string" required:"true"`
+
+	// The OIDC IdP logout endpoint used to configure your private workforce.
+	//
+	// LogoutEndpoint is a required field
+	LogoutEndpoint *string `type:"string" required:"true"`
+
+	// The OIDC IdP token endpoint used to configure your private workforce.
+	//
+	// TokenEndpoint is a required field
+	TokenEndpoint *string `type:"string" required:"true"`
+
+	// The OIDC IdP user information endpoint used to configure your private workforce.
+	//
+	// UserInfoEndpoint is a required field
+	UserInfoEndpoint *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s OidcConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OidcConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OidcConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OidcConfig"}
+	if s.AuthorizationEndpoint == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthorizationEndpoint"))
+	}
+	if s.ClientId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientId"))
+	}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+	if s.ClientSecret == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientSecret"))
+	}
+	if s.ClientSecret != nil && len(*s.ClientSecret) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientSecret", 1))
+	}
+	if s.Issuer == nil {
+		invalidParams.Add(request.NewErrParamRequired("Issuer"))
+	}
+	if s.JwksUri == nil {
+		invalidParams.Add(request.NewErrParamRequired("JwksUri"))
+	}
+	if s.LogoutEndpoint == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogoutEndpoint"))
+	}
+	if s.TokenEndpoint == nil {
+		invalidParams.Add(request.NewErrParamRequired("TokenEndpoint"))
+	}
+	if s.UserInfoEndpoint == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserInfoEndpoint"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizationEndpoint sets the AuthorizationEndpoint field's value.
+func (s *OidcConfig) SetAuthorizationEndpoint(v string) *OidcConfig {
+	s.AuthorizationEndpoint = &v
+	return s
+}
+
+// SetClientId sets the ClientId field's value.
+func (s *OidcConfig) SetClientId(v string) *OidcConfig {
+	s.ClientId = &v
+	return s
+}
+
+// SetClientSecret sets the ClientSecret field's value.
+func (s *OidcConfig) SetClientSecret(v string) *OidcConfig {
+	s.ClientSecret = &v
+	return s
+}
+
+// SetIssuer sets the Issuer field's value.
+func (s *OidcConfig) SetIssuer(v string) *OidcConfig {
+	s.Issuer = &v
+	return s
+}
+
+// SetJwksUri sets the JwksUri field's value.
+func (s *OidcConfig) SetJwksUri(v string) *OidcConfig {
+	s.JwksUri = &v
+	return s
+}
+
+// SetLogoutEndpoint sets the LogoutEndpoint field's value.
+func (s *OidcConfig) SetLogoutEndpoint(v string) *OidcConfig {
+	s.LogoutEndpoint = &v
+	return s
+}
+
+// SetTokenEndpoint sets the TokenEndpoint field's value.
+func (s *OidcConfig) SetTokenEndpoint(v string) *OidcConfig {
+	s.TokenEndpoint = &v
+	return s
+}
+
+// SetUserInfoEndpoint sets the UserInfoEndpoint field's value.
+func (s *OidcConfig) SetUserInfoEndpoint(v string) *OidcConfig {
+	s.UserInfoEndpoint = &v
+	return s
+}
+
+// Your Amazon Cognito workforce configuration.
+type OidcConfigForResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The OIDC IdP authorization endpoint used to configure your private workforce.
+	AuthorizationEndpoint *string `type:"string"`
+
+	// The OIDC IdP client ID used to configure your private workforce.
+	ClientId *string `min:"1" type:"string"`
+
+	// The OIDC IdP issuer used to configure your private workforce.
+	Issuer *string `type:"string"`
+
+	// The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
+	JwksUri *string `type:"string"`
+
+	// The OIDC IdP logout endpoint used to configure your private workforce.
+	LogoutEndpoint *string `type:"string"`
+
+	// The OIDC IdP token endpoint used to configure your private workforce.
+	TokenEndpoint *string `type:"string"`
+
+	// The OIDC IdP user information endpoint used to configure your private workforce.
+	UserInfoEndpoint *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OidcConfigForResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OidcConfigForResponse) GoString() string {
+	return s.String()
+}
+
+// SetAuthorizationEndpoint sets the AuthorizationEndpoint field's value.
+func (s *OidcConfigForResponse) SetAuthorizationEndpoint(v string) *OidcConfigForResponse {
+	s.AuthorizationEndpoint = &v
+	return s
+}
+
+// SetClientId sets the ClientId field's value.
+func (s *OidcConfigForResponse) SetClientId(v string) *OidcConfigForResponse {
+	s.ClientId = &v
+	return s
+}
+
+// SetIssuer sets the Issuer field's value.
+func (s *OidcConfigForResponse) SetIssuer(v string) *OidcConfigForResponse {
+	s.Issuer = &v
+	return s
+}
+
+// SetJwksUri sets the JwksUri field's value.
+func (s *OidcConfigForResponse) SetJwksUri(v string) *OidcConfigForResponse {
+	s.JwksUri = &v
+	return s
+}
+
+// SetLogoutEndpoint sets the LogoutEndpoint field's value.
+func (s *OidcConfigForResponse) SetLogoutEndpoint(v string) *OidcConfigForResponse {
+	s.LogoutEndpoint = &v
+	return s
+}
+
+// SetTokenEndpoint sets the TokenEndpoint field's value.
+func (s *OidcConfigForResponse) SetTokenEndpoint(v string) *OidcConfigForResponse {
+	s.TokenEndpoint = &v
+	return s
+}
+
+// SetUserInfoEndpoint sets the UserInfoEndpoint field's value.
+func (s *OidcConfigForResponse) SetUserInfoEndpoint(v string) *OidcConfigForResponse {
+	s.UserInfoEndpoint = &v
+	return s
+}
+
+// A list user groups that exist in your OIDC Identity Provider (IdP). One to
+// ten groups can be used to create a single private work team. When you add
+// a user group to the list of Groups, you can add that user group to one or
+// more private work teams. If you add a user group to a private work team,
+// all workers in that user group are added to the work team.
+type OidcMemberDefinition struct {
+	_ struct{} `type:"structure"`
+
+	// A list of comma seperated strings that identifies user groups in your OIDC
+	// IdP. Each user group is made up of a group of private workers.
+	//
+	// Groups is a required field
+	Groups []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s OidcMemberDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OidcMemberDefinition) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OidcMemberDefinition) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OidcMemberDefinition"}
+	if s.Groups == nil {
+		invalidParams.Add(request.NewErrParamRequired("Groups"))
+	}
+	if s.Groups != nil && len(s.Groups) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Groups", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroups sets the Groups field's value.
+func (s *OidcMemberDefinition) SetGroups(v []*string) *OidcMemberDefinition {
+	s.Groups = v
+	return s
+}
+
 // Contains information about the output location for the compiled model and
-// the device (target) that the model runs on.
+// the target device that the model runs on. TargetDevice and TargetPlatform
+// are mutually exclusive, so you need to choose one between the two to specify
+// your target device or platform. If you cannot find your device you want to
+// use from the TargetDevice list, use TargetPlatform to describe the platform
+// of your edge device and CompilerOptions if there are specific settings that
+// are required or recommended to use for particular TargetPlatform.
 type OutputConfig struct {
 	_ struct{} `type:"structure"`
 
-	// Identifies the S3 path where you want Amazon SageMaker to store the model
+	// Specifies additional parameters for compiler options in JSON format. The
+	// compiler options are TargetPlatform specific. It is required for NVIDIA accelerators
+	// and highly recommended for CPU compliations. For any other cases, it is optional
+	// to specify CompilerOptions.
+	//
+	//    * CPU: Compilation for CPU supports the following compiler options. mcpu:
+	//    CPU micro-architecture. For example, {'mcpu': 'skylake-avx512'} mattr:
+	//    CPU flags. For example, {'mattr': ['+neon', '+vfpv4']}
+	//
+	//    * ARM: Details of ARM CPU compilations. NEON: NEON is an implementation
+	//    of the Advanced SIMD extension used in ARMv7 processors. For example,
+	//    add {'mattr': ['+neon']} to the compiler options if compiling for ARM
+	//    32-bit platform with the NEON support.
+	//
+	//    * NVIDIA: Compilation for NVIDIA GPU supports the following compiler options.
+	//    gpu_code: Specifies the targeted architecture. trt-ver: Specifies the
+	//    TensorRT versions in x.y.z. format. cuda-ver: Specifies the CUDA version
+	//    in x.y format. For example, {'gpu-code': 'sm_72', 'trt-ver': '6.0.1',
+	//    'cuda-ver': '10.1'}
+	//
+	//    * ANDROID: Compilation for the Android OS supports the following compiler
+	//    options: ANDROID_PLATFORM: Specifies the Android API levels. Available
+	//    levels range from 21 to 29. For example, {'ANDROID_PLATFORM': 28}. mattr:
+	//    Add {'mattr': ['+neon']} to compiler options if compiling for ARM 32-bit
+	//    platform with NEON support.
+	CompilerOptions *string `min:"7" type:"string"`
+
+	// Identifies the S3 bucket where you want Amazon SageMaker to store the model
 	// artifacts. For example, s3://bucket-name/key-name-prefix.
 	//
 	// S3OutputLocation is a required field
 	S3OutputLocation *string `type:"string" required:"true"`
 
-	// Identifies the device that you want to run your model on after it has been
-	// compiled. For example: ml_c5.
+	// Identifies the target device or the machine learning instance that you want
+	// to run your model on after the compilation has completed. Alternatively,
+	// you can specify OS, architecture, and accelerator using TargetPlatform fields.
+	// It can be used instead of TargetPlatform.
+	TargetDevice *string `type:"string" enum:"TargetDevice"`
+
+	// Contains information about a target platform that you want your model to
+	// run on, such as OS, architecture, and accelerators. It is an alternative
+	// of TargetDevice.
 	//
-	// TargetDevice is a required field
-	TargetDevice *string `type:"string" required:"true" enum:"TargetDevice"`
+	// The following examples show how to configure the TargetPlatform and CompilerOptions
+	// JSON strings for popular target platforms:
+	//
+	//    * Raspberry Pi 3 Model B+ "TargetPlatform": {"Os": "LINUX", "Arch": "ARM_EABIHF"},
+	//    "CompilerOptions": {'mattr': ['+neon']}
+	//
+	//    * Jetson TX2 "TargetPlatform": {"Os": "LINUX", "Arch": "ARM64", "Accelerator":
+	//    "NVIDIA"}, "CompilerOptions": {'gpu-code': 'sm_62', 'trt-ver': '6.0.1',
+	//    'cuda-ver': '10.0'}
+	//
+	//    * EC2 m5.2xlarge instance OS "TargetPlatform": {"Os": "LINUX", "Arch":
+	//    "X86_64", "Accelerator": "NVIDIA"}, "CompilerOptions": {'mcpu': 'skylake-avx512'}
+	//
+	//    * RK3399 "TargetPlatform": {"Os": "LINUX", "Arch": "ARM64", "Accelerator":
+	//    "MALI"}
+	//
+	//    * ARMv7 phone (CPU) "TargetPlatform": {"Os": "ANDROID", "Arch": "ARM_EABI"},
+	//    "CompilerOptions": {'ANDROID_PLATFORM': 25, 'mattr': ['+neon']}
+	//
+	//    * ARMv8 phone (CPU) "TargetPlatform": {"Os": "ANDROID", "Arch": "ARM64"},
+	//    "CompilerOptions": {'ANDROID_PLATFORM': 29}
+	TargetPlatform *TargetPlatform `type:"structure"`
 }
 
 // String returns the string representation
@@ -37534,17 +39517,28 @@ func (s OutputConfig) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *OutputConfig) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "OutputConfig"}
+	if s.CompilerOptions != nil && len(*s.CompilerOptions) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("CompilerOptions", 7))
+	}
 	if s.S3OutputLocation == nil {
 		invalidParams.Add(request.NewErrParamRequired("S3OutputLocation"))
 	}
-	if s.TargetDevice == nil {
-		invalidParams.Add(request.NewErrParamRequired("TargetDevice"))
+	if s.TargetPlatform != nil {
+		if err := s.TargetPlatform.Validate(); err != nil {
+			invalidParams.AddNested("TargetPlatform", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCompilerOptions sets the CompilerOptions field's value.
+func (s *OutputConfig) SetCompilerOptions(v string) *OutputConfig {
+	s.CompilerOptions = &v
+	return s
 }
 
 // SetS3OutputLocation sets the S3OutputLocation field's value.
@@ -37556,6 +39550,12 @@ func (s *OutputConfig) SetS3OutputLocation(v string) *OutputConfig {
 // SetTargetDevice sets the TargetDevice field's value.
 func (s *OutputConfig) SetTargetDevice(v string) *OutputConfig {
 	s.TargetDevice = &v
+	return s
+}
+
+// SetTargetPlatform sets the TargetPlatform field's value.
+func (s *OutputConfig) SetTargetPlatform(v *TargetPlatform) *OutputConfig {
+	s.TargetPlatform = v
 	return s
 }
 
@@ -38038,7 +40038,14 @@ type ProcessingJob struct {
 	// container when the processing job exits.
 	ExitMessage *string `type:"string"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// A string, up to one KB in size, that contains the reason a processing job
@@ -39216,6 +41223,12 @@ func (s *PublicWorkforceTaskPrice) SetAmountInUsd(v *USD) *PublicWorkforceTaskPr
 type RenderUiTemplateInput struct {
 	_ struct{} `type:"structure"`
 
+	// The HumanTaskUiArn of the worker UI that you want to render. Do not provide
+	// a HumanTaskUiArn if you use the UiTemplate parameter.
+	//
+	// See a list of available Human Ui Amazon Resource Names (ARNs) in UiConfig.
+	HumanTaskUiArn *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) that has access to the S3 objects that are
 	// used by the template.
 	//
@@ -39268,6 +41281,12 @@ func (s *RenderUiTemplateInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetHumanTaskUiArn sets the HumanTaskUiArn field's value.
+func (s *RenderUiTemplateInput) SetHumanTaskUiArn(v string) *RenderUiTemplateInput {
+	s.HumanTaskUiArn = &v
+	return s
 }
 
 // SetRoleArn sets the RoleArn field's value.
@@ -39803,8 +41822,8 @@ func (s *ResourceNotFound) RequestID() string {
 }
 
 // The instance type and the Amazon Resource Name (ARN) of the SageMaker image
-// created on the instance. The ARN is stored as metadata in Amazon SageMaker
-// Studio notebooks.
+// created on the instance. The ARN is stored as metadata in SageMaker Studio
+// notebooks.
 type ResourceSpec struct {
 	_ struct{} `type:"structure"`
 
@@ -39911,18 +41930,22 @@ type S3DataSource struct {
 	// Depending on the value specified for the S3DataType, identifies either a
 	// key name prefix or a manifest. For example:
 	//
-	//    * A key name prefix might look like this: s3://bucketname/exampleprefix.
+	//    * A key name prefix might look like this: s3://bucketname/exampleprefix
 	//
-	//    * A manifest might look like this: s3://bucketname/example.manifest The
-	//    manifest is an S3 object which is a JSON file with the following format:
-	//    The preceding JSON matches the following s3Uris: [ {"prefix": "s3://customer_bucket/some/prefix/"},
+	//    * A manifest might look like this: s3://bucketname/example.manifest A
+	//    manifest is an S3 object which is a JSON file consisting of an array of
+	//    elements. The first element is a prefix which is followed by one or more
+	//    suffixes. SageMaker appends the suffix elements to the prefix to get a
+	//    full set of S3Uri. Note that the prefix must be a valid non-empty S3Uri
+	//    that precludes users from specifying a manifest whose individual S3Uri
+	//    is sourced from different S3 buckets. The following code example shows
+	//    a valid manifest format: [ {"prefix": "s3://customer_bucket/some/prefix/"},
 	//    "relative/path/to/custdata-1", "relative/path/custdata-2", ... "relative/path/custdata-N"
-	//    ] The preceding JSON matches the following s3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1
+	//    ] This JSON is equivalent to the following S3Uri list: s3://customer_bucket/some/prefix/relative/path/to/custdata-1
 	//    s3://customer_bucket/some/prefix/relative/path/custdata-2 ... s3://customer_bucket/some/prefix/relative/path/custdata-N
-	//    The complete set of s3uris in this manifest is the input data for the
-	//    channel for this datasource. The object that each s3uris points to must
-	//    be readable by the IAM role that Amazon SageMaker uses to perform tasks
-	//    on your behalf.
+	//    The complete set of S3Uri in this manifest is the input data for the channel
+	//    for this data source. The object that each S3Uri points to must be readable
+	//    by the IAM role that Amazon SageMaker uses to perform tasks on your behalf.
 	//
 	// S3Uri is a required field
 	S3Uri *string `type:"string" required:"true"`
@@ -40058,8 +42081,7 @@ func (s *ScheduleConfig) SetScheduleExpression(v string) *ScheduleConfig {
 // A SearchExpression contains the following components:
 //
 //    * A list of Filter objects. Each filter defines a simple Boolean expression
-//    comprised of a resource property name, Boolean operator, and value. A
-//    SearchExpression can include only one Contains operator.
+//    comprised of a resource property name, Boolean operator, and value.
 //
 //    * A list of NestedFilter objects. Each nested filter defines a list of
 //    Boolean expressions using a list of resource properties. A nested filter
@@ -40501,17 +42523,25 @@ func (s *SecondaryStatusTransition) SetStatusMessage(v string) *SecondaryStatusT
 	return s
 }
 
-// The sharing settings.
+// Specifies options when sharing an Amazon SageMaker Studio notebook. These
+// settings are specified as part of DefaultUserSettings when the CreateDomain
+// API is called, and as part of UserSettings when the CreateUserProfile API
+// is called.
 type SharingSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The notebook output option.
+	// Whether to include the notebook cell output when sharing the notebook. The
+	// default is Disabled.
 	NotebookOutputOption *string `type:"string" enum:"NotebookOutputOption"`
 
-	// The AWS Key Management Service encryption key ID.
+	// When NotebookOutputOption is Allowed, the AWS Key Management Service (KMS)
+	// encryption key ID used to encrypt the notebook cell output in the Amazon
+	// S3 bucket.
 	S3KmsKeyId *string `type:"string"`
 
-	// The Amazon S3 output path.
+	// When NotebookOutputOption is Allowed, the Amazon S3 bucket used to save the
+	// notebook cell output. If S3OutputPath isn't specified, a default bucket is
+	// used.
 	S3OutputPath *string `type:"string"`
 }
 
@@ -40710,10 +42740,10 @@ func (s *SourceAlgorithmSpecification) SetSourceAlgorithms(v []*SourceAlgorithm)
 type SourceIpConfig struct {
 	_ struct{} `type:"structure"`
 
-	// A list of one to four Classless Inter-Domain Routing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
+	// A list of one to ten Classless Inter-Domain Routing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 	// (CIDR) values.
 	//
-	// Maximum: Four CIDR values
+	// Maximum: Ten CIDR values
 	//
 	// The following Length Constraints apply to individual CIDR values in the CIDR
 	// value list.
@@ -41427,6 +43457,7 @@ func (s *StoppingCondition) SetMaxWaitTimeInSeconds(v int64) *StoppingCondition 
 type SubscribedWorkteam struct {
 	_ struct{} `type:"structure"`
 
+	// Marketplace product listing ID.
 	ListingId *string `type:"string"`
 
 	// The description of the vendor from the Amazon Marketplace.
@@ -41581,6 +43612,93 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
+// Contains information about a target platform that you want your model to
+// run on, such as OS, architecture, and accelerators. It is an alternative
+// of TargetDevice.
+type TargetPlatform struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies a target platform accelerator (optional).
+	//
+	//    * NVIDIA: Nvidia graphics processing unit. It also requires gpu-code,
+	//    trt-ver, cuda-ver compiler options
+	//
+	//    * MALI: ARM Mali graphics processor
+	//
+	//    * INTEL_GRAPHICS: Integrated Intel graphics
+	Accelerator *string `type:"string" enum:"TargetPlatformAccelerator"`
+
+	// Specifies a target platform architecture.
+	//
+	//    * X86_64: 64-bit version of the x86 instruction set.
+	//
+	//    * X86: 32-bit version of the x86 instruction set.
+	//
+	//    * ARM64: ARMv8 64-bit CPU.
+	//
+	//    * ARM_EABIHF: ARMv7 32-bit, Hard Float.
+	//
+	//    * ARM_EABI: ARMv7 32-bit, Soft Float. Used by Android 32-bit ARM platform.
+	//
+	// Arch is a required field
+	Arch *string `type:"string" required:"true" enum:"TargetPlatformArch"`
+
+	// Specifies a target platform OS.
+	//
+	//    * LINUX: Linux-based operating systems.
+	//
+	//    * ANDROID: Android operating systems. Android API level can be specified
+	//    using the ANDROID_PLATFORM compiler option. For example, "CompilerOptions":
+	//    {'ANDROID_PLATFORM': 28}
+	//
+	// Os is a required field
+	Os *string `type:"string" required:"true" enum:"TargetPlatformOs"`
+}
+
+// String returns the string representation
+func (s TargetPlatform) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetPlatform) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TargetPlatform) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TargetPlatform"}
+	if s.Arch == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arch"))
+	}
+	if s.Os == nil {
+		invalidParams.Add(request.NewErrParamRequired("Os"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccelerator sets the Accelerator field's value.
+func (s *TargetPlatform) SetAccelerator(v string) *TargetPlatform {
+	s.Accelerator = &v
+	return s
+}
+
+// SetArch sets the Arch field's value.
+func (s *TargetPlatform) SetArch(v string) *TargetPlatform {
+	s.Arch = &v
+	return s
+}
+
+// SetOs sets the Os field's value.
+func (s *TargetPlatform) SetOs(v string) *TargetPlatform {
+	s.Os = &v
+	return s
+}
+
 // The TensorBoard app settings.
 type TensorBoardAppSettings struct {
 	_ struct{} `type:"structure"`
@@ -41701,7 +43819,14 @@ type TrainingJob struct {
 	// VPC they run in.
 	EnableNetworkIsolation *bool `type:"boolean"`
 
-	// Configuration for the experiment.
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
 	ExperimentConfig *ExperimentConfig `type:"structure"`
 
 	// If the training job failed, the reason it failed.
@@ -42682,6 +44807,261 @@ func (s *TransformInput) SetSplitType(v string) *TransformInput {
 	return s
 }
 
+// A batch transform job. For information about SageMaker batch transform, see
+// Use Batch Transform (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html).
+type TransformJob struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the AutoML job that created the transform
+	// job.
+	AutoMLJobArn *string `min:"1" type:"string"`
+
+	// Specifies the number of records to include in a mini-batch for an HTTP inference
+	// request. A record is a single unit of input data that inference can be made
+	// on. For example, a single line in a CSV file is a record.
+	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
+
+	// A timestamp that shows when the transform Job was created.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// The data structure used to specify the data to be used for inference in a
+	// batch transform job and to associate the data that is relevant to the prediction
+	// results in the output. The input filter provided allows you to exclude input
+	// data that is not needed for inference in a batch transform job. The output
+	// filter provided allows you to include input data relevant to interpreting
+	// the predictions in the output from the job. For more information, see Associate
+	// Prediction Results with their Corresponding Input Records (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform-data-processing.html).
+	DataProcessing *DataProcessing `type:"structure"`
+
+	// The environment variables to set in the Docker container. We support up to
+	// 16 key and values entries in the map.
+	Environment map[string]*string `type:"map"`
+
+	// Associates a SageMaker job as a trial component with an experiment and trial.
+	// Specified when you call the following APIs:
+	//
+	//    * CreateProcessingJob
+	//
+	//    * CreateTrainingJob
+	//
+	//    * CreateTransformJob
+	ExperimentConfig *ExperimentConfig `type:"structure"`
+
+	// If the transform job failed, the reason it failed.
+	FailureReason *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the labeling job that created the transform
+	// job.
+	LabelingJobArn *string `type:"string"`
+
+	// The maximum number of parallel requests that can be sent to each instance
+	// in a transform job. If MaxConcurrentTransforms is set to 0 or left unset,
+	// SageMaker checks the optional execution-parameters to determine the settings
+	// for your chosen algorithm. If the execution-parameters endpoint is not enabled,
+	// the default value is 1. For built-in algorithms, you don't need to set a
+	// value for MaxConcurrentTransforms.
+	MaxConcurrentTransforms *int64 `type:"integer"`
+
+	// The maximum allowed size of the payload, in MB. A payload is the data portion
+	// of a record (without metadata). The value in MaxPayloadInMB must be greater
+	// than, or equal to, the size of a single record. To estimate the size of a
+	// record in MB, divide the size of your dataset by the number of records. To
+	// ensure that the records fit within the maximum payload size, we recommend
+	// using a slightly larger value. The default value is 6 MB. For cases where
+	// the payload might be arbitrarily large and is transmitted using HTTP chunked
+	// encoding, set the value to 0. This feature works only in supported algorithms.
+	// Currently, SageMaker built-in algorithms do not support HTTP chunked encoding.
+	MaxPayloadInMB *int64 `type:"integer"`
+
+	// Configures the timeout and maximum number of retries for processing a transform
+	// job invocation.
+	ModelClientConfig *ModelClientConfig `type:"structure"`
+
+	// The name of the model associated with the transform job.
+	ModelName *string `type:"string"`
+
+	// A list of tags associated with the transform job.
+	Tags []*Tag `type:"list"`
+
+	// Indicates when the transform job has been completed, or has stopped or failed.
+	// You are billed for the time interval between this time and the value of TransformStartTime.
+	TransformEndTime *time.Time `type:"timestamp"`
+
+	// Describes the input source of a transform job and the way the transform job
+	// consumes it.
+	TransformInput *TransformInput `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the transform job.
+	TransformJobArn *string `type:"string"`
+
+	// The name of the transform job.
+	TransformJobName *string `min:"1" type:"string"`
+
+	// The status of the transform job.
+	//
+	// Transform job statuses are:
+	//
+	//    * InProgress - The job is in progress.
+	//
+	//    * Completed - The job has completed.
+	//
+	//    * Failed - The transform job has failed. To see the reason for the failure,
+	//    see the FailureReason field in the response to a DescribeTransformJob
+	//    call.
+	//
+	//    * Stopping - The transform job is stopping.
+	//
+	//    * Stopped - The transform job has stopped.
+	TransformJobStatus *string `type:"string" enum:"TransformJobStatus"`
+
+	// Describes the results of a transform job.
+	TransformOutput *TransformOutput `type:"structure"`
+
+	// Describes the resources, including ML instance types and ML instance count,
+	// to use for transform job.
+	TransformResources *TransformResources `type:"structure"`
+
+	// Indicates when the transform job starts on ML instances. You are billed for
+	// the time interval between this time and the value of TransformEndTime.
+	TransformStartTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s TransformJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TransformJob) GoString() string {
+	return s.String()
+}
+
+// SetAutoMLJobArn sets the AutoMLJobArn field's value.
+func (s *TransformJob) SetAutoMLJobArn(v string) *TransformJob {
+	s.AutoMLJobArn = &v
+	return s
+}
+
+// SetBatchStrategy sets the BatchStrategy field's value.
+func (s *TransformJob) SetBatchStrategy(v string) *TransformJob {
+	s.BatchStrategy = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *TransformJob) SetCreationTime(v time.Time) *TransformJob {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDataProcessing sets the DataProcessing field's value.
+func (s *TransformJob) SetDataProcessing(v *DataProcessing) *TransformJob {
+	s.DataProcessing = v
+	return s
+}
+
+// SetEnvironment sets the Environment field's value.
+func (s *TransformJob) SetEnvironment(v map[string]*string) *TransformJob {
+	s.Environment = v
+	return s
+}
+
+// SetExperimentConfig sets the ExperimentConfig field's value.
+func (s *TransformJob) SetExperimentConfig(v *ExperimentConfig) *TransformJob {
+	s.ExperimentConfig = v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *TransformJob) SetFailureReason(v string) *TransformJob {
+	s.FailureReason = &v
+	return s
+}
+
+// SetLabelingJobArn sets the LabelingJobArn field's value.
+func (s *TransformJob) SetLabelingJobArn(v string) *TransformJob {
+	s.LabelingJobArn = &v
+	return s
+}
+
+// SetMaxConcurrentTransforms sets the MaxConcurrentTransforms field's value.
+func (s *TransformJob) SetMaxConcurrentTransforms(v int64) *TransformJob {
+	s.MaxConcurrentTransforms = &v
+	return s
+}
+
+// SetMaxPayloadInMB sets the MaxPayloadInMB field's value.
+func (s *TransformJob) SetMaxPayloadInMB(v int64) *TransformJob {
+	s.MaxPayloadInMB = &v
+	return s
+}
+
+// SetModelClientConfig sets the ModelClientConfig field's value.
+func (s *TransformJob) SetModelClientConfig(v *ModelClientConfig) *TransformJob {
+	s.ModelClientConfig = v
+	return s
+}
+
+// SetModelName sets the ModelName field's value.
+func (s *TransformJob) SetModelName(v string) *TransformJob {
+	s.ModelName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TransformJob) SetTags(v []*Tag) *TransformJob {
+	s.Tags = v
+	return s
+}
+
+// SetTransformEndTime sets the TransformEndTime field's value.
+func (s *TransformJob) SetTransformEndTime(v time.Time) *TransformJob {
+	s.TransformEndTime = &v
+	return s
+}
+
+// SetTransformInput sets the TransformInput field's value.
+func (s *TransformJob) SetTransformInput(v *TransformInput) *TransformJob {
+	s.TransformInput = v
+	return s
+}
+
+// SetTransformJobArn sets the TransformJobArn field's value.
+func (s *TransformJob) SetTransformJobArn(v string) *TransformJob {
+	s.TransformJobArn = &v
+	return s
+}
+
+// SetTransformJobName sets the TransformJobName field's value.
+func (s *TransformJob) SetTransformJobName(v string) *TransformJob {
+	s.TransformJobName = &v
+	return s
+}
+
+// SetTransformJobStatus sets the TransformJobStatus field's value.
+func (s *TransformJob) SetTransformJobStatus(v string) *TransformJob {
+	s.TransformJobStatus = &v
+	return s
+}
+
+// SetTransformOutput sets the TransformOutput field's value.
+func (s *TransformJob) SetTransformOutput(v *TransformOutput) *TransformJob {
+	s.TransformOutput = v
+	return s
+}
+
+// SetTransformResources sets the TransformResources field's value.
+func (s *TransformJob) SetTransformResources(v *TransformResources) *TransformJob {
+	s.TransformResources = v
+	return s
+}
+
+// SetTransformStartTime sets the TransformStartTime field's value.
+func (s *TransformJob) SetTransformStartTime(v time.Time) *TransformJob {
+	s.TransformStartTime = &v
+	return s
+}
+
 // Defines the input needed to run a transform job using the inference specification
 // specified in the algorithm.
 type TransformJobDefinition struct {
@@ -43110,7 +45490,7 @@ type TransformS3DataSource struct {
 	//    manifest is an S3 object which is a JSON file with the following format:
 	//    [ {"prefix": "s3://customer_bucket/some/prefix/"}, "relative/path/to/custdata-1",
 	//    "relative/path/custdata-2", ... "relative/path/custdata-N" ] The preceding
-	//    JSON matches the following s3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1
+	//    JSON matches the following S3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1
 	//    s3://customer_bucket/some/prefix/relative/path/custdata-2 ... s3://customer_bucket/some/prefix/relative/path/custdata-N
 	//    The complete set of S3Uris in this manifest constitutes the input data
 	//    for the channel for this datasource. The object that each S3Uris points
@@ -43761,6 +46141,9 @@ type TrialComponentSourceDetail struct {
 
 	// Information about a training job that's the source of a trial component.
 	TrainingJob *TrainingJob `type:"structure"`
+
+	// Information about a transform job that's the source of the trial component.
+	TransformJob *TransformJob `type:"structure"`
 }
 
 // String returns the string representation
@@ -43788,6 +46171,12 @@ func (s *TrialComponentSourceDetail) SetSourceArn(v string) *TrialComponentSourc
 // SetTrainingJob sets the TrainingJob field's value.
 func (s *TrialComponentSourceDetail) SetTrainingJob(v *TrainingJob) *TrialComponentSourceDetail {
 	s.TrainingJob = v
+	return s
+}
+
+// SetTransformJob sets the TransformJob field's value.
+func (s *TrialComponentSourceDetail) SetTransformJob(v *TransformJob) *TrialComponentSourceDetail {
+	s.TransformJob = v
 	return s
 }
 
@@ -44137,9 +46526,49 @@ func (s *USD) SetTenthFractionsOfACent(v int64) *USD {
 type UiConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 bucket location of the UI template. For more information about
-	// the contents of a UI template, see Creating Your Custom Labeling Task Template
-	// (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step2.html).
+	// The ARN of the worker task template used to render the worker UI and tools
+	// for labeling job tasks.
+	//
+	// Use this parameter when you are creating a labeling job for 3D point cloud
+	// and video fram labeling jobs. Use your labeling job task type to select one
+	// of the following ARN's and use it with this parameter when you create a labeling
+	// job. Replace aws-region with the AWS region you are creating your labeling
+	// job in.
+	//
+	// 3D Point Cloud HumanTaskUiArns
+	//
+	// Use this HumanTaskUiArn for 3D point cloud object detection and 3D point
+	// cloud object detection adjustment labeling jobs.
+	//
+	//    * arn:aws:sagemaker:aws-region:394669845002:human-task-ui/PointCloudObjectDetection
+	//
+	// Use this HumanTaskUiArn for 3D point cloud object tracking and 3D point cloud
+	// object tracking adjustment labeling jobs.
+	//
+	//    * arn:aws:sagemaker:aws-region:394669845002:human-task-ui/PointCloudObjectTracking
+	//
+	// Use this HumanTaskUiArn for 3D point cloud semantic segmentation and 3D point
+	// cloud semantic segmentation adjustment labeling jobs.
+	//
+	//    * arn:aws:sagemaker:aws-region:394669845002:human-task-ui/PointCloudSemanticSegmentation
+	//
+	// Video Frame HumanTaskUiArns
+	//
+	// Use this HumanTaskUiArn for video frame object detection and video frame
+	// object detection adjustment labeling jobs.
+	//
+	//    * arn:aws:sagemaker:region:394669845002:human-task-ui/VideoObjectDetection
+	//
+	// Use this HumanTaskUiArn for video frame object tracking and video frame object
+	// tracking adjustment labeling jobs.
+	//
+	//    * arn:aws:sagemaker:aws-region:394669845002:human-task-ui/VideoObjectTracking
+	HumanTaskUiArn *string `type:"string"`
+
+	// The Amazon S3 bucket location of the UI template, or worker task template.
+	// This is the template used to render the worker UI and tools for labeling
+	// job tasks. For more information about the contents of a UI template, see
+	// Creating Your Custom Labeling Task Template (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step2.html).
 	UiTemplateS3Uri *string `type:"string"`
 }
 
@@ -44151,6 +46580,12 @@ func (s UiConfig) String() string {
 // GoString returns the string representation
 func (s UiConfig) GoString() string {
 	return s.String()
+}
+
+// SetHumanTaskUiArn sets the HumanTaskUiArn field's value.
+func (s *UiConfig) SetHumanTaskUiArn(v string) *UiConfig {
+	s.HumanTaskUiArn = &v
+	return s
 }
 
 // SetUiTemplateS3Uri sets the UiTemplateS3Uri field's value.
@@ -44325,7 +46760,7 @@ type UpdateDomainInput struct {
 	// A collection of settings.
 	DefaultUserSettings *UserSettings `type:"structure"`
 
-	// The domain ID.
+	// The ID of the domain to be updated.
 	//
 	// DomainId is a required field
 	DomainId *string `type:"string" required:"true"`
@@ -44374,7 +46809,7 @@ func (s *UpdateDomainInput) SetDomainId(v string) *UpdateDomainInput {
 type UpdateDomainOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The domain Amazon Resource Name (ARN).
+	// The Amazon Resource Name (ARN) of the domain.
 	DomainArn *string `type:"string"`
 }
 
@@ -45423,10 +47858,14 @@ func (s *UpdateUserProfileOutput) SetUserProfileArn(v string) *UpdateUserProfile
 type UpdateWorkforceInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of one to four worker IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// Use this parameter to update your OIDC Identity Provider (IdP) configuration
+	// for a workforce made using your own IdP.
+	OidcConfig *OidcConfig `type:"structure"`
+
+	// A list of one to ten worker IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
 	// that can be used to access tasks assigned to this workforce.
 	//
-	// Maximum: Four CIDR values
+	// Maximum: Ten CIDR values
 	SourceIpConfig *SourceIpConfig `type:"structure"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
@@ -45456,6 +47895,11 @@ func (s *UpdateWorkforceInput) Validate() error {
 	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
 	}
+	if s.OidcConfig != nil {
+		if err := s.OidcConfig.Validate(); err != nil {
+			invalidParams.AddNested("OidcConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.SourceIpConfig != nil {
 		if err := s.SourceIpConfig.Validate(); err != nil {
 			invalidParams.AddNested("SourceIpConfig", err.(request.ErrInvalidParams))
@@ -45466,6 +47910,12 @@ func (s *UpdateWorkforceInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetOidcConfig sets the OidcConfig field's value.
+func (s *UpdateWorkforceInput) SetOidcConfig(v *OidcConfig) *UpdateWorkforceInput {
+	s.OidcConfig = v
+	return s
 }
 
 // SetSourceIpConfig sets the SourceIpConfig field's value.
@@ -45928,23 +48378,34 @@ func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
 type Workforce struct {
 	_ struct{} `type:"structure"`
 
+	// The configuration of an Amazon Cognito workforce. A single Cognito workforce
+	// is created using and corresponds to a single Amazon Cognito user pool (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
+	CognitoConfig *CognitoConfig `type:"structure"`
+
+	// The date that the workforce is created.
+	CreateDate *time.Time `type:"timestamp"`
+
 	// The most recent date that was used to successfully add one or more IP address
 	// ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
 	// to a private workforce's allow list.
 	LastUpdatedDate *time.Time `type:"timestamp"`
 
-	// A list of one to four IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// The configuration of an OIDC Identity Provider (IdP) private workforce.
+	OidcConfig *OidcConfigForResponse `type:"structure"`
+
+	// A list of one to ten IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
 	// to be added to the workforce allow list.
 	SourceIpConfig *SourceIpConfig `type:"structure"`
+
+	// The subdomain for your OIDC Identity Provider.
+	SubDomain *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the private workforce.
 	//
 	// WorkforceArn is a required field
 	WorkforceArn *string `type:"string" required:"true"`
 
-	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to default when a workforce is created and cannot be
-	// modified.
+	// The name of the private workforce.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -45960,15 +48421,39 @@ func (s Workforce) GoString() string {
 	return s.String()
 }
 
+// SetCognitoConfig sets the CognitoConfig field's value.
+func (s *Workforce) SetCognitoConfig(v *CognitoConfig) *Workforce {
+	s.CognitoConfig = v
+	return s
+}
+
+// SetCreateDate sets the CreateDate field's value.
+func (s *Workforce) SetCreateDate(v time.Time) *Workforce {
+	s.CreateDate = &v
+	return s
+}
+
 // SetLastUpdatedDate sets the LastUpdatedDate field's value.
 func (s *Workforce) SetLastUpdatedDate(v time.Time) *Workforce {
 	s.LastUpdatedDate = &v
 	return s
 }
 
+// SetOidcConfig sets the OidcConfig field's value.
+func (s *Workforce) SetOidcConfig(v *OidcConfigForResponse) *Workforce {
+	s.OidcConfig = v
+	return s
+}
+
 // SetSourceIpConfig sets the SourceIpConfig field's value.
 func (s *Workforce) SetSourceIpConfig(v *SourceIpConfig) *Workforce {
 	s.SourceIpConfig = v
+	return s
+}
+
+// SetSubDomain sets the SubDomain field's value.
+func (s *Workforce) SetSubDomain(v string) *Workforce {
+	s.SubDomain = &v
 	return s
 }
 
@@ -46014,6 +48499,9 @@ type Workteam struct {
 	// The URI of the labeling job's user interface. Workers open this URI to start
 	// labeling your data objects.
 	SubDomain *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the workforce.
+	WorkforceArn *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) that identifies the work team.
 	//
@@ -46075,6 +48563,12 @@ func (s *Workteam) SetProductListingIds(v []*string) *Workteam {
 // SetSubDomain sets the SubDomain field's value.
 func (s *Workteam) SetSubDomain(v string) *Workteam {
 	s.SubDomain = &v
+	return s
+}
+
+// SetWorkforceArn sets the WorkforceArn field's value.
+func (s *Workteam) SetWorkforceArn(v string) *Workteam {
+	s.WorkforceArn = &v
 	return s
 }
 
@@ -46674,6 +49168,14 @@ const (
 )
 
 const (
+	// HumanTaskUiStatusActive is a HumanTaskUiStatus enum value
+	HumanTaskUiStatusActive = "Active"
+
+	// HumanTaskUiStatusDeleting is a HumanTaskUiStatus enum value
+	HumanTaskUiStatusDeleting = "Deleting"
+)
+
+const (
 	// HyperParameterScalingTypeAuto is a HyperParameterScalingType enum value
 	HyperParameterScalingTypeAuto = "Auto"
 
@@ -46866,6 +49368,9 @@ const (
 )
 
 const (
+	// LabelingJobStatusInitializing is a LabelingJobStatus enum value
+	LabelingJobStatusInitializing = "Initializing"
+
 	// LabelingJobStatusInProgress is a LabelingJobStatus enum value
 	LabelingJobStatusInProgress = "InProgress"
 
@@ -46896,6 +49401,14 @@ const (
 const (
 	// ListLabelingJobsForWorkteamSortByOptionsCreationTime is a ListLabelingJobsForWorkteamSortByOptions enum value
 	ListLabelingJobsForWorkteamSortByOptionsCreationTime = "CreationTime"
+)
+
+const (
+	// ListWorkforcesSortByOptionsName is a ListWorkforcesSortByOptions enum value
+	ListWorkforcesSortByOptionsName = "Name"
+
+	// ListWorkforcesSortByOptionsCreateDate is a ListWorkforcesSortByOptions enum value
+	ListWorkforcesSortByOptionsCreateDate = "CreateDate"
 )
 
 const (
@@ -47741,6 +50254,9 @@ const (
 	// TargetDeviceMlP3 is a TargetDevice enum value
 	TargetDeviceMlP3 = "ml_p3"
 
+	// TargetDeviceMlG4dn is a TargetDevice enum value
+	TargetDeviceMlG4dn = "ml_g4dn"
+
 	// TargetDeviceMlInf1 is a TargetDevice enum value
 	TargetDeviceMlInf1 = "ml_inf1"
 
@@ -47788,6 +50304,48 @@ const (
 
 	// TargetDeviceAmbaCv22 is a TargetDevice enum value
 	TargetDeviceAmbaCv22 = "amba_cv22"
+
+	// TargetDeviceX86Win32 is a TargetDevice enum value
+	TargetDeviceX86Win32 = "x86_win32"
+
+	// TargetDeviceX86Win64 is a TargetDevice enum value
+	TargetDeviceX86Win64 = "x86_win64"
+)
+
+const (
+	// TargetPlatformAcceleratorIntelGraphics is a TargetPlatformAccelerator enum value
+	TargetPlatformAcceleratorIntelGraphics = "INTEL_GRAPHICS"
+
+	// TargetPlatformAcceleratorMali is a TargetPlatformAccelerator enum value
+	TargetPlatformAcceleratorMali = "MALI"
+
+	// TargetPlatformAcceleratorNvidia is a TargetPlatformAccelerator enum value
+	TargetPlatformAcceleratorNvidia = "NVIDIA"
+)
+
+const (
+	// TargetPlatformArchX8664 is a TargetPlatformArch enum value
+	TargetPlatformArchX8664 = "X86_64"
+
+	// TargetPlatformArchX86 is a TargetPlatformArch enum value
+	TargetPlatformArchX86 = "X86"
+
+	// TargetPlatformArchArm64 is a TargetPlatformArch enum value
+	TargetPlatformArchArm64 = "ARM64"
+
+	// TargetPlatformArchArmEabi is a TargetPlatformArch enum value
+	TargetPlatformArchArmEabi = "ARM_EABI"
+
+	// TargetPlatformArchArmEabihf is a TargetPlatformArch enum value
+	TargetPlatformArchArmEabihf = "ARM_EABIHF"
+)
+
+const (
+	// TargetPlatformOsAndroid is a TargetPlatformOs enum value
+	TargetPlatformOsAndroid = "ANDROID"
+
+	// TargetPlatformOsLinux is a TargetPlatformOs enum value
+	TargetPlatformOsLinux = "LINUX"
 )
 
 const (

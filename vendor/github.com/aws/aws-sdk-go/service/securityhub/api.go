@@ -4493,6 +4493,100 @@ func (c *SecurityHub) UpdateInsightWithContext(ctx aws.Context, input *UpdateIns
 	return out, req.Send()
 }
 
+const opUpdateSecurityHubConfiguration = "UpdateSecurityHubConfiguration"
+
+// UpdateSecurityHubConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSecurityHubConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSecurityHubConfiguration for more information on using the UpdateSecurityHubConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSecurityHubConfigurationRequest method.
+//    req, resp := client.UpdateSecurityHubConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/securityhub-2018-10-26/UpdateSecurityHubConfiguration
+func (c *SecurityHub) UpdateSecurityHubConfigurationRequest(input *UpdateSecurityHubConfigurationInput) (req *request.Request, output *UpdateSecurityHubConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSecurityHubConfiguration,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/accounts",
+	}
+
+	if input == nil {
+		input = &UpdateSecurityHubConfigurationInput{}
+	}
+
+	output = &UpdateSecurityHubConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateSecurityHubConfiguration API operation for AWS SecurityHub.
+//
+// Updates configuration options for Security Hub.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS SecurityHub's
+// API operation UpdateSecurityHubConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because you supplied an invalid or out-of-range
+//   value for an input parameter.
+//
+//   * InvalidAccessException
+//   AWS Security Hub isn't enabled for the account used to make this request.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * ResourceNotFoundException
+//   The request was rejected because we can't find the specified resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/securityhub-2018-10-26/UpdateSecurityHubConfiguration
+func (c *SecurityHub) UpdateSecurityHubConfiguration(input *UpdateSecurityHubConfigurationInput) (*UpdateSecurityHubConfigurationOutput, error) {
+	req, out := c.UpdateSecurityHubConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSecurityHubConfigurationWithContext is the same as UpdateSecurityHubConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSecurityHubConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SecurityHub) UpdateSecurityHubConfigurationWithContext(ctx aws.Context, input *UpdateSecurityHubConfigurationInput, opts ...request.Option) (*UpdateSecurityHubConfigurationOutput, error) {
+	req, out := c.UpdateSecurityHubConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateStandardsControl = "UpdateStandardsControl"
 
 // UpdateStandardsControlRequest generates a "aws/request.Request" representing the
@@ -4819,6 +4913,67 @@ func (s *AvailabilityZone) SetSubnetId(v string) *AvailabilityZone {
 // SetZoneName sets the ZoneName field's value.
 func (s *AvailabilityZone) SetZoneName(v string) *AvailabilityZone {
 	s.ZoneName = &v
+	return s
+}
+
+// Provides details about an auto scaling group.
+type AwsAutoScalingAutoScalingGroupDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The datetime when the auto scaling group was created.
+	CreatedTime *string `type:"string"`
+
+	// The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before
+	// it checks the health status of an EC2 instance that has come into service.
+	HealthCheckGracePeriod *int64 `type:"integer"`
+
+	// The service to use for the health checks.
+	HealthCheckType *string `type:"string"`
+
+	// The name of the launch configuration.
+	LaunchConfigurationName *string `type:"string"`
+
+	// The list of load balancers associated with the group.
+	LoadBalancerNames []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s AwsAutoScalingAutoScalingGroupDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsAutoScalingAutoScalingGroupDetails) GoString() string {
+	return s.String()
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *AwsAutoScalingAutoScalingGroupDetails) SetCreatedTime(v string) *AwsAutoScalingAutoScalingGroupDetails {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetHealthCheckGracePeriod sets the HealthCheckGracePeriod field's value.
+func (s *AwsAutoScalingAutoScalingGroupDetails) SetHealthCheckGracePeriod(v int64) *AwsAutoScalingAutoScalingGroupDetails {
+	s.HealthCheckGracePeriod = &v
+	return s
+}
+
+// SetHealthCheckType sets the HealthCheckType field's value.
+func (s *AwsAutoScalingAutoScalingGroupDetails) SetHealthCheckType(v string) *AwsAutoScalingAutoScalingGroupDetails {
+	s.HealthCheckType = &v
+	return s
+}
+
+// SetLaunchConfigurationName sets the LaunchConfigurationName field's value.
+func (s *AwsAutoScalingAutoScalingGroupDetails) SetLaunchConfigurationName(v string) *AwsAutoScalingAutoScalingGroupDetails {
+	s.LaunchConfigurationName = &v
+	return s
+}
+
+// SetLoadBalancerNames sets the LoadBalancerNames field's value.
+func (s *AwsAutoScalingAutoScalingGroupDetails) SetLoadBalancerNames(v []*string) *AwsAutoScalingAutoScalingGroupDetails {
+	s.LoadBalancerNames = v
 	return s
 }
 
@@ -5928,6 +6083,189 @@ func (s *AwsEc2SecurityGroupUserIdGroupPair) SetVpcId(v string) *AwsEc2SecurityG
 // SetVpcPeeringConnectionId sets the VpcPeeringConnectionId field's value.
 func (s *AwsEc2SecurityGroupUserIdGroupPair) SetVpcPeeringConnectionId(v string) *AwsEc2SecurityGroupUserIdGroupPair {
 	s.VpcPeeringConnectionId = &v
+	return s
+}
+
+// An attachment to an AWS EC2 volume.
+type AwsEc2VolumeAttachment struct {
+	_ struct{} `type:"structure"`
+
+	// The datetime when the attachment initiated.
+	AttachTime *string `type:"string"`
+
+	// Whether the EBS volume is deleted when the EC2 instance is terminated.
+	DeleteOnTermination *bool `type:"boolean"`
+
+	// The identifier of the EC2 instance.
+	InstanceId *string `type:"string"`
+
+	// The attachment state of the volume.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsEc2VolumeAttachment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsEc2VolumeAttachment) GoString() string {
+	return s.String()
+}
+
+// SetAttachTime sets the AttachTime field's value.
+func (s *AwsEc2VolumeAttachment) SetAttachTime(v string) *AwsEc2VolumeAttachment {
+	s.AttachTime = &v
+	return s
+}
+
+// SetDeleteOnTermination sets the DeleteOnTermination field's value.
+func (s *AwsEc2VolumeAttachment) SetDeleteOnTermination(v bool) *AwsEc2VolumeAttachment {
+	s.DeleteOnTermination = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *AwsEc2VolumeAttachment) SetInstanceId(v string) *AwsEc2VolumeAttachment {
+	s.InstanceId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsEc2VolumeAttachment) SetStatus(v string) *AwsEc2VolumeAttachment {
+	s.Status = &v
+	return s
+}
+
+// Details about an EC2 volume.
+type AwsEc2VolumeDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The volume attachments.
+	Attachments []*AwsEc2VolumeAttachment `type:"list"`
+
+	// The datetime when the volume was created.
+	CreateTime *string `type:"string"`
+
+	// Whether the volume is encrypted.
+	Encrypted *bool `type:"boolean"`
+
+	// The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK)
+	// that was used to protect the volume encryption key for the volume.
+	KmsKeyId *string `type:"string"`
+
+	// The size of the volume, in GiBs.
+	Size *int64 `type:"integer"`
+
+	// The snapshot from which the volume was created.
+	SnapshotId *string `type:"string"`
+
+	// The volume state.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsEc2VolumeDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsEc2VolumeDetails) GoString() string {
+	return s.String()
+}
+
+// SetAttachments sets the Attachments field's value.
+func (s *AwsEc2VolumeDetails) SetAttachments(v []*AwsEc2VolumeAttachment) *AwsEc2VolumeDetails {
+	s.Attachments = v
+	return s
+}
+
+// SetCreateTime sets the CreateTime field's value.
+func (s *AwsEc2VolumeDetails) SetCreateTime(v string) *AwsEc2VolumeDetails {
+	s.CreateTime = &v
+	return s
+}
+
+// SetEncrypted sets the Encrypted field's value.
+func (s *AwsEc2VolumeDetails) SetEncrypted(v bool) *AwsEc2VolumeDetails {
+	s.Encrypted = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *AwsEc2VolumeDetails) SetKmsKeyId(v string) *AwsEc2VolumeDetails {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetSize sets the Size field's value.
+func (s *AwsEc2VolumeDetails) SetSize(v int64) *AwsEc2VolumeDetails {
+	s.Size = &v
+	return s
+}
+
+// SetSnapshotId sets the SnapshotId field's value.
+func (s *AwsEc2VolumeDetails) SetSnapshotId(v string) *AwsEc2VolumeDetails {
+	s.SnapshotId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsEc2VolumeDetails) SetStatus(v string) *AwsEc2VolumeDetails {
+	s.Status = &v
+	return s
+}
+
+// Details about an EC2 VPC.
+type AwsEc2VpcDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the IPv4 CIDR blocks associated with the VPC.
+	CidrBlockAssociationSet []*CidrBlockAssociation `type:"list"`
+
+	// The identifier of the set of Dynamic Host Configuration Protocol (DHCP) options
+	// that are associated with the VPC. If the default options are associated with
+	// the VPC, then this is default.
+	DhcpOptionsId *string `type:"string"`
+
+	// Information about the IPv6 CIDR blocks associated with the VPC.
+	Ipv6CidrBlockAssociationSet []*Ipv6CidrBlockAssociation `type:"list"`
+
+	// The current state of the VPC.
+	State *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsEc2VpcDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsEc2VpcDetails) GoString() string {
+	return s.String()
+}
+
+// SetCidrBlockAssociationSet sets the CidrBlockAssociationSet field's value.
+func (s *AwsEc2VpcDetails) SetCidrBlockAssociationSet(v []*CidrBlockAssociation) *AwsEc2VpcDetails {
+	s.CidrBlockAssociationSet = v
+	return s
+}
+
+// SetDhcpOptionsId sets the DhcpOptionsId field's value.
+func (s *AwsEc2VpcDetails) SetDhcpOptionsId(v string) *AwsEc2VpcDetails {
+	s.DhcpOptionsId = &v
+	return s
+}
+
+// SetIpv6CidrBlockAssociationSet sets the Ipv6CidrBlockAssociationSet field's value.
+func (s *AwsEc2VpcDetails) SetIpv6CidrBlockAssociationSet(v []*Ipv6CidrBlockAssociation) *AwsEc2VpcDetails {
+	s.Ipv6CidrBlockAssociationSet = v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *AwsEc2VpcDetails) SetState(v string) *AwsEc2VpcDetails {
+	s.State = &v
 	return s
 }
 
@@ -7640,6 +7978,10 @@ type AwsSecurityFinding struct {
 	// The details of network-related information about a finding.
 	Network *Network `type:"structure"`
 
+	// Provides information about a network path that is relevant to a finding.
+	// Each entry under NetworkPath represents a component of that path.
+	NetworkPath []*NetworkPathComponent `type:"list"`
+
 	// A user-defined note added to a finding.
 	Note *Note `type:"structure"`
 
@@ -7717,6 +8059,9 @@ type AwsSecurityFinding struct {
 
 	// Indicates the veracity of a finding.
 	VerificationState *string `type:"string" enum:"VerificationState"`
+
+	// Provides a list of vulnerabilities associated with the findings.
+	Vulnerabilities []*Vulnerability `type:"list"`
 
 	// Provides information about the status of the investigation into a finding.
 	Workflow *Workflow `type:"structure"`
@@ -7814,6 +8159,16 @@ func (s *AwsSecurityFinding) Validate() error {
 			}
 		}
 	}
+	if s.Vulnerabilities != nil {
+		for i, v := range s.Vulnerabilities {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Vulnerabilities", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7890,6 +8245,12 @@ func (s *AwsSecurityFinding) SetMalware(v []*Malware) *AwsSecurityFinding {
 // SetNetwork sets the Network field's value.
 func (s *AwsSecurityFinding) SetNetwork(v *Network) *AwsSecurityFinding {
 	s.Network = v
+	return s
+}
+
+// SetNetworkPath sets the NetworkPath field's value.
+func (s *AwsSecurityFinding) SetNetworkPath(v []*NetworkPathComponent) *AwsSecurityFinding {
+	s.NetworkPath = v
 	return s
 }
 
@@ -7992,6 +8353,12 @@ func (s *AwsSecurityFinding) SetUserDefinedFields(v map[string]*string) *AwsSecu
 // SetVerificationState sets the VerificationState field's value.
 func (s *AwsSecurityFinding) SetVerificationState(v string) *AwsSecurityFinding {
 	s.VerificationState = &v
+	return s
+}
+
+// SetVulnerabilities sets the Vulnerabilities field's value.
+func (s *AwsSecurityFinding) SetVulnerabilities(v []*Vulnerability) *AwsSecurityFinding {
+	s.Vulnerabilities = v
 	return s
 }
 
@@ -8287,6 +8654,9 @@ type AwsSecurityFindingFilters struct {
 	VerificationState []*StringFilter `type:"list"`
 
 	// The workflow state of a finding.
+	//
+	// Note that this field is deprecated. To search for a finding based on its
+	// workflow status, use WorkflowStatus.
 	WorkflowState []*StringFilter `type:"list"`
 
 	// The status of the investigation into a finding. Allowed values are the following.
@@ -9661,6 +10031,48 @@ func (s *BatchUpdateFindingsUnprocessedFinding) SetFindingIdentifier(v *AwsSecur
 	return s
 }
 
+// An IPv4 CIDR block association.
+type CidrBlockAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The association ID for the IPv4 CIDR block.
+	AssociationId *string `type:"string"`
+
+	// The IPv4 CIDR block.
+	CidrBlock *string `type:"string"`
+
+	// Information about the state of the IPv4 CIDR block.
+	CidrBlockState *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CidrBlockAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CidrBlockAssociation) GoString() string {
+	return s.String()
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *CidrBlockAssociation) SetAssociationId(v string) *CidrBlockAssociation {
+	s.AssociationId = &v
+	return s
+}
+
+// SetCidrBlock sets the CidrBlock field's value.
+func (s *CidrBlockAssociation) SetCidrBlock(v string) *CidrBlockAssociation {
+	s.CidrBlock = &v
+	return s
+}
+
+// SetCidrBlockState sets the CidrBlockState field's value.
+func (s *CidrBlockAssociation) SetCidrBlockState(v string) *CidrBlockAssociation {
+	s.CidrBlockState = &v
+	return s
+}
+
 // Contains finding details that are specific to control-based findings. Only
 // returned for findings generated from controls.
 type Compliance struct {
@@ -10022,6 +10434,48 @@ func (s CreateMembersOutput) GoString() string {
 // SetUnprocessedAccounts sets the UnprocessedAccounts field's value.
 func (s *CreateMembersOutput) SetUnprocessedAccounts(v []*Result) *CreateMembersOutput {
 	s.UnprocessedAccounts = v
+	return s
+}
+
+// CVSS scores from the advisory related to the vulnerability.
+type Cvss struct {
+	_ struct{} `type:"structure"`
+
+	// The base CVSS score.
+	BaseScore *float64 `type:"double"`
+
+	// The base scoring vector for the CVSS score.
+	BaseVector *string `type:"string"`
+
+	// The version of CVSS for the CVSS score.
+	Version *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Cvss) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Cvss) GoString() string {
+	return s.String()
+}
+
+// SetBaseScore sets the BaseScore field's value.
+func (s *Cvss) SetBaseScore(v float64) *Cvss {
+	s.BaseScore = &v
+	return s
+}
+
+// SetBaseVector sets the BaseVector field's value.
+func (s *Cvss) SetBaseVector(v string) *Cvss {
+	s.BaseVector = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *Cvss) SetVersion(v string) *Cvss {
+	s.Version = &v
 	return s
 }
 
@@ -10523,6 +10977,13 @@ func (s *DescribeHubInput) SetHubArn(v string) *DescribeHubInput {
 type DescribeHubOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Whether to automatically enable new controls when they are added to standards
+	// that are enabled.
+	//
+	// If set to true, then new controls for enabled standards are enabled automatically.
+	// If set to false, then new controls are not enabled.
+	AutoEnableControls *bool `type:"boolean"`
+
 	// The ARN of the Hub resource that was retrieved.
 	HubArn *string `type:"string"`
 
@@ -10538,6 +10999,12 @@ func (s DescribeHubOutput) String() string {
 // GoString returns the string representation
 func (s DescribeHubOutput) GoString() string {
 	return s.String()
+}
+
+// SetAutoEnableControls sets the AutoEnableControls field's value.
+func (s *DescribeHubOutput) SetAutoEnableControls(v bool) *DescribeHubOutput {
+	s.AutoEnableControls = &v
+	return s
 }
 
 // SetHubArn sets the HubArn field's value.
@@ -11184,6 +11651,9 @@ type GetFindingsInput struct {
 
 	// The finding attributes used to define a condition to filter the returned
 	// findings.
+	//
+	// Note that in the available filter fields, WorkflowState is deprecated. To
+	// search for a finding based on its workflow status, use WorkflowStatus.
 	Filters *AwsSecurityFindingFilters `type:"structure"`
 
 	// The maximum number of findings to return.
@@ -12089,6 +12559,48 @@ func (s *IpFilter) SetCidr(v string) *IpFilter {
 	return s
 }
 
+// An IPV6 CIDR block association.
+type Ipv6CidrBlockAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The association ID for the IPv6 CIDR block.
+	AssociationId *string `type:"string"`
+
+	// Information about the state of the CIDR block.
+	CidrBlockState *string `type:"string"`
+
+	// The IPv6 CIDR block.
+	Ipv6CidrBlock *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Ipv6CidrBlockAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Ipv6CidrBlockAssociation) GoString() string {
+	return s.String()
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *Ipv6CidrBlockAssociation) SetAssociationId(v string) *Ipv6CidrBlockAssociation {
+	s.AssociationId = &v
+	return s
+}
+
+// SetCidrBlockState sets the CidrBlockState field's value.
+func (s *Ipv6CidrBlockAssociation) SetCidrBlockState(v string) *Ipv6CidrBlockAssociation {
+	s.CidrBlockState = &v
+	return s
+}
+
+// SetIpv6CidrBlock sets the Ipv6CidrBlock field's value.
+func (s *Ipv6CidrBlockAssociation) SetIpv6CidrBlock(v string) *Ipv6CidrBlockAssociation {
+	s.Ipv6CidrBlock = &v
+	return s
+}
+
 // A keyword filter for querying findings.
 type KeywordFilter struct {
 	_ struct{} `type:"structure"`
@@ -12733,6 +13245,9 @@ type Network struct {
 	// The direction of network traffic associated with a finding.
 	Direction *string `type:"string" enum:"NetworkDirection"`
 
+	// The range of open ports that is present on the network.
+	OpenPortRange *PortRange `type:"structure"`
+
 	// The protocol of network-related information about a finding.
 	Protocol *string `type:"string"`
 
@@ -12793,6 +13308,12 @@ func (s *Network) SetDirection(v string) *Network {
 	return s
 }
 
+// SetOpenPortRange sets the OpenPortRange field's value.
+func (s *Network) SetOpenPortRange(v *PortRange) *Network {
+	s.OpenPortRange = v
+	return s
+}
+
 // SetProtocol sets the Protocol field's value.
 func (s *Network) SetProtocol(v string) *Network {
 	s.Protocol = &v
@@ -12826,6 +13347,135 @@ func (s *Network) SetSourceMac(v string) *Network {
 // SetSourcePort sets the SourcePort field's value.
 func (s *Network) SetSourcePort(v int64) *Network {
 	s.SourcePort = &v
+	return s
+}
+
+// Details about a network path component that occurs before or after the current
+// component.
+type NetworkHeader struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the destination of the component.
+	Destination *NetworkPathComponentDetails `type:"structure"`
+
+	// The protocol used for the component.
+	Protocol *string `type:"string"`
+
+	// Information about the origin of the component.
+	Source *NetworkPathComponentDetails `type:"structure"`
+}
+
+// String returns the string representation
+func (s NetworkHeader) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkHeader) GoString() string {
+	return s.String()
+}
+
+// SetDestination sets the Destination field's value.
+func (s *NetworkHeader) SetDestination(v *NetworkPathComponentDetails) *NetworkHeader {
+	s.Destination = v
+	return s
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *NetworkHeader) SetProtocol(v string) *NetworkHeader {
+	s.Protocol = &v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *NetworkHeader) SetSource(v *NetworkPathComponentDetails) *NetworkHeader {
+	s.Source = v
+	return s
+}
+
+// Information about a network path component.
+type NetworkPathComponent struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of a component in the network path.
+	ComponentId *string `type:"string"`
+
+	// The type of component.
+	ComponentType *string `type:"string"`
+
+	// Information about the component that comes after the current component in
+	// the network path.
+	Egress *NetworkHeader `type:"structure"`
+
+	// Information about the component that comes before the current node in the
+	// network path.
+	Ingress *NetworkHeader `type:"structure"`
+}
+
+// String returns the string representation
+func (s NetworkPathComponent) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkPathComponent) GoString() string {
+	return s.String()
+}
+
+// SetComponentId sets the ComponentId field's value.
+func (s *NetworkPathComponent) SetComponentId(v string) *NetworkPathComponent {
+	s.ComponentId = &v
+	return s
+}
+
+// SetComponentType sets the ComponentType field's value.
+func (s *NetworkPathComponent) SetComponentType(v string) *NetworkPathComponent {
+	s.ComponentType = &v
+	return s
+}
+
+// SetEgress sets the Egress field's value.
+func (s *NetworkPathComponent) SetEgress(v *NetworkHeader) *NetworkPathComponent {
+	s.Egress = v
+	return s
+}
+
+// SetIngress sets the Ingress field's value.
+func (s *NetworkPathComponent) SetIngress(v *NetworkHeader) *NetworkPathComponent {
+	s.Ingress = v
+	return s
+}
+
+// Information about the destination of the next component in the network path.
+type NetworkPathComponentDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The IP addresses of the destination.
+	Address []*string `type:"list"`
+
+	// A list of port ranges for the destination.
+	PortRanges []*PortRange `type:"list"`
+}
+
+// String returns the string representation
+func (s NetworkPathComponentDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkPathComponentDetails) GoString() string {
+	return s.String()
+}
+
+// SetAddress sets the Address field's value.
+func (s *NetworkPathComponentDetails) SetAddress(v []*string) *NetworkPathComponentDetails {
+	s.Address = v
+	return s
+}
+
+// SetPortRanges sets the PortRanges field's value.
+func (s *NetworkPathComponentDetails) SetPortRanges(v []*PortRange) *NetworkPathComponentDetails {
+	s.PortRanges = v
 	return s
 }
 
@@ -12991,6 +13641,39 @@ func (s *NumberFilter) SetGte(v float64) *NumberFilter {
 // SetLte sets the Lte field's value.
 func (s *NumberFilter) SetLte(v float64) *NumberFilter {
 	s.Lte = &v
+	return s
+}
+
+// A range of ports.
+type PortRange struct {
+	_ struct{} `type:"structure"`
+
+	// The first port in the port range.
+	Begin *int64 `type:"integer"`
+
+	// The last port in the port range.
+	End *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s PortRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PortRange) GoString() string {
+	return s.String()
+}
+
+// SetBegin sets the Begin field's value.
+func (s *PortRange) SetBegin(v int64) *PortRange {
+	s.Begin = &v
+	return s
+}
+
+// SetEnd sets the End field's value.
+func (s *PortRange) SetEnd(v int64) *PortRange {
+	s.End = &v
 	return s
 }
 
@@ -13453,6 +14136,9 @@ func (s *ResourceConflictException) RequestID() string {
 type ResourceDetails struct {
 	_ struct{} `type:"structure"`
 
+	// Details for an autoscaling group.
+	AwsAutoScalingAutoScalingGroup *AwsAutoScalingAutoScalingGroupDetails `type:"structure"`
+
 	// Details about a CloudFront distribution.
 	AwsCloudFrontDistribution *AwsCloudFrontDistributionDetails `type:"structure"`
 
@@ -13467,6 +14153,12 @@ type ResourceDetails struct {
 
 	// Details for an EC2 security group.
 	AwsEc2SecurityGroup *AwsEc2SecurityGroupDetails `type:"structure"`
+
+	// Details for an EC2 volume.
+	AwsEc2Volume *AwsEc2VolumeDetails `type:"structure"`
+
+	// Details for an EC2 VPC.
+	AwsEc2Vpc *AwsEc2VpcDetails `type:"structure"`
 
 	// Details for an Elasticsearch domain.
 	AwsElasticsearchDomain *AwsElasticsearchDomainDetails `type:"structure"`
@@ -13548,6 +14240,12 @@ func (s *ResourceDetails) Validate() error {
 	return nil
 }
 
+// SetAwsAutoScalingAutoScalingGroup sets the AwsAutoScalingAutoScalingGroup field's value.
+func (s *ResourceDetails) SetAwsAutoScalingAutoScalingGroup(v *AwsAutoScalingAutoScalingGroupDetails) *ResourceDetails {
+	s.AwsAutoScalingAutoScalingGroup = v
+	return s
+}
+
 // SetAwsCloudFrontDistribution sets the AwsCloudFrontDistribution field's value.
 func (s *ResourceDetails) SetAwsCloudFrontDistribution(v *AwsCloudFrontDistributionDetails) *ResourceDetails {
 	s.AwsCloudFrontDistribution = v
@@ -13575,6 +14273,18 @@ func (s *ResourceDetails) SetAwsEc2NetworkInterface(v *AwsEc2NetworkInterfaceDet
 // SetAwsEc2SecurityGroup sets the AwsEc2SecurityGroup field's value.
 func (s *ResourceDetails) SetAwsEc2SecurityGroup(v *AwsEc2SecurityGroupDetails) *ResourceDetails {
 	s.AwsEc2SecurityGroup = v
+	return s
+}
+
+// SetAwsEc2Volume sets the AwsEc2Volume field's value.
+func (s *ResourceDetails) SetAwsEc2Volume(v *AwsEc2VolumeDetails) *ResourceDetails {
+	s.AwsEc2Volume = v
+	return s
+}
+
+// SetAwsEc2Vpc sets the AwsEc2Vpc field's value.
+func (s *ResourceDetails) SetAwsEc2Vpc(v *AwsEc2VpcDetails) *ResourceDetails {
+	s.AwsEc2Vpc = v
 	return s
 }
 
@@ -13760,6 +14470,15 @@ func (s *Result) SetProcessingResult(v string) *Result {
 }
 
 // The severity of the finding.
+//
+// The finding provider can provide the initial severity, but cannot update
+// it after that. The severity can only be updated by a master account. It cannot
+// be updated by a member account.
+//
+// The finding must have either Label or Normalized populated. If only one of
+// these attributes is populated, then Security Hub automatically populates
+// the other one. If neither attribute is populated, then the finding is invalid.
+// Label is the preferred attribute.
 type Severity struct {
 	_ struct{} `type:"structure"`
 
@@ -13774,12 +14493,8 @@ type Severity struct {
 	//    * HIGH - The issue must be addressed as a priority.
 	//
 	//    * CRITICAL - The issue must be remediated immediately to avoid it escalating.
-	Label *string `type:"string" enum:"SeverityLabel"`
-
-	// Deprecated. This attribute is being deprecated. Instead of providing Normalized,
-	// provide Label.
 	//
-	// If you provide Normalized and do not provide Label, Label is set automatically
+	// If you provide Normalized and do not provide Label, then Label is set automatically
 	// as follows.
 	//
 	//    * 0 - INFORMATIONAL
@@ -13791,6 +14506,23 @@ type Severity struct {
 	//    * 70–89 - HIGH
 	//
 	//    * 90–100 - CRITICAL
+	Label *string `type:"string" enum:"SeverityLabel"`
+
+	// Deprecated. The normalized severity of a finding. This attribute is being
+	// deprecated. Instead of providing Normalized, provide Label.
+	//
+	// If you provide Label and do not provide Normalized, then Normalized is set
+	// automatically as follows.
+	//
+	//    * INFORMATIONAL - 0
+	//
+	//    * LOW - 1
+	//
+	//    * MEDIUM - 40
+	//
+	//    * HIGH - 70
+	//
+	//    * CRITICAL - 90
 	Normalized *int64 `type:"integer"`
 
 	// The native severity from the finding product that generated the finding.
@@ -13902,6 +14634,66 @@ func (s *SeverityUpdate) SetNormalized(v int64) *SeverityUpdate {
 // SetProduct sets the Product field's value.
 func (s *SeverityUpdate) SetProduct(v float64) *SeverityUpdate {
 	s.Product = &v
+	return s
+}
+
+// Information about a software package.
+type SoftwarePackage struct {
+	_ struct{} `type:"structure"`
+
+	// The architecture used for the software package.
+	Architecture *string `type:"string"`
+
+	// The epoch of the software package.
+	Epoch *string `type:"string"`
+
+	// The name of the software package.
+	Name *string `type:"string"`
+
+	// The release of the software package.
+	Release *string `type:"string"`
+
+	// The version of the software package.
+	Version *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SoftwarePackage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SoftwarePackage) GoString() string {
+	return s.String()
+}
+
+// SetArchitecture sets the Architecture field's value.
+func (s *SoftwarePackage) SetArchitecture(v string) *SoftwarePackage {
+	s.Architecture = &v
+	return s
+}
+
+// SetEpoch sets the Epoch field's value.
+func (s *SoftwarePackage) SetEpoch(v string) *SoftwarePackage {
+	s.Epoch = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *SoftwarePackage) SetName(v string) *SoftwarePackage {
+	s.Name = &v
+	return s
+}
+
+// SetRelease sets the Release field's value.
+func (s *SoftwarePackage) SetRelease(v string) *SoftwarePackage {
+	s.Release = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *SoftwarePackage) SetVersion(v string) *SoftwarePackage {
+	s.Version = &v
 	return s
 }
 
@@ -14744,6 +15536,47 @@ func (s UpdateInsightOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateSecurityHubConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Whether to automatically enable new controls when they are added to standards
+	// that are enabled.
+	//
+	// By default, this is set to true, and new controls are enabled automatically.
+	// To not automatically enable new controls, set this to false.
+	AutoEnableControls *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateSecurityHubConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSecurityHubConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// SetAutoEnableControls sets the AutoEnableControls field's value.
+func (s *UpdateSecurityHubConfigurationInput) SetAutoEnableControls(v bool) *UpdateSecurityHubConfigurationInput {
+	s.AutoEnableControls = &v
+	return s
+}
+
+type UpdateSecurityHubConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateSecurityHubConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSecurityHubConfigurationOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateStandardsControlInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14751,6 +15584,7 @@ type UpdateStandardsControlInput struct {
 	ControlStatus *string `type:"string" enum:"ControlStatus"`
 
 	// A description of the reason why you are disabling a security standard control.
+	// If you are disabling a control, then this is required.
 	DisabledReason *string `type:"string"`
 
 	// The ARN of the security standard control to enable or disable.
@@ -14815,6 +15649,170 @@ func (s UpdateStandardsControlOutput) String() string {
 // GoString returns the string representation
 func (s UpdateStandardsControlOutput) GoString() string {
 	return s.String()
+}
+
+// A vulnerability associated with a finding.
+type Vulnerability struct {
+	_ struct{} `type:"structure"`
+
+	// CVSS scores from the advisory related to the vulnerability.
+	Cvss []*Cvss `type:"list"`
+
+	// The identifier of the vulnerability.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// A list of URLs that provide additional information about the vulnerability.
+	ReferenceUrls []*string `type:"list"`
+
+	// List of vulnerabilities that are related to this vulnerability.
+	RelatedVulnerabilities []*string `type:"list"`
+
+	// Information about the vendor that generates the vulnerability report.
+	Vendor *VulnerabilityVendor `type:"structure"`
+
+	// List of software packages that have the vulnerability.
+	VulnerablePackages []*SoftwarePackage `type:"list"`
+}
+
+// String returns the string representation
+func (s Vulnerability) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Vulnerability) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Vulnerability) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Vulnerability"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Vendor != nil {
+		if err := s.Vendor.Validate(); err != nil {
+			invalidParams.AddNested("Vendor", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCvss sets the Cvss field's value.
+func (s *Vulnerability) SetCvss(v []*Cvss) *Vulnerability {
+	s.Cvss = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *Vulnerability) SetId(v string) *Vulnerability {
+	s.Id = &v
+	return s
+}
+
+// SetReferenceUrls sets the ReferenceUrls field's value.
+func (s *Vulnerability) SetReferenceUrls(v []*string) *Vulnerability {
+	s.ReferenceUrls = v
+	return s
+}
+
+// SetRelatedVulnerabilities sets the RelatedVulnerabilities field's value.
+func (s *Vulnerability) SetRelatedVulnerabilities(v []*string) *Vulnerability {
+	s.RelatedVulnerabilities = v
+	return s
+}
+
+// SetVendor sets the Vendor field's value.
+func (s *Vulnerability) SetVendor(v *VulnerabilityVendor) *Vulnerability {
+	s.Vendor = v
+	return s
+}
+
+// SetVulnerablePackages sets the VulnerablePackages field's value.
+func (s *Vulnerability) SetVulnerablePackages(v []*SoftwarePackage) *Vulnerability {
+	s.VulnerablePackages = v
+	return s
+}
+
+// A vendor that generates a vulnerability report.
+type VulnerabilityVendor struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the vendor.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The URL of the vulnerability advisory.
+	Url *string `type:"string"`
+
+	// The datetime when the vulnerability advisory was created.
+	VendorCreatedAt *string `type:"string"`
+
+	// The severity that the vendor assigned to the vulnerability.
+	VendorSeverity *string `type:"string"`
+
+	// The datetime when the vulnerability advisory was last updated.
+	VendorUpdatedAt *string `type:"string"`
+}
+
+// String returns the string representation
+func (s VulnerabilityVendor) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VulnerabilityVendor) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VulnerabilityVendor) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VulnerabilityVendor"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *VulnerabilityVendor) SetName(v string) *VulnerabilityVendor {
+	s.Name = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *VulnerabilityVendor) SetUrl(v string) *VulnerabilityVendor {
+	s.Url = &v
+	return s
+}
+
+// SetVendorCreatedAt sets the VendorCreatedAt field's value.
+func (s *VulnerabilityVendor) SetVendorCreatedAt(v string) *VulnerabilityVendor {
+	s.VendorCreatedAt = &v
+	return s
+}
+
+// SetVendorSeverity sets the VendorSeverity field's value.
+func (s *VulnerabilityVendor) SetVendorSeverity(v string) *VulnerabilityVendor {
+	s.VendorSeverity = &v
+	return s
+}
+
+// SetVendorUpdatedAt sets the VendorUpdatedAt field's value.
+func (s *VulnerabilityVendor) SetVendorUpdatedAt(v string) *VulnerabilityVendor {
+	s.VendorUpdatedAt = &v
+	return s
 }
 
 // Details about the action that CloudFront or AWS WAF takes when a web request

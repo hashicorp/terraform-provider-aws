@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
@@ -225,12 +225,12 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccLbListenerCertificateConfig(rName, key, certificate string) string {
-	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + fmt.Sprintf(`
+	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + `
 resource "aws_lb_listener_certificate" "test" {
   certificate_arn = "${aws_iam_server_certificate.test.arn}"
   listener_arn    = "${aws_lb_listener.test.arn}"
 }
-`)
+`
 }
 
 func testAccLbListenerCertificateConfigMultiple(rName string, keys, certificates []string) string {

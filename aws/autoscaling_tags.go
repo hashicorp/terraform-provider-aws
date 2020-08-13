@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 // autoscalingTagSchema returns the schema to use for the tag element.
@@ -56,7 +56,7 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 	resourceID := d.Get("name").(string)
 	var createTags, removeTags []*autoscaling.Tag
 
-	if d.HasChange("tag") || d.HasChange("tags") {
+	if d.HasChanges("tag", "tags") {
 		oraw, nraw := d.GetChange("tag")
 		o := setToMapByKey(oraw.(*schema.Set))
 		n := setToMapByKey(nraw.(*schema.Set))
