@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
-sidebar_current: "docs-aws-datasource-ecs-service"
 description: |-
     Provides details about an ecs service
 ---
@@ -16,7 +16,7 @@ Service within a AWS ECS Cluster.
 ```hcl
 data "aws_ecs_service" "example" {
   service_name = "example"
-  cluster_arn  = "${data.aws_ecs_cluster.example.arn}"
+  cluster_arn  = data.aws_ecs_cluster.example.arn
 }
 ```
 

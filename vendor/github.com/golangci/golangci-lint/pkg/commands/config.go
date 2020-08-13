@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/golangci/golangci-lint/pkg/exitcodes"
 	"github.com/golangci/golangci-lint/pkg/fsutils"
-
-	"github.com/spf13/cobra"
 )
 
 func (e *Executor) initConfig() {
@@ -34,7 +33,21 @@ func (e *Executor) initConfig() {
 	}
 	e.initRunConfiguration(pathCmd) // allow --config
 	cmd.AddCommand(pathCmd)
+}
 
+func (e *Executor) getUsedConfig() string {
+	usedConfigFile := viper.ConfigFileUsed()
+	if usedConfigFile == "" {
+		return ""
+	}
+
+	prettyUsedConfigFile, err := fsutils.ShortestRelPath(usedConfigFile, "")
+	if err != nil {
+		e.log.Warnf("Can't pretty print config file path: %s", err)
+		return usedConfigFile
+	}
+
+	return prettyUsedConfigFile
 }
 
 func (e *Executor) executePathCmd(_ *cobra.Command, args []string) {
@@ -42,15 +55,10 @@ func (e *Executor) executePathCmd(_ *cobra.Command, args []string) {
 		e.log.Fatalf("Usage: golangci-lint config path")
 	}
 
-	usedConfigFile := viper.ConfigFileUsed()
+	usedConfigFile := e.getUsedConfig()
 	if usedConfigFile == "" {
 		e.log.Warnf("No config file detected")
 		os.Exit(exitcodes.NoConfigFileDetected)
-	}
-
-	usedConfigFile, err := fsutils.ShortestRelPath(usedConfigFile, "")
-	if err != nil {
-		e.log.Warnf("Can't pretty print config file path: %s", err)
 	}
 
 	fmt.Println(usedConfigFile)

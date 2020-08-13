@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb_hosted_zone_id"
-sidebar_current: "docs-aws-datasource-elb-hosted-zone-id"
 description: |-
   Get AWS Elastic Load Balancing Hosted Zone Id
 ---
@@ -17,13 +17,13 @@ in a given region for the purpose of using in an AWS Route53 Alias.
 data "aws_elb_hosted_zone_id" "main" {}
 
 resource "aws_route53_record" "www" {
-  zone_id = "${aws_route53_zone.primary.zone_id}"
+  zone_id = aws_route53_zone.primary.zone_id
   name    = "example.com"
   type    = "A"
 
   alias {
-    name                   = "${aws_elb.main.dns_name}"
-    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    name                   = aws_elb.main.dns_name
+    zone_id                = data.aws_elb_hosted_zone_id.main.id
     evaluate_target_health = true
   }
 }

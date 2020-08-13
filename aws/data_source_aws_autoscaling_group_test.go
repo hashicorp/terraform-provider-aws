@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAwsAutoScalingGroupDataSource_basic(t *testing.T) {
@@ -60,11 +60,16 @@ data "aws_ami" "ubuntu" {
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_launch_configuration" "data_source_aws_autoscaling_group_test" {
   name          = "%[1]s"
-  image_id      = "${data.aws_ami.ubuntu.id}"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
 }
 
@@ -76,8 +81,8 @@ resource "aws_autoscaling_group" "foo" {
   health_check_type         = "ELB"
   desired_capacity          = 0
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.data_source_aws_autoscaling_group_test.name}"
-  availability_zones        = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  launch_configuration      = aws_launch_configuration.data_source_aws_autoscaling_group_test.name
+  availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -88,12 +93,12 @@ resource "aws_autoscaling_group" "bar" {
   health_check_type         = "ELB"
   desired_capacity          = 0
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.data_source_aws_autoscaling_group_test.name}"
-  availability_zones        = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  launch_configuration      = aws_launch_configuration.data_source_aws_autoscaling_group_test.name
+  availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
 
 data "aws_autoscaling_group" "good_match" {
-  name = "${aws_autoscaling_group.foo.name}"
+  name = aws_autoscaling_group.foo.name
 }
 `, rName)
 }

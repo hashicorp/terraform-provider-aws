@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_target"
-sidebar_current: "docs-aws-resource-inspector-assessment-target"
 description: |-
   Provides a Inspector assessment target.
 ---
@@ -22,7 +22,7 @@ resource "aws_inspector_resource_group" "bar" {
 
 resource "aws_inspector_assessment_target" "foo" {
   name               = "assessment target"
-  resource_group_arn = "${aws_inspector_resource_group.bar.arn}"
+  resource_group_arn = aws_inspector_resource_group.bar.arn
 }
 ```
 

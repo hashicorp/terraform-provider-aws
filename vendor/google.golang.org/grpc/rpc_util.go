@@ -155,7 +155,6 @@ func (d *gzipDecompressor) Type() string {
 type callInfo struct {
 	compressorType        string
 	failFast              bool
-	stream                ClientStream
 	maxReceiveMessageSize *int
 	maxSendMessageSize    *int
 	creds                 credentials.PerRPCCredentials
@@ -180,7 +179,7 @@ type CallOption interface {
 
 	// after is called after the call has completed.  after cannot return an
 	// error, so any failures should be reported via output parameters.
-	after(*callInfo)
+	after(*callInfo, *csAttempt)
 }
 
 // EmptyCallOption does not alter the Call configuration.
@@ -188,8 +187,8 @@ type CallOption interface {
 // by interceptors.
 type EmptyCallOption struct{}
 
-func (EmptyCallOption) before(*callInfo) error { return nil }
-func (EmptyCallOption) after(*callInfo)        {}
+func (EmptyCallOption) before(*callInfo) error      { return nil }
+func (EmptyCallOption) after(*callInfo, *csAttempt) {}
 
 // Header returns a CallOptions that retrieves the header metadata
 // for a unary RPC.
@@ -205,10 +204,8 @@ type HeaderCallOption struct {
 }
 
 func (o HeaderCallOption) before(c *callInfo) error { return nil }
-func (o HeaderCallOption) after(c *callInfo) {
-	if c.stream != nil {
-		*o.HeaderAddr, _ = c.stream.Header()
-	}
+func (o HeaderCallOption) after(c *callInfo, attempt *csAttempt) {
+	*o.HeaderAddr, _ = attempt.s.Header()
 }
 
 // Trailer returns a CallOptions that retrieves the trailer metadata
@@ -225,10 +222,8 @@ type TrailerCallOption struct {
 }
 
 func (o TrailerCallOption) before(c *callInfo) error { return nil }
-func (o TrailerCallOption) after(c *callInfo) {
-	if c.stream != nil {
-		*o.TrailerAddr = c.stream.Trailer()
-	}
+func (o TrailerCallOption) after(c *callInfo, attempt *csAttempt) {
+	*o.TrailerAddr = attempt.s.Trailer()
 }
 
 // Peer returns a CallOption that retrieves peer information for a unary RPC.
@@ -245,11 +240,9 @@ type PeerCallOption struct {
 }
 
 func (o PeerCallOption) before(c *callInfo) error { return nil }
-func (o PeerCallOption) after(c *callInfo) {
-	if c.stream != nil {
-		if x, ok := peer.FromContext(c.stream.Context()); ok {
-			*o.PeerAddr = *x
-		}
+func (o PeerCallOption) after(c *callInfo, attempt *csAttempt) {
+	if x, ok := peer.FromContext(attempt.s.Context()); ok {
+		*o.PeerAddr = *x
 	}
 }
 
@@ -285,15 +278,16 @@ func (o FailFastCallOption) before(c *callInfo) error {
 	c.failFast = o.FailFast
 	return nil
 }
-func (o FailFastCallOption) after(c *callInfo) {}
+func (o FailFastCallOption) after(c *callInfo, attempt *csAttempt) {}
 
-// MaxCallRecvMsgSize returns a CallOption which sets the maximum message size the client can receive.
-func MaxCallRecvMsgSize(s int) CallOption {
-	return MaxRecvMsgSizeCallOption{MaxRecvMsgSize: s}
+// MaxCallRecvMsgSize returns a CallOption which sets the maximum message size
+// in bytes the client can receive.
+func MaxCallRecvMsgSize(bytes int) CallOption {
+	return MaxRecvMsgSizeCallOption{MaxRecvMsgSize: bytes}
 }
 
 // MaxRecvMsgSizeCallOption is a CallOption that indicates the maximum message
-// size the client can receive.
+// size in bytes the client can receive.
 // This is an EXPERIMENTAL API.
 type MaxRecvMsgSizeCallOption struct {
 	MaxRecvMsgSize int
@@ -303,15 +297,16 @@ func (o MaxRecvMsgSizeCallOption) before(c *callInfo) error {
 	c.maxReceiveMessageSize = &o.MaxRecvMsgSize
 	return nil
 }
-func (o MaxRecvMsgSizeCallOption) after(c *callInfo) {}
+func (o MaxRecvMsgSizeCallOption) after(c *callInfo, attempt *csAttempt) {}
 
-// MaxCallSendMsgSize returns a CallOption which sets the maximum message size the client can send.
-func MaxCallSendMsgSize(s int) CallOption {
-	return MaxSendMsgSizeCallOption{MaxSendMsgSize: s}
+// MaxCallSendMsgSize returns a CallOption which sets the maximum message size
+// in bytes the client can send.
+func MaxCallSendMsgSize(bytes int) CallOption {
+	return MaxSendMsgSizeCallOption{MaxSendMsgSize: bytes}
 }
 
 // MaxSendMsgSizeCallOption is a CallOption that indicates the maximum message
-// size the client can send.
+// size in bytes the client can send.
 // This is an EXPERIMENTAL API.
 type MaxSendMsgSizeCallOption struct {
 	MaxSendMsgSize int
@@ -321,7 +316,7 @@ func (o MaxSendMsgSizeCallOption) before(c *callInfo) error {
 	c.maxSendMessageSize = &o.MaxSendMsgSize
 	return nil
 }
-func (o MaxSendMsgSizeCallOption) after(c *callInfo) {}
+func (o MaxSendMsgSizeCallOption) after(c *callInfo, attempt *csAttempt) {}
 
 // PerRPCCredentials returns a CallOption that sets credentials.PerRPCCredentials
 // for a call.
@@ -340,7 +335,7 @@ func (o PerRPCCredsCallOption) before(c *callInfo) error {
 	c.creds = o.Creds
 	return nil
 }
-func (o PerRPCCredsCallOption) after(c *callInfo) {}
+func (o PerRPCCredsCallOption) after(c *callInfo, attempt *csAttempt) {}
 
 // UseCompressor returns a CallOption which sets the compressor used when
 // sending the request.  If WithCompressor is also set, UseCompressor has
@@ -361,7 +356,7 @@ func (o CompressorCallOption) before(c *callInfo) error {
 	c.compressorType = o.CompressorType
 	return nil
 }
-func (o CompressorCallOption) after(c *callInfo) {}
+func (o CompressorCallOption) after(c *callInfo, attempt *csAttempt) {}
 
 // CallContentSubtype returns a CallOption that will set the content-subtype
 // for a call. For example, if content-subtype is "json", the Content-Type over
@@ -370,13 +365,13 @@ func (o CompressorCallOption) after(c *callInfo) {}
 // https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md#requests for
 // more details.
 //
-// If CallCustomCodec is not also used, the content-subtype will be used to
-// look up the Codec to use in the registry controlled by RegisterCodec. See
-// the documentation on RegisterCodec for details on registration. The lookup
-// of content-subtype is case-insensitive. If no such Codec is found, the call
+// If ForceCodec is not also used, the content-subtype will be used to look up
+// the Codec to use in the registry controlled by RegisterCodec. See the
+// documentation on RegisterCodec for details on registration. The lookup of
+// content-subtype is case-insensitive. If no such Codec is found, the call
 // will result in an error with code codes.Internal.
 //
-// If CallCustomCodec is also used, that Codec will be used for all request and
+// If ForceCodec is also used, that Codec will be used for all request and
 // response messages, with the content-subtype set to the given contentSubtype
 // here for requests.
 func CallContentSubtype(contentSubtype string) CallOption {
@@ -394,9 +389,9 @@ func (o ContentSubtypeCallOption) before(c *callInfo) error {
 	c.contentSubtype = o.ContentSubtype
 	return nil
 }
-func (o ContentSubtypeCallOption) after(c *callInfo) {}
+func (o ContentSubtypeCallOption) after(c *callInfo, attempt *csAttempt) {}
 
-// CallCustomCodec returns a CallOption that will set the given Codec to be
+// ForceCodec returns a CallOption that will set the given Codec to be
 // used for all request and response messages for a call. The result of calling
 // String() will be used as the content-subtype in a case-insensitive manner.
 //
@@ -408,12 +403,37 @@ func (o ContentSubtypeCallOption) after(c *callInfo) {}
 //
 // This function is provided for advanced users; prefer to use only
 // CallContentSubtype to select a registered codec instead.
+//
+// This is an EXPERIMENTAL API.
+func ForceCodec(codec encoding.Codec) CallOption {
+	return ForceCodecCallOption{Codec: codec}
+}
+
+// ForceCodecCallOption is a CallOption that indicates the codec used for
+// marshaling messages.
+//
+// This is an EXPERIMENTAL API.
+type ForceCodecCallOption struct {
+	Codec encoding.Codec
+}
+
+func (o ForceCodecCallOption) before(c *callInfo) error {
+	c.codec = o.Codec
+	return nil
+}
+func (o ForceCodecCallOption) after(c *callInfo, attempt *csAttempt) {}
+
+// CallCustomCodec behaves like ForceCodec, but accepts a grpc.Codec instead of
+// an encoding.Codec.
+//
+// Deprecated: use ForceCodec instead.
 func CallCustomCodec(codec Codec) CallOption {
 	return CustomCodecCallOption{Codec: codec}
 }
 
 // CustomCodecCallOption is a CallOption that indicates the codec used for
 // marshaling messages.
+//
 // This is an EXPERIMENTAL API.
 type CustomCodecCallOption struct {
 	Codec Codec
@@ -423,7 +443,7 @@ func (o CustomCodecCallOption) before(c *callInfo) error {
 	c.codec = o.Codec
 	return nil
 }
-func (o CustomCodecCallOption) after(c *callInfo) {}
+func (o CustomCodecCallOption) after(c *callInfo, attempt *csAttempt) {}
 
 // MaxRetryRPCBufferSize returns a CallOption that limits the amount of memory
 // used for buffering this RPC's requests for retry purposes.
@@ -444,7 +464,7 @@ func (o MaxRetryRPCBufferSizeCallOption) before(c *callInfo) error {
 	c.maxRetryRPCBufferSize = o.MaxRetryRPCBufferSize
 	return nil
 }
-func (o MaxRetryRPCBufferSizeCallOption) after(c *callInfo) {}
+func (o MaxRetryRPCBufferSizeCallOption) after(c *callInfo, attempt *csAttempt) {}
 
 // The format of the payload: compressed or not?
 type payloadFormat uint8
@@ -623,31 +643,56 @@ func recvAndDecompress(p *parser, s *transport.Stream, dc Decompressor, maxRecei
 		return nil, st.Err()
 	}
 
+	var size int
 	if pf == compressionMade {
 		// To match legacy behavior, if the decompressor is set by WithDecompressor or RPCDecompressor,
 		// use this decompressor as the default.
 		if dc != nil {
 			d, err = dc.Do(bytes.NewReader(d))
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "grpc: failed to decompress the received message %v", err)
-			}
+			size = len(d)
 		} else {
-			dcReader, err := compressor.Decompress(bytes.NewReader(d))
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "grpc: failed to decompress the received message %v", err)
-			}
-			d, err = ioutil.ReadAll(dcReader)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "grpc: failed to decompress the received message %v", err)
-			}
+			d, size, err = decompress(compressor, d, maxReceiveMessageSize)
 		}
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "grpc: failed to decompress the received message %v", err)
+		}
+	} else {
+		size = len(d)
 	}
-	if len(d) > maxReceiveMessageSize {
+	if size > maxReceiveMessageSize {
 		// TODO: Revisit the error code. Currently keep it consistent with java
 		// implementation.
-		return nil, status.Errorf(codes.ResourceExhausted, "grpc: received message larger than max (%d vs. %d)", len(d), maxReceiveMessageSize)
+		return nil, status.Errorf(codes.ResourceExhausted, "grpc: received message larger than max (%d vs. %d)", size, maxReceiveMessageSize)
 	}
 	return d, nil
+}
+
+// Using compressor, decompress d, returning data and size.
+// Optionally, if data will be over maxReceiveMessageSize, just return the size.
+func decompress(compressor encoding.Compressor, d []byte, maxReceiveMessageSize int) ([]byte, int, error) {
+	dcReader, err := compressor.Decompress(bytes.NewReader(d))
+	if err != nil {
+		return nil, 0, err
+	}
+	if sizer, ok := compressor.(interface {
+		DecompressedSize(compressedBytes []byte) int
+	}); ok {
+		if size := sizer.DecompressedSize(d); size >= 0 {
+			if size > maxReceiveMessageSize {
+				return nil, size, nil
+			}
+			// size is used as an estimate to size the buffer, but we
+			// will read more data if available.
+			// +MinRead so ReadFrom will not reallocate if size is correct.
+			buf := bytes.NewBuffer(make([]byte, 0, size+bytes.MinRead))
+			bytesRead, err := buf.ReadFrom(io.LimitReader(dcReader, int64(maxReceiveMessageSize)+1))
+			return buf.Bytes(), int(bytesRead), err
+		}
+	}
+	// Read from LimitReader with limit max+1. So if the underlying
+	// reader is over limit, the result will be bigger than max.
+	d, err = ioutil.ReadAll(io.LimitReader(dcReader, int64(maxReceiveMessageSize)+1))
+	return d, len(d), err
 }
 
 // For the two compressor parameters, both should not be set, but if they are,
@@ -667,14 +712,34 @@ func recv(p *parser, c baseCodec, s *transport.Stream, dc Decompressor, m interf
 	return nil
 }
 
+// Information about RPC
 type rpcInfo struct {
-	failfast bool
+	failfast      bool
+	preloaderInfo *compressorInfo
+}
+
+// Information about Preloader
+// Responsible for storing codec, and compressors
+// If stream (s) has  context s.Context which stores rpcInfo that has non nil
+// pointers to codec, and compressors, then we can use preparedMsg for Async message prep
+// and reuse marshalled bytes
+type compressorInfo struct {
+	codec baseCodec
+	cp    Compressor
+	comp  encoding.Compressor
 }
 
 type rpcInfoContextKey struct{}
 
-func newContextWithRPCInfo(ctx context.Context, failfast bool) context.Context {
-	return context.WithValue(ctx, rpcInfoContextKey{}, &rpcInfo{failfast: failfast})
+func newContextWithRPCInfo(ctx context.Context, failfast bool, codec baseCodec, cp Compressor, comp encoding.Compressor) context.Context {
+	return context.WithValue(ctx, rpcInfoContextKey{}, &rpcInfo{
+		failfast: failfast,
+		preloaderInfo: &compressorInfo{
+			codec: codec,
+			cp:    cp,
+			comp:  comp,
+		},
+	})
 }
 
 func rpcInfoFromContext(ctx context.Context) (s *rpcInfo, ok bool) {
@@ -801,7 +866,7 @@ type channelzData struct {
 
 // The SupportPackageIsVersion variables are referenced from generated protocol
 // buffer files to ensure compatibility with the gRPC version used.  The latest
-// support package version is 5.
+// support package version is 6.
 //
 // Older versions are kept for compatibility. They may be removed if
 // compatibility cannot be maintained.
@@ -811,6 +876,7 @@ const (
 	SupportPackageIsVersion3 = true
 	SupportPackageIsVersion4 = true
 	SupportPackageIsVersion5 = true
+	SupportPackageIsVersion6 = true
 )
 
 const grpcUA = "grpc-go/" + Version

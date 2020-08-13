@@ -2,6 +2,10 @@
 
 package cloudhsmv2
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCloudHsmAccessDeniedException for service response error code
@@ -35,4 +39,20 @@ const (
 	//
 	// The request was rejected because an error occurred.
 	ErrCodeCloudHsmServiceException = "CloudHsmServiceException"
+
+	// ErrCodeCloudHsmTagException for service response error code
+	// "CloudHsmTagException".
+	//
+	// The request was rejected because of a tagging failure. Verify the tag conditions
+	// in all applicable policies, and then retry the request.
+	ErrCodeCloudHsmTagException = "CloudHsmTagException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CloudHsmAccessDeniedException":     newErrorCloudHsmAccessDeniedException,
+	"CloudHsmInternalFailureException":  newErrorCloudHsmInternalFailureException,
+	"CloudHsmInvalidRequestException":   newErrorCloudHsmInvalidRequestException,
+	"CloudHsmResourceNotFoundException": newErrorCloudHsmResourceNotFoundException,
+	"CloudHsmServiceException":          newErrorCloudHsmServiceException,
+	"CloudHsmTagException":              newErrorCloudHsmTagException,
+}

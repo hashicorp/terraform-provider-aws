@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_resource_data_sync"
-sidebar_current: "docs-aws-resource-ssm-resource-data-sync"
 description: |-
   Provides a SSM resource data sync.
 ---
@@ -15,11 +15,10 @@ Provides a SSM resource data sync.
 ```hcl
 resource "aws_s3_bucket" "hoge" {
   bucket = "tf-test-bucket-1234"
-  region = "us-east-1"
 }
 
 resource "aws_s3_bucket_policy" "hoge" {
-  bucket = "${aws_s3_bucket.hoge.bucket}"
+  bucket = aws_s3_bucket.hoge.bucket
 
   policy = <<EOF
 {
@@ -56,9 +55,9 @@ EOF
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
 
-  s3_destination = {
-    bucket_name = "${aws_s3_bucket.hoge.bucket}"
-    region      = "${aws_s3_bucket.hoge.region}"
+  s3_destination {
+    bucket_name = aws_s3_bucket.hoge.bucket
+    region      = aws_s3_bucket.hoge.region
   }
 }
 ```

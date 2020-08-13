@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_configuration_recorder"
-sidebar_current: "docs-aws-resource-config-configuration-recorder"
 description: |-
   Provides an AWS Config Configuration Recorder.
 ---
@@ -17,7 +17,7 @@ Provides an AWS Config Configuration Recorder. Please note that this resource **
 ```hcl
 resource "aws_config_configuration_recorder" "foo" {
   name     = "example"
-  role_arn = "${aws_iam_role.r.arn}"
+  role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "r" {

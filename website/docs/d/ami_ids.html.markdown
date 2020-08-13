@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami_ids"
-sidebar_current: "docs-aws-datasource-ami-ids"
 description: |-
   Provides a list of AMI IDs.
 ---

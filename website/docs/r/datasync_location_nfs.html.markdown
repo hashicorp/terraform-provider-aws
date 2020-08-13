@@ -1,7 +1,7 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_location_nfs"
-sidebar_current: "docs-aws-resource-datasync-location-nfs"
 description: |-
   Manages an AWS DataSync NFS Location
 ---
@@ -20,7 +20,7 @@ resource "aws_datasync_location_nfs" "example" {
   subdirectory    = "/exported/path"
 
   on_prem_config {
-    agent_arns = ["${aws_datasync_agent.example.arn}"]
+    agent_arns = [aws_datasync_agent.example.arn]
   }
 }
 ```

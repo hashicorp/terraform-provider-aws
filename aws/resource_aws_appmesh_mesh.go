@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppmeshMesh() *schema.Resource {
@@ -74,6 +75,8 @@ func resourceAwsAppmeshMesh() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -85,6 +88,7 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandAppmeshMeshSpec(d.Get("spec").([]interface{})),
+		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
@@ -100,11 +104,12 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, "NotFoundException", "") {
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -118,13 +123,24 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
+	arn := aws.StringValue(resp.Mesh.Metadata.Arn)
 	d.Set("name", resp.Mesh.MeshName)
-	d.Set("arn", resp.Mesh.Metadata.Arn)
+	d.Set("arn", arn)
 	d.Set("created_date", resp.Mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	err = d.Set("spec", flattenAppmeshMeshSpec(resp.Mesh.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
+	}
+
+	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -147,6 +163,15 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating App Mesh service mesh (%s) tags: %s", arn, err)
+		}
+	}
+
 	return resourceAwsAppmeshMeshRead(d, meta)
 }
 
@@ -157,7 +182,7 @@ func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, "NotFoundException", "") {
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {

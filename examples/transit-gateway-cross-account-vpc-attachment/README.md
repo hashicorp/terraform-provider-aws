@@ -16,3 +16,8 @@ terraform apply \
 	-var="aws_second_secret_key=SuperSecretKeyForAccount2" \
 	-var="aws_region=us-east-1"
 ```
+
+## Prerequisites
+
+- This example requires two AWS accounts within the same AWS Organizations Organization
+- Ensure Resource Access Manager is enabled in your organization. For more information, see the [Resource Access Manager User Guide](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html).

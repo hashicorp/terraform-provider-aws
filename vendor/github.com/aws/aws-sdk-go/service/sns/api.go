@@ -341,31 +341,33 @@ func (c *SNS) CreatePlatformApplicationRequest(input *CreatePlatformApplicationI
 // CreatePlatformApplication API operation for Amazon Simple Notification Service.
 //
 // Creates a platform application object for one of the supported push notification
-// services, such as APNS and FCM, to which devices and mobile apps may register.
-// You must specify PlatformPrincipal and PlatformCredential attributes when
-// using the CreatePlatformApplication action. The PlatformPrincipal is received
-// from the notification service. For APNS/APNS_SANDBOX, PlatformPrincipal is
-// "SSL certificate". For GCM, PlatformPrincipal is not applicable. For ADM,
-// PlatformPrincipal is "client id". The PlatformCredential is also received
-// from the notification service. For WNS, PlatformPrincipal is "Package Security
-// Identifier". For MPNS, PlatformPrincipal is "TLS certificate". For Baidu,
-// PlatformPrincipal is "API key".
+// services, such as APNS and GCM (Firebase Cloud Messaging), to which devices
+// and mobile apps may register. You must specify PlatformPrincipal and PlatformCredential
+// attributes when using the CreatePlatformApplication action.
 //
-// For APNS/APNS_SANDBOX, PlatformCredential is "private key". For GCM, PlatformCredential
-// is "API key". For ADM, PlatformCredential is "client secret". For WNS, PlatformCredential
-// is "secret key". For MPNS, PlatformCredential is "private key". For Baidu,
-// PlatformCredential is "secret key". The PlatformApplicationArn that is returned
-// when using CreatePlatformApplication is then used as an attribute for the
-// CreatePlatformEndpoint action. For more information, see Using Amazon SNS
-// Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
-// For more information about obtaining the PlatformPrincipal and PlatformCredential
-// for each of the supported push notification services, see Getting Started
-// with Apple Push Notification Service (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-apns.html),
-// Getting Started with Amazon Device Messaging (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-adm.html),
-// Getting Started with Baidu Cloud Push (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-baidu.html),
-// Getting Started with Google Cloud Messaging for Android (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-gcm.html),
-// Getting Started with MPNS (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-mpns.html),
-// or Getting Started with WNS (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-wns.html).
+// PlatformPrincipal and PlatformCredential are received from the notification
+// service.
+//
+//    * For ADM, PlatformPrincipal is client id and PlatformCredential is client
+//    secret.
+//
+//    * For Baidu, PlatformPrincipal is API key and PlatformCredential is secret
+//    key.
+//
+//    * For APNS and APNS_SANDBOX, PlatformPrincipal is SSL certificate and
+//    PlatformCredential is private key.
+//
+//    * For GCM (Firebase Cloud Messaging), there is no PlatformPrincipal and
+//    the PlatformCredential is API key.
+//
+//    * For MPNS, PlatformPrincipal is TLS certificate and PlatformCredential
+//    is private key.
+//
+//    * For WNS, PlatformPrincipal is Package Security Identifier and PlatformCredential
+//    is secret key.
+//
+// You can use the returned PlatformApplicationArn as an attribute for the CreatePlatformEndpoint
+// action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -451,11 +453,10 @@ func (c *SNS) CreatePlatformEndpointRequest(input *CreatePlatformEndpointInput) 
 // CreatePlatformEndpoint API operation for Amazon Simple Notification Service.
 //
 // Creates an endpoint for a device and mobile app on one of the supported push
-// notification services, such as GCM and APNS. CreatePlatformEndpoint requires
-// the PlatformApplicationArn that is returned from CreatePlatformApplication.
-// The EndpointArn that is returned when using CreatePlatformEndpoint can then
-// be used by the Publish action to send a message to a mobile app or by the
-// Subscribe action for subscription to a topic. The CreatePlatformEndpoint
+// notification services, such as GCM (Firebase Cloud Messaging) and APNS. CreatePlatformEndpoint
+// requires the PlatformApplicationArn that is returned from CreatePlatformApplication.
+// You can use the returned EndpointArn to send a message to a mobile app or
+// by the Subscribe action for subscription to a topic. The CreatePlatformEndpoint
 // action is idempotent, so if the requester already owns an endpoint with the
 // same device token and attributes, that endpoint's ARN is returned without
 // creating a new endpoint. For more information, see Using Amazon SNS Mobile
@@ -755,8 +756,8 @@ func (c *SNS) DeletePlatformApplicationRequest(input *DeletePlatformApplicationI
 // DeletePlatformApplication API operation for Amazon Simple Notification Service.
 //
 // Deletes a platform application object for one of the supported push notification
-// services, such as APNS and GCM. For more information, see Using Amazon SNS
-// Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
+// services, such as APNS and GCM (Firebase Cloud Messaging). For more information,
+// see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -946,8 +947,8 @@ func (c *SNS) GetEndpointAttributesRequest(input *GetEndpointAttributesInput) (r
 // GetEndpointAttributes API operation for Amazon Simple Notification Service.
 //
 // Retrieves the endpoint attributes for a device on one of the supported push
-// notification services, such as GCM and APNS. For more information, see Using
-// Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
+// notification services, such as GCM (Firebase Cloud Messaging) and APNS. For
+// more information, see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1036,8 +1037,8 @@ func (c *SNS) GetPlatformApplicationAttributesRequest(input *GetPlatformApplicat
 // GetPlatformApplicationAttributes API operation for Amazon Simple Notification Service.
 //
 // Retrieves the attributes of the platform application object for the supported
-// push notification services, such as APNS and GCM. For more information, see
-// Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
+// push notification services, such as APNS and GCM (Firebase Cloud Messaging).
+// For more information, see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1404,12 +1405,13 @@ func (c *SNS) ListEndpointsByPlatformApplicationRequest(input *ListEndpointsByPl
 // ListEndpointsByPlatformApplication API operation for Amazon Simple Notification Service.
 //
 // Lists the endpoints and endpoint attributes for devices in a supported push
-// notification service, such as GCM and APNS. The results for ListEndpointsByPlatformApplication
-// are paginated and return a limited list of endpoints, up to 100. If additional
-// records are available after the first page results, then a NextToken string
-// will be returned. To receive the next page, you call ListEndpointsByPlatformApplication
-// again using the NextToken string received from the previous call. When there
-// are no more records to return, NextToken will be null. For more information,
+// notification service, such as GCM (Firebase Cloud Messaging) and APNS. The
+// results for ListEndpointsByPlatformApplication are paginated and return a
+// limited list of endpoints, up to 100. If additional records are available
+// after the first page results, then a NextToken string will be returned. To
+// receive the next page, you call ListEndpointsByPlatformApplication again
+// using the NextToken string received from the previous call. When there are
+// no more records to return, NextToken will be null. For more information,
 // see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 //
 // This action is throttled at 30 transactions per second (TPS).
@@ -1499,10 +1501,12 @@ func (c *SNS) ListEndpointsByPlatformApplicationPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEndpointsByPlatformApplicationOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEndpointsByPlatformApplicationOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1654,13 +1658,13 @@ func (c *SNS) ListPlatformApplicationsRequest(input *ListPlatformApplicationsInp
 // ListPlatformApplications API operation for Amazon Simple Notification Service.
 //
 // Lists the platform application objects for the supported push notification
-// services, such as APNS and GCM. The results for ListPlatformApplications
-// are paginated and return a limited list of applications, up to 100. If additional
-// records are available after the first page results, then a NextToken string
-// will be returned. To receive the next page, you call ListPlatformApplications
-// using the NextToken string received from the previous call. When there are
-// no more records to return, NextToken will be null. For more information,
-// see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
+// services, such as APNS and GCM (Firebase Cloud Messaging). The results for
+// ListPlatformApplications are paginated and return a limited list of applications,
+// up to 100. If additional records are available after the first page results,
+// then a NextToken string will be returned. To receive the next page, you call
+// ListPlatformApplications using the NextToken string received from the previous
+// call. When there are no more records to return, NextToken will be null. For
+// more information, see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 //
 // This action is throttled at 15 transactions per second (TPS).
 //
@@ -1746,10 +1750,12 @@ func (c *SNS) ListPlatformApplicationsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPlatformApplicationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPlatformApplicationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1892,10 +1898,12 @@ func (c *SNS) ListSubscriptionsPagesWithContext(ctx aws.Context, input *ListSubs
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2041,10 +2049,12 @@ func (c *SNS) ListSubscriptionsByTopicPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSubscriptionsByTopicOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSubscriptionsByTopicOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2281,10 +2291,12 @@ func (c *SNS) ListTopicsPagesWithContext(ctx aws.Context, input *ListTopicsInput
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTopicsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTopicsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2425,8 +2437,9 @@ func (c *SNS) PublishRequest(input *PublishInput) (req *request.Request, output 
 
 // Publish API operation for Amazon Simple Notification Service.
 //
-// Sends a message to an Amazon SNS topic or sends a text message (SMS message)
-// directly to a phone number.
+// Sends a message to an Amazon SNS topic, a text message (SMS message) directly
+// to a phone number, or a message to a mobile platform endpoint (when you specify
+// the TargetArn).
 //
 // If you send a message to a topic, Amazon SNS delivers the message to each
 // endpoint that is subscribed to the topic. The format of the message depends
@@ -2442,6 +2455,8 @@ func (c *SNS) PublishRequest(input *PublishInput) (req *request.Request, output 
 //
 // For more information about formatting messages, see Send Custom Platform-Specific
 // Payloads in Messages to Mobile Devices (https://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-custommessage.html).
+//
+// You can publish messages only to topics and endpoints in the same AWS Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2659,8 +2674,8 @@ func (c *SNS) SetEndpointAttributesRequest(input *SetEndpointAttributesInput) (r
 // SetEndpointAttributes API operation for Amazon Simple Notification Service.
 //
 // Sets the attributes for an endpoint for a device on one of the supported
-// push notification services, such as GCM and APNS. For more information, see
-// Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
+// push notification services, such as GCM (Firebase Cloud Messaging) and APNS.
+// For more information, see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2750,8 +2765,8 @@ func (c *SNS) SetPlatformApplicationAttributesRequest(input *SetPlatformApplicat
 // SetPlatformApplicationAttributes API operation for Amazon Simple Notification Service.
 //
 // Sets the attributes of the platform application object for the supported
-// push notification services, such as APNS and GCM. For more information, see
-// Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
+// push notification services, such as APNS and GCM (Firebase Cloud Messaging).
+// For more information, see Using Amazon SNS Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html).
 // For information on configuring attributes for message delivery status, see
 // Using Amazon SNS Application Attributes for Message Delivery Status (https://docs.aws.amazon.com/sns/latest/dg/sns-msg-status.html).
 //
@@ -3125,10 +3140,12 @@ func (c *SNS) SubscribeRequest(input *SubscribeInput) (req *request.Request, out
 
 // Subscribe API operation for Amazon Simple Notification Service.
 //
-// Prepares to subscribe an endpoint by sending the endpoint a confirmation
-// message. To actually create a subscription, the endpoint owner must call
-// the ConfirmSubscription action with the token from the confirmation message.
-// Confirmation tokens are valid for three days.
+// Subscribes an endpoint to an Amazon SNS topic. If the endpoint type is HTTP/S
+// or email, or if the endpoint and the topic are not in the same AWS account,
+// the endpoint owner must the ConfirmSubscription action to confirm the subscription.
+//
+// You call the ConfirmSubscription action with the token from the subscription
+// response. Confirmation tokens are valid for three days.
 //
 // This action is throttled at 100 transactions per second (TPS).
 //
@@ -3247,11 +3264,9 @@ func (c *SNS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //    * A new tag with a key identical to that of an existing tag overwrites
 //    the existing tag.
 //
-//    * Tagging actions are limited to 10 TPS per AWS account. If your application
-//    requires a higher throughput, file a technical support request (https://console.aws.amazon.com/support/home#/case/create?issueType=technical).
-//
-// For a full list of tag restrictions, see Limits Related to Topics (https://docs.aws.amazon.com/sns/latest/dg/sns-limits.html#limits-topics)
-// in the Amazon SNS Developer Guide.
+//    * Tagging actions are limited to 10 TPS per AWS account, per AWS region.
+//    If your application requires a higher throughput, file a technical support
+//    request (https://console.aws.amazon.com/support/home#/case/create?issueType=technical).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3522,7 +3537,7 @@ type AddPermissionInput struct {
 
 	// The action you want to allow for the specified principal(s).
 	//
-	// Valid values: any Amazon SNS action name.
+	// Valid values: Any Amazon SNS action name, for example Publish.
 	//
 	// ActionName is a required field
 	ActionName []*string `type:"list" required:"true"`
@@ -3783,7 +3798,8 @@ type CreatePlatformApplicationInput struct {
 	Name *string `type:"string" required:"true"`
 
 	// The following platforms are supported: ADM (Amazon Device Messaging), APNS
-	// (Apple Push Notification Service), APNS_SANDBOX, and GCM (Google Cloud Messaging).
+	// (Apple Push Notification Service), APNS_SANDBOX, and GCM (Firebase Cloud
+	// Messaging).
 	//
 	// Platform is a required field
 	Platform *string `type:"string" required:"true"`
@@ -3880,8 +3896,9 @@ type CreatePlatformEndpointInput struct {
 	// Unique identifier created by the notification service for an app on a device.
 	// The specific name for Token will vary, depending on which notification service
 	// is being used. For example, when using APNS as the notification service,
-	// you need the device token. Alternatively, when using GCM or ADM, the device
-	// token equivalent is called the registration ID.
+	// you need the device token. Alternatively, when using GCM (Firebase Cloud
+	// Messaging) or ADM, the device token equivalent is called the registration
+	// ID.
 	//
 	// Token is a required field
 	Token *string `type:"string" required:"true"`
@@ -3996,6 +4013,9 @@ type CreateTopicInput struct {
 	Name *string `type:"string" required:"true"`
 
 	// The list of tags to add to a new topic.
+	//
+	// To be able to tag a topic on creation, you must have the sns:CreateTopic
+	// and sns:TagResource permissions.
 	Tags []*Tag `type:"list"`
 }
 
@@ -4322,6 +4342,7 @@ type GetEndpointAttributesOutput struct {
 	//    * Token – device token, also referred to as a registration id, for an
 	//    app and mobile device. This is returned from the notification service
 	//    when an app and mobile device are registered with the notification service.
+	//    The device token for the iOS platform is returned in lowercase.
 	Attributes map[string]*string `type:"map"`
 }
 
@@ -4527,6 +4548,8 @@ type GetSubscriptionAttributesOutput struct {
 	//    account system defaults.
 	//
 	//    * FilterPolicy – The filter policy JSON that is assigned to the subscription.
+	//    For more information, see Amazon SNS Message Filtering (https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html)
+	//    in the Amazon SNS Developer Guide.
 	//
 	//    * Owner – The AWS account ID of the subscription's owner.
 	//
@@ -4537,6 +4560,13 @@ type GetSubscriptionAttributesOutput struct {
 	//    * RawMessageDelivery – true if raw message delivery is enabled for the
 	//    subscription. Raw messages are free of JSON formatting and can be sent
 	//    to HTTP/S and Amazon SQS endpoints.
+	//
+	//    * RedrivePolicy – When specified, sends undeliverable messages to the
+	//    specified Amazon SQS dead-letter queue. Messages that can't be delivered
+	//    due to client errors (for example, when the subscribed endpoint is unreachable)
+	//    or server errors (for example, when the service that powers the subscribed
+	//    endpoint becomes unavailable) are held in the dead-letter queue for further
+	//    analysis or reprocessing.
 	//
 	//    * SubscriptionArn – The subscription's ARN.
 	//
@@ -4605,28 +4635,35 @@ type GetTopicAttributesOutput struct {
 
 	// A map of the topic's attributes. Attributes in this map include the following:
 	//
-	//    * TopicArn – the topic's ARN
+	//    * DeliveryPolicy – The JSON serialization of the topic's delivery policy.
 	//
-	//    * Owner – the AWS account ID of the topic's owner
+	//    * DisplayName – The human-readable name used in the From field for notifications
+	//    to email and email-json endpoints.
 	//
-	//    * Policy – the JSON serialization of the topic's access control policy
+	//    * Owner – The AWS account ID of the topic's owner.
 	//
-	//    * DisplayName – the human-readable name used in the "From" field for
-	//    notifications to email and email-json endpoints
+	//    * Policy – The JSON serialization of the topic's access control policy.
 	//
-	//    * SubscriptionsPending – the number of subscriptions pending confirmation
-	//    on this topic
+	//    * SubscriptionsConfirmed – The number of confirmed subscriptions for
+	//    the topic.
 	//
-	//    * SubscriptionsConfirmed – the number of confirmed subscriptions on
-	//    this topic
+	//    * SubscriptionsDeleted – The number of deleted subscriptions for the
+	//    topic.
 	//
-	//    * SubscriptionsDeleted – the number of deleted subscriptions on this
-	//    topic
+	//    * SubscriptionsPending – The number of subscriptions pending confirmation
+	//    for the topic.
 	//
-	//    * DeliveryPolicy – the JSON serialization of the topic's delivery policy
+	//    * TopicArn – The topic's ARN.
 	//
-	//    * EffectiveDeliveryPolicy – the JSON serialization of the effective
-	//    delivery policy that takes into account system defaults
+	//    * EffectiveDeliveryPolicy – The JSON serialization of the effective
+	//    delivery policy, taking system defaults into account.
+	//
+	// The following attribute applies only to server-side-encryption (https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html):
+	//
+	//    * KmsMasterKeyId - The ID of an AWS-managed customer master key (CMK)
+	//    for Amazon SNS or a custom CMK. For more information, see Key Terms (https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms).
+	//    For more examples, see KeyId (https://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters)
+	//    in the AWS Key Management Service API Reference.
 	Attributes map[string]*string `type:"map"`
 }
 
@@ -5275,9 +5312,6 @@ type PublishInput struct {
 
 	// The message you want to send.
 	//
-	// The Message parameter is always a string. If you set MessageStructure to
-	// json, you must string-encode the Message parameter.
-	//
 	// If you are publishing to a topic and you want to send the same message to
 	// all transport protocols, include the text of the message as a String value.
 	// If you want to send different messages for each transport protocol, set the
@@ -5340,11 +5374,6 @@ type PublishInput struct {
 	//
 	// You can define other top-level keys that define the message you want to send
 	// to a specific transport protocol (e.g., "http").
-	//
-	// For information about sending different messages for each protocol using
-	// the AWS Management Console, go to Create Different Messages for Each Protocol
-	// (https://docs.aws.amazon.com/sns/latest/gsg/Publish.html#sns-message-formatting-by-protocol)
-	// in the Amazon Simple Notification Service Getting Started Guide.
 	//
 	// Valid value: json
 	MessageStructure *string `type:"string"`
@@ -5631,27 +5660,27 @@ type SetPlatformApplicationAttributesInput struct {
 	// the following:
 	//
 	//    * PlatformCredential – The credential received from the notification
-	//    service. For APNS/APNS_SANDBOX, PlatformCredential is private key. For
-	//    GCM, PlatformCredential is "API key". For ADM, PlatformCredential is "client
-	//    secret".
+	//    service. For APNS and APNS_SANDBOX, PlatformCredential is private key.
+	//    For GCM (Firebase Cloud Messaging), PlatformCredential is API key. For
+	//    ADM, PlatformCredential is client secret.
 	//
 	//    * PlatformPrincipal – The principal received from the notification service.
-	//    For APNS/APNS_SANDBOX, PlatformPrincipal is SSL certificate. For GCM,
-	//    PlatformPrincipal is not applicable. For ADM, PlatformPrincipal is "client
-	//    id".
+	//    For APNS and APNS_SANDBOX, PlatformPrincipal is SSL certificate. For GCM
+	//    (Firebase Cloud Messaging), there is no PlatformPrincipal. For ADM, PlatformPrincipal
+	//    is client id.
 	//
 	//    * EventEndpointCreated – Topic ARN to which EndpointCreated event notifications
-	//    should be sent.
+	//    are sent.
 	//
 	//    * EventEndpointDeleted – Topic ARN to which EndpointDeleted event notifications
-	//    should be sent.
+	//    are sent.
 	//
 	//    * EventEndpointUpdated – Topic ARN to which EndpointUpdate event notifications
-	//    should be sent.
+	//    are sent.
 	//
 	//    * EventDeliveryFailure – Topic ARN to which DeliveryFailure event notifications
-	//    should be sent upon Direct Publish delivery failure (permanent) to one
-	//    of the application's endpoints.
+	//    are sent upon Direct Publish delivery failure (permanent) to one of the
+	//    application's endpoints.
 	//
 	//    * SuccessFeedbackRoleArn – IAM role ARN used to give Amazon SNS write
 	//    access to use CloudWatch Logs on your behalf.
@@ -5871,6 +5900,13 @@ type SetSubscriptionAttributesInput struct {
 	//    to process JSON formatting, which is otherwise created for Amazon SNS
 	//    metadata.
 	//
+	//    * RedrivePolicy – When specified, sends undeliverable messages to the
+	//    specified Amazon SQS dead-letter queue. Messages that can't be delivered
+	//    due to client errors (for example, when the subscribed endpoint is unreachable)
+	//    or server errors (for example, when the service that powers the subscribed
+	//    endpoint becomes unavailable) are held in the dead-letter queue for further
+	//    analysis or reprocessing.
+	//
 	// AttributeName is a required field
 	AttributeName *string `type:"string" required:"true"`
 
@@ -6055,13 +6091,22 @@ type SubscribeInput struct {
 	//    to Amazon SQS or HTTP/S endpoints. This eliminates the need for the endpoints
 	//    to process JSON formatting, which is otherwise created for Amazon SNS
 	//    metadata.
+	//
+	//    * RedrivePolicy – When specified, sends undeliverable messages to the
+	//    specified Amazon SQS dead-letter queue. Messages that can't be delivered
+	//    due to client errors (for example, when the subscribed endpoint is unreachable)
+	//    or server errors (for example, when the service that powers the subscribed
+	//    endpoint becomes unavailable) are held in the dead-letter queue for further
+	//    analysis or reprocessing.
 	Attributes map[string]*string `type:"map"`
 
 	// The endpoint that you want to receive notifications. Endpoints vary by protocol:
 	//
-	//    * For the http protocol, the endpoint is an URL beginning with "https://"
+	//    * For the http protocol, the (public) endpoint is a URL beginning with
+	//    http://
 	//
-	//    * For the https protocol, the endpoint is a URL beginning with "https://"
+	//    * For the https protocol, the (public) endpoint is a URL beginning with
+	//    https://
 	//
 	//    * For the email protocol, the endpoint is an email address
 	//
@@ -6075,7 +6120,8 @@ type SubscribeInput struct {
 	//    * For the application protocol, the endpoint is the EndpointArn of a mobile
 	//    app and device.
 	//
-	//    * For the lambda protocol, the endpoint is the ARN of an AWS Lambda function.
+	//    * For the lambda protocol, the endpoint is the ARN of an Amazon Lambda
+	//    function.
 	Endpoint *string `type:"string"`
 
 	// The protocol you want to use. Supported protocols include:
@@ -6095,7 +6141,7 @@ type SubscribeInput struct {
 	//    * application – delivery of JSON-encoded message to an EndpointArn for
 	//    a mobile app and device.
 	//
-	//    * lambda – delivery of JSON-encoded message to an AWS Lambda function.
+	//    * lambda – delivery of JSON-encoded message to an Amazon Lambda function.
 	//
 	// Protocol is a required field
 	Protocol *string `type:"string" required:"true"`
@@ -6103,14 +6149,12 @@ type SubscribeInput struct {
 	// Sets whether the response from the Subscribe request includes the subscription
 	// ARN, even if the subscription is not yet confirmed.
 	//
-	// If you set this parameter to false, the response includes the ARN for confirmed
-	// subscriptions, but it includes an ARN value of "pending subscription" for
-	// subscriptions that are not yet confirmed. A subscription becomes confirmed
-	// when the subscriber calls the ConfirmSubscription action with a confirmation
-	// token.
-	//
-	// If you set this parameter to true, the response includes the ARN in all cases,
-	// even if the subscription is not yet confirmed.
+	//    * If you set this parameter to true, the response includes the ARN in
+	//    all cases, even if the subscription is not yet confirmed. In addition
+	//    to the ARN for confirmed subscriptions, the response also includes the
+	//    pending subscription ARN value for subscriptions that aren't yet confirmed.
+	//    A subscription becomes confirmed when the subscriber calls the ConfirmSubscription
+	//    action with a confirmation token.
 	//
 	// The default value is false.
 	ReturnSubscriptionArn *bool `type:"boolean"`

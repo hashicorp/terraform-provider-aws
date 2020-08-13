@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_eip_association"
-sidebar_current: "docs-aws-resource-eip-association"
 description: |-
   Provides an AWS EIP Association
 ---
@@ -20,8 +20,8 @@ pre-existing or distributed to customers or users and therefore cannot be change
 
 ```hcl
 resource "aws_eip_association" "eip_assoc" {
-  instance_id   = "${aws_instance.web.id}"
-  allocation_id = "${aws_eip.example.id}"
+  instance_id   = aws_instance.web.id
+  allocation_id = aws_eip.example.id
 }
 
 resource "aws_instance" "web" {

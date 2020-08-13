@@ -2,15 +2,85 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
+		Name: "aws_route53_resolver_rule",
+		F:    testSweepRoute53ResolverRules,
+		Dependencies: []string{
+			"aws_route53_resolver_rule_association",
+		},
+	})
+}
+
+func testSweepRoute53ResolverRules(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).route53resolverconn
+
+	var errors error
+	err = conn.ListResolverRulesPages(&route53resolver.ListResolverRulesInput{}, func(page *route53resolver.ListResolverRulesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, resolverRule := range page.ResolverRules {
+			id := aws.StringValue(resolverRule.Id)
+
+			ownerID := aws.StringValue(resolverRule.OwnerId)
+			if ownerID != client.(*AWSClient).accountid {
+				log.Printf("[INFO] Skipping Route53 Resolver rule %q, owned by %q", id, ownerID)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Route53 Resolver rule %q", id)
+			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
+				ResolverRuleId: aws.String(id),
+			})
+			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error deleting Route53 Resolver rule (%s): %w", id, err))
+				continue
+			}
+
+			err = route53ResolverRuleWaitUntilTargetState(conn, id, 10*time.Minute,
+				[]string{route53resolver.ResolverRuleStatusDeleting},
+				[]string{route53ResolverRuleStatusDeleted})
+			if err != nil {
+				errors = multierror.Append(errors, err)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Resolver rule sweep for %s: %s", region, err)
+			return nil
+		}
+		errors = multierror.Append(errors, fmt.Errorf("error retrievingRoute53 Resolver rules: %w", err))
+	}
+
+	return errors
+}
 
 func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 	var rule route53resolver.ResolverRule
@@ -25,7 +95,7 @@ func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicNoTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -54,7 +124,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -70,7 +140,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicTagsChanged,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -81,7 +151,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicNoTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -106,7 +176,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_basicName(name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 				),
@@ -121,7 +191,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule2),
 					testAccCheckRoute53ResolverRulesSame(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 				),
@@ -146,13 +216,15 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp1, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1379138419.ip", "192.0.2.6"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1379138419.port", "53"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.6",
+						"port": "53",
+					}),
 				),
 			},
 			{
@@ -165,15 +237,19 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule2),
 					testAccCheckRoute53ResolverRulesSame(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp1, "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1867764419.ip", "192.0.2.7"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1867764419.port", "53"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1677112772.ip", "192.0.2.17"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1677112772.port", "54"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.7",
+						"port": "53",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.17",
+						"port": "54",
+					}),
 				),
 			},
 			{
@@ -181,15 +257,19 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule3),
 					testAccCheckRoute53ResolverRulesSame(&rule3, &rule2),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp2, "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1867764419.ip", "192.0.2.7"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1867764419.port", "53"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1677112772.ip", "192.0.2.17"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1677112772.port", "54"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.7",
+						"port": "53",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.17",
+						"port": "54",
+					}),
 				),
 			},
 		},
@@ -211,13 +291,15 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1379138419.ip", "192.0.2.6"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1379138419.port", "53"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.6",
+						"port": "53",
+					}),
 				),
 			},
 			{
@@ -225,13 +307,16 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule2),
 					testAccCheckRoute53ResolverRulesDifferent(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1379138419.ip", "192.0.2.6"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.1379138419.port", "53")),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":   "192.0.2.6",
+						"port": "53",
+					}),
+				),
 			},
 		},
 	})
@@ -438,7 +523,14 @@ resource "aws_vpc" "foo" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "sn1" {
   vpc_id            = "${aws_vpc.foo.id}"

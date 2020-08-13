@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_event_stream"
-sidebar_current: "docs-aws-resource-pinpoint-event-stream"
 description: |-
   Provides a Pinpoint Event Stream resource.
 ---

@@ -12,11 +12,29 @@ const (
 
 	// ErrCodeBatchTooLarge for service response error code
 	// "BatchTooLarge".
+	//
+	// Invalidation batch specified is too large.
 	ErrCodeBatchTooLarge = "BatchTooLarge"
 
 	// ErrCodeCNAMEAlreadyExists for service response error code
 	// "CNAMEAlreadyExists".
+	//
+	// The CNAME specified is already defined for CloudFront.
 	ErrCodeCNAMEAlreadyExists = "CNAMEAlreadyExists"
+
+	// ErrCodeCachePolicyAlreadyExists for service response error code
+	// "CachePolicyAlreadyExists".
+	//
+	// A cache policy with this name already exists. You must provide a unique name.
+	// To modify an existing cache policy, use UpdateCachePolicy.
+	ErrCodeCachePolicyAlreadyExists = "CachePolicyAlreadyExists"
+
+	// ErrCodeCachePolicyInUse for service response error code
+	// "CachePolicyInUse".
+	//
+	// Cannot delete the cache policy because it is attached to one or more cache
+	// behaviors.
+	ErrCodeCachePolicyInUse = "CachePolicyInUse"
 
 	// ErrCodeCannotChangeImmutablePublicKeyFields for service response error code
 	// "CannotChangeImmutablePublicKeyFields".
@@ -33,6 +51,9 @@ const (
 
 	// ErrCodeDistributionNotDisabled for service response error code
 	// "DistributionNotDisabled".
+	//
+	// The specified CloudFront distribution is not disabled. You must disable the
+	// distribution before you can delete it.
 	ErrCodeDistributionNotDisabled = "DistributionNotDisabled"
 
 	// ErrCodeFieldLevelEncryptionConfigAlreadyExists for service response error code
@@ -65,6 +86,12 @@ const (
 	// The maximum size of a profile for field-level encryption was exceeded.
 	ErrCodeFieldLevelEncryptionProfileSizeExceeded = "FieldLevelEncryptionProfileSizeExceeded"
 
+	// ErrCodeIllegalDelete for service response error code
+	// "IllegalDelete".
+	//
+	// You cannot delete a managed policy.
+	ErrCodeIllegalDelete = "IllegalDelete"
+
 	// ErrCodeIllegalFieldLevelEncryptionConfigAssociationWithCacheBehavior for service response error code
 	// "IllegalFieldLevelEncryptionConfigAssociationWithCacheBehavior".
 	//
@@ -75,7 +102,7 @@ const (
 	// ErrCodeIllegalUpdate for service response error code
 	// "IllegalUpdate".
 	//
-	// Origin and CallerReference cannot be updated.
+	// The update contains modifications that are not allowed.
 	ErrCodeIllegalUpdate = "IllegalUpdate"
 
 	// ErrCodeInconsistentQuantities for service response error code
@@ -87,7 +114,7 @@ const (
 	// ErrCodeInvalidArgument for service response error code
 	// "InvalidArgument".
 	//
-	// The argument is invalid.
+	// An argument is invalid.
 	ErrCodeInvalidArgument = "InvalidArgument"
 
 	// ErrCodeInvalidDefaultRootObject for service response error code
@@ -98,6 +125,8 @@ const (
 
 	// ErrCodeInvalidErrorCode for service response error code
 	// "InvalidErrorCode".
+	//
+	// An invalid error code was specified.
 	ErrCodeInvalidErrorCode = "InvalidErrorCode"
 
 	// ErrCodeInvalidForwardCookies for service response error code
@@ -111,16 +140,20 @@ const (
 
 	// ErrCodeInvalidGeoRestrictionParameter for service response error code
 	// "InvalidGeoRestrictionParameter".
+	//
+	// The specified geo restriction parameter is not valid.
 	ErrCodeInvalidGeoRestrictionParameter = "InvalidGeoRestrictionParameter"
 
 	// ErrCodeInvalidHeadersForS3Origin for service response error code
 	// "InvalidHeadersForS3Origin".
+	//
+	// The headers specified are not valid for an Amazon S3 origin.
 	ErrCodeInvalidHeadersForS3Origin = "InvalidHeadersForS3Origin"
 
 	// ErrCodeInvalidIfMatchVersion for service response error code
 	// "InvalidIfMatchVersion".
 	//
-	// The If-Match version is missing or not valid for the distribution.
+	// The If-Match version is missing or not valid.
 	ErrCodeInvalidIfMatchVersion = "InvalidIfMatchVersion"
 
 	// ErrCodeInvalidLambdaFunctionAssociation for service response error code
@@ -131,10 +164,14 @@ const (
 
 	// ErrCodeInvalidLocationCode for service response error code
 	// "InvalidLocationCode".
+	//
+	// The location code specified is not valid.
 	ErrCodeInvalidLocationCode = "InvalidLocationCode"
 
 	// ErrCodeInvalidMinimumProtocolVersion for service response error code
 	// "InvalidMinimumProtocolVersion".
+	//
+	// The minimum protocol version specified is not valid.
 	ErrCodeInvalidMinimumProtocolVersion = "InvalidMinimumProtocolVersion"
 
 	// ErrCodeInvalidOrigin for service response error code
@@ -152,10 +189,14 @@ const (
 
 	// ErrCodeInvalidOriginKeepaliveTimeout for service response error code
 	// "InvalidOriginKeepaliveTimeout".
+	//
+	// The keep alive timeout specified for the origin is not valid.
 	ErrCodeInvalidOriginKeepaliveTimeout = "InvalidOriginKeepaliveTimeout"
 
 	// ErrCodeInvalidOriginReadTimeout for service response error code
 	// "InvalidOriginReadTimeout".
+	//
+	// The read timeout specified for the origin is not valid.
 	ErrCodeInvalidOriginReadTimeout = "InvalidOriginReadTimeout"
 
 	// ErrCodeInvalidProtocolSettings for service response error code
@@ -167,6 +208,8 @@ const (
 
 	// ErrCodeInvalidQueryStringParameters for service response error code
 	// "InvalidQueryStringParameters".
+	//
+	// The query string parameters specified are not valid.
 	ErrCodeInvalidQueryStringParameters = "InvalidQueryStringParameters"
 
 	// ErrCodeInvalidRelativePath for service response error code
@@ -186,22 +229,35 @@ const (
 
 	// ErrCodeInvalidResponseCode for service response error code
 	// "InvalidResponseCode".
+	//
+	// A response code is not valid.
 	ErrCodeInvalidResponseCode = "InvalidResponseCode"
 
 	// ErrCodeInvalidTTLOrder for service response error code
 	// "InvalidTTLOrder".
+	//
+	// The TTL order specified is not valid.
 	ErrCodeInvalidTTLOrder = "InvalidTTLOrder"
 
 	// ErrCodeInvalidTagging for service response error code
 	// "InvalidTagging".
+	//
+	// The tagging specified is not valid.
 	ErrCodeInvalidTagging = "InvalidTagging"
 
 	// ErrCodeInvalidViewerCertificate for service response error code
 	// "InvalidViewerCertificate".
+	//
+	// A viewer certificate specified is not valid.
 	ErrCodeInvalidViewerCertificate = "InvalidViewerCertificate"
 
 	// ErrCodeInvalidWebACLId for service response error code
 	// "InvalidWebACLId".
+	//
+	// A web ACL ID specified is not valid. To specify a web ACL created using the
+	// latest version of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+	// To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+	// 473e64fd-f30b-4765-81a0-62ad96dd167a.
 	ErrCodeInvalidWebACLId = "InvalidWebACLId"
 
 	// ErrCodeMissingBody for service response error code
@@ -210,6 +266,12 @@ const (
 	// This operation requires a body. Ensure that the body is present and the Content-Type
 	// header is set.
 	ErrCodeMissingBody = "MissingBody"
+
+	// ErrCodeNoSuchCachePolicy for service response error code
+	// "NoSuchCachePolicy".
+	//
+	// The cache policy does not exist.
+	ErrCodeNoSuchCachePolicy = "NoSuchCachePolicy"
 
 	// ErrCodeNoSuchCloudFrontOriginAccessIdentity for service response error code
 	// "NoSuchCloudFrontOriginAccessIdentity".
@@ -247,6 +309,12 @@ const (
 	// No origin exists with the specified Origin Id.
 	ErrCodeNoSuchOrigin = "NoSuchOrigin"
 
+	// ErrCodeNoSuchOriginRequestPolicy for service response error code
+	// "NoSuchOriginRequestPolicy".
+	//
+	// The origin request policy does not exist.
+	ErrCodeNoSuchOriginRequestPolicy = "NoSuchOriginRequestPolicy"
+
 	// ErrCodeNoSuchPublicKey for service response error code
 	// "NoSuchPublicKey".
 	//
@@ -255,6 +323,8 @@ const (
 
 	// ErrCodeNoSuchResource for service response error code
 	// "NoSuchResource".
+	//
+	// A resource that was specified is not valid.
 	ErrCodeNoSuchResource = "NoSuchResource"
 
 	// ErrCodeNoSuchStreamingDistribution for service response error code
@@ -274,12 +344,28 @@ const (
 
 	// ErrCodeOriginAccessIdentityInUse for service response error code
 	// "CloudFrontOriginAccessIdentityInUse".
+	//
+	// The Origin Access Identity specified is already in use.
 	ErrCodeOriginAccessIdentityInUse = "CloudFrontOriginAccessIdentityInUse"
+
+	// ErrCodeOriginRequestPolicyAlreadyExists for service response error code
+	// "OriginRequestPolicyAlreadyExists".
+	//
+	// An origin request policy with this name already exists. You must provide
+	// a unique name. To modify an existing origin request policy, use UpdateOriginRequestPolicy.
+	ErrCodeOriginRequestPolicyAlreadyExists = "OriginRequestPolicyAlreadyExists"
+
+	// ErrCodeOriginRequestPolicyInUse for service response error code
+	// "OriginRequestPolicyInUse".
+	//
+	// Cannot delete the origin request policy because it is attached to one or
+	// more cache behaviors.
+	ErrCodeOriginRequestPolicyInUse = "OriginRequestPolicyInUse"
 
 	// ErrCodePreconditionFailed for service response error code
 	// "PreconditionFailed".
 	//
-	// The precondition given in one or more of the request-header fields evaluated
+	// The precondition given in one or more of the request header fields evaluated
 	// to false.
 	ErrCodePreconditionFailed = "PreconditionFailed"
 
@@ -303,10 +389,16 @@ const (
 
 	// ErrCodeStreamingDistributionAlreadyExists for service response error code
 	// "StreamingDistributionAlreadyExists".
+	//
+	// The caller reference you attempted to create the streaming distribution with
+	// is associated with another distribution
 	ErrCodeStreamingDistributionAlreadyExists = "StreamingDistributionAlreadyExists"
 
 	// ErrCodeStreamingDistributionNotDisabled for service response error code
 	// "StreamingDistributionNotDisabled".
+	//
+	// The specified CloudFront distribution is not disabled. You must disable the
+	// distribution before you can delete it.
 	ErrCodeStreamingDistributionNotDisabled = "StreamingDistributionNotDisabled"
 
 	// ErrCodeTooManyCacheBehaviors for service response error code
@@ -314,6 +406,14 @@ const (
 	//
 	// You cannot create more cache behaviors for the distribution.
 	ErrCodeTooManyCacheBehaviors = "TooManyCacheBehaviors"
+
+	// ErrCodeTooManyCachePolicies for service response error code
+	// "TooManyCachePolicies".
+	//
+	// You have reached the maximum number of cache policies for this AWS account.
+	// For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyCachePolicies = "TooManyCachePolicies"
 
 	// ErrCodeTooManyCertificates for service response error code
 	// "TooManyCertificates".
@@ -335,6 +435,22 @@ const (
 	// per cache behavior.
 	ErrCodeTooManyCookieNamesInWhiteList = "TooManyCookieNamesInWhiteList"
 
+	// ErrCodeTooManyCookiesInCachePolicy for service response error code
+	// "TooManyCookiesInCachePolicy".
+	//
+	// The number of cookies in the cache policy exceeds the maximum. For more information,
+	// see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyCookiesInCachePolicy = "TooManyCookiesInCachePolicy"
+
+	// ErrCodeTooManyCookiesInOriginRequestPolicy for service response error code
+	// "TooManyCookiesInOriginRequestPolicy".
+	//
+	// The number of cookies in the origin request policy exceeds the maximum. For
+	// more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyCookiesInOriginRequestPolicy = "TooManyCookiesInOriginRequestPolicy"
+
 	// ErrCodeTooManyDistributionCNAMEs for service response error code
 	// "TooManyDistributionCNAMEs".
 	//
@@ -348,6 +464,14 @@ const (
 	// allowed.
 	ErrCodeTooManyDistributions = "TooManyDistributions"
 
+	// ErrCodeTooManyDistributionsAssociatedToCachePolicy for service response error code
+	// "TooManyDistributionsAssociatedToCachePolicy".
+	//
+	// The maximum number of distributions have been associated with the specified
+	// cache policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyDistributionsAssociatedToCachePolicy = "TooManyDistributionsAssociatedToCachePolicy"
+
 	// ErrCodeTooManyDistributionsAssociatedToFieldLevelEncryptionConfig for service response error code
 	// "TooManyDistributionsAssociatedToFieldLevelEncryptionConfig".
 	//
@@ -355,12 +479,27 @@ const (
 	// configuration for field-level encryption.
 	ErrCodeTooManyDistributionsAssociatedToFieldLevelEncryptionConfig = "TooManyDistributionsAssociatedToFieldLevelEncryptionConfig"
 
+	// ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy for service response error code
+	// "TooManyDistributionsAssociatedToOriginRequestPolicy".
+	//
+	// The maximum number of distributions have been associated with the specified
+	// origin request policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy = "TooManyDistributionsAssociatedToOriginRequestPolicy"
+
 	// ErrCodeTooManyDistributionsWithLambdaAssociations for service response error code
 	// "TooManyDistributionsWithLambdaAssociations".
 	//
 	// Processing your request would cause the maximum number of distributions with
 	// Lambda function associations per owner to be exceeded.
 	ErrCodeTooManyDistributionsWithLambdaAssociations = "TooManyDistributionsWithLambdaAssociations"
+
+	// ErrCodeTooManyDistributionsWithSingleFunctionARN for service response error code
+	// "TooManyDistributionsWithSingleFunctionARN".
+	//
+	// The maximum number of distributions have been associated with the specified
+	// Lambda function.
+	ErrCodeTooManyDistributionsWithSingleFunctionARN = "TooManyDistributionsWithSingleFunctionARN"
 
 	// ErrCodeTooManyFieldLevelEncryptionConfigs for service response error code
 	// "TooManyFieldLevelEncryptionConfigs".
@@ -403,9 +542,27 @@ const (
 	// been created.
 	ErrCodeTooManyFieldLevelEncryptionQueryArgProfiles = "TooManyFieldLevelEncryptionQueryArgProfiles"
 
+	// ErrCodeTooManyHeadersInCachePolicy for service response error code
+	// "TooManyHeadersInCachePolicy".
+	//
+	// The number of headers in the cache policy exceeds the maximum. For more information,
+	// see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyHeadersInCachePolicy = "TooManyHeadersInCachePolicy"
+
 	// ErrCodeTooManyHeadersInForwardedValues for service response error code
 	// "TooManyHeadersInForwardedValues".
+	//
+	// Your request contains too many headers in forwarded values.
 	ErrCodeTooManyHeadersInForwardedValues = "TooManyHeadersInForwardedValues"
+
+	// ErrCodeTooManyHeadersInOriginRequestPolicy for service response error code
+	// "TooManyHeadersInOriginRequestPolicy".
+	//
+	// The number of headers in the origin request policy exceeds the maximum. For
+	// more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyHeadersInOriginRequestPolicy = "TooManyHeadersInOriginRequestPolicy"
 
 	// ErrCodeTooManyInvalidationsInProgress for service response error code
 	// "TooManyInvalidationsInProgress".
@@ -423,6 +580,8 @@ const (
 
 	// ErrCodeTooManyOriginCustomHeaders for service response error code
 	// "TooManyOriginCustomHeaders".
+	//
+	// Your request contains too many origin custom headers.
 	ErrCodeTooManyOriginCustomHeaders = "TooManyOriginCustomHeaders"
 
 	// ErrCodeTooManyOriginGroupsPerDistribution for service response error code
@@ -431,6 +590,14 @@ const (
 	// Processing your request would cause you to exceed the maximum number of origin
 	// groups allowed.
 	ErrCodeTooManyOriginGroupsPerDistribution = "TooManyOriginGroupsPerDistribution"
+
+	// ErrCodeTooManyOriginRequestPolicies for service response error code
+	// "TooManyOriginRequestPolicies".
+	//
+	// You have reached the maximum number of origin request policies for this AWS
+	// account. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyOriginRequestPolicies = "TooManyOriginRequestPolicies"
 
 	// ErrCodeTooManyOrigins for service response error code
 	// "TooManyOrigins".
@@ -447,10 +614,30 @@ const (
 
 	// ErrCodeTooManyQueryStringParameters for service response error code
 	// "TooManyQueryStringParameters".
+	//
+	// Your request contains too many query string parameters.
 	ErrCodeTooManyQueryStringParameters = "TooManyQueryStringParameters"
+
+	// ErrCodeTooManyQueryStringsInCachePolicy for service response error code
+	// "TooManyQueryStringsInCachePolicy".
+	//
+	// The number of query strings in the cache policy exceeds the maximum. For
+	// more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyQueryStringsInCachePolicy = "TooManyQueryStringsInCachePolicy"
+
+	// ErrCodeTooManyQueryStringsInOriginRequestPolicy for service response error code
+	// "TooManyQueryStringsInOriginRequestPolicy".
+	//
+	// The number of query strings in the origin request policy exceeds the maximum.
+	// For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyQueryStringsInOriginRequestPolicy = "TooManyQueryStringsInOriginRequestPolicy"
 
 	// ErrCodeTooManyStreamingDistributionCNAMEs for service response error code
 	// "TooManyStreamingDistributionCNAMEs".
+	//
+	// Your request contains more CNAMEs than are allowed per distribution.
 	ErrCodeTooManyStreamingDistributionCNAMEs = "TooManyStreamingDistributionCNAMEs"
 
 	// ErrCodeTooManyStreamingDistributions for service response error code

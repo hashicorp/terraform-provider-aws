@@ -57,14 +57,18 @@ func (c *ELBV2) AddListenerCertificatesRequest(input *AddListenerCertificatesInp
 
 // AddListenerCertificates API operation for Elastic Load Balancing.
 //
-// Adds the specified certificate to the specified HTTPS listener.
+// Adds the specified SSL server certificate to the certificate list for the
+// specified HTTPS or TLS listener.
 //
-// If the certificate was already added, the call is successful but the certificate
-// is not added again.
+// If the certificate in already in the certificate list, the call is successful
+// but the certificate is not added again.
 //
-// To list the certificates for your listener, use DescribeListenerCertificates.
-// To remove certificates from your listener, use RemoveListenerCertificates.
-// To specify the default SSL server certificate, use ModifyListener.
+// To get the certificate list for a listener, use DescribeListenerCertificates.
+// To remove certificates from the certificate list for a listener, use RemoveListenerCertificates.
+// To replace the default certificate for a listener, use ModifyListener.
+//
+// For more information, see SSL Certificates (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#https-listener-certificates)
+// in the Application Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -315,6 +319,14 @@ func (c *ELBV2) CreateListenerRequest(input *CreateListenerInput) (req *request.
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
+//
+//   * ErrCodeALPNPolicyNotSupportedException "ALPNPolicyNotFound"
+//   The specified ALPN policy is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/CreateListener
 func (c *ELBV2) CreateListener(input *CreateListenerInput) (*CreateListenerOutput, error) {
@@ -578,6 +590,11 @@ func (c *ELBV2) CreateRuleRequest(input *CreateRuleInput) (req *request.Request,
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/CreateRule
 func (c *ELBV2) CreateRule(input *CreateRuleInput) (*CreateRuleOutput, error) {
@@ -1259,7 +1276,15 @@ func (c *ELBV2) DescribeListenerCertificatesRequest(input *DescribeListenerCerti
 
 // DescribeListenerCertificates API operation for Elastic Load Balancing.
 //
-// Describes the certificates for the specified HTTPS listener.
+// Describes the default certificate and the certificate list for the specified
+// HTTPS or TLS listener.
+//
+// If the default certificate is also in the certificate list, it appears twice
+// in the results (once with IsDefault set to true and once with IsDefault set
+// to false).
+//
+// For more information, see SSL Certificates (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#https-listener-certificates)
+// in the Application Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1348,6 +1373,10 @@ func (c *ELBV2) DescribeListenersRequest(input *DescribeListenersInput) (req *re
 // Load Balancer or Network Load Balancer. You must specify either a load balancer
 // or one or more listeners.
 //
+// For an HTTPS or TLS listener, the output includes the default certificate
+// for the listener. To describe the certificate list for the listener, use
+// DescribeListenerCertificates.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1430,10 +1459,12 @@ func (c *ELBV2) DescribeListenersPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeListenersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeListenersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1652,10 +1683,12 @@ func (c *ELBV2) DescribeLoadBalancersPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeLoadBalancersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeLoadBalancersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2137,10 +2170,12 @@ func (c *ELBV2) DescribeTargetGroupsPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTargetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTargetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2275,13 +2310,17 @@ func (c *ELBV2) ModifyListenerRequest(input *ModifyListenerInput) (req *request.
 
 // ModifyListener API operation for Elastic Load Balancing.
 //
-// Modifies the specified properties of the specified listener.
+// Replaces the specified properties of the specified listener. Any properties
+// that you do not specify remain unchanged.
 //
-// Any properties that you do not specify retain their current values. However,
-// changing the protocol from HTTPS to HTTP, or from TLS to TCP, removes the
-// security policy and server certificate properties. If you change the protocol
+// Changing the protocol from HTTPS to HTTP, or from TLS to TCP, removes the
+// security policy and default certificate properties. If you change the protocol
 // from HTTP to HTTPS, or from TCP to TLS, you must add the security policy
-// and server certificate properties.
+// and default certificate properties.
+//
+// To add an item to a list, remove an item from a list, or update an item in
+// a list, you must provide the entire list. For example, to add an action,
+// specify a list with the current actions plus the new action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2336,6 +2375,14 @@ func (c *ELBV2) ModifyListenerRequest(input *ModifyListenerInput) (req *request.
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
+//
+//   * ErrCodeALPNPolicyNotSupportedException "ALPNPolicyNotFound"
+//   The specified ALPN policy is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/ModifyListener
 func (c *ELBV2) ModifyListener(input *ModifyListenerInput) (*ModifyListenerOutput, error) {
@@ -2490,9 +2537,12 @@ func (c *ELBV2) ModifyRuleRequest(input *ModifyRuleInput) (req *request.Request,
 
 // ModifyRule API operation for Elastic Load Balancing.
 //
-// Modifies the specified rule.
+// Replaces the specified properties of the specified rule. Any properties that
+// you do not specify are unchanged.
 //
-// Any existing properties that you do not modify retain their current values.
+// To add an item to a list, remove an item from a list, or update an item in
+// a list, you must provide the entire list. For example, to add an action,
+// specify a list with the current actions plus the new action.
 //
 // To modify the actions for the default rule, use ModifyListener.
 //
@@ -2534,6 +2584,11 @@ func (c *ELBV2) ModifyRuleRequest(input *ModifyRuleInput) (req *request.Request,
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/ModifyRule
 func (c *ELBV2) ModifyRule(input *ModifyRuleInput) (*ModifyRuleOutput, error) {
@@ -2875,7 +2930,8 @@ func (c *ELBV2) RemoveListenerCertificatesRequest(input *RemoveListenerCertifica
 
 // RemoveListenerCertificates API operation for Elastic Load Balancing.
 //
-// Removes the specified certificate from the specified HTTPS listener.
+// Removes the specified certificate from the certificate list for the specified
+// HTTPS or TLS listener.
 //
 // You can't remove the default certificate for a listener. To replace the default
 // certificate, call ModifyListener.
@@ -3058,8 +3114,6 @@ func (c *ELBV2) SetIpAddressTypeRequest(input *SetIpAddressTypeInput) (req *requ
 //
 // Sets the type of IP addresses used by the subnets of the specified Application
 // Load Balancer or Network Load Balancer.
-//
-// Network Load Balancers must use ipv4.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3322,11 +3376,12 @@ func (c *ELBV2) SetSubnetsRequest(input *SetSubnetsInput) (req *request.Request,
 
 // SetSubnets API operation for Elastic Load Balancing.
 //
-// Enables the Availability Zone for the specified public subnets for the specified
-// Application Load Balancer. The specified subnets replace the previously enabled
-// subnets.
+// Enables the Availability Zones for the specified public subnets for the specified
+// load balancer. The specified subnets replace the previously enabled subnets.
 //
-// You can't change the subnets for a Network Load Balancer.
+// When you specify subnets for a Network Load Balancer, you must include all
+// subnets that were enabled previously, with their existing configurations,
+// plus any additional subnets.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3392,9 +3447,17 @@ type Action struct {
 	// a custom HTTP response. Specify only when Type is fixed-response.
 	FixedResponseConfig *FixedResponseActionConfig `type:"structure"`
 
+	// Information for creating an action that distributes requests among one or
+	// more target groups. For Network Load Balancers, you can specify a single
+	// target group. Specify only when Type is forward. If you specify both ForwardConfig
+	// and TargetGroupArn, you can specify only one target group using ForwardConfig
+	// and it must be the same target group specified in TargetGroupArn.
+	ForwardConfig *ForwardActionConfig `type:"structure"`
+
 	// The order for the action. This value is required for rules with multiple
 	// actions. The action with the lowest value for order is performed first. The
-	// final action to be performed must be a forward or a fixed-response action.
+	// last action to be performed must be one of the following types of actions:
+	// a forward, fixed-response, or redirect.
 	Order *int64 `min:"1" type:"integer"`
 
 	// [Application Load Balancer] Information for creating a redirect action. Specify
@@ -3402,11 +3465,11 @@ type Action struct {
 	RedirectConfig *RedirectActionConfig `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the target group. Specify only when Type
-	// is forward.
+	// is forward and you want to route to a single target group. To route to one
+	// or more target groups, use ForwardConfig instead.
 	TargetGroupArn *string `type:"string"`
 
-	// The type of action. Each rule must include exactly one of the following types
-	// of actions: forward, fixed-response, or redirect.
+	// The type of action.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"ActionTypeEnum"`
@@ -3473,6 +3536,12 @@ func (s *Action) SetAuthenticateOidcConfig(v *AuthenticateOidcActionConfig) *Act
 // SetFixedResponseConfig sets the FixedResponseConfig field's value.
 func (s *Action) SetFixedResponseConfig(v *FixedResponseActionConfig) *Action {
 	s.FixedResponseConfig = v
+	return s
+}
+
+// SetForwardConfig sets the ForwardConfig field's value.
+func (s *Action) SetForwardConfig(v *ForwardActionConfig) *Action {
+	s.ForwardConfig = v
 	return s
 }
 
@@ -3556,7 +3625,7 @@ func (s *AddListenerCertificatesInput) SetListenerArn(v string) *AddListenerCert
 type AddListenerCertificatesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the certificates.
+	// Information about the certificates in the certificate list.
 	Certificates []*Certificate `type:"list"`
 }
 
@@ -3584,7 +3653,7 @@ type AddTagsInput struct {
 	// ResourceArns is a required field
 	ResourceArns []*string `type:"list" required:"true"`
 
-	// The tags. Each resource can have a maximum of 10 tags.
+	// The tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `min:"1" type:"list" required:"true"`
@@ -3967,10 +4036,13 @@ func (s *AuthenticateOidcActionConfig) SetUserInfoEndpoint(v string) *Authentica
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
-	// [Network Load Balancers] The static IP address.
+	// [Network Load Balancers] If you need static IP addresses for your load balancer,
+	// you can specify one Elastic IP address per Availability Zone when you create
+	// an internal-facing load balancer. For internal load balancers, you can specify
+	// a private IP address from the IPv4 range of the subnet.
 	LoadBalancerAddresses []*LoadBalancerAddress `type:"list"`
 
-	// The ID of the subnet.
+	// The ID of the subnet. You can specify one subnet per Availability Zone.
 	SubnetId *string `type:"string"`
 
 	// The name of the Availability Zone.
@@ -4013,7 +4085,9 @@ type Certificate struct {
 	CertificateArn *string `type:"string"`
 
 	// Indicates whether the certificate is the default certificate. Do not set
-	// IsDefault when specifying a certificate as an input parameter.
+	// this value when specifying a certificate as an input. This value is not included
+	// in the output when describing a listener, but is included when describing
+	// listener certificates.
 	IsDefault *bool `type:"boolean"`
 }
 
@@ -4075,19 +4149,37 @@ func (s *Cipher) SetPriority(v int64) *Cipher {
 type CreateListenerInput struct {
 	_ struct{} `type:"structure"`
 
-	// [HTTPS and TLS listeners] The default SSL server certificate. You must provide
-	// exactly one certificate. Set CertificateArn to the certificate ARN but do
-	// not set IsDefault.
+	// [TLS listeners] The name of the Application-Layer Protocol Negotiation (ALPN)
+	// policy. You can specify one policy name. The following are the possible values:
 	//
-	// To create a certificate list, use AddListenerCertificates.
+	//    * HTTP1Only
+	//
+	//    * HTTP2Only
+	//
+	//    * HTTP2Optional
+	//
+	//    * HTTP2Preferred
+	//
+	//    * None
+	//
+	// For more information, see ALPN Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html#alpn-policies)
+	// in the Network Load Balancers Guide.
+	AlpnPolicy []*string `type:"list"`
+
+	// [HTTPS and TLS listeners] The default certificate for the listener. You must
+	// provide exactly one certificate. Set CertificateArn to the certificate ARN
+	// but do not set IsDefault.
+	//
+	// To create a certificate list for the listener, use AddListenerCertificates.
 	Certificates []*Certificate `type:"list"`
 
 	// The actions for the default rule. The rule must include one forward action
 	// or one or more fixed-response actions.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP or TLS for a Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -4116,14 +4208,35 @@ type CreateListenerInput struct {
 
 	// The protocol for connections from clients to the load balancer. For Application
 	// Load Balancers, the supported protocols are HTTP and HTTPS. For Network Load
-	// Balancers, the supported protocols are TCP and TLS.
+	// Balancers, the supported protocols are TCP, TLS, UDP, and TCP_UDP.
 	//
 	// Protocol is a required field
 	Protocol *string `type:"string" required:"true" enum:"ProtocolEnum"`
 
-	// [HTTPS and TLS listeners] The security policy that defines which ciphers
-	// and protocols are supported. The default is the current predefined security
-	// policy.
+	// [HTTPS and TLS listeners] The security policy that defines which protocols
+	// and ciphers are supported. The following are the possible values:
+	//
+	//    * ELBSecurityPolicy-2016-08
+	//
+	//    * ELBSecurityPolicy-TLS-1-0-2015-04
+	//
+	//    * ELBSecurityPolicy-TLS-1-1-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-1-1-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-Res-2019-08
+	//
+	// For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
+	// in the Application Load Balancers Guide and Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html#describe-ssl-policies)
+	// in the Network Load Balancers Guide.
 	SslPolicy *string `type:"string"`
 }
 
@@ -4170,6 +4283,12 @@ func (s *CreateListenerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlpnPolicy sets the AlpnPolicy field's value.
+func (s *CreateListenerInput) SetAlpnPolicy(v []*string) *CreateListenerInput {
+	s.AlpnPolicy = v
+	return s
 }
 
 // SetCertificates sets the Certificates field's value.
@@ -4256,8 +4375,8 @@ type CreateLoadBalancerInput struct {
 	//
 	// The nodes of an internal load balancer have only private IP addresses. The
 	// DNS name of an internal load balancer is publicly resolvable to the private
-	// IP addresses of the nodes. Therefore, internal load balancers can only route
-	// requests from clients with access to the VPC for the load balancer.
+	// IP addresses of the nodes. Therefore, internal load balancers can route requests
+	// only from clients with access to the VPC for the load balancer.
 	//
 	// The default is an Internet-facing load balancer.
 	Scheme *string `type:"string" enum:"LoadBalancerSchemeEnum"`
@@ -4273,7 +4392,10 @@ type CreateLoadBalancerInput struct {
 	// Zones. You cannot specify Elastic IP addresses for your subnets.
 	//
 	// [Network Load Balancers] You can specify subnets from one or more Availability
-	// Zones. You can specify one Elastic IP address per subnet.
+	// Zones. You can specify one Elastic IP address per subnet if you need static
+	// IP addresses for your internet-facing load balancer. For internal load balancers,
+	// you can specify one private IP address per subnet from the IPv4 range of
+	// the subnet.
 	SubnetMappings []*SubnetMapping `type:"list"`
 
 	// The IDs of the public subnets. You can specify only one subnet per Availability
@@ -4404,11 +4526,13 @@ type CreateRuleInput struct {
 	_ struct{} `type:"structure"`
 
 	// The actions. Each rule must include exactly one of the following types of
-	// actions: forward, fixed-response, or redirect.
+	// actions: forward, fixed-response, or redirect, and it must be the last action
+	// to be performed.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP or TLS for a Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -4425,35 +4549,9 @@ type CreateRuleInput struct {
 	// Actions is a required field
 	Actions []*Action `type:"list" required:"true"`
 
-	// The conditions. Each condition specifies a field name and a single value.
-	//
-	// If the field name is host-header, you can specify a single host name (for
-	// example, my.example.com). A host name is case insensitive, can be up to 128
-	// characters in length, and can contain any of the following characters. You
-	// can include up to three wildcard characters.
-	//
-	//    * A-Z, a-z, 0-9
-	//
-	//    * - .
-	//
-	//    * * (matches 0 or more characters)
-	//
-	//    * ? (matches exactly 1 character)
-	//
-	// If the field name is path-pattern, you can specify a single path pattern.
-	// A path pattern is case-sensitive, can be up to 128 characters in length,
-	// and can contain any of the following characters. You can include up to three
-	// wildcard characters.
-	//
-	//    * A-Z, a-z, 0-9
-	//
-	//    * _ - . $ / ~ " ' @ : +
-	//
-	//    * & (using &)
-	//
-	//    * * (matches 0 or more characters)
-	//
-	//    * ? (matches exactly 1 character)
+	// The conditions. Each rule can include zero or one of the following conditions:
+	// http-request-method, host-header, path-pattern, and source-ip, and zero or
+	// more of the following conditions: http-header and query-string.
 	//
 	// Conditions is a required field
 	Conditions []*RuleCondition `type:"list" required:"true"`
@@ -4564,16 +4662,16 @@ func (s *CreateRuleOutput) SetRules(v []*Rule) *CreateRuleOutput {
 type CreateTargetGroupInput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether health checks are enabled. If the target type is instance
-	// or ip, the default is true. If the target type is lambda, the default is
-	// false.
+	// Indicates whether health checks are enabled. If the target type is lambda,
+	// health checks are disabled by default but can be enabled. If the target type
+	// is instance or ip, health checks are always enabled and cannot be disabled.
 	HealthCheckEnabled *bool `type:"boolean"`
 
 	// The approximate amount of time, in seconds, between health checks of an individual
-	// target. For Application Load Balancers, the range is 5–300 seconds. For
-	// Network Load Balancers, the supported values are 10 or 30 seconds. If the
-	// target type is instance or ip, the default is 30 seconds. If the target type
-	// is lambda, the default is 35 seconds.
+	// target. For HTTP and HTTPS health checks, the range is 5–300 seconds. For
+	// TCP health checks, the supported values are 10 and 30 seconds. If the target
+	// type is instance or ip, the default is 30 seconds. If the target type is
+	// lambda, the default is 35 seconds.
 	HealthCheckIntervalSeconds *int64 `min:"5" type:"integer"`
 
 	// [HTTP/HTTPS health checks] The ping path that is the destination on the targets
@@ -4588,21 +4686,22 @@ type CreateTargetGroupInput struct {
 	// The protocol the load balancer uses when performing health checks on targets.
 	// For Application Load Balancers, the default is HTTP. For Network Load Balancers,
 	// the default is TCP. The TCP protocol is supported for health checks only
-	// if the protocol of the target group is TCP or TLS. The TLS protocol is not
-	// supported for health checks.
+	// if the protocol of the target group is TCP, TLS, UDP, or TCP_UDP. The TLS,
+	// UDP, and TCP_UDP protocols are not supported for health checks.
 	HealthCheckProtocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// The amount of time, in seconds, during which no response from a target means
-	// a failed health check. For Application Load Balancers, the range is 2–120
-	// seconds and the default is 5 seconds if the target type is instance or ip
-	// and 30 seconds if the target type is lambda. For Network Load Balancers,
-	// this is 10 seconds for TCP and HTTPS health checks and 6 seconds for HTTP
-	// health checks.
+	// a failed health check. For target groups with a protocol of HTTP or HTTPS,
+	// the default is 5 seconds. For target groups with a protocol of TCP or TLS,
+	// this value must be 6 seconds for HTTP health checks and 10 seconds for TCP
+	// and HTTPS health checks. If the target type is lambda, the default is 30
+	// seconds.
 	HealthCheckTimeoutSeconds *int64 `min:"2" type:"integer"`
 
 	// The number of consecutive health checks successes required before considering
-	// an unhealthy target healthy. For Application Load Balancers, the default
-	// is 5. For Network Load Balancers, the default is 3.
+	// an unhealthy target healthy. For target groups with a protocol of HTTP or
+	// HTTPS, the default is 5. For target groups with a protocol of TCP or TLS,
+	// the default is 3. If the target type is lambda, the default is 5.
 	HealthyThresholdCount *int64 `min:"2" type:"integer"`
 
 	// [HTTP/HTTPS health checks] The HTTP codes to use when checking for a successful
@@ -4625,8 +4724,9 @@ type CreateTargetGroupInput struct {
 
 	// The protocol to use for routing traffic to the targets. For Application Load
 	// Balancers, the supported protocols are HTTP and HTTPS. For Network Load Balancers,
-	// the supported protocols are TCP and TLS. If the target is a Lambda function,
-	// this parameter does not apply.
+	// the supported protocols are TCP, TLS, UDP, or TCP_UDP. A TCP_UDP listener
+	// must be associated with a TCP_UDP target group. If the target is a Lambda
+	// function, this parameter does not apply.
 	Protocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// The type of target that you must specify when registering targets with this
@@ -4634,7 +4734,8 @@ type CreateTargetGroupInput struct {
 	// one target type.
 	//
 	//    * instance - Targets are specified by instance ID. This is the default
-	//    value.
+	//    value. If the target group protocol is UDP or TCP_UDP, the target type
+	//    must be instance.
 	//
 	//    * ip - Targets are specified by IP address. You can specify IP addresses
 	//    from the subnets of the virtual private cloud (VPC) for the target group,
@@ -4646,13 +4747,14 @@ type CreateTargetGroupInput struct {
 	TargetType *string `type:"string" enum:"TargetTypeEnum"`
 
 	// The number of consecutive health check failures required before considering
-	// a target unhealthy. For Application Load Balancers, the default is 2. For
-	// Network Load Balancers, this value must be the same as the healthy threshold
-	// count.
+	// a target unhealthy. For target groups with a protocol of HTTP or HTTPS, the
+	// default is 2. For target groups with a protocol of TCP or TLS, this value
+	// must be the same as the healthy threshold count. If the target type is lambda,
+	// the default is 2.
 	UnhealthyThresholdCount *int64 `min:"2" type:"integer"`
 
 	// The identifier of the virtual private cloud (VPC). If the target is a Lambda
-	// function, this parameter does not apply.
+	// function, this parameter does not apply. Otherwise, this parameter is required.
 	VpcId *string `type:"string"`
 }
 
@@ -5146,8 +5248,8 @@ type DescribeAccountLimitsOutput struct {
 	// Information about the limits.
 	Limits []*Limit `type:"list"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 }
 
@@ -5239,8 +5341,8 @@ type DescribeListenerCertificatesOutput struct {
 	// Information about the certificates.
 	Certificates []*Certificate `type:"list"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 }
 
@@ -5336,8 +5438,8 @@ type DescribeListenersOutput struct {
 	// Information about the listeners.
 	Listeners []*Listener `type:"list"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 }
 
@@ -5495,8 +5597,8 @@ type DescribeLoadBalancersOutput struct {
 	// Information about the load balancers.
 	LoadBalancers []*LoadBalancer `type:"list"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 }
 
@@ -5589,8 +5691,8 @@ func (s *DescribeRulesInput) SetRuleArns(v []*string) *DescribeRulesInput {
 type DescribeRulesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 
 	// Information about the rules.
@@ -5677,11 +5779,11 @@ func (s *DescribeSSLPoliciesInput) SetPageSize(v int64) *DescribeSSLPoliciesInpu
 type DescribeSSLPoliciesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 
-	// Information about the policies.
+	// Information about the security policies.
 	SslPolicies []*SslPolicy `type:"list"`
 }
 
@@ -5710,7 +5812,8 @@ func (s *DescribeSSLPoliciesOutput) SetSslPolicies(v []*SslPolicy) *DescribeSSLP
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Names (ARN) of the resources.
+	// The Amazon Resource Names (ARN) of the resources. You can specify up to 20
+	// resources in a single call.
 	//
 	// ResourceArns is a required field
 	ResourceArns []*string `type:"list" required:"true"`
@@ -5905,8 +6008,8 @@ func (s *DescribeTargetGroupsInput) SetTargetGroupArns(v []*string) *DescribeTar
 type DescribeTargetGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The marker to use when requesting the next set of results. If there are no
-	// additional results, the string is empty.
+	// If there are additional results, this is the marker for the next set of results.
+	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 
 	// Information about the target groups.
@@ -6075,9 +6178,50 @@ func (s *FixedResponseActionConfig) SetStatusCode(v string) *FixedResponseAction
 	return s
 }
 
+// Information about a forward action.
+type ForwardActionConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The target group stickiness for the rule.
+	TargetGroupStickinessConfig *TargetGroupStickinessConfig `type:"structure"`
+
+	// One or more target groups. For Network Load Balancers, you can specify a
+	// single target group.
+	TargetGroups []*TargetGroupTuple `type:"list"`
+}
+
+// String returns the string representation
+func (s ForwardActionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForwardActionConfig) GoString() string {
+	return s.String()
+}
+
+// SetTargetGroupStickinessConfig sets the TargetGroupStickinessConfig field's value.
+func (s *ForwardActionConfig) SetTargetGroupStickinessConfig(v *TargetGroupStickinessConfig) *ForwardActionConfig {
+	s.TargetGroupStickinessConfig = v
+	return s
+}
+
+// SetTargetGroups sets the TargetGroups field's value.
+func (s *ForwardActionConfig) SetTargetGroups(v []*TargetGroupTuple) *ForwardActionConfig {
+	s.TargetGroups = v
+	return s
+}
+
+// Information about a host header condition.
 type HostHeaderConditionConfig struct {
 	_ struct{} `type:"structure"`
 
+	// One or more host names. The maximum size of each name is 128 characters.
+	// The comparison is case insensitive. The following wildcard characters are
+	// supported: * (matches 0 or more characters) and ? (matches exactly 1 character).
+	//
+	// If you specify multiple strings, the condition is satisfied if one of the
+	// strings matches the host name.
 	Values []*string `type:"list"`
 }
 
@@ -6097,11 +6241,32 @@ func (s *HostHeaderConditionConfig) SetValues(v []*string) *HostHeaderConditionC
 	return s
 }
 
+// Information about an HTTP header condition.
+//
+// There is a set of standard HTTP header fields. You can also define custom
+// HTTP header fields.
 type HttpHeaderConditionConfig struct {
 	_ struct{} `type:"structure"`
 
+	// The name of the HTTP header field. The maximum size is 40 characters. The
+	// header name is case insensitive. The allowed characters are specified by
+	// RFC 7230. Wildcards are not supported.
+	//
+	// You can't use an HTTP header condition to specify the host header. Use HostHeaderConditionConfig
+	// to specify a host header condition.
 	HttpHeaderName *string `type:"string"`
 
+	// One or more strings to compare against the value of the HTTP header. The
+	// maximum size of each string is 128 characters. The comparison strings are
+	// case insensitive. The following wildcard characters are supported: * (matches
+	// 0 or more characters) and ? (matches exactly 1 character).
+	//
+	// If the same header appears multiple times in the request, we search them
+	// in order until a match is found.
+	//
+	// If you specify multiple strings, the condition is satisfied if one of the
+	// strings matches the value of the HTTP header. To require that all of the
+	// strings are a match, create one condition per string.
 	Values []*string `type:"list"`
 }
 
@@ -6127,9 +6292,23 @@ func (s *HttpHeaderConditionConfig) SetValues(v []*string) *HttpHeaderConditionC
 	return s
 }
 
+// Information about an HTTP method condition.
+//
+// HTTP defines a set of request methods, also referred to as HTTP verbs. For
+// more information, see the HTTP Method Registry (https://www.iana.org/assignments/http-methods/http-methods.xhtml).
+// You can also define custom HTTP methods.
 type HttpRequestMethodConditionConfig struct {
 	_ struct{} `type:"structure"`
 
+	// The name of the request method. The maximum size is 40 characters. The allowed
+	// characters are A-Z, hyphen (-), and underscore (_). The comparison is case
+	// sensitive. Wildcards are not supported; therefore, the method name must be
+	// an exact match.
+	//
+	// If you specify multiple strings, the condition is satisfied if one of the
+	// strings matches the HTTP request method. We recommend that you route GET
+	// and HEAD requests in the same way, because the response to a HEAD request
+	// may be cached.
 	Values []*string `type:"list"`
 }
 
@@ -6170,6 +6349,12 @@ type Limit struct {
 	//
 	//    * target-groups
 	//
+	//    * target-groups-per-action-on-application-load-balancer
+	//
+	//    * target-groups-per-action-on-network-load-balancer
+	//
+	//    * target-groups-per-application-load-balancer
+	//
 	//    * targets-per-application-load-balancer
 	//
 	//    * targets-per-availability-zone-per-network-load-balancer
@@ -6204,8 +6389,11 @@ func (s *Limit) SetName(v string) *Limit {
 type Listener struct {
 	_ struct{} `type:"structure"`
 
-	// The SSL server certificate. You must provide a certificate if the protocol
-	// is HTTPS or TLS.
+	// [TLS listener] The name of the Application-Layer Protocol Negotiation (ALPN)
+	// policy.
+	AlpnPolicy []*string `type:"list"`
+
+	// [HTTPS or TLS listener] The default certificate for the listener.
 	Certificates []*Certificate `type:"list"`
 
 	// The default actions for the listener.
@@ -6223,8 +6411,8 @@ type Listener struct {
 	// The protocol for connections from clients to the load balancer.
 	Protocol *string `type:"string" enum:"ProtocolEnum"`
 
-	// The security policy that defines which ciphers and protocols are supported.
-	// The default is the current predefined security policy.
+	// [HTTPS or TLS listener] The security policy that defines which protocols
+	// and ciphers are supported.
 	SslPolicy *string `type:"string"`
 }
 
@@ -6236,6 +6424,12 @@ func (s Listener) String() string {
 // GoString returns the string representation
 func (s Listener) GoString() string {
 	return s.String()
+}
+
+// SetAlpnPolicy sets the AlpnPolicy field's value.
+func (s *Listener) SetAlpnPolicy(v []*string) *Listener {
+	s.AlpnPolicy = v
+	return s
 }
 
 // SetCertificates sets the Certificates field's value.
@@ -6314,8 +6508,8 @@ type LoadBalancer struct {
 	//
 	// The nodes of an internal load balancer have only private IP addresses. The
 	// DNS name of an internal load balancer is publicly resolvable to the private
-	// IP addresses of the nodes. Therefore, internal load balancers can only route
-	// requests from clients with access to the VPC for the load balancer.
+	// IP addresses of the nodes. Therefore, internal load balancers can route requests
+	// only from clients with access to the VPC for the load balancer.
 	Scheme *string `type:"string" enum:"LoadBalancerSchemeEnum"`
 
 	// The IDs of the security groups for the load balancer.
@@ -6417,11 +6611,15 @@ func (s *LoadBalancer) SetVpcId(v string) *LoadBalancer {
 type LoadBalancerAddress struct {
 	_ struct{} `type:"structure"`
 
-	// [Network Load Balancers] The allocation ID of the Elastic IP address.
+	// [Network Load Balancers] The allocation ID of the Elastic IP address for
+	// an internal-facing load balancer.
 	AllocationId *string `type:"string"`
 
 	// The static IP address.
 	IpAddress *string `type:"string"`
+
+	// [Network Load Balancers] The private IPv4 address for an internal load balancer.
+	PrivateIPv4Address *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6443,6 +6641,12 @@ func (s *LoadBalancerAddress) SetAllocationId(v string) *LoadBalancerAddress {
 // SetIpAddress sets the IpAddress field's value.
 func (s *LoadBalancerAddress) SetIpAddress(v string) *LoadBalancerAddress {
 	s.IpAddress = &v
+	return s
+}
+
+// SetPrivateIPv4Address sets the PrivateIPv4Address field's value.
+func (s *LoadBalancerAddress) SetPrivateIPv4Address(v string) *LoadBalancerAddress {
+	s.PrivateIPv4Address = &v
 	return s
 }
 
@@ -6474,8 +6678,13 @@ type LoadBalancerAttribute struct {
 	//    * idle_timeout.timeout_seconds - The idle timeout value, in seconds. The
 	//    valid range is 1-4000 seconds. The default is 60 seconds.
 	//
+	//    * routing.http.drop_invalid_header_fields.enabled - Indicates whether
+	//    HTTP headers with invalid header fields are removed by the load balancer
+	//    (true) or routed to targets (false). The default is false.
+	//
 	//    * routing.http2.enabled - Indicates whether HTTP/2 is enabled. The value
-	//    is true or false. The default is true.
+	//    is true or false. The default is true. Elastic Load Balancing requires
+	//    that message header names contain only alphanumeric characters and hyphens.
 	//
 	// The following attributes are supported by only Network Load Balancers:
 	//
@@ -6592,9 +6801,26 @@ func (s *Matcher) SetHttpCode(v string) *Matcher {
 type ModifyListenerInput struct {
 	_ struct{} `type:"structure"`
 
-	// [HTTPS and TLS listeners] The default SSL server certificate. You must provide
-	// exactly one certificate. Set CertificateArn to the certificate ARN but do
-	// not set IsDefault.
+	// [TLS listeners] The name of the Application-Layer Protocol Negotiation (ALPN)
+	// policy. You can specify one policy name. The following are the possible values:
+	//
+	//    * HTTP1Only
+	//
+	//    * HTTP2Only
+	//
+	//    * HTTP2Optional
+	//
+	//    * HTTP2Preferred
+	//
+	//    * None
+	//
+	// For more information, see ALPN Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html#alpn-policies)
+	// in the Network Load Balancers Guide.
+	AlpnPolicy []*string `type:"list"`
+
+	// [HTTPS and TLS listeners] The default certificate for the listener. You must
+	// provide exactly one certificate. Set CertificateArn to the certificate ARN
+	// but do not set IsDefault.
 	//
 	// To create a certificate list, use AddListenerCertificates.
 	Certificates []*Certificate `type:"list"`
@@ -6602,9 +6828,10 @@ type ModifyListenerInput struct {
 	// The actions for the default rule. The rule must include one forward action
 	// or one or more fixed-response actions.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP or TLS for a Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -6629,12 +6856,33 @@ type ModifyListenerInput struct {
 
 	// The protocol for connections from clients to the load balancer. Application
 	// Load Balancers support the HTTP and HTTPS protocols. Network Load Balancers
-	// support the TCP and TLS protocols.
+	// support the TCP, TLS, UDP, and TCP_UDP protocols.
 	Protocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// [HTTPS and TLS listeners] The security policy that defines which protocols
-	// and ciphers are supported. For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
-	// in the Application Load Balancers Guide.
+	// and ciphers are supported. The following are the possible values:
+	//
+	//    * ELBSecurityPolicy-2016-08
+	//
+	//    * ELBSecurityPolicy-TLS-1-0-2015-04
+	//
+	//    * ELBSecurityPolicy-TLS-1-1-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-1-1-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-Res-2019-08
+	//
+	// For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
+	// in the Application Load Balancers Guide and Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html#describe-ssl-policies)
+	// in the Network Load Balancers Guide.
 	SslPolicy *string `type:"string"`
 }
 
@@ -6672,6 +6920,12 @@ func (s *ModifyListenerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlpnPolicy sets the AlpnPolicy field's value.
+func (s *ModifyListenerInput) SetAlpnPolicy(v []*string) *ModifyListenerInput {
+	s.AlpnPolicy = v
+	return s
 }
 
 // SetCertificates sets the Certificates field's value.
@@ -6811,11 +7065,14 @@ func (s *ModifyLoadBalancerAttributesOutput) SetAttributes(v []*LoadBalancerAttr
 type ModifyRuleInput struct {
 	_ struct{} `type:"structure"`
 
-	// The actions.
+	// The actions. Each rule must include exactly one of the following types of
+	// actions: forward, fixed-response, or redirect, and it must be the last action
+	// to be performed.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP or TLS for a Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -6830,35 +7087,9 @@ type ModifyRuleInput struct {
 	// specified client requests and return a custom HTTP response.
 	Actions []*Action `type:"list"`
 
-	// The conditions. Each condition specifies a field name and a single value.
-	//
-	// If the field name is host-header, you can specify a single host name (for
-	// example, my.example.com). A host name is case insensitive, can be up to 128
-	// characters in length, and can contain any of the following characters. You
-	// can include up to three wildcard characters.
-	//
-	//    * A-Z, a-z, 0-9
-	//
-	//    * - .
-	//
-	//    * * (matches 0 or more characters)
-	//
-	//    * ? (matches exactly 1 character)
-	//
-	// If the field name is path-pattern, you can specify a single path pattern.
-	// A path pattern is case-sensitive, can be up to 128 characters in length,
-	// and can contain any of the following characters. You can include up to three
-	// wildcard characters.
-	//
-	//    * A-Z, a-z, 0-9
-	//
-	//    * _ - . $ / ~ " ' @ : +
-	//
-	//    * & (using &)
-	//
-	//    * * (matches 0 or more characters)
-	//
-	//    * ? (matches exactly 1 character)
+	// The conditions. Each rule can include zero or one of the following conditions:
+	// http-request-method, host-header, path-pattern, and source-ip, and zero or
+	// more of the following conditions: http-header and query-string.
 	Conditions []*RuleCondition `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the rule.
@@ -7023,10 +7254,10 @@ type ModifyTargetGroupInput struct {
 	HealthCheckEnabled *bool `type:"boolean"`
 
 	// The approximate amount of time, in seconds, between health checks of an individual
-	// target. For Application Load Balancers, the range is 5–300 seconds. For
+	// target. For Application Load Balancers, the range is 5 to 300 seconds. For
 	// Network Load Balancers, the supported values are 10 or 30 seconds.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	HealthCheckIntervalSeconds *int64 `min:"5" type:"integer"`
 
 	// [HTTP/HTTPS health checks] The ping path that is the destination for the
@@ -7038,16 +7269,16 @@ type ModifyTargetGroupInput struct {
 
 	// The protocol the load balancer uses when performing health checks on targets.
 	// The TCP protocol is supported for health checks only if the protocol of the
-	// target group is TCP or TLS. The TLS protocol is not supported for health
-	// checks.
+	// target group is TCP, TLS, UDP, or TCP_UDP. The TLS, UDP, and TCP_UDP protocols
+	// are not supported for health checks.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	HealthCheckProtocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// [HTTP/HTTPS health checks] The amount of time, in seconds, during which no
 	// response means a failed health check.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	HealthCheckTimeoutSeconds *int64 `min:"2" type:"integer"`
 
 	// The number of consecutive health checks successes required before considering
@@ -7057,7 +7288,7 @@ type ModifyTargetGroupInput struct {
 	// [HTTP/HTTPS health checks] The HTTP codes to use when checking for a successful
 	// response from a target.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	Matcher *Matcher `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the target group.
@@ -7197,9 +7428,19 @@ func (s *ModifyTargetGroupOutput) SetTargetGroups(v []*TargetGroup) *ModifyTarge
 	return s
 }
 
+// Information about a path pattern condition.
 type PathPatternConditionConfig struct {
 	_ struct{} `type:"structure"`
 
+	// One or more path patterns to compare against the request URL. The maximum
+	// size of each string is 128 characters. The comparison is case sensitive.
+	// The following wildcard characters are supported: * (matches 0 or more characters)
+	// and ? (matches exactly 1 character).
+	//
+	// If you specify multiple strings, the condition is satisfied if one of them
+	// matches the request URL. The path pattern is compared only to the path of
+	// the URL, not to its query string. To compare against the query string, use
+	// QueryStringConditionConfig.
 	Values []*string `type:"list"`
 }
 
@@ -7219,9 +7460,24 @@ func (s *PathPatternConditionConfig) SetValues(v []*string) *PathPatternConditio
 	return s
 }
 
+// Information about a query string condition.
+//
+// The query string component of a URI starts after the first '?' character
+// and is terminated by either a '#' character or the end of the URI. A typical
+// query string contains key/value pairs separated by '&' characters. The allowed
+// characters are specified by RFC 3986. Any character can be percentage encoded.
 type QueryStringConditionConfig struct {
 	_ struct{} `type:"structure"`
 
+	// One or more key/value pairs or values to find in the query string. The maximum
+	// size of each string is 128 characters. The comparison is case insensitive.
+	// The following wildcard characters are supported: * (matches 0 or more characters)
+	// and ? (matches exactly 1 character). To search for a literal '*' or '?' character
+	// in a query string, you must escape these characters in Values using a '\'
+	// character.
+	//
+	// If you specify multiple key/value pairs or values, the condition is satisfied
+	// if one of them is found in the query string.
 	Values []*QueryStringKeyValuePair `type:"list"`
 }
 
@@ -7241,11 +7497,14 @@ func (s *QueryStringConditionConfig) SetValues(v []*QueryStringKeyValuePair) *Qu
 	return s
 }
 
+// Information about a key/value pair.
 type QueryStringKeyValuePair struct {
 	_ struct{} `type:"structure"`
 
+	// The key. You can omit the key.
 	Key *string `type:"string"`
 
+	// The value.
 	Value *string `type:"string"`
 }
 
@@ -7605,10 +7864,14 @@ func (s RemoveTagsOutput) GoString() string {
 type Rule struct {
 	_ struct{} `type:"structure"`
 
-	// The actions.
+	// The actions. Each rule must include exactly one of the following types of
+	// actions: forward, redirect, or fixed-response, and it must be the last action
+	// to be performed.
 	Actions []*Action `type:"list"`
 
-	// The conditions.
+	// The conditions. Each rule can include zero or one of the following conditions:
+	// http-request-method, host-header, path-pattern, and source-ip, and zero or
+	// more of the following conditions: http-header and query-string.
 	Conditions []*RuleCondition `type:"list"`
 
 	// Indicates whether this is the default rule.
@@ -7665,27 +7928,46 @@ func (s *Rule) SetRuleArn(v string) *Rule {
 type RuleCondition struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the field. The possible values are host-header and path-pattern.
+	// The field in the HTTP request. The following are the possible values:
+	//
+	//    * http-header
+	//
+	//    * http-request-method
+	//
+	//    * host-header
+	//
+	//    * path-pattern
+	//
+	//    * query-string
+	//
+	//    * source-ip
 	Field *string `type:"string"`
 
+	// Information for a host header condition. Specify only when Field is host-header.
 	HostHeaderConfig *HostHeaderConditionConfig `type:"structure"`
 
+	// Information for an HTTP header condition. Specify only when Field is http-header.
 	HttpHeaderConfig *HttpHeaderConditionConfig `type:"structure"`
 
+	// Information for an HTTP method condition. Specify only when Field is http-request-method.
 	HttpRequestMethodConfig *HttpRequestMethodConditionConfig `type:"structure"`
 
+	// Information for a path pattern condition. Specify only when Field is path-pattern.
 	PathPatternConfig *PathPatternConditionConfig `type:"structure"`
 
+	// Information for a query string condition. Specify only when Field is query-string.
 	QueryStringConfig *QueryStringConditionConfig `type:"structure"`
 
+	// Information for a source IP condition. Specify only when Field is source-ip.
 	SourceIpConfig *SourceIpConditionConfig `type:"structure"`
 
-	// The condition value.
+	// The condition value. You can use Values if the rule contains only host-header
+	// and path-pattern conditions. Otherwise, you can use HostHeaderConfig for
+	// host-header conditions and PathPatternConfig for path-pattern conditions.
 	//
-	// If the field name is host-header, you can specify a single host name (for
-	// example, my.example.com). A host name is case insensitive, can be up to 128
-	// characters in length, and can contain any of the following characters. You
-	// can include up to three wildcard characters.
+	// If Field is host-header, you can specify a single host name (for example,
+	// my.example.com). A host name is case insensitive, can be up to 128 characters
+	// in length, and can contain any of the following characters.
 	//
 	//    * A-Z, a-z, 0-9
 	//
@@ -7695,10 +7977,9 @@ type RuleCondition struct {
 	//
 	//    * ? (matches exactly 1 character)
 	//
-	// If the field name is path-pattern, you can specify a single path pattern
-	// (for example, /img/*). A path pattern is case-sensitive, can be up to 128
-	// characters in length, and can contain any of the following characters. You
-	// can include up to three wildcard characters.
+	// If Field is path-pattern, you can specify a single path pattern (for example,
+	// /img/*). A path pattern is case-sensitive, can be up to 128 characters in
+	// length, and can contain any of the following characters.
 	//
 	//    * A-Z, a-z, 0-9
 	//
@@ -7821,7 +8102,7 @@ type SetIpAddressTypeInput struct {
 
 	// The IP address type. The possible values are ipv4 (for IPv4 addresses) and
 	// dualstack (for IPv4 and IPv6 addresses). Internal load balancers must use
-	// ipv4.
+	// ipv4. Network Load Balancers must use ipv4.
 	//
 	// IpAddressType is a required field
 	IpAddressType *string `type:"string" required:"true" enum:"IpAddressType"`
@@ -8047,11 +8328,17 @@ type SetSubnetsInput struct {
 	// LoadBalancerArn is a required field
 	LoadBalancerArn *string `type:"string" required:"true"`
 
-	// The IDs of the public subnets. You must specify subnets from at least two
-	// Availability Zones. You can specify only one subnet per Availability Zone.
-	// You must specify either subnets or subnet mappings.
+	// The IDs of the public subnets. You can specify only one subnet per Availability
+	// Zone. You must specify either subnets or subnet mappings.
 	//
-	// You cannot specify Elastic IP addresses for your subnets.
+	// [Application Load Balancers] You must specify subnets from at least two Availability
+	// Zones. You cannot specify Elastic IP addresses for your subnets.
+	//
+	// [Network Load Balancers] You can specify subnets from one or more Availability
+	// Zones. If you need static IP addresses for your internet-facing load balancer,
+	// you can specify one Elastic IP address per subnet. For internal load balancers,
+	// you can specify one private IP address per subnet from the IPv4 range of
+	// the subnet.
 	SubnetMappings []*SubnetMapping `type:"list"`
 
 	// The IDs of the public subnets. You must specify subnets from at least two
@@ -8124,9 +8411,21 @@ func (s *SetSubnetsOutput) SetAvailabilityZones(v []*AvailabilityZone) *SetSubne
 	return s
 }
 
+// Information about a source IP condition.
+//
+// You can use this condition to route based on the IP address of the source
+// that connects to the load balancer. If a client is behind a proxy, this is
+// the IP address of the proxy not the IP address of the client.
 type SourceIpConditionConfig struct {
 	_ struct{} `type:"structure"`
 
+	// One or more source IP addresses, in CIDR format. You can use both IPv4 and
+	// IPv6 addresses. Wildcards are not supported.
+	//
+	// If you specify multiple addresses, the condition is satisfied if the source
+	// IP address of the request matches one of the CIDR blocks. This condition
+	// is not satisfied by the addresses in the X-Forwarded-For header. To search
+	// for addresses in the X-Forwarded-For header, use HttpHeaderConditionConfig.
 	Values []*string `type:"list"`
 }
 
@@ -8192,8 +8491,12 @@ func (s *SslPolicy) SetSslProtocols(v []*string) *SslPolicy {
 type SubnetMapping struct {
 	_ struct{} `type:"structure"`
 
-	// [Network Load Balancers] The allocation ID of the Elastic IP address.
+	// [Network Load Balancers] The allocation ID of the Elastic IP address for
+	// an internet-facing load balancer.
 	AllocationId *string `type:"string"`
+
+	// [Network Load Balancers] The private IPv4 address for an internal load balancer.
+	PrivateIPv4Address *string `type:"string"`
 
 	// The ID of the subnet.
 	SubnetId *string `type:"string"`
@@ -8212,6 +8515,12 @@ func (s SubnetMapping) GoString() string {
 // SetAllocationId sets the AllocationId field's value.
 func (s *SubnetMapping) SetAllocationId(v string) *SubnetMapping {
 	s.AllocationId = &v
+	return s
+}
+
+// SetPrivateIPv4Address sets the PrivateIPv4Address field's value.
+func (s *SubnetMapping) SetPrivateIPv4Address(v string) *SubnetMapping {
+	s.PrivateIPv4Address = &v
 	return s
 }
 
@@ -8335,7 +8644,8 @@ type TargetDescription struct {
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
 
-	// The port on which the target is listening.
+	// The port on which the target is listening. Not used if the target is a Lambda
+	// function.
 	Port *int64 `min:"1" type:"integer"`
 }
 
@@ -8418,7 +8728,8 @@ type TargetGroup struct {
 	// The HTTP codes to use when checking for a successful response from a target.
 	Matcher *Matcher `type:"structure"`
 
-	// The port on which the targets are listening.
+	// The port on which the targets are listening. Not used if the target is a
+	// Lambda function.
 	Port *int64 `min:"1" type:"integer"`
 
 	// The protocol to use for routing traffic to the targets.
@@ -8555,8 +8866,8 @@ type TargetGroupAttribute struct {
 
 	// The name of the attribute.
 	//
-	// The following attribute is supported by both Application Load Balancers and
-	// Network Load Balancers:
+	// The following attributes are supported by both Application Load Balancers
+	// and Network Load Balancers:
 	//
 	//    * deregistration_delay.timeout_seconds - The amount of time, in seconds,
 	//    for Elastic Load Balancing to wait before changing the state of a deregistering
@@ -8564,20 +8875,25 @@ type TargetGroupAttribute struct {
 	//    value is 300 seconds. If the target is a Lambda function, this attribute
 	//    is not supported.
 	//
-	// The following attributes are supported by Application Load Balancers if the
-	// target is not a Lambda function:
-	//
-	//    * slow_start.duration_seconds - The time period, in seconds, during which
-	//    a newly registered target receives a linearly increasing share of the
-	//    traffic to the target group. After this time period ends, the target receives
-	//    its full share of traffic. The range is 30-900 seconds (15 minutes). Slow
-	//    start mode is disabled by default.
-	//
 	//    * stickiness.enabled - Indicates whether sticky sessions are enabled.
 	//    The value is true or false. The default is false.
 	//
-	//    * stickiness.type - The type of sticky sessions. The possible value is
-	//    lb_cookie.
+	//    * stickiness.type - The type of sticky sessions. The possible values are
+	//    lb_cookie for Application Load Balancers or source_ip for Network Load
+	//    Balancers.
+	//
+	// The following attributes are supported only if the load balancer is an Application
+	// Load Balancer and the target is an instance or an IP address:
+	//
+	//    * load_balancing.algorithm.type - The load balancing algorithm determines
+	//    how the load balancer selects targets when routing requests. The value
+	//    is round_robin or least_outstanding_requests. The default is round_robin.
+	//
+	//    * slow_start.duration_seconds - The time period, in seconds, during which
+	//    a newly registered target receives an increasing share of the traffic
+	//    to the target group. After this time period ends, the target receives
+	//    its full share of traffic. The range is 30-900 seconds (15 minutes). Slow
+	//    start mode is disabled by default.
 	//
 	//    * stickiness.lb_cookie.duration_seconds - The time period, in seconds,
 	//    during which requests from a client should be routed to the same target.
@@ -8585,14 +8901,15 @@ type TargetGroupAttribute struct {
 	//    considered stale. The range is 1 second to 1 week (604800 seconds). The
 	//    default value is 1 day (86400 seconds).
 	//
-	// The following attribute is supported only if the target is a Lambda function.
+	// The following attribute is supported only if the load balancer is an Application
+	// Load Balancer and the target is a Lambda function:
 	//
 	//    * lambda.multi_value_headers.enabled - Indicates whether the request and
-	//    response headers exchanged between the load balancer and the Lambda function
-	//    include arrays of values or strings. The value is true or false. The default
-	//    is false. If the value is false and the request contains a duplicate header
-	//    field name or query parameter key, the load balancer uses the last value
-	//    sent by the client.
+	//    response headers that are exchanged between the load balancer and the
+	//    Lambda function include arrays of values or strings. The value is true
+	//    or false. The default is false. If the value is false and the request
+	//    contains a duplicate header field name or query parameter key, the load
+	//    balancer uses the last value sent by the client.
 	//
 	// The following attribute is supported only by Network Load Balancers:
 	//
@@ -8626,6 +8943,74 @@ func (s *TargetGroupAttribute) SetValue(v string) *TargetGroupAttribute {
 	return s
 }
 
+// Information about the target group stickiness for a rule.
+type TargetGroupStickinessConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The time period, in seconds, during which requests from a client should be
+	// routed to the same target group. The range is 1-604800 seconds (7 days).
+	DurationSeconds *int64 `type:"integer"`
+
+	// Indicates whether target group stickiness is enabled.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s TargetGroupStickinessConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetGroupStickinessConfig) GoString() string {
+	return s.String()
+}
+
+// SetDurationSeconds sets the DurationSeconds field's value.
+func (s *TargetGroupStickinessConfig) SetDurationSeconds(v int64) *TargetGroupStickinessConfig {
+	s.DurationSeconds = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *TargetGroupStickinessConfig) SetEnabled(v bool) *TargetGroupStickinessConfig {
+	s.Enabled = &v
+	return s
+}
+
+// Information about how traffic will be distributed between multiple target
+// groups in a forward rule.
+type TargetGroupTuple struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the target group.
+	TargetGroupArn *string `type:"string"`
+
+	// The weight. The range is 0 to 999.
+	Weight *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s TargetGroupTuple) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetGroupTuple) GoString() string {
+	return s.String()
+}
+
+// SetTargetGroupArn sets the TargetGroupArn field's value.
+func (s *TargetGroupTuple) SetTargetGroupArn(v string) *TargetGroupTuple {
+	s.TargetGroupArn = &v
+	return s
+}
+
+// SetWeight sets the Weight field's value.
+func (s *TargetGroupTuple) SetWeight(v int64) *TargetGroupTuple {
+	s.Weight = &v
+	return s
+}
+
 // Information about the current health of a target.
 type TargetHealth struct {
 	_ struct{} `type:"structure"`
@@ -8651,15 +9036,16 @@ type TargetHealth struct {
 	// values:
 	//
 	//    * Target.ResponseCodeMismatch - The health checks did not return an expected
-	//    HTTP code.
+	//    HTTP code. Applies only to Application Load Balancers.
 	//
-	//    * Target.Timeout - The health check requests timed out.
+	//    * Target.Timeout - The health check requests timed out. Applies only to
+	//    Application Load Balancers.
 	//
-	//    * Target.FailedHealthChecks - The health checks failed because the connection
-	//    to the target timed out, the target response was malformed, or the target
-	//    failed the health check for an unknown reason.
+	//    * Target.FailedHealthChecks - The load balancer received an error while
+	//    establishing a connection to the target or the target response was malformed.
 	//
 	//    * Elb.InternalError - The health checks failed due to an internal error.
+	//    Applies only to Application Load Balancers.
 	//
 	// If the target state is unused, the reason code can be one of the following
 	// values:
@@ -8671,10 +9057,10 @@ type TargetHealth struct {
 	//    or the target is in an Availability Zone that is not enabled for its load
 	//    balancer.
 	//
+	//    * Target.InvalidState - The target is in the stopped or terminated state.
+	//
 	//    * Target.IpUnusable - The target IP address is reserved for use by a load
 	//    balancer.
-	//
-	//    * Target.InvalidState - The target is in the stopped or terminated state.
 	//
 	// If the target state is draining, the reason code can be the following value:
 	//
@@ -8685,7 +9071,10 @@ type TargetHealth struct {
 	// value:
 	//
 	//    * Target.HealthCheckDisabled - Health checks are disabled for the target
-	//    group.
+	//    group. Applies only to Application Load Balancers.
+	//
+	//    * Elb.InternalError - Target health is unavailable due to an internal
+	//    error. Applies only to Network Load Balancers.
 	Reason *string `type:"string" enum:"TargetHealthReasonEnum"`
 
 	// The state of the target.
@@ -8851,6 +9240,12 @@ const (
 
 	// ProtocolEnumTls is a ProtocolEnum enum value
 	ProtocolEnumTls = "TLS"
+
+	// ProtocolEnumUdp is a ProtocolEnum enum value
+	ProtocolEnumUdp = "UDP"
+
+	// ProtocolEnumTcpUdp is a ProtocolEnum enum value
+	ProtocolEnumTcpUdp = "TCP_UDP"
 )
 
 const (

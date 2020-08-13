@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsLb() *schema.Resource {
@@ -74,7 +74,6 @@ func dataSourceAwsLb() *schema.Resource {
 			"access_logs": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket": {
@@ -98,8 +97,18 @@ func dataSourceAwsLb() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_http2": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"idle_timeout": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"drop_invalid_header_fields": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 
@@ -114,6 +123,11 @@ func dataSourceAwsLb() *schema.Resource {
 			},
 
 			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"ip_address_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

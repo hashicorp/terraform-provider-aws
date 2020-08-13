@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/vault/helper/pgpkeys"
 )
 
@@ -234,17 +234,20 @@ resource "aws_iam_access_key" "a_key" {
 `, rName)
 }
 
-func TestSesSmtpPasswordFromSecretKey(t *testing.T) {
+func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
 	cases := []struct {
+		Region   string
 		Input    string
 		Expected string
 	}{
-		{"some+secret+key", "AnkqhOiWEcszZZzTMCQbOY1sPGoLFgMH9zhp4eNgSjo4"},
-		{"another+secret+key", "Akwqr0Giwi8FsQFgW3DXWCC2DiiQ/jZjqLDWK8TeTBgL"},
+		{"eu-central-1", "some+secret+key", "BMXhUYlu5Z3gSXVQORxlVa7XPaz91aGWdfHxvkOZdWZ2"},
+		{"eu-central-1", "another+secret+key", "BBbphbrQmrKMx42d1N6+C7VINYEBGI5v9VsZeTxwskfh"},
+		{"us-west-1", "some+secret+key", "BH+jbMzper5WwlwUar9E1ySBqHa9whi0GPo+sJ0mVYJj"},
+		{"us-west-1", "another+secret+key", "BKVmjjMDFk/qqw8EROW99bjCS65PF8WKvK5bSr4Y6EqF"},
 	}
 
 	for _, tc := range cases {
-		actual, err := sesSmtpPasswordFromSecretKey(&tc.Input)
+		actual, err := sesSmtpPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}

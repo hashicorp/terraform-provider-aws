@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_lb_cookie_stickiness_policy"
-sidebar_current: "docs-aws-resource-lb-cookie-stickiness-policy"
 description: |-
   Provides a load balancer cookie stickiness policy, which allows an ELB to control the sticky session lifetime of the browser.
 ---
@@ -27,7 +27,7 @@ resource "aws_elb" "lb" {
 
 resource "aws_lb_cookie_stickiness_policy" "foo" {
   name                     = "foo-policy"
-  load_balancer            = "${aws_elb.lb.id}"
+  load_balancer            = aws_elb.lb.id
   lb_port                  = 80
   cookie_expiration_period = 600
 }

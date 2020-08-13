@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachment_accepter"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-vpc-attachment-accepter"
 description: |-
   Manages the accepter's side of an EC2 Transit Gateway VPC Attachment
 ---
@@ -20,7 +20,7 @@ connection into management.
 
 ```hcl
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
-  transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.example.id}"
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.example.id
 
   tags = {
     Name = "Example cross-account attachment"

@@ -1,7 +1,7 @@
 ---
+subcategory: "WorkLink"
 layout: "aws"
 page_title: "AWS: aws_worklink_fleet"
-sidebar_current: "docs-aws-resource-worklink-fleet"
 description: |-
   Provides a AWS WorkLink Fleet resource.
 ---
@@ -25,9 +25,9 @@ resource "aws_worklink_fleet" "example" {
   name = "terraform-example"
 
   network {
-    vpc_id             = "${aws_vpc.test.id}"
-    subnet_ids         = ["${aws_subnet.test.*.id}"]
-    security_group_ids = ["${aws_security_group.test.id}"]
+    vpc_id             = aws_vpc.test.id
+    subnet_ids         = [aws_subnet.test.*.id]
+    security_group_ids = [aws_security_group.test.id]
   }
 }
 ```
@@ -40,7 +40,7 @@ resource "aws_worklink_fleet" "test" {
 
   identity_provider {
     type          = "SAML"
-    saml_metadata = "${file("saml-metadata.xml")}"
+    saml_metadata = file("saml-metadata.xml")
   }
 }
 ```

@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
-sidebar_current: "docs-aws-iam-server-certificate"
 description: |-
   Get information about a server certificate
 ---
@@ -26,7 +26,7 @@ resource "aws_elb" "elb" {
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${data.aws_iam_server_certificate.my-domain.arn}"
+    ssl_certificate_id = data.aws_iam_server_certificate.my-domain.arn
   }
 }
 ```

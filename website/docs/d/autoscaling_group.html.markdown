@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group"
-sidebar_current: "docs-aws-datasource-autoscaling-group"
 description: |-
   Get information on an Amazon EC2 Autoscaling Group.
 ---

@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsOpsworksPermission() *schema.Resource {
@@ -116,24 +116,25 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 		StackId:    aws.String(d.Get("stack_id").(string)),
 	}
 
-	if v, ok := d.GetOk("level"); ok {
-		req.Level = aws.String(v.(string))
+	if d.HasChange("level") {
+		req.Level = aws.String(d.Get("level").(string))
 	}
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		_, cerr = client.SetPermission(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// XXX: handle errors
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				return resource.RetryableError(cerr)
+		_, err := client.SetPermission(req)
+		if err != nil {
+
+			if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
+				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(cerr)
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = client.SetPermission(req)
+	}
 
 	if err != nil {
 		return err

@@ -7,13 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func resourceAwsSqsQueuePolicy() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSqsQueuePolicyUpsert,
 		Read:   resourceAwsSqsQueuePolicyRead,
@@ -35,7 +36,7 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 		},
@@ -67,9 +68,11 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	}
 	notUpdatedError := fmt.Errorf("SQS attribute %s not updated", sqs.QueueAttributeNamePolicy)
+	var out *sqs.GetQueueAttributesOutput
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading SQS attributes: %s", gqaInput)
-		out, err := conn.GetQueueAttributes(gqaInput)
+		var err error
+		out, err = conn.GetQueueAttributes(gqaInput)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -78,7 +81,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[DEBUG] SQS attribute %s not found - retrying", sqs.QueueAttributeNamePolicy)
 			return resource.RetryableError(notUpdatedError)
 		}
-		equivalent, err := awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+		equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -88,8 +91,23 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.GetQueueAttributes(gqaInput)
+		if err == nil {
+			queuePolicy, ok := out.Attributes[sqs.QueueAttributeNamePolicy]
+			if !ok {
+				return notUpdatedError
+			}
+
+			var equivalent bool
+			equivalent, err = awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
+			if !equivalent {
+				return notUpdatedError
+			}
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating SQS queue attributes: %s", err)
 	}
 
 	d.SetId(url)
@@ -105,7 +123,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	})
 	if err != nil {
-		if isAWSErr(err, "AWS.SimpleQueueService.NonExistentQueue", "") {
+		if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
 			log.Printf("[WARN] SQS Queue (%s) not found", d.Id())
 			d.SetId("")
 			return nil

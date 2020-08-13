@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
@@ -53,10 +54,13 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"email": {
-				ForceNew:     true,
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateAwsOrganizationsAccountEmail,
+				ForceNew: true,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(6, 64),
+					validation.StringMatch(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+				),
 			},
 			"iam_user_access_to_billing": {
 				ForceNew:     true,
@@ -68,8 +72,9 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateAwsOrganizationsAccountRoleName,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -162,11 +167,19 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding AWS Organizations Account (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsOrganizationsAccountRead(d, meta)
 }
 
 func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describeOpts := &organizations.DescribeAccountInput{
 		AccountId: aws.String(d.Id()),
 	}
@@ -197,10 +210,20 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 	d.Set("arn", account.Arn)
 	d.Set("email", account.Email)
 	d.Set("joined_method", account.JoinedMethod)
-	d.Set("joined_timestamp", account.JoinedTimestamp)
+	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", account.Name)
 	d.Set("parent_id", parentId)
 	d.Set("status", account.Status)
+
+	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for AWS Organizations Account (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -219,6 +242,14 @@ func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interfac
 
 		if _, err := conn.MoveAccount(input); err != nil {
 			return fmt.Errorf("error moving AWS Organizations Account (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating AWS Organizations Account (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -271,36 +302,6 @@ func resourceAwsOrganizationsAccountStateRefreshFunc(conn *organizations.Organiz
 		}
 		return accountStatus, *accountStatus.State, nil
 	}
-}
-
-func validateAwsOrganizationsAccountEmail(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must be a valid email address", value))
-	}
-
-	if len(value) < 6 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be less than 6 characters", value))
-	}
-
-	if len(value) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 64 characters", value))
-	}
-
-	return
-}
-
-func validateAwsOrganizationsAccountRoleName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[\w+=,.@-]{1,64}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters: =,.@-", value))
-	}
-
-	return
 }
 
 func resourceAwsOrganizationsAccountGetParentId(conn *organizations.Organizations, childId string) (string, error) {

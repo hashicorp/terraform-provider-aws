@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -37,6 +37,7 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
 				),
 			},
@@ -297,7 +298,7 @@ resource "aws_docdb_cluster" "default" {
 
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   identifier         = "tf-cluster-instance-%d"
-  cluster_identifier = "${aws_docdb_cluster.default.id}"
+  cluster_identifier = aws_docdb_cluster.default.id
   instance_class     = "db.r4.large"
   promotion_tier     = "3"
 }
@@ -316,7 +317,7 @@ resource "aws_docdb_cluster" "default" {
 
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   identifier                 = "tf-cluster-instance-%d"
-  cluster_identifier         = "${aws_docdb_cluster.default.id}"
+  cluster_identifier         = aws_docdb_cluster.default.id
   instance_class             = "db.r4.large"
   auto_minor_version_upgrade = false
   promotion_tier             = "3"
@@ -326,11 +327,18 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 
 func testAccAWSDocDBClusterInstanceConfig_az(n int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_docdb_cluster" "default" {
   cluster_identifier  = "tf-docdb-cluster-test-%d"
-  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
@@ -338,10 +346,10 @@ resource "aws_docdb_cluster" "default" {
 
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   identifier         = "tf-cluster-instance-%d"
-  cluster_identifier = "${aws_docdb_cluster.default.id}"
+  cluster_identifier = aws_docdb_cluster.default.id
   instance_class     = "db.r4.large"
   promotion_tier     = "3"
-  availability_zone  = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone  = data.aws_availability_zones.available.names[0]
 }
 `, n, n)
 }
@@ -350,7 +358,7 @@ func testAccAWSDocDBClusterInstanceConfig_namePrefix(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_instance" "test" {
   identifier_prefix  = "tf-cluster-instance-"
-  cluster_identifier = "${aws_docdb_cluster.test.id}"
+  cluster_identifier = aws_docdb_cluster.test.id
   instance_class     = "db.r4.large"
 }
 
@@ -358,7 +366,7 @@ resource "aws_docdb_cluster" "test" {
   cluster_identifier   = "tf-docdb-cluster-%d"
   master_username      = "root"
   master_password      = "password"
-  db_subnet_group_name = "${aws_docdb_subnet_group.test.name}"
+  db_subnet_group_name = aws_docdb_subnet_group.test.name
   skip_final_snapshot  = true
 }
 
@@ -371,7 +379,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
 
@@ -381,7 +389,7 @@ resource "aws_subnet" "a" {
 }
 
 resource "aws_subnet" "b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
 
@@ -392,7 +400,7 @@ resource "aws_subnet" "b" {
 
 resource "aws_docdb_subnet_group" "test" {
   name       = "tf-test-%d"
-  subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
+  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
 }
 `, n, n)
 }
@@ -400,7 +408,7 @@ resource "aws_docdb_subnet_group" "test" {
 func testAccAWSDocDBClusterInstanceConfig_generatedName(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster_instance" "test" {
-  cluster_identifier = "${aws_docdb_cluster.test.id}"
+  cluster_identifier = aws_docdb_cluster.test.id
   instance_class     = "db.r4.large"
 }
 
@@ -408,7 +416,7 @@ resource "aws_docdb_cluster" "test" {
   cluster_identifier   = "tf-docdb-cluster-%d"
   master_username      = "root"
   master_password      = "password"
-  db_subnet_group_name = "${aws_docdb_subnet_group.test.name}"
+  db_subnet_group_name = aws_docdb_subnet_group.test.name
   skip_final_snapshot  = true
 }
 
@@ -421,7 +429,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
 
@@ -431,7 +439,7 @@ resource "aws_subnet" "a" {
 }
 
 resource "aws_subnet" "b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
 
@@ -442,7 +450,7 @@ resource "aws_subnet" "b" {
 
 resource "aws_docdb_subnet_group" "test" {
   name       = "tf-test-%d"
-  subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
+  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
 }
 `, n, n)
 }
@@ -469,6 +477,7 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_docdb_cluster" "default" {
@@ -477,13 +486,13 @@ resource "aws_docdb_cluster" "default" {
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   storage_encrypted   = true
-  kms_key_id          = "${aws_kms_key.foo.arn}"
+  kms_key_id          = aws_kms_key.foo.arn
   skip_final_snapshot = true
 }
 
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   identifier         = "tf-cluster-instance-%d"
-  cluster_identifier = "${aws_docdb_cluster.default.id}"
+  cluster_identifier = aws_docdb_cluster.default.id
   instance_class     = "db.r4.large"
 }
 `, n, n, n)

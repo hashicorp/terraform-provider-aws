@@ -1,34 +1,27 @@
 module github.com/terraform-providers/terraform-provider-aws
 
+go 1.14
+
 require (
-	github.com/aws/aws-sdk-go v1.19.47
+	github.com/aws/aws-sdk-go v1.33.21
 	github.com/beevik/etree v1.1.0
-	github.com/bflad/tfproviderlint v0.2.0
+	github.com/bflad/tfproviderdocs v0.7.0
+	github.com/bflad/tfproviderlint v0.17.0
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
-	github.com/golangci/golangci-lint v1.17.1
-	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
-	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
-	github.com/hashicorp/aws-sdk-go-base v0.3.0
+	github.com/golangci/golangci-lint v1.29.0
+	github.com/hashicorp/aws-sdk-go-base v0.5.0
+	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
-	github.com/hashicorp/go-multierror v1.0.0
-	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/terraform v0.12.1
+	github.com/hashicorp/go-multierror v1.1.0
+	github.com/hashicorp/go-version v1.2.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.1
 	github.com/hashicorp/vault v0.10.4
-	github.com/jen20/awspolicyequivalence v1.0.0
-	github.com/json-iterator/go v1.1.5 // indirect
-	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
+	github.com/jen20/awspolicyequivalence v1.1.0
+	github.com/katbyte/terrafmt v0.2.1-0.20200303174203-e6a3e82cb21b
+	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pquerna/otp v1.2.0
-	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/terraform-providers/terraform-provider-template v1.0.0
-	github.com/terraform-providers/terraform-provider-tls v1.2.0
-	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/apimachinery v0.0.0-20190204010555-a98ff070d70e // indirect
-	k8s.io/client-go v10.0.0+incompatible // indirect
-	k8s.io/klog v0.1.0 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
+	golang.org/x/tools v0.0.0-20200713011307-fd294ab11aed
+	gopkg.in/yaml.v2 v2.3.0
 )

@@ -1,7 +1,7 @@
 ---
+subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
 page_title: "AWS: aws_msk_configuration"
-sidebar_current: "docs-aws-resource-msk-configuration"
 description: |-
   Terraform resource for managing an Amazon Managed Streaming for Kafka configuration
 ---
@@ -47,5 +47,5 @@ In addition to all arguments above, the following attributes are exported:
 MSK configurations can be imported using the configuration ARN, e.g.
 
 ```
-$ terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+$ terraform import aws_msk_configuration.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

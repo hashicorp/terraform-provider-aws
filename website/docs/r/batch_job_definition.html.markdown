@@ -1,7 +1,7 @@
 ---
+subcategory: "Batch"
 layout: "aws"
 page_title: "AWS: aws_batch_job_definition"
-sidebar_current: "docs-aws-resource-batch-job-definition"
 description: |-
   Provides a Batch Job Definition resource.
 ---
@@ -84,3 +84,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of the job definition.
 * `revision` - The revision of the job definition.
+
+## Import
+
+Batch Job Definition can be imported using the `arn`, e.g.
+
+```
+$ terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
+```

@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
-sidebar_current: "docs-aws-resource-kms-alias"
 description: |-
   Provides a display name for a customer master key.
 ---
@@ -19,7 +19,7 @@ resource "aws_kms_key" "a" {}
 
 resource "aws_kms_alias" "a" {
   name          = "alias/my-key-alias"
-  target_key_id = "${aws_kms_key.a.key_id}"
+  target_key_id = aws_kms_key.a.key_id
 }
 ```
 

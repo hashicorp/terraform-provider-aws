@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
-sidebar_current: "docs-aws-datasource-db-snapshot"
 description: |-
   Get information on a DB Snapshot.
 ---
@@ -29,7 +29,7 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = "${aws_db_instance.prod.id}"
+  db_instance_identifier = aws_db_instance.prod.id
   most_recent            = true
 }
 
@@ -37,15 +37,17 @@ data "aws_db_snapshot" "latest_prod_snapshot" {
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
   name                = "mydbdev"
-  snapshot_identifier = "${data.aws_db_snapshot.latest_prod_snapshot.id}"
+  snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {
-    ignore_changes = ["snapshot_identifier"]
+    ignore_changes = [snapshot_identifier]
   }
 }
 ```
 
 ## Argument Reference
+
+~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
 The following arguments are supported:
 

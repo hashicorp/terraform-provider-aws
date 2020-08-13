@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb"
-sidebar_current: "docs-aws-datasource-lb-x"
 description: |-
   Provides a Load Balancer data source.
 ---
@@ -20,18 +20,18 @@ with it, etc.
 
 ```hcl
 variable "lb_arn" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 variable "lb_name" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 data "aws_lb" "test" {
-  arn  = "${var.lb_arn}"
-  name = "${var.lb_name}"
+  arn  = var.lb_arn
+  name = var.lb_name
 }
 ```
 

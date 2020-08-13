@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"log"
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"log"
+	"regexp"
+	"strings"
 )
 
 func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
@@ -17,6 +17,17 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 		Read:   resourceAwsSsmMaintenanceWindowTargetRead,
 		Update: resourceAwsSsmMaintenanceWindowTargetUpdate,
 		Delete: resourceAwsSsmMaintenanceWindowTargetDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
+				}
+				d.Set("window_id", idParts[0])
+				d.SetId(idParts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"window_id": {
@@ -29,6 +40,10 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.MaintenanceWindowResourceTypeInstance,
+					ssm.MaintenanceWindowResourceTypeResourceGroup,
+				}, true),
 			},
 
 			"targets": {
@@ -81,8 +96,14 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 		WindowId:     aws.String(d.Get("window_id").(string)),
 		ResourceType: aws.String(d.Get("resource_type").(string)),
 		Targets:      expandAwsSsmTargets(d.Get("targets").([]interface{})),
-		Name:         aws.String(d.Get("name").(string)),
-		Description:  aws.String(d.Get("description").(string)),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("owner_information"); ok {
@@ -152,6 +173,14 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
 		WindowId:       aws.String(d.Get("window_id").(string)),
 		WindowTargetId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("name") {
+		params.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("description") {
+		params.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("owner_information") {

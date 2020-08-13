@@ -18,7 +18,6 @@ import (
 	"go/printer"
 	"go/token"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -30,6 +29,11 @@ import (
 type Options struct {
 	Env *ProcessEnv // The environment to use. Note: this contains the cached module and filesystem state.
 
+	// LocalPrefix is a comma-separated string of import path prefixes, which, if
+	// set, instructs Process to sort the import paths with the given prefixes
+	// into another group after 3rd-party packages.
+	LocalPrefix string
+
 	Fragment  bool // Accept fragment of a source file (no package statement)
 	AllErrors bool // Report all errors (not just the first 10 on different lines)
 
@@ -40,16 +44,8 @@ type Options struct {
 	FormatOnly bool // Disable the insertion and deletion of imports
 }
 
-// Process implements golang.org/x/tools/imports.Process with explicit context in env.
-func Process(filename string, src []byte, opt *Options) ([]byte, error) {
-	if src == nil {
-		b, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return nil, err
-		}
-		src = b
-	}
-
+// Process implements golang.org/x/tools/imports.Process with explicit context in opt.Env.
+func Process(filename string, src []byte, opt *Options) (formatted []byte, err error) {
 	fileSet := token.NewFileSet()
 	file, adjust, err := parse(fileSet, filename, src, opt)
 	if err != nil {
@@ -61,8 +57,55 @@ func Process(filename string, src []byte, opt *Options) ([]byte, error) {
 			return nil, err
 		}
 	}
+	return formatFile(fileSet, file, src, adjust, opt)
+}
 
-	sortImports(opt.Env, fileSet, file)
+// FixImports returns a list of fixes to the imports that, when applied,
+// will leave the imports in the same state as Process. src and opt must
+// be specified.
+//
+// Note that filename's directory influences which imports can be chosen,
+// so it is important that filename be accurate.
+func FixImports(filename string, src []byte, opt *Options) (fixes []*ImportFix, err error) {
+	fileSet := token.NewFileSet()
+	file, _, err := parse(fileSet, filename, src, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return getFixes(fileSet, file, filename, opt.Env)
+}
+
+// ApplyFixes applies all of the fixes to the file and formats it. extraMode
+// is added in when parsing the file. src and opts must be specified, but no
+// env is needed.
+func ApplyFixes(fixes []*ImportFix, filename string, src []byte, opt *Options, extraMode parser.Mode) (formatted []byte, err error) {
+	// Don't use parse() -- we don't care about fragments or statement lists
+	// here, and we need to work with unparseable files.
+	fileSet := token.NewFileSet()
+	parserMode := parser.Mode(0)
+	if opt.Comments {
+		parserMode |= parser.ParseComments
+	}
+	if opt.AllErrors {
+		parserMode |= parser.AllErrors
+	}
+	parserMode |= extraMode
+
+	file, err := parser.ParseFile(fileSet, filename, src, parserMode)
+	if file == nil {
+		return nil, err
+	}
+
+	// Apply the fixes to the file.
+	apply(fileSet, file, fixes)
+
+	return formatFile(fileSet, file, src, nil, opt)
+}
+
+func formatFile(fileSet *token.FileSet, file *ast.File, src []byte, adjust func(orig []byte, src []byte) []byte, opt *Options) ([]byte, error) {
+	mergeImports(fileSet, file)
+	sortImports(opt.LocalPrefix, fileSet, file)
 	imps := astutil.Imports(fileSet, file)
 	var spacesBefore []string // import paths we need spaces before
 	for _, impSection := range imps {
@@ -73,7 +116,7 @@ func Process(filename string, src []byte, opt *Options) ([]byte, error) {
 		lastGroup := -1
 		for _, importSpec := range impSection {
 			importPath, _ := strconv.Unquote(importSpec.Path.Value)
-			groupNum := importGroup(opt.Env, importPath)
+			groupNum := importGroup(opt.LocalPrefix, importPath)
 			if groupNum != lastGroup && lastGroup != -1 {
 				spacesBefore = append(spacesBefore, importPath)
 			}
@@ -89,7 +132,7 @@ func Process(filename string, src []byte, opt *Options) ([]byte, error) {
 	printConfig := &printer.Config{Mode: printerMode, Tabwidth: opt.TabWidth}
 
 	var buf bytes.Buffer
-	err = printConfig.Fprint(&buf, fileSet, file)
+	err := printConfig.Fprint(&buf, fileSet, file)
 	if err != nil {
 		return nil, err
 	}

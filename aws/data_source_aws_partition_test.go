@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSPartition_basic(t *testing.T) {
@@ -17,6 +17,7 @@ func TestAccAWSPartition_basic(t *testing.T) {
 				Config: testAccCheckAwsPartitionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsPartition("data.aws_partition.current"),
+					testAccCheckAwsDnsSuffix("data.aws_partition.current"),
 				),
 			},
 		},
@@ -39,6 +40,26 @@ func testAccCheckAwsPartition(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAwsDnsSuffix(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Can't find resource: %s", n)
+		}
+
+		expected := testAccProvider.Meta().(*AWSClient).dnsSuffix
+		if rs.Primary.Attributes["dns_suffix"] != expected {
+			return fmt.Errorf("Incorrect DNS Suffix: expected %q, got %q", expected, rs.Primary.Attributes["dns_suffix"])
+		}
+
+		if rs.Primary.Attributes["dns_suffix"] == "" {
+			return fmt.Errorf("DNS Suffix expected to not be nil")
+		}
+
+		return nil
+	}
+}
+
 const testAccCheckAwsPartitionConfig_basic = `
-data "aws_partition" "current" { }
+data "aws_partition" "current" {}
 `

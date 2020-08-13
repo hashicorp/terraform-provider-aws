@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
@@ -171,7 +171,7 @@ data "aws_iam_policy_document" "rds_assume_role_policy" {
 }
 
 resource "aws_iam_role" "test" {
-  assume_role_policy = "${data.aws_iam_policy_document.rds_assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
   name               = %[1]q
 }
 
@@ -179,16 +179,16 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = "oracle-se"
   identifier          = %[1]q
-  instance_class      = "db.t2.micro"
+  instance_class      = "db.t3.micro"
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
 }
 
 resource "aws_db_instance_role_association" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   feature_name           = "S3_INTEGRATION"
-  role_arn               = "${aws_iam_role.test.arn}"
+  role_arn               = aws_iam_role.test.arn
 }
 `, rName)
 }

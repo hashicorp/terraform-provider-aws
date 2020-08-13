@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
 page_title: "AWS: aws_emr_cluster"
-sidebar_current: "docs-aws-resource-emr-cluster"
 description: |-
   Provides an Elastic MapReduce Cluster
 ---
@@ -37,10 +37,10 @@ EOF
   keep_job_flow_alive_when_no_steps = true
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.sg.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.sg.id
+    emr_managed_slave_security_group  = aws_security_group.sg.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_group {
@@ -136,7 +136,7 @@ EOF
   ]
 EOF
 
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role = aws_iam_role.iam_emr_service_role.arn
 }
 ```
 
@@ -171,7 +171,52 @@ resource "aws_emr_cluster" "example" {
 
   # Optional: ignore outside changes to running cluster steps
   lifecycle {
-    ignore_changes = ["step"]
+    ignore_changes = [step]
+  }
+}
+```
+
+### Multiple Node Master Instance Group
+
+Available in EMR version 5.23.0 and later, an EMR Cluster can be launched with three master nodes for high availability. Additional information about this functionality and its requirements can be found in the [EMR Management Guide](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-ha.html).
+
+```hcl
+# This configuration is for illustrative purposes and highlights
+# only relevant configurations for working with this functionality.
+
+# Map public IP on launch must be enabled for public (Internet accessible) subnets
+resource "aws_subnet" "example" {
+  # ... other configuration ...
+
+  map_public_ip_on_launch = true
+}
+
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  # EMR version must be 5.23.0 or later
+  release_label = "emr-5.24.1"
+
+  # Termination protection is automatically enabled for multiple masters
+  # To destroy the cluster, this must be configured to false and applied first
+  termination_protection = true
+
+  ec2_attributes {
+    # ... other configuration ...
+
+    subnet_id = aws_subnet.example.id
+  }
+
+  master_instance_group {
+    # ... other configuration ...
+
+    # Master instance count must be set to 3
+    instance_count = 3
+  }
+
+  # core_instance_group must be configured
+  core_instance_group {
+    # ... other configuration ...
   }
 }
 ```
@@ -182,25 +227,21 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the job flow
 * `release_label` - (Required) The release label for the Amazon EMR release
-* `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master). Cannot be specified if `master_instance_type` argument or `instance_group` configuration blocks are set. Detailed below.
-* `master_instance_type` - (Optional, **DEPRECATED**) Use the `master_instance_group` configuration block `instance_type` argument instead. The EC2 instance type of the master node. Cannot be specified if `master_instance_group` or `instance_group` configuration blocks are set.
+* `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
 * `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `additional_info` - (Optional) A JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
-* `core_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [core node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-core). Cannot be specified if `core_instance_count` argument, `core_instance_type` argument, or `instance_group` configuration blocks are set. Detailed below.
-* `core_instance_type` - (Optional, **DEPRECATED**) Use the `core_instance_group` configuration block `instance_type` argument instead. The EC2 instance type of the slave nodes. Cannot be specified if `core_instance_group` or `instance_group` configuration blocks are set.
-* `core_instance_count` - (Optional, **DEPRECATED**) Use the `core_instance_group` configuration block `instance_count` argument instead. Number of Amazon EC2 instances used to execute the job flow. EMR will use one node as the cluster's master node and use the remainder of the nodes (`core_instance_count`-1) as core nodes. Cannot be specified if `core_instance_group` or `instance_group` configuration blocks are set. Default `1`
-* `instance_group` - (Optional, **DEPRECATED**) Use the `master_instance_group` configuration block, `core_instance_group` configuration block and [`aws_emr_instance_group` resource(s)](/docs/providers/aws/r/emr_instance_group.html) instead. A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Cannot be specified if `master_instance_group` or `core_instance_group` configuration blocks are set. Defined below
+* `core_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [core node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-core).
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
-* `termination_protection` - (Optional) Switch on/off termination protection (default is off)
+* `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job flow. Defined below
 * `kerberos_attributes` - (Optional) Kerberos configuration for the cluster. Defined below
 * `ebs_root_volume_size` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
 * `custom_ami_id` - (Optional) A custom Amazon Linux AMI for the cluster (instead of an EMR-owned AMI). Available in Amazon EMR version 5.7.0 and later.
-* `bootstrap_action` - (Optional) List of bootstrap actions that will be run before Hadoop is started on the cluster nodes. Defined below
+* `bootstrap_action` - (Optional) Ordered list of bootstrap actions that will be run before Hadoop is started on the cluster nodes. Defined below.
 * `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
 * `configurations_json` - (Optional) A JSON string for supplying list of configurations for the EMR cluster.
 
@@ -229,6 +270,7 @@ EOF
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`
 * `autoscaling_role` - (Optional) An IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
 * `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
+* `step_concurrency_level` - (Optional) The number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `release_label` 5.28.0 or greater. (default is 1)
 * `tags` - (Optional) list of tags to apply to the EMR Cluster
 
 ## core_instance_group Configuration Block
@@ -274,23 +316,11 @@ for more information about the EMR-managed security group rules.
 
 Attributes for Kerberos configuration
 
-* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`
-* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain.
-* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms.
-* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster.
+* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`. Terraform cannot perform drift detection of this configuration.
+* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain. Terraform cannot perform drift detection of this configuration.
+* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms. Terraform cannot perform drift detection of this configuration.
+* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster. Terraform cannot perform drift detection of this configuration.
 * `realm` - (Required) The name of the Kerberos realm to which all nodes in a cluster belong. For example, `EC2.INTERNAL`
-
-## instance_group
-
-Attributes for each task instance group in the cluster
-
-* `instance_role` - (Required) The role of the instance group in the cluster. Valid values are: `MASTER`, `CORE`, and `TASK`.
-* `instance_type` - (Required) The EC2 instance type for all instances in the instance group
-* `instance_count` - (Optional) Target number of instances for the instance group
-* `name` - (Optional) Friendly name given to the instance group
-* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
-* `ebs_config` - (Optional) A list of attributes for the EBS volumes attached to each instance in the instance group. Each `ebs_config` defined will result in additional EBS volumes being attached to _each_ instance in the instance group. Defined below
-* `autoscaling_policy` - (Optional) The autoscaling policy document. This is a JSON formatted string. See [EMR Auto Scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
 
 ## master_instance_group Configuration Block
 
@@ -299,11 +329,12 @@ Supported nested arguments for the `master_instance_group` configuration block:
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
 * `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `instance_count` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, and requires this resource's `core_instance_group` to be configured. Public (Internet accessible) instances must be created in VPC subnets that have [map public IP on launch](/docs/providers/aws/r/subnet.html#map_public_ip_on_launch) enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
 * `name` - (Optional) Friendly name given to the instance group.
 
 ## ebs_config
 
-Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
+Attributes for the EBS volumes attached to each EC2 instance in the `master_instance_group` and `core_instance_group` configuration blocks:
 
 * `size` - (Required) The volume size, in gibibytes (GiB).
 * `type` - (Required) The volume type. Valid options are `gp2`, `io1`, `standard` and `st1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
@@ -337,6 +368,7 @@ Attributes for Hadoop job step configuration
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn`- The ARN of the cluster.
 * `id` - The ID of the EMR Cluster
 * `name` - The name of the cluster.
 * `release_label` - The release label for the Amazon EMR release.
@@ -359,25 +391,26 @@ boot an example EMR Cluster. It is not meant to display best practices. Please
 use at your own risk.
 
 ```hcl
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.allow_all.id
+    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
-  master_instance_type = "m5.xlarge"
-  core_instance_type   = "m5.xlarge"
-  core_instance_count  = 1
+  master_instance_group {
+    instance_type = "m5.xlarge"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "m5.xlarge"
+  }
 
   tags = {
     role     = "rolename"
@@ -421,22 +454,19 @@ resource "aws_emr_cluster" "cluster" {
   ]
 EOF
 
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role = aws_iam_role.iam_emr_service_role.arn
 }
 
 resource "aws_security_group" "allow_access" {
   name        = "allow_access"
   description = "Allow inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    # these ports should be locked down
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-
-    # we do not recommend opening your cluster to 0.0.0.0/0
-    cidr_blocks = # add your IP address here
+    cidr_blocks = aws_vpc.main.cidr_block
   }
 
   egress {
@@ -446,10 +476,13 @@ resource "aws_security_group" "allow_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.main"]
+  depends_on = [aws_subnet.main]
 
   lifecycle {
-    ignore_changes = ["ingress", "egress"]
+    ignore_changes = [
+      ingress,
+      egress,
+    ]
   }
 
   tags = {
@@ -467,7 +500,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.main.id}"
+  vpc_id     = aws_vpc.main.id
   cidr_block = "168.31.0.0/20"
 
   tags = {
@@ -476,21 +509,21 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.main.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.main.id
+  route_table_id = aws_route_table.r.id
 }
 
 ###
@@ -522,7 +555,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_emr_service_policy" {
   name = "iam_emr_service_policy"
-  role = "${aws_iam_role.iam_emr_service_role.id}"
+  role = aws_iam_role.iam_emr_service_role.id
 
   policy = <<EOF
 {
@@ -612,13 +645,13 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  name = "emr_profile"
+  role = aws_iam_role.iam_emr_profile_role.name
 }
 
 resource "aws_iam_role_policy" "iam_emr_profile_policy" {
   name = "iam_emr_profile_policy"
-  role = "${aws_iam_role.iam_emr_profile_role.id}"
+  role = aws_iam_role.iam_emr_profile_role.id
 
   policy = <<EOF
 {
@@ -662,4 +695,16 @@ EMR clusters can be imported using the `id`, e.g.
 
 ```
 $ terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```
+
+Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](/docs/configuration/resources.html#ignore_changes) available to all Terraform resources to prevent perpetual differences, e.g.
+
+```hcl
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  lifecycle {
+    ignore_changes = [kerberos_attributes]
+  }
+}
 ```

@@ -1,7 +1,7 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint"
-sidebar_current: "docs-aws-resource-sagemaker-endpoint"
 description: |-
   Provides a SageMaker Endpoint resource.
 ---
@@ -17,7 +17,7 @@ Basic usage:
 ```hcl
 resource "aws_sagemaker_endpoint" "e" {
   name                 = "my-endpoint"
-  endpoint_config_name = "${aws_sagemaker_endpoint_configuration.ec.name}"
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.ec.name
 
   tags = {
     Name = "foo"
@@ -31,7 +31,7 @@ The following arguments are supported:
 
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

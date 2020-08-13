@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsApiGatewayGatewayResponse() *schema.Resource {
@@ -68,7 +65,7 @@ func resourceAwsApiGatewayGatewayResponse() *schema.Resource {
 }
 
 func resourceAwsApiGatewayGatewayResponsePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	templates := make(map[string]string)
 	if kv, ok := d.GetOk("response_templates"); ok {
@@ -109,7 +106,7 @@ func resourceAwsApiGatewayGatewayResponsePut(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Gateway Response %s", d.Id())
 	gatewayResponse, err := conn.GetGatewayResponse(&apigateway.GetGatewayResponseInput{
@@ -117,7 +114,7 @@ func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta inter
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -136,25 +133,20 @@ func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayGatewayResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 
-	return resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteGatewayResponse(&apigateway.DeleteGatewayResponseInput{
-			RestApiId:    aws.String(d.Get("rest_api_id").(string)),
-			ResponseType: aws.String(d.Get("response_type").(string)),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-
-		if ok && apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteGatewayResponse(&apigateway.DeleteGatewayResponseInput{
+		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API Gateway gateway response: %s", err)
+	}
+	return nil
 }

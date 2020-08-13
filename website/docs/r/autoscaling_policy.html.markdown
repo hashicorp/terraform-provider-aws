@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_policy"
-sidebar_current: "docs-aws-resource-autoscaling-policy"
 description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
@@ -24,7 +24,7 @@ resource "aws_autoscaling_policy" "bat" {
   scaling_adjustment     = 4
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
-  autoscaling_group_name = "${aws_autoscaling_group.bar.name}"
+  autoscaling_group_name = aws_autoscaling_group.bar.name
 }
 
 resource "aws_autoscaling_group" "bar" {
@@ -35,7 +35,7 @@ resource "aws_autoscaling_group" "bar" {
   health_check_grace_period = 300
   health_check_type         = "ELB"
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.foo.name}"
+  launch_configuration      = aws_launch_configuration.foo.name
 }
 ```
 
@@ -57,7 +57,7 @@ The following arguments are only available to "SimpleScaling" type policies:
 The following arguments are only available to "StepScaling" type policies:
 
 * `metric_aggregation_type` - (Optional) The aggregation type for the policy's metrics. Valid values are "Minimum", "Maximum", and "Average". Without a value, AWS will treat the aggregation type as "Average".
-* `step_adjustments` - (Optional) A set of adjustments that manage
+* `step_adjustment` - (Optional) A set of adjustments that manage
 group scaling. These have the following structure:
 
 ```hcl

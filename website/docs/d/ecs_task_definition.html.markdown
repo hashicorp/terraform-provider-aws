@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_task_definition"
-sidebar_current: "docs-aws-datasource-ecs-task-definition"
 description: |-
     Provides details about an ecs task definition
 ---
@@ -17,7 +17,7 @@ a specific AWS ECS task definition.
 ```hcl
 # Simply specify the family to find the latest ACTIVE revision in that family.
 data "aws_ecs_task_definition" "mongo" {
-  task_definition = "${aws_ecs_task_definition.mongo.family}"
+  task_definition = aws_ecs_task_definition.mongo.family
 }
 
 resource "aws_ecs_cluster" "foo" {
@@ -47,11 +47,11 @@ DEFINITION
 
 resource "aws_ecs_service" "mongo" {
   name          = "mongo"
-  cluster       = "${aws_ecs_cluster.foo.id}"
+  cluster       = aws_ecs_cluster.foo.id
   desired_count = 2
 
   # Track the latest ACTIVE revision
-  task_definition = "${aws_ecs_task_definition.mongo.family}:${max("${aws_ecs_task_definition.mongo.revision}", "${data.aws_ecs_task_definition.mongo.revision}")}"
+  task_definition = "${aws_ecs_task_definition.mongo.family}:${max(aws_ecs_task_definition.mongo.revision, data.aws_ecs_task_definition.mongo.revision)}"
 }
 ```
 

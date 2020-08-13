@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_volume"
-sidebar_current: "docs-aws-resource-ebs-volume"
 description: |-
   Provides an elastic block storage resource.
 ---
@@ -23,7 +23,7 @@ resource "aws_ebs_volume" "example" {
 }
 ```
 
-~> **NOTE**: One of `size` or `snapshot_id` is required when specifying an EBS volume 
+~> **NOTE**: One of `size` or `snapshot_id` is required when specifying an EBS volume
 
 ## Argument Reference
 
@@ -31,12 +31,14 @@ The following arguments are supported:
 
 * `availability_zone` - (Required) The AZ where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
-* `iops` - (Optional) The amount of IOPS to provision for the disk.
+* `iops` - (Optional) The amount of IOPS to provision for the disk. Only valid for `type` of `io1`.
+* `multi_attach_enabled` - (Optional) Specifies whether to enable Amazon EBS Multi-Attach. Multi-Attach is supported exclusively on `io1` volumes.
 * `size` - (Optional) The size of the drive in GiBs.
 * `snapshot_id` (Optional) A snapshot to base the EBS volume off of.
-* `type` - (Optional) The type of EBS volume. Can be "standard", "gp2", "io1", "sc1" or "st1" (Default: "standard").
+* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
+* `type` - (Optional) The type of EBS volume. Can be "standard", "gp2", "io1", "sc1" or "st1" (Default: "gp2").
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `encrypted` needs to be set to true.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ~> **NOTE**: When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of that Amazon have written about this.
 
@@ -50,8 +52,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EBS Volumes can be imported using the `id`, e.g. 
+EBS Volumes can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_ebs_volume.data vol-049df61146c4d7901
+$ terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```

@@ -80,7 +80,7 @@ func (c *SWF) CountClosedWorkflowExecutionsRequest(input *CountClosedWorkflowExe
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -90,13 +90,13 @@ func (c *SWF) CountClosedWorkflowExecutionsRequest(input *CountClosedWorkflowExe
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountClosedWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -188,7 +188,7 @@ func (c *SWF) CountOpenWorkflowExecutionsRequest(input *CountOpenWorkflowExecuti
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -198,13 +198,13 @@ func (c *SWF) CountOpenWorkflowExecutionsRequest(input *CountOpenWorkflowExecuti
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountOpenWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -294,7 +294,7 @@ func (c *SWF) CountPendingActivityTasksRequest(input *CountPendingActivityTasksI
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -304,13 +304,13 @@ func (c *SWF) CountPendingActivityTasksRequest(input *CountPendingActivityTasksI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountPendingActivityTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -400,7 +400,7 @@ func (c *SWF) CountPendingDecisionTasksRequest(input *CountPendingDecisionTasksI
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -410,13 +410,13 @@ func (c *SWF) CountPendingDecisionTasksRequest(input *CountPendingDecisionTasksI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountPendingDecisionTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -510,7 +510,7 @@ func (c *SWF) DeprecateActivityTypeRequest(input *DeprecateActivityTypeInput) (r
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -520,16 +520,16 @@ func (c *SWF) DeprecateActivityTypeRequest(input *DeprecateActivityTypeInput) (r
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DeprecateActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeDeprecatedFault "TypeDeprecatedFault"
+//   * TypeDeprecatedFault
 //   Returned when the specified activity or workflow type was already deprecated.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -623,7 +623,7 @@ func (c *SWF) DeprecateDomainRequest(input *DeprecateDomainInput) (req *request.
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -633,16 +633,16 @@ func (c *SWF) DeprecateDomainRequest(input *DeprecateDomainInput) (req *request.
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DeprecateDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeDomainDeprecatedFault "DomainDeprecatedFault"
+//   * DomainDeprecatedFault
 //   Returned when the specified domain has been deprecated.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -737,7 +737,7 @@ func (c *SWF) DeprecateWorkflowTypeRequest(input *DeprecateWorkflowTypeInput) (r
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -747,16 +747,16 @@ func (c *SWF) DeprecateWorkflowTypeRequest(input *DeprecateWorkflowTypeInput) (r
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DeprecateWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeDeprecatedFault "TypeDeprecatedFault"
+//   * TypeDeprecatedFault
 //   Returned when the specified activity or workflow type was already deprecated.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -846,7 +846,7 @@ func (c *SWF) DescribeActivityTypeRequest(input *DescribeActivityTypeInput) (req
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -856,13 +856,13 @@ func (c *SWF) DescribeActivityTypeRequest(input *DescribeActivityTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -948,7 +948,7 @@ func (c *SWF) DescribeDomainRequest(input *DescribeDomainInput) (req *request.Re
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -958,13 +958,13 @@ func (c *SWF) DescribeDomainRequest(input *DescribeDomainInput) (req *request.Re
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1053,7 +1053,7 @@ func (c *SWF) DescribeWorkflowExecutionRequest(input *DescribeWorkflowExecutionI
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1063,13 +1063,13 @@ func (c *SWF) DescribeWorkflowExecutionRequest(input *DescribeWorkflowExecutionI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1159,7 +1159,7 @@ func (c *SWF) DescribeWorkflowTypeRequest(input *DescribeWorkflowTypeInput) (req
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1169,13 +1169,13 @@ func (c *SWF) DescribeWorkflowTypeRequest(input *DescribeWorkflowTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1271,7 +1271,7 @@ func (c *SWF) GetWorkflowExecutionHistoryRequest(input *GetWorkflowExecutionHist
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1281,13 +1281,13 @@ func (c *SWF) GetWorkflowExecutionHistoryRequest(input *GetWorkflowExecutionHist
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation GetWorkflowExecutionHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1355,10 +1355,12 @@ func (c *SWF) GetWorkflowExecutionHistoryPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetWorkflowExecutionHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetWorkflowExecutionHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1432,7 +1434,7 @@ func (c *SWF) ListActivityTypesRequest(input *ListActivityTypesInput) (req *requ
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1442,12 +1444,12 @@ func (c *SWF) ListActivityTypesRequest(input *ListActivityTypesInput) (req *requ
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListActivityTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+// Returned Error Types:
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
@@ -1516,10 +1518,12 @@ func (c *SWF) ListActivityTypesPagesWithContext(ctx aws.Context, input *ListActi
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListActivityTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListActivityTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1598,7 +1602,7 @@ func (c *SWF) ListClosedWorkflowExecutionsRequest(input *ListClosedWorkflowExecu
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1608,13 +1612,13 @@ func (c *SWF) ListClosedWorkflowExecutionsRequest(input *ListClosedWorkflowExecu
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListClosedWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1682,10 +1686,12 @@ func (c *SWF) ListClosedWorkflowExecutionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1761,7 +1767,7 @@ func (c *SWF) ListDomainsRequest(input *ListDomainsInput) (req *request.Request,
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1771,8 +1777,8 @@ func (c *SWF) ListDomainsRequest(input *ListDomainsInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListDomains for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+// Returned Error Types:
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1840,10 +1846,12 @@ func (c *SWF) ListDomainsPagesWithContext(ctx aws.Context, input *ListDomainsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDomainsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDomainsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1922,7 +1930,7 @@ func (c *SWF) ListOpenWorkflowExecutionsRequest(input *ListOpenWorkflowExecution
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1932,13 +1940,13 @@ func (c *SWF) ListOpenWorkflowExecutionsRequest(input *ListOpenWorkflowExecution
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListOpenWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2006,11 +2014,100 @@ func (c *SWF) ListOpenWorkflowExecutionsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *SWF) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon Simple Workflow Service.
+//
+// List tags for a given domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Workflow Service's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * UnknownResourceFault
+//   Returned when the named resource cannot be found with in the scope of this
+//   operation (region or domain). This could happen if the named resource was
+//   never created or is no longer available for this operation.
+//
+//   * LimitExceededFault
+//   Returned by any operation if a system imposed limitation has been reached.
+//   To address this fault you should either clean up unused resources or increase
+//   the limit by contacting AWS.
+//
+//   * OperationNotPermittedFault
+//   Returned when the caller doesn't have sufficient permissions to invoke the
+//   action.
+//
+func (c *SWF) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SWF) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListWorkflowTypes = "ListWorkflowTypes"
@@ -2081,7 +2178,7 @@ func (c *SWF) ListWorkflowTypesRequest(input *ListWorkflowTypesInput) (req *requ
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2091,12 +2188,12 @@ func (c *SWF) ListWorkflowTypesRequest(input *ListWorkflowTypesInput) (req *requ
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListWorkflowTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+// Returned Error Types:
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
@@ -2165,10 +2262,12 @@ func (c *SWF) ListWorkflowTypesPagesWithContext(ctx aws.Context, input *ListWork
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkflowTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkflowTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2244,7 +2343,7 @@ func (c *SWF) PollForActivityTaskRequest(input *PollForActivityTaskInput) (req *
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2254,17 +2353,17 @@ func (c *SWF) PollForActivityTaskRequest(input *PollForActivityTaskInput) (req *
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation PollForActivityTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
@@ -2378,7 +2477,7 @@ func (c *SWF) PollForDecisionTaskRequest(input *PollForDecisionTaskInput) (req *
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2388,17 +2487,17 @@ func (c *SWF) PollForDecisionTaskRequest(input *PollForDecisionTaskInput) (req *
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation PollForDecisionTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
@@ -2467,10 +2566,12 @@ func (c *SWF) PollForDecisionTaskPagesWithContext(ctx aws.Context, input *PollFo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*PollForDecisionTaskOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*PollForDecisionTaskOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2559,7 +2660,7 @@ func (c *SWF) RecordActivityTaskHeartbeatRequest(input *RecordActivityTaskHeartb
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2569,13 +2670,13 @@ func (c *SWF) RecordActivityTaskHeartbeatRequest(input *RecordActivityTaskHeartb
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RecordActivityTaskHeartbeat for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2669,7 +2770,7 @@ func (c *SWF) RegisterActivityTypeRequest(input *RegisterActivityTypeInput) (req
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2679,24 +2780,23 @@ func (c *SWF) RegisterActivityTypeRequest(input *RegisterActivityTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RegisterActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTypeAlreadyExistsFault "TypeAlreadyExistsFault"
-//   Returned if the type already exists in the specified domain. You get this
-//   fault even if the existing type is in deprecated status. You can specify
-//   another version if the intent is to create a new distinct version of the
-//   type.
+// Returned Error Types:
+//   * TypeAlreadyExistsFault
+//   Returned if the type already exists in the specified domain. You may get
+//   this fault if you are registering a type that is either already registered
+//   or deprecated, or if you undeprecate a type that is currently registered.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2783,7 +2883,7 @@ func (c *SWF) RegisterDomainRequest(input *RegisterDomainInput) (req *request.Re
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2793,19 +2893,23 @@ func (c *SWF) RegisterDomainRequest(input *RegisterDomainInput) (req *request.Re
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RegisterDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDomainAlreadyExistsFault "DomainAlreadyExistsFault"
-//   Returned if the specified domain already exists. You get this fault even
-//   if the existing domain is in deprecated status.
+// Returned Error Types:
+//   * DomainAlreadyExistsFault
+//   Returned if the domain already exists. You may get this fault if you are
+//   registering a domain that is either already registered or deprecated, or
+//   if you undeprecate a domain that is currently registered.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
+//
+//   * TooManyTagsFault
+//   You've exceeded the number of tags allowed for a domain.
 //
 func (c *SWF) RegisterDomain(input *RegisterDomainInput) (*RegisterDomainOutput, error) {
 	req, out := c.RegisterDomainRequest(input)
@@ -2900,7 +3004,7 @@ func (c *SWF) RegisterWorkflowTypeRequest(input *RegisterWorkflowTypeInput) (req
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2910,24 +3014,23 @@ func (c *SWF) RegisterWorkflowTypeRequest(input *RegisterWorkflowTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RegisterWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTypeAlreadyExistsFault "TypeAlreadyExistsFault"
-//   Returned if the type already exists in the specified domain. You get this
-//   fault even if the existing type is in deprecated status. You can specify
-//   another version if the intent is to create a new distinct version of the
-//   type.
+// Returned Error Types:
+//   * TypeAlreadyExistsFault
+//   Returned if the type already exists in the specified domain. You may get
+//   this fault if you are registering a type that is either already registered
+//   or deprecated, or if you undeprecate a type that is currently registered.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3024,7 +3127,7 @@ func (c *SWF) RequestCancelWorkflowExecutionRequest(input *RequestCancelWorkflow
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3034,13 +3137,13 @@ func (c *SWF) RequestCancelWorkflowExecutionRequest(input *RequestCancelWorkflow
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RequestCancelWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3122,7 +3225,7 @@ func (c *SWF) RespondActivityTaskCanceledRequest(input *RespondActivityTaskCance
 // closed. Therefore a task is reported as open while a worker is processing
 // it. A task is closed after it has been specified in a call to RespondActivityTaskCompleted,
 // RespondActivityTaskCanceled, RespondActivityTaskFailed, or the task has timed
-// out (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-basic.html#swf-dev-timeout-types).
+// out (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-basic.html#swf-dev-timeout-types).
 //
 // Access Control
 //
@@ -3140,7 +3243,7 @@ func (c *SWF) RespondActivityTaskCanceledRequest(input *RespondActivityTaskCance
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3150,13 +3253,13 @@ func (c *SWF) RespondActivityTaskCanceledRequest(input *RespondActivityTaskCance
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondActivityTaskCanceled for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3237,7 +3340,7 @@ func (c *SWF) RespondActivityTaskCompletedRequest(input *RespondActivityTaskComp
 // closed. Therefore a task is reported as open while a worker is processing
 // it. A task is closed after it has been specified in a call to RespondActivityTaskCompleted,
 // RespondActivityTaskCanceled, RespondActivityTaskFailed, or the task has timed
-// out (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-basic.html#swf-dev-timeout-types).
+// out (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-basic.html#swf-dev-timeout-types).
 //
 // Access Control
 //
@@ -3255,7 +3358,7 @@ func (c *SWF) RespondActivityTaskCompletedRequest(input *RespondActivityTaskComp
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3265,13 +3368,13 @@ func (c *SWF) RespondActivityTaskCompletedRequest(input *RespondActivityTaskComp
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondActivityTaskCompleted for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3347,7 +3450,7 @@ func (c *SWF) RespondActivityTaskFailedRequest(input *RespondActivityTaskFailedI
 // closed. Therefore a task is reported as open while a worker is processing
 // it. A task is closed after it has been specified in a call to RespondActivityTaskCompleted,
 // RespondActivityTaskCanceled, RespondActivityTaskFailed, or the task has timed
-// out (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-basic.html#swf-dev-timeout-types).
+// out (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-basic.html#swf-dev-timeout-types).
 //
 // Access Control
 //
@@ -3365,7 +3468,7 @@ func (c *SWF) RespondActivityTaskFailedRequest(input *RespondActivityTaskFailedI
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3375,13 +3478,13 @@ func (c *SWF) RespondActivityTaskFailedRequest(input *RespondActivityTaskFailedI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondActivityTaskFailed for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3464,7 +3567,7 @@ func (c *SWF) RespondDecisionTaskCompletedRequest(input *RespondDecisionTaskComp
 // call. To allow for policies to be as readable as possible, you can express
 // permissions on decisions as if they were actual API calls, including applying
 // conditions to some parameters. For more information, see Using IAM to Manage
-// Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3474,13 +3577,13 @@ func (c *SWF) RespondDecisionTaskCompletedRequest(input *RespondDecisionTaskComp
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondDecisionTaskCompleted for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3575,7 +3678,7 @@ func (c *SWF) SignalWorkflowExecutionRequest(input *SignalWorkflowExecutionInput
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3585,13 +3688,13 @@ func (c *SWF) SignalWorkflowExecutionRequest(input *SignalWorkflowExecutionInput
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation SignalWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3686,7 +3789,7 @@ func (c *SWF) StartWorkflowExecutionRequest(input *StartWorkflowExecutionInput) 
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3696,29 +3799,29 @@ func (c *SWF) StartWorkflowExecutionRequest(input *StartWorkflowExecutionInput) 
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation StartWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeDeprecatedFault "TypeDeprecatedFault"
+//   * TypeDeprecatedFault
 //   Returned when the specified activity or workflow type was already deprecated.
 //
-//   * ErrCodeWorkflowExecutionAlreadyStartedFault "WorkflowExecutionAlreadyStartedFault"
+//   * WorkflowExecutionAlreadyStartedFault
 //   Returned by StartWorkflowExecution when an open execution with the same workflowId
 //   is already running in the specified domain.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeDefaultUndefinedFault "DefaultUndefinedFault"
+//   * DefaultUndefinedFault
 //   The StartWorkflowExecution API action was called without the required parameters
 //   set.
 //
@@ -3747,6 +3850,99 @@ func (c *SWF) StartWorkflowExecution(input *StartWorkflowExecutionInput) (*Start
 // for more information on using Contexts.
 func (c *SWF) StartWorkflowExecutionWithContext(ctx aws.Context, input *StartWorkflowExecutionInput, opts ...request.Option) (*StartWorkflowExecutionOutput, error) {
 	req, out := c.StartWorkflowExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *SWF) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon Simple Workflow Service.
+//
+// Add a tag to a Amazon SWF domain.
+//
+// Amazon SWF supports a maximum of 50 tags per resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Workflow Service's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Types:
+//   * UnknownResourceFault
+//   Returned when the named resource cannot be found with in the scope of this
+//   operation (region or domain). This could happen if the named resource was
+//   never created or is no longer available for this operation.
+//
+//   * TooManyTagsFault
+//   You've exceeded the number of tags allowed for a domain.
+//
+//   * LimitExceededFault
+//   Returned by any operation if a system imposed limitation has been reached.
+//   To address this fault you should either clean up unused resources or increase
+//   the limit by contacting AWS.
+//
+//   * OperationNotPermittedFault
+//   Returned when the caller doesn't have sufficient permissions to invoke the
+//   action.
+//
+func (c *SWF) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SWF) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3827,7 +4023,7 @@ func (c *SWF) TerminateWorkflowExecutionRequest(input *TerminateWorkflowExecutio
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3837,13 +4033,13 @@ func (c *SWF) TerminateWorkflowExecutionRequest(input *TerminateWorkflowExecutio
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation TerminateWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3863,6 +4059,433 @@ func (c *SWF) TerminateWorkflowExecution(input *TerminateWorkflowExecutionInput)
 // for more information on using Contexts.
 func (c *SWF) TerminateWorkflowExecutionWithContext(ctx aws.Context, input *TerminateWorkflowExecutionInput, opts ...request.Option) (*TerminateWorkflowExecutionOutput, error) {
 	req, out := c.TerminateWorkflowExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUndeprecateActivityType = "UndeprecateActivityType"
+
+// UndeprecateActivityTypeRequest generates a "aws/request.Request" representing the
+// client's request for the UndeprecateActivityType operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UndeprecateActivityType for more information on using the UndeprecateActivityType
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UndeprecateActivityTypeRequest method.
+//    req, resp := client.UndeprecateActivityTypeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *SWF) UndeprecateActivityTypeRequest(input *UndeprecateActivityTypeInput) (req *request.Request, output *UndeprecateActivityTypeOutput) {
+	op := &request.Operation{
+		Name:       opUndeprecateActivityType,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UndeprecateActivityTypeInput{}
+	}
+
+	output = &UndeprecateActivityTypeOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UndeprecateActivityType API operation for Amazon Simple Workflow Service.
+//
+// Undeprecates a previously deprecated activity type. After an activity type
+// has been undeprecated, you can create new tasks of that activity type.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not exactly reflect recent updates and changes.
+//
+// Access Control
+//
+// You can use IAM policies to control this action's access to Amazon SWF resources
+// as follows:
+//
+//    * Use a Resource element with the domain name to limit the action to only
+//    specified domains.
+//
+//    * Use an Action element to allow or deny permission to call this action.
+//
+//    * Constrain the following parameters by using a Condition element with
+//    the appropriate keys. activityType.name: String constraint. The key is
+//    swf:activityType.name. activityType.version: String constraint. The key
+//    is swf:activityType.version.
+//
+// If the caller doesn't have sufficient permissions to invoke the action, or
+// the parameter values fall outside the specified constraints, the action fails.
+// The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
+// For details and example IAM policies, see Using IAM to Manage Access to Amazon
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// in the Amazon SWF Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Workflow Service's
+// API operation UndeprecateActivityType for usage and error information.
+//
+// Returned Error Types:
+//   * UnknownResourceFault
+//   Returned when the named resource cannot be found with in the scope of this
+//   operation (region or domain). This could happen if the named resource was
+//   never created or is no longer available for this operation.
+//
+//   * TypeAlreadyExistsFault
+//   Returned if the type already exists in the specified domain. You may get
+//   this fault if you are registering a type that is either already registered
+//   or deprecated, or if you undeprecate a type that is currently registered.
+//
+//   * OperationNotPermittedFault
+//   Returned when the caller doesn't have sufficient permissions to invoke the
+//   action.
+//
+func (c *SWF) UndeprecateActivityType(input *UndeprecateActivityTypeInput) (*UndeprecateActivityTypeOutput, error) {
+	req, out := c.UndeprecateActivityTypeRequest(input)
+	return out, req.Send()
+}
+
+// UndeprecateActivityTypeWithContext is the same as UndeprecateActivityType with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UndeprecateActivityType for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SWF) UndeprecateActivityTypeWithContext(ctx aws.Context, input *UndeprecateActivityTypeInput, opts ...request.Option) (*UndeprecateActivityTypeOutput, error) {
+	req, out := c.UndeprecateActivityTypeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUndeprecateDomain = "UndeprecateDomain"
+
+// UndeprecateDomainRequest generates a "aws/request.Request" representing the
+// client's request for the UndeprecateDomain operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UndeprecateDomain for more information on using the UndeprecateDomain
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UndeprecateDomainRequest method.
+//    req, resp := client.UndeprecateDomainRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *SWF) UndeprecateDomainRequest(input *UndeprecateDomainInput) (req *request.Request, output *UndeprecateDomainOutput) {
+	op := &request.Operation{
+		Name:       opUndeprecateDomain,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UndeprecateDomainInput{}
+	}
+
+	output = &UndeprecateDomainOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UndeprecateDomain API operation for Amazon Simple Workflow Service.
+//
+// Undeprecates a previously deprecated domain. After a domain has been undeprecated
+// it can be used to create new workflow executions or register new types.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not exactly reflect recent updates and changes.
+//
+// Access Control
+//
+// You can use IAM policies to control this action's access to Amazon SWF resources
+// as follows:
+//
+//    * Use a Resource element with the domain name to limit the action to only
+//    specified domains.
+//
+//    * Use an Action element to allow or deny permission to call this action.
+//
+//    * You cannot use an IAM policy to constrain this action's parameters.
+//
+// If the caller doesn't have sufficient permissions to invoke the action, or
+// the parameter values fall outside the specified constraints, the action fails.
+// The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
+// For details and example IAM policies, see Using IAM to Manage Access to Amazon
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// in the Amazon SWF Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Workflow Service's
+// API operation UndeprecateDomain for usage and error information.
+//
+// Returned Error Types:
+//   * UnknownResourceFault
+//   Returned when the named resource cannot be found with in the scope of this
+//   operation (region or domain). This could happen if the named resource was
+//   never created or is no longer available for this operation.
+//
+//   * DomainAlreadyExistsFault
+//   Returned if the domain already exists. You may get this fault if you are
+//   registering a domain that is either already registered or deprecated, or
+//   if you undeprecate a domain that is currently registered.
+//
+//   * OperationNotPermittedFault
+//   Returned when the caller doesn't have sufficient permissions to invoke the
+//   action.
+//
+func (c *SWF) UndeprecateDomain(input *UndeprecateDomainInput) (*UndeprecateDomainOutput, error) {
+	req, out := c.UndeprecateDomainRequest(input)
+	return out, req.Send()
+}
+
+// UndeprecateDomainWithContext is the same as UndeprecateDomain with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UndeprecateDomain for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SWF) UndeprecateDomainWithContext(ctx aws.Context, input *UndeprecateDomainInput, opts ...request.Option) (*UndeprecateDomainOutput, error) {
+	req, out := c.UndeprecateDomainRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUndeprecateWorkflowType = "UndeprecateWorkflowType"
+
+// UndeprecateWorkflowTypeRequest generates a "aws/request.Request" representing the
+// client's request for the UndeprecateWorkflowType operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UndeprecateWorkflowType for more information on using the UndeprecateWorkflowType
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UndeprecateWorkflowTypeRequest method.
+//    req, resp := client.UndeprecateWorkflowTypeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *SWF) UndeprecateWorkflowTypeRequest(input *UndeprecateWorkflowTypeInput) (req *request.Request, output *UndeprecateWorkflowTypeOutput) {
+	op := &request.Operation{
+		Name:       opUndeprecateWorkflowType,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UndeprecateWorkflowTypeInput{}
+	}
+
+	output = &UndeprecateWorkflowTypeOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UndeprecateWorkflowType API operation for Amazon Simple Workflow Service.
+//
+// Undeprecates a previously deprecated workflow type. After a workflow type
+// has been undeprecated, you can create new executions of that type.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not exactly reflect recent updates and changes.
+//
+// Access Control
+//
+// You can use IAM policies to control this action's access to Amazon SWF resources
+// as follows:
+//
+//    * Use a Resource element with the domain name to limit the action to only
+//    specified domains.
+//
+//    * Use an Action element to allow or deny permission to call this action.
+//
+//    * Constrain the following parameters by using a Condition element with
+//    the appropriate keys. workflowType.name: String constraint. The key is
+//    swf:workflowType.name. workflowType.version: String constraint. The key
+//    is swf:workflowType.version.
+//
+// If the caller doesn't have sufficient permissions to invoke the action, or
+// the parameter values fall outside the specified constraints, the action fails.
+// The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
+// For details and example IAM policies, see Using IAM to Manage Access to Amazon
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// in the Amazon SWF Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Workflow Service's
+// API operation UndeprecateWorkflowType for usage and error information.
+//
+// Returned Error Types:
+//   * UnknownResourceFault
+//   Returned when the named resource cannot be found with in the scope of this
+//   operation (region or domain). This could happen if the named resource was
+//   never created or is no longer available for this operation.
+//
+//   * TypeAlreadyExistsFault
+//   Returned if the type already exists in the specified domain. You may get
+//   this fault if you are registering a type that is either already registered
+//   or deprecated, or if you undeprecate a type that is currently registered.
+//
+//   * OperationNotPermittedFault
+//   Returned when the caller doesn't have sufficient permissions to invoke the
+//   action.
+//
+func (c *SWF) UndeprecateWorkflowType(input *UndeprecateWorkflowTypeInput) (*UndeprecateWorkflowTypeOutput, error) {
+	req, out := c.UndeprecateWorkflowTypeRequest(input)
+	return out, req.Send()
+}
+
+// UndeprecateWorkflowTypeWithContext is the same as UndeprecateWorkflowType with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UndeprecateWorkflowType for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SWF) UndeprecateWorkflowTypeWithContext(ctx aws.Context, input *UndeprecateWorkflowTypeInput, opts ...request.Option) (*UndeprecateWorkflowTypeOutput, error) {
+	req, out := c.UndeprecateWorkflowTypeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *SWF) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon Simple Workflow Service.
+//
+// Remove a tag from a Amazon SWF domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Workflow Service's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Types:
+//   * UnknownResourceFault
+//   Returned when the named resource cannot be found with in the scope of this
+//   operation (region or domain). This could happen if the named resource was
+//   never created or is no longer available for this operation.
+//
+//   * LimitExceededFault
+//   Returned by any operation if a system imposed limitation has been reached.
+//   To address this fault you should either clean up unused resources or increase
+//   the limit by contacting AWS.
+//
+//   * OperationNotPermittedFault
+//   Returned when the caller doesn't have sufficient permissions to invoke the
+//   action.
+//
+func (c *SWF) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SWF) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4135,7 +4758,7 @@ type ActivityTaskScheduledEventAttributes struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 }
@@ -4413,7 +5036,7 @@ type ActivityTypeConfiguration struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	DefaultTaskPriority *string `locationName:"defaultTaskPriority" type:"string"`
 
@@ -4573,7 +5196,7 @@ func (s *ActivityTypeInfo) SetStatus(v string) *ActivityTypeInfo {
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type CancelTimerDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -4625,7 +5248,7 @@ type CancelTimerFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -4691,7 +5314,7 @@ func (s *CancelTimerFailedEventAttributes) SetTimerId(v string) *CancelTimerFail
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type CancelWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -4725,7 +5348,7 @@ type CancelWorkflowExecutionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -5240,7 +5863,7 @@ func (s *CloseStatusFilter) SetStatus(v string) *CloseStatusFilter {
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type CompleteWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -5275,7 +5898,7 @@ type CompleteWorkflowExecutionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -5333,7 +5956,7 @@ func (s *CompleteWorkflowExecutionFailedEventAttributes) SetDecisionTaskComplete
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type ContinueAsNewWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -5395,7 +6018,7 @@ type ContinueAsNewWorkflowExecutionDecisionAttributes struct {
 	// Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 
@@ -5510,7 +6133,7 @@ type ContinueAsNewWorkflowExecutionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -5986,7 +6609,7 @@ func (s *CountPendingDecisionTasksInput) SetTaskList(v *TaskList) *CountPendingD
 // this action as if they were members of the API. Treating decisions as a pseudo
 // API maintains a uniform conceptual model and helps keep policies readable.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 // Decision Failure
@@ -6005,7 +6628,7 @@ func (s *CountPendingDecisionTasksInput) SetTaskList(v *TaskList) *CountPendingD
 // error. The event attribute's cause parameter indicates the cause. If cause
 // is set to OPERATION_NOT_PERMITTED, the decision failed because it lacked
 // sufficient permissions. For details and example IAM policies, see Using IAM
-// to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 //
 //    * ScheduleActivityTaskFailed – A ScheduleActivityTask decision failed.
@@ -6385,7 +7008,7 @@ type DecisionTaskScheduledEventAttributes struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 }
@@ -6506,6 +7129,72 @@ func (s *DecisionTaskTimedOutEventAttributes) SetStartedEventId(v int64) *Decisi
 func (s *DecisionTaskTimedOutEventAttributes) SetTimeoutType(v string) *DecisionTaskTimedOutEventAttributes {
 	s.TimeoutType = &v
 	return s
+}
+
+// The StartWorkflowExecution API action was called without the required parameters
+// set.
+//
+// Some workflow execution parameters, such as the decision taskList, must be
+// set to start the execution. However, these parameters might have been set
+// as defaults when the workflow type was registered. In this case, you can
+// omit these parameters from the StartWorkflowExecution call and Amazon SWF
+// uses the values defined in the workflow type.
+//
+// If these parameters aren't set and no default parameters were defined in
+// the workflow type, this error is displayed.
+type DefaultUndefinedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DefaultUndefinedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DefaultUndefinedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorDefaultUndefinedFault(v protocol.ResponseMetadata) error {
+	return &DefaultUndefinedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DefaultUndefinedFault) Code() string {
+	return "DefaultUndefinedFault"
+}
+
+// Message returns the exception's message.
+func (s *DefaultUndefinedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DefaultUndefinedFault) OrigErr() error {
+	return nil
+}
+
+func (s *DefaultUndefinedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DefaultUndefinedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DefaultUndefinedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type DeprecateActivityTypeInput struct {
@@ -7137,6 +7826,65 @@ func (s *DescribeWorkflowTypeOutput) SetTypeInfo(v *WorkflowTypeInfo) *DescribeW
 	return s
 }
 
+// Returned if the domain already exists. You may get this fault if you are
+// registering a domain that is either already registered or deprecated, or
+// if you undeprecate a domain that is currently registered.
+type DomainAlreadyExistsFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DomainAlreadyExistsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainAlreadyExistsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorDomainAlreadyExistsFault(v protocol.ResponseMetadata) error {
+	return &DomainAlreadyExistsFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DomainAlreadyExistsFault) Code() string {
+	return "DomainAlreadyExistsFault"
+}
+
+// Message returns the exception's message.
+func (s *DomainAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DomainAlreadyExistsFault) OrigErr() error {
+	return nil
+}
+
+func (s *DomainAlreadyExistsFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DomainAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DomainAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Contains the configuration settings of a domain.
 type DomainConfiguration struct {
 	_ struct{} `type:"structure"`
@@ -7163,9 +7911,69 @@ func (s *DomainConfiguration) SetWorkflowExecutionRetentionPeriodInDays(v string
 	return s
 }
 
+// Returned when the specified domain has been deprecated.
+type DomainDeprecatedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DomainDeprecatedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainDeprecatedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorDomainDeprecatedFault(v protocol.ResponseMetadata) error {
+	return &DomainDeprecatedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DomainDeprecatedFault) Code() string {
+	return "DomainDeprecatedFault"
+}
+
+// Message returns the exception's message.
+func (s *DomainDeprecatedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DomainDeprecatedFault) OrigErr() error {
+	return nil
+}
+
+func (s *DomainDeprecatedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DomainDeprecatedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DomainDeprecatedFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Contains general information about a domain.
 type DomainInfo struct {
 	_ struct{} `type:"structure"`
+
+	// The ARN of the domain.
+	Arn *string `locationName:"arn" min:"1" type:"string"`
 
 	// The description of the domain provided through RegisterDomain.
 	Description *string `locationName:"description" type:"string"`
@@ -7196,6 +8004,12 @@ func (s DomainInfo) String() string {
 // GoString returns the string representation
 func (s DomainInfo) GoString() string {
 	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DomainInfo) SetArn(v string) *DomainInfo {
+	s.Arn = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -7366,7 +8180,7 @@ func (s *ExternalWorkflowExecutionSignaledEventAttributes) SetWorkflowExecution(
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type FailWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -7409,7 +8223,7 @@ type FailWorkflowExecutionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -7459,18 +8273,16 @@ type GetWorkflowExecutionHistoryInput struct {
 	// Execution is a required field
 	Execution *WorkflowExecution `locationName:"execution" type:"structure" required:"true"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
-	//
-	// This is an upper limit only; the actual number of results returned per call
-	// may be fewer than the specified maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -8622,6 +9434,65 @@ func (s *LambdaFunctionTimedOutEventAttributes) SetTimeoutType(v string) *Lambda
 	return s
 }
 
+// Returned by any operation if a system imposed limitation has been reached.
+// To address this fault you should either clean up unused resources or increase
+// the limit by contacting AWS.
+type LimitExceededFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededFault) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededFault(v protocol.ResponseMetadata) error {
+	return &LimitExceededFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededFault) Code() string {
+	return "LimitExceededFault"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededFault) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type ListActivityTypesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8630,21 +9501,19 @@ type ListActivityTypesInput struct {
 	// Domain is a required field
 	Domain *string `locationName:"domain" min:"1" type:"string" required:"true"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
-	//
-	// This is an upper limit only; the actual number of results returned per call
-	// may be fewer than the specified maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
 	// If specified, only lists the activity types that have this name.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -8800,18 +9669,16 @@ type ListClosedWorkflowExecutionsInput struct {
 	// exclusive. You can specify at most one of these in a request.
 	ExecutionFilter *WorkflowExecutionFilter `locationName:"executionFilter" type:"structure"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
-	//
-	// This is an upper limit only; the actual number of results returned per call
-	// may be fewer than the specified maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -8962,18 +9829,16 @@ func (s *ListClosedWorkflowExecutionsInput) SetTypeFilter(v *WorkflowTypeFilter)
 type ListDomainsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
-	//
-	// This is an upper limit only; the actual number of results returned per call
-	// may be fewer than the specified maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -9091,18 +9956,16 @@ type ListOpenWorkflowExecutionsInput struct {
 	// specify at most one of these in a request.
 	ExecutionFilter *WorkflowExecutionFilter `locationName:"executionFilter" type:"structure"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
-	//
-	// This is an upper limit only; the actual number of results returned per call
-	// may be fewer than the specified maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -9228,6 +10091,70 @@ func (s *ListOpenWorkflowExecutionsInput) SetTypeFilter(v *WorkflowTypeFilter) *
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the Amazon SWF domain.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of tags associated with the domain.
+	Tags []*ResourceTag `locationName:"tags" type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*ResourceTag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
 type ListWorkflowTypesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9236,21 +10163,19 @@ type ListWorkflowTypesInput struct {
 	// Domain is a required field
 	Domain *string `locationName:"domain" min:"1" type:"string" required:"true"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
-	//
-	// This is an upper limit only; the actual number of results returned per call
-	// may be fewer than the specified maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
 	// If specified, lists the workflow type with this name.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -9424,6 +10349,64 @@ func (s *MarkerRecordedEventAttributes) SetMarkerName(v string) *MarkerRecordedE
 	return s
 }
 
+// Returned when the caller doesn't have sufficient permissions to invoke the
+// action.
+type OperationNotPermittedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s OperationNotPermittedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OperationNotPermittedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorOperationNotPermittedFault(v protocol.ResponseMetadata) error {
+	return &OperationNotPermittedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *OperationNotPermittedFault) Code() string {
+	return "OperationNotPermittedFault"
+}
+
+// Message returns the exception's message.
+func (s *OperationNotPermittedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *OperationNotPermittedFault) OrigErr() error {
+	return nil
+}
+
+func (s *OperationNotPermittedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *OperationNotPermittedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *OperationNotPermittedFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Contains the count of tasks in a task list.
 type PendingTaskCount struct {
 	_ struct{} `type:"structure"`
@@ -9477,7 +10460,7 @@ type PollForActivityTaskInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// TaskList is a required field
 	TaskList *TaskList `locationName:"taskList" type:"structure" required:"true"`
@@ -9630,18 +10613,19 @@ type PollForDecisionTaskInput struct {
 	// arise. The form of this identity is user defined.
 	Identity *string `locationName:"identity" type:"string"`
 
-	// The maximum number of results that are returned per call. nextPageToken can
-	// be used to obtain futher pages of results. The default is 1000, which is
-	// the maximum allowed page size. You can, however, specify a page size smaller
-	// than the maximum.
+	// The maximum number of results that are returned per call. Use nextPageToken
+	// to obtain further pages of results.
 	//
 	// This is an upper limit only; the actual number of results returned per call
 	// may be fewer than the specified maximum.
 	MaximumPageSize *int64 `locationName:"maximumPageSize" type:"integer"`
 
-	// If a NextPageToken was returned by a previous call, there are more results
-	// available. To retrieve the next page of results, make the call again using
-	// the returned token in nextPageToken. Keep all other arguments unchanged.
+	// If NextPageToken is returned there are more results available. The value
+	// of NextPageToken is a unique pagination token for each page. Make the call
+	// again using the returned token to retrieve the next page. Keep all other
+	// arguments unchanged. Each pagination token expires after 60 seconds. Using
+	// an expired pagination token will return a 400 error: "Specified token has
+	// exceeded its maximum lifetime".
 	//
 	// The configured maximumPageSize determines how many results can be returned
 	// in a single call.
@@ -9660,7 +10644,7 @@ type PollForDecisionTaskInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// TaskList is a required field
 	TaskList *TaskList `locationName:"taskList" type:"structure" required:"true"`
@@ -9934,7 +10918,7 @@ func (s *RecordActivityTaskHeartbeatOutput) SetCancelRequested(v bool) *RecordAc
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type RecordMarkerDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -9995,7 +10979,7 @@ type RecordMarkerFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -10070,7 +11054,7 @@ type RegisterActivityTypeInput struct {
 	// higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the in the Amazon SWF Developer Guide..
 	DefaultTaskPriority *string `locationName:"defaultTaskPriority" type:"string"`
 
@@ -10110,7 +11094,7 @@ type RegisterActivityTypeInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -10122,7 +11106,7 @@ type RegisterActivityTypeInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// Version is a required field
 	Version *string `locationName:"version" min:"1" type:"string" required:"true"`
@@ -10256,10 +11240,16 @@ type RegisterDomainInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+
+	// Tags to be added when registering a domain.
+	//
+	// Tags may only contain unicode letters, digits, whitespace, or these symbols:
+	// _ . : / = + - @.
+	Tags []*ResourceTag `locationName:"tags" type:"list"`
 
 	// The duration (in days) that records and histories of workflow executions
 	// on the domain should be kept by the service. After the retention period,
@@ -10270,7 +11260,7 @@ type RegisterDomainInput struct {
 	// record and its history are deleted.
 	//
 	// The maximum workflow execution retention period is 90 days. For more information
-	// about Amazon SWF service limits, see: Amazon SWF Service Limits (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-limits.html)
+	// about Amazon SWF service limits, see: Amazon SWF Service Limits (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dg-limits.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// WorkflowExecutionRetentionPeriodInDays is a required field
@@ -10302,6 +11292,16 @@ func (s *RegisterDomainInput) Validate() error {
 	if s.WorkflowExecutionRetentionPeriodInDays != nil && len(*s.WorkflowExecutionRetentionPeriodInDays) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("WorkflowExecutionRetentionPeriodInDays", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10318,6 +11318,12 @@ func (s *RegisterDomainInput) SetDescription(v string) *RegisterDomainInput {
 // SetName sets the Name field's value.
 func (s *RegisterDomainInput) SetName(v string) *RegisterDomainInput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *RegisterDomainInput) SetTags(v []*ResourceTag) *RegisterDomainInput {
+	s.Tags = v
 	return s
 }
 
@@ -10377,8 +11383,8 @@ type RegisterWorkflowTypeInput struct {
 	//
 	// Executions of this workflow type need IAM roles to invoke Lambda functions.
 	// If you don't specify an IAM role when you start this workflow type, the default
-	// Lambda role is attached to the execution. For more information, see http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
+	// Lambda role is attached to the execution. For more information, see https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
 	// in the Amazon SWF Developer Guide.
 	DefaultLambdaRole *string `locationName:"defaultLambdaRole" min:"1" type:"string"`
 
@@ -10394,7 +11400,7 @@ type RegisterWorkflowTypeInput struct {
 	// higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	DefaultTaskPriority *string `locationName:"defaultTaskPriority" type:"string"`
 
@@ -10419,7 +11425,7 @@ type RegisterWorkflowTypeInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
@@ -10432,7 +11438,7 @@ type RegisterWorkflowTypeInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// Version is a required field
 	Version *string `locationName:"version" min:"1" type:"string" required:"true"`
@@ -10576,7 +11582,7 @@ func (s RegisterWorkflowTypeOutput) GoString() string {
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type RequestCancelActivityTaskDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -10633,7 +11639,7 @@ type RequestCancelActivityTaskFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -10694,7 +11700,7 @@ func (s *RequestCancelActivityTaskFailedEventAttributes) SetDecisionTaskComplete
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type RequestCancelExternalWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -10766,7 +11772,7 @@ type RequestCancelExternalWorkflowExecutionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -10987,6 +11993,61 @@ func (s RequestCancelWorkflowExecutionOutput) String() string {
 // GoString returns the string representation
 func (s RequestCancelWorkflowExecutionOutput) GoString() string {
 	return s.String()
+}
+
+// Tags are key-value pairs that can be associated with Amazon SWF state machines
+// and activities.
+//
+// Tags may only contain unicode letters, digits, whitespace, or these symbols:
+// _ . : / = + - @.
+type ResourceTag struct {
+	_ struct{} `type:"structure"`
+
+	// The key of a tag.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+
+	// The value of a tag.
+	Value *string `locationName:"value" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceTag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceTag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceTag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceTag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *ResourceTag) SetKey(v string) *ResourceTag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *ResourceTag) SetValue(v string) *ResourceTag {
+	s.Value = &v
+	return s
 }
 
 type RespondActivityTaskCanceledInput struct {
@@ -11314,7 +12375,7 @@ func (s RespondDecisionTaskCompletedOutput) GoString() string {
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type ScheduleActivityTaskDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -11409,7 +12470,7 @@ type ScheduleActivityTaskDecisionAttributes struct {
 	// Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 }
@@ -11532,7 +12593,7 @@ type ScheduleActivityTaskFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -11681,7 +12742,7 @@ type ScheduleLambdaFunctionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -11757,7 +12818,7 @@ func (s *ScheduleLambdaFunctionFailedEventAttributes) SetName(v string) *Schedul
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type SignalExternalWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -11856,7 +12917,7 @@ type SignalExternalWorkflowExecutionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -12149,7 +13210,7 @@ func (s SignalWorkflowExecutionOutput) GoString() string {
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type StartChildWorkflowExecutionDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -12224,7 +13285,7 @@ type StartChildWorkflowExecutionDecisionAttributes struct {
 	// Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 
@@ -12373,7 +13434,7 @@ type StartChildWorkflowExecutionFailedEventAttributes struct {
 	//
 	// When cause is set to OPERATION_NOT_PERMITTED, the decision fails because
 	// it lacks sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -12522,7 +13583,7 @@ type StartChildWorkflowExecutionInitiatedEventAttributes struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 
@@ -12635,7 +13696,7 @@ type StartLambdaFunctionFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because the
 	// IAM role attached to the execution lacked sufficient permissions. For details
-	// and example IAM policies, see Lambda Tasks (http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
+	// and example IAM policies, see Lambda Tasks (https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
 	// in the Amazon SWF Developer Guide.
 	Cause *string `locationName:"cause" type:"string" enum:"StartLambdaFunctionFailedCause"`
 
@@ -12694,7 +13755,7 @@ func (s *StartLambdaFunctionFailedEventAttributes) SetScheduledEventId(v int64) 
 // the parameter values fall outside the specified constraints, the action fails.
 // The associated event attribute's cause parameter is set to OPERATION_NOT_PERMITTED.
 // For details and example IAM policies, see Using IAM to Manage Access to Amazon
-// SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+// SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 // in the Amazon SWF Developer Guide.
 type StartTimerDecisionAttributes struct {
 	_ struct{} `type:"structure"`
@@ -12780,7 +13841,7 @@ type StartTimerFailedEventAttributes struct {
 	//
 	// If cause is set to OPERATION_NOT_PERMITTED, the decision failed because it
 	// lacked sufficient permissions. For details and example IAM policies, see
-	// Using IAM to Manage Access to Amazon SWF Workflows (http://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
+	// Using IAM to Manage Access to Amazon SWF Workflows (https://docs.aws.amazon.com/amazonswf/latest/developerguide/swf-dev-iam.html)
 	// in the Amazon SWF Developer Guide.
 	//
 	// Cause is a required field
@@ -12883,8 +13944,8 @@ type StartWorkflowExecutionInput struct {
 	// Executions of this workflow type need IAM roles to invoke Lambda functions.
 	// If you don't attach an IAM role, any attempt to schedule a Lambda task fails.
 	// This results in a ScheduleLambdaFunctionFailed history event. For more information,
-	// see http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
+	// see https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
 	// in the Amazon SWF Developer Guide.
 	LambdaRole *string `locationName:"lambdaRole" min:"1" type:"string"`
 
@@ -12905,7 +13966,7 @@ type StartWorkflowExecutionInput struct {
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	TaskList *TaskList `locationName:"taskList" type:"structure"`
 
 	// The task priority to use for this workflow execution. This overrides any
@@ -12915,7 +13976,7 @@ type StartWorkflowExecutionInput struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 
@@ -12936,11 +13997,11 @@ type StartWorkflowExecutionInput struct {
 	// use this to associate a custom identifier with the workflow execution. You
 	// may specify the same identifier if a workflow execution is logically a restart
 	// of a previous execution. You cannot have two open workflow executions with
-	// the same workflowId at the same time.
+	// the same workflowId at the same time within the same domain.
 	//
 	// The specified string must not start or end with whitespace. It must not contain
 	// a : (colon), / (slash), | (vertical bar), or any control characters (\u0000-\u001f
-	// | \u007f-\u009f). Also, it must not contain the literal string arn.
+	// | \u007f-\u009f). Also, it must not be the literal string arn.
 	//
 	// WorkflowId is a required field
 	WorkflowId *string `locationName:"workflowId" min:"1" type:"string" required:"true"`
@@ -13097,6 +14158,9 @@ type TagFilter struct {
 	// Specifies the tag that must be associated with the execution for it to meet
 	// the filter criteria.
 	//
+	// Tags may only contain unicode letters, digits, whitespace, or these symbols:
+	// _ . : / = + - @.
+	//
 	// Tag is a required field
 	Tag *string `locationName:"tag" type:"string" required:"true"`
 }
@@ -13128,6 +14192,88 @@ func (s *TagFilter) Validate() error {
 func (s *TagFilter) SetTag(v string) *TagFilter {
 	s.Tag = &v
 	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the Amazon SWF domain.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+
+	// The list of tags to add to a domain.
+	//
+	// Tags may only contain unicode letters, digits, whitespace, or these symbols:
+	// _ . : / = + - @.
+	//
+	// Tags is a required field
+	Tags []*ResourceTag `locationName:"tags" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*ResourceTag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
 }
 
 // Represents a task list.
@@ -13455,6 +14601,509 @@ func (s *TimerStartedEventAttributes) SetTimerId(v string) *TimerStartedEventAtt
 	return s
 }
 
+// You've exceeded the number of tags allowed for a domain.
+type TooManyTagsFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTagsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsFault(v protocol.ResponseMetadata) error {
+	return &TooManyTagsFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyTagsFault) Code() string {
+	return "TooManyTagsFault"
+}
+
+// Message returns the exception's message.
+func (s *TooManyTagsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyTagsFault) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyTagsFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyTagsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyTagsFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Returned if the type already exists in the specified domain. You may get
+// this fault if you are registering a type that is either already registered
+// or deprecated, or if you undeprecate a type that is currently registered.
+type TypeAlreadyExistsFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TypeAlreadyExistsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TypeAlreadyExistsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorTypeAlreadyExistsFault(v protocol.ResponseMetadata) error {
+	return &TypeAlreadyExistsFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TypeAlreadyExistsFault) Code() string {
+	return "TypeAlreadyExistsFault"
+}
+
+// Message returns the exception's message.
+func (s *TypeAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TypeAlreadyExistsFault) OrigErr() error {
+	return nil
+}
+
+func (s *TypeAlreadyExistsFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TypeAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TypeAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Returned when the specified activity or workflow type was already deprecated.
+type TypeDeprecatedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TypeDeprecatedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TypeDeprecatedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorTypeDeprecatedFault(v protocol.ResponseMetadata) error {
+	return &TypeDeprecatedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TypeDeprecatedFault) Code() string {
+	return "TypeDeprecatedFault"
+}
+
+// Message returns the exception's message.
+func (s *TypeDeprecatedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TypeDeprecatedFault) OrigErr() error {
+	return nil
+}
+
+func (s *TypeDeprecatedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TypeDeprecatedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TypeDeprecatedFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type UndeprecateActivityTypeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The activity type to undeprecate.
+	//
+	// ActivityType is a required field
+	ActivityType *ActivityType `locationName:"activityType" type:"structure" required:"true"`
+
+	// The name of the domain of the deprecated activity type.
+	//
+	// Domain is a required field
+	Domain *string `locationName:"domain" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UndeprecateActivityTypeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UndeprecateActivityTypeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UndeprecateActivityTypeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UndeprecateActivityTypeInput"}
+	if s.ActivityType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActivityType"))
+	}
+	if s.Domain == nil {
+		invalidParams.Add(request.NewErrParamRequired("Domain"))
+	}
+	if s.Domain != nil && len(*s.Domain) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Domain", 1))
+	}
+	if s.ActivityType != nil {
+		if err := s.ActivityType.Validate(); err != nil {
+			invalidParams.AddNested("ActivityType", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActivityType sets the ActivityType field's value.
+func (s *UndeprecateActivityTypeInput) SetActivityType(v *ActivityType) *UndeprecateActivityTypeInput {
+	s.ActivityType = v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *UndeprecateActivityTypeInput) SetDomain(v string) *UndeprecateActivityTypeInput {
+	s.Domain = &v
+	return s
+}
+
+type UndeprecateActivityTypeOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UndeprecateActivityTypeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UndeprecateActivityTypeOutput) GoString() string {
+	return s.String()
+}
+
+type UndeprecateDomainInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain of the deprecated workflow type.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UndeprecateDomainInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UndeprecateDomainInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UndeprecateDomainInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UndeprecateDomainInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *UndeprecateDomainInput) SetName(v string) *UndeprecateDomainInput {
+	s.Name = &v
+	return s
+}
+
+type UndeprecateDomainOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UndeprecateDomainOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UndeprecateDomainOutput) GoString() string {
+	return s.String()
+}
+
+type UndeprecateWorkflowTypeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain of the deprecated workflow type.
+	//
+	// Domain is a required field
+	Domain *string `locationName:"domain" min:"1" type:"string" required:"true"`
+
+	// The name of the domain of the deprecated workflow type.
+	//
+	// WorkflowType is a required field
+	WorkflowType *WorkflowType `locationName:"workflowType" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UndeprecateWorkflowTypeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UndeprecateWorkflowTypeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UndeprecateWorkflowTypeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UndeprecateWorkflowTypeInput"}
+	if s.Domain == nil {
+		invalidParams.Add(request.NewErrParamRequired("Domain"))
+	}
+	if s.Domain != nil && len(*s.Domain) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Domain", 1))
+	}
+	if s.WorkflowType == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkflowType"))
+	}
+	if s.WorkflowType != nil {
+		if err := s.WorkflowType.Validate(); err != nil {
+			invalidParams.AddNested("WorkflowType", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomain sets the Domain field's value.
+func (s *UndeprecateWorkflowTypeInput) SetDomain(v string) *UndeprecateWorkflowTypeInput {
+	s.Domain = &v
+	return s
+}
+
+// SetWorkflowType sets the WorkflowType field's value.
+func (s *UndeprecateWorkflowTypeInput) SetWorkflowType(v *WorkflowType) *UndeprecateWorkflowTypeInput {
+	s.WorkflowType = v
+	return s
+}
+
+type UndeprecateWorkflowTypeOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UndeprecateWorkflowTypeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UndeprecateWorkflowTypeOutput) GoString() string {
+	return s.String()
+}
+
+// Returned when the named resource cannot be found with in the scope of this
+// operation (region or domain). This could happen if the named resource was
+// never created or is no longer available for this operation.
+type UnknownResourceFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnknownResourceFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnknownResourceFault) GoString() string {
+	return s.String()
+}
+
+func newErrorUnknownResourceFault(v protocol.ResponseMetadata) error {
+	return &UnknownResourceFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnknownResourceFault) Code() string {
+	return "UnknownResourceFault"
+}
+
+// Message returns the exception's message.
+func (s *UnknownResourceFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnknownResourceFault) OrigErr() error {
+	return nil
+}
+
+func (s *UnknownResourceFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnknownResourceFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnknownResourceFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the Amazon SWF domain.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+
+	// The list of tags to remove from the Amazon SWF domain.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a workflow execution.
 type WorkflowExecution struct {
 	_ struct{} `type:"structure"`
@@ -13512,6 +15161,64 @@ func (s *WorkflowExecution) SetRunId(v string) *WorkflowExecution {
 func (s *WorkflowExecution) SetWorkflowId(v string) *WorkflowExecution {
 	s.WorkflowId = &v
 	return s
+}
+
+// Returned by StartWorkflowExecution when an open execution with the same workflowId
+// is already running in the specified domain.
+type WorkflowExecutionAlreadyStartedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s WorkflowExecutionAlreadyStartedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WorkflowExecutionAlreadyStartedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorWorkflowExecutionAlreadyStartedFault(v protocol.ResponseMetadata) error {
+	return &WorkflowExecutionAlreadyStartedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *WorkflowExecutionAlreadyStartedFault) Code() string {
+	return "WorkflowExecutionAlreadyStartedFault"
+}
+
+// Message returns the exception's message.
+func (s *WorkflowExecutionAlreadyStartedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *WorkflowExecutionAlreadyStartedFault) OrigErr() error {
+	return nil
+}
+
+func (s *WorkflowExecutionAlreadyStartedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *WorkflowExecutionAlreadyStartedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *WorkflowExecutionAlreadyStartedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides the details of the WorkflowExecutionCancelRequested event.
@@ -13684,7 +15391,7 @@ type WorkflowExecutionConfiguration struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	TaskPriority *string `locationName:"taskPriority" type:"string"`
 
@@ -14684,8 +16391,8 @@ type WorkflowTypeConfiguration struct {
 	//
 	// Executions of this workflow type need IAM roles to invoke Lambda functions.
 	// If you don't specify an IAM role when starting this workflow type, the default
-	// Lambda role is attached to the execution. For more information, see http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
+	// Lambda role is attached to the execution. For more information, see https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/lambda-task.html)
 	// in the Amazon SWF Developer Guide.
 	DefaultLambdaRole *string `locationName:"defaultLambdaRole" min:"1" type:"string"`
 
@@ -14704,7 +16411,7 @@ type WorkflowTypeConfiguration struct {
 	// to Integer.MAX_VALUE (2147483647). Higher numbers indicate higher priority.
 	//
 	// For more information about setting task priority, see Setting Task Priority
-	// (http://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
+	// (https://docs.aws.amazon.com/amazonswf/latest/developerguide/programming-priority.html)
 	// in the Amazon SWF Developer Guide.
 	DefaultTaskPriority *string `locationName:"defaultTaskPriority" type:"string"`
 

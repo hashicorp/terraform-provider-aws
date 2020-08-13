@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
@@ -28,15 +29,14 @@ func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_default_security_group.web", "name", "default"),
 					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
+						"aws_default_security_group.web", "description", "default VPC security group"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_default_security_group.web", "ingress.*", map[string]string{
+						"protocol":      "tcp",
+						"from_port":     "80",
+						"to_port":       "8000",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 				),
 			},
 		},
@@ -59,16 +59,13 @@ func TestAccAWSDefaultSecurityGroup_classic(t *testing.T) {
 					testAccCheckAWSDefaultSecurityGroupAttributes(&group),
 					resource.TestCheckResourceAttr(
 						"aws_default_security_group.web", "name", "default"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_default_security_group.web", "ingress.*", map[string]string{
+						"protocol":      "tcp",
+						"from_port":     "80",
+						"to_port":       "8000",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 				),
 			},
 		},
@@ -141,13 +138,13 @@ func testAccCheckAWSDefaultSecurityGroupAttributes(group *ec2.SecurityGroup) res
 const testAccAWSDefaultSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-default-security-group"
-	}
+  tags = {
+    Name = "terraform-testacc-default-security-group"
+  }
 }
 
 resource "aws_default_security_group" "web" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   ingress {
     protocol    = "6"

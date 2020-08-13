@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachment"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-vpc-attachment"
 description: |-
   Manages an EC2 Transit Gateway VPC Attachment
 ---
@@ -14,13 +14,13 @@ Manages an EC2 Transit Gateway VPC Attachment. For examples of custom route tabl
 
 ```hcl
 resource "aws_ec2_transit_gateway_vpc_attachment" "example" {
-  subnet_ids         = ["${aws_subnet.example.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.example.id}"
-  vpc_id             = "${aws_vpc.example.id}"
+  subnet_ids         = [aws_subnet.example.id]
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+  vpc_id             = aws_vpc.example.id
 }
 ```
 
-A full example of how to how to create a Transit Gateway in one AWS account, share it with a second AWS account, and attach a VPC in the second account to the Transit Gateway via the `aws_ec2_transit_gateway_vpc_attachment` and `aws_ec2_transit_gateway_vpc_attachment_accepter` resources can be found in [the `./examples/transit-gateway-cross-account-vpc-attachment` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-aws/tree/master/examples/transit-gateway-cross-account-vpc-attachment).
+A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and attach a VPC in the second account to the Transit Gateway via the `aws_ec2_transit_gateway_vpc_attachment` and `aws_ec2_transit_gateway_vpc_attachment_accepter` resources can be found in [the `./examples/transit-gateway-cross-account-vpc-attachment` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-aws/tree/master/examples/transit-gateway-cross-account-vpc-attachment).
 
 ## Argument Reference
 

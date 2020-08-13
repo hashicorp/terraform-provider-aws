@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -67,7 +67,7 @@ func testSweepCloudWatchEventPermissions(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchEventPermission_Basic(t *testing.T) {
+func TestAccAWSCloudWatchEventPermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"
 	statementID := acctest.RandomWithPrefix(t.Name())
@@ -246,6 +246,48 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_permission.test1"
+	principal := "111111111111"
+	statementID := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(52, acctest.CharSetAlphaNum)) // len = 64
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					testAccCheckCloudWatchEventPermissionDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCloudWatchEventPermissionDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No resource ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
+		input := events.RemovePermissionInput{
+			StatementId: aws.String(rs.Primary.ID),
+		}
+		_, err := conn.RemovePermission(&input)
+		return err
+	}
 }
 
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {

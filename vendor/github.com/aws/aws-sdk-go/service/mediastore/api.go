@@ -67,15 +67,15 @@ func (c *MediaStore) CreateContainerRequest(input *CreateContainerInput) (req *r
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation CreateContainer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit has been exceeded.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainer
@@ -156,15 +156,15 @@ func (c *MediaStore) DeleteContainerRequest(input *DeleteContainerInput) (req *r
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteContainer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainer
@@ -243,18 +243,18 @@ func (c *MediaStore) DeleteContainerPolicyRequest(input *DeleteContainerPolicyIn
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteContainerPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicy
@@ -338,18 +338,18 @@ func (c *MediaStore) DeleteCorsPolicyRequest(input *DeleteCorsPolicyInput) (req 
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteCorsPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeCorsPolicyNotFoundException "CorsPolicyNotFoundException"
+//   * CorsPolicyNotFoundException
 //   The CORS policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteCorsPolicy
@@ -429,18 +429,18 @@ func (c *MediaStore) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyIn
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DeleteLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteLifecyclePolicy
@@ -460,6 +460,98 @@ func (c *MediaStore) DeleteLifecyclePolicy(input *DeleteLifecyclePolicyInput) (*
 // for more information on using Contexts.
 func (c *MediaStore) DeleteLifecyclePolicyWithContext(ctx aws.Context, input *DeleteLifecyclePolicyInput, opts ...request.Option) (*DeleteLifecyclePolicyOutput, error) {
 	req, out := c.DeleteLifecyclePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteMetricPolicy = "DeleteMetricPolicy"
+
+// DeleteMetricPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteMetricPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteMetricPolicy for more information on using the DeleteMetricPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteMetricPolicyRequest method.
+//    req, resp := client.DeleteMetricPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteMetricPolicy
+func (c *MediaStore) DeleteMetricPolicyRequest(input *DeleteMetricPolicyInput) (req *request.Request, output *DeleteMetricPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteMetricPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteMetricPolicyInput{}
+	}
+
+	output = &DeleteMetricPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteMetricPolicy API operation for AWS Elemental MediaStore.
+//
+// Deletes the metric policy that is associated with the specified container.
+// If there is no metric policy associated with the container, MediaStore doesn't
+// send metrics to CloudWatch.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation DeleteMetricPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * ContainerInUseException
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ContainerNotFoundException
+//   The container that you specified in the request does not exist.
+//
+//   * PolicyNotFoundException
+//   The policy that you specified in the request does not exist.
+//
+//   * InternalServerError
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteMetricPolicy
+func (c *MediaStore) DeleteMetricPolicy(input *DeleteMetricPolicyInput) (*DeleteMetricPolicyOutput, error) {
+	req, out := c.DeleteMetricPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteMetricPolicyWithContext is the same as DeleteMetricPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMetricPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) DeleteMetricPolicyWithContext(ctx aws.Context, input *DeleteMetricPolicyInput, opts ...request.Option) (*DeleteMetricPolicyOutput, error) {
+	req, out := c.DeleteMetricPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -523,11 +615,11 @@ func (c *MediaStore) DescribeContainerRequest(input *DescribeContainerInput) (re
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation DescribeContainer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+// Returned Error Types:
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainer
@@ -607,18 +699,18 @@ func (c *MediaStore) GetContainerPolicyRequest(input *GetContainerPolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation GetContainerPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicy
@@ -701,18 +793,18 @@ func (c *MediaStore) GetCorsPolicyRequest(input *GetCorsPolicyInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation GetCorsPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeCorsPolicyNotFoundException "CorsPolicyNotFoundException"
+//   * CorsPolicyNotFoundException
 //   The CORS policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetCorsPolicy
@@ -790,18 +882,18 @@ func (c *MediaStore) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation GetLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   * PolicyNotFoundException
 //   The policy that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetLifecyclePolicy
@@ -821,6 +913,95 @@ func (c *MediaStore) GetLifecyclePolicy(input *GetLifecyclePolicyInput) (*GetLif
 // for more information on using Contexts.
 func (c *MediaStore) GetLifecyclePolicyWithContext(ctx aws.Context, input *GetLifecyclePolicyInput, opts ...request.Option) (*GetLifecyclePolicyOutput, error) {
 	req, out := c.GetLifecyclePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetMetricPolicy = "GetMetricPolicy"
+
+// GetMetricPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetMetricPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetMetricPolicy for more information on using the GetMetricPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetMetricPolicyRequest method.
+//    req, resp := client.GetMetricPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetMetricPolicy
+func (c *MediaStore) GetMetricPolicyRequest(input *GetMetricPolicyInput) (req *request.Request, output *GetMetricPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetMetricPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetMetricPolicyInput{}
+	}
+
+	output = &GetMetricPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetMetricPolicy API operation for AWS Elemental MediaStore.
+//
+// Returns the metric policy for the specified container.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation GetMetricPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * ContainerNotFoundException
+//   The container that you specified in the request does not exist.
+//
+//   * PolicyNotFoundException
+//   The policy that you specified in the request does not exist.
+//
+//   * ContainerInUseException
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * InternalServerError
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetMetricPolicy
+func (c *MediaStore) GetMetricPolicy(input *GetMetricPolicyInput) (*GetMetricPolicyOutput, error) {
+	req, out := c.GetMetricPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetMetricPolicyWithContext is the same as GetMetricPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetMetricPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) GetMetricPolicyWithContext(ctx aws.Context, input *GetMetricPolicyInput, opts ...request.Option) (*GetMetricPolicyOutput, error) {
+	req, out := c.GetMetricPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -857,6 +1038,12 @@ func (c *MediaStore) ListContainersRequest(input *ListContainersInput) (req *req
 		Name:       opListContainers,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -888,8 +1075,8 @@ func (c *MediaStore) ListContainersRequest(input *ListContainersInput) (req *req
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation ListContainers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainers
@@ -909,6 +1096,144 @@ func (c *MediaStore) ListContainers(input *ListContainersInput) (*ListContainers
 // for more information on using Contexts.
 func (c *MediaStore) ListContainersWithContext(ctx aws.Context, input *ListContainersInput, opts ...request.Option) (*ListContainersOutput, error) {
 	req, out := c.ListContainersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListContainersPages iterates over the pages of a ListContainers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListContainers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListContainers operation.
+//    pageNum := 0
+//    err := client.ListContainersPages(params,
+//        func(page *mediastore.ListContainersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaStore) ListContainersPages(input *ListContainersInput, fn func(*ListContainersOutput, bool) bool) error {
+	return c.ListContainersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListContainersPagesWithContext same as ListContainersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) ListContainersPagesWithContext(ctx aws.Context, input *ListContainersInput, fn func(*ListContainersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListContainersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListContainersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListContainersOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListTagsForResource
+func (c *MediaStore) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS Elemental MediaStore.
+//
+// Returns a list of the tags assigned to the specified container.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * ContainerInUseException
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ContainerNotFoundException
+//   The container that you specified in the request does not exist.
+//
+//   * InternalServerError
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListTagsForResource
+func (c *MediaStore) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -975,15 +1300,15 @@ func (c *MediaStore) PutContainerPolicyRequest(input *PutContainerPolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation PutContainerPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+// Returned Error Types:
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicy
@@ -1075,15 +1400,15 @@ func (c *MediaStore) PutCorsPolicyRequest(input *PutCorsPolicyInput) (req *reque
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation PutCorsPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+// Returned Error Types:
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutCorsPolicy
@@ -1167,15 +1492,15 @@ func (c *MediaStore) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation PutLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutLifecyclePolicy
@@ -1195,6 +1520,95 @@ func (c *MediaStore) PutLifecyclePolicy(input *PutLifecyclePolicyInput) (*PutLif
 // for more information on using Contexts.
 func (c *MediaStore) PutLifecyclePolicyWithContext(ctx aws.Context, input *PutLifecyclePolicyInput, opts ...request.Option) (*PutLifecyclePolicyOutput, error) {
 	req, out := c.PutLifecyclePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutMetricPolicy = "PutMetricPolicy"
+
+// PutMetricPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutMetricPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutMetricPolicy for more information on using the PutMetricPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutMetricPolicyRequest method.
+//    req, resp := client.PutMetricPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutMetricPolicy
+func (c *MediaStore) PutMetricPolicyRequest(input *PutMetricPolicyInput) (req *request.Request, output *PutMetricPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutMetricPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutMetricPolicyInput{}
+	}
+
+	output = &PutMetricPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutMetricPolicy API operation for AWS Elemental MediaStore.
+//
+// The metric policy that you want to add to the container. A metric policy
+// allows AWS Elemental MediaStore to send metrics to Amazon CloudWatch. It
+// takes up to 20 minutes for the new policy to take effect.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation PutMetricPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * ContainerInUseException
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ContainerNotFoundException
+//   The container that you specified in the request does not exist.
+//
+//   * InternalServerError
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutMetricPolicy
+func (c *MediaStore) PutMetricPolicy(input *PutMetricPolicyInput) (*PutMetricPolicyOutput, error) {
+	req, out := c.PutMetricPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutMetricPolicyWithContext is the same as PutMetricPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutMetricPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) PutMetricPolicyWithContext(ctx aws.Context, input *PutMetricPolicyInput, opts ...request.Option) (*PutMetricPolicyOutput, error) {
+	req, out := c.PutMetricPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1256,15 +1670,15 @@ func (c *MediaStore) StartAccessLoggingRequest(input *StartAccessLoggingInput) (
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation StartAccessLogging for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StartAccessLogging
@@ -1345,15 +1759,15 @@ func (c *MediaStore) StopAccessLoggingRequest(input *StopAccessLoggingInput) (re
 // See the AWS API reference guide for AWS Elemental MediaStore's
 // API operation StopAccessLogging for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeContainerInUseException "ContainerInUseException"
+// Returned Error Types:
+//   * ContainerInUseException
 //   The container that you specified in the request already exists or is being
 //   updated.
 //
-//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   * ContainerNotFoundException
 //   The container that you specified in the request does not exist.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   The service is temporarily unavailable.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StopAccessLogging
@@ -1373,6 +1787,186 @@ func (c *MediaStore) StopAccessLogging(input *StopAccessLoggingInput) (*StopAcce
 // for more information on using Contexts.
 func (c *MediaStore) StopAccessLoggingWithContext(ctx aws.Context, input *StopAccessLoggingInput, opts ...request.Option) (*StopAccessLoggingOutput, error) {
 	req, out := c.StopAccessLoggingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/TagResource
+func (c *MediaStore) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for AWS Elemental MediaStore.
+//
+// Adds tags to the specified AWS Elemental MediaStore container. Tags are key:value
+// pairs that you can associate with AWS resources. For example, the tag key
+// might be "customer" and the tag value might be "companyA." You can specify
+// one or more tags to add to each container. You can add up to 50 tags to each
+// container. For more information about tagging, including naming and usage
+// conventions, see Tagging Resources in MediaStore (https://docs.aws.amazon.com/mediastore/latest/ug/tagging.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Types:
+//   * ContainerInUseException
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ContainerNotFoundException
+//   The container that you specified in the request does not exist.
+//
+//   * InternalServerError
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/TagResource
+func (c *MediaStore) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/UntagResource
+func (c *MediaStore) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for AWS Elemental MediaStore.
+//
+// Removes tags from the specified container. You can specify one or more tags
+// to remove.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Types:
+//   * ContainerInUseException
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ContainerNotFoundException
+//   The container that you specified in the request does not exist.
+//
+//   * InternalServerError
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/UntagResource
+func (c *MediaStore) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1461,6 +2055,175 @@ func (s *Container) SetName(v string) *Container {
 func (s *Container) SetStatus(v string) *Container {
 	s.Status = &v
 	return s
+}
+
+// The container that you specified in the request already exists or is being
+// updated.
+type ContainerInUseException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ContainerInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorContainerInUseException(v protocol.ResponseMetadata) error {
+	return &ContainerInUseException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ContainerInUseException) Code() string {
+	return "ContainerInUseException"
+}
+
+// Message returns the exception's message.
+func (s *ContainerInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ContainerInUseException) OrigErr() error {
+	return nil
+}
+
+func (s *ContainerInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ContainerInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ContainerInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The container that you specified in the request does not exist.
+type ContainerNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ContainerNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorContainerNotFoundException(v protocol.ResponseMetadata) error {
+	return &ContainerNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ContainerNotFoundException) Code() string {
+	return "ContainerNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ContainerNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ContainerNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ContainerNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ContainerNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ContainerNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The CORS policy that you specified in the request does not exist.
+type CorsPolicyNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CorsPolicyNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CorsPolicyNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorCorsPolicyNotFoundException(v protocol.ResponseMetadata) error {
+	return &CorsPolicyNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CorsPolicyNotFoundException) Code() string {
+	return "CorsPolicyNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *CorsPolicyNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CorsPolicyNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *CorsPolicyNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CorsPolicyNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CorsPolicyNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A rule for a CORS policy. You can add up to 100 rules to a CORS policy. If
@@ -1581,6 +2344,14 @@ type CreateContainerInput struct {
 	//
 	// ContainerName is a required field
 	ContainerName *string `min:"1" type:"string" required:"true"`
+
+	// An array of key:value pairs that you define. These values can be anything
+	// that you want. Typically, the tag key represents a category (such as "environment")
+	// and the tag value represents a specific value within that category (such
+	// as "test," "development," or "production"). You can add up to 50 tags to
+	// each container. For more information about tagging, including naming and
+	// usage conventions, see Tagging Resources in MediaStore (https://docs.aws.amazon.com/mediastore/latest/ug/tagging.html).
+	Tags []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -1602,6 +2373,19 @@ func (s *CreateContainerInput) Validate() error {
 	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1612,6 +2396,12 @@ func (s *CreateContainerInput) Validate() error {
 // SetContainerName sets the ContainerName field's value.
 func (s *CreateContainerInput) SetContainerName(v string) *CreateContainerInput {
 	s.ContainerName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateContainerInput) SetTags(v []*Tag) *CreateContainerInput {
+	s.Tags = v
 	return s
 }
 
@@ -1874,6 +2664,62 @@ func (s DeleteLifecyclePolicyOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteMetricPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that is associated with the metric policy that
+	// you want to delete.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteMetricPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMetricPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteMetricPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteMetricPolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *DeleteMetricPolicyInput) SetContainerName(v string) *DeleteMetricPolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+type DeleteMetricPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteMetricPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMetricPolicyOutput) GoString() string {
+	return s.String()
+}
+
 type DescribeContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2131,6 +2977,184 @@ func (s *GetLifecyclePolicyOutput) SetLifecyclePolicy(v string) *GetLifecyclePol
 	return s
 }
 
+type GetMetricPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that is associated with the metric policy.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetMetricPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetMetricPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetMetricPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetMetricPolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *GetMetricPolicyInput) SetContainerName(v string) *GetMetricPolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+type GetMetricPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The metric policy that is associated with the specific container.
+	//
+	// MetricPolicy is a required field
+	MetricPolicy *MetricPolicy `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetMetricPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetMetricPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetMetricPolicy sets the MetricPolicy field's value.
+func (s *GetMetricPolicyOutput) SetMetricPolicy(v *MetricPolicy) *GetMetricPolicyOutput {
+	s.MetricPolicy = v
+	return s
+}
+
+// The service is temporarily unavailable.
+type InternalServerError struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// A service limit has been exceeded.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type ListContainersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2217,6 +3241,262 @@ func (s *ListContainersOutput) SetContainers(v []*Container) *ListContainersOutp
 func (s *ListContainersOutput) SetNextToken(v string) *ListContainersOutput {
 	s.NextToken = &v
 	return s
+}
+
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the container.
+	//
+	// Resource is a required field
+	Resource *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.Resource == nil {
+		invalidParams.Add(request.NewErrParamRequired("Resource"))
+	}
+	if s.Resource != nil && len(*s.Resource) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Resource", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResource sets the Resource field's value.
+func (s *ListTagsForResourceInput) SetResource(v string) *ListTagsForResourceInput {
+	s.Resource = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of key:value pairs that are assigned to the container.
+	Tags []*Tag `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
+// The metric policy that is associated with the container. A metric policy
+// allows AWS Elemental MediaStore to send metrics to Amazon CloudWatch. In
+// the policy, you must indicate whether you want MediaStore to send container-level
+// metrics. You can also include rules to define groups of objects that you
+// want MediaStore to send object-level metrics for.
+//
+// To view examples of how to construct a metric policy for your use case, see
+// Example Metric Policies (https://docs.aws.amazon.com/mediastore/latest/ug/policies-metric-examples.html).
+type MetricPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// A setting to enable or disable metrics at the container level.
+	//
+	// ContainerLevelMetrics is a required field
+	ContainerLevelMetrics *string `type:"string" required:"true" enum:"ContainerLevelMetrics"`
+
+	// A parameter that holds an array of rules that enable metrics at the object
+	// level. This parameter is optional, but if you choose to include it, you must
+	// also include at least one rule. By default, you can include up to five rules.
+	// You can also request a quota increase (https://console.aws.amazon.com/servicequotas/home?region=us-east-1#!/services/mediastore/quotas)
+	// to allow up to 300 rules per policy.
+	MetricPolicyRules []*MetricPolicyRule `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s MetricPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricPolicy) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MetricPolicy) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MetricPolicy"}
+	if s.ContainerLevelMetrics == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerLevelMetrics"))
+	}
+	if s.MetricPolicyRules != nil && len(s.MetricPolicyRules) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MetricPolicyRules", 1))
+	}
+	if s.MetricPolicyRules != nil {
+		for i, v := range s.MetricPolicyRules {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "MetricPolicyRules", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerLevelMetrics sets the ContainerLevelMetrics field's value.
+func (s *MetricPolicy) SetContainerLevelMetrics(v string) *MetricPolicy {
+	s.ContainerLevelMetrics = &v
+	return s
+}
+
+// SetMetricPolicyRules sets the MetricPolicyRules field's value.
+func (s *MetricPolicy) SetMetricPolicyRules(v []*MetricPolicyRule) *MetricPolicy {
+	s.MetricPolicyRules = v
+	return s
+}
+
+// A setting that enables metrics at the object level. Each rule contains an
+// object group and an object group name. If the policy includes the MetricPolicyRules
+// parameter, you must include at least one rule. Each metric policy can include
+// up to five rules by default. You can also request a quota increase (https://console.aws.amazon.com/servicequotas/home?region=us-east-1#!/services/mediastore/quotas)
+// to allow up to 300 rules per policy.
+type MetricPolicyRule struct {
+	_ struct{} `type:"structure"`
+
+	// A path or file name that defines which objects to include in the group. Wildcards
+	// (*) are acceptable.
+	//
+	// ObjectGroup is a required field
+	ObjectGroup *string `min:"1" type:"string" required:"true"`
+
+	// A name that allows you to refer to the object group.
+	//
+	// ObjectGroupName is a required field
+	ObjectGroupName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s MetricPolicyRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricPolicyRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MetricPolicyRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MetricPolicyRule"}
+	if s.ObjectGroup == nil {
+		invalidParams.Add(request.NewErrParamRequired("ObjectGroup"))
+	}
+	if s.ObjectGroup != nil && len(*s.ObjectGroup) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ObjectGroup", 1))
+	}
+	if s.ObjectGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ObjectGroupName"))
+	}
+	if s.ObjectGroupName != nil && len(*s.ObjectGroupName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ObjectGroupName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetObjectGroup sets the ObjectGroup field's value.
+func (s *MetricPolicyRule) SetObjectGroup(v string) *MetricPolicyRule {
+	s.ObjectGroup = &v
+	return s
+}
+
+// SetObjectGroupName sets the ObjectGroupName field's value.
+func (s *MetricPolicyRule) SetObjectGroupName(v string) *MetricPolicyRule {
+	s.ObjectGroupName = &v
+	return s
+}
+
+// The policy that you specified in the request does not exist.
+type PolicyNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PolicyNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PolicyNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorPolicyNotFoundException(v protocol.ResponseMetadata) error {
+	return &PolicyNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *PolicyNotFoundException) Code() string {
+	return "PolicyNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *PolicyNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *PolicyNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *PolicyNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *PolicyNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *PolicyNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type PutContainerPolicyInput struct {
@@ -2447,6 +3727,94 @@ func (s PutLifecyclePolicyOutput) GoString() string {
 	return s.String()
 }
 
+type PutMetricPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to add the metric policy to.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+
+	// The metric policy that you want to associate with the container. In the policy,
+	// you must indicate whether you want MediaStore to send container-level metrics.
+	// You can also include up to five rules to define groups of objects that you
+	// want MediaStore to send object-level metrics for. If you include rules in
+	// the policy, construct each rule with both of the following:
+	//
+	//    * An object group that defines which objects to include in the group.
+	//    The definition can be a path or a file name, but it can't have more than
+	//    900 characters. Valid characters are: a-z, A-Z, 0-9, _ (underscore), =
+	//    (equal), : (colon), . (period), - (hyphen), ~ (tilde), / (forward slash),
+	//    and * (asterisk). Wildcards (*) are acceptable.
+	//
+	//    * An object group name that allows you to refer to the object group. The
+	//    name can't have more than 30 characters. Valid characters are: a-z, A-Z,
+	//    0-9, and _ (underscore).
+	//
+	// MetricPolicy is a required field
+	MetricPolicy *MetricPolicy `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutMetricPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutMetricPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutMetricPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutMetricPolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+	if s.MetricPolicy == nil {
+		invalidParams.Add(request.NewErrParamRequired("MetricPolicy"))
+	}
+	if s.MetricPolicy != nil {
+		if err := s.MetricPolicy.Validate(); err != nil {
+			invalidParams.AddNested("MetricPolicy", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *PutMetricPolicyInput) SetContainerName(v string) *PutMetricPolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+// SetMetricPolicy sets the MetricPolicy field's value.
+func (s *PutMetricPolicyInput) SetMetricPolicy(v *MetricPolicy) *PutMetricPolicyInput {
+	s.MetricPolicy = v
+	return s
+}
+
+type PutMetricPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutMetricPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutMetricPolicyOutput) GoString() string {
+	return s.String()
+}
+
 type StartAccessLoggingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2556,6 +3924,234 @@ func (s StopAccessLoggingOutput) String() string {
 func (s StopAccessLoggingOutput) GoString() string {
 	return s.String()
 }
+
+// A collection of tags associated with a container. Each tag consists of a
+// key:value pair, which can be anything you define. Typically, the tag key
+// represents a category (such as "environment") and the tag value represents
+// a specific value within that category (such as "test," "development," or
+// "production"). You can add up to 50 tags to each container. For more information
+// about tagging, including naming and usage conventions, see Tagging Resources
+// in MediaStore (https://docs.aws.amazon.com/mediastore/latest/ug/tagging.html).
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// Part of the key:value pair that defines a tag. You can use a tag key to describe
+	// a category of information, such as "customer." Tag keys are case-sensitive.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// Part of the key:value pair that defines a tag. You can use a tag value to
+	// describe a specific value within a category, such as "companyA" or "companyB."
+	// Tag values are case-sensitive.
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the container.
+	//
+	// Resource is a required field
+	Resource *string `min:"1" type:"string" required:"true"`
+
+	// An array of key:value pairs that you want to add to the container. You need
+	// to specify only the tags that you want to add or update. For example, suppose
+	// a container already has two tags (customer:CompanyA and priority:High). You
+	// want to change the priority tag and also add a third tag (type:Contract).
+	// For TagResource, you specify the following tags: priority:Medium, type:Contract.
+	// The result is that your container has three tags: customer:CompanyA, priority:Medium,
+	// and type:Contract.
+	//
+	// Tags is a required field
+	Tags []*Tag `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.Resource == nil {
+		invalidParams.Add(request.NewErrParamRequired("Resource"))
+	}
+	if s.Resource != nil && len(*s.Resource) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Resource", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResource sets the Resource field's value.
+func (s *TagResourceInput) SetResource(v string) *TagResourceInput {
+	s.Resource = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the container.
+	//
+	// Resource is a required field
+	Resource *string `min:"1" type:"string" required:"true"`
+
+	// A comma-separated list of keys for tags that you want to remove from the
+	// container. For example, if your container has two tags (customer:CompanyA
+	// and priority:High) and you want to remove one of the tags (priority:High),
+	// you specify the key for the tag that you want to remove (priority).
+	//
+	// TagKeys is a required field
+	TagKeys []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.Resource == nil {
+		invalidParams.Add(request.NewErrParamRequired("Resource"))
+	}
+	if s.Resource != nil && len(*s.Resource) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Resource", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResource sets the Resource field's value.
+func (s *UntagResourceInput) SetResource(v string) *UntagResourceInput {
+	s.Resource = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
+const (
+	// ContainerLevelMetricsEnabled is a ContainerLevelMetrics enum value
+	ContainerLevelMetricsEnabled = "ENABLED"
+
+	// ContainerLevelMetricsDisabled is a ContainerLevelMetrics enum value
+	ContainerLevelMetricsDisabled = "DISABLED"
+)
 
 const (
 	// ContainerStatusActive is a ContainerStatus enum value

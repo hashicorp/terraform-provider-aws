@@ -1,7 +1,7 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_layer_version"
-sidebar_current: "docs-aws-datasource-lambda-layer-version"
 description: |-
   Provides a Lambda Layer Version data source.
 ---
@@ -14,11 +14,11 @@ Provides information about a Lambda Layer Version.
 
 ```hcl
 variable "layer_name" {
-  type = "string"
+  type = string
 }
 
 data "aws_lambda_layer_version" "existing" {
-  layer_name = "${var.layer_name}"
+  layer_name = var.layer_name
 }
 ```
 

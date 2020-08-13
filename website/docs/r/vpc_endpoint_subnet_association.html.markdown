@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_subnet_association"
-sidebar_current: "docs-aws-resource-vpc-endpoint-subnet-association"
 description: |-
   Provides a resource to create an association between a VPC endpoint and a subnet.
 ---
@@ -22,8 +22,8 @@ Basic usage:
 
 ```hcl
 resource "aws_vpc_endpoint_subnet_association" "sn_ec2" {
-  vpc_endpoint_id = "${aws_vpc_endpoint.ec2.id}"
-  subnet_id       = "${aws_subnet.sn.id}"
+  vpc_endpoint_id = aws_vpc_endpoint.ec2.id
+  subnet_id       = aws_subnet.sn.id
 }
 ```
 

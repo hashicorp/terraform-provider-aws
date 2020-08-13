@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDirectoryServiceConditionalForwarderDestroy,
 		Steps: []resource.TestStep{
@@ -69,21 +69,20 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderDestroy(s *terraform.Sta
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
 
+		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+			continue
+		}
+
 		if err != nil {
-			if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
-				return nil
-			}
 			return err
 		}
 
 		if len(res.ConditionalForwarders) > 0 {
 			return fmt.Errorf("Expected AWS Directory Service Conditional Forwarder to be gone, but was still found")
 		}
-
-		return nil
 	}
 
-	return fmt.Errorf("Default error in Service Directory Test")
+	return nil
 }
 
 func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsIps []string) resource.TestCheckFunc {
@@ -137,6 +136,15 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 
 func testAccDirectoryServiceConditionalForwarderConfig(ip1, ip2 string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_directory_service_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -144,8 +152,8 @@ resource "aws_directory_service_directory" "bar" {
   edition  = "Standard"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    vpc_id     = aws_vpc.main.id
+    subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
   }
 
   tags = {
@@ -162,8 +170,8 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  vpc_id            = aws_vpc.main.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.1.0/24"
 
   tags = {
@@ -172,8 +180,8 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id            = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  vpc_id            = aws_vpc.main.id
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.0.2.0/24"
 
   tags = {
@@ -182,7 +190,7 @@ resource "aws_subnet" "bar" {
 }
 
 resource "aws_directory_service_conditional_forwarder" "fwd" {
-  directory_id = "${aws_directory_service_directory.bar.id}"
+  directory_id = aws_directory_service_directory.bar.id
 
   remote_domain_name = "test.example.com"
 

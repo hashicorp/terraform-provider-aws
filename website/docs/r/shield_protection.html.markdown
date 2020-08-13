@@ -1,7 +1,7 @@
 ---
+subcategory: "Shield"
 layout: "aws"
 page_title: "AWS: aws_shield_protection"
-sidebar_current: "docs-aws-resource-shield-protection"
 description: |-
   Enables AWS Shield Advanced for a specific AWS resource.
 ---
@@ -25,7 +25,7 @@ resource "aws_eip" "foo" {
 }
 
 resource "aws_shield_protection" "foo" {
-  name         = "${var.name}"
+  name         = var.name
   resource_arn = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.foo.id}"
 }
 ```

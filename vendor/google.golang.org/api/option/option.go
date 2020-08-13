@@ -1,21 +1,12 @@
-// Copyright 2017 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Copyright 2017 Google LLC.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 // Package option contains options for Google API clients.
 package option
 
 import (
+	"crypto/tls"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -124,7 +115,7 @@ func (w withHTTPClient) Apply(o *internal.DialSettings) {
 }
 
 // WithGRPCConn returns a ClientOption that specifies the gRPC client
-// connection to use as the basis of communications. This option many only be
+// connection to use as the basis of communications. This option may only be
 // used with services that support gRPC as their communication transport. When
 // used, the WithGRPCConn option takes precedent over all other supplied
 // options.
@@ -152,6 +143,7 @@ func (w withGRPCDialOption) Apply(o *internal.DialSettings) {
 
 // WithGRPCConnectionPool returns a ClientOption that creates a pool of gRPC
 // connections that requests will be balanced between.
+//
 // This is an EXPERIMENTAL API and may be changed or removed in the future.
 func WithGRPCConnectionPool(size int) ClientOption {
 	return withGRPCConnectionPool(size)
@@ -160,8 +152,7 @@ func WithGRPCConnectionPool(size int) ClientOption {
 type withGRPCConnectionPool int
 
 func (w withGRPCConnectionPool) Apply(o *internal.DialSettings) {
-	balancer := grpc.RoundRobin(internal.NewPoolResolver(int(w), o))
-	o.GRPCDialOpts = append(o.GRPCDialOpts, grpc.WithBalancer(balancer))
+	o.GRPCConnPoolSize = int(w)
 }
 
 // WithAPIKey returns a ClientOption that specifies an API key to be used
@@ -177,6 +168,19 @@ type withAPIKey string
 
 func (w withAPIKey) Apply(o *internal.DialSettings) { o.APIKey = string(w) }
 
+// WithAudiences returns a ClientOption that specifies an audience to be used
+// as the audience field ("aud") for the JWT token authentication.
+func WithAudiences(audience ...string) ClientOption {
+	return withAudiences(audience)
+}
+
+type withAudiences []string
+
+func (w withAudiences) Apply(o *internal.DialSettings) {
+	o.Audiences = make([]string, len(w))
+	copy(o.Audiences, w)
+}
+
 // WithoutAuthentication returns a ClientOption that specifies that no
 // authentication should be used. It is suitable only for testing and for
 // accessing public resources, like public Google Cloud Storage buckets.
@@ -189,3 +193,79 @@ func WithoutAuthentication() ClientOption {
 type withoutAuthentication struct{}
 
 func (w withoutAuthentication) Apply(o *internal.DialSettings) { o.NoAuth = true }
+
+// WithQuotaProject returns a ClientOption that specifies the project used
+// for quota and billing purposes.
+//
+// For more information please read:
+// https://cloud.google.com/apis/docs/system-parameters
+func WithQuotaProject(quotaProject string) ClientOption {
+	return withQuotaProject(quotaProject)
+}
+
+type withQuotaProject string
+
+func (w withQuotaProject) Apply(o *internal.DialSettings) {
+	o.QuotaProject = string(w)
+}
+
+// WithRequestReason returns a ClientOption that specifies a reason for
+// making the request, which is intended to be recorded in audit logging.
+// An example reason would be a support-case ticket number.
+//
+// For more information please read:
+// https://cloud.google.com/apis/docs/system-parameters
+func WithRequestReason(requestReason string) ClientOption {
+	return withRequestReason(requestReason)
+}
+
+type withRequestReason string
+
+func (w withRequestReason) Apply(o *internal.DialSettings) {
+	o.RequestReason = string(w)
+}
+
+// WithTelemetryDisabled returns a ClientOption that disables default telemetry (OpenCensus)
+// settings on gRPC and HTTP clients.
+// An example reason would be to bind custom telemetry that overrides the defaults.
+func WithTelemetryDisabled() ClientOption {
+	return withTelemetryDisabled{}
+}
+
+type withTelemetryDisabled struct{}
+
+func (w withTelemetryDisabled) Apply(o *internal.DialSettings) {
+	o.TelemetryDisabled = true
+}
+
+// ClientCertSource is a function that returns a TLS client certificate to be used
+// when opening TLS connections.
+//
+// It follows the same semantics as crypto/tls.Config.GetClientCertificate.
+//
+// This is an EXPERIMENTAL API and may be changed or removed in the future.
+type ClientCertSource = func(*tls.CertificateRequestInfo) (*tls.Certificate, error)
+
+// WithClientCertSource returns a ClientOption that specifies a
+// callback function for obtaining a TLS client certificate.
+//
+// This option is used for supporting mTLS authentication, where the
+// server validates the client certifcate when establishing a connection.
+//
+// The callback function will be invoked whenever the server requests a
+// certificate from the client. Implementations of the callback function
+// should try to ensure that a valid certificate can be repeatedly returned
+// on demand for the entire life cycle of the transport client. If a nil
+// Certificate is returned (i.e. no Certificate can be obtained), an error
+// should be returned.
+//
+// This is an EXPERIMENTAL API and may be changed or removed in the future.
+func WithClientCertSource(s ClientCertSource) ClientOption {
+	return withClientCertSource{s}
+}
+
+type withClientCertSource struct{ s ClientCertSource }
+
+func (w withClientCertSource) Apply(o *internal.DialSettings) {
+	o.ClientCertSource = w.s
+}

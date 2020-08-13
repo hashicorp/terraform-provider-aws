@@ -1,7 +1,7 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_version"
-sidebar_current: "docs-aws-datasource-secretsmanager-secret-version"
 description: |-
   Retrieve information about a Secrets Manager secret version including its secret value
 ---
@@ -18,7 +18,7 @@ By default, this data sources retrieves information based on the `AWSCURRENT` st
 
 ```hcl
 data "aws_secretsmanager_secret_version" "example" {
-  secret_id = "${data.aws_secretsmanager_secret.example.id}"
+  secret_id = data.aws_secretsmanager_secret.example.id
 }
 ```
 
@@ -26,7 +26,7 @@ data "aws_secretsmanager_secret_version" "example" {
 
 ```hcl
 data "aws_secretsmanager_secret_version" "by-version-stage" {
-  secret_id     = "${data.aws_secretsmanager_secret.example.id}"
+  secret_id     = data.aws_secretsmanager_secret.example.id
   version_stage = "example"
 }
 ```
@@ -37,7 +37,7 @@ Reading key-value pairs from JSON back into a native Terraform map can be accomp
 
 ```hcl
 output "example" {
-  value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
+  value = jsondecode(data.aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
 ```
 

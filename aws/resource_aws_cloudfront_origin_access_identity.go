@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"time"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsCloudFrontOriginAccessIdentity() *schema.Resource {
@@ -72,6 +73,11 @@ func resourceAwsCloudFrontOriginAccessIdentityRead(d *schema.ResourceData, meta 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if err != nil {
+		if isAWSErr(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity, "") {
+			log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -125,7 +131,7 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 	}
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
-		originAccessIdentityConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
+		originAccessIdentityConfig.CallerReference = aws.String(resource.UniqueId())
 	} else {
 		originAccessIdentityConfig.CallerReference = aws.String(v.(string))
 	}
