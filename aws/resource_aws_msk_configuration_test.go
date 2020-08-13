@@ -172,6 +172,7 @@ resource "aws_msk_configuration" "test" {
 auto.create.topics.enable = true
 delete.topic.enable = true
 PROPERTIES
+
 }
 `, rName)
 }
@@ -186,6 +187,7 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 PROPERTIES
+
 }
 `, rName, description)
 }
@@ -199,6 +201,7 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 PROPERTIES
+
 }
 `, rName)
 }
@@ -212,6 +215,7 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 auto.create.topics.enable = false
 PROPERTIES
+
 }
 `, rName)
 }

@@ -200,8 +200,8 @@ resource "aws_media_package_channel" "test" {
   channel_id = "%[1]s"
 
   tags = {
-	  Name = "%[1]s"
-	  %[2]s = "%[3]s"
+    Name  = "%[1]s"
+    %[2]s = "%[3]s"
   }
 }
 `, rName, key, value)
