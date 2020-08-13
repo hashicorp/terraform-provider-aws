@@ -110,7 +110,6 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"override_action": {
@@ -253,7 +252,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			Scope:            aws.String(d.Get("scope").(string)),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
 			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
-			Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+			Rules:            expandWafv2WebACLRules(d.Get("rule").(*schema.Set).List()),
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 

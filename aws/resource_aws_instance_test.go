@@ -3280,6 +3280,19 @@ data "aws_availability_zones" "available" {
 `, strings.Join(excludeZoneIds, "\", \""))
 }
 
+func testAccAvailableAZsNoOptInConfig() string {
+	return `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`
+}
+
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
 	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
@@ -4886,16 +4899,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAwsInstanceVpcConfigBasic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4913,7 +4917,7 @@ resource "aws_subnet" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 // testAccAwsInstanceVpcSecurityGroupConfig returns the configuration for tests that create

@@ -27,7 +27,7 @@ resource "aws_eip_association" "eip_assoc" {
 resource "aws_instance" "web" {
   ami               = "ami-21f78e11"
   availability_zone = "us-west-2a"
-  instance_type     = "t1.micro"
+  instance_type     = "t2.micro"
 
   tags = {
     Name = "HelloWorld"

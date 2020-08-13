@@ -61,16 +61,20 @@ The following arguments are only available to "StepScaling" type policies:
 group scaling. These have the following structure:
 
 ```hcl
-step_adjustment {
-  scaling_adjustment          = -1
-  metric_interval_lower_bound = 1.0
-  metric_interval_upper_bound = 2.0
-}
+resource "aws_autoscaling_policy" "example" {
+  # ... other configuration ...
 
-step_adjustment {
-  scaling_adjustment          = 1
-  metric_interval_lower_bound = 2.0
-  metric_interval_upper_bound = 3.0
+  step_adjustment {
+    scaling_adjustment          = -1
+    metric_interval_lower_bound = 1.0
+    metric_interval_upper_bound = 2.0
+  }
+
+  step_adjustment {
+    scaling_adjustment          = 1
+    metric_interval_lower_bound = 2.0
+    metric_interval_upper_bound = 3.0
+  }
 }
 ```
 
@@ -92,27 +96,31 @@ The following arguments are only available to "TargetTrackingScaling" type polic
 * `target_tracking_configuration` - (Optional) A target tracking policy. These have the following structure:
 
 ```hcl
-target_tracking_configuration {
-  predefined_metric_specification {
-    predefined_metric_type = "ASGAverageCPUUtilization"
-  }
+resource "aws_autoscaling_policy" "example" {
+  # ... other configuration ...
 
-  target_value = 40.0
-}
-
-target_tracking_configuration {
-  customized_metric_specification {
-    metric_dimension {
-      name  = "fuga"
-      value = "fuga"
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
     }
 
-    metric_name = "hoge"
-    namespace   = "hoge"
-    statistic   = "Average"
+    target_value = 40.0
   }
 
-  target_value = 40.0
+  target_tracking_configuration {
+    customized_metric_specification {
+      metric_dimension {
+        name  = "fuga"
+        value = "fuga"
+      }
+
+      metric_name = "hoge"
+      namespace   = "hoge"
+      statistic   = "Average"
+    }
+
+    target_value = 40.0
+  }
 }
 ```
 

@@ -212,6 +212,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.EnvironmentTypeLinuxContainer,
 								codebuild.EnvironmentTypeLinuxGpuContainer,
 								codebuild.EnvironmentTypeWindowsContainer,
+								codebuild.EnvironmentTypeWindowsServer2019Container,
 								codebuild.EnvironmentTypeArmContainer,
 							}, false),
 						},

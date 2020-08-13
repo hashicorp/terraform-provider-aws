@@ -41,7 +41,10 @@ The following arguments are supported:
 * `configurations_json` - (Optional) A JSON string for supplying list of configurations specific to the EMR instance group. Note that this can only be changed when using EMR release 5.21 or later.
 
 ```hcl
-configurations_json = <<EOF
+resource "aws_emr_instance_group" "task" {
+  # ... other configuration ...
+
+  configurations_json = <<EOF
   [
     {
       "Classification": "hadoop-env",
@@ -57,6 +60,7 @@ configurations_json = <<EOF
     }
   ]
 EOF
+}
 ```
 
 `ebs_config` supports the following:

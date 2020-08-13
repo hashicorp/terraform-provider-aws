@@ -105,6 +105,11 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 							Computed: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
