@@ -1781,8 +1781,13 @@ resource "aws_lb" "test" {
   subnets            = ["${aws_subnet.test.id}"]
 }
 
-resource "aws_default_security_group" "test" {
+resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint_service" "test" {
@@ -1792,7 +1797,7 @@ resource "aws_vpc_endpoint_service" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
-  security_group_ids  = ["${aws_default_security_group.test.id}"]
+  security_group_ids  = ["${aws_security_group.test.id}"]
   service_name        = "${aws_vpc_endpoint_service.test.service_name}"
   subnet_ids          = ["${aws_subnet.test.id}"]
   vpc_endpoint_type   = "Interface"
