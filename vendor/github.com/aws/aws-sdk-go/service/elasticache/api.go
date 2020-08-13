@@ -17248,6 +17248,14 @@ const (
 	AZModeCrossAz = "cross-az"
 )
 
+// AZMode_Values returns all elements of the AZMode enum
+func AZMode_Values() []string {
+	return []string{
+		AZModeSingleAz,
+		AZModeCrossAz,
+	}
+}
+
 const (
 	// AuthTokenUpdateStatusSetting is a AuthTokenUpdateStatus enum value
 	AuthTokenUpdateStatusSetting = "SETTING"
@@ -17256,6 +17264,14 @@ const (
 	AuthTokenUpdateStatusRotating = "ROTATING"
 )
 
+// AuthTokenUpdateStatus_Values returns all elements of the AuthTokenUpdateStatus enum
+func AuthTokenUpdateStatus_Values() []string {
+	return []string{
+		AuthTokenUpdateStatusSetting,
+		AuthTokenUpdateStatusRotating,
+	}
+}
+
 const (
 	// AuthTokenUpdateStrategyTypeSet is a AuthTokenUpdateStrategyType enum value
 	AuthTokenUpdateStrategyTypeSet = "SET"
@@ -17263,6 +17279,14 @@ const (
 	// AuthTokenUpdateStrategyTypeRotate is a AuthTokenUpdateStrategyType enum value
 	AuthTokenUpdateStrategyTypeRotate = "ROTATE"
 )
+
+// AuthTokenUpdateStrategyType_Values returns all elements of the AuthTokenUpdateStrategyType enum
+func AuthTokenUpdateStrategyType_Values() []string {
+	return []string{
+		AuthTokenUpdateStrategyTypeSet,
+		AuthTokenUpdateStrategyTypeRotate,
+	}
+}
 
 const (
 	// AutomaticFailoverStatusEnabled is a AutomaticFailoverStatus enum value
@@ -17278,6 +17302,16 @@ const (
 	AutomaticFailoverStatusDisabling = "disabling"
 )
 
+// AutomaticFailoverStatus_Values returns all elements of the AutomaticFailoverStatus enum
+func AutomaticFailoverStatus_Values() []string {
+	return []string{
+		AutomaticFailoverStatusEnabled,
+		AutomaticFailoverStatusDisabled,
+		AutomaticFailoverStatusEnabling,
+		AutomaticFailoverStatusDisabling,
+	}
+}
+
 const (
 	// ChangeTypeImmediate is a ChangeType enum value
 	ChangeTypeImmediate = "immediate"
@@ -17285,6 +17319,14 @@ const (
 	// ChangeTypeRequiresReboot is a ChangeType enum value
 	ChangeTypeRequiresReboot = "requires-reboot"
 )
+
+// ChangeType_Values returns all elements of the ChangeType enum
+func ChangeType_Values() []string {
+	return []string{
+		ChangeTypeImmediate,
+		ChangeTypeRequiresReboot,
+	}
+}
 
 const (
 	// MultiAZStatusEnabled is a MultiAZStatus enum value
@@ -17294,6 +17336,14 @@ const (
 	MultiAZStatusDisabled = "disabled"
 )
 
+// MultiAZStatus_Values returns all elements of the MultiAZStatus enum
+func MultiAZStatus_Values() []string {
+	return []string{
+		MultiAZStatusEnabled,
+		MultiAZStatusDisabled,
+	}
+}
+
 const (
 	// NodeUpdateInitiatedBySystem is a NodeUpdateInitiatedBy enum value
 	NodeUpdateInitiatedBySystem = "system"
@@ -17301,6 +17351,14 @@ const (
 	// NodeUpdateInitiatedByCustomer is a NodeUpdateInitiatedBy enum value
 	NodeUpdateInitiatedByCustomer = "customer"
 )
+
+// NodeUpdateInitiatedBy_Values returns all elements of the NodeUpdateInitiatedBy enum
+func NodeUpdateInitiatedBy_Values() []string {
+	return []string{
+		NodeUpdateInitiatedBySystem,
+		NodeUpdateInitiatedByCustomer,
+	}
+}
 
 const (
 	// NodeUpdateStatusNotApplied is a NodeUpdateStatus enum value
@@ -17322,6 +17380,18 @@ const (
 	NodeUpdateStatusComplete = "complete"
 )
 
+// NodeUpdateStatus_Values returns all elements of the NodeUpdateStatus enum
+func NodeUpdateStatus_Values() []string {
+	return []string{
+		NodeUpdateStatusNotApplied,
+		NodeUpdateStatusWaitingToStart,
+		NodeUpdateStatusInProgress,
+		NodeUpdateStatusStopping,
+		NodeUpdateStatusStopped,
+		NodeUpdateStatusComplete,
+	}
+}
+
 const (
 	// PendingAutomaticFailoverStatusEnabled is a PendingAutomaticFailoverStatus enum value
 	PendingAutomaticFailoverStatusEnabled = "enabled"
@@ -17329,6 +17399,14 @@ const (
 	// PendingAutomaticFailoverStatusDisabled is a PendingAutomaticFailoverStatus enum value
 	PendingAutomaticFailoverStatusDisabled = "disabled"
 )
+
+// PendingAutomaticFailoverStatus_Values returns all elements of the PendingAutomaticFailoverStatus enum
+func PendingAutomaticFailoverStatus_Values() []string {
+	return []string{
+		PendingAutomaticFailoverStatusEnabled,
+		PendingAutomaticFailoverStatusDisabled,
+	}
+}
 
 const (
 	// ServiceUpdateSeverityCritical is a ServiceUpdateSeverity enum value
@@ -17344,6 +17422,16 @@ const (
 	ServiceUpdateSeverityLow = "low"
 )
 
+// ServiceUpdateSeverity_Values returns all elements of the ServiceUpdateSeverity enum
+func ServiceUpdateSeverity_Values() []string {
+	return []string{
+		ServiceUpdateSeverityCritical,
+		ServiceUpdateSeverityImportant,
+		ServiceUpdateSeverityMedium,
+		ServiceUpdateSeverityLow,
+	}
+}
+
 const (
 	// ServiceUpdateStatusAvailable is a ServiceUpdateStatus enum value
 	ServiceUpdateStatusAvailable = "available"
@@ -17355,10 +17443,26 @@ const (
 	ServiceUpdateStatusExpired = "expired"
 )
 
+// ServiceUpdateStatus_Values returns all elements of the ServiceUpdateStatus enum
+func ServiceUpdateStatus_Values() []string {
+	return []string{
+		ServiceUpdateStatusAvailable,
+		ServiceUpdateStatusCancelled,
+		ServiceUpdateStatusExpired,
+	}
+}
+
 const (
 	// ServiceUpdateTypeSecurityUpdate is a ServiceUpdateType enum value
 	ServiceUpdateTypeSecurityUpdate = "security-update"
 )
+
+// ServiceUpdateType_Values returns all elements of the ServiceUpdateType enum
+func ServiceUpdateType_Values() []string {
+	return []string{
+		ServiceUpdateTypeSecurityUpdate,
+	}
+}
 
 const (
 	// SlaMetYes is a SlaMet enum value
@@ -17370,6 +17474,15 @@ const (
 	// SlaMetNA is a SlaMet enum value
 	SlaMetNA = "n/a"
 )
+
+// SlaMet_Values returns all elements of the SlaMet enum
+func SlaMet_Values() []string {
+	return []string{
+		SlaMetYes,
+		SlaMetNo,
+		SlaMetNA,
+	}
+}
 
 const (
 	// SourceTypeCacheCluster is a SourceType enum value
@@ -17387,6 +17500,17 @@ const (
 	// SourceTypeReplicationGroup is a SourceType enum value
 	SourceTypeReplicationGroup = "replication-group"
 )
+
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeCacheCluster,
+		SourceTypeCacheParameterGroup,
+		SourceTypeCacheSecurityGroup,
+		SourceTypeCacheSubnetGroup,
+		SourceTypeReplicationGroup,
+	}
+}
 
 const (
 	// UpdateActionStatusNotApplied is a UpdateActionStatus enum value
@@ -17416,3 +17540,18 @@ const (
 	// UpdateActionStatusNotApplicable is a UpdateActionStatus enum value
 	UpdateActionStatusNotApplicable = "not-applicable"
 )
+
+// UpdateActionStatus_Values returns all elements of the UpdateActionStatus enum
+func UpdateActionStatus_Values() []string {
+	return []string{
+		UpdateActionStatusNotApplied,
+		UpdateActionStatusWaitingToStart,
+		UpdateActionStatusInProgress,
+		UpdateActionStatusStopping,
+		UpdateActionStatusStopped,
+		UpdateActionStatusComplete,
+		UpdateActionStatusScheduling,
+		UpdateActionStatusScheduled,
+		UpdateActionStatusNotApplicable,
+	}
+}

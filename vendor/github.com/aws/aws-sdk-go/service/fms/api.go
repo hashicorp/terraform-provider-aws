@@ -6713,6 +6713,17 @@ const (
 	AccountRoleStatusDeleted = "DELETED"
 )
 
+// AccountRoleStatus_Values returns all elements of the AccountRoleStatus enum
+func AccountRoleStatus_Values() []string {
+	return []string{
+		AccountRoleStatusReady,
+		AccountRoleStatusCreating,
+		AccountRoleStatusPendingDeletion,
+		AccountRoleStatusDeleting,
+		AccountRoleStatusDeleted,
+	}
+}
+
 const (
 	// CustomerPolicyScopeIdTypeAccount is a CustomerPolicyScopeIdType enum value
 	CustomerPolicyScopeIdTypeAccount = "ACCOUNT"
@@ -6720,6 +6731,14 @@ const (
 	// CustomerPolicyScopeIdTypeOrgUnit is a CustomerPolicyScopeIdType enum value
 	CustomerPolicyScopeIdTypeOrgUnit = "ORG_UNIT"
 )
+
+// CustomerPolicyScopeIdType_Values returns all elements of the CustomerPolicyScopeIdType enum
+func CustomerPolicyScopeIdType_Values() []string {
+	return []string{
+		CustomerPolicyScopeIdTypeAccount,
+		CustomerPolicyScopeIdTypeOrgUnit,
+	}
+}
 
 const (
 	// DependentServiceNameAwsconfig is a DependentServiceName enum value
@@ -6735,6 +6754,16 @@ const (
 	DependentServiceNameAwsvpc = "AWSVPC"
 )
 
+// DependentServiceName_Values returns all elements of the DependentServiceName enum
+func DependentServiceName_Values() []string {
+	return []string{
+		DependentServiceNameAwsconfig,
+		DependentServiceNameAwswaf,
+		DependentServiceNameAwsshieldAdvanced,
+		DependentServiceNameAwsvpc,
+	}
+}
+
 const (
 	// PolicyComplianceStatusTypeCompliant is a PolicyComplianceStatusType enum value
 	PolicyComplianceStatusTypeCompliant = "COMPLIANT"
@@ -6743,6 +6772,14 @@ const (
 	PolicyComplianceStatusTypeNonCompliant = "NON_COMPLIANT"
 )
 
+// PolicyComplianceStatusType_Values returns all elements of the PolicyComplianceStatusType enum
+func PolicyComplianceStatusType_Values() []string {
+	return []string{
+		PolicyComplianceStatusTypeCompliant,
+		PolicyComplianceStatusTypeNonCompliant,
+	}
+}
+
 const (
 	// RemediationActionTypeRemove is a RemediationActionType enum value
 	RemediationActionTypeRemove = "REMOVE"
@@ -6750,6 +6787,14 @@ const (
 	// RemediationActionTypeModify is a RemediationActionType enum value
 	RemediationActionTypeModify = "MODIFY"
 )
+
+// RemediationActionType_Values returns all elements of the RemediationActionType enum
+func RemediationActionType_Values() []string {
+	return []string{
+		RemediationActionTypeRemove,
+		RemediationActionTypeModify,
+	}
+}
 
 const (
 	// SecurityServiceTypeWaf is a SecurityServiceType enum value
@@ -6770,6 +6815,18 @@ const (
 	// SecurityServiceTypeSecurityGroupsUsageAudit is a SecurityServiceType enum value
 	SecurityServiceTypeSecurityGroupsUsageAudit = "SECURITY_GROUPS_USAGE_AUDIT"
 )
+
+// SecurityServiceType_Values returns all elements of the SecurityServiceType enum
+func SecurityServiceType_Values() []string {
+	return []string{
+		SecurityServiceTypeWaf,
+		SecurityServiceTypeWafv2,
+		SecurityServiceTypeShieldAdvanced,
+		SecurityServiceTypeSecurityGroupsCommon,
+		SecurityServiceTypeSecurityGroupsContentAudit,
+		SecurityServiceTypeSecurityGroupsUsageAudit,
+	}
+}
 
 const (
 	// ViolationReasonWebAclMissingRuleGroup is a ViolationReason enum value
@@ -6799,3 +6856,18 @@ const (
 	// ViolationReasonSecurityGroupRedundant is a ViolationReason enum value
 	ViolationReasonSecurityGroupRedundant = "SECURITY_GROUP_REDUNDANT"
 )
+
+// ViolationReason_Values returns all elements of the ViolationReason enum
+func ViolationReason_Values() []string {
+	return []string{
+		ViolationReasonWebAclMissingRuleGroup,
+		ViolationReasonResourceMissingWebAcl,
+		ViolationReasonResourceIncorrectWebAcl,
+		ViolationReasonResourceMissingShieldProtection,
+		ViolationReasonResourceMissingWebAclOrShieldProtection,
+		ViolationReasonResourceMissingSecurityGroup,
+		ViolationReasonResourceViolatesAuditSecurityGroup,
+		ViolationReasonSecurityGroupUnused,
+		ViolationReasonSecurityGroupRedundant,
+	}
+}

@@ -9287,6 +9287,16 @@ const (
 	AttributeTypeTimestamp = "timestamp"
 )
 
+// AttributeType_Values returns all elements of the AttributeType enum
+func AttributeType_Values() []string {
+	return []string{
+		AttributeTypeString,
+		AttributeTypeInteger,
+		AttributeTypeFloat,
+		AttributeTypeTimestamp,
+	}
+}
+
 const (
 	// DatasetTypeTargetTimeSeries is a DatasetType enum value
 	DatasetTypeTargetTimeSeries = "TARGET_TIME_SERIES"
@@ -9297,6 +9307,15 @@ const (
 	// DatasetTypeItemMetadata is a DatasetType enum value
 	DatasetTypeItemMetadata = "ITEM_METADATA"
 )
+
+// DatasetType_Values returns all elements of the DatasetType enum
+func DatasetType_Values() []string {
+	return []string{
+		DatasetTypeTargetTimeSeries,
+		DatasetTypeRelatedTimeSeries,
+		DatasetTypeItemMetadata,
+	}
+}
 
 const (
 	// DomainRetail is a Domain enum value
@@ -9321,6 +9340,19 @@ const (
 	DomainMetrics = "METRICS"
 )
 
+// Domain_Values returns all elements of the Domain enum
+func Domain_Values() []string {
+	return []string{
+		DomainRetail,
+		DomainCustom,
+		DomainInventoryPlanning,
+		DomainEc2Capacity,
+		DomainWorkForce,
+		DomainWebTraffic,
+		DomainMetrics,
+	}
+}
+
 const (
 	// EvaluationTypeSummary is a EvaluationType enum value
 	EvaluationTypeSummary = "SUMMARY"
@@ -9329,10 +9361,25 @@ const (
 	EvaluationTypeComputed = "COMPUTED"
 )
 
+// EvaluationType_Values returns all elements of the EvaluationType enum
+func EvaluationType_Values() []string {
+	return []string{
+		EvaluationTypeSummary,
+		EvaluationTypeComputed,
+	}
+}
+
 const (
 	// FeaturizationMethodNameFilling is a FeaturizationMethodName enum value
 	FeaturizationMethodNameFilling = "filling"
 )
+
+// FeaturizationMethodName_Values returns all elements of the FeaturizationMethodName enum
+func FeaturizationMethodName_Values() []string {
+	return []string{
+		FeaturizationMethodNameFilling,
+	}
+}
 
 const (
 	// FilterConditionStringIs is a FilterConditionString enum value
@@ -9341,6 +9388,14 @@ const (
 	// FilterConditionStringIsNot is a FilterConditionString enum value
 	FilterConditionStringIsNot = "IS_NOT"
 )
+
+// FilterConditionString_Values returns all elements of the FilterConditionString enum
+func FilterConditionString_Values() []string {
+	return []string{
+		FilterConditionStringIs,
+		FilterConditionStringIsNot,
+	}
+}
 
 const (
 	// ScalingTypeAuto is a ScalingType enum value
@@ -9355,3 +9410,13 @@ const (
 	// ScalingTypeReverseLogarithmic is a ScalingType enum value
 	ScalingTypeReverseLogarithmic = "ReverseLogarithmic"
 )
+
+// ScalingType_Values returns all elements of the ScalingType enum
+func ScalingType_Values() []string {
+	return []string{
+		ScalingTypeAuto,
+		ScalingTypeLinear,
+		ScalingTypeLogarithmic,
+		ScalingTypeReverseLogarithmic,
+	}
+}

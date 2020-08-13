@@ -15984,6 +15984,14 @@ const (
 	AwsIamAccessKeyStatusInactive = "Inactive"
 )
 
+// AwsIamAccessKeyStatus_Values returns all elements of the AwsIamAccessKeyStatus enum
+func AwsIamAccessKeyStatus_Values() []string {
+	return []string{
+		AwsIamAccessKeyStatusActive,
+		AwsIamAccessKeyStatusInactive,
+	}
+}
+
 const (
 	// ComplianceStatusPassed is a ComplianceStatus enum value
 	ComplianceStatusPassed = "PASSED"
@@ -15998,6 +16006,16 @@ const (
 	ComplianceStatusNotAvailable = "NOT_AVAILABLE"
 )
 
+// ComplianceStatus_Values returns all elements of the ComplianceStatus enum
+func ComplianceStatus_Values() []string {
+	return []string{
+		ComplianceStatusPassed,
+		ComplianceStatusWarning,
+		ComplianceStatusFailed,
+		ComplianceStatusNotAvailable,
+	}
+}
+
 const (
 	// ControlStatusEnabled is a ControlStatus enum value
 	ControlStatusEnabled = "ENABLED"
@@ -16006,10 +16024,25 @@ const (
 	ControlStatusDisabled = "DISABLED"
 )
 
+// ControlStatus_Values returns all elements of the ControlStatus enum
+func ControlStatus_Values() []string {
+	return []string{
+		ControlStatusEnabled,
+		ControlStatusDisabled,
+	}
+}
+
 const (
 	// DateRangeUnitDays is a DateRangeUnit enum value
 	DateRangeUnitDays = "DAYS"
 )
+
+// DateRangeUnit_Values returns all elements of the DateRangeUnit enum
+func DateRangeUnit_Values() []string {
+	return []string{
+		DateRangeUnitDays,
+	}
+}
 
 const (
 	// IntegrationTypeSendFindingsToSecurityHub is a IntegrationType enum value
@@ -16018,6 +16051,14 @@ const (
 	// IntegrationTypeReceiveFindingsFromSecurityHub is a IntegrationType enum value
 	IntegrationTypeReceiveFindingsFromSecurityHub = "RECEIVE_FINDINGS_FROM_SECURITY_HUB"
 )
+
+// IntegrationType_Values returns all elements of the IntegrationType enum
+func IntegrationType_Values() []string {
+	return []string{
+		IntegrationTypeSendFindingsToSecurityHub,
+		IntegrationTypeReceiveFindingsFromSecurityHub,
+	}
+}
 
 const (
 	// MalwareStateObserved is a MalwareState enum value
@@ -16029,6 +16070,15 @@ const (
 	// MalwareStateRemoved is a MalwareState enum value
 	MalwareStateRemoved = "REMOVED"
 )
+
+// MalwareState_Values returns all elements of the MalwareState enum
+func MalwareState_Values() []string {
+	return []string{
+		MalwareStateObserved,
+		MalwareStateRemovalFailed,
+		MalwareStateRemoved,
+	}
+}
 
 const (
 	// MalwareTypeAdware is a MalwareType enum value
@@ -16077,10 +16127,38 @@ const (
 	MalwareTypeWorm = "WORM"
 )
 
+// MalwareType_Values returns all elements of the MalwareType enum
+func MalwareType_Values() []string {
+	return []string{
+		MalwareTypeAdware,
+		MalwareTypeBlendedThreat,
+		MalwareTypeBotnetAgent,
+		MalwareTypeCoinMiner,
+		MalwareTypeExploitKit,
+		MalwareTypeKeylogger,
+		MalwareTypeMacro,
+		MalwareTypePotentiallyUnwanted,
+		MalwareTypeSpyware,
+		MalwareTypeRansomware,
+		MalwareTypeRemoteAccess,
+		MalwareTypeRootkit,
+		MalwareTypeTrojan,
+		MalwareTypeVirus,
+		MalwareTypeWorm,
+	}
+}
+
 const (
 	// MapFilterComparisonEquals is a MapFilterComparison enum value
 	MapFilterComparisonEquals = "EQUALS"
 )
+
+// MapFilterComparison_Values returns all elements of the MapFilterComparison enum
+func MapFilterComparison_Values() []string {
+	return []string{
+		MapFilterComparisonEquals,
+	}
+}
 
 const (
 	// NetworkDirectionIn is a NetworkDirection enum value
@@ -16089,6 +16167,14 @@ const (
 	// NetworkDirectionOut is a NetworkDirection enum value
 	NetworkDirectionOut = "OUT"
 )
+
+// NetworkDirection_Values returns all elements of the NetworkDirection enum
+func NetworkDirection_Values() []string {
+	return []string{
+		NetworkDirectionIn,
+		NetworkDirectionOut,
+	}
+}
 
 const (
 	// PartitionAws is a Partition enum value
@@ -16101,6 +16187,15 @@ const (
 	PartitionAwsUsGov = "aws-us-gov"
 )
 
+// Partition_Values returns all elements of the Partition enum
+func Partition_Values() []string {
+	return []string{
+		PartitionAws,
+		PartitionAwsCn,
+		PartitionAwsUsGov,
+	}
+}
+
 const (
 	// RecordStateActive is a RecordState enum value
 	RecordStateActive = "ACTIVE"
@@ -16108,6 +16203,14 @@ const (
 	// RecordStateArchived is a RecordState enum value
 	RecordStateArchived = "ARCHIVED"
 )
+
+// RecordState_Values returns all elements of the RecordState enum
+func RecordState_Values() []string {
+	return []string{
+		RecordStateActive,
+		RecordStateArchived,
+	}
+}
 
 const (
 	// SeverityLabelInformational is a SeverityLabel enum value
@@ -16126,6 +16229,17 @@ const (
 	SeverityLabelCritical = "CRITICAL"
 )
 
+// SeverityLabel_Values returns all elements of the SeverityLabel enum
+func SeverityLabel_Values() []string {
+	return []string{
+		SeverityLabelInformational,
+		SeverityLabelLow,
+		SeverityLabelMedium,
+		SeverityLabelHigh,
+		SeverityLabelCritical,
+	}
+}
+
 const (
 	// SeverityRatingLow is a SeverityRating enum value
 	SeverityRatingLow = "LOW"
@@ -16140,6 +16254,16 @@ const (
 	SeverityRatingCritical = "CRITICAL"
 )
 
+// SeverityRating_Values returns all elements of the SeverityRating enum
+func SeverityRating_Values() []string {
+	return []string{
+		SeverityRatingLow,
+		SeverityRatingMedium,
+		SeverityRatingHigh,
+		SeverityRatingCritical,
+	}
+}
+
 const (
 	// SortOrderAsc is a SortOrder enum value
 	SortOrderAsc = "asc"
@@ -16147,6 +16271,14 @@ const (
 	// SortOrderDesc is a SortOrder enum value
 	SortOrderDesc = "desc"
 )
+
+// SortOrder_Values returns all elements of the SortOrder enum
+func SortOrder_Values() []string {
+	return []string{
+		SortOrderAsc,
+		SortOrderDesc,
+	}
+}
 
 const (
 	// StandardsStatusPending is a StandardsStatus enum value
@@ -16165,6 +16297,17 @@ const (
 	StandardsStatusIncomplete = "INCOMPLETE"
 )
 
+// StandardsStatus_Values returns all elements of the StandardsStatus enum
+func StandardsStatus_Values() []string {
+	return []string{
+		StandardsStatusPending,
+		StandardsStatusReady,
+		StandardsStatusFailed,
+		StandardsStatusDeleting,
+		StandardsStatusIncomplete,
+	}
+}
+
 const (
 	// StringFilterComparisonEquals is a StringFilterComparison enum value
 	StringFilterComparisonEquals = "EQUALS"
@@ -16172,6 +16315,14 @@ const (
 	// StringFilterComparisonPrefix is a StringFilterComparison enum value
 	StringFilterComparisonPrefix = "PREFIX"
 )
+
+// StringFilterComparison_Values returns all elements of the StringFilterComparison enum
+func StringFilterComparison_Values() []string {
+	return []string{
+		StringFilterComparisonEquals,
+		StringFilterComparisonPrefix,
+	}
+}
 
 const (
 	// ThreatIntelIndicatorCategoryBackdoor is a ThreatIntelIndicatorCategory enum value
@@ -16192,6 +16343,18 @@ const (
 	// ThreatIntelIndicatorCategoryKeylogger is a ThreatIntelIndicatorCategory enum value
 	ThreatIntelIndicatorCategoryKeylogger = "KEYLOGGER"
 )
+
+// ThreatIntelIndicatorCategory_Values returns all elements of the ThreatIntelIndicatorCategory enum
+func ThreatIntelIndicatorCategory_Values() []string {
+	return []string{
+		ThreatIntelIndicatorCategoryBackdoor,
+		ThreatIntelIndicatorCategoryCardStealer,
+		ThreatIntelIndicatorCategoryCommandAndControl,
+		ThreatIntelIndicatorCategoryDropSite,
+		ThreatIntelIndicatorCategoryExploitSite,
+		ThreatIntelIndicatorCategoryKeylogger,
+	}
+}
 
 const (
 	// ThreatIntelIndicatorTypeDomain is a ThreatIntelIndicatorType enum value
@@ -16228,6 +16391,23 @@ const (
 	ThreatIntelIndicatorTypeUrl = "URL"
 )
 
+// ThreatIntelIndicatorType_Values returns all elements of the ThreatIntelIndicatorType enum
+func ThreatIntelIndicatorType_Values() []string {
+	return []string{
+		ThreatIntelIndicatorTypeDomain,
+		ThreatIntelIndicatorTypeEmailAddress,
+		ThreatIntelIndicatorTypeHashMd5,
+		ThreatIntelIndicatorTypeHashSha1,
+		ThreatIntelIndicatorTypeHashSha256,
+		ThreatIntelIndicatorTypeHashSha512,
+		ThreatIntelIndicatorTypeIpv4Address,
+		ThreatIntelIndicatorTypeIpv6Address,
+		ThreatIntelIndicatorTypeMutex,
+		ThreatIntelIndicatorTypeProcess,
+		ThreatIntelIndicatorTypeUrl,
+	}
+}
+
 const (
 	// VerificationStateUnknown is a VerificationState enum value
 	VerificationStateUnknown = "UNKNOWN"
@@ -16241,6 +16421,16 @@ const (
 	// VerificationStateBenignPositive is a VerificationState enum value
 	VerificationStateBenignPositive = "BENIGN_POSITIVE"
 )
+
+// VerificationState_Values returns all elements of the VerificationState enum
+func VerificationState_Values() []string {
+	return []string{
+		VerificationStateUnknown,
+		VerificationStateTruePositive,
+		VerificationStateFalsePositive,
+		VerificationStateBenignPositive,
+	}
+}
 
 const (
 	// WorkflowStateNew is a WorkflowState enum value
@@ -16259,6 +16449,17 @@ const (
 	WorkflowStateResolved = "RESOLVED"
 )
 
+// WorkflowState_Values returns all elements of the WorkflowState enum
+func WorkflowState_Values() []string {
+	return []string{
+		WorkflowStateNew,
+		WorkflowStateAssigned,
+		WorkflowStateInProgress,
+		WorkflowStateDeferred,
+		WorkflowStateResolved,
+	}
+}
+
 const (
 	// WorkflowStatusNew is a WorkflowStatus enum value
 	WorkflowStatusNew = "NEW"
@@ -16272,3 +16473,13 @@ const (
 	// WorkflowStatusSuppressed is a WorkflowStatus enum value
 	WorkflowStatusSuppressed = "SUPPRESSED"
 )
+
+// WorkflowStatus_Values returns all elements of the WorkflowStatus enum
+func WorkflowStatus_Values() []string {
+	return []string{
+		WorkflowStatusNew,
+		WorkflowStatusNotified,
+		WorkflowStatusResolved,
+		WorkflowStatusSuppressed,
+	}
+}

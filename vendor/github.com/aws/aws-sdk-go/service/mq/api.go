@@ -5912,6 +5912,14 @@ const (
 	AuthenticationStrategyLdap = "LDAP"
 )
 
+// AuthenticationStrategy_Values returns all elements of the AuthenticationStrategy enum
+func AuthenticationStrategy_Values() []string {
+	return []string{
+		AuthenticationStrategySimple,
+		AuthenticationStrategyLdap,
+	}
+}
+
 // The status of the broker.
 const (
 	// BrokerStateCreationInProgress is a BrokerState enum value
@@ -5930,6 +5938,17 @@ const (
 	BrokerStateRebootInProgress = "REBOOT_IN_PROGRESS"
 )
 
+// BrokerState_Values returns all elements of the BrokerState enum
+func BrokerState_Values() []string {
+	return []string{
+		BrokerStateCreationInProgress,
+		BrokerStateCreationFailed,
+		BrokerStateDeletionInProgress,
+		BrokerStateRunning,
+		BrokerStateRebootInProgress,
+	}
+}
+
 // The storage type of the broker.
 const (
 	// BrokerStorageTypeEbs is a BrokerStorageType enum value
@@ -5938,6 +5957,14 @@ const (
 	// BrokerStorageTypeEfs is a BrokerStorageType enum value
 	BrokerStorageTypeEfs = "EFS"
 )
+
+// BrokerStorageType_Values returns all elements of the BrokerStorageType enum
+func BrokerStorageType_Values() []string {
+	return []string{
+		BrokerStorageTypeEbs,
+		BrokerStorageTypeEfs,
+	}
+}
 
 // The type of change pending for the ActiveMQ user.
 const (
@@ -5950,6 +5977,15 @@ const (
 	// ChangeTypeDelete is a ChangeType enum value
 	ChangeTypeDelete = "DELETE"
 )
+
+// ChangeType_Values returns all elements of the ChangeType enum
+func ChangeType_Values() []string {
+	return []string{
+		ChangeTypeCreate,
+		ChangeTypeUpdate,
+		ChangeTypeDelete,
+	}
+}
 
 const (
 	// DayOfWeekMonday is a DayOfWeek enum value
@@ -5974,6 +6010,19 @@ const (
 	DayOfWeekSunday = "SUNDAY"
 )
 
+// DayOfWeek_Values returns all elements of the DayOfWeek enum
+func DayOfWeek_Values() []string {
+	return []string{
+		DayOfWeekMonday,
+		DayOfWeekTuesday,
+		DayOfWeekWednesday,
+		DayOfWeekThursday,
+		DayOfWeekFriday,
+		DayOfWeekSaturday,
+		DayOfWeekSunday,
+	}
+}
+
 // The deployment mode of the broker.
 const (
 	// DeploymentModeSingleInstance is a DeploymentMode enum value
@@ -5983,11 +6032,26 @@ const (
 	DeploymentModeActiveStandbyMultiAz = "ACTIVE_STANDBY_MULTI_AZ"
 )
 
+// DeploymentMode_Values returns all elements of the DeploymentMode enum
+func DeploymentMode_Values() []string {
+	return []string{
+		DeploymentModeSingleInstance,
+		DeploymentModeActiveStandbyMultiAz,
+	}
+}
+
 // The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 const (
 	// EngineTypeActivemq is a EngineType enum value
 	EngineTypeActivemq = "ACTIVEMQ"
 )
+
+// EngineType_Values returns all elements of the EngineType enum
+func EngineType_Values() []string {
+	return []string{
+		EngineTypeActivemq,
+	}
+}
 
 // The reason for which the XML elements or attributes were sanitized.
 const (
@@ -6000,3 +6064,12 @@ const (
 	// SanitizationWarningReasonInvalidAttributeValueRemoved is a SanitizationWarningReason enum value
 	SanitizationWarningReasonInvalidAttributeValueRemoved = "INVALID_ATTRIBUTE_VALUE_REMOVED"
 )
+
+// SanitizationWarningReason_Values returns all elements of the SanitizationWarningReason enum
+func SanitizationWarningReason_Values() []string {
+	return []string{
+		SanitizationWarningReasonDisallowedElementRemoved,
+		SanitizationWarningReasonDisallowedAttributeRemoved,
+		SanitizationWarningReasonInvalidAttributeValueRemoved,
+	}
+}

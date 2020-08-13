@@ -2879,6 +2879,9 @@ func (c *WorkSpaces) ModifyWorkspaceCreationPropertiesRequest(input *ModifyWorks
 //   * ResourceNotFoundException
 //   The resource could not be found.
 //
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceCreationProperties
 func (c *WorkSpaces) ModifyWorkspaceCreationProperties(input *ModifyWorkspaceCreationPropertiesInput) (*ModifyWorkspaceCreationPropertiesOutput, error) {
 	req, out := c.ModifyWorkspaceCreationPropertiesRequest(input)
@@ -8966,7 +8969,8 @@ type Workspace struct {
 	// The identifier of the bundle used to create the WorkSpace.
 	BundleId *string `type:"string"`
 
-	// The name of the WorkSpace, as seen by the operating system.
+	// The name of the WorkSpace, as seen by the operating system. The format of
+	// this name varies. For more information, see Launch a WorkSpace (https://docs.aws.amazon.com/workspaces/latest/adminguide/launch-workspaces-tutorials.html).
 	ComputerName *string `type:"string"`
 
 	// The identifier of the AWS Directory Service directory for the WorkSpace.
@@ -9363,6 +9367,22 @@ type WorkspaceCreationProperties struct {
 	// information, see WorkSpace Maintenance (https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html).
 	EnableMaintenanceMode *bool `type:"boolean"`
 
+	// Indicates whether Amazon WorkDocs is enabled for your WorkSpaces.
+	//
+	// If WorkDocs is already enabled for a WorkSpaces directory and you disable
+	// it, new WorkSpaces launched in the directory will not have WorkDocs enabled.
+	// However, WorkDocs remains enabled for any existing WorkSpaces, unless you
+	// either disable users' access to WorkDocs or you delete the WorkDocs site.
+	// To disable users' access to WorkDocs, see Disabling Users (https://docs.aws.amazon.com/workdocs/latest/adminguide/inactive-user.html)
+	// in the Amazon WorkDocs Administration Guide. To delete a WorkDocs site, see
+	// Deleting a Site (https://docs.aws.amazon.com/workdocs/latest/adminguide/manage-sites.html)
+	// in the Amazon WorkDocs Administration Guide.
+	//
+	// If you enable WorkDocs on a directory that already has existing WorkSpaces,
+	// the existing WorkSpaces and any new WorkSpaces that are launched in the directory
+	// will have WorkDocs enabled.
+	EnableWorkDocs *bool `type:"boolean"`
+
 	// Indicates whether users are local administrators of their WorkSpaces.
 	UserEnabledAsLocalAdministrator *bool `type:"boolean"`
 }
@@ -9411,6 +9431,12 @@ func (s *WorkspaceCreationProperties) SetEnableInternetAccess(v bool) *Workspace
 // SetEnableMaintenanceMode sets the EnableMaintenanceMode field's value.
 func (s *WorkspaceCreationProperties) SetEnableMaintenanceMode(v bool) *WorkspaceCreationProperties {
 	s.EnableMaintenanceMode = &v
+	return s
+}
+
+// SetEnableWorkDocs sets the EnableWorkDocs field's value.
+func (s *WorkspaceCreationProperties) SetEnableWorkDocs(v bool) *WorkspaceCreationProperties {
+	s.EnableWorkDocs = &v
 	return s
 }
 
@@ -9955,6 +9981,14 @@ const (
 	AccessPropertyValueDeny = "DENY"
 )
 
+// AccessPropertyValue_Values returns all elements of the AccessPropertyValue enum
+func AccessPropertyValue_Values() []string {
+	return []string{
+		AccessPropertyValueAllow,
+		AccessPropertyValueDeny,
+	}
+}
+
 const (
 	// ComputeValue is a Compute enum value
 	ComputeValue = "VALUE"
@@ -9978,6 +10012,19 @@ const (
 	ComputeGraphicspro = "GRAPHICSPRO"
 )
 
+// Compute_Values returns all elements of the Compute enum
+func Compute_Values() []string {
+	return []string{
+		ComputeValue,
+		ComputeStandard,
+		ComputePerformance,
+		ComputePower,
+		ComputeGraphics,
+		ComputePowerpro,
+		ComputeGraphicspro,
+	}
+}
+
 const (
 	// ConnectionStateConnected is a ConnectionState enum value
 	ConnectionStateConnected = "CONNECTED"
@@ -9988,6 +10035,15 @@ const (
 	// ConnectionStateUnknown is a ConnectionState enum value
 	ConnectionStateUnknown = "UNKNOWN"
 )
+
+// ConnectionState_Values returns all elements of the ConnectionState enum
+func ConnectionState_Values() []string {
+	return []string{
+		ConnectionStateConnected,
+		ConnectionStateDisconnected,
+		ConnectionStateUnknown,
+	}
+}
 
 const (
 	// DedicatedTenancyModificationStateEnumPending is a DedicatedTenancyModificationStateEnum enum value
@@ -10000,10 +10056,26 @@ const (
 	DedicatedTenancyModificationStateEnumFailed = "FAILED"
 )
 
+// DedicatedTenancyModificationStateEnum_Values returns all elements of the DedicatedTenancyModificationStateEnum enum
+func DedicatedTenancyModificationStateEnum_Values() []string {
+	return []string{
+		DedicatedTenancyModificationStateEnumPending,
+		DedicatedTenancyModificationStateEnumCompleted,
+		DedicatedTenancyModificationStateEnumFailed,
+	}
+}
+
 const (
 	// DedicatedTenancySupportEnumEnabled is a DedicatedTenancySupportEnum enum value
 	DedicatedTenancySupportEnumEnabled = "ENABLED"
 )
+
+// DedicatedTenancySupportEnum_Values returns all elements of the DedicatedTenancySupportEnum enum
+func DedicatedTenancySupportEnum_Values() []string {
+	return []string{
+		DedicatedTenancySupportEnumEnabled,
+	}
+}
 
 const (
 	// DedicatedTenancySupportResultEnumEnabled is a DedicatedTenancySupportResultEnum enum value
@@ -10013,6 +10085,14 @@ const (
 	DedicatedTenancySupportResultEnumDisabled = "DISABLED"
 )
 
+// DedicatedTenancySupportResultEnum_Values returns all elements of the DedicatedTenancySupportResultEnum enum
+func DedicatedTenancySupportResultEnum_Values() []string {
+	return []string{
+		DedicatedTenancySupportResultEnumEnabled,
+		DedicatedTenancySupportResultEnumDisabled,
+	}
+}
+
 const (
 	// ImageTypeOwned is a ImageType enum value
 	ImageTypeOwned = "OWNED"
@@ -10020,6 +10100,14 @@ const (
 	// ImageTypeShared is a ImageType enum value
 	ImageTypeShared = "SHARED"
 )
+
+// ImageType_Values returns all elements of the ImageType enum
+func ImageType_Values() []string {
+	return []string{
+		ImageTypeOwned,
+		ImageTypeShared,
+	}
+}
 
 const (
 	// ModificationResourceEnumRootVolume is a ModificationResourceEnum enum value
@@ -10032,6 +10120,15 @@ const (
 	ModificationResourceEnumComputeType = "COMPUTE_TYPE"
 )
 
+// ModificationResourceEnum_Values returns all elements of the ModificationResourceEnum enum
+func ModificationResourceEnum_Values() []string {
+	return []string{
+		ModificationResourceEnumRootVolume,
+		ModificationResourceEnumUserVolume,
+		ModificationResourceEnumComputeType,
+	}
+}
+
 const (
 	// ModificationStateEnumUpdateInitiated is a ModificationStateEnum enum value
 	ModificationStateEnumUpdateInitiated = "UPDATE_INITIATED"
@@ -10039,6 +10136,14 @@ const (
 	// ModificationStateEnumUpdateInProgress is a ModificationStateEnum enum value
 	ModificationStateEnumUpdateInProgress = "UPDATE_IN_PROGRESS"
 )
+
+// ModificationStateEnum_Values returns all elements of the ModificationStateEnum enum
+func ModificationStateEnum_Values() []string {
+	return []string{
+		ModificationStateEnumUpdateInitiated,
+		ModificationStateEnumUpdateInProgress,
+	}
+}
 
 const (
 	// OperatingSystemTypeWindows is a OperatingSystemType enum value
@@ -10048,6 +10153,14 @@ const (
 	OperatingSystemTypeLinux = "LINUX"
 )
 
+// OperatingSystemType_Values returns all elements of the OperatingSystemType enum
+func OperatingSystemType_Values() []string {
+	return []string{
+		OperatingSystemTypeWindows,
+		OperatingSystemTypeLinux,
+	}
+}
+
 const (
 	// ReconnectEnumEnabled is a ReconnectEnum enum value
 	ReconnectEnumEnabled = "ENABLED"
@@ -10055,6 +10168,14 @@ const (
 	// ReconnectEnumDisabled is a ReconnectEnum enum value
 	ReconnectEnumDisabled = "DISABLED"
 )
+
+// ReconnectEnum_Values returns all elements of the ReconnectEnum enum
+func ReconnectEnum_Values() []string {
+	return []string{
+		ReconnectEnumEnabled,
+		ReconnectEnumDisabled,
+	}
+}
 
 const (
 	// RunningModeAutoStop is a RunningMode enum value
@@ -10064,6 +10185,14 @@ const (
 	RunningModeAlwaysOn = "ALWAYS_ON"
 )
 
+// RunningMode_Values returns all elements of the RunningMode enum
+func RunningMode_Values() []string {
+	return []string{
+		RunningModeAutoStop,
+		RunningModeAlwaysOn,
+	}
+}
+
 const (
 	// TargetWorkspaceStateAvailable is a TargetWorkspaceState enum value
 	TargetWorkspaceStateAvailable = "AVAILABLE"
@@ -10072,6 +10201,14 @@ const (
 	TargetWorkspaceStateAdminMaintenance = "ADMIN_MAINTENANCE"
 )
 
+// TargetWorkspaceState_Values returns all elements of the TargetWorkspaceState enum
+func TargetWorkspaceState_Values() []string {
+	return []string{
+		TargetWorkspaceStateAvailable,
+		TargetWorkspaceStateAdminMaintenance,
+	}
+}
+
 const (
 	// TenancyDedicated is a Tenancy enum value
 	TenancyDedicated = "DEDICATED"
@@ -10079,6 +10216,14 @@ const (
 	// TenancyShared is a Tenancy enum value
 	TenancyShared = "SHARED"
 )
+
+// Tenancy_Values returns all elements of the Tenancy enum
+func Tenancy_Values() []string {
+	return []string{
+		TenancyDedicated,
+		TenancyShared,
+	}
+}
 
 const (
 	// WorkspaceDirectoryStateRegistering is a WorkspaceDirectoryState enum value
@@ -10097,6 +10242,17 @@ const (
 	WorkspaceDirectoryStateError = "ERROR"
 )
 
+// WorkspaceDirectoryState_Values returns all elements of the WorkspaceDirectoryState enum
+func WorkspaceDirectoryState_Values() []string {
+	return []string{
+		WorkspaceDirectoryStateRegistering,
+		WorkspaceDirectoryStateRegistered,
+		WorkspaceDirectoryStateDeregistering,
+		WorkspaceDirectoryStateDeregistered,
+		WorkspaceDirectoryStateError,
+	}
+}
+
 const (
 	// WorkspaceDirectoryTypeSimpleAd is a WorkspaceDirectoryType enum value
 	WorkspaceDirectoryTypeSimpleAd = "SIMPLE_AD"
@@ -10104,6 +10260,14 @@ const (
 	// WorkspaceDirectoryTypeAdConnector is a WorkspaceDirectoryType enum value
 	WorkspaceDirectoryTypeAdConnector = "AD_CONNECTOR"
 )
+
+// WorkspaceDirectoryType_Values returns all elements of the WorkspaceDirectoryType enum
+func WorkspaceDirectoryType_Values() []string {
+	return []string{
+		WorkspaceDirectoryTypeSimpleAd,
+		WorkspaceDirectoryTypeAdConnector,
+	}
+}
 
 const (
 	// WorkspaceImageIngestionProcessByolRegular is a WorkspaceImageIngestionProcess enum value
@@ -10116,6 +10280,15 @@ const (
 	WorkspaceImageIngestionProcessByolGraphicspro = "BYOL_GRAPHICSPRO"
 )
 
+// WorkspaceImageIngestionProcess_Values returns all elements of the WorkspaceImageIngestionProcess enum
+func WorkspaceImageIngestionProcess_Values() []string {
+	return []string{
+		WorkspaceImageIngestionProcessByolRegular,
+		WorkspaceImageIngestionProcessByolGraphics,
+		WorkspaceImageIngestionProcessByolGraphicspro,
+	}
+}
+
 const (
 	// WorkspaceImageRequiredTenancyDefault is a WorkspaceImageRequiredTenancy enum value
 	WorkspaceImageRequiredTenancyDefault = "DEFAULT"
@@ -10123,6 +10296,14 @@ const (
 	// WorkspaceImageRequiredTenancyDedicated is a WorkspaceImageRequiredTenancy enum value
 	WorkspaceImageRequiredTenancyDedicated = "DEDICATED"
 )
+
+// WorkspaceImageRequiredTenancy_Values returns all elements of the WorkspaceImageRequiredTenancy enum
+func WorkspaceImageRequiredTenancy_Values() []string {
+	return []string{
+		WorkspaceImageRequiredTenancyDefault,
+		WorkspaceImageRequiredTenancyDedicated,
+	}
+}
 
 const (
 	// WorkspaceImageStateAvailable is a WorkspaceImageState enum value
@@ -10134,6 +10315,15 @@ const (
 	// WorkspaceImageStateError is a WorkspaceImageState enum value
 	WorkspaceImageStateError = "ERROR"
 )
+
+// WorkspaceImageState_Values returns all elements of the WorkspaceImageState enum
+func WorkspaceImageState_Values() []string {
+	return []string{
+		WorkspaceImageStateAvailable,
+		WorkspaceImageStatePending,
+		WorkspaceImageStateError,
+	}
+}
 
 const (
 	// WorkspaceStatePending is a WorkspaceState enum value
@@ -10187,3 +10377,26 @@ const (
 	// WorkspaceStateError is a WorkspaceState enum value
 	WorkspaceStateError = "ERROR"
 )
+
+// WorkspaceState_Values returns all elements of the WorkspaceState enum
+func WorkspaceState_Values() []string {
+	return []string{
+		WorkspaceStatePending,
+		WorkspaceStateAvailable,
+		WorkspaceStateImpaired,
+		WorkspaceStateUnhealthy,
+		WorkspaceStateRebooting,
+		WorkspaceStateStarting,
+		WorkspaceStateRebuilding,
+		WorkspaceStateRestoring,
+		WorkspaceStateMaintenance,
+		WorkspaceStateAdminMaintenance,
+		WorkspaceStateTerminating,
+		WorkspaceStateTerminated,
+		WorkspaceStateSuspended,
+		WorkspaceStateUpdating,
+		WorkspaceStateStopping,
+		WorkspaceStateStopped,
+		WorkspaceStateError,
+	}
+}

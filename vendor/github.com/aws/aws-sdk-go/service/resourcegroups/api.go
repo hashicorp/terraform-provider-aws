@@ -4140,6 +4140,15 @@ const (
 	GroupConfigurationStatusUpdateFailed = "UPDATE_FAILED"
 )
 
+// GroupConfigurationStatus_Values returns all elements of the GroupConfigurationStatus enum
+func GroupConfigurationStatus_Values() []string {
+	return []string{
+		GroupConfigurationStatusUpdating,
+		GroupConfigurationStatusUpdateComplete,
+		GroupConfigurationStatusUpdateFailed,
+	}
+}
+
 const (
 	// GroupFilterNameResourceType is a GroupFilterName enum value
 	GroupFilterNameResourceType = "resource-type"
@@ -4147,6 +4156,14 @@ const (
 	// GroupFilterNameConfigurationType is a GroupFilterName enum value
 	GroupFilterNameConfigurationType = "configuration-type"
 )
+
+// GroupFilterName_Values returns all elements of the GroupFilterName enum
+func GroupFilterName_Values() []string {
+	return []string{
+		GroupFilterNameResourceType,
+		GroupFilterNameConfigurationType,
+	}
+}
 
 const (
 	// QueryErrorCodeCloudformationStackInactive is a QueryErrorCode enum value
@@ -4156,6 +4173,14 @@ const (
 	QueryErrorCodeCloudformationStackNotExisting = "CLOUDFORMATION_STACK_NOT_EXISTING"
 )
 
+// QueryErrorCode_Values returns all elements of the QueryErrorCode enum
+func QueryErrorCode_Values() []string {
+	return []string{
+		QueryErrorCodeCloudformationStackInactive,
+		QueryErrorCodeCloudformationStackNotExisting,
+	}
+}
+
 const (
 	// QueryTypeTagFilters10 is a QueryType enum value
 	QueryTypeTagFilters10 = "TAG_FILTERS_1_0"
@@ -4164,7 +4189,22 @@ const (
 	QueryTypeCloudformationStack10 = "CLOUDFORMATION_STACK_1_0"
 )
 
+// QueryType_Values returns all elements of the QueryType enum
+func QueryType_Values() []string {
+	return []string{
+		QueryTypeTagFilters10,
+		QueryTypeCloudformationStack10,
+	}
+}
+
 const (
 	// ResourceFilterNameResourceType is a ResourceFilterName enum value
 	ResourceFilterNameResourceType = "resource-type"
 )
+
+// ResourceFilterName_Values returns all elements of the ResourceFilterName enum
+func ResourceFilterName_Values() []string {
+	return []string{
+		ResourceFilterNameResourceType,
+	}
+}

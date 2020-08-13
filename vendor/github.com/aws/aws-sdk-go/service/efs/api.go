@@ -7795,6 +7795,17 @@ const (
 	LifeCycleStateDeleted = "deleted"
 )
 
+// LifeCycleState_Values returns all elements of the LifeCycleState enum
+func LifeCycleState_Values() []string {
+	return []string{
+		LifeCycleStateCreating,
+		LifeCycleStateAvailable,
+		LifeCycleStateUpdating,
+		LifeCycleStateDeleting,
+		LifeCycleStateDeleted,
+	}
+}
+
 const (
 	// PerformanceModeGeneralPurpose is a PerformanceMode enum value
 	PerformanceModeGeneralPurpose = "generalPurpose"
@@ -7802,6 +7813,14 @@ const (
 	// PerformanceModeMaxIo is a PerformanceMode enum value
 	PerformanceModeMaxIo = "maxIO"
 )
+
+// PerformanceMode_Values returns all elements of the PerformanceMode enum
+func PerformanceMode_Values() []string {
+	return []string{
+		PerformanceModeGeneralPurpose,
+		PerformanceModeMaxIo,
+	}
+}
 
 const (
 	// StatusEnabled is a Status enum value
@@ -7817,6 +7836,16 @@ const (
 	StatusDisabling = "DISABLING"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusEnabled,
+		StatusEnabling,
+		StatusDisabled,
+		StatusDisabling,
+	}
+}
+
 const (
 	// ThroughputModeBursting is a ThroughputMode enum value
 	ThroughputModeBursting = "bursting"
@@ -7824,6 +7853,14 @@ const (
 	// ThroughputModeProvisioned is a ThroughputMode enum value
 	ThroughputModeProvisioned = "provisioned"
 )
+
+// ThroughputMode_Values returns all elements of the ThroughputMode enum
+func ThroughputMode_Values() []string {
+	return []string{
+		ThroughputModeBursting,
+		ThroughputModeProvisioned,
+	}
+}
 
 const (
 	// TransitionToIARulesAfter7Days is a TransitionToIARules enum value
@@ -7841,3 +7878,14 @@ const (
 	// TransitionToIARulesAfter90Days is a TransitionToIARules enum value
 	TransitionToIARulesAfter90Days = "AFTER_90_DAYS"
 )
+
+// TransitionToIARules_Values returns all elements of the TransitionToIARules enum
+func TransitionToIARules_Values() []string {
+	return []string{
+		TransitionToIARulesAfter7Days,
+		TransitionToIARulesAfter14Days,
+		TransitionToIARulesAfter30Days,
+		TransitionToIARulesAfter60Days,
+		TransitionToIARulesAfter90Days,
+	}
+}

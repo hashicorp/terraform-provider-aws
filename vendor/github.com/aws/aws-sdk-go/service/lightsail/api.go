@@ -31983,10 +31983,25 @@ const (
 	AccessDirectionOutbound = "outbound"
 )
 
+// AccessDirection_Values returns all elements of the AccessDirection enum
+func AccessDirection_Values() []string {
+	return []string{
+		AccessDirectionInbound,
+		AccessDirectionOutbound,
+	}
+}
+
 const (
 	// AddOnTypeAutoSnapshot is a AddOnType enum value
 	AddOnTypeAutoSnapshot = "AutoSnapshot"
 )
+
+// AddOnType_Values returns all elements of the AddOnType enum
+func AddOnType_Values() []string {
+	return []string{
+		AddOnTypeAutoSnapshot,
+	}
+}
 
 const (
 	// AlarmStateOk is a AlarmState enum value
@@ -31998,6 +32013,15 @@ const (
 	// AlarmStateInsufficientData is a AlarmState enum value
 	AlarmStateInsufficientData = "INSUFFICIENT_DATA"
 )
+
+// AlarmState_Values returns all elements of the AlarmState enum
+func AlarmState_Values() []string {
+	return []string{
+		AlarmStateOk,
+		AlarmStateAlarm,
+		AlarmStateInsufficientData,
+	}
+}
 
 const (
 	// AutoSnapshotStatusSuccess is a AutoSnapshotStatus enum value
@@ -32013,6 +32037,16 @@ const (
 	AutoSnapshotStatusNotFound = "NotFound"
 )
 
+// AutoSnapshotStatus_Values returns all elements of the AutoSnapshotStatus enum
+func AutoSnapshotStatus_Values() []string {
+	return []string{
+		AutoSnapshotStatusSuccess,
+		AutoSnapshotStatusFailed,
+		AutoSnapshotStatusInProgress,
+		AutoSnapshotStatusNotFound,
+	}
+}
+
 const (
 	// BehaviorEnumDontCache is a BehaviorEnum enum value
 	BehaviorEnumDontCache = "dont-cache"
@@ -32021,6 +32055,14 @@ const (
 	BehaviorEnumCache = "cache"
 )
 
+// BehaviorEnum_Values returns all elements of the BehaviorEnum enum
+func BehaviorEnum_Values() []string {
+	return []string{
+		BehaviorEnumDontCache,
+		BehaviorEnumCache,
+	}
+}
+
 const (
 	// BlueprintTypeOs is a BlueprintType enum value
 	BlueprintTypeOs = "os"
@@ -32028,6 +32070,14 @@ const (
 	// BlueprintTypeApp is a BlueprintType enum value
 	BlueprintTypeApp = "app"
 )
+
+// BlueprintType_Values returns all elements of the BlueprintType enum
+func BlueprintType_Values() []string {
+	return []string{
+		BlueprintTypeOs,
+		BlueprintTypeApp,
+	}
+}
 
 const (
 	// CertificateStatusPendingValidation is a CertificateStatus enum value
@@ -32052,10 +32102,30 @@ const (
 	CertificateStatusFailed = "FAILED"
 )
 
+// CertificateStatus_Values returns all elements of the CertificateStatus enum
+func CertificateStatus_Values() []string {
+	return []string{
+		CertificateStatusPendingValidation,
+		CertificateStatusIssued,
+		CertificateStatusInactive,
+		CertificateStatusExpired,
+		CertificateStatusValidationTimedOut,
+		CertificateStatusRevoked,
+		CertificateStatusFailed,
+	}
+}
+
 const (
 	// CloudFormationStackRecordSourceTypeExportSnapshotRecord is a CloudFormationStackRecordSourceType enum value
 	CloudFormationStackRecordSourceTypeExportSnapshotRecord = "ExportSnapshotRecord"
 )
+
+// CloudFormationStackRecordSourceType_Values returns all elements of the CloudFormationStackRecordSourceType enum
+func CloudFormationStackRecordSourceType_Values() []string {
+	return []string{
+		CloudFormationStackRecordSourceTypeExportSnapshotRecord,
+	}
+}
 
 const (
 	// ComparisonOperatorGreaterThanOrEqualToThreshold is a ComparisonOperator enum value
@@ -32071,6 +32141,16 @@ const (
 	ComparisonOperatorLessThanOrEqualToThreshold = "LessThanOrEqualToThreshold"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorGreaterThanOrEqualToThreshold,
+		ComparisonOperatorGreaterThanThreshold,
+		ComparisonOperatorLessThanThreshold,
+		ComparisonOperatorLessThanOrEqualToThreshold,
+	}
+}
+
 const (
 	// ContactMethodStatusPendingVerification is a ContactMethodStatus enum value
 	ContactMethodStatusPendingVerification = "PendingVerification"
@@ -32082,10 +32162,26 @@ const (
 	ContactMethodStatusInvalid = "Invalid"
 )
 
+// ContactMethodStatus_Values returns all elements of the ContactMethodStatus enum
+func ContactMethodStatus_Values() []string {
+	return []string{
+		ContactMethodStatusPendingVerification,
+		ContactMethodStatusValid,
+		ContactMethodStatusInvalid,
+	}
+}
+
 const (
 	// ContactMethodVerificationProtocolEmail is a ContactMethodVerificationProtocol enum value
 	ContactMethodVerificationProtocolEmail = "Email"
 )
+
+// ContactMethodVerificationProtocol_Values returns all elements of the ContactMethodVerificationProtocol enum
+func ContactMethodVerificationProtocol_Values() []string {
+	return []string{
+		ContactMethodVerificationProtocolEmail,
+	}
+}
 
 const (
 	// ContactProtocolEmail is a ContactProtocol enum value
@@ -32094,6 +32190,14 @@ const (
 	// ContactProtocolSms is a ContactProtocol enum value
 	ContactProtocolSms = "SMS"
 )
+
+// ContactProtocol_Values returns all elements of the ContactProtocol enum
+func ContactProtocol_Values() []string {
+	return []string{
+		ContactProtocolEmail,
+		ContactProtocolSms,
+	}
+}
 
 const (
 	// DiskSnapshotStatePending is a DiskSnapshotState enum value
@@ -32108,6 +32212,16 @@ const (
 	// DiskSnapshotStateUnknown is a DiskSnapshotState enum value
 	DiskSnapshotStateUnknown = "unknown"
 )
+
+// DiskSnapshotState_Values returns all elements of the DiskSnapshotState enum
+func DiskSnapshotState_Values() []string {
+	return []string{
+		DiskSnapshotStatePending,
+		DiskSnapshotStateCompleted,
+		DiskSnapshotStateError,
+		DiskSnapshotStateUnknown,
+	}
+}
 
 const (
 	// DiskStatePending is a DiskState enum value
@@ -32125,6 +32239,17 @@ const (
 	// DiskStateUnknown is a DiskState enum value
 	DiskStateUnknown = "unknown"
 )
+
+// DiskState_Values returns all elements of the DiskState enum
+func DiskState_Values() []string {
+	return []string{
+		DiskStatePending,
+		DiskStateError,
+		DiskStateAvailable,
+		DiskStateInUse,
+		DiskStateUnknown,
+	}
+}
 
 const (
 	// DistributionMetricNameRequests is a DistributionMetricName enum value
@@ -32146,6 +32271,18 @@ const (
 	DistributionMetricNameHttp5xxErrorRate = "Http5xxErrorRate"
 )
 
+// DistributionMetricName_Values returns all elements of the DistributionMetricName enum
+func DistributionMetricName_Values() []string {
+	return []string{
+		DistributionMetricNameRequests,
+		DistributionMetricNameBytesDownloaded,
+		DistributionMetricNameBytesUploaded,
+		DistributionMetricNameTotalErrorRate,
+		DistributionMetricNameHttp4xxErrorRate,
+		DistributionMetricNameHttp5xxErrorRate,
+	}
+}
+
 const (
 	// ExportSnapshotRecordSourceTypeInstanceSnapshot is a ExportSnapshotRecordSourceType enum value
 	ExportSnapshotRecordSourceTypeInstanceSnapshot = "InstanceSnapshot"
@@ -32153,6 +32290,14 @@ const (
 	// ExportSnapshotRecordSourceTypeDiskSnapshot is a ExportSnapshotRecordSourceType enum value
 	ExportSnapshotRecordSourceTypeDiskSnapshot = "DiskSnapshot"
 )
+
+// ExportSnapshotRecordSourceType_Values returns all elements of the ExportSnapshotRecordSourceType enum
+func ExportSnapshotRecordSourceType_Values() []string {
+	return []string{
+		ExportSnapshotRecordSourceTypeInstanceSnapshot,
+		ExportSnapshotRecordSourceTypeDiskSnapshot,
+	}
+}
 
 const (
 	// ForwardValuesNone is a ForwardValues enum value
@@ -32164,6 +32309,15 @@ const (
 	// ForwardValuesAll is a ForwardValues enum value
 	ForwardValuesAll = "all"
 )
+
+// ForwardValues_Values returns all elements of the ForwardValues enum
+func ForwardValues_Values() []string {
+	return []string{
+		ForwardValuesNone,
+		ForwardValuesAllowList,
+		ForwardValuesAll,
+	}
+}
 
 const (
 	// HeaderEnumAccept is a HeaderEnum enum value
@@ -32212,6 +32366,27 @@ const (
 	HeaderEnumReferer = "Referer"
 )
 
+// HeaderEnum_Values returns all elements of the HeaderEnum enum
+func HeaderEnum_Values() []string {
+	return []string{
+		HeaderEnumAccept,
+		HeaderEnumAcceptCharset,
+		HeaderEnumAcceptDatetime,
+		HeaderEnumAcceptEncoding,
+		HeaderEnumAcceptLanguage,
+		HeaderEnumAuthorization,
+		HeaderEnumCloudFrontForwardedProto,
+		HeaderEnumCloudFrontIsDesktopViewer,
+		HeaderEnumCloudFrontIsMobileViewer,
+		HeaderEnumCloudFrontIsSmartTvViewer,
+		HeaderEnumCloudFrontIsTabletViewer,
+		HeaderEnumCloudFrontViewerCountry,
+		HeaderEnumHost,
+		HeaderEnumOrigin,
+		HeaderEnumReferer,
+	}
+}
+
 const (
 	// InstanceAccessProtocolSsh is a InstanceAccessProtocol enum value
 	InstanceAccessProtocolSsh = "ssh"
@@ -32219,6 +32394,14 @@ const (
 	// InstanceAccessProtocolRdp is a InstanceAccessProtocol enum value
 	InstanceAccessProtocolRdp = "rdp"
 )
+
+// InstanceAccessProtocol_Values returns all elements of the InstanceAccessProtocol enum
+func InstanceAccessProtocol_Values() []string {
+	return []string{
+		InstanceAccessProtocolSsh,
+		InstanceAccessProtocolRdp,
+	}
+}
 
 const (
 	// InstanceHealthReasonLbRegistrationInProgress is a InstanceHealthReason enum value
@@ -32255,6 +32438,23 @@ const (
 	InstanceHealthReasonInstanceIpUnusable = "Instance.IpUnusable"
 )
 
+// InstanceHealthReason_Values returns all elements of the InstanceHealthReason enum
+func InstanceHealthReason_Values() []string {
+	return []string{
+		InstanceHealthReasonLbRegistrationInProgress,
+		InstanceHealthReasonLbInitialHealthChecking,
+		InstanceHealthReasonLbInternalError,
+		InstanceHealthReasonInstanceResponseCodeMismatch,
+		InstanceHealthReasonInstanceTimeout,
+		InstanceHealthReasonInstanceFailedHealthChecks,
+		InstanceHealthReasonInstanceNotRegistered,
+		InstanceHealthReasonInstanceNotInUse,
+		InstanceHealthReasonInstanceDeregistrationInProgress,
+		InstanceHealthReasonInstanceInvalidState,
+		InstanceHealthReasonInstanceIpUnusable,
+	}
+}
+
 const (
 	// InstanceHealthStateInitial is a InstanceHealthState enum value
 	InstanceHealthStateInitial = "initial"
@@ -32274,6 +32474,18 @@ const (
 	// InstanceHealthStateUnavailable is a InstanceHealthState enum value
 	InstanceHealthStateUnavailable = "unavailable"
 )
+
+// InstanceHealthState_Values returns all elements of the InstanceHealthState enum
+func InstanceHealthState_Values() []string {
+	return []string{
+		InstanceHealthStateInitial,
+		InstanceHealthStateHealthy,
+		InstanceHealthStateUnhealthy,
+		InstanceHealthStateUnused,
+		InstanceHealthStateDraining,
+		InstanceHealthStateUnavailable,
+	}
+}
 
 const (
 	// InstanceMetricNameCpuutilization is a InstanceMetricName enum value
@@ -32301,6 +32513,20 @@ const (
 	InstanceMetricNameBurstCapacityPercentage = "BurstCapacityPercentage"
 )
 
+// InstanceMetricName_Values returns all elements of the InstanceMetricName enum
+func InstanceMetricName_Values() []string {
+	return []string{
+		InstanceMetricNameCpuutilization,
+		InstanceMetricNameNetworkIn,
+		InstanceMetricNameNetworkOut,
+		InstanceMetricNameStatusCheckFailed,
+		InstanceMetricNameStatusCheckFailedInstance,
+		InstanceMetricNameStatusCheckFailedSystem,
+		InstanceMetricNameBurstCapacityTime,
+		InstanceMetricNameBurstCapacityPercentage,
+	}
+}
+
 const (
 	// InstancePlatformLinuxUnix is a InstancePlatform enum value
 	InstancePlatformLinuxUnix = "LINUX_UNIX"
@@ -32308,6 +32534,14 @@ const (
 	// InstancePlatformWindows is a InstancePlatform enum value
 	InstancePlatformWindows = "WINDOWS"
 )
+
+// InstancePlatform_Values returns all elements of the InstancePlatform enum
+func InstancePlatform_Values() []string {
+	return []string{
+		InstancePlatformLinuxUnix,
+		InstancePlatformWindows,
+	}
+}
 
 const (
 	// InstanceSnapshotStatePending is a InstanceSnapshotState enum value
@@ -32320,6 +32554,15 @@ const (
 	InstanceSnapshotStateAvailable = "available"
 )
 
+// InstanceSnapshotState_Values returns all elements of the InstanceSnapshotState enum
+func InstanceSnapshotState_Values() []string {
+	return []string{
+		InstanceSnapshotStatePending,
+		InstanceSnapshotStateError,
+		InstanceSnapshotStateAvailable,
+	}
+}
+
 const (
 	// LoadBalancerAttributeNameHealthCheckPath is a LoadBalancerAttributeName enum value
 	LoadBalancerAttributeNameHealthCheckPath = "HealthCheckPath"
@@ -32330,6 +32573,15 @@ const (
 	// LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds is a LoadBalancerAttributeName enum value
 	LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds = "SessionStickiness_LB_CookieDurationSeconds"
 )
+
+// LoadBalancerAttributeName_Values returns all elements of the LoadBalancerAttributeName enum
+func LoadBalancerAttributeName_Values() []string {
+	return []string{
+		LoadBalancerAttributeNameHealthCheckPath,
+		LoadBalancerAttributeNameSessionStickinessEnabled,
+		LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds,
+	}
+}
 
 const (
 	// LoadBalancerMetricNameClientTlsnegotiationErrorCount is a LoadBalancerMetricName enum value
@@ -32369,6 +32621,24 @@ const (
 	LoadBalancerMetricNameRequestCount = "RequestCount"
 )
 
+// LoadBalancerMetricName_Values returns all elements of the LoadBalancerMetricName enum
+func LoadBalancerMetricName_Values() []string {
+	return []string{
+		LoadBalancerMetricNameClientTlsnegotiationErrorCount,
+		LoadBalancerMetricNameHealthyHostCount,
+		LoadBalancerMetricNameUnhealthyHostCount,
+		LoadBalancerMetricNameHttpcodeLb4xxCount,
+		LoadBalancerMetricNameHttpcodeLb5xxCount,
+		LoadBalancerMetricNameHttpcodeInstance2xxCount,
+		LoadBalancerMetricNameHttpcodeInstance3xxCount,
+		LoadBalancerMetricNameHttpcodeInstance4xxCount,
+		LoadBalancerMetricNameHttpcodeInstance5xxCount,
+		LoadBalancerMetricNameInstanceResponseTime,
+		LoadBalancerMetricNameRejectedConnectionCount,
+		LoadBalancerMetricNameRequestCount,
+	}
+}
+
 const (
 	// LoadBalancerProtocolHttpHttps is a LoadBalancerProtocol enum value
 	LoadBalancerProtocolHttpHttps = "HTTP_HTTPS"
@@ -32376,6 +32646,14 @@ const (
 	// LoadBalancerProtocolHttp is a LoadBalancerProtocol enum value
 	LoadBalancerProtocolHttp = "HTTP"
 )
+
+// LoadBalancerProtocol_Values returns all elements of the LoadBalancerProtocol enum
+func LoadBalancerProtocol_Values() []string {
+	return []string{
+		LoadBalancerProtocolHttpHttps,
+		LoadBalancerProtocolHttp,
+	}
+}
 
 const (
 	// LoadBalancerStateActive is a LoadBalancerState enum value
@@ -32394,6 +32672,17 @@ const (
 	LoadBalancerStateUnknown = "unknown"
 )
 
+// LoadBalancerState_Values returns all elements of the LoadBalancerState enum
+func LoadBalancerState_Values() []string {
+	return []string{
+		LoadBalancerStateActive,
+		LoadBalancerStateProvisioning,
+		LoadBalancerStateActiveImpaired,
+		LoadBalancerStateFailed,
+		LoadBalancerStateUnknown,
+	}
+}
+
 const (
 	// LoadBalancerTlsCertificateDomainStatusPendingValidation is a LoadBalancerTlsCertificateDomainStatus enum value
 	LoadBalancerTlsCertificateDomainStatusPendingValidation = "PENDING_VALIDATION"
@@ -32404,6 +32693,15 @@ const (
 	// LoadBalancerTlsCertificateDomainStatusSuccess is a LoadBalancerTlsCertificateDomainStatus enum value
 	LoadBalancerTlsCertificateDomainStatusSuccess = "SUCCESS"
 )
+
+// LoadBalancerTlsCertificateDomainStatus_Values returns all elements of the LoadBalancerTlsCertificateDomainStatus enum
+func LoadBalancerTlsCertificateDomainStatus_Values() []string {
+	return []string{
+		LoadBalancerTlsCertificateDomainStatusPendingValidation,
+		LoadBalancerTlsCertificateDomainStatusFailed,
+		LoadBalancerTlsCertificateDomainStatusSuccess,
+	}
+}
 
 const (
 	// LoadBalancerTlsCertificateFailureReasonNoAvailableContacts is a LoadBalancerTlsCertificateFailureReason enum value
@@ -32422,6 +32720,17 @@ const (
 	LoadBalancerTlsCertificateFailureReasonOther = "OTHER"
 )
 
+// LoadBalancerTlsCertificateFailureReason_Values returns all elements of the LoadBalancerTlsCertificateFailureReason enum
+func LoadBalancerTlsCertificateFailureReason_Values() []string {
+	return []string{
+		LoadBalancerTlsCertificateFailureReasonNoAvailableContacts,
+		LoadBalancerTlsCertificateFailureReasonAdditionalVerificationRequired,
+		LoadBalancerTlsCertificateFailureReasonDomainNotAllowed,
+		LoadBalancerTlsCertificateFailureReasonInvalidPublicDomain,
+		LoadBalancerTlsCertificateFailureReasonOther,
+	}
+}
+
 const (
 	// LoadBalancerTlsCertificateRenewalStatusPendingAutoRenewal is a LoadBalancerTlsCertificateRenewalStatus enum value
 	LoadBalancerTlsCertificateRenewalStatusPendingAutoRenewal = "PENDING_AUTO_RENEWAL"
@@ -32435,6 +32744,16 @@ const (
 	// LoadBalancerTlsCertificateRenewalStatusFailed is a LoadBalancerTlsCertificateRenewalStatus enum value
 	LoadBalancerTlsCertificateRenewalStatusFailed = "FAILED"
 )
+
+// LoadBalancerTlsCertificateRenewalStatus_Values returns all elements of the LoadBalancerTlsCertificateRenewalStatus enum
+func LoadBalancerTlsCertificateRenewalStatus_Values() []string {
+	return []string{
+		LoadBalancerTlsCertificateRenewalStatusPendingAutoRenewal,
+		LoadBalancerTlsCertificateRenewalStatusPendingValidation,
+		LoadBalancerTlsCertificateRenewalStatusSuccess,
+		LoadBalancerTlsCertificateRenewalStatusFailed,
+	}
+}
 
 const (
 	// LoadBalancerTlsCertificateRevocationReasonUnspecified is a LoadBalancerTlsCertificateRevocationReason enum value
@@ -32468,6 +32787,22 @@ const (
 	LoadBalancerTlsCertificateRevocationReasonAACompromise = "A_A_COMPROMISE"
 )
 
+// LoadBalancerTlsCertificateRevocationReason_Values returns all elements of the LoadBalancerTlsCertificateRevocationReason enum
+func LoadBalancerTlsCertificateRevocationReason_Values() []string {
+	return []string{
+		LoadBalancerTlsCertificateRevocationReasonUnspecified,
+		LoadBalancerTlsCertificateRevocationReasonKeyCompromise,
+		LoadBalancerTlsCertificateRevocationReasonCaCompromise,
+		LoadBalancerTlsCertificateRevocationReasonAffiliationChanged,
+		LoadBalancerTlsCertificateRevocationReasonSuperceded,
+		LoadBalancerTlsCertificateRevocationReasonCessationOfOperation,
+		LoadBalancerTlsCertificateRevocationReasonCertificateHold,
+		LoadBalancerTlsCertificateRevocationReasonRemoveFromCrl,
+		LoadBalancerTlsCertificateRevocationReasonPrivilegeWithdrawn,
+		LoadBalancerTlsCertificateRevocationReasonAACompromise,
+	}
+}
+
 const (
 	// LoadBalancerTlsCertificateStatusPendingValidation is a LoadBalancerTlsCertificateStatus enum value
 	LoadBalancerTlsCertificateStatusPendingValidation = "PENDING_VALIDATION"
@@ -32493,6 +32828,20 @@ const (
 	// LoadBalancerTlsCertificateStatusUnknown is a LoadBalancerTlsCertificateStatus enum value
 	LoadBalancerTlsCertificateStatusUnknown = "UNKNOWN"
 )
+
+// LoadBalancerTlsCertificateStatus_Values returns all elements of the LoadBalancerTlsCertificateStatus enum
+func LoadBalancerTlsCertificateStatus_Values() []string {
+	return []string{
+		LoadBalancerTlsCertificateStatusPendingValidation,
+		LoadBalancerTlsCertificateStatusIssued,
+		LoadBalancerTlsCertificateStatusInactive,
+		LoadBalancerTlsCertificateStatusExpired,
+		LoadBalancerTlsCertificateStatusValidationTimedOut,
+		LoadBalancerTlsCertificateStatusRevoked,
+		LoadBalancerTlsCertificateStatusFailed,
+		LoadBalancerTlsCertificateStatusUnknown,
+	}
+}
 
 const (
 	// MetricNameCpuutilization is a MetricName enum value
@@ -32571,6 +32920,37 @@ const (
 	MetricNameBurstCapacityPercentage = "BurstCapacityPercentage"
 )
 
+// MetricName_Values returns all elements of the MetricName enum
+func MetricName_Values() []string {
+	return []string{
+		MetricNameCpuutilization,
+		MetricNameNetworkIn,
+		MetricNameNetworkOut,
+		MetricNameStatusCheckFailed,
+		MetricNameStatusCheckFailedInstance,
+		MetricNameStatusCheckFailedSystem,
+		MetricNameClientTlsnegotiationErrorCount,
+		MetricNameHealthyHostCount,
+		MetricNameUnhealthyHostCount,
+		MetricNameHttpcodeLb4xxCount,
+		MetricNameHttpcodeLb5xxCount,
+		MetricNameHttpcodeInstance2xxCount,
+		MetricNameHttpcodeInstance3xxCount,
+		MetricNameHttpcodeInstance4xxCount,
+		MetricNameHttpcodeInstance5xxCount,
+		MetricNameInstanceResponseTime,
+		MetricNameRejectedConnectionCount,
+		MetricNameRequestCount,
+		MetricNameDatabaseConnections,
+		MetricNameDiskQueueDepth,
+		MetricNameFreeStorageSpace,
+		MetricNameNetworkReceiveThroughput,
+		MetricNameNetworkTransmitThroughput,
+		MetricNameBurstCapacityTime,
+		MetricNameBurstCapacityPercentage,
+	}
+}
+
 const (
 	// MetricStatisticMinimum is a MetricStatistic enum value
 	MetricStatisticMinimum = "Minimum"
@@ -32587,6 +32967,17 @@ const (
 	// MetricStatisticSampleCount is a MetricStatistic enum value
 	MetricStatisticSampleCount = "SampleCount"
 )
+
+// MetricStatistic_Values returns all elements of the MetricStatistic enum
+func MetricStatistic_Values() []string {
+	return []string{
+		MetricStatisticMinimum,
+		MetricStatisticMaximum,
+		MetricStatisticSum,
+		MetricStatisticAverage,
+		MetricStatisticSampleCount,
+	}
+}
 
 const (
 	// MetricUnitSeconds is a MetricUnit enum value
@@ -32671,6 +33062,39 @@ const (
 	MetricUnitNone = "None"
 )
 
+// MetricUnit_Values returns all elements of the MetricUnit enum
+func MetricUnit_Values() []string {
+	return []string{
+		MetricUnitSeconds,
+		MetricUnitMicroseconds,
+		MetricUnitMilliseconds,
+		MetricUnitBytes,
+		MetricUnitKilobytes,
+		MetricUnitMegabytes,
+		MetricUnitGigabytes,
+		MetricUnitTerabytes,
+		MetricUnitBits,
+		MetricUnitKilobits,
+		MetricUnitMegabits,
+		MetricUnitGigabits,
+		MetricUnitTerabits,
+		MetricUnitPercent,
+		MetricUnitCount,
+		MetricUnitBytesSecond,
+		MetricUnitKilobytesSecond,
+		MetricUnitMegabytesSecond,
+		MetricUnitGigabytesSecond,
+		MetricUnitTerabytesSecond,
+		MetricUnitBitsSecond,
+		MetricUnitKilobitsSecond,
+		MetricUnitMegabitsSecond,
+		MetricUnitGigabitsSecond,
+		MetricUnitTerabitsSecond,
+		MetricUnitCountSecond,
+		MetricUnitNone,
+	}
+}
+
 const (
 	// NetworkProtocolTcp is a NetworkProtocol enum value
 	NetworkProtocolTcp = "tcp"
@@ -32684,6 +33108,16 @@ const (
 	// NetworkProtocolIcmp is a NetworkProtocol enum value
 	NetworkProtocolIcmp = "icmp"
 )
+
+// NetworkProtocol_Values returns all elements of the NetworkProtocol enum
+func NetworkProtocol_Values() []string {
+	return []string{
+		NetworkProtocolTcp,
+		NetworkProtocolAll,
+		NetworkProtocolUdp,
+		NetworkProtocolIcmp,
+	}
+}
 
 const (
 	// OperationStatusNotStarted is a OperationStatus enum value
@@ -32701,6 +33135,17 @@ const (
 	// OperationStatusSucceeded is a OperationStatus enum value
 	OperationStatusSucceeded = "Succeeded"
 )
+
+// OperationStatus_Values returns all elements of the OperationStatus enum
+func OperationStatus_Values() []string {
+	return []string{
+		OperationStatusNotStarted,
+		OperationStatusStarted,
+		OperationStatusFailed,
+		OperationStatusCompleted,
+		OperationStatusSucceeded,
+	}
+}
 
 const (
 	// OperationTypeDeleteKnownHostKeys is a OperationType enum value
@@ -32896,6 +33341,76 @@ const (
 	OperationTypeDeleteCertificate = "DeleteCertificate"
 )
 
+// OperationType_Values returns all elements of the OperationType enum
+func OperationType_Values() []string {
+	return []string{
+		OperationTypeDeleteKnownHostKeys,
+		OperationTypeDeleteInstance,
+		OperationTypeCreateInstance,
+		OperationTypeStopInstance,
+		OperationTypeStartInstance,
+		OperationTypeRebootInstance,
+		OperationTypeOpenInstancePublicPorts,
+		OperationTypePutInstancePublicPorts,
+		OperationTypeCloseInstancePublicPorts,
+		OperationTypeAllocateStaticIp,
+		OperationTypeReleaseStaticIp,
+		OperationTypeAttachStaticIp,
+		OperationTypeDetachStaticIp,
+		OperationTypeUpdateDomainEntry,
+		OperationTypeDeleteDomainEntry,
+		OperationTypeCreateDomain,
+		OperationTypeDeleteDomain,
+		OperationTypeCreateInstanceSnapshot,
+		OperationTypeDeleteInstanceSnapshot,
+		OperationTypeCreateInstancesFromSnapshot,
+		OperationTypeCreateLoadBalancer,
+		OperationTypeDeleteLoadBalancer,
+		OperationTypeAttachInstancesToLoadBalancer,
+		OperationTypeDetachInstancesFromLoadBalancer,
+		OperationTypeUpdateLoadBalancerAttribute,
+		OperationTypeCreateLoadBalancerTlsCertificate,
+		OperationTypeDeleteLoadBalancerTlsCertificate,
+		OperationTypeAttachLoadBalancerTlsCertificate,
+		OperationTypeCreateDisk,
+		OperationTypeDeleteDisk,
+		OperationTypeAttachDisk,
+		OperationTypeDetachDisk,
+		OperationTypeCreateDiskSnapshot,
+		OperationTypeDeleteDiskSnapshot,
+		OperationTypeCreateDiskFromSnapshot,
+		OperationTypeCreateRelationalDatabase,
+		OperationTypeUpdateRelationalDatabase,
+		OperationTypeDeleteRelationalDatabase,
+		OperationTypeCreateRelationalDatabaseFromSnapshot,
+		OperationTypeCreateRelationalDatabaseSnapshot,
+		OperationTypeDeleteRelationalDatabaseSnapshot,
+		OperationTypeUpdateRelationalDatabaseParameters,
+		OperationTypeStartRelationalDatabase,
+		OperationTypeRebootRelationalDatabase,
+		OperationTypeStopRelationalDatabase,
+		OperationTypeEnableAddOn,
+		OperationTypeDisableAddOn,
+		OperationTypePutAlarm,
+		OperationTypeGetAlarms,
+		OperationTypeDeleteAlarm,
+		OperationTypeTestAlarm,
+		OperationTypeCreateContactMethod,
+		OperationTypeGetContactMethods,
+		OperationTypeSendContactMethodVerification,
+		OperationTypeDeleteContactMethod,
+		OperationTypeCreateDistribution,
+		OperationTypeUpdateDistribution,
+		OperationTypeDeleteDistribution,
+		OperationTypeResetDistributionCache,
+		OperationTypeAttachCertificateToDistribution,
+		OperationTypeDetachCertificateFromDistribution,
+		OperationTypeUpdateDistributionBundle,
+		OperationTypeCreateCertificate,
+		OperationTypeDeleteCertificate,
+	}
+}
+
 const (
 	// OriginProtocolPolicyEnumHttpOnly is a OriginProtocolPolicyEnum enum value
 	OriginProtocolPolicyEnumHttpOnly = "http-only"
@@ -32904,6 +33419,14 @@ const (
 	OriginProtocolPolicyEnumHttpsOnly = "https-only"
 )
 
+// OriginProtocolPolicyEnum_Values returns all elements of the OriginProtocolPolicyEnum enum
+func OriginProtocolPolicyEnum_Values() []string {
+	return []string{
+		OriginProtocolPolicyEnumHttpOnly,
+		OriginProtocolPolicyEnumHttpsOnly,
+	}
+}
+
 const (
 	// PortAccessTypePublic is a PortAccessType enum value
 	PortAccessTypePublic = "Public"
@@ -32911,6 +33434,14 @@ const (
 	// PortAccessTypePrivate is a PortAccessType enum value
 	PortAccessTypePrivate = "Private"
 )
+
+// PortAccessType_Values returns all elements of the PortAccessType enum
+func PortAccessType_Values() []string {
+	return []string{
+		PortAccessTypePublic,
+		PortAccessTypePrivate,
+	}
+}
 
 const (
 	// PortInfoSourceTypeDefault is a PortInfoSourceType enum value
@@ -32926,6 +33457,16 @@ const (
 	PortInfoSourceTypeClosed = "CLOSED"
 )
 
+// PortInfoSourceType_Values returns all elements of the PortInfoSourceType enum
+func PortInfoSourceType_Values() []string {
+	return []string{
+		PortInfoSourceTypeDefault,
+		PortInfoSourceTypeInstance,
+		PortInfoSourceTypeNone,
+		PortInfoSourceTypeClosed,
+	}
+}
+
 const (
 	// PortStateOpen is a PortState enum value
 	PortStateOpen = "open"
@@ -32933,6 +33474,14 @@ const (
 	// PortStateClosed is a PortState enum value
 	PortStateClosed = "closed"
 )
+
+// PortState_Values returns all elements of the PortState enum
+func PortState_Values() []string {
+	return []string{
+		PortStateOpen,
+		PortStateClosed,
+	}
+}
 
 const (
 	// RecordStateStarted is a RecordState enum value
@@ -32944,6 +33493,15 @@ const (
 	// RecordStateFailed is a RecordState enum value
 	RecordStateFailed = "Failed"
 )
+
+// RecordState_Values returns all elements of the RecordState enum
+func RecordState_Values() []string {
+	return []string{
+		RecordStateStarted,
+		RecordStateSucceeded,
+		RecordStateFailed,
+	}
+}
 
 const (
 	// RegionNameUsEast1 is a RegionName enum value
@@ -32989,10 +33547,37 @@ const (
 	RegionNameApNortheast2 = "ap-northeast-2"
 )
 
+// RegionName_Values returns all elements of the RegionName enum
+func RegionName_Values() []string {
+	return []string{
+		RegionNameUsEast1,
+		RegionNameUsEast2,
+		RegionNameUsWest1,
+		RegionNameUsWest2,
+		RegionNameEuWest1,
+		RegionNameEuWest2,
+		RegionNameEuWest3,
+		RegionNameEuCentral1,
+		RegionNameCaCentral1,
+		RegionNameApSouth1,
+		RegionNameApSoutheast1,
+		RegionNameApSoutheast2,
+		RegionNameApNortheast1,
+		RegionNameApNortheast2,
+	}
+}
+
 const (
 	// RelationalDatabaseEngineMysql is a RelationalDatabaseEngine enum value
 	RelationalDatabaseEngineMysql = "mysql"
 )
+
+// RelationalDatabaseEngine_Values returns all elements of the RelationalDatabaseEngine enum
+func RelationalDatabaseEngine_Values() []string {
+	return []string{
+		RelationalDatabaseEngineMysql,
+	}
+}
 
 const (
 	// RelationalDatabaseMetricNameCpuutilization is a RelationalDatabaseMetricName enum value
@@ -33014,6 +33599,18 @@ const (
 	RelationalDatabaseMetricNameNetworkTransmitThroughput = "NetworkTransmitThroughput"
 )
 
+// RelationalDatabaseMetricName_Values returns all elements of the RelationalDatabaseMetricName enum
+func RelationalDatabaseMetricName_Values() []string {
+	return []string{
+		RelationalDatabaseMetricNameCpuutilization,
+		RelationalDatabaseMetricNameDatabaseConnections,
+		RelationalDatabaseMetricNameDiskQueueDepth,
+		RelationalDatabaseMetricNameFreeStorageSpace,
+		RelationalDatabaseMetricNameNetworkReceiveThroughput,
+		RelationalDatabaseMetricNameNetworkTransmitThroughput,
+	}
+}
+
 const (
 	// RelationalDatabasePasswordVersionCurrent is a RelationalDatabasePasswordVersion enum value
 	RelationalDatabasePasswordVersionCurrent = "CURRENT"
@@ -33024,6 +33621,15 @@ const (
 	// RelationalDatabasePasswordVersionPending is a RelationalDatabasePasswordVersion enum value
 	RelationalDatabasePasswordVersionPending = "PENDING"
 )
+
+// RelationalDatabasePasswordVersion_Values returns all elements of the RelationalDatabasePasswordVersion enum
+func RelationalDatabasePasswordVersion_Values() []string {
+	return []string{
+		RelationalDatabasePasswordVersionCurrent,
+		RelationalDatabasePasswordVersionPrevious,
+		RelationalDatabasePasswordVersionPending,
+	}
+}
 
 const (
 	// RenewalStatusPendingAutoRenewal is a RenewalStatus enum value
@@ -33038,6 +33644,16 @@ const (
 	// RenewalStatusFailed is a RenewalStatus enum value
 	RenewalStatusFailed = "Failed"
 )
+
+// RenewalStatus_Values returns all elements of the RenewalStatus enum
+func RenewalStatus_Values() []string {
+	return []string{
+		RenewalStatusPendingAutoRenewal,
+		RenewalStatusPendingValidation,
+		RenewalStatusSuccess,
+		RenewalStatusFailed,
+	}
+}
 
 const (
 	// ResourceTypeInstance is a ResourceType enum value
@@ -33095,6 +33711,30 @@ const (
 	ResourceTypeCertificate = "Certificate"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeInstance,
+		ResourceTypeStaticIp,
+		ResourceTypeKeyPair,
+		ResourceTypeInstanceSnapshot,
+		ResourceTypeDomain,
+		ResourceTypePeeredVpc,
+		ResourceTypeLoadBalancer,
+		ResourceTypeLoadBalancerTlsCertificate,
+		ResourceTypeDisk,
+		ResourceTypeDiskSnapshot,
+		ResourceTypeRelationalDatabase,
+		ResourceTypeRelationalDatabaseSnapshot,
+		ResourceTypeExportSnapshotRecord,
+		ResourceTypeCloudFormationStackRecord,
+		ResourceTypeAlarm,
+		ResourceTypeContactMethod,
+		ResourceTypeDistribution,
+		ResourceTypeCertificate,
+	}
+}
+
 const (
 	// TreatMissingDataBreaching is a TreatMissingData enum value
 	TreatMissingDataBreaching = "breaching"
@@ -33108,3 +33748,13 @@ const (
 	// TreatMissingDataMissing is a TreatMissingData enum value
 	TreatMissingDataMissing = "missing"
 )
+
+// TreatMissingData_Values returns all elements of the TreatMissingData enum
+func TreatMissingData_Values() []string {
+	return []string{
+		TreatMissingDataBreaching,
+		TreatMissingDataNotBreaching,
+		TreatMissingDataIgnore,
+		TreatMissingDataMissing,
+	}
+}
