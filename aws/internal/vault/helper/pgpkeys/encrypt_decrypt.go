@@ -111,7 +111,11 @@ func DecryptBytes(encodedCrypt, privKey string) (*bytes.Buffer, error) {
 	}
 
 	ptBuf := bytes.NewBuffer(nil)
-	ptBuf.ReadFrom(md.UnverifiedBody)
+	_, err = ptBuf.ReadFrom(md.UnverifiedBody)
+
+	if err != nil {
+		return nil, fmt.Errorf("error reading the messages: %w", err)
+	}
 
 	return ptBuf, nil
 }
