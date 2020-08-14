@@ -19,6 +19,7 @@ import (
 const DefaultSecurityGroupName = "default"
 
 func resourceAwsDefaultSecurityGroup() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsDefaultSecurityGroupCreate,
 		Read:   resourceAwsDefaultSecurityGroupRead,
