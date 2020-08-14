@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_synthetics_canary
 
-Provides an SWF Domain resource.
+Provides a Synthetics Canary resource.
 
 ## Example Usage
 
