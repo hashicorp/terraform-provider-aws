@@ -2,16 +2,17 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -254,7 +255,7 @@ func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsRoute53ResolverRuleCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+func resourceAwsRoute53ResolverRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() != "" {
 		if diff.HasChange("resolver_endpoint_id") {
 			if _, n := diff.GetChange("resolver_endpoint_id"); n.(string) == "" {

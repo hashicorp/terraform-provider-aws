@@ -8975,6 +8975,14 @@ const (
 	EncryptionTypeKms = "KMS"
 )
 
+// EncryptionType_Values returns all elements of the EncryptionType enum
+func EncryptionType_Values() []string {
+	return []string{
+		EncryptionTypeAes256,
+		EncryptionTypeKms,
+	}
+}
+
 const (
 	// FindingSeverityInformational is a FindingSeverity enum value
 	FindingSeverityInformational = "INFORMATIONAL"
@@ -8995,10 +9003,29 @@ const (
 	FindingSeverityUndefined = "UNDEFINED"
 )
 
+// FindingSeverity_Values returns all elements of the FindingSeverity enum
+func FindingSeverity_Values() []string {
+	return []string{
+		FindingSeverityInformational,
+		FindingSeverityLow,
+		FindingSeverityMedium,
+		FindingSeverityHigh,
+		FindingSeverityCritical,
+		FindingSeverityUndefined,
+	}
+}
+
 const (
 	// ImageActionTypeExpire is a ImageActionType enum value
 	ImageActionTypeExpire = "EXPIRE"
 )
+
+// ImageActionType_Values returns all elements of the ImageActionType enum
+func ImageActionType_Values() []string {
+	return []string{
+		ImageActionTypeExpire,
+	}
+}
 
 const (
 	// ImageFailureCodeInvalidImageDigest is a ImageFailureCode enum value
@@ -9023,6 +9050,19 @@ const (
 	ImageFailureCodeKmsError = "KmsError"
 )
 
+// ImageFailureCode_Values returns all elements of the ImageFailureCode enum
+func ImageFailureCode_Values() []string {
+	return []string{
+		ImageFailureCodeInvalidImageDigest,
+		ImageFailureCodeInvalidImageTag,
+		ImageFailureCodeImageTagDoesNotMatchDigest,
+		ImageFailureCodeImageNotFound,
+		ImageFailureCodeMissingDigestAndTag,
+		ImageFailureCodeImageReferencedByManifestList,
+		ImageFailureCodeKmsError,
+	}
+}
+
 const (
 	// ImageTagMutabilityMutable is a ImageTagMutability enum value
 	ImageTagMutabilityMutable = "MUTABLE"
@@ -9030,6 +9070,14 @@ const (
 	// ImageTagMutabilityImmutable is a ImageTagMutability enum value
 	ImageTagMutabilityImmutable = "IMMUTABLE"
 )
+
+// ImageTagMutability_Values returns all elements of the ImageTagMutability enum
+func ImageTagMutability_Values() []string {
+	return []string{
+		ImageTagMutabilityMutable,
+		ImageTagMutabilityImmutable,
+	}
+}
 
 const (
 	// LayerAvailabilityAvailable is a LayerAvailability enum value
@@ -9039,6 +9087,14 @@ const (
 	LayerAvailabilityUnavailable = "UNAVAILABLE"
 )
 
+// LayerAvailability_Values returns all elements of the LayerAvailability enum
+func LayerAvailability_Values() []string {
+	return []string{
+		LayerAvailabilityAvailable,
+		LayerAvailabilityUnavailable,
+	}
+}
+
 const (
 	// LayerFailureCodeInvalidLayerDigest is a LayerFailureCode enum value
 	LayerFailureCodeInvalidLayerDigest = "InvalidLayerDigest"
@@ -9046,6 +9102,14 @@ const (
 	// LayerFailureCodeMissingLayerDigest is a LayerFailureCode enum value
 	LayerFailureCodeMissingLayerDigest = "MissingLayerDigest"
 )
+
+// LayerFailureCode_Values returns all elements of the LayerFailureCode enum
+func LayerFailureCode_Values() []string {
+	return []string{
+		LayerFailureCodeInvalidLayerDigest,
+		LayerFailureCodeMissingLayerDigest,
+	}
+}
 
 const (
 	// LifecyclePolicyPreviewStatusInProgress is a LifecyclePolicyPreviewStatus enum value
@@ -9061,6 +9125,16 @@ const (
 	LifecyclePolicyPreviewStatusFailed = "FAILED"
 )
 
+// LifecyclePolicyPreviewStatus_Values returns all elements of the LifecyclePolicyPreviewStatus enum
+func LifecyclePolicyPreviewStatus_Values() []string {
+	return []string{
+		LifecyclePolicyPreviewStatusInProgress,
+		LifecyclePolicyPreviewStatusComplete,
+		LifecyclePolicyPreviewStatusExpired,
+		LifecyclePolicyPreviewStatusFailed,
+	}
+}
+
 const (
 	// ScanStatusInProgress is a ScanStatus enum value
 	ScanStatusInProgress = "IN_PROGRESS"
@@ -9072,6 +9146,15 @@ const (
 	ScanStatusFailed = "FAILED"
 )
 
+// ScanStatus_Values returns all elements of the ScanStatus enum
+func ScanStatus_Values() []string {
+	return []string{
+		ScanStatusInProgress,
+		ScanStatusComplete,
+		ScanStatusFailed,
+	}
+}
+
 const (
 	// TagStatusTagged is a TagStatus enum value
 	TagStatusTagged = "TAGGED"
@@ -9082,3 +9165,12 @@ const (
 	// TagStatusAny is a TagStatus enum value
 	TagStatusAny = "ANY"
 )
+
+// TagStatus_Values returns all elements of the TagStatus enum
+func TagStatus_Values() []string {
+	return []string{
+		TagStatusTagged,
+		TagStatusUntagged,
+		TagStatusAny,
+	}
+}

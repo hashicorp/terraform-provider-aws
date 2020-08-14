@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
@@ -96,8 +96,12 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 			}
 		} else {
 			// Check that the SSL Negotiation Policy is destroyed
-			elbName, _, policyName := resourceAwsLBSSLNegotiationPolicyParseId(rs.Primary.ID)
-			_, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+			elbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 				LoadBalancerName: aws.String(elbName),
 				PolicyNames:      []*string{aws.String(policyName)},
 			})
@@ -129,7 +133,11 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 
 		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
 
-		elbName, _, policyName := resourceAwsLBSSLNegotiationPolicyParseId(policy.Primary.ID)
+		elbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(policy.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		resp, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},

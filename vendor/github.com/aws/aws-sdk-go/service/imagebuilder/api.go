@@ -12678,6 +12678,13 @@ const (
 	ComponentFormatShell = "SHELL"
 )
 
+// ComponentFormat_Values returns all elements of the ComponentFormat enum
+func ComponentFormat_Values() []string {
+	return []string{
+		ComponentFormatShell,
+	}
+}
+
 const (
 	// ComponentTypeBuild is a ComponentType enum value
 	ComponentTypeBuild = "BUILD"
@@ -12685,6 +12692,14 @@ const (
 	// ComponentTypeTest is a ComponentType enum value
 	ComponentTypeTest = "TEST"
 )
+
+// ComponentType_Values returns all elements of the ComponentType enum
+func ComponentType_Values() []string {
+	return []string{
+		ComponentTypeBuild,
+		ComponentTypeTest,
+	}
+}
 
 const (
 	// EbsVolumeTypeStandard is a EbsVolumeType enum value
@@ -12702,6 +12717,17 @@ const (
 	// EbsVolumeTypeSt1 is a EbsVolumeType enum value
 	EbsVolumeTypeSt1 = "st1"
 )
+
+// EbsVolumeType_Values returns all elements of the EbsVolumeType enum
+func EbsVolumeType_Values() []string {
+	return []string{
+		EbsVolumeTypeStandard,
+		EbsVolumeTypeIo1,
+		EbsVolumeTypeGp2,
+		EbsVolumeTypeSc1,
+		EbsVolumeTypeSt1,
+	}
+}
 
 const (
 	// ImageStatusPending is a ImageStatus enum value
@@ -12738,6 +12764,23 @@ const (
 	ImageStatusDeleted = "DELETED"
 )
 
+// ImageStatus_Values returns all elements of the ImageStatus enum
+func ImageStatus_Values() []string {
+	return []string{
+		ImageStatusPending,
+		ImageStatusCreating,
+		ImageStatusBuilding,
+		ImageStatusTesting,
+		ImageStatusDistributing,
+		ImageStatusIntegrating,
+		ImageStatusAvailable,
+		ImageStatusCancelled,
+		ImageStatusFailed,
+		ImageStatusDeprecated,
+		ImageStatusDeleted,
+	}
+}
+
 const (
 	// OwnershipSelf is a Ownership enum value
 	OwnershipSelf = "Self"
@@ -12749,6 +12792,15 @@ const (
 	OwnershipAmazon = "Amazon"
 )
 
+// Ownership_Values returns all elements of the Ownership enum
+func Ownership_Values() []string {
+	return []string{
+		OwnershipSelf,
+		OwnershipShared,
+		OwnershipAmazon,
+	}
+}
+
 const (
 	// PipelineExecutionStartConditionExpressionMatchOnly is a PipelineExecutionStartCondition enum value
 	PipelineExecutionStartConditionExpressionMatchOnly = "EXPRESSION_MATCH_ONLY"
@@ -12756,6 +12808,14 @@ const (
 	// PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable is a PipelineExecutionStartCondition enum value
 	PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable = "EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE"
 )
+
+// PipelineExecutionStartCondition_Values returns all elements of the PipelineExecutionStartCondition enum
+func PipelineExecutionStartCondition_Values() []string {
+	return []string{
+		PipelineExecutionStartConditionExpressionMatchOnly,
+		PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable,
+	}
+}
 
 const (
 	// PipelineStatusDisabled is a PipelineStatus enum value
@@ -12765,6 +12825,14 @@ const (
 	PipelineStatusEnabled = "ENABLED"
 )
 
+// PipelineStatus_Values returns all elements of the PipelineStatus enum
+func PipelineStatus_Values() []string {
+	return []string{
+		PipelineStatusDisabled,
+		PipelineStatusEnabled,
+	}
+}
+
 const (
 	// PlatformWindows is a Platform enum value
 	PlatformWindows = "Windows"
@@ -12772,3 +12840,11 @@ const (
 	// PlatformLinux is a Platform enum value
 	PlatformLinux = "Linux"
 )
+
+// Platform_Values returns all elements of the Platform enum
+func Platform_Values() []string {
+	return []string{
+		PlatformWindows,
+		PlatformLinux,
+	}
+}

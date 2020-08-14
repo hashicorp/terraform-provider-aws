@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -876,8 +876,8 @@ resource "aws_db_parameter_group" "test" {
 func testAccAWSDBParameterGroupAddParametersConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
-  family      = "mysql5.6"
+  name   = "%s"
+  family = "mysql5.6"
 
   parameter {
     name  = "character_set_server"
@@ -1374,23 +1374,23 @@ resource "aws_db_parameter_group" "test" {
 
 const testAccDBParameterGroupConfig_namePrefix = `
 resource "aws_db_parameter_group" "test" {
-	name_prefix = "tf-test-"
-	family = "mysql5.6"
+  name_prefix = "tf-test-"
+  family      = "mysql5.6"
 
-	parameter {
-		name = "sync_binlog"
-		value = 0
-	}
+  parameter {
+    name = "sync_binlog"
+    value = 0
+  }
 }
 `
 
 const testAccDBParameterGroupConfig_generatedName = `
 resource "aws_db_parameter_group" "test" {
-	family = "mysql5.6"
+  family = "mysql5.6"
 
-	parameter {
-		name = "sync_binlog"
-		value = 0
-	}
+  parameter {
+    name = "sync_binlog"
+    value = 0
+  }
 }
 `

@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -557,18 +557,19 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
   name       = "foo-bar-%d"
-  kms_key_id = "${aws_kms_key.foo.arn}"
+  kms_key_id = aws_kms_key.foo.arn
 }
 `, rInt, rInt)
 }
 
 const testAccAWSCloudWatchLogGroup_namePrefix = `
 resource "aws_cloudwatch_log_group" "test" {
-    name_prefix = "tf-test-"
+  name_prefix = "tf-test-"
 }
 `
 

@@ -48592,6 +48592,14 @@ const (
 	AlgorithmSortByCreationTime = "CreationTime"
 )
 
+// AlgorithmSortBy_Values returns all elements of the AlgorithmSortBy enum
+func AlgorithmSortBy_Values() []string {
+	return []string{
+		AlgorithmSortByName,
+		AlgorithmSortByCreationTime,
+	}
+}
+
 const (
 	// AlgorithmStatusPending is a AlgorithmStatus enum value
 	AlgorithmStatusPending = "Pending"
@@ -48608,6 +48616,17 @@ const (
 	// AlgorithmStatusDeleting is a AlgorithmStatus enum value
 	AlgorithmStatusDeleting = "Deleting"
 )
+
+// AlgorithmStatus_Values returns all elements of the AlgorithmStatus enum
+func AlgorithmStatus_Values() []string {
+	return []string{
+		AlgorithmStatusPending,
+		AlgorithmStatusInProgress,
+		AlgorithmStatusCompleted,
+		AlgorithmStatusFailed,
+		AlgorithmStatusDeleting,
+	}
+}
 
 const (
 	// AppInstanceTypeSystem is a AppInstanceType enum value
@@ -48707,10 +48726,55 @@ const (
 	AppInstanceTypeMlG4dn16xlarge = "ml.g4dn.16xlarge"
 )
 
+// AppInstanceType_Values returns all elements of the AppInstanceType enum
+func AppInstanceType_Values() []string {
+	return []string{
+		AppInstanceTypeSystem,
+		AppInstanceTypeMlT3Micro,
+		AppInstanceTypeMlT3Small,
+		AppInstanceTypeMlT3Medium,
+		AppInstanceTypeMlT3Large,
+		AppInstanceTypeMlT3Xlarge,
+		AppInstanceTypeMlT32xlarge,
+		AppInstanceTypeMlM5Large,
+		AppInstanceTypeMlM5Xlarge,
+		AppInstanceTypeMlM52xlarge,
+		AppInstanceTypeMlM54xlarge,
+		AppInstanceTypeMlM58xlarge,
+		AppInstanceTypeMlM512xlarge,
+		AppInstanceTypeMlM516xlarge,
+		AppInstanceTypeMlM524xlarge,
+		AppInstanceTypeMlC5Large,
+		AppInstanceTypeMlC5Xlarge,
+		AppInstanceTypeMlC52xlarge,
+		AppInstanceTypeMlC54xlarge,
+		AppInstanceTypeMlC59xlarge,
+		AppInstanceTypeMlC512xlarge,
+		AppInstanceTypeMlC518xlarge,
+		AppInstanceTypeMlC524xlarge,
+		AppInstanceTypeMlP32xlarge,
+		AppInstanceTypeMlP38xlarge,
+		AppInstanceTypeMlP316xlarge,
+		AppInstanceTypeMlG4dnXlarge,
+		AppInstanceTypeMlG4dn2xlarge,
+		AppInstanceTypeMlG4dn4xlarge,
+		AppInstanceTypeMlG4dn8xlarge,
+		AppInstanceTypeMlG4dn12xlarge,
+		AppInstanceTypeMlG4dn16xlarge,
+	}
+}
+
 const (
 	// AppSortKeyCreationTime is a AppSortKey enum value
 	AppSortKeyCreationTime = "CreationTime"
 )
+
+// AppSortKey_Values returns all elements of the AppSortKey enum
+func AppSortKey_Values() []string {
+	return []string{
+		AppSortKeyCreationTime,
+	}
+}
 
 const (
 	// AppStatusDeleted is a AppStatus enum value
@@ -48729,6 +48793,17 @@ const (
 	AppStatusPending = "Pending"
 )
 
+// AppStatus_Values returns all elements of the AppStatus enum
+func AppStatus_Values() []string {
+	return []string{
+		AppStatusDeleted,
+		AppStatusDeleting,
+		AppStatusFailed,
+		AppStatusInService,
+		AppStatusPending,
+	}
+}
+
 const (
 	// AppTypeJupyterServer is a AppType enum value
 	AppTypeJupyterServer = "JupyterServer"
@@ -48740,6 +48815,15 @@ const (
 	AppTypeTensorBoard = "TensorBoard"
 )
 
+// AppType_Values returns all elements of the AppType enum
+func AppType_Values() []string {
+	return []string{
+		AppTypeJupyterServer,
+		AppTypeKernelGateway,
+		AppTypeTensorBoard,
+	}
+}
+
 const (
 	// AssemblyTypeNone is a AssemblyType enum value
 	AssemblyTypeNone = "None"
@@ -48747,6 +48831,14 @@ const (
 	// AssemblyTypeLine is a AssemblyType enum value
 	AssemblyTypeLine = "Line"
 )
+
+// AssemblyType_Values returns all elements of the AssemblyType enum
+func AssemblyType_Values() []string {
+	return []string{
+		AssemblyTypeNone,
+		AssemblyTypeLine,
+	}
+}
 
 const (
 	// AuthModeSso is a AuthMode enum value
@@ -48756,6 +48848,14 @@ const (
 	AuthModeIam = "IAM"
 )
 
+// AuthMode_Values returns all elements of the AuthMode enum
+func AuthMode_Values() []string {
+	return []string{
+		AuthModeSso,
+		AuthModeIam,
+	}
+}
+
 const (
 	// AutoMLJobObjectiveTypeMaximize is a AutoMLJobObjectiveType enum value
 	AutoMLJobObjectiveTypeMaximize = "Maximize"
@@ -48763,6 +48863,14 @@ const (
 	// AutoMLJobObjectiveTypeMinimize is a AutoMLJobObjectiveType enum value
 	AutoMLJobObjectiveTypeMinimize = "Minimize"
 )
+
+// AutoMLJobObjectiveType_Values returns all elements of the AutoMLJobObjectiveType enum
+func AutoMLJobObjectiveType_Values() []string {
+	return []string{
+		AutoMLJobObjectiveTypeMaximize,
+		AutoMLJobObjectiveTypeMinimize,
+	}
+}
 
 const (
 	// AutoMLJobSecondaryStatusStarting is a AutoMLJobSecondaryStatus enum value
@@ -48796,6 +48904,22 @@ const (
 	AutoMLJobSecondaryStatusCandidateDefinitionsGenerated = "CandidateDefinitionsGenerated"
 )
 
+// AutoMLJobSecondaryStatus_Values returns all elements of the AutoMLJobSecondaryStatus enum
+func AutoMLJobSecondaryStatus_Values() []string {
+	return []string{
+		AutoMLJobSecondaryStatusStarting,
+		AutoMLJobSecondaryStatusAnalyzingData,
+		AutoMLJobSecondaryStatusFeatureEngineering,
+		AutoMLJobSecondaryStatusModelTuning,
+		AutoMLJobSecondaryStatusMaxCandidatesReached,
+		AutoMLJobSecondaryStatusFailed,
+		AutoMLJobSecondaryStatusStopped,
+		AutoMLJobSecondaryStatusMaxAutoMljobRuntimeReached,
+		AutoMLJobSecondaryStatusStopping,
+		AutoMLJobSecondaryStatusCandidateDefinitionsGenerated,
+	}
+}
+
 const (
 	// AutoMLJobStatusCompleted is a AutoMLJobStatus enum value
 	AutoMLJobStatusCompleted = "Completed"
@@ -48813,6 +48937,17 @@ const (
 	AutoMLJobStatusStopping = "Stopping"
 )
 
+// AutoMLJobStatus_Values returns all elements of the AutoMLJobStatus enum
+func AutoMLJobStatus_Values() []string {
+	return []string{
+		AutoMLJobStatusCompleted,
+		AutoMLJobStatusInProgress,
+		AutoMLJobStatusFailed,
+		AutoMLJobStatusStopped,
+		AutoMLJobStatusStopping,
+	}
+}
+
 const (
 	// AutoMLMetricEnumAccuracy is a AutoMLMetricEnum enum value
 	AutoMLMetricEnumAccuracy = "Accuracy"
@@ -48827,6 +48962,16 @@ const (
 	AutoMLMetricEnumF1macro = "F1macro"
 )
 
+// AutoMLMetricEnum_Values returns all elements of the AutoMLMetricEnum enum
+func AutoMLMetricEnum_Values() []string {
+	return []string{
+		AutoMLMetricEnumAccuracy,
+		AutoMLMetricEnumMse,
+		AutoMLMetricEnumF1,
+		AutoMLMetricEnumF1macro,
+	}
+}
+
 const (
 	// AutoMLS3DataTypeManifestFile is a AutoMLS3DataType enum value
 	AutoMLS3DataTypeManifestFile = "ManifestFile"
@@ -48834,6 +48979,14 @@ const (
 	// AutoMLS3DataTypeS3prefix is a AutoMLS3DataType enum value
 	AutoMLS3DataTypeS3prefix = "S3Prefix"
 )
+
+// AutoMLS3DataType_Values returns all elements of the AutoMLS3DataType enum
+func AutoMLS3DataType_Values() []string {
+	return []string{
+		AutoMLS3DataTypeManifestFile,
+		AutoMLS3DataTypeS3prefix,
+	}
+}
 
 const (
 	// AutoMLSortByName is a AutoMLSortBy enum value
@@ -48846,6 +48999,15 @@ const (
 	AutoMLSortByStatus = "Status"
 )
 
+// AutoMLSortBy_Values returns all elements of the AutoMLSortBy enum
+func AutoMLSortBy_Values() []string {
+	return []string{
+		AutoMLSortByName,
+		AutoMLSortByCreationTime,
+		AutoMLSortByStatus,
+	}
+}
+
 const (
 	// AutoMLSortOrderAscending is a AutoMLSortOrder enum value
 	AutoMLSortOrderAscending = "Ascending"
@@ -48853,6 +49015,14 @@ const (
 	// AutoMLSortOrderDescending is a AutoMLSortOrder enum value
 	AutoMLSortOrderDescending = "Descending"
 )
+
+// AutoMLSortOrder_Values returns all elements of the AutoMLSortOrder enum
+func AutoMLSortOrder_Values() []string {
+	return []string{
+		AutoMLSortOrderAscending,
+		AutoMLSortOrderDescending,
+	}
+}
 
 const (
 	// AwsManagedHumanLoopRequestSourceAwsRekognitionDetectModerationLabelsImageV3 is a AwsManagedHumanLoopRequestSource enum value
@@ -48862,6 +49032,14 @@ const (
 	AwsManagedHumanLoopRequestSourceAwsTextractAnalyzeDocumentFormsV1 = "AWS/Textract/AnalyzeDocument/Forms/V1"
 )
 
+// AwsManagedHumanLoopRequestSource_Values returns all elements of the AwsManagedHumanLoopRequestSource enum
+func AwsManagedHumanLoopRequestSource_Values() []string {
+	return []string{
+		AwsManagedHumanLoopRequestSourceAwsRekognitionDetectModerationLabelsImageV3,
+		AwsManagedHumanLoopRequestSourceAwsTextractAnalyzeDocumentFormsV1,
+	}
+}
+
 const (
 	// BatchStrategyMultiRecord is a BatchStrategy enum value
 	BatchStrategyMultiRecord = "MultiRecord"
@@ -48870,6 +49048,14 @@ const (
 	BatchStrategySingleRecord = "SingleRecord"
 )
 
+// BatchStrategy_Values returns all elements of the BatchStrategy enum
+func BatchStrategy_Values() []string {
+	return []string{
+		BatchStrategyMultiRecord,
+		BatchStrategySingleRecord,
+	}
+}
+
 const (
 	// BooleanOperatorAnd is a BooleanOperator enum value
 	BooleanOperatorAnd = "And"
@@ -48877,6 +49063,14 @@ const (
 	// BooleanOperatorOr is a BooleanOperator enum value
 	BooleanOperatorOr = "Or"
 )
+
+// BooleanOperator_Values returns all elements of the BooleanOperator enum
+func BooleanOperator_Values() []string {
+	return []string{
+		BooleanOperatorAnd,
+		BooleanOperatorOr,
+	}
+}
 
 const (
 	// CandidateSortByCreationTime is a CandidateSortBy enum value
@@ -48888,6 +49082,15 @@ const (
 	// CandidateSortByFinalObjectiveMetricValue is a CandidateSortBy enum value
 	CandidateSortByFinalObjectiveMetricValue = "FinalObjectiveMetricValue"
 )
+
+// CandidateSortBy_Values returns all elements of the CandidateSortBy enum
+func CandidateSortBy_Values() []string {
+	return []string{
+		CandidateSortByCreationTime,
+		CandidateSortByStatus,
+		CandidateSortByFinalObjectiveMetricValue,
+	}
+}
 
 const (
 	// CandidateStatusCompleted is a CandidateStatus enum value
@@ -48906,6 +49109,17 @@ const (
 	CandidateStatusStopping = "Stopping"
 )
 
+// CandidateStatus_Values returns all elements of the CandidateStatus enum
+func CandidateStatus_Values() []string {
+	return []string{
+		CandidateStatusCompleted,
+		CandidateStatusInProgress,
+		CandidateStatusFailed,
+		CandidateStatusStopped,
+		CandidateStatusStopping,
+	}
+}
+
 const (
 	// CandidateStepTypeAwsSageMakerTrainingJob is a CandidateStepType enum value
 	CandidateStepTypeAwsSageMakerTrainingJob = "AWS::SageMaker::TrainingJob"
@@ -48917,6 +49131,15 @@ const (
 	CandidateStepTypeAwsSageMakerProcessingJob = "AWS::SageMaker::ProcessingJob"
 )
 
+// CandidateStepType_Values returns all elements of the CandidateStepType enum
+func CandidateStepType_Values() []string {
+	return []string{
+		CandidateStepTypeAwsSageMakerTrainingJob,
+		CandidateStepTypeAwsSageMakerTransformJob,
+		CandidateStepTypeAwsSageMakerProcessingJob,
+	}
+}
+
 const (
 	// CaptureModeInput is a CaptureMode enum value
 	CaptureModeInput = "Input"
@@ -48925,6 +49148,14 @@ const (
 	CaptureModeOutput = "Output"
 )
 
+// CaptureMode_Values returns all elements of the CaptureMode enum
+func CaptureMode_Values() []string {
+	return []string{
+		CaptureModeInput,
+		CaptureModeOutput,
+	}
+}
+
 const (
 	// CaptureStatusStarted is a CaptureStatus enum value
 	CaptureStatusStarted = "Started"
@@ -48932,6 +49163,14 @@ const (
 	// CaptureStatusStopped is a CaptureStatus enum value
 	CaptureStatusStopped = "Stopped"
 )
+
+// CaptureStatus_Values returns all elements of the CaptureStatus enum
+func CaptureStatus_Values() []string {
+	return []string{
+		CaptureStatusStarted,
+		CaptureStatusStopped,
+	}
+}
 
 const (
 	// CodeRepositorySortByName is a CodeRepositorySortBy enum value
@@ -48944,6 +49183,15 @@ const (
 	CodeRepositorySortByLastModifiedTime = "LastModifiedTime"
 )
 
+// CodeRepositorySortBy_Values returns all elements of the CodeRepositorySortBy enum
+func CodeRepositorySortBy_Values() []string {
+	return []string{
+		CodeRepositorySortByName,
+		CodeRepositorySortByCreationTime,
+		CodeRepositorySortByLastModifiedTime,
+	}
+}
+
 const (
 	// CodeRepositorySortOrderAscending is a CodeRepositorySortOrder enum value
 	CodeRepositorySortOrderAscending = "Ascending"
@@ -48951,6 +49199,14 @@ const (
 	// CodeRepositorySortOrderDescending is a CodeRepositorySortOrder enum value
 	CodeRepositorySortOrderDescending = "Descending"
 )
+
+// CodeRepositorySortOrder_Values returns all elements of the CodeRepositorySortOrder enum
+func CodeRepositorySortOrder_Values() []string {
+	return []string{
+		CodeRepositorySortOrderAscending,
+		CodeRepositorySortOrderDescending,
+	}
+}
 
 const (
 	// CompilationJobStatusInprogress is a CompilationJobStatus enum value
@@ -48972,6 +49228,18 @@ const (
 	CompilationJobStatusStopped = "STOPPED"
 )
 
+// CompilationJobStatus_Values returns all elements of the CompilationJobStatus enum
+func CompilationJobStatus_Values() []string {
+	return []string{
+		CompilationJobStatusInprogress,
+		CompilationJobStatusCompleted,
+		CompilationJobStatusFailed,
+		CompilationJobStatusStarting,
+		CompilationJobStatusStopping,
+		CompilationJobStatusStopped,
+	}
+}
+
 const (
 	// CompressionTypeNone is a CompressionType enum value
 	CompressionTypeNone = "None"
@@ -48979,6 +49247,14 @@ const (
 	// CompressionTypeGzip is a CompressionType enum value
 	CompressionTypeGzip = "Gzip"
 )
+
+// CompressionType_Values returns all elements of the CompressionType enum
+func CompressionType_Values() []string {
+	return []string{
+		CompressionTypeNone,
+		CompressionTypeGzip,
+	}
+}
 
 const (
 	// ContainerModeSingleModel is a ContainerMode enum value
@@ -48988,6 +49264,14 @@ const (
 	ContainerModeMultiModel = "MultiModel"
 )
 
+// ContainerMode_Values returns all elements of the ContainerMode enum
+func ContainerMode_Values() []string {
+	return []string{
+		ContainerModeSingleModel,
+		ContainerModeMultiModel,
+	}
+}
+
 const (
 	// ContentClassifierFreeOfPersonallyIdentifiableInformation is a ContentClassifier enum value
 	ContentClassifierFreeOfPersonallyIdentifiableInformation = "FreeOfPersonallyIdentifiableInformation"
@@ -48995,6 +49279,14 @@ const (
 	// ContentClassifierFreeOfAdultContent is a ContentClassifier enum value
 	ContentClassifierFreeOfAdultContent = "FreeOfAdultContent"
 )
+
+// ContentClassifier_Values returns all elements of the ContentClassifier enum
+func ContentClassifier_Values() []string {
+	return []string{
+		ContentClassifierFreeOfPersonallyIdentifiableInformation,
+		ContentClassifierFreeOfAdultContent,
+	}
+}
 
 const (
 	// DetailedAlgorithmStatusNotStarted is a DetailedAlgorithmStatus enum value
@@ -49010,6 +49302,16 @@ const (
 	DetailedAlgorithmStatusFailed = "Failed"
 )
 
+// DetailedAlgorithmStatus_Values returns all elements of the DetailedAlgorithmStatus enum
+func DetailedAlgorithmStatus_Values() []string {
+	return []string{
+		DetailedAlgorithmStatusNotStarted,
+		DetailedAlgorithmStatusInProgress,
+		DetailedAlgorithmStatusCompleted,
+		DetailedAlgorithmStatusFailed,
+	}
+}
+
 const (
 	// DetailedModelPackageStatusNotStarted is a DetailedModelPackageStatus enum value
 	DetailedModelPackageStatusNotStarted = "NotStarted"
@@ -49024,6 +49326,16 @@ const (
 	DetailedModelPackageStatusFailed = "Failed"
 )
 
+// DetailedModelPackageStatus_Values returns all elements of the DetailedModelPackageStatus enum
+func DetailedModelPackageStatus_Values() []string {
+	return []string{
+		DetailedModelPackageStatusNotStarted,
+		DetailedModelPackageStatusInProgress,
+		DetailedModelPackageStatusCompleted,
+		DetailedModelPackageStatusFailed,
+	}
+}
+
 const (
 	// DirectInternetAccessEnabled is a DirectInternetAccess enum value
 	DirectInternetAccessEnabled = "Enabled"
@@ -49031,6 +49343,14 @@ const (
 	// DirectInternetAccessDisabled is a DirectInternetAccess enum value
 	DirectInternetAccessDisabled = "Disabled"
 )
+
+// DirectInternetAccess_Values returns all elements of the DirectInternetAccess enum
+func DirectInternetAccess_Values() []string {
+	return []string{
+		DirectInternetAccessEnabled,
+		DirectInternetAccessDisabled,
+	}
+}
 
 const (
 	// DomainStatusDeleting is a DomainStatus enum value
@@ -49046,6 +49366,16 @@ const (
 	DomainStatusPending = "Pending"
 )
 
+// DomainStatus_Values returns all elements of the DomainStatus enum
+func DomainStatus_Values() []string {
+	return []string{
+		DomainStatusDeleting,
+		DomainStatusFailed,
+		DomainStatusInService,
+		DomainStatusPending,
+	}
+}
+
 const (
 	// EndpointConfigSortKeyName is a EndpointConfigSortKey enum value
 	EndpointConfigSortKeyName = "Name"
@@ -49053,6 +49383,14 @@ const (
 	// EndpointConfigSortKeyCreationTime is a EndpointConfigSortKey enum value
 	EndpointConfigSortKeyCreationTime = "CreationTime"
 )
+
+// EndpointConfigSortKey_Values returns all elements of the EndpointConfigSortKey enum
+func EndpointConfigSortKey_Values() []string {
+	return []string{
+		EndpointConfigSortKeyName,
+		EndpointConfigSortKeyCreationTime,
+	}
+}
 
 const (
 	// EndpointSortKeyName is a EndpointSortKey enum value
@@ -49064,6 +49402,15 @@ const (
 	// EndpointSortKeyStatus is a EndpointSortKey enum value
 	EndpointSortKeyStatus = "Status"
 )
+
+// EndpointSortKey_Values returns all elements of the EndpointSortKey enum
+func EndpointSortKey_Values() []string {
+	return []string{
+		EndpointSortKeyName,
+		EndpointSortKeyCreationTime,
+		EndpointSortKeyStatus,
+	}
+}
 
 const (
 	// EndpointStatusOutOfService is a EndpointStatus enum value
@@ -49091,6 +49438,20 @@ const (
 	EndpointStatusFailed = "Failed"
 )
 
+// EndpointStatus_Values returns all elements of the EndpointStatus enum
+func EndpointStatus_Values() []string {
+	return []string{
+		EndpointStatusOutOfService,
+		EndpointStatusCreating,
+		EndpointStatusUpdating,
+		EndpointStatusSystemUpdating,
+		EndpointStatusRollingBack,
+		EndpointStatusInService,
+		EndpointStatusDeleting,
+		EndpointStatusFailed,
+	}
+}
+
 const (
 	// ExecutionStatusPending is a ExecutionStatus enum value
 	ExecutionStatusPending = "Pending"
@@ -49114,6 +49475,19 @@ const (
 	ExecutionStatusStopped = "Stopped"
 )
 
+// ExecutionStatus_Values returns all elements of the ExecutionStatus enum
+func ExecutionStatus_Values() []string {
+	return []string{
+		ExecutionStatusPending,
+		ExecutionStatusCompleted,
+		ExecutionStatusCompletedWithViolations,
+		ExecutionStatusInProgress,
+		ExecutionStatusFailed,
+		ExecutionStatusStopping,
+		ExecutionStatusStopped,
+	}
+}
+
 const (
 	// FileSystemAccessModeRw is a FileSystemAccessMode enum value
 	FileSystemAccessModeRw = "rw"
@@ -49122,6 +49496,14 @@ const (
 	FileSystemAccessModeRo = "ro"
 )
 
+// FileSystemAccessMode_Values returns all elements of the FileSystemAccessMode enum
+func FileSystemAccessMode_Values() []string {
+	return []string{
+		FileSystemAccessModeRw,
+		FileSystemAccessModeRo,
+	}
+}
+
 const (
 	// FileSystemTypeEfs is a FileSystemType enum value
 	FileSystemTypeEfs = "EFS"
@@ -49129,6 +49511,14 @@ const (
 	// FileSystemTypeFsxLustre is a FileSystemType enum value
 	FileSystemTypeFsxLustre = "FSxLustre"
 )
+
+// FileSystemType_Values returns all elements of the FileSystemType enum
+func FileSystemType_Values() []string {
+	return []string{
+		FileSystemTypeEfs,
+		FileSystemTypeFsxLustre,
+	}
+}
 
 const (
 	// FlowDefinitionStatusInitializing is a FlowDefinitionStatus enum value
@@ -49143,6 +49533,16 @@ const (
 	// FlowDefinitionStatusDeleting is a FlowDefinitionStatus enum value
 	FlowDefinitionStatusDeleting = "Deleting"
 )
+
+// FlowDefinitionStatus_Values returns all elements of the FlowDefinitionStatus enum
+func FlowDefinitionStatus_Values() []string {
+	return []string{
+		FlowDefinitionStatusInitializing,
+		FlowDefinitionStatusActive,
+		FlowDefinitionStatusFailed,
+		FlowDefinitionStatusDeleting,
+	}
+}
 
 const (
 	// FrameworkTensorflow is a Framework enum value
@@ -49167,6 +49567,19 @@ const (
 	FrameworkTflite = "TFLITE"
 )
 
+// Framework_Values returns all elements of the Framework enum
+func Framework_Values() []string {
+	return []string{
+		FrameworkTensorflow,
+		FrameworkKeras,
+		FrameworkMxnet,
+		FrameworkOnnx,
+		FrameworkPytorch,
+		FrameworkXgboost,
+		FrameworkTflite,
+	}
+}
+
 const (
 	// HumanTaskUiStatusActive is a HumanTaskUiStatus enum value
 	HumanTaskUiStatusActive = "Active"
@@ -49174,6 +49587,14 @@ const (
 	// HumanTaskUiStatusDeleting is a HumanTaskUiStatus enum value
 	HumanTaskUiStatusDeleting = "Deleting"
 )
+
+// HumanTaskUiStatus_Values returns all elements of the HumanTaskUiStatus enum
+func HumanTaskUiStatus_Values() []string {
+	return []string{
+		HumanTaskUiStatusActive,
+		HumanTaskUiStatusDeleting,
+	}
+}
 
 const (
 	// HyperParameterScalingTypeAuto is a HyperParameterScalingType enum value
@@ -49189,6 +49610,16 @@ const (
 	HyperParameterScalingTypeReverseLogarithmic = "ReverseLogarithmic"
 )
 
+// HyperParameterScalingType_Values returns all elements of the HyperParameterScalingType enum
+func HyperParameterScalingType_Values() []string {
+	return []string{
+		HyperParameterScalingTypeAuto,
+		HyperParameterScalingTypeLinear,
+		HyperParameterScalingTypeLogarithmic,
+		HyperParameterScalingTypeReverseLogarithmic,
+	}
+}
+
 const (
 	// HyperParameterTuningJobObjectiveTypeMaximize is a HyperParameterTuningJobObjectiveType enum value
 	HyperParameterTuningJobObjectiveTypeMaximize = "Maximize"
@@ -49196,6 +49627,14 @@ const (
 	// HyperParameterTuningJobObjectiveTypeMinimize is a HyperParameterTuningJobObjectiveType enum value
 	HyperParameterTuningJobObjectiveTypeMinimize = "Minimize"
 )
+
+// HyperParameterTuningJobObjectiveType_Values returns all elements of the HyperParameterTuningJobObjectiveType enum
+func HyperParameterTuningJobObjectiveType_Values() []string {
+	return []string{
+		HyperParameterTuningJobObjectiveTypeMaximize,
+		HyperParameterTuningJobObjectiveTypeMinimize,
+	}
+}
 
 const (
 	// HyperParameterTuningJobSortByOptionsName is a HyperParameterTuningJobSortByOptions enum value
@@ -49207,6 +49646,15 @@ const (
 	// HyperParameterTuningJobSortByOptionsCreationTime is a HyperParameterTuningJobSortByOptions enum value
 	HyperParameterTuningJobSortByOptionsCreationTime = "CreationTime"
 )
+
+// HyperParameterTuningJobSortByOptions_Values returns all elements of the HyperParameterTuningJobSortByOptions enum
+func HyperParameterTuningJobSortByOptions_Values() []string {
+	return []string{
+		HyperParameterTuningJobSortByOptionsName,
+		HyperParameterTuningJobSortByOptionsStatus,
+		HyperParameterTuningJobSortByOptionsCreationTime,
+	}
+}
 
 const (
 	// HyperParameterTuningJobStatusCompleted is a HyperParameterTuningJobStatus enum value
@@ -49225,6 +49673,17 @@ const (
 	HyperParameterTuningJobStatusStopping = "Stopping"
 )
 
+// HyperParameterTuningJobStatus_Values returns all elements of the HyperParameterTuningJobStatus enum
+func HyperParameterTuningJobStatus_Values() []string {
+	return []string{
+		HyperParameterTuningJobStatusCompleted,
+		HyperParameterTuningJobStatusInProgress,
+		HyperParameterTuningJobStatusFailed,
+		HyperParameterTuningJobStatusStopped,
+		HyperParameterTuningJobStatusStopping,
+	}
+}
+
 // The strategy hyperparameter tuning uses to find the best combination of hyperparameters
 // for your model. Currently, the only supported value is Bayesian.
 const (
@@ -49235,6 +49694,14 @@ const (
 	HyperParameterTuningJobStrategyTypeRandom = "Random"
 )
 
+// HyperParameterTuningJobStrategyType_Values returns all elements of the HyperParameterTuningJobStrategyType enum
+func HyperParameterTuningJobStrategyType_Values() []string {
+	return []string{
+		HyperParameterTuningJobStrategyTypeBayesian,
+		HyperParameterTuningJobStrategyTypeRandom,
+	}
+}
+
 const (
 	// HyperParameterTuningJobWarmStartTypeIdenticalDataAndAlgorithm is a HyperParameterTuningJobWarmStartType enum value
 	HyperParameterTuningJobWarmStartTypeIdenticalDataAndAlgorithm = "IdenticalDataAndAlgorithm"
@@ -49242,6 +49709,14 @@ const (
 	// HyperParameterTuningJobWarmStartTypeTransferLearning is a HyperParameterTuningJobWarmStartType enum value
 	HyperParameterTuningJobWarmStartTypeTransferLearning = "TransferLearning"
 )
+
+// HyperParameterTuningJobWarmStartType_Values returns all elements of the HyperParameterTuningJobWarmStartType enum
+func HyperParameterTuningJobWarmStartType_Values() []string {
+	return []string{
+		HyperParameterTuningJobWarmStartTypeIdenticalDataAndAlgorithm,
+		HyperParameterTuningJobWarmStartTypeTransferLearning,
+	}
+}
 
 const (
 	// InstanceTypeMlT2Medium is a InstanceType enum value
@@ -49359,6 +49834,50 @@ const (
 	InstanceTypeMlP316xlarge = "ml.p3.16xlarge"
 )
 
+// InstanceType_Values returns all elements of the InstanceType enum
+func InstanceType_Values() []string {
+	return []string{
+		InstanceTypeMlT2Medium,
+		InstanceTypeMlT2Large,
+		InstanceTypeMlT2Xlarge,
+		InstanceTypeMlT22xlarge,
+		InstanceTypeMlT3Medium,
+		InstanceTypeMlT3Large,
+		InstanceTypeMlT3Xlarge,
+		InstanceTypeMlT32xlarge,
+		InstanceTypeMlM4Xlarge,
+		InstanceTypeMlM42xlarge,
+		InstanceTypeMlM44xlarge,
+		InstanceTypeMlM410xlarge,
+		InstanceTypeMlM416xlarge,
+		InstanceTypeMlM5Xlarge,
+		InstanceTypeMlM52xlarge,
+		InstanceTypeMlM54xlarge,
+		InstanceTypeMlM512xlarge,
+		InstanceTypeMlM524xlarge,
+		InstanceTypeMlC4Xlarge,
+		InstanceTypeMlC42xlarge,
+		InstanceTypeMlC44xlarge,
+		InstanceTypeMlC48xlarge,
+		InstanceTypeMlC5Xlarge,
+		InstanceTypeMlC52xlarge,
+		InstanceTypeMlC54xlarge,
+		InstanceTypeMlC59xlarge,
+		InstanceTypeMlC518xlarge,
+		InstanceTypeMlC5dXlarge,
+		InstanceTypeMlC5d2xlarge,
+		InstanceTypeMlC5d4xlarge,
+		InstanceTypeMlC5d9xlarge,
+		InstanceTypeMlC5d18xlarge,
+		InstanceTypeMlP2Xlarge,
+		InstanceTypeMlP28xlarge,
+		InstanceTypeMlP216xlarge,
+		InstanceTypeMlP32xlarge,
+		InstanceTypeMlP38xlarge,
+		InstanceTypeMlP316xlarge,
+	}
+}
+
 const (
 	// JoinSourceInput is a JoinSource enum value
 	JoinSourceInput = "Input"
@@ -49366,6 +49885,14 @@ const (
 	// JoinSourceNone is a JoinSource enum value
 	JoinSourceNone = "None"
 )
+
+// JoinSource_Values returns all elements of the JoinSource enum
+func JoinSource_Values() []string {
+	return []string{
+		JoinSourceInput,
+		JoinSourceNone,
+	}
+}
 
 const (
 	// LabelingJobStatusInitializing is a LabelingJobStatus enum value
@@ -49387,6 +49914,18 @@ const (
 	LabelingJobStatusStopped = "Stopped"
 )
 
+// LabelingJobStatus_Values returns all elements of the LabelingJobStatus enum
+func LabelingJobStatus_Values() []string {
+	return []string{
+		LabelingJobStatusInitializing,
+		LabelingJobStatusInProgress,
+		LabelingJobStatusCompleted,
+		LabelingJobStatusFailed,
+		LabelingJobStatusStopping,
+		LabelingJobStatusStopped,
+	}
+}
+
 const (
 	// ListCompilationJobsSortByName is a ListCompilationJobsSortBy enum value
 	ListCompilationJobsSortByName = "Name"
@@ -49398,10 +49937,26 @@ const (
 	ListCompilationJobsSortByStatus = "Status"
 )
 
+// ListCompilationJobsSortBy_Values returns all elements of the ListCompilationJobsSortBy enum
+func ListCompilationJobsSortBy_Values() []string {
+	return []string{
+		ListCompilationJobsSortByName,
+		ListCompilationJobsSortByCreationTime,
+		ListCompilationJobsSortByStatus,
+	}
+}
+
 const (
 	// ListLabelingJobsForWorkteamSortByOptionsCreationTime is a ListLabelingJobsForWorkteamSortByOptions enum value
 	ListLabelingJobsForWorkteamSortByOptionsCreationTime = "CreationTime"
 )
+
+// ListLabelingJobsForWorkteamSortByOptions_Values returns all elements of the ListLabelingJobsForWorkteamSortByOptions enum
+func ListLabelingJobsForWorkteamSortByOptions_Values() []string {
+	return []string{
+		ListLabelingJobsForWorkteamSortByOptionsCreationTime,
+	}
+}
 
 const (
 	// ListWorkforcesSortByOptionsName is a ListWorkforcesSortByOptions enum value
@@ -49411,6 +49966,14 @@ const (
 	ListWorkforcesSortByOptionsCreateDate = "CreateDate"
 )
 
+// ListWorkforcesSortByOptions_Values returns all elements of the ListWorkforcesSortByOptions enum
+func ListWorkforcesSortByOptions_Values() []string {
+	return []string{
+		ListWorkforcesSortByOptionsName,
+		ListWorkforcesSortByOptionsCreateDate,
+	}
+}
+
 const (
 	// ListWorkteamsSortByOptionsName is a ListWorkteamsSortByOptions enum value
 	ListWorkteamsSortByOptionsName = "Name"
@@ -49419,6 +49982,14 @@ const (
 	ListWorkteamsSortByOptionsCreateDate = "CreateDate"
 )
 
+// ListWorkteamsSortByOptions_Values returns all elements of the ListWorkteamsSortByOptions enum
+func ListWorkteamsSortByOptions_Values() []string {
+	return []string{
+		ListWorkteamsSortByOptionsName,
+		ListWorkteamsSortByOptionsCreateDate,
+	}
+}
+
 const (
 	// ModelPackageSortByName is a ModelPackageSortBy enum value
 	ModelPackageSortByName = "Name"
@@ -49426,6 +49997,14 @@ const (
 	// ModelPackageSortByCreationTime is a ModelPackageSortBy enum value
 	ModelPackageSortByCreationTime = "CreationTime"
 )
+
+// ModelPackageSortBy_Values returns all elements of the ModelPackageSortBy enum
+func ModelPackageSortBy_Values() []string {
+	return []string{
+		ModelPackageSortByName,
+		ModelPackageSortByCreationTime,
+	}
+}
 
 const (
 	// ModelPackageStatusPending is a ModelPackageStatus enum value
@@ -49444,6 +50023,17 @@ const (
 	ModelPackageStatusDeleting = "Deleting"
 )
 
+// ModelPackageStatus_Values returns all elements of the ModelPackageStatus enum
+func ModelPackageStatus_Values() []string {
+	return []string{
+		ModelPackageStatusPending,
+		ModelPackageStatusInProgress,
+		ModelPackageStatusCompleted,
+		ModelPackageStatusFailed,
+		ModelPackageStatusDeleting,
+	}
+}
+
 const (
 	// ModelSortKeyName is a ModelSortKey enum value
 	ModelSortKeyName = "Name"
@@ -49451,6 +50041,14 @@ const (
 	// ModelSortKeyCreationTime is a ModelSortKey enum value
 	ModelSortKeyCreationTime = "CreationTime"
 )
+
+// ModelSortKey_Values returns all elements of the ModelSortKey enum
+func ModelSortKey_Values() []string {
+	return []string{
+		ModelSortKeyName,
+		ModelSortKeyCreationTime,
+	}
+}
 
 const (
 	// MonitoringExecutionSortKeyCreationTime is a MonitoringExecutionSortKey enum value
@@ -49463,6 +50061,15 @@ const (
 	MonitoringExecutionSortKeyStatus = "Status"
 )
 
+// MonitoringExecutionSortKey_Values returns all elements of the MonitoringExecutionSortKey enum
+func MonitoringExecutionSortKey_Values() []string {
+	return []string{
+		MonitoringExecutionSortKeyCreationTime,
+		MonitoringExecutionSortKeyScheduledTime,
+		MonitoringExecutionSortKeyStatus,
+	}
+}
+
 const (
 	// MonitoringScheduleSortKeyName is a MonitoringScheduleSortKey enum value
 	MonitoringScheduleSortKeyName = "Name"
@@ -49473,6 +50080,15 @@ const (
 	// MonitoringScheduleSortKeyStatus is a MonitoringScheduleSortKey enum value
 	MonitoringScheduleSortKeyStatus = "Status"
 )
+
+// MonitoringScheduleSortKey_Values returns all elements of the MonitoringScheduleSortKey enum
+func MonitoringScheduleSortKey_Values() []string {
+	return []string{
+		MonitoringScheduleSortKeyName,
+		MonitoringScheduleSortKeyCreationTime,
+		MonitoringScheduleSortKeyStatus,
+	}
+}
 
 const (
 	// NotebookInstanceAcceleratorTypeMlEia1Medium is a NotebookInstanceAcceleratorType enum value
@@ -49494,6 +50110,18 @@ const (
 	NotebookInstanceAcceleratorTypeMlEia2Xlarge = "ml.eia2.xlarge"
 )
 
+// NotebookInstanceAcceleratorType_Values returns all elements of the NotebookInstanceAcceleratorType enum
+func NotebookInstanceAcceleratorType_Values() []string {
+	return []string{
+		NotebookInstanceAcceleratorTypeMlEia1Medium,
+		NotebookInstanceAcceleratorTypeMlEia1Large,
+		NotebookInstanceAcceleratorTypeMlEia1Xlarge,
+		NotebookInstanceAcceleratorTypeMlEia2Medium,
+		NotebookInstanceAcceleratorTypeMlEia2Large,
+		NotebookInstanceAcceleratorTypeMlEia2Xlarge,
+	}
+}
+
 const (
 	// NotebookInstanceLifecycleConfigSortKeyName is a NotebookInstanceLifecycleConfigSortKey enum value
 	NotebookInstanceLifecycleConfigSortKeyName = "Name"
@@ -49505,6 +50133,15 @@ const (
 	NotebookInstanceLifecycleConfigSortKeyLastModifiedTime = "LastModifiedTime"
 )
 
+// NotebookInstanceLifecycleConfigSortKey_Values returns all elements of the NotebookInstanceLifecycleConfigSortKey enum
+func NotebookInstanceLifecycleConfigSortKey_Values() []string {
+	return []string{
+		NotebookInstanceLifecycleConfigSortKeyName,
+		NotebookInstanceLifecycleConfigSortKeyCreationTime,
+		NotebookInstanceLifecycleConfigSortKeyLastModifiedTime,
+	}
+}
+
 const (
 	// NotebookInstanceLifecycleConfigSortOrderAscending is a NotebookInstanceLifecycleConfigSortOrder enum value
 	NotebookInstanceLifecycleConfigSortOrderAscending = "Ascending"
@@ -49512,6 +50149,14 @@ const (
 	// NotebookInstanceLifecycleConfigSortOrderDescending is a NotebookInstanceLifecycleConfigSortOrder enum value
 	NotebookInstanceLifecycleConfigSortOrderDescending = "Descending"
 )
+
+// NotebookInstanceLifecycleConfigSortOrder_Values returns all elements of the NotebookInstanceLifecycleConfigSortOrder enum
+func NotebookInstanceLifecycleConfigSortOrder_Values() []string {
+	return []string{
+		NotebookInstanceLifecycleConfigSortOrderAscending,
+		NotebookInstanceLifecycleConfigSortOrderDescending,
+	}
+}
 
 const (
 	// NotebookInstanceSortKeyName is a NotebookInstanceSortKey enum value
@@ -49524,6 +50169,15 @@ const (
 	NotebookInstanceSortKeyStatus = "Status"
 )
 
+// NotebookInstanceSortKey_Values returns all elements of the NotebookInstanceSortKey enum
+func NotebookInstanceSortKey_Values() []string {
+	return []string{
+		NotebookInstanceSortKeyName,
+		NotebookInstanceSortKeyCreationTime,
+		NotebookInstanceSortKeyStatus,
+	}
+}
+
 const (
 	// NotebookInstanceSortOrderAscending is a NotebookInstanceSortOrder enum value
 	NotebookInstanceSortOrderAscending = "Ascending"
@@ -49531,6 +50185,14 @@ const (
 	// NotebookInstanceSortOrderDescending is a NotebookInstanceSortOrder enum value
 	NotebookInstanceSortOrderDescending = "Descending"
 )
+
+// NotebookInstanceSortOrder_Values returns all elements of the NotebookInstanceSortOrder enum
+func NotebookInstanceSortOrder_Values() []string {
+	return []string{
+		NotebookInstanceSortOrderAscending,
+		NotebookInstanceSortOrderDescending,
+	}
+}
 
 const (
 	// NotebookInstanceStatusPending is a NotebookInstanceStatus enum value
@@ -49555,6 +50217,19 @@ const (
 	NotebookInstanceStatusUpdating = "Updating"
 )
 
+// NotebookInstanceStatus_Values returns all elements of the NotebookInstanceStatus enum
+func NotebookInstanceStatus_Values() []string {
+	return []string{
+		NotebookInstanceStatusPending,
+		NotebookInstanceStatusInService,
+		NotebookInstanceStatusStopping,
+		NotebookInstanceStatusStopped,
+		NotebookInstanceStatusFailed,
+		NotebookInstanceStatusDeleting,
+		NotebookInstanceStatusUpdating,
+	}
+}
+
 const (
 	// NotebookOutputOptionAllowed is a NotebookOutputOption enum value
 	NotebookOutputOptionAllowed = "Allowed"
@@ -49562,6 +50237,14 @@ const (
 	// NotebookOutputOptionDisabled is a NotebookOutputOption enum value
 	NotebookOutputOptionDisabled = "Disabled"
 )
+
+// NotebookOutputOption_Values returns all elements of the NotebookOutputOption enum
+func NotebookOutputOption_Values() []string {
+	return []string{
+		NotebookOutputOptionAllowed,
+		NotebookOutputOptionDisabled,
+	}
+}
 
 const (
 	// ObjectiveStatusSucceeded is a ObjectiveStatus enum value
@@ -49573,6 +50256,15 @@ const (
 	// ObjectiveStatusFailed is a ObjectiveStatus enum value
 	ObjectiveStatusFailed = "Failed"
 )
+
+// ObjectiveStatus_Values returns all elements of the ObjectiveStatus enum
+func ObjectiveStatus_Values() []string {
+	return []string{
+		ObjectiveStatusSucceeded,
+		ObjectiveStatusPending,
+		ObjectiveStatusFailed,
+	}
+}
 
 const (
 	// OperatorEquals is a Operator enum value
@@ -49606,6 +50298,22 @@ const (
 	OperatorIn = "In"
 )
 
+// Operator_Values returns all elements of the Operator enum
+func Operator_Values() []string {
+	return []string{
+		OperatorEquals,
+		OperatorNotEquals,
+		OperatorGreaterThan,
+		OperatorGreaterThanOrEqualTo,
+		OperatorLessThan,
+		OperatorLessThanOrEqualTo,
+		OperatorContains,
+		OperatorExists,
+		OperatorNotExists,
+		OperatorIn,
+	}
+}
+
 const (
 	// OrderKeyAscending is a OrderKey enum value
 	OrderKeyAscending = "Ascending"
@@ -49613,6 +50321,14 @@ const (
 	// OrderKeyDescending is a OrderKey enum value
 	OrderKeyDescending = "Descending"
 )
+
+// OrderKey_Values returns all elements of the OrderKey enum
+func OrderKey_Values() []string {
+	return []string{
+		OrderKeyAscending,
+		OrderKeyDescending,
+	}
+}
 
 const (
 	// ParameterTypeInteger is a ParameterType enum value
@@ -49628,6 +50344,16 @@ const (
 	ParameterTypeFreeText = "FreeText"
 )
 
+// ParameterType_Values returns all elements of the ParameterType enum
+func ParameterType_Values() []string {
+	return []string{
+		ParameterTypeInteger,
+		ParameterTypeContinuous,
+		ParameterTypeCategorical,
+		ParameterTypeFreeText,
+	}
+}
+
 const (
 	// ProblemTypeBinaryClassification is a ProblemType enum value
 	ProblemTypeBinaryClassification = "BinaryClassification"
@@ -49638,6 +50364,15 @@ const (
 	// ProblemTypeRegression is a ProblemType enum value
 	ProblemTypeRegression = "Regression"
 )
+
+// ProblemType_Values returns all elements of the ProblemType enum
+func ProblemType_Values() []string {
+	return []string{
+		ProblemTypeBinaryClassification,
+		ProblemTypeMulticlassClassification,
+		ProblemTypeRegression,
+	}
+}
 
 const (
 	// ProcessingInstanceTypeMlT3Medium is a ProcessingInstanceType enum value
@@ -49755,6 +50490,50 @@ const (
 	ProcessingInstanceTypeMlR524xlarge = "ml.r5.24xlarge"
 )
 
+// ProcessingInstanceType_Values returns all elements of the ProcessingInstanceType enum
+func ProcessingInstanceType_Values() []string {
+	return []string{
+		ProcessingInstanceTypeMlT3Medium,
+		ProcessingInstanceTypeMlT3Large,
+		ProcessingInstanceTypeMlT3Xlarge,
+		ProcessingInstanceTypeMlT32xlarge,
+		ProcessingInstanceTypeMlM4Xlarge,
+		ProcessingInstanceTypeMlM42xlarge,
+		ProcessingInstanceTypeMlM44xlarge,
+		ProcessingInstanceTypeMlM410xlarge,
+		ProcessingInstanceTypeMlM416xlarge,
+		ProcessingInstanceTypeMlC4Xlarge,
+		ProcessingInstanceTypeMlC42xlarge,
+		ProcessingInstanceTypeMlC44xlarge,
+		ProcessingInstanceTypeMlC48xlarge,
+		ProcessingInstanceTypeMlP2Xlarge,
+		ProcessingInstanceTypeMlP28xlarge,
+		ProcessingInstanceTypeMlP216xlarge,
+		ProcessingInstanceTypeMlP32xlarge,
+		ProcessingInstanceTypeMlP38xlarge,
+		ProcessingInstanceTypeMlP316xlarge,
+		ProcessingInstanceTypeMlC5Xlarge,
+		ProcessingInstanceTypeMlC52xlarge,
+		ProcessingInstanceTypeMlC54xlarge,
+		ProcessingInstanceTypeMlC59xlarge,
+		ProcessingInstanceTypeMlC518xlarge,
+		ProcessingInstanceTypeMlM5Large,
+		ProcessingInstanceTypeMlM5Xlarge,
+		ProcessingInstanceTypeMlM52xlarge,
+		ProcessingInstanceTypeMlM54xlarge,
+		ProcessingInstanceTypeMlM512xlarge,
+		ProcessingInstanceTypeMlM524xlarge,
+		ProcessingInstanceTypeMlR5Large,
+		ProcessingInstanceTypeMlR5Xlarge,
+		ProcessingInstanceTypeMlR52xlarge,
+		ProcessingInstanceTypeMlR54xlarge,
+		ProcessingInstanceTypeMlR58xlarge,
+		ProcessingInstanceTypeMlR512xlarge,
+		ProcessingInstanceTypeMlR516xlarge,
+		ProcessingInstanceTypeMlR524xlarge,
+	}
+}
+
 const (
 	// ProcessingJobStatusInProgress is a ProcessingJobStatus enum value
 	ProcessingJobStatusInProgress = "InProgress"
@@ -49772,6 +50551,17 @@ const (
 	ProcessingJobStatusStopped = "Stopped"
 )
 
+// ProcessingJobStatus_Values returns all elements of the ProcessingJobStatus enum
+func ProcessingJobStatus_Values() []string {
+	return []string{
+		ProcessingJobStatusInProgress,
+		ProcessingJobStatusCompleted,
+		ProcessingJobStatusFailed,
+		ProcessingJobStatusStopping,
+		ProcessingJobStatusStopped,
+	}
+}
+
 const (
 	// ProcessingS3CompressionTypeNone is a ProcessingS3CompressionType enum value
 	ProcessingS3CompressionTypeNone = "None"
@@ -49779,6 +50569,14 @@ const (
 	// ProcessingS3CompressionTypeGzip is a ProcessingS3CompressionType enum value
 	ProcessingS3CompressionTypeGzip = "Gzip"
 )
+
+// ProcessingS3CompressionType_Values returns all elements of the ProcessingS3CompressionType enum
+func ProcessingS3CompressionType_Values() []string {
+	return []string{
+		ProcessingS3CompressionTypeNone,
+		ProcessingS3CompressionTypeGzip,
+	}
+}
 
 const (
 	// ProcessingS3DataDistributionTypeFullyReplicated is a ProcessingS3DataDistributionType enum value
@@ -49788,6 +50586,14 @@ const (
 	ProcessingS3DataDistributionTypeShardedByS3key = "ShardedByS3Key"
 )
 
+// ProcessingS3DataDistributionType_Values returns all elements of the ProcessingS3DataDistributionType enum
+func ProcessingS3DataDistributionType_Values() []string {
+	return []string{
+		ProcessingS3DataDistributionTypeFullyReplicated,
+		ProcessingS3DataDistributionTypeShardedByS3key,
+	}
+}
+
 const (
 	// ProcessingS3DataTypeManifestFile is a ProcessingS3DataType enum value
 	ProcessingS3DataTypeManifestFile = "ManifestFile"
@@ -49795,6 +50601,14 @@ const (
 	// ProcessingS3DataTypeS3prefix is a ProcessingS3DataType enum value
 	ProcessingS3DataTypeS3prefix = "S3Prefix"
 )
+
+// ProcessingS3DataType_Values returns all elements of the ProcessingS3DataType enum
+func ProcessingS3DataType_Values() []string {
+	return []string{
+		ProcessingS3DataTypeManifestFile,
+		ProcessingS3DataTypeS3prefix,
+	}
+}
 
 const (
 	// ProcessingS3InputModePipe is a ProcessingS3InputMode enum value
@@ -49804,6 +50618,14 @@ const (
 	ProcessingS3InputModeFile = "File"
 )
 
+// ProcessingS3InputMode_Values returns all elements of the ProcessingS3InputMode enum
+func ProcessingS3InputMode_Values() []string {
+	return []string{
+		ProcessingS3InputModePipe,
+		ProcessingS3InputModeFile,
+	}
+}
+
 const (
 	// ProcessingS3UploadModeContinuous is a ProcessingS3UploadMode enum value
 	ProcessingS3UploadModeContinuous = "Continuous"
@@ -49811,6 +50633,14 @@ const (
 	// ProcessingS3UploadModeEndOfJob is a ProcessingS3UploadMode enum value
 	ProcessingS3UploadModeEndOfJob = "EndOfJob"
 )
+
+// ProcessingS3UploadMode_Values returns all elements of the ProcessingS3UploadMode enum
+func ProcessingS3UploadMode_Values() []string {
+	return []string{
+		ProcessingS3UploadModeContinuous,
+		ProcessingS3UploadModeEndOfJob,
+	}
+}
 
 const (
 	// ProductionVariantAcceleratorTypeMlEia1Medium is a ProductionVariantAcceleratorType enum value
@@ -49831,6 +50661,18 @@ const (
 	// ProductionVariantAcceleratorTypeMlEia2Xlarge is a ProductionVariantAcceleratorType enum value
 	ProductionVariantAcceleratorTypeMlEia2Xlarge = "ml.eia2.xlarge"
 )
+
+// ProductionVariantAcceleratorType_Values returns all elements of the ProductionVariantAcceleratorType enum
+func ProductionVariantAcceleratorType_Values() []string {
+	return []string{
+		ProductionVariantAcceleratorTypeMlEia1Medium,
+		ProductionVariantAcceleratorTypeMlEia1Large,
+		ProductionVariantAcceleratorTypeMlEia1Xlarge,
+		ProductionVariantAcceleratorTypeMlEia2Medium,
+		ProductionVariantAcceleratorTypeMlEia2Large,
+		ProductionVariantAcceleratorTypeMlEia2Xlarge,
+	}
+}
 
 const (
 	// ProductionVariantInstanceTypeMlT2Medium is a ProductionVariantInstanceType enum value
@@ -50032,6 +50874,78 @@ const (
 	ProductionVariantInstanceTypeMlInf124xlarge = "ml.inf1.24xlarge"
 )
 
+// ProductionVariantInstanceType_Values returns all elements of the ProductionVariantInstanceType enum
+func ProductionVariantInstanceType_Values() []string {
+	return []string{
+		ProductionVariantInstanceTypeMlT2Medium,
+		ProductionVariantInstanceTypeMlT2Large,
+		ProductionVariantInstanceTypeMlT2Xlarge,
+		ProductionVariantInstanceTypeMlT22xlarge,
+		ProductionVariantInstanceTypeMlM4Xlarge,
+		ProductionVariantInstanceTypeMlM42xlarge,
+		ProductionVariantInstanceTypeMlM44xlarge,
+		ProductionVariantInstanceTypeMlM410xlarge,
+		ProductionVariantInstanceTypeMlM416xlarge,
+		ProductionVariantInstanceTypeMlM5Large,
+		ProductionVariantInstanceTypeMlM5Xlarge,
+		ProductionVariantInstanceTypeMlM52xlarge,
+		ProductionVariantInstanceTypeMlM54xlarge,
+		ProductionVariantInstanceTypeMlM512xlarge,
+		ProductionVariantInstanceTypeMlM524xlarge,
+		ProductionVariantInstanceTypeMlM5dLarge,
+		ProductionVariantInstanceTypeMlM5dXlarge,
+		ProductionVariantInstanceTypeMlM5d2xlarge,
+		ProductionVariantInstanceTypeMlM5d4xlarge,
+		ProductionVariantInstanceTypeMlM5d12xlarge,
+		ProductionVariantInstanceTypeMlM5d24xlarge,
+		ProductionVariantInstanceTypeMlC4Large,
+		ProductionVariantInstanceTypeMlC4Xlarge,
+		ProductionVariantInstanceTypeMlC42xlarge,
+		ProductionVariantInstanceTypeMlC44xlarge,
+		ProductionVariantInstanceTypeMlC48xlarge,
+		ProductionVariantInstanceTypeMlP2Xlarge,
+		ProductionVariantInstanceTypeMlP28xlarge,
+		ProductionVariantInstanceTypeMlP216xlarge,
+		ProductionVariantInstanceTypeMlP32xlarge,
+		ProductionVariantInstanceTypeMlP38xlarge,
+		ProductionVariantInstanceTypeMlP316xlarge,
+		ProductionVariantInstanceTypeMlC5Large,
+		ProductionVariantInstanceTypeMlC5Xlarge,
+		ProductionVariantInstanceTypeMlC52xlarge,
+		ProductionVariantInstanceTypeMlC54xlarge,
+		ProductionVariantInstanceTypeMlC59xlarge,
+		ProductionVariantInstanceTypeMlC518xlarge,
+		ProductionVariantInstanceTypeMlC5dLarge,
+		ProductionVariantInstanceTypeMlC5dXlarge,
+		ProductionVariantInstanceTypeMlC5d2xlarge,
+		ProductionVariantInstanceTypeMlC5d4xlarge,
+		ProductionVariantInstanceTypeMlC5d9xlarge,
+		ProductionVariantInstanceTypeMlC5d18xlarge,
+		ProductionVariantInstanceTypeMlG4dnXlarge,
+		ProductionVariantInstanceTypeMlG4dn2xlarge,
+		ProductionVariantInstanceTypeMlG4dn4xlarge,
+		ProductionVariantInstanceTypeMlG4dn8xlarge,
+		ProductionVariantInstanceTypeMlG4dn12xlarge,
+		ProductionVariantInstanceTypeMlG4dn16xlarge,
+		ProductionVariantInstanceTypeMlR5Large,
+		ProductionVariantInstanceTypeMlR5Xlarge,
+		ProductionVariantInstanceTypeMlR52xlarge,
+		ProductionVariantInstanceTypeMlR54xlarge,
+		ProductionVariantInstanceTypeMlR512xlarge,
+		ProductionVariantInstanceTypeMlR524xlarge,
+		ProductionVariantInstanceTypeMlR5dLarge,
+		ProductionVariantInstanceTypeMlR5dXlarge,
+		ProductionVariantInstanceTypeMlR5d2xlarge,
+		ProductionVariantInstanceTypeMlR5d4xlarge,
+		ProductionVariantInstanceTypeMlR5d12xlarge,
+		ProductionVariantInstanceTypeMlR5d24xlarge,
+		ProductionVariantInstanceTypeMlInf1Xlarge,
+		ProductionVariantInstanceTypeMlInf12xlarge,
+		ProductionVariantInstanceTypeMlInf16xlarge,
+		ProductionVariantInstanceTypeMlInf124xlarge,
+	}
+}
+
 const (
 	// RecordWrapperNone is a RecordWrapper enum value
 	RecordWrapperNone = "None"
@@ -50039,6 +50953,14 @@ const (
 	// RecordWrapperRecordIo is a RecordWrapper enum value
 	RecordWrapperRecordIo = "RecordIO"
 )
+
+// RecordWrapper_Values returns all elements of the RecordWrapper enum
+func RecordWrapper_Values() []string {
+	return []string{
+		RecordWrapperNone,
+		RecordWrapperRecordIo,
+	}
+}
 
 const (
 	// ResourceTypeTrainingJob is a ResourceType enum value
@@ -50054,6 +50976,16 @@ const (
 	ResourceTypeExperimentTrialComponent = "ExperimentTrialComponent"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeTrainingJob,
+		ResourceTypeExperiment,
+		ResourceTypeExperimentTrial,
+		ResourceTypeExperimentTrialComponent,
+	}
+}
+
 const (
 	// RetentionTypeRetain is a RetentionType enum value
 	RetentionTypeRetain = "Retain"
@@ -50062,6 +50994,14 @@ const (
 	RetentionTypeDelete = "Delete"
 )
 
+// RetentionType_Values returns all elements of the RetentionType enum
+func RetentionType_Values() []string {
+	return []string{
+		RetentionTypeRetain,
+		RetentionTypeDelete,
+	}
+}
+
 const (
 	// RootAccessEnabled is a RootAccess enum value
 	RootAccessEnabled = "Enabled"
@@ -50069,6 +51009,14 @@ const (
 	// RootAccessDisabled is a RootAccess enum value
 	RootAccessDisabled = "Disabled"
 )
+
+// RootAccess_Values returns all elements of the RootAccess enum
+func RootAccess_Values() []string {
+	return []string{
+		RootAccessEnabled,
+		RootAccessDisabled,
+	}
+}
 
 const (
 	// RuleEvaluationStatusInProgress is a RuleEvaluationStatus enum value
@@ -50090,6 +51038,18 @@ const (
 	RuleEvaluationStatusStopped = "Stopped"
 )
 
+// RuleEvaluationStatus_Values returns all elements of the RuleEvaluationStatus enum
+func RuleEvaluationStatus_Values() []string {
+	return []string{
+		RuleEvaluationStatusInProgress,
+		RuleEvaluationStatusNoIssuesFound,
+		RuleEvaluationStatusIssuesFound,
+		RuleEvaluationStatusError,
+		RuleEvaluationStatusStopping,
+		RuleEvaluationStatusStopped,
+	}
+}
+
 const (
 	// S3DataDistributionFullyReplicated is a S3DataDistribution enum value
 	S3DataDistributionFullyReplicated = "FullyReplicated"
@@ -50097,6 +51057,14 @@ const (
 	// S3DataDistributionShardedByS3key is a S3DataDistribution enum value
 	S3DataDistributionShardedByS3key = "ShardedByS3Key"
 )
+
+// S3DataDistribution_Values returns all elements of the S3DataDistribution enum
+func S3DataDistribution_Values() []string {
+	return []string{
+		S3DataDistributionFullyReplicated,
+		S3DataDistributionShardedByS3key,
+	}
+}
 
 const (
 	// S3DataTypeManifestFile is a S3DataType enum value
@@ -50108,6 +51076,15 @@ const (
 	// S3DataTypeAugmentedManifestFile is a S3DataType enum value
 	S3DataTypeAugmentedManifestFile = "AugmentedManifestFile"
 )
+
+// S3DataType_Values returns all elements of the S3DataType enum
+func S3DataType_Values() []string {
+	return []string{
+		S3DataTypeManifestFile,
+		S3DataTypeS3prefix,
+		S3DataTypeAugmentedManifestFile,
+	}
+}
 
 const (
 	// ScheduleStatusPending is a ScheduleStatus enum value
@@ -50123,6 +51100,16 @@ const (
 	ScheduleStatusStopped = "Stopped"
 )
 
+// ScheduleStatus_Values returns all elements of the ScheduleStatus enum
+func ScheduleStatus_Values() []string {
+	return []string{
+		ScheduleStatusPending,
+		ScheduleStatusFailed,
+		ScheduleStatusScheduled,
+		ScheduleStatusStopped,
+	}
+}
+
 const (
 	// SearchSortOrderAscending is a SearchSortOrder enum value
 	SearchSortOrderAscending = "Ascending"
@@ -50130,6 +51117,14 @@ const (
 	// SearchSortOrderDescending is a SearchSortOrder enum value
 	SearchSortOrderDescending = "Descending"
 )
+
+// SearchSortOrder_Values returns all elements of the SearchSortOrder enum
+func SearchSortOrder_Values() []string {
+	return []string{
+		SearchSortOrderAscending,
+		SearchSortOrderDescending,
+	}
+}
 
 const (
 	// SecondaryStatusStarting is a SecondaryStatus enum value
@@ -50175,6 +51170,26 @@ const (
 	SecondaryStatusMaxWaitTimeExceeded = "MaxWaitTimeExceeded"
 )
 
+// SecondaryStatus_Values returns all elements of the SecondaryStatus enum
+func SecondaryStatus_Values() []string {
+	return []string{
+		SecondaryStatusStarting,
+		SecondaryStatusLaunchingMlinstances,
+		SecondaryStatusPreparingTrainingStack,
+		SecondaryStatusDownloading,
+		SecondaryStatusDownloadingTrainingImage,
+		SecondaryStatusTraining,
+		SecondaryStatusUploading,
+		SecondaryStatusStopping,
+		SecondaryStatusStopped,
+		SecondaryStatusMaxRuntimeExceeded,
+		SecondaryStatusCompleted,
+		SecondaryStatusFailed,
+		SecondaryStatusInterrupted,
+		SecondaryStatusMaxWaitTimeExceeded,
+	}
+}
+
 const (
 	// SortByName is a SortBy enum value
 	SortByName = "Name"
@@ -50186,6 +51201,15 @@ const (
 	SortByStatus = "Status"
 )
 
+// SortBy_Values returns all elements of the SortBy enum
+func SortBy_Values() []string {
+	return []string{
+		SortByName,
+		SortByCreationTime,
+		SortByStatus,
+	}
+}
+
 const (
 	// SortExperimentsByName is a SortExperimentsBy enum value
 	SortExperimentsByName = "Name"
@@ -50193,6 +51217,14 @@ const (
 	// SortExperimentsByCreationTime is a SortExperimentsBy enum value
 	SortExperimentsByCreationTime = "CreationTime"
 )
+
+// SortExperimentsBy_Values returns all elements of the SortExperimentsBy enum
+func SortExperimentsBy_Values() []string {
+	return []string{
+		SortExperimentsByName,
+		SortExperimentsByCreationTime,
+	}
+}
 
 const (
 	// SortOrderAscending is a SortOrder enum value
@@ -50202,6 +51234,14 @@ const (
 	SortOrderDescending = "Descending"
 )
 
+// SortOrder_Values returns all elements of the SortOrder enum
+func SortOrder_Values() []string {
+	return []string{
+		SortOrderAscending,
+		SortOrderDescending,
+	}
+}
+
 const (
 	// SortTrialComponentsByName is a SortTrialComponentsBy enum value
 	SortTrialComponentsByName = "Name"
@@ -50210,6 +51250,14 @@ const (
 	SortTrialComponentsByCreationTime = "CreationTime"
 )
 
+// SortTrialComponentsBy_Values returns all elements of the SortTrialComponentsBy enum
+func SortTrialComponentsBy_Values() []string {
+	return []string{
+		SortTrialComponentsByName,
+		SortTrialComponentsByCreationTime,
+	}
+}
+
 const (
 	// SortTrialsByName is a SortTrialsBy enum value
 	SortTrialsByName = "Name"
@@ -50217,6 +51265,14 @@ const (
 	// SortTrialsByCreationTime is a SortTrialsBy enum value
 	SortTrialsByCreationTime = "CreationTime"
 )
+
+// SortTrialsBy_Values returns all elements of the SortTrialsBy enum
+func SortTrialsBy_Values() []string {
+	return []string{
+		SortTrialsByName,
+		SortTrialsByCreationTime,
+	}
+}
 
 const (
 	// SplitTypeNone is a SplitType enum value
@@ -50231,6 +51287,16 @@ const (
 	// SplitTypeTfrecord is a SplitType enum value
 	SplitTypeTfrecord = "TFRecord"
 )
+
+// SplitType_Values returns all elements of the SplitType enum
+func SplitType_Values() []string {
+	return []string{
+		SplitTypeNone,
+		SplitTypeLine,
+		SplitTypeRecordIo,
+		SplitTypeTfrecord,
+	}
+}
 
 const (
 	// TargetDeviceLambda is a TargetDevice enum value
@@ -50312,6 +51378,38 @@ const (
 	TargetDeviceX86Win64 = "x86_win64"
 )
 
+// TargetDevice_Values returns all elements of the TargetDevice enum
+func TargetDevice_Values() []string {
+	return []string{
+		TargetDeviceLambda,
+		TargetDeviceMlM4,
+		TargetDeviceMlM5,
+		TargetDeviceMlC4,
+		TargetDeviceMlC5,
+		TargetDeviceMlP2,
+		TargetDeviceMlP3,
+		TargetDeviceMlG4dn,
+		TargetDeviceMlInf1,
+		TargetDeviceJetsonTx1,
+		TargetDeviceJetsonTx2,
+		TargetDeviceJetsonNano,
+		TargetDeviceJetsonXavier,
+		TargetDeviceRasp3b,
+		TargetDeviceImx8qm,
+		TargetDeviceDeeplens,
+		TargetDeviceRk3399,
+		TargetDeviceRk3288,
+		TargetDeviceAisage,
+		TargetDeviceSbeC,
+		TargetDeviceQcs605,
+		TargetDeviceQcs603,
+		TargetDeviceSitaraAm57x,
+		TargetDeviceAmbaCv22,
+		TargetDeviceX86Win32,
+		TargetDeviceX86Win64,
+	}
+}
+
 const (
 	// TargetPlatformAcceleratorIntelGraphics is a TargetPlatformAccelerator enum value
 	TargetPlatformAcceleratorIntelGraphics = "INTEL_GRAPHICS"
@@ -50322,6 +51420,15 @@ const (
 	// TargetPlatformAcceleratorNvidia is a TargetPlatformAccelerator enum value
 	TargetPlatformAcceleratorNvidia = "NVIDIA"
 )
+
+// TargetPlatformAccelerator_Values returns all elements of the TargetPlatformAccelerator enum
+func TargetPlatformAccelerator_Values() []string {
+	return []string{
+		TargetPlatformAcceleratorIntelGraphics,
+		TargetPlatformAcceleratorMali,
+		TargetPlatformAcceleratorNvidia,
+	}
+}
 
 const (
 	// TargetPlatformArchX8664 is a TargetPlatformArch enum value
@@ -50340,6 +51447,17 @@ const (
 	TargetPlatformArchArmEabihf = "ARM_EABIHF"
 )
 
+// TargetPlatformArch_Values returns all elements of the TargetPlatformArch enum
+func TargetPlatformArch_Values() []string {
+	return []string{
+		TargetPlatformArchX8664,
+		TargetPlatformArchX86,
+		TargetPlatformArchArm64,
+		TargetPlatformArchArmEabi,
+		TargetPlatformArchArmEabihf,
+	}
+}
+
 const (
 	// TargetPlatformOsAndroid is a TargetPlatformOs enum value
 	TargetPlatformOsAndroid = "ANDROID"
@@ -50348,6 +51466,14 @@ const (
 	TargetPlatformOsLinux = "LINUX"
 )
 
+// TargetPlatformOs_Values returns all elements of the TargetPlatformOs enum
+func TargetPlatformOs_Values() []string {
+	return []string{
+		TargetPlatformOsAndroid,
+		TargetPlatformOsLinux,
+	}
+}
+
 const (
 	// TrainingInputModePipe is a TrainingInputMode enum value
 	TrainingInputModePipe = "Pipe"
@@ -50355,6 +51481,14 @@ const (
 	// TrainingInputModeFile is a TrainingInputMode enum value
 	TrainingInputModeFile = "File"
 )
+
+// TrainingInputMode_Values returns all elements of the TrainingInputMode enum
+func TrainingInputMode_Values() []string {
+	return []string{
+		TrainingInputModePipe,
+		TrainingInputModeFile,
+	}
+}
 
 const (
 	// TrainingInstanceTypeMlM4Xlarge is a TrainingInstanceType enum value
@@ -50472,6 +51606,50 @@ const (
 	TrainingInstanceTypeMlC5n18xlarge = "ml.c5n.18xlarge"
 )
 
+// TrainingInstanceType_Values returns all elements of the TrainingInstanceType enum
+func TrainingInstanceType_Values() []string {
+	return []string{
+		TrainingInstanceTypeMlM4Xlarge,
+		TrainingInstanceTypeMlM42xlarge,
+		TrainingInstanceTypeMlM44xlarge,
+		TrainingInstanceTypeMlM410xlarge,
+		TrainingInstanceTypeMlM416xlarge,
+		TrainingInstanceTypeMlG4dnXlarge,
+		TrainingInstanceTypeMlG4dn2xlarge,
+		TrainingInstanceTypeMlG4dn4xlarge,
+		TrainingInstanceTypeMlG4dn8xlarge,
+		TrainingInstanceTypeMlG4dn12xlarge,
+		TrainingInstanceTypeMlG4dn16xlarge,
+		TrainingInstanceTypeMlM5Large,
+		TrainingInstanceTypeMlM5Xlarge,
+		TrainingInstanceTypeMlM52xlarge,
+		TrainingInstanceTypeMlM54xlarge,
+		TrainingInstanceTypeMlM512xlarge,
+		TrainingInstanceTypeMlM524xlarge,
+		TrainingInstanceTypeMlC4Xlarge,
+		TrainingInstanceTypeMlC42xlarge,
+		TrainingInstanceTypeMlC44xlarge,
+		TrainingInstanceTypeMlC48xlarge,
+		TrainingInstanceTypeMlP2Xlarge,
+		TrainingInstanceTypeMlP28xlarge,
+		TrainingInstanceTypeMlP216xlarge,
+		TrainingInstanceTypeMlP32xlarge,
+		TrainingInstanceTypeMlP38xlarge,
+		TrainingInstanceTypeMlP316xlarge,
+		TrainingInstanceTypeMlP3dn24xlarge,
+		TrainingInstanceTypeMlC5Xlarge,
+		TrainingInstanceTypeMlC52xlarge,
+		TrainingInstanceTypeMlC54xlarge,
+		TrainingInstanceTypeMlC59xlarge,
+		TrainingInstanceTypeMlC518xlarge,
+		TrainingInstanceTypeMlC5nXlarge,
+		TrainingInstanceTypeMlC5n2xlarge,
+		TrainingInstanceTypeMlC5n4xlarge,
+		TrainingInstanceTypeMlC5n9xlarge,
+		TrainingInstanceTypeMlC5n18xlarge,
+	}
+}
+
 const (
 	// TrainingJobEarlyStoppingTypeOff is a TrainingJobEarlyStoppingType enum value
 	TrainingJobEarlyStoppingTypeOff = "Off"
@@ -50479,6 +51657,14 @@ const (
 	// TrainingJobEarlyStoppingTypeAuto is a TrainingJobEarlyStoppingType enum value
 	TrainingJobEarlyStoppingTypeAuto = "Auto"
 )
+
+// TrainingJobEarlyStoppingType_Values returns all elements of the TrainingJobEarlyStoppingType enum
+func TrainingJobEarlyStoppingType_Values() []string {
+	return []string{
+		TrainingJobEarlyStoppingTypeOff,
+		TrainingJobEarlyStoppingTypeAuto,
+	}
+}
 
 const (
 	// TrainingJobSortByOptionsName is a TrainingJobSortByOptions enum value
@@ -50493,6 +51679,16 @@ const (
 	// TrainingJobSortByOptionsFinalObjectiveMetricValue is a TrainingJobSortByOptions enum value
 	TrainingJobSortByOptionsFinalObjectiveMetricValue = "FinalObjectiveMetricValue"
 )
+
+// TrainingJobSortByOptions_Values returns all elements of the TrainingJobSortByOptions enum
+func TrainingJobSortByOptions_Values() []string {
+	return []string{
+		TrainingJobSortByOptionsName,
+		TrainingJobSortByOptionsCreationTime,
+		TrainingJobSortByOptionsStatus,
+		TrainingJobSortByOptionsFinalObjectiveMetricValue,
+	}
+}
 
 const (
 	// TrainingJobStatusInProgress is a TrainingJobStatus enum value
@@ -50510,6 +51706,17 @@ const (
 	// TrainingJobStatusStopped is a TrainingJobStatus enum value
 	TrainingJobStatusStopped = "Stopped"
 )
+
+// TrainingJobStatus_Values returns all elements of the TrainingJobStatus enum
+func TrainingJobStatus_Values() []string {
+	return []string{
+		TrainingJobStatusInProgress,
+		TrainingJobStatusCompleted,
+		TrainingJobStatusFailed,
+		TrainingJobStatusStopping,
+		TrainingJobStatusStopped,
+	}
+}
 
 const (
 	// TransformInstanceTypeMlM4Xlarge is a TransformInstanceType enum value
@@ -50591,6 +51798,38 @@ const (
 	TransformInstanceTypeMlM524xlarge = "ml.m5.24xlarge"
 )
 
+// TransformInstanceType_Values returns all elements of the TransformInstanceType enum
+func TransformInstanceType_Values() []string {
+	return []string{
+		TransformInstanceTypeMlM4Xlarge,
+		TransformInstanceTypeMlM42xlarge,
+		TransformInstanceTypeMlM44xlarge,
+		TransformInstanceTypeMlM410xlarge,
+		TransformInstanceTypeMlM416xlarge,
+		TransformInstanceTypeMlC4Xlarge,
+		TransformInstanceTypeMlC42xlarge,
+		TransformInstanceTypeMlC44xlarge,
+		TransformInstanceTypeMlC48xlarge,
+		TransformInstanceTypeMlP2Xlarge,
+		TransformInstanceTypeMlP28xlarge,
+		TransformInstanceTypeMlP216xlarge,
+		TransformInstanceTypeMlP32xlarge,
+		TransformInstanceTypeMlP38xlarge,
+		TransformInstanceTypeMlP316xlarge,
+		TransformInstanceTypeMlC5Xlarge,
+		TransformInstanceTypeMlC52xlarge,
+		TransformInstanceTypeMlC54xlarge,
+		TransformInstanceTypeMlC59xlarge,
+		TransformInstanceTypeMlC518xlarge,
+		TransformInstanceTypeMlM5Large,
+		TransformInstanceTypeMlM5Xlarge,
+		TransformInstanceTypeMlM52xlarge,
+		TransformInstanceTypeMlM54xlarge,
+		TransformInstanceTypeMlM512xlarge,
+		TransformInstanceTypeMlM524xlarge,
+	}
+}
+
 const (
 	// TransformJobStatusInProgress is a TransformJobStatus enum value
 	TransformJobStatusInProgress = "InProgress"
@@ -50607,6 +51846,17 @@ const (
 	// TransformJobStatusStopped is a TransformJobStatus enum value
 	TransformJobStatusStopped = "Stopped"
 )
+
+// TransformJobStatus_Values returns all elements of the TransformJobStatus enum
+func TransformJobStatus_Values() []string {
+	return []string{
+		TransformJobStatusInProgress,
+		TransformJobStatusCompleted,
+		TransformJobStatusFailed,
+		TransformJobStatusStopping,
+		TransformJobStatusStopped,
+	}
+}
 
 const (
 	// TrialComponentPrimaryStatusInProgress is a TrialComponentPrimaryStatus enum value
@@ -50625,6 +51875,17 @@ const (
 	TrialComponentPrimaryStatusStopped = "Stopped"
 )
 
+// TrialComponentPrimaryStatus_Values returns all elements of the TrialComponentPrimaryStatus enum
+func TrialComponentPrimaryStatus_Values() []string {
+	return []string{
+		TrialComponentPrimaryStatusInProgress,
+		TrialComponentPrimaryStatusCompleted,
+		TrialComponentPrimaryStatusFailed,
+		TrialComponentPrimaryStatusStopping,
+		TrialComponentPrimaryStatusStopped,
+	}
+}
+
 const (
 	// UserProfileSortKeyCreationTime is a UserProfileSortKey enum value
 	UserProfileSortKeyCreationTime = "CreationTime"
@@ -50632,6 +51893,14 @@ const (
 	// UserProfileSortKeyLastModifiedTime is a UserProfileSortKey enum value
 	UserProfileSortKeyLastModifiedTime = "LastModifiedTime"
 )
+
+// UserProfileSortKey_Values returns all elements of the UserProfileSortKey enum
+func UserProfileSortKey_Values() []string {
+	return []string{
+		UserProfileSortKeyCreationTime,
+		UserProfileSortKeyLastModifiedTime,
+	}
+}
 
 const (
 	// UserProfileStatusDeleting is a UserProfileStatus enum value
@@ -50647,6 +51916,16 @@ const (
 	UserProfileStatusPending = "Pending"
 )
 
+// UserProfileStatus_Values returns all elements of the UserProfileStatus enum
+func UserProfileStatus_Values() []string {
+	return []string{
+		UserProfileStatusDeleting,
+		UserProfileStatusFailed,
+		UserProfileStatusInService,
+		UserProfileStatusPending,
+	}
+}
+
 const (
 	// VariantPropertyTypeDesiredInstanceCount is a VariantPropertyType enum value
 	VariantPropertyTypeDesiredInstanceCount = "DesiredInstanceCount"
@@ -50657,3 +51936,12 @@ const (
 	// VariantPropertyTypeDataCaptureConfig is a VariantPropertyType enum value
 	VariantPropertyTypeDataCaptureConfig = "DataCaptureConfig"
 )
+
+// VariantPropertyType_Values returns all elements of the VariantPropertyType enum
+func VariantPropertyType_Values() []string {
+	return []string{
+		VariantPropertyTypeDesiredInstanceCount,
+		VariantPropertyTypeDesiredWeight,
+		VariantPropertyTypeDataCaptureConfig,
+	}
+}

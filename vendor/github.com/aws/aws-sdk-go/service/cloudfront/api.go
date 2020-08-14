@@ -19408,6 +19408,16 @@ const (
 	CachePolicyCookieBehaviorAll = "all"
 )
 
+// CachePolicyCookieBehavior_Values returns all elements of the CachePolicyCookieBehavior enum
+func CachePolicyCookieBehavior_Values() []string {
+	return []string{
+		CachePolicyCookieBehaviorNone,
+		CachePolicyCookieBehaviorWhitelist,
+		CachePolicyCookieBehaviorAllExcept,
+		CachePolicyCookieBehaviorAll,
+	}
+}
+
 const (
 	// CachePolicyHeaderBehaviorNone is a CachePolicyHeaderBehavior enum value
 	CachePolicyHeaderBehaviorNone = "none"
@@ -19415,6 +19425,14 @@ const (
 	// CachePolicyHeaderBehaviorWhitelist is a CachePolicyHeaderBehavior enum value
 	CachePolicyHeaderBehaviorWhitelist = "whitelist"
 )
+
+// CachePolicyHeaderBehavior_Values returns all elements of the CachePolicyHeaderBehavior enum
+func CachePolicyHeaderBehavior_Values() []string {
+	return []string{
+		CachePolicyHeaderBehaviorNone,
+		CachePolicyHeaderBehaviorWhitelist,
+	}
+}
 
 const (
 	// CachePolicyQueryStringBehaviorNone is a CachePolicyQueryStringBehavior enum value
@@ -19430,6 +19448,16 @@ const (
 	CachePolicyQueryStringBehaviorAll = "all"
 )
 
+// CachePolicyQueryStringBehavior_Values returns all elements of the CachePolicyQueryStringBehavior enum
+func CachePolicyQueryStringBehavior_Values() []string {
+	return []string{
+		CachePolicyQueryStringBehaviorNone,
+		CachePolicyQueryStringBehaviorWhitelist,
+		CachePolicyQueryStringBehaviorAllExcept,
+		CachePolicyQueryStringBehaviorAll,
+	}
+}
+
 const (
 	// CachePolicyTypeManaged is a CachePolicyType enum value
 	CachePolicyTypeManaged = "managed"
@@ -19437,6 +19465,14 @@ const (
 	// CachePolicyTypeCustom is a CachePolicyType enum value
 	CachePolicyTypeCustom = "custom"
 )
+
+// CachePolicyType_Values returns all elements of the CachePolicyType enum
+func CachePolicyType_Values() []string {
+	return []string{
+		CachePolicyTypeManaged,
+		CachePolicyTypeCustom,
+	}
+}
 
 const (
 	// CertificateSourceCloudfront is a CertificateSource enum value
@@ -19448,6 +19484,15 @@ const (
 	// CertificateSourceAcm is a CertificateSource enum value
 	CertificateSourceAcm = "acm"
 )
+
+// CertificateSource_Values returns all elements of the CertificateSource enum
+func CertificateSource_Values() []string {
+	return []string{
+		CertificateSourceCloudfront,
+		CertificateSourceIam,
+		CertificateSourceAcm,
+	}
+}
 
 const (
 	// EventTypeViewerRequest is a EventType enum value
@@ -19463,10 +19508,27 @@ const (
 	EventTypeOriginResponse = "origin-response"
 )
 
+// EventType_Values returns all elements of the EventType enum
+func EventType_Values() []string {
+	return []string{
+		EventTypeViewerRequest,
+		EventTypeViewerResponse,
+		EventTypeOriginRequest,
+		EventTypeOriginResponse,
+	}
+}
+
 const (
 	// FormatUrlencoded is a Format enum value
 	FormatUrlencoded = "URLEncoded"
 )
+
+// Format_Values returns all elements of the Format enum
+func Format_Values() []string {
+	return []string{
+		FormatUrlencoded,
+	}
+}
 
 const (
 	// GeoRestrictionTypeBlacklist is a GeoRestrictionType enum value
@@ -19479,6 +19541,15 @@ const (
 	GeoRestrictionTypeNone = "none"
 )
 
+// GeoRestrictionType_Values returns all elements of the GeoRestrictionType enum
+func GeoRestrictionType_Values() []string {
+	return []string{
+		GeoRestrictionTypeBlacklist,
+		GeoRestrictionTypeWhitelist,
+		GeoRestrictionTypeNone,
+	}
+}
+
 const (
 	// HttpVersionHttp11 is a HttpVersion enum value
 	HttpVersionHttp11 = "http1.1"
@@ -19486,6 +19557,14 @@ const (
 	// HttpVersionHttp2 is a HttpVersion enum value
 	HttpVersionHttp2 = "http2"
 )
+
+// HttpVersion_Values returns all elements of the HttpVersion enum
+func HttpVersion_Values() []string {
+	return []string{
+		HttpVersionHttp11,
+		HttpVersionHttp2,
+	}
+}
 
 const (
 	// ICPRecordalStatusApproved is a ICPRecordalStatus enum value
@@ -19498,6 +19577,15 @@ const (
 	ICPRecordalStatusPending = "PENDING"
 )
 
+// ICPRecordalStatus_Values returns all elements of the ICPRecordalStatus enum
+func ICPRecordalStatus_Values() []string {
+	return []string{
+		ICPRecordalStatusApproved,
+		ICPRecordalStatusSuspended,
+		ICPRecordalStatusPending,
+	}
+}
+
 const (
 	// ItemSelectionNone is a ItemSelection enum value
 	ItemSelectionNone = "none"
@@ -19508,6 +19596,15 @@ const (
 	// ItemSelectionAll is a ItemSelection enum value
 	ItemSelectionAll = "all"
 )
+
+// ItemSelection_Values returns all elements of the ItemSelection enum
+func ItemSelection_Values() []string {
+	return []string{
+		ItemSelectionNone,
+		ItemSelectionWhitelist,
+		ItemSelectionAll,
+	}
+}
 
 const (
 	// MethodGet is a Method enum value
@@ -19532,6 +19629,19 @@ const (
 	MethodDelete = "DELETE"
 )
 
+// Method_Values returns all elements of the Method enum
+func Method_Values() []string {
+	return []string{
+		MethodGet,
+		MethodHead,
+		MethodPost,
+		MethodPut,
+		MethodPatch,
+		MethodOptions,
+		MethodDelete,
+	}
+}
+
 const (
 	// MinimumProtocolVersionSslv3 is a MinimumProtocolVersion enum value
 	MinimumProtocolVersionSslv3 = "SSLv3"
@@ -19552,6 +19662,18 @@ const (
 	MinimumProtocolVersionTlsv122019 = "TLSv1.2_2019"
 )
 
+// MinimumProtocolVersion_Values returns all elements of the MinimumProtocolVersion enum
+func MinimumProtocolVersion_Values() []string {
+	return []string{
+		MinimumProtocolVersionSslv3,
+		MinimumProtocolVersionTlsv1,
+		MinimumProtocolVersionTlsv12016,
+		MinimumProtocolVersionTlsv112016,
+		MinimumProtocolVersionTlsv122018,
+		MinimumProtocolVersionTlsv122019,
+	}
+}
+
 const (
 	// OriginProtocolPolicyHttpOnly is a OriginProtocolPolicy enum value
 	OriginProtocolPolicyHttpOnly = "http-only"
@@ -19563,6 +19685,15 @@ const (
 	OriginProtocolPolicyHttpsOnly = "https-only"
 )
 
+// OriginProtocolPolicy_Values returns all elements of the OriginProtocolPolicy enum
+func OriginProtocolPolicy_Values() []string {
+	return []string{
+		OriginProtocolPolicyHttpOnly,
+		OriginProtocolPolicyMatchViewer,
+		OriginProtocolPolicyHttpsOnly,
+	}
+}
+
 const (
 	// OriginRequestPolicyCookieBehaviorNone is a OriginRequestPolicyCookieBehavior enum value
 	OriginRequestPolicyCookieBehaviorNone = "none"
@@ -19573,6 +19704,15 @@ const (
 	// OriginRequestPolicyCookieBehaviorAll is a OriginRequestPolicyCookieBehavior enum value
 	OriginRequestPolicyCookieBehaviorAll = "all"
 )
+
+// OriginRequestPolicyCookieBehavior_Values returns all elements of the OriginRequestPolicyCookieBehavior enum
+func OriginRequestPolicyCookieBehavior_Values() []string {
+	return []string{
+		OriginRequestPolicyCookieBehaviorNone,
+		OriginRequestPolicyCookieBehaviorWhitelist,
+		OriginRequestPolicyCookieBehaviorAll,
+	}
+}
 
 const (
 	// OriginRequestPolicyHeaderBehaviorNone is a OriginRequestPolicyHeaderBehavior enum value
@@ -19588,6 +19728,16 @@ const (
 	OriginRequestPolicyHeaderBehaviorAllViewerAndWhitelistCloudFront = "allViewerAndWhitelistCloudFront"
 )
 
+// OriginRequestPolicyHeaderBehavior_Values returns all elements of the OriginRequestPolicyHeaderBehavior enum
+func OriginRequestPolicyHeaderBehavior_Values() []string {
+	return []string{
+		OriginRequestPolicyHeaderBehaviorNone,
+		OriginRequestPolicyHeaderBehaviorWhitelist,
+		OriginRequestPolicyHeaderBehaviorAllViewer,
+		OriginRequestPolicyHeaderBehaviorAllViewerAndWhitelistCloudFront,
+	}
+}
+
 const (
 	// OriginRequestPolicyQueryStringBehaviorNone is a OriginRequestPolicyQueryStringBehavior enum value
 	OriginRequestPolicyQueryStringBehaviorNone = "none"
@@ -19599,6 +19749,15 @@ const (
 	OriginRequestPolicyQueryStringBehaviorAll = "all"
 )
 
+// OriginRequestPolicyQueryStringBehavior_Values returns all elements of the OriginRequestPolicyQueryStringBehavior enum
+func OriginRequestPolicyQueryStringBehavior_Values() []string {
+	return []string{
+		OriginRequestPolicyQueryStringBehaviorNone,
+		OriginRequestPolicyQueryStringBehaviorWhitelist,
+		OriginRequestPolicyQueryStringBehaviorAll,
+	}
+}
+
 const (
 	// OriginRequestPolicyTypeManaged is a OriginRequestPolicyType enum value
 	OriginRequestPolicyTypeManaged = "managed"
@@ -19606,6 +19765,14 @@ const (
 	// OriginRequestPolicyTypeCustom is a OriginRequestPolicyType enum value
 	OriginRequestPolicyTypeCustom = "custom"
 )
+
+// OriginRequestPolicyType_Values returns all elements of the OriginRequestPolicyType enum
+func OriginRequestPolicyType_Values() []string {
+	return []string{
+		OriginRequestPolicyTypeManaged,
+		OriginRequestPolicyTypeCustom,
+	}
+}
 
 const (
 	// PriceClassPriceClass100 is a PriceClass enum value
@@ -19618,6 +19785,15 @@ const (
 	PriceClassPriceClassAll = "PriceClass_All"
 )
 
+// PriceClass_Values returns all elements of the PriceClass enum
+func PriceClass_Values() []string {
+	return []string{
+		PriceClassPriceClass100,
+		PriceClassPriceClass200,
+		PriceClassPriceClassAll,
+	}
+}
+
 const (
 	// SSLSupportMethodSniOnly is a SSLSupportMethod enum value
 	SSLSupportMethodSniOnly = "sni-only"
@@ -19625,6 +19801,14 @@ const (
 	// SSLSupportMethodVip is a SSLSupportMethod enum value
 	SSLSupportMethodVip = "vip"
 )
+
+// SSLSupportMethod_Values returns all elements of the SSLSupportMethod enum
+func SSLSupportMethod_Values() []string {
+	return []string{
+		SSLSupportMethodSniOnly,
+		SSLSupportMethodVip,
+	}
+}
 
 const (
 	// SslProtocolSslv3 is a SslProtocol enum value
@@ -19640,6 +19824,16 @@ const (
 	SslProtocolTlsv12 = "TLSv1.2"
 )
 
+// SslProtocol_Values returns all elements of the SslProtocol enum
+func SslProtocol_Values() []string {
+	return []string{
+		SslProtocolSslv3,
+		SslProtocolTlsv1,
+		SslProtocolTlsv11,
+		SslProtocolTlsv12,
+	}
+}
+
 const (
 	// ViewerProtocolPolicyAllowAll is a ViewerProtocolPolicy enum value
 	ViewerProtocolPolicyAllowAll = "allow-all"
@@ -19650,3 +19844,12 @@ const (
 	// ViewerProtocolPolicyRedirectToHttps is a ViewerProtocolPolicy enum value
 	ViewerProtocolPolicyRedirectToHttps = "redirect-to-https"
 )
+
+// ViewerProtocolPolicy_Values returns all elements of the ViewerProtocolPolicy enum
+func ViewerProtocolPolicy_Values() []string {
+	return []string{
+		ViewerProtocolPolicyAllowAll,
+		ViewerProtocolPolicyHttpsOnly,
+		ViewerProtocolPolicyRedirectToHttps,
+	}
+}

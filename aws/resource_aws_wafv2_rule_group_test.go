@@ -7,14 +7,51 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_updateRule(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
@@ -55,15 +92,115 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":             "rule-2",
-						"priority":         "10",
+						"name":                              "rule-1",
+						"priority":                          "1",
+						"action.#":                          "1",
+						"action.0.allow.#":                  "0",
+						"action.0.block.#":                  "0",
+						"action.0.count.#":                  "1",
+						"statement.#":                       "1",
+						"statement.0.geo_match_statement.#": "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_updateRuleProperties(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+	ruleName2 := fmt.Sprintf("%s-2", ruleGroupName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_BasicUpdate(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":             "rule-1",
+						"priority":         "1",
 						"action.#":         "1",
 						"action.0.allow.#": "0",
-						"action.0.block.#": "1",
-						"action.0.count.#": "0",
-						"statement.#":      "1",
+						"action.0.block.#": "0",
+						"action.0.count.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#":                                       "1",
+						"statement.0.geo_match_statement.#":                 "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+				),
+			},
+			{
+				// Test step verifies addition of a rule block with the first block unchanged
+				Config: testAccAwsWafv2RuleGroupConfig_UpdateMultipleRules(ruleGroupName, "rule-1", ruleName2, 1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                "rule-1",
+						"priority":            "1",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "0",
+						"action.0.count.#":    "1",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "rule-1",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#":                                       "1",
+						"statement.0.geo_match_statement.#":                 "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                ruleName2,
+						"priority":            "2",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "1",
+						"action.0.count.#":    "0",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                ruleName2,
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#": "1",
 						"statement.0.size_constraint_statement.#":                                 "1",
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
 						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
@@ -79,13 +216,65 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 						"priority": "5",
 						"type":     "NONE",
 					}),
+				),
+			},
+			{
+				// Test step to verify a change in priority for rule #1 and a change in name and priority for rule #2
+				Config: testAccAwsWafv2RuleGroupConfig_UpdateMultipleRules(ruleGroupName, "rule-1", "updated", 5, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":             "rule-1",
-						"priority":         "1",
-						"action.#":         "1",
-						"action.0.allow.#": "0",
-						"action.0.block.#": "0",
-						"action.0.count.#": "1",
+						"name":                "rule-1",
+						"priority":            "5",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "0",
+						"action.0.count.#":    "1",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "rule-1",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#":                                       "1",
+						"statement.0.geo_match_statement.#":                 "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                "updated",
+						"priority":            "10",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "1",
+						"action.0.count.#":    "0",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "updated",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#": "1",
+						"statement.0.size_constraint_statement.#":                                 "1",
+						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
+						"statement.0.size_constraint_statement.0.size":                            "50",
+						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
+						"priority": "2",
+						"type":     "CMD_LINE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
+						"priority": "5",
+						"type":     "NONE",
 					}),
 				),
 			},
@@ -1235,8 +1424,67 @@ resource "aws_wafv2_rule_group" "test" {
   scope       = "REGIONAL"
 
   rule {
-    name     = "rule-2"
-    priority = 10
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "NL"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_UpdateMultipleRules(name string, ruleName1, ruleName2 string, priority1, priority2 int) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity    = 50
+  name        = "%[1]s"
+  description = "Updated"
+  scope       = "REGIONAL"
+
+  rule {
+    name     = "%[2]s"
+    priority = %[3]d
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "NL"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "%[2]s"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "%[4]s"
+    priority = %[5]d
 
     action {
       block {}
@@ -1265,28 +1513,7 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      count {}
-    }
-
-    statement {
-      geo_match_statement {
-        country_codes = ["US", "NL"]
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
+      metric_name                = "%[4]s"
       sampled_requests_enabled   = false
     }
   }
@@ -1297,7 +1524,7 @@ resource "aws_wafv2_rule_group" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name)
+`, name, ruleName1, priority1, ruleName2, priority2)
 }
 
 func testAccAwsWafv2RuleGroupConfig_UpdateCapacity(name string) string {

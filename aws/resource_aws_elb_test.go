@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -1132,13 +1132,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   cross_zone_load_balancing = true
@@ -1157,13 +1157,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
@@ -1187,13 +1187,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
@@ -1218,13 +1218,13 @@ data "aws_availability_zones" "available" {
 
 resource "aws_elb" "test" {
   name = "%s"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1240,13 +1240,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1254,7 +1254,7 @@ resource "aws_elb" "test" {
 func testAccAWSELBAccessLogsOn(r string) string {
 	return `
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
     instance_port     = 8000
@@ -1265,7 +1265,7 @@ resource "aws_elb" "test" {
 
   access_logs {
     interval = 5
-    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
+    bucket   = aws_s3_bucket.accesslogs_bucket.bucket
   }
 }
 
@@ -1283,7 +1283,7 @@ data "aws_availability_zones" "available" {
 func testAccAWSELBAccessLogsDisabled(r string) string {
 	return `
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
     instance_port     = 8000
@@ -1294,7 +1294,7 @@ resource "aws_elb" "test" {
 
   access_logs {
     interval = 5
-    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
+    bucket   = aws_s3_bucket.accesslogs_bucket.bucket
     enabled  = false
   }
 }
@@ -1312,9 +1312,11 @@ data "aws_availability_zones" "available" {
 
 func testAccAWSELBAccessLogsCommon(r string) string {
 	return fmt.Sprintf(`
-data "aws_elb_service_account" "current" {}
+data "aws_elb_service_account" "current" {
+}
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_s3_bucket" "accesslogs_bucket" {
   bucket        = "%[1]s"
@@ -1338,6 +1340,7 @@ resource "aws_s3_bucket" "accesslogs_bucket" {
   "Version": "2012-10-17"
 }
 EOF
+
 }
 `, r)
 }
@@ -1354,13 +1357,13 @@ data "aws_availability_zones" "available" {
 
 resource "aws_elb" "test" {
   name_prefix = "test-"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1376,13 +1379,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1399,19 +1402,19 @@ data "aws_availability_zones" "available" {
 
 resource "aws_elb" "test" {
   name               = ""
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 
 # See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = "${aws_elb.test.name}"
+  value = aws_elb.test.name
 }
 `
 
@@ -1426,13 +1429,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1463,20 +1466,20 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  instances = ["${aws_instance.test.id}"]
+  instances = [aws_instance.test.id]
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
 }
 `
@@ -1492,21 +1495,21 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   health_check {
-    healthy_threshold = 5
+    healthy_threshold   = 5
     unhealthy_threshold = 5
-    target = "HTTP:8000/"
-    interval = 60
-    timeout = 30
+    target              = "HTTP:8000/"
+    interval            = 60
+    timeout             = 30
   }
 }
 `
@@ -1522,21 +1525,21 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   health_check {
-    healthy_threshold = 10
+    healthy_threshold   = 10
     unhealthy_threshold = 5
-    target = "HTTP:8000/"
-    interval = 60
-    timeout = 30
+    target              = "HTTP:8000/"
+    interval            = 60
+    timeout             = 30
   }
 }
 `
@@ -1552,13 +1555,13 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8080
+    instance_port     = 8080
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1574,20 +1577,20 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   listener {
-    instance_port = 22
+    instance_port     = 22
     instance_protocol = "tcp"
-    lb_port = 22
-    lb_protocol = "tcp"
+    lb_port           = 22
+    lb_protocol       = "tcp"
   }
 }
 `
@@ -1603,16 +1606,16 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	idle_timeout = 200
+  idle_timeout = 200
 }
 `
 
@@ -1627,16 +1630,16 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	idle_timeout = 400
+  idle_timeout = 400
 }
 `
 
@@ -1651,17 +1654,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	connection_draining = true
-	connection_draining_timeout = 400
+  connection_draining = true
+  connection_draining_timeout = 400
 }
 `
 
@@ -1676,17 +1679,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	connection_draining = true
-	connection_draining_timeout = 600
+  connection_draining = true
+  connection_draining_timeout = 600
 }
 `
 
@@ -1701,16 +1704,16 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	connection_draining = false
+  connection_draining = false
 }
 `
 
@@ -1725,29 +1728,29 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups = [aws_security_group.test.id]
 }
 
 resource "aws_security_group" "test" {
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 80
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-	tags = {
-		Name = "tf_elb_sg_test"
-	}
+  tags = {
+    Name = "tf_elb_sg_test"
+  }
 }
 `
 
@@ -1769,14 +1772,14 @@ resource "aws_iam_server_certificate" "test_cert" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "%[4]s"
     lb_port            = 443
     lb_protocol        = "%[4]s"
-    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 }
 `, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), lbProtocol)
@@ -1800,14 +1803,14 @@ resource "aws_iam_server_certificate" "test_cert" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 
   # lb_protocol tcp and ssl_certificate_id is not valid
@@ -1816,7 +1819,7 @@ resource "aws_elb" "test" {
     instance_protocol  = "tcp"
     lb_port            = 8443
     lb_protocol        = "tcp"
-    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 }
 `, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
@@ -1842,30 +1845,32 @@ resource "aws_vpc" "azelb" {
 }
 
 resource "aws_subnet" "public_a_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-elb-subnets-a-one"
   }
 }
 
 resource "aws_subnet" "public_b_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.7.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
   tags = {
     Name = "tf-acc-elb-subnets-b-one"
   }
 }
 
 resource "aws_subnet" "public_a_two" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-elb-subnets-a-two"
   }
@@ -1875,8 +1880,8 @@ resource "aws_elb" "test" {
   name = "terraform-asg-deployment-example"
 
   subnets = [
-    "${aws_subnet.public_a_one.id}",
-    "${aws_subnet.public_b_one.id}",
+    aws_subnet.public_a_one.id,
+    aws_subnet.public_b_one.id,
   ]
 
   listener {
@@ -1886,11 +1891,11 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   tags = {
     Name = "main"
@@ -1918,30 +1923,30 @@ resource "aws_vpc" "azelb" {
 }
 
 resource "aws_subnet" "public_a_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-elb-subnet-swap-a-one"
   }
 }
 
 resource "aws_subnet" "public_b_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.7.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
-  tags = {
-    Name = "tf-acc-elb-subnet-swap-b-one"
+  availability_zone = data.aws_availability_zones.available.names[1]
+ gs = {
+    Name = "tf-acc-elb-subnet-swap-b-on
   }
 }
 
 resource "aws_subnet" "public_a_two" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-elb-subnet-swap-a-two"
   }
@@ -1951,8 +1956,8 @@ resource "aws_elb" "test" {
   name = "terraform-asg-deployment-example"
 
   subnets = [
-    "${aws_subnet.public_a_two.id}",
-    "${aws_subnet.public_b_one.id}",
+    aws_subnet.public_a_two.id,
+    aws_subnet.public_b_one.id,
   ]
 
   listener {
@@ -1962,11 +1967,11 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   tags = {
     Name = "main"

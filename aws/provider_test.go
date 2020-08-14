@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -14,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const rfc3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
@@ -30,24 +31,24 @@ var TestAccSkip = func(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-var testAccProviders map[string]terraform.ResourceProvider
-var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
+var testAccProviders map[string]*schema.Provider
+var testAccProviderFactories func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error)
 var testAccProvider *schema.Provider
 var testAccProviderFunc func() *schema.Provider
 
 func init() {
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
+	testAccProvider = Provider()
+	testAccProviders = map[string]*schema.Provider{
 		"aws": testAccProvider,
 	}
-	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory {
+	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
 		// this is an SDKV2 compatible hack, the "factory" functions are
 		// effectively singletons for the lifecycle of a resource.Test
 		var providerNames = []string{"aws", "awseast", "awswest", "awsalternate", "awsus-east-1", "awsalternateaccountalternateregion", "awsalternateaccountsameregion", "awssameaccountalternateregion", "awsthird"}
-		var factories = make(map[string]terraform.ResourceProviderFactory, len(providerNames))
+		var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 		for _, name := range providerNames {
-			p := Provider().(*schema.Provider)
-			factories[name] = func() (terraform.ResourceProvider, error) {
+			p := Provider()
+			factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 				return p, nil
 			}
 			*providers = append(*providers, p)
@@ -58,13 +59,13 @@ func init() {
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	var _ *schema.Provider = Provider()
 }
 
 func testAccPreCheck(t *testing.T) {
@@ -80,7 +81,7 @@ func testAccPreCheck(t *testing.T) {
 	log.Printf("[INFO] Test: Using %s as test region", region)
 	os.Setenv("AWS_DEFAULT_REGION", region)
 
-	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(nil))
+	err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 	if err != nil {
 		t.Fatal(err)
 	}

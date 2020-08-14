@@ -5508,6 +5508,15 @@ const (
 	AdjustmentTypeExactCapacity = "ExactCapacity"
 )
 
+// AdjustmentType_Values returns all elements of the AdjustmentType enum
+func AdjustmentType_Values() []string {
+	return []string{
+		AdjustmentTypeChangeInCapacity,
+		AdjustmentTypePercentChangeInCapacity,
+		AdjustmentTypeExactCapacity,
+	}
+}
+
 const (
 	// MetricAggregationTypeAverage is a MetricAggregationType enum value
 	MetricAggregationTypeAverage = "Average"
@@ -5518,6 +5527,15 @@ const (
 	// MetricAggregationTypeMaximum is a MetricAggregationType enum value
 	MetricAggregationTypeMaximum = "Maximum"
 )
+
+// MetricAggregationType_Values returns all elements of the MetricAggregationType enum
+func MetricAggregationType_Values() []string {
+	return []string{
+		MetricAggregationTypeAverage,
+		MetricAggregationTypeMinimum,
+		MetricAggregationTypeMaximum,
+	}
+}
 
 const (
 	// MetricStatisticAverage is a MetricStatistic enum value
@@ -5535,6 +5553,17 @@ const (
 	// MetricStatisticSum is a MetricStatistic enum value
 	MetricStatisticSum = "Sum"
 )
+
+// MetricStatistic_Values returns all elements of the MetricStatistic enum
+func MetricStatistic_Values() []string {
+	return []string{
+		MetricStatisticAverage,
+		MetricStatisticMinimum,
+		MetricStatisticMaximum,
+		MetricStatisticSampleCount,
+		MetricStatisticSum,
+	}
+}
 
 const (
 	// MetricTypeDynamoDbreadCapacityUtilization is a MetricType enum value
@@ -5586,6 +5615,28 @@ const (
 	MetricTypeCassandraWriteCapacityUtilization = "CassandraWriteCapacityUtilization"
 )
 
+// MetricType_Values returns all elements of the MetricType enum
+func MetricType_Values() []string {
+	return []string{
+		MetricTypeDynamoDbreadCapacityUtilization,
+		MetricTypeDynamoDbwriteCapacityUtilization,
+		MetricTypeAlbrequestCountPerTarget,
+		MetricTypeRdsreaderAverageCpuutilization,
+		MetricTypeRdsreaderAverageDatabaseConnections,
+		MetricTypeEc2spotFleetRequestAverageCpuutilization,
+		MetricTypeEc2spotFleetRequestAverageNetworkIn,
+		MetricTypeEc2spotFleetRequestAverageNetworkOut,
+		MetricTypeSageMakerVariantInvocationsPerInstance,
+		MetricTypeEcsserviceAverageCpuutilization,
+		MetricTypeEcsserviceAverageMemoryUtilization,
+		MetricTypeAppStreamAverageCapacityUtilization,
+		MetricTypeComprehendInferenceUtilization,
+		MetricTypeLambdaProvisionedConcurrencyUtilization,
+		MetricTypeCassandraReadCapacityUtilization,
+		MetricTypeCassandraWriteCapacityUtilization,
+	}
+}
+
 const (
 	// PolicyTypeStepScaling is a PolicyType enum value
 	PolicyTypeStepScaling = "StepScaling"
@@ -5593,6 +5644,14 @@ const (
 	// PolicyTypeTargetTrackingScaling is a PolicyType enum value
 	PolicyTypeTargetTrackingScaling = "TargetTrackingScaling"
 )
+
+// PolicyType_Values returns all elements of the PolicyType enum
+func PolicyType_Values() []string {
+	return []string{
+		PolicyTypeStepScaling,
+		PolicyTypeTargetTrackingScaling,
+	}
+}
 
 const (
 	// ScalableDimensionEcsServiceDesiredCount is a ScalableDimension enum value
@@ -5641,6 +5700,27 @@ const (
 	ScalableDimensionCassandraTableWriteCapacityUnits = "cassandra:table:WriteCapacityUnits"
 )
 
+// ScalableDimension_Values returns all elements of the ScalableDimension enum
+func ScalableDimension_Values() []string {
+	return []string{
+		ScalableDimensionEcsServiceDesiredCount,
+		ScalableDimensionEc2SpotFleetRequestTargetCapacity,
+		ScalableDimensionElasticmapreduceInstancegroupInstanceCount,
+		ScalableDimensionAppstreamFleetDesiredCapacity,
+		ScalableDimensionDynamodbTableReadCapacityUnits,
+		ScalableDimensionDynamodbTableWriteCapacityUnits,
+		ScalableDimensionDynamodbIndexReadCapacityUnits,
+		ScalableDimensionDynamodbIndexWriteCapacityUnits,
+		ScalableDimensionRdsClusterReadReplicaCount,
+		ScalableDimensionSagemakerVariantDesiredInstanceCount,
+		ScalableDimensionCustomResourceResourceTypeProperty,
+		ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits,
+		ScalableDimensionLambdaFunctionProvisionedConcurrency,
+		ScalableDimensionCassandraTableReadCapacityUnits,
+		ScalableDimensionCassandraTableWriteCapacityUnits,
+	}
+}
+
 const (
 	// ScalingActivityStatusCodePending is a ScalingActivityStatusCode enum value
 	ScalingActivityStatusCodePending = "Pending"
@@ -5660,6 +5740,18 @@ const (
 	// ScalingActivityStatusCodeFailed is a ScalingActivityStatusCode enum value
 	ScalingActivityStatusCodeFailed = "Failed"
 )
+
+// ScalingActivityStatusCode_Values returns all elements of the ScalingActivityStatusCode enum
+func ScalingActivityStatusCode_Values() []string {
+	return []string{
+		ScalingActivityStatusCodePending,
+		ScalingActivityStatusCodeInProgress,
+		ScalingActivityStatusCodeSuccessful,
+		ScalingActivityStatusCodeOverridden,
+		ScalingActivityStatusCodeUnfulfilled,
+		ScalingActivityStatusCodeFailed,
+	}
+}
 
 const (
 	// ServiceNamespaceEcs is a ServiceNamespace enum value
@@ -5695,3 +5787,20 @@ const (
 	// ServiceNamespaceCassandra is a ServiceNamespace enum value
 	ServiceNamespaceCassandra = "cassandra"
 )
+
+// ServiceNamespace_Values returns all elements of the ServiceNamespace enum
+func ServiceNamespace_Values() []string {
+	return []string{
+		ServiceNamespaceEcs,
+		ServiceNamespaceElasticmapreduce,
+		ServiceNamespaceEc2,
+		ServiceNamespaceAppstream,
+		ServiceNamespaceDynamodb,
+		ServiceNamespaceRds,
+		ServiceNamespaceSagemaker,
+		ServiceNamespaceCustomResource,
+		ServiceNamespaceComprehend,
+		ServiceNamespaceLambda,
+		ServiceNamespaceCassandra,
+	}
+}

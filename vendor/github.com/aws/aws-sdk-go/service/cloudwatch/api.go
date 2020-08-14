@@ -8908,6 +8908,14 @@ const (
 	AlarmTypeMetricAlarm = "MetricAlarm"
 )
 
+// AlarmType_Values returns all elements of the AlarmType enum
+func AlarmType_Values() []string {
+	return []string{
+		AlarmTypeCompositeAlarm,
+		AlarmTypeMetricAlarm,
+	}
+}
+
 const (
 	// AnomalyDetectorStateValuePendingTraining is a AnomalyDetectorStateValue enum value
 	AnomalyDetectorStateValuePendingTraining = "PENDING_TRAINING"
@@ -8918,6 +8926,15 @@ const (
 	// AnomalyDetectorStateValueTrained is a AnomalyDetectorStateValue enum value
 	AnomalyDetectorStateValueTrained = "TRAINED"
 )
+
+// AnomalyDetectorStateValue_Values returns all elements of the AnomalyDetectorStateValue enum
+func AnomalyDetectorStateValue_Values() []string {
+	return []string{
+		AnomalyDetectorStateValuePendingTraining,
+		AnomalyDetectorStateValueTrainedInsufficientData,
+		AnomalyDetectorStateValueTrained,
+	}
+}
 
 const (
 	// ComparisonOperatorGreaterThanOrEqualToThreshold is a ComparisonOperator enum value
@@ -8942,6 +8959,19 @@ const (
 	ComparisonOperatorGreaterThanUpperThreshold = "GreaterThanUpperThreshold"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorGreaterThanOrEqualToThreshold,
+		ComparisonOperatorGreaterThanThreshold,
+		ComparisonOperatorLessThanThreshold,
+		ComparisonOperatorLessThanOrEqualToThreshold,
+		ComparisonOperatorLessThanLowerOrGreaterThanUpperThreshold,
+		ComparisonOperatorLessThanLowerThreshold,
+		ComparisonOperatorGreaterThanUpperThreshold,
+	}
+}
+
 const (
 	// HistoryItemTypeConfigurationUpdate is a HistoryItemType enum value
 	HistoryItemTypeConfigurationUpdate = "ConfigurationUpdate"
@@ -8953,10 +8983,26 @@ const (
 	HistoryItemTypeAction = "Action"
 )
 
+// HistoryItemType_Values returns all elements of the HistoryItemType enum
+func HistoryItemType_Values() []string {
+	return []string{
+		HistoryItemTypeConfigurationUpdate,
+		HistoryItemTypeStateUpdate,
+		HistoryItemTypeAction,
+	}
+}
+
 const (
 	// RecentlyActivePt3h is a RecentlyActive enum value
 	RecentlyActivePt3h = "PT3H"
 )
+
+// RecentlyActive_Values returns all elements of the RecentlyActive enum
+func RecentlyActive_Values() []string {
+	return []string{
+		RecentlyActivePt3h,
+	}
+}
 
 const (
 	// ScanByTimestampDescending is a ScanBy enum value
@@ -8965,6 +9011,14 @@ const (
 	// ScanByTimestampAscending is a ScanBy enum value
 	ScanByTimestampAscending = "TimestampAscending"
 )
+
+// ScanBy_Values returns all elements of the ScanBy enum
+func ScanBy_Values() []string {
+	return []string{
+		ScanByTimestampDescending,
+		ScanByTimestampAscending,
+	}
+}
 
 const (
 	// StandardUnitSeconds is a StandardUnit enum value
@@ -9049,6 +9103,39 @@ const (
 	StandardUnitNone = "None"
 )
 
+// StandardUnit_Values returns all elements of the StandardUnit enum
+func StandardUnit_Values() []string {
+	return []string{
+		StandardUnitSeconds,
+		StandardUnitMicroseconds,
+		StandardUnitMilliseconds,
+		StandardUnitBytes,
+		StandardUnitKilobytes,
+		StandardUnitMegabytes,
+		StandardUnitGigabytes,
+		StandardUnitTerabytes,
+		StandardUnitBits,
+		StandardUnitKilobits,
+		StandardUnitMegabits,
+		StandardUnitGigabits,
+		StandardUnitTerabits,
+		StandardUnitPercent,
+		StandardUnitCount,
+		StandardUnitBytesSecond,
+		StandardUnitKilobytesSecond,
+		StandardUnitMegabytesSecond,
+		StandardUnitGigabytesSecond,
+		StandardUnitTerabytesSecond,
+		StandardUnitBitsSecond,
+		StandardUnitKilobitsSecond,
+		StandardUnitMegabitsSecond,
+		StandardUnitGigabitsSecond,
+		StandardUnitTerabitsSecond,
+		StandardUnitCountSecond,
+		StandardUnitNone,
+	}
+}
+
 const (
 	// StateValueOk is a StateValue enum value
 	StateValueOk = "OK"
@@ -9059,6 +9146,15 @@ const (
 	// StateValueInsufficientData is a StateValue enum value
 	StateValueInsufficientData = "INSUFFICIENT_DATA"
 )
+
+// StateValue_Values returns all elements of the StateValue enum
+func StateValue_Values() []string {
+	return []string{
+		StateValueOk,
+		StateValueAlarm,
+		StateValueInsufficientData,
+	}
+}
 
 const (
 	// StatisticSampleCount is a Statistic enum value
@@ -9077,6 +9173,17 @@ const (
 	StatisticMaximum = "Maximum"
 )
 
+// Statistic_Values returns all elements of the Statistic enum
+func Statistic_Values() []string {
+	return []string{
+		StatisticSampleCount,
+		StatisticAverage,
+		StatisticSum,
+		StatisticMinimum,
+		StatisticMaximum,
+	}
+}
+
 const (
 	// StatusCodeComplete is a StatusCode enum value
 	StatusCodeComplete = "Complete"
@@ -9087,3 +9194,12 @@ const (
 	// StatusCodePartialData is a StatusCode enum value
 	StatusCodePartialData = "PartialData"
 )
+
+// StatusCode_Values returns all elements of the StatusCode enum
+func StatusCode_Values() []string {
+	return []string{
+		StatusCodeComplete,
+		StatusCodeInternalError,
+		StatusCodePartialData,
+	}
+}

@@ -14725,6 +14725,14 @@ const (
 	DurationUnitS = "s"
 )
 
+// DurationUnit_Values returns all elements of the DurationUnit enum
+func DurationUnit_Values() []string {
+	return []string{
+		DurationUnitMs,
+		DurationUnitS,
+	}
+}
+
 const (
 	// EgressFilterTypeAllowAll is a EgressFilterType enum value
 	EgressFilterTypeAllowAll = "ALLOW_ALL"
@@ -14732,6 +14740,14 @@ const (
 	// EgressFilterTypeDropAll is a EgressFilterType enum value
 	EgressFilterTypeDropAll = "DROP_ALL"
 )
+
+// EgressFilterType_Values returns all elements of the EgressFilterType enum
+func EgressFilterType_Values() []string {
+	return []string{
+		EgressFilterTypeAllowAll,
+		EgressFilterTypeDropAll,
+	}
+}
 
 const (
 	// GatewayRouteStatusCodeActive is a GatewayRouteStatusCode enum value
@@ -14743,6 +14759,15 @@ const (
 	// GatewayRouteStatusCodeInactive is a GatewayRouteStatusCode enum value
 	GatewayRouteStatusCodeInactive = "INACTIVE"
 )
+
+// GatewayRouteStatusCode_Values returns all elements of the GatewayRouteStatusCode enum
+func GatewayRouteStatusCode_Values() []string {
+	return []string{
+		GatewayRouteStatusCodeActive,
+		GatewayRouteStatusCodeDeleted,
+		GatewayRouteStatusCodeInactive,
+	}
+}
 
 const (
 	// GrpcRetryPolicyEventCancelled is a GrpcRetryPolicyEvent enum value
@@ -14760,6 +14785,17 @@ const (
 	// GrpcRetryPolicyEventUnavailable is a GrpcRetryPolicyEvent enum value
 	GrpcRetryPolicyEventUnavailable = "unavailable"
 )
+
+// GrpcRetryPolicyEvent_Values returns all elements of the GrpcRetryPolicyEvent enum
+func GrpcRetryPolicyEvent_Values() []string {
+	return []string{
+		GrpcRetryPolicyEventCancelled,
+		GrpcRetryPolicyEventDeadlineExceeded,
+		GrpcRetryPolicyEventInternal,
+		GrpcRetryPolicyEventResourceExhausted,
+		GrpcRetryPolicyEventUnavailable,
+	}
+}
 
 const (
 	// HttpMethodConnect is a HttpMethod enum value
@@ -14790,6 +14826,21 @@ const (
 	HttpMethodTrace = "TRACE"
 )
 
+// HttpMethod_Values returns all elements of the HttpMethod enum
+func HttpMethod_Values() []string {
+	return []string{
+		HttpMethodConnect,
+		HttpMethodDelete,
+		HttpMethodGet,
+		HttpMethodHead,
+		HttpMethodOptions,
+		HttpMethodPatch,
+		HttpMethodPost,
+		HttpMethodPut,
+		HttpMethodTrace,
+	}
+}
+
 const (
 	// HttpSchemeHttp is a HttpScheme enum value
 	HttpSchemeHttp = "http"
@@ -14797,6 +14848,14 @@ const (
 	// HttpSchemeHttps is a HttpScheme enum value
 	HttpSchemeHttps = "https"
 )
+
+// HttpScheme_Values returns all elements of the HttpScheme enum
+func HttpScheme_Values() []string {
+	return []string{
+		HttpSchemeHttp,
+		HttpSchemeHttps,
+	}
+}
 
 const (
 	// ListenerTlsModeDisabled is a ListenerTlsMode enum value
@@ -14809,6 +14868,15 @@ const (
 	ListenerTlsModeStrict = "STRICT"
 )
 
+// ListenerTlsMode_Values returns all elements of the ListenerTlsMode enum
+func ListenerTlsMode_Values() []string {
+	return []string{
+		ListenerTlsModeDisabled,
+		ListenerTlsModePermissive,
+		ListenerTlsModeStrict,
+	}
+}
+
 const (
 	// MeshStatusCodeActive is a MeshStatusCode enum value
 	MeshStatusCodeActive = "ACTIVE"
@@ -14819,6 +14887,15 @@ const (
 	// MeshStatusCodeInactive is a MeshStatusCode enum value
 	MeshStatusCodeInactive = "INACTIVE"
 )
+
+// MeshStatusCode_Values returns all elements of the MeshStatusCode enum
+func MeshStatusCode_Values() []string {
+	return []string{
+		MeshStatusCodeActive,
+		MeshStatusCodeDeleted,
+		MeshStatusCodeInactive,
+	}
+}
 
 const (
 	// PortProtocolGrpc is a PortProtocol enum value
@@ -14834,6 +14911,16 @@ const (
 	PortProtocolTcp = "tcp"
 )
 
+// PortProtocol_Values returns all elements of the PortProtocol enum
+func PortProtocol_Values() []string {
+	return []string{
+		PortProtocolGrpc,
+		PortProtocolHttp,
+		PortProtocolHttp2,
+		PortProtocolTcp,
+	}
+}
+
 const (
 	// RouteStatusCodeActive is a RouteStatusCode enum value
 	RouteStatusCodeActive = "ACTIVE"
@@ -14845,10 +14932,26 @@ const (
 	RouteStatusCodeInactive = "INACTIVE"
 )
 
+// RouteStatusCode_Values returns all elements of the RouteStatusCode enum
+func RouteStatusCode_Values() []string {
+	return []string{
+		RouteStatusCodeActive,
+		RouteStatusCodeDeleted,
+		RouteStatusCodeInactive,
+	}
+}
+
 const (
 	// TcpRetryPolicyEventConnectionError is a TcpRetryPolicyEvent enum value
 	TcpRetryPolicyEventConnectionError = "connection-error"
 )
+
+// TcpRetryPolicyEvent_Values returns all elements of the TcpRetryPolicyEvent enum
+func TcpRetryPolicyEvent_Values() []string {
+	return []string{
+		TcpRetryPolicyEventConnectionError,
+	}
+}
 
 const (
 	// VirtualGatewayListenerTlsModeDisabled is a VirtualGatewayListenerTlsMode enum value
@@ -14861,6 +14964,15 @@ const (
 	VirtualGatewayListenerTlsModeStrict = "STRICT"
 )
 
+// VirtualGatewayListenerTlsMode_Values returns all elements of the VirtualGatewayListenerTlsMode enum
+func VirtualGatewayListenerTlsMode_Values() []string {
+	return []string{
+		VirtualGatewayListenerTlsModeDisabled,
+		VirtualGatewayListenerTlsModePermissive,
+		VirtualGatewayListenerTlsModeStrict,
+	}
+}
+
 const (
 	// VirtualGatewayPortProtocolGrpc is a VirtualGatewayPortProtocol enum value
 	VirtualGatewayPortProtocolGrpc = "grpc"
@@ -14871,6 +14983,15 @@ const (
 	// VirtualGatewayPortProtocolHttp2 is a VirtualGatewayPortProtocol enum value
 	VirtualGatewayPortProtocolHttp2 = "http2"
 )
+
+// VirtualGatewayPortProtocol_Values returns all elements of the VirtualGatewayPortProtocol enum
+func VirtualGatewayPortProtocol_Values() []string {
+	return []string{
+		VirtualGatewayPortProtocolGrpc,
+		VirtualGatewayPortProtocolHttp,
+		VirtualGatewayPortProtocolHttp2,
+	}
+}
 
 const (
 	// VirtualGatewayStatusCodeActive is a VirtualGatewayStatusCode enum value
@@ -14883,6 +15004,15 @@ const (
 	VirtualGatewayStatusCodeInactive = "INACTIVE"
 )
 
+// VirtualGatewayStatusCode_Values returns all elements of the VirtualGatewayStatusCode enum
+func VirtualGatewayStatusCode_Values() []string {
+	return []string{
+		VirtualGatewayStatusCodeActive,
+		VirtualGatewayStatusCodeDeleted,
+		VirtualGatewayStatusCodeInactive,
+	}
+}
+
 const (
 	// VirtualNodeStatusCodeActive is a VirtualNodeStatusCode enum value
 	VirtualNodeStatusCodeActive = "ACTIVE"
@@ -14893,6 +15023,15 @@ const (
 	// VirtualNodeStatusCodeInactive is a VirtualNodeStatusCode enum value
 	VirtualNodeStatusCodeInactive = "INACTIVE"
 )
+
+// VirtualNodeStatusCode_Values returns all elements of the VirtualNodeStatusCode enum
+func VirtualNodeStatusCode_Values() []string {
+	return []string{
+		VirtualNodeStatusCodeActive,
+		VirtualNodeStatusCodeDeleted,
+		VirtualNodeStatusCodeInactive,
+	}
+}
 
 const (
 	// VirtualRouterStatusCodeActive is a VirtualRouterStatusCode enum value
@@ -14905,6 +15044,15 @@ const (
 	VirtualRouterStatusCodeInactive = "INACTIVE"
 )
 
+// VirtualRouterStatusCode_Values returns all elements of the VirtualRouterStatusCode enum
+func VirtualRouterStatusCode_Values() []string {
+	return []string{
+		VirtualRouterStatusCodeActive,
+		VirtualRouterStatusCodeDeleted,
+		VirtualRouterStatusCodeInactive,
+	}
+}
+
 const (
 	// VirtualServiceStatusCodeActive is a VirtualServiceStatusCode enum value
 	VirtualServiceStatusCodeActive = "ACTIVE"
@@ -14915,3 +15063,12 @@ const (
 	// VirtualServiceStatusCodeInactive is a VirtualServiceStatusCode enum value
 	VirtualServiceStatusCodeInactive = "INACTIVE"
 )
+
+// VirtualServiceStatusCode_Values returns all elements of the VirtualServiceStatusCode enum
+func VirtualServiceStatusCode_Values() []string {
+	return []string{
+		VirtualServiceStatusCodeActive,
+		VirtualServiceStatusCodeDeleted,
+		VirtualServiceStatusCodeInactive,
+	}
+}

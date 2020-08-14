@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -487,6 +487,7 @@ resource "aws_cloudformation_stack" "test" {
   }
 }
 STACK
+
 }
 `, stackName)
 }
@@ -515,6 +516,7 @@ Outputs:
     Description: The VPC ID
     Value: !Ref MyVPC
 STACK
+
 }
 `, stackName)
 }
@@ -568,6 +570,7 @@ resource "aws_cloudformation_stack" "test" {
     }
 }
 BODY
+
 
   parameters = {
     TopicName = "%[1]s"
@@ -759,6 +762,7 @@ resource "aws_s3_bucket" "b" {
 }
 POLICY
 
+
   website {
     index_document = "index.html"
     error_document = "error.html"
@@ -766,7 +770,7 @@ POLICY
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.b.id}"
+  bucket = aws_s3_bucket.b.id
   key    = "%[2]s"
   source = "test-fixtures/cloudformation-template.json"
 }
@@ -808,6 +812,7 @@ resource "aws_s3_bucket" "b" {
 }
 POLICY
 
+
   website {
     index_document = "index.html"
     error_document = "error.html"
@@ -815,7 +820,7 @@ POLICY
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.b.id}"
+  bucket = aws_s3_bucket.b.id
   key    = "%[2]s"
   source = "test-fixtures/cloudformation-template.yaml"
 }
@@ -839,7 +844,7 @@ func testAccAWSCloudFormationStackConfig_withTransform(rName string) string {
 resource "aws_cloudformation_stack" "with-transform" {
   name = "%[1]s"
 
-  template_body      = <<STACK
+  template_body = <<STACK
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
@@ -882,6 +887,8 @@ resource "aws_cloudformation_stack" "with-transform" {
   }
 }
 STACK
+
+
   capabilities       = ["CAPABILITY_AUTO_EXPAND"]
   on_failure         = "DELETE"
   timeout_in_minutes = 10

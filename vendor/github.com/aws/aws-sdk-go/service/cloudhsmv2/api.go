@@ -3476,6 +3476,13 @@ const (
 	BackupPolicyDefault = "DEFAULT"
 )
 
+// BackupPolicy_Values returns all elements of the BackupPolicy enum
+func BackupPolicy_Values() []string {
+	return []string{
+		BackupPolicyDefault,
+	}
+}
+
 const (
 	// BackupStateCreateInProgress is a BackupState enum value
 	BackupStateCreateInProgress = "CREATE_IN_PROGRESS"
@@ -3489,6 +3496,16 @@ const (
 	// BackupStatePendingDeletion is a BackupState enum value
 	BackupStatePendingDeletion = "PENDING_DELETION"
 )
+
+// BackupState_Values returns all elements of the BackupState enum
+func BackupState_Values() []string {
+	return []string{
+		BackupStateCreateInProgress,
+		BackupStateReady,
+		BackupStateDeleted,
+		BackupStatePendingDeletion,
+	}
+}
 
 const (
 	// ClusterStateCreateInProgress is a ClusterState enum value
@@ -3519,6 +3536,21 @@ const (
 	ClusterStateDegraded = "DEGRADED"
 )
 
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateCreateInProgress,
+		ClusterStateUninitialized,
+		ClusterStateInitializeInProgress,
+		ClusterStateInitialized,
+		ClusterStateActive,
+		ClusterStateUpdateInProgress,
+		ClusterStateDeleteInProgress,
+		ClusterStateDeleted,
+		ClusterStateDegraded,
+	}
+}
+
 const (
 	// HsmStateCreateInProgress is a HsmState enum value
 	HsmStateCreateInProgress = "CREATE_IN_PROGRESS"
@@ -3535,3 +3567,14 @@ const (
 	// HsmStateDeleted is a HsmState enum value
 	HsmStateDeleted = "DELETED"
 )
+
+// HsmState_Values returns all elements of the HsmState enum
+func HsmState_Values() []string {
+	return []string{
+		HsmStateCreateInProgress,
+		HsmStateActive,
+		HsmStateDegraded,
+		HsmStateDeleteInProgress,
+		HsmStateDeleted,
+	}
+}

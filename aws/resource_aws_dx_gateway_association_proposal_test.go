@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -81,7 +81,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -119,7 +119,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicVpnGateway(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -159,7 +159,7 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
@@ -186,7 +186,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
@@ -314,7 +314,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -326,9 +326,9 @@ resource "aws_vpn_gateway" "test" {
 func testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }
@@ -349,9 +349,9 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_ec2_transit_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -365,9 +365,9 @@ func testAccDxGatewayAssociationProposalConfigAllowedPrefixes1(rName string, rBg
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/16"]
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }
@@ -376,9 +376,9 @@ func testAccDxGatewayAssociationProposalConfigAllowedPrefixes2(rName string, rBg
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association_proposal" "test" {
   allowed_prefixes            = ["10.0.0.0/24", "10.0.1.0/24"]
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway.test.id
 }
 `
 }

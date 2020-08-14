@@ -17432,6 +17432,15 @@ const (
 	AuthMechanismValueScramSha1 = "scram_sha_1"
 )
 
+// AuthMechanismValue_Values returns all elements of the AuthMechanismValue enum
+func AuthMechanismValue_Values() []string {
+	return []string{
+		AuthMechanismValueDefault,
+		AuthMechanismValueMongodbCr,
+		AuthMechanismValueScramSha1,
+	}
+}
+
 const (
 	// AuthTypeValueNo is a AuthTypeValue enum value
 	AuthTypeValueNo = "no"
@@ -17439,6 +17448,14 @@ const (
 	// AuthTypeValuePassword is a AuthTypeValue enum value
 	AuthTypeValuePassword = "password"
 )
+
+// AuthTypeValue_Values returns all elements of the AuthTypeValue enum
+func AuthTypeValue_Values() []string {
+	return []string{
+		AuthTypeValueNo,
+		AuthTypeValuePassword,
+	}
+}
 
 const (
 	// CompressionTypeValueNone is a CompressionTypeValue enum value
@@ -17448,6 +17465,14 @@ const (
 	CompressionTypeValueGzip = "gzip"
 )
 
+// CompressionTypeValue_Values returns all elements of the CompressionTypeValue enum
+func CompressionTypeValue_Values() []string {
+	return []string{
+		CompressionTypeValueNone,
+		CompressionTypeValueGzip,
+	}
+}
+
 const (
 	// DataFormatValueCsv is a DataFormatValue enum value
 	DataFormatValueCsv = "csv"
@@ -17455,6 +17480,14 @@ const (
 	// DataFormatValueParquet is a DataFormatValue enum value
 	DataFormatValueParquet = "parquet"
 )
+
+// DataFormatValue_Values returns all elements of the DataFormatValue enum
+func DataFormatValue_Values() []string {
+	return []string{
+		DataFormatValueCsv,
+		DataFormatValueParquet,
+	}
+}
 
 const (
 	// DmsSslModeValueNone is a DmsSslModeValue enum value
@@ -17470,6 +17503,16 @@ const (
 	DmsSslModeValueVerifyFull = "verify-full"
 )
 
+// DmsSslModeValue_Values returns all elements of the DmsSslModeValue enum
+func DmsSslModeValue_Values() []string {
+	return []string{
+		DmsSslModeValueNone,
+		DmsSslModeValueRequire,
+		DmsSslModeValueVerifyCa,
+		DmsSslModeValueVerifyFull,
+	}
+}
+
 const (
 	// EncodingTypeValuePlain is a EncodingTypeValue enum value
 	EncodingTypeValuePlain = "plain"
@@ -17481,6 +17524,15 @@ const (
 	EncodingTypeValueRleDictionary = "rle-dictionary"
 )
 
+// EncodingTypeValue_Values returns all elements of the EncodingTypeValue enum
+func EncodingTypeValue_Values() []string {
+	return []string{
+		EncodingTypeValuePlain,
+		EncodingTypeValuePlainDictionary,
+		EncodingTypeValueRleDictionary,
+	}
+}
+
 const (
 	// EncryptionModeValueSseS3 is a EncryptionModeValue enum value
 	EncryptionModeValueSseS3 = "sse-s3"
@@ -17489,6 +17541,14 @@ const (
 	EncryptionModeValueSseKms = "sse-kms"
 )
 
+// EncryptionModeValue_Values returns all elements of the EncryptionModeValue enum
+func EncryptionModeValue_Values() []string {
+	return []string{
+		EncryptionModeValueSseS3,
+		EncryptionModeValueSseKms,
+	}
+}
+
 const (
 	// MessageFormatValueJson is a MessageFormatValue enum value
 	MessageFormatValueJson = "json"
@@ -17496,6 +17556,14 @@ const (
 	// MessageFormatValueJsonUnformatted is a MessageFormatValue enum value
 	MessageFormatValueJsonUnformatted = "json-unformatted"
 )
+
+// MessageFormatValue_Values returns all elements of the MessageFormatValue enum
+func MessageFormatValue_Values() []string {
+	return []string{
+		MessageFormatValueJson,
+		MessageFormatValueJsonUnformatted,
+	}
+}
 
 const (
 	// MigrationTypeValueFullLoad is a MigrationTypeValue enum value
@@ -17508,6 +17576,15 @@ const (
 	MigrationTypeValueFullLoadAndCdc = "full-load-and-cdc"
 )
 
+// MigrationTypeValue_Values returns all elements of the MigrationTypeValue enum
+func MigrationTypeValue_Values() []string {
+	return []string{
+		MigrationTypeValueFullLoad,
+		MigrationTypeValueCdc,
+		MigrationTypeValueFullLoadAndCdc,
+	}
+}
+
 const (
 	// NestingLevelValueNone is a NestingLevelValue enum value
 	NestingLevelValueNone = "none"
@@ -17516,6 +17593,14 @@ const (
 	NestingLevelValueOne = "one"
 )
 
+// NestingLevelValue_Values returns all elements of the NestingLevelValue enum
+func NestingLevelValue_Values() []string {
+	return []string{
+		NestingLevelValueNone,
+		NestingLevelValueOne,
+	}
+}
+
 const (
 	// ParquetVersionValueParquet10 is a ParquetVersionValue enum value
 	ParquetVersionValueParquet10 = "parquet-1-0"
@@ -17523,6 +17608,14 @@ const (
 	// ParquetVersionValueParquet20 is a ParquetVersionValue enum value
 	ParquetVersionValueParquet20 = "parquet-2-0"
 )
+
+// ParquetVersionValue_Values returns all elements of the ParquetVersionValue enum
+func ParquetVersionValue_Values() []string {
+	return []string{
+		ParquetVersionValueParquet10,
+		ParquetVersionValueParquet20,
+	}
+}
 
 const (
 	// RefreshSchemasStatusTypeValueSuccessful is a RefreshSchemasStatusTypeValue enum value
@@ -17535,10 +17628,26 @@ const (
 	RefreshSchemasStatusTypeValueRefreshing = "refreshing"
 )
 
+// RefreshSchemasStatusTypeValue_Values returns all elements of the RefreshSchemasStatusTypeValue enum
+func RefreshSchemasStatusTypeValue_Values() []string {
+	return []string{
+		RefreshSchemasStatusTypeValueSuccessful,
+		RefreshSchemasStatusTypeValueFailed,
+		RefreshSchemasStatusTypeValueRefreshing,
+	}
+}
+
 const (
 	// ReleaseStatusValuesBeta is a ReleaseStatusValues enum value
 	ReleaseStatusValuesBeta = "beta"
 )
+
+// ReleaseStatusValues_Values returns all elements of the ReleaseStatusValues enum
+func ReleaseStatusValues_Values() []string {
+	return []string{
+		ReleaseStatusValuesBeta,
+	}
+}
 
 const (
 	// ReloadOptionValueDataReload is a ReloadOptionValue enum value
@@ -17548,6 +17657,14 @@ const (
 	ReloadOptionValueValidateOnly = "validate-only"
 )
 
+// ReloadOptionValue_Values returns all elements of the ReloadOptionValue enum
+func ReloadOptionValue_Values() []string {
+	return []string{
+		ReloadOptionValueDataReload,
+		ReloadOptionValueValidateOnly,
+	}
+}
+
 const (
 	// ReplicationEndpointTypeValueSource is a ReplicationEndpointTypeValue enum value
 	ReplicationEndpointTypeValueSource = "source"
@@ -17556,10 +17673,25 @@ const (
 	ReplicationEndpointTypeValueTarget = "target"
 )
 
+// ReplicationEndpointTypeValue_Values returns all elements of the ReplicationEndpointTypeValue enum
+func ReplicationEndpointTypeValue_Values() []string {
+	return []string{
+		ReplicationEndpointTypeValueSource,
+		ReplicationEndpointTypeValueTarget,
+	}
+}
+
 const (
 	// SourceTypeReplicationInstance is a SourceType enum value
 	SourceTypeReplicationInstance = "replication-instance"
 )
+
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeReplicationInstance,
+	}
+}
 
 const (
 	// StartReplicationTaskTypeValueStartReplication is a StartReplicationTaskTypeValue enum value
@@ -17571,3 +17703,12 @@ const (
 	// StartReplicationTaskTypeValueReloadTarget is a StartReplicationTaskTypeValue enum value
 	StartReplicationTaskTypeValueReloadTarget = "reload-target"
 )
+
+// StartReplicationTaskTypeValue_Values returns all elements of the StartReplicationTaskTypeValue enum
+func StartReplicationTaskTypeValue_Values() []string {
+	return []string{
+		StartReplicationTaskTypeValueStartReplication,
+		StartReplicationTaskTypeValueResumeProcessing,
+		StartReplicationTaskTypeValueReloadTarget,
+	}
+}

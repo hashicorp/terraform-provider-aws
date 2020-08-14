@@ -1,4 +1,34 @@
-## 3.2.0 (Unreleased)
+## 3.3.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
+
+BUG FIXES
+
+* resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs [GH-14638]
+
+## 3.2.0 (August 14, 2020)
+
+ENHANCEMENTS
+
+* data-source/aws_launch_configuration: Add `ebs_block_device` `no_device` attribute ([#14583](https://github.com/terraform-providers/terraform-provider-aws/issues/14583))
+* data-source/aws_lb: Add `subnet_mapping` `private_ipv4_address` attribute ([#14545](https://github.com/terraform-providers/terraform-provider-aws/issues/14545))
+* provider: Upgrade to Terraform Plugin SDK V2. There should be no breaking changes from a practitioner's perspective. Some validation errors should now feature enhanced messaging. ([#14432](https://github.com/terraform-providers/terraform-provider-aws/issues/14432))
+* resource/aws_accessanalyzer_analyzer: Support `ORGANIZATION` value in `type` argument ([#14493](https://github.com/terraform-providers/terraform-provider-aws/issues/14493))
+* resource/aws_codebuild_project: Support `WINDOWS_SERVER_2019_CONTAINER` value in `environment` `type` argument plan-time validation ([#14532](https://github.com/terraform-providers/terraform-provider-aws/issues/14532))
+* resource/aws_organizations_organization: Support `AISERVICES_OPT_OUT_POLICY` value in `enabled_policy_types` argument plan-time validation (Support AI Opt Out policies) ([#14650](https://github.com/terraform-providers/terraform-provider-aws/issues/14650))
+* resource/aws_organizations_policy: Support `AISERVICES_OPT_OUT_POLICY` value in `type` argument plan-time validation (Support AI Opt Out policies) ([#14528](https://github.com/terraform-providers/terraform-provider-aws/issues/14528))
+* resource/aws_route53_health_check: Add `disabled` argument ([#14614](https://github.com/terraform-providers/terraform-provider-aws/issues/14614))
+
+BUG FIXES
+
+* data-source/aws_launch_template: Prevent type error with `network_interfaces` `delete_on_termination` attribute ([#14599](https://github.com/terraform-providers/terraform-provider-aws/issues/14599))
+* resource/aws_acm_certificate_validation: Prevent panic with missing `DomainValidationOptions` `ResourceRecord` attribute in API response [[#14590](https://github.com/terraform-providers/terraform-provider-aws/issues/14590)] 
+* resource/aws_ecr_repository: Prevent panic with missing `EncryptionConfiguration` attribute in API response ([#14584](https://github.com/terraform-providers/terraform-provider-aws/issues/14584))
+* resource/aws_wafv2_rule_group: Prevent unnecessary resource recreation with `rule` updates ([#14617](https://github.com/terraform-providers/terraform-provider-aws/issues/14617))
+* resource/aws_wafv2_web_acl: Prevent unnecessary resource recreation with `rule` updates ([#14616](https://github.com/terraform-providers/terraform-provider-aws/issues/14616))
+
 ## 3.1.0 (August 07, 2020)
 
 NOTES:

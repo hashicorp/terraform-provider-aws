@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
@@ -309,10 +309,10 @@ func testAccPreCheckAWSElasticTranscoder(t *testing.T) {
 func awsElasticTranscoderPipelineConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket  = "${aws_s3_bucket.test.bucket}"
-  output_bucket = "${aws_s3_bucket.test.bucket}"
+  input_bucket  = aws_s3_bucket.test.bucket
+  output_bucket = aws_s3_bucket.test.bucket
   name          = %[1]q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -333,6 +333,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -346,7 +347,7 @@ func awsElasticTranscoderPipelineConfigKmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
-  policy = <<POLICY
+  policy      = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -363,14 +364,15 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket    = "${aws_s3_bucket.test.bucket}"
-  output_bucket   = "${aws_s3_bucket.test.bucket}"
+  input_bucket    = aws_s3_bucket.test.bucket
+  output_bucket   = aws_s3_bucket.test.bucket
   name            = %[1]q
-  role            = "${aws_iam_role.test.arn}"
-  aws_kms_key_arn = "${aws_kms_key.test.arn}"
+  role            = aws_iam_role.test.arn
+  aws_kms_key_arn = aws_kms_key.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -391,6 +393,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -403,17 +406,17 @@ resource "aws_s3_bucket" "test" {
 func awsElasticTranscoderPipelineWithContentConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket = "${aws_s3_bucket.content_bucket.bucket}"
+  input_bucket = aws_s3_bucket.content_bucket.bucket
   name         = %[1]q
-  role         = "${aws_iam_role.test.arn}"
+  role         = aws_iam_role.test.arn
 
   content_config {
-    bucket        = "${aws_s3_bucket.content_bucket.bucket}"
+    bucket        = aws_s3_bucket.content_bucket.bucket
     storage_class = "Standard"
   }
 
   thumbnail_config {
-    bucket        = "${aws_s3_bucket.content_bucket.bucket}"
+    bucket        = aws_s3_bucket.content_bucket.bucket
     storage_class = "Standard"
   }
 }
@@ -436,6 +439,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "content_bucket" {
@@ -458,17 +462,17 @@ resource "aws_s3_bucket" "thumb_bucket" {
 func awsElasticTranscoderPipelineWithContentConfigUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket = "${aws_s3_bucket.input_bucket.bucket}"
+  input_bucket = aws_s3_bucket.input_bucket.bucket
   name         = %[1]q
-  role         = "${aws_iam_role.test.arn}"
+  role         = aws_iam_role.test.arn
 
   content_config {
-    bucket        = "${aws_s3_bucket.content_bucket.bucket}"
+    bucket        = aws_s3_bucket.content_bucket.bucket
     storage_class = "Standard"
   }
 
   thumbnail_config {
-    bucket        = "${aws_s3_bucket.thumb_bucket.bucket}"
+    bucket        = aws_s3_bucket.thumb_bucket.bucket
     storage_class = "Standard"
   }
 }
@@ -491,6 +495,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "content_bucket" {
@@ -513,12 +518,12 @@ resource "aws_s3_bucket" "thumb_bucket" {
 func awsElasticTranscoderPipelineWithPerms(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket = "${aws_s3_bucket.test.bucket}"
+  input_bucket = aws_s3_bucket.test.bucket
   name         = %[1]q
-  role         = "${aws_iam_role.test.arn}"
+  role         = aws_iam_role.test.arn
 
   content_config {
-    bucket        = "${aws_s3_bucket.test.bucket}"
+    bucket        = aws_s3_bucket.test.bucket
     storage_class = "Standard"
   }
 
@@ -529,7 +534,7 @@ resource "aws_elastictranscoder_pipeline" "test" {
   }
 
   thumbnail_config {
-    bucket        = "${aws_s3_bucket.test.bucket}"
+    bucket        = aws_s3_bucket.test.bucket
     storage_class = "Standard"
   }
 
@@ -558,6 +563,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -570,14 +576,14 @@ resource "aws_s3_bucket" "test" {
 func awsElasticTranscoderNotifications(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket  = "${aws_s3_bucket.test.bucket}"
-  output_bucket = "${aws_s3_bucket.test.bucket}"
+  input_bucket  = aws_s3_bucket.test.bucket
+  output_bucket = aws_s3_bucket.test.bucket
   name          = %[1]q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
 
   notifications {
-    completed = "${aws_sns_topic.test.arn}"
-    warning   = "${aws_sns_topic.test.arn}"
+    completed = aws_sns_topic.test.arn
+    warning   = aws_sns_topic.test.arn
   }
 }
 
@@ -599,6 +605,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -624,6 +631,7 @@ resource "aws_sns_topic" "test" {
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -631,13 +639,13 @@ EOF
 func awsElasticTranscoderNotifications_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
-  input_bucket  = "${aws_s3_bucket.test.bucket}"
-  output_bucket = "${aws_s3_bucket.test.bucket}"
+  input_bucket  = aws_s3_bucket.test.bucket
+  output_bucket = aws_s3_bucket.test.bucket
   name          = %[1]q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
 
   notifications {
-    completed = "${aws_sns_topic.test.arn}"
+    completed = aws_sns_topic.test.arn
   }
 }
 
@@ -659,6 +667,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -684,6 +693,7 @@ resource "aws_sns_topic" "test" {
   ]
 }
 EOF
+
 }
 `, rName)
 }

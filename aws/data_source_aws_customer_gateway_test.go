@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
-	asn := randIntRange(64512, 65534)
+	asn := acctest.RandIntRange(64512, 65534)
 	hostOctet := acctest.RandIntRange(1, 254)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -40,7 +40,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
-	asn := randIntRange(64512, 65534)
+	asn := acctest.RandIntRange(64512, 65534)
 	hostOctet := acctest.RandIntRange(1, 254)
 
 	resource.ParallelTest(t, resource.TestCase{

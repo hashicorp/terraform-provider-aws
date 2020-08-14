@@ -97,7 +97,7 @@ import (
 {{- range .ServiceNames }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
 {{- end }}
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const EventualConsistencyTimeout = 5 * time.Minute

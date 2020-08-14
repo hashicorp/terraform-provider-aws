@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -2087,7 +2087,6 @@ func TestAWSCodeDeployDeploymentGroup_alarmConfigToMap(t *testing.T) {
 
 func testAccCheckCodeDeployDeploymentGroupTriggerEvents(group *codedeploy.DeploymentGroupInfo, triggerName string, expectedEvents []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		found := false
 		for _, actual := range group.TriggerConfigurations {
 			if *actual.TriggerName == triggerName {
@@ -2238,21 +2237,25 @@ func testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName string) r
 func testAccAWSCodeDeployDeploymentGroup(rName string, tagGroup bool) string {
 	var tagGroupOrFilter string
 	if tagGroup {
-		tagGroupOrFilter = `ec2_tag_set {
-    ec2_tag_filter {
-      key   = "filterkey"
-      type  = "KEY_AND_VALUE"
-      value = "filtervalue"
-    }
-  }
-`
-	} else {
-		tagGroupOrFilter = `ec2_tag_filter {
+		tagGroupOrFilter = `
+ec2_tag_set {
+  ec2_tag_filter {
     key   = "filterkey"
     type  = "KEY_AND_VALUE"
     value = "filtervalue"
   }
+}
 `
+
+	} else {
+		tagGroupOrFilter = `
+ec2_tag_filter {
+  key   = "filterkey"
+  type  = "KEY_AND_VALUE"
+  value = "filtervalue"
+}
+`
+
 	}
 
 	return fmt.Sprintf(`
@@ -2268,8 +2271,9 @@ resource "aws_codedeploy_app" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "tf-acc-test-%[1]s"
-  role   = aws_iam_role.test.id
+  name = "tf-acc-test-%[1]s"
+  role = aws_iam_role.test.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2297,7 +2301,8 @@ EOF
 }
 
 resource "aws_iam_role" "test" {
-  name               = "tf-acc-test-%[1]s"
+  name = "tf-acc-test-%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2323,21 +2328,25 @@ EOF
 func testAccAWSCodeDeployDeploymentGroupModified(rName string, tagGroup bool) string {
 	var tagGroupOrFilter string
 	if tagGroup {
-		tagGroupOrFilter = `ec2_tag_set {
-    ec2_tag_filter {
-      key   = "filterkey"
-      type  = "KEY_AND_VALUE"
-      value = "anotherfiltervalue"
-    }
-  }
-`
-	} else {
-		tagGroupOrFilter = `ec2_tag_filter {
+		tagGroupOrFilter = `
+ec2_tag_set {
+  ec2_tag_filter {
     key   = "filterkey"
     type  = "KEY_AND_VALUE"
     value = "anotherfiltervalue"
   }
+}
 `
+
+	} else {
+		tagGroupOrFilter = `
+ec2_tag_filter {
+  key   = "filterkey"
+  type  = "KEY_AND_VALUE"
+  value = "anotherfiltervalue"
+}
+`
+
 	}
 
 	return fmt.Sprintf(`
@@ -2353,8 +2362,9 @@ resource "aws_codedeploy_app" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "tf-acc-test-%[1]s"
-  role   = aws_iam_role.test_updated.id
+  name = "tf-acc-test-%[1]s"
+  role = aws_iam_role.test_updated.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2382,7 +2392,8 @@ EOF
 }
 
 resource "aws_iam_role" "test_updated" {
-  name               = "tf-acc-test-updated-%[1]s"
+  name = "tf-acc-test-updated-%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2412,8 +2423,9 @@ resource "aws_codedeploy_app" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "tf-acc-test-%[1]s"
-  role   = aws_iam_role.test.id
+  name = "tf-acc-test-%[1]s"
+  role = aws_iam_role.test.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2441,7 +2453,8 @@ EOF
 }
 
 resource "aws_iam_role" "test" {
-  name               = "tf-acc-test-%[1]s"
+  name = "tf-acc-test-%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2483,8 +2496,9 @@ resource "aws_codedeploy_app" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "tf-acc-test-%[1]s"
-  role   = aws_iam_role.test.id
+  name = "tf-acc-test-%[1]s"
+  role = aws_iam_role.test.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2514,7 +2528,8 @@ EOF
 }
 
 resource "aws_iam_role" "test" {
-  name               = "tf-acc-test-%[1]s"
+  name = "tf-acc-test-%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2979,6 +2994,7 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
+
   filter {
     name   = "root-device-type"
     values = ["ebs"]
@@ -3070,6 +3086,7 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
+
   filter {
     name   = "root-device-type"
     values = ["ebs"]
@@ -3409,7 +3426,9 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": ["codedeploy.amazonaws.com"]
+        "Service": [
+          "codedeploy.amazonaws.com"
+        ]
       }
     }
   ]
@@ -3457,10 +3476,10 @@ POLICY
 func testAccAWSCodeDeployDeploymentGroupConfigEcsBlueGreen(rName string) string {
 	return testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName) + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name               = "${aws_codedeploy_app.test.name}"
+  app_name               = aws_codedeploy_app.test.name
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
   deployment_group_name  = %q
-  service_role_arn       = "${aws_iam_role.test.arn}"
+  service_role_arn       = aws_iam_role.test.arn
 
   auto_rollback_configuration {
     enabled = true
@@ -3484,22 +3503,22 @@ resource "aws_codedeploy_deployment_group" "test" {
   }
 
   ecs_service {
-    cluster_name = "${aws_ecs_cluster.test.name}"
-    service_name = "${aws_ecs_service.test.name}"
+    cluster_name = aws_ecs_cluster.test.name
+    service_name = aws_ecs_service.test.name
   }
 
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = ["${aws_lb_listener.test.arn}"]
+        listener_arns = [aws_lb_listener.test.arn]
       }
 
       target_group {
-        name = "${aws_lb_target_group.blue.name}"
+        name = aws_lb_target_group.blue.name
       }
 
       target_group {
-        name = "${aws_lb_target_group.green.name}"
+        name = aws_lb_target_group.green.name
       }
     }
   }
@@ -3510,10 +3529,10 @@ resource "aws_codedeploy_deployment_group" "test" {
 func testAccAWSCodeDeployDeploymentGroupConfigEcsBlueGreenUpdate(rName string) string {
 	return testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName) + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
-  app_name               = "${aws_codedeploy_app.test.name}"
+  app_name               = aws_codedeploy_app.test.name
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
   deployment_group_name  = %q
-  service_role_arn       = "${aws_iam_role.test.arn}"
+  service_role_arn       = aws_iam_role.test.arn
 
   auto_rollback_configuration {
     enabled = true
@@ -3538,22 +3557,22 @@ resource "aws_codedeploy_deployment_group" "test" {
   }
 
   ecs_service {
-    cluster_name = "${aws_ecs_cluster.test.name}"
-    service_name = "${aws_ecs_service.test.name}"
+    cluster_name = aws_ecs_cluster.test.name
+    service_name = aws_ecs_service.test.name
   }
 
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = ["${aws_lb_listener.test.arn}"]
+        listener_arns = [aws_lb_listener.test.arn]
       }
 
       target_group {
-        name = "${aws_lb_target_group.blue.name}"
+        name = aws_lb_target_group.blue.name
       }
 
       target_group {
-        name = "${aws_lb_target_group.green.name}"
+        name = aws_lb_target_group.green.name
       }
     }
   }

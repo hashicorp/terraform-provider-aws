@@ -14854,6 +14854,14 @@ const (
 	InstanceMetadataEndpointStateEnabled = "enabled"
 )
 
+// InstanceMetadataEndpointState_Values returns all elements of the InstanceMetadataEndpointState enum
+func InstanceMetadataEndpointState_Values() []string {
+	return []string{
+		InstanceMetadataEndpointStateDisabled,
+		InstanceMetadataEndpointStateEnabled,
+	}
+}
+
 const (
 	// InstanceMetadataHttpTokensStateOptional is a InstanceMetadataHttpTokensState enum value
 	InstanceMetadataHttpTokensStateOptional = "optional"
@@ -14861,6 +14869,14 @@ const (
 	// InstanceMetadataHttpTokensStateRequired is a InstanceMetadataHttpTokensState enum value
 	InstanceMetadataHttpTokensStateRequired = "required"
 )
+
+// InstanceMetadataHttpTokensState_Values returns all elements of the InstanceMetadataHttpTokensState enum
+func InstanceMetadataHttpTokensState_Values() []string {
+	return []string{
+		InstanceMetadataHttpTokensStateOptional,
+		InstanceMetadataHttpTokensStateRequired,
+	}
+}
 
 const (
 	// InstanceRefreshStatusPending is a InstanceRefreshStatus enum value
@@ -14881,6 +14897,18 @@ const (
 	// InstanceRefreshStatusCancelled is a InstanceRefreshStatus enum value
 	InstanceRefreshStatusCancelled = "Cancelled"
 )
+
+// InstanceRefreshStatus_Values returns all elements of the InstanceRefreshStatus enum
+func InstanceRefreshStatus_Values() []string {
+	return []string{
+		InstanceRefreshStatusPending,
+		InstanceRefreshStatusInProgress,
+		InstanceRefreshStatusSuccessful,
+		InstanceRefreshStatusFailed,
+		InstanceRefreshStatusCancelling,
+		InstanceRefreshStatusCancelled,
+	}
+}
 
 const (
 	// LifecycleStatePending is a LifecycleState enum value
@@ -14923,6 +14951,25 @@ const (
 	LifecycleStateStandby = "Standby"
 )
 
+// LifecycleState_Values returns all elements of the LifecycleState enum
+func LifecycleState_Values() []string {
+	return []string{
+		LifecycleStatePending,
+		LifecycleStatePendingWait,
+		LifecycleStatePendingProceed,
+		LifecycleStateQuarantined,
+		LifecycleStateInService,
+		LifecycleStateTerminating,
+		LifecycleStateTerminatingWait,
+		LifecycleStateTerminatingProceed,
+		LifecycleStateTerminated,
+		LifecycleStateDetaching,
+		LifecycleStateDetached,
+		LifecycleStateEnteringStandby,
+		LifecycleStateStandby,
+	}
+}
+
 const (
 	// MetricStatisticAverage is a MetricStatistic enum value
 	MetricStatisticAverage = "Average"
@@ -14940,6 +14987,17 @@ const (
 	MetricStatisticSum = "Sum"
 )
 
+// MetricStatistic_Values returns all elements of the MetricStatistic enum
+func MetricStatistic_Values() []string {
+	return []string{
+		MetricStatisticAverage,
+		MetricStatisticMinimum,
+		MetricStatisticMaximum,
+		MetricStatisticSampleCount,
+		MetricStatisticSum,
+	}
+}
+
 const (
 	// MetricTypeAsgaverageCpuutilization is a MetricType enum value
 	MetricTypeAsgaverageCpuutilization = "ASGAverageCPUUtilization"
@@ -14954,10 +15012,27 @@ const (
 	MetricTypeAlbrequestCountPerTarget = "ALBRequestCountPerTarget"
 )
 
+// MetricType_Values returns all elements of the MetricType enum
+func MetricType_Values() []string {
+	return []string{
+		MetricTypeAsgaverageCpuutilization,
+		MetricTypeAsgaverageNetworkIn,
+		MetricTypeAsgaverageNetworkOut,
+		MetricTypeAlbrequestCountPerTarget,
+	}
+}
+
 const (
 	// RefreshStrategyRolling is a RefreshStrategy enum value
 	RefreshStrategyRolling = "Rolling"
 )
+
+// RefreshStrategy_Values returns all elements of the RefreshStrategy enum
+func RefreshStrategy_Values() []string {
+	return []string{
+		RefreshStrategyRolling,
+	}
+}
 
 const (
 	// ScalingActivityStatusCodePendingSpotBidPlacement is a ScalingActivityStatusCode enum value
@@ -14996,3 +15071,21 @@ const (
 	// ScalingActivityStatusCodeCancelled is a ScalingActivityStatusCode enum value
 	ScalingActivityStatusCodeCancelled = "Cancelled"
 )
+
+// ScalingActivityStatusCode_Values returns all elements of the ScalingActivityStatusCode enum
+func ScalingActivityStatusCode_Values() []string {
+	return []string{
+		ScalingActivityStatusCodePendingSpotBidPlacement,
+		ScalingActivityStatusCodeWaitingForSpotInstanceRequestId,
+		ScalingActivityStatusCodeWaitingForSpotInstanceId,
+		ScalingActivityStatusCodeWaitingForInstanceId,
+		ScalingActivityStatusCodePreInService,
+		ScalingActivityStatusCodeInProgress,
+		ScalingActivityStatusCodeWaitingForElbconnectionDraining,
+		ScalingActivityStatusCodeMidLifecycleAction,
+		ScalingActivityStatusCodeWaitingForInstanceWarmup,
+		ScalingActivityStatusCodeSuccessful,
+		ScalingActivityStatusCodeFailed,
+		ScalingActivityStatusCodeCancelled,
+	}
+}

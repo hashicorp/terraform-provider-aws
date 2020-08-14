@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSCodePipeline_basic(t *testing.T) {
@@ -594,18 +594,19 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
+  role = aws_iam_role.codepipeline_role.id
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect":"Allow",
+      "Effect": "Allow",
       "Action": [
         "s3:GetObject",
         "s3:GetObjectVersion",
@@ -627,6 +628,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -650,11 +652,12 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
+  role = aws_iam_role.codepipeline_role.id
 
   policy = <<EOF
 {
@@ -685,11 +688,12 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       "Action": [
         "sts:AssumeRole"
       ],
-      "Resource": "${aws_iam_role.codepipeline_action_role.arn}"
+      "Resource": aws_iam_role.codepipeline_action_role.arn
     }
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -701,10 +705,10 @@ func testAccAWSCodePipelineConfig_basic(rName, githubToken string) string {
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.test.bucket}"
+    location = aws_s3_bucket.test.bucket
     type     = "S3"
 
     encryption_key {
@@ -761,10 +765,10 @@ func testAccAWSCodePipelineConfig_basicUpdated(rName, githubToken string) string
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.updated.bucket}"
+    location = aws_s3_bucket.updated.bucket
     type     = "S3"
 
     encryption_key {
@@ -820,10 +824,10 @@ func testAccAWSCodePipelineConfig_emptyStageArtifacts(rName, githubToken string)
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.test.bucket}"
+    location = aws_s3_bucket.test.bucket
     type     = "S3"
   }
 
@@ -890,18 +894,19 @@ resource "aws_iam_role" "codepipeline_action_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "codepipeline_action_policy" {
   name = "codepipeline_action_policy"
-  role = "${aws_iam_role.codepipeline_action_role.id}"
+  role = aws_iam_role.codepipeline_action_role.id
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect":"Allow",
+      "Effect": "Allow",
       "Action": [
         "s3:GetObject",
         "s3:GetObjectVersion",
@@ -915,6 +920,7 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
   ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -927,10 +933,10 @@ func testAccAWSCodePipelineConfig_deployWithServiceRole(rName, githubToken strin
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.test.bucket}"
+    location = aws_s3_bucket.test.bucket
     type     = "S3"
 
     encryption_key {
@@ -986,7 +992,7 @@ resource "aws_codepipeline" "test" {
       owner           = "AWS"
       provider        = "CloudFormation"
       input_artifacts = ["artifacts2"]
-      role_arn        = "${aws_iam_role.codepipeline_action_role.arn}"
+      role_arn        = aws_iam_role.codepipeline_action_role.arn
       version         = "1"
 
       configuration = {
@@ -1008,10 +1014,10 @@ func testAccAWSCodePipelineConfigWithTags(rName, githubToken, tag1, tag2 string)
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.test.bucket}"
+    location = aws_s3_bucket.test.bucket
     type     = "S3"
 
     encryption_key {
@@ -1075,26 +1081,31 @@ func testAccAWSCodePipelineConfig_multiregion(rName, githubToken string) string 
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-		location = "${aws_s3_bucket.test.bucket}"
-		type     = "S3"
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
     encryption_key {
       id   = "1234"
       type = "KMS"
     }
+
     region = "%[2]s"
-	}
+  }
+
   artifact_store {
-		location = "${aws_s3_bucket.alternate.bucket}"
-		type     = "S3"
+    location = aws_s3_bucket.alternate.bucket
+    type     = "S3"
+
     encryption_key {
       id   = "5678"
       type = "KMS"
     }
-    region   = "%[3]s"
-	}
+
+    region = "%[3]s"
+  }
 
   stage {
     name = "Source"
@@ -1115,11 +1126,12 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build"
 
     action {
-		  region          = "%[2]s"
+      region          = "%[2]s"
       name            = "Build"
       category        = "Build"
       owner           = "AWS"
@@ -1131,8 +1143,9 @@ resource "aws_codepipeline" "test" {
         ProjectName = "Test"
       }
     }
+
     action {
-		  region          = "%[3]s"
+      region          = "%[3]s"
       name            = "%[3]s-Build"
       category        = "Build"
       owner           = "AWS"
@@ -1158,26 +1171,31 @@ func testAccAWSCodePipelineConfig_multiregionUpdated(rName, githubToken string) 
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-		location = "${aws_s3_bucket.test.bucket}"
-		type     = "S3"
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
     encryption_key {
       id   = "4321"
       type = "KMS"
     }
+
     region = "%[2]s"
-	}
+  }
+
   artifact_store {
-		location = "${aws_s3_bucket.alternate.bucket}"
-		type     = "S3"
+    location = aws_s3_bucket.alternate.bucket
+    type     = "S3"
+
     encryption_key {
       id   = "8765"
       type = "KMS"
     }
-    region   = "%[3]s"
-	}
+
+    region = "%[3]s"
+  }
 
   stage {
     name = "Source"
@@ -1198,11 +1216,12 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
   stage {
     name = "Build"
 
     action {
-		  region          = "%[2]s"
+      region          = "%[2]s"
       name            = "BuildUpdated"
       category        = "Build"
       owner           = "AWS"
@@ -1214,8 +1233,9 @@ resource "aws_codepipeline" "test" {
         ProjectName = "Test"
       }
     }
+
     action {
-		  region          = "%[3]s"
+      region          = "%[3]s"
       name            = "%[3]s-BuildUpdated"
       category        = "Build"
       owner           = "AWS"
@@ -1269,10 +1289,10 @@ func testAccAWSCodePipelineConfigWithNamespace(rName, githubToken string) string
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = aws_s3_bucket.foo.bucket
     type     = "S3"
 
     encryption_key {

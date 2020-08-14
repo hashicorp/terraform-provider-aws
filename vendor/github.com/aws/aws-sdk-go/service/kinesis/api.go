@@ -3160,7 +3160,7 @@ func (c *Kinesis) SubscribeToShardRequest(input *SubscribeToShardInput) (req *re
 	output = &SubscribeToShardOutput{}
 	req = c.newRequest(op, input, output)
 
-	es := newSubscribeToShardEventStream()
+	es := NewSubscribeToShardEventStream()
 	req.Handlers.Unmarshal.PushBack(es.setStreamCloser)
 	output.EventStream = es
 
@@ -3236,6 +3236,10 @@ func (c *Kinesis) SubscribeToShardWithContext(ctx aws.Context, input *SubscribeT
 var _ awserr.Error
 
 // SubscribeToShardEventStream provides the event stream handling for the SubscribeToShard.
+//
+// For testing and mocking the event stream this type should be initialized via
+// the NewSubscribeToShardEventStream constructor function. Using the functional options
+// to pass in nested mock behavior.
 type SubscribeToShardEventStream struct {
 
 	// Reader is the EventStream reader for the SubscribeToShardEventStream
@@ -3259,11 +3263,31 @@ type SubscribeToShardEventStream struct {
 	err       *eventstreamapi.OnceError
 }
 
-func newSubscribeToShardEventStream() *SubscribeToShardEventStream {
-	return &SubscribeToShardEventStream{
+// NewSubscribeToShardEventStream initializes an SubscribeToShardEventStream.
+// This function should only be used for testing and mocking the SubscribeToShardEventStream
+// stream within your application.
+//
+// The Reader member must be set before reading events from the stream.
+//
+// The StreamCloser member should be set to the underlying io.Closer,
+// (e.g. http.Response.Body), that will be closed when the stream Close method
+// is called.
+//
+//   es := NewSubscribeToShardEventStream(func(o *SubscribeToShardEventStream{
+//       es.Reader = myMockStreamReader
+//       es.StreamCloser = myMockStreamCloser
+//   })
+func NewSubscribeToShardEventStream(opts ...func(*SubscribeToShardEventStream)) *SubscribeToShardEventStream {
+	es := &SubscribeToShardEventStream{
 		done: make(chan struct{}),
 		err:  eventstreamapi.NewOnceError(),
 	}
+
+	for _, fn := range opts {
+		fn(es)
+	}
+
+	return es
 }
 
 func (es *SubscribeToShardEventStream) setStreamCloser(r *request.Request) {
@@ -8594,6 +8618,15 @@ const (
 	ConsumerStatusActive = "ACTIVE"
 )
 
+// ConsumerStatus_Values returns all elements of the ConsumerStatus enum
+func ConsumerStatus_Values() []string {
+	return []string{
+		ConsumerStatusCreating,
+		ConsumerStatusDeleting,
+		ConsumerStatusActive,
+	}
+}
+
 const (
 	// EncryptionTypeNone is a EncryptionType enum value
 	EncryptionTypeNone = "NONE"
@@ -8601,6 +8634,14 @@ const (
 	// EncryptionTypeKms is a EncryptionType enum value
 	EncryptionTypeKms = "KMS"
 )
+
+// EncryptionType_Values returns all elements of the EncryptionType enum
+func EncryptionType_Values() []string {
+	return []string{
+		EncryptionTypeNone,
+		EncryptionTypeKms,
+	}
+}
 
 const (
 	// MetricsNameIncomingBytes is a MetricsName enum value
@@ -8628,10 +8669,31 @@ const (
 	MetricsNameAll = "ALL"
 )
 
+// MetricsName_Values returns all elements of the MetricsName enum
+func MetricsName_Values() []string {
+	return []string{
+		MetricsNameIncomingBytes,
+		MetricsNameIncomingRecords,
+		MetricsNameOutgoingBytes,
+		MetricsNameOutgoingRecords,
+		MetricsNameWriteProvisionedThroughputExceeded,
+		MetricsNameReadProvisionedThroughputExceeded,
+		MetricsNameIteratorAgeMilliseconds,
+		MetricsNameAll,
+	}
+}
+
 const (
 	// ScalingTypeUniformScaling is a ScalingType enum value
 	ScalingTypeUniformScaling = "UNIFORM_SCALING"
 )
+
+// ScalingType_Values returns all elements of the ScalingType enum
+func ScalingType_Values() []string {
+	return []string{
+		ScalingTypeUniformScaling,
+	}
+}
 
 const (
 	// ShardIteratorTypeAtSequenceNumber is a ShardIteratorType enum value
@@ -8650,6 +8712,17 @@ const (
 	ShardIteratorTypeAtTimestamp = "AT_TIMESTAMP"
 )
 
+// ShardIteratorType_Values returns all elements of the ShardIteratorType enum
+func ShardIteratorType_Values() []string {
+	return []string{
+		ShardIteratorTypeAtSequenceNumber,
+		ShardIteratorTypeAfterSequenceNumber,
+		ShardIteratorTypeTrimHorizon,
+		ShardIteratorTypeLatest,
+		ShardIteratorTypeAtTimestamp,
+	}
+}
+
 const (
 	// StreamStatusCreating is a StreamStatus enum value
 	StreamStatusCreating = "CREATING"
@@ -8663,3 +8736,13 @@ const (
 	// StreamStatusUpdating is a StreamStatus enum value
 	StreamStatusUpdating = "UPDATING"
 )
+
+// StreamStatus_Values returns all elements of the StreamStatus enum
+func StreamStatus_Values() []string {
+	return []string{
+		StreamStatusCreating,
+		StreamStatusDeleting,
+		StreamStatusActive,
+		StreamStatusUpdating,
+	}
+}

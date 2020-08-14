@@ -6694,6 +6694,15 @@ const (
 	AlgorithmAes256 = "aes256"
 )
 
+// Algorithm_Values returns all elements of the Algorithm enum
+func Algorithm_Values() []string {
+	return []string{
+		AlgorithmAes128,
+		AlgorithmAes192,
+		AlgorithmAes256,
+	}
+}
+
 const (
 	// EntitlementStatusEnabled is a EntitlementStatus enum value
 	EntitlementStatusEnabled = "ENABLED"
@@ -6702,6 +6711,14 @@ const (
 	EntitlementStatusDisabled = "DISABLED"
 )
 
+// EntitlementStatus_Values returns all elements of the EntitlementStatus enum
+func EntitlementStatus_Values() []string {
+	return []string{
+		EntitlementStatusEnabled,
+		EntitlementStatusDisabled,
+	}
+}
+
 const (
 	// KeyTypeSpeke is a KeyType enum value
 	KeyTypeSpeke = "speke"
@@ -6709,6 +6726,14 @@ const (
 	// KeyTypeStaticKey is a KeyType enum value
 	KeyTypeStaticKey = "static-key"
 )
+
+// KeyType_Values returns all elements of the KeyType enum
+func KeyType_Values() []string {
+	return []string{
+		KeyTypeSpeke,
+		KeyTypeStaticKey,
+	}
+}
 
 const (
 	// ProtocolZixiPush is a Protocol enum value
@@ -6727,6 +6752,17 @@ const (
 	ProtocolRist = "rist"
 )
 
+// Protocol_Values returns all elements of the Protocol enum
+func Protocol_Values() []string {
+	return []string{
+		ProtocolZixiPush,
+		ProtocolRtpFec,
+		ProtocolRtp,
+		ProtocolZixiPull,
+		ProtocolRist,
+	}
+}
+
 const (
 	// SourceTypeOwned is a SourceType enum value
 	SourceTypeOwned = "OWNED"
@@ -6735,6 +6771,14 @@ const (
 	SourceTypeEntitled = "ENTITLED"
 )
 
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeOwned,
+		SourceTypeEntitled,
+	}
+}
+
 const (
 	// StateEnabled is a State enum value
 	StateEnabled = "ENABLED"
@@ -6742,6 +6786,14 @@ const (
 	// StateDisabled is a State enum value
 	StateDisabled = "DISABLED"
 )
+
+// State_Values returns all elements of the State enum
+func State_Values() []string {
+	return []string{
+		StateEnabled,
+		StateDisabled,
+	}
+}
 
 const (
 	// StatusStandby is a Status enum value
@@ -6765,3 +6817,16 @@ const (
 	// StatusError is a Status enum value
 	StatusError = "ERROR"
 )
+
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusStandby,
+		StatusActive,
+		StatusUpdating,
+		StatusDeleting,
+		StatusStarting,
+		StatusStopping,
+		StatusError,
+	}
+}

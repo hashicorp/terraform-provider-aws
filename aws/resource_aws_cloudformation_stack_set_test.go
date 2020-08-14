@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -698,8 +698,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -724,8 +723,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -751,8 +749,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -776,8 +773,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -797,8 +793,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Region:
@@ -811,22 +806,59 @@ Outputs:
 func testAccAWSCloudFormationStackSetConfigAdministrationRoleArn1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test1" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s1"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s1"
 }
 
 resource "aws_iam_role" "test2" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s2"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s2"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test1.arn}"
+  administration_role_arn = aws_iam_role.test1.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -834,22 +866,59 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigAdministrationRoleArn2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test1" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s1"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s1"
 }
 
 resource "aws_iam_role" "test2" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s2"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s2"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test2.arn}"
+  administration_role_arn = aws_iam_role.test2.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -857,18 +926,37 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   description             = %[3]q
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), description)
 }
@@ -876,18 +964,37 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigExecutionRoleName(rName, executionRoleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   execution_role_name     = %[3]q
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), executionRoleName)
 }
@@ -895,17 +1002,36 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -913,12 +1039,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParameters1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -928,6 +1072,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParameters1(rName), value1)
 }
@@ -935,12 +1080,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParameters2(rName, value1, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -951,6 +1114,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParameters2(rName), value1, value2)
 }
@@ -958,17 +1122,36 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParametersDefault0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersDefault1(rName))
 }
@@ -976,12 +1159,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParametersDefault1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -991,6 +1192,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersDefault1(rName), value1)
 }
@@ -998,12 +1200,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -1013,6 +1233,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersNoEcho1(rName), value1)
 }
@@ -1020,12 +1241,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTags1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   tags = {
@@ -1035,6 +1274,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1)
 }
@@ -1042,12 +1282,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTags2(rName, value1, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   tags = {
@@ -1058,6 +1316,7 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1, value2)
 }
@@ -1065,17 +1324,36 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTemplateBody(rName, templateBody string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
+
 }
 `, rName, templateBody)
 }
@@ -1083,8 +1361,26 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTemplateUrl1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1094,17 +1390,18 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   acl    = "public-read"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 
   content = <<CONTENT
 %[2]s
+
 CONTENT
 
   key = "%[1]s-template1.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
 }
@@ -1114,8 +1411,26 @@ resource "aws_cloudformation_stack_set" "test" {
 func testAccAWSCloudFormationStackSetConfigTemplateUrl2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1125,17 +1440,18 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   acl    = "public-read"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 
   content = <<CONTENT
 %[2]s
+
 CONTENT
 
   key = "%[1]s-template2.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
 }

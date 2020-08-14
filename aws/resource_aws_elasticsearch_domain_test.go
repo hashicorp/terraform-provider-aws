@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -1220,9 +1220,9 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccESDomainConfigWithDisabledEBSAndVolumeType(rName, volumeType string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "%s"
+  domain_name           = "%s"
   elasticsearch_version = "6.0"
-  
+
   cluster_config {
     instance_type  = "i3.xlarge.elasticsearch"
     instance_count = 1
@@ -1319,6 +1319,7 @@ resource "aws_elasticsearch_domain" "test" {
     dedicated_master_count   = "3"
     dedicated_master_type    = "c5.large.elasticsearch"
     warm_enabled             = %[2]t
+
     %[3]s
 
     zone_awareness_config {
@@ -1476,7 +1477,8 @@ resource "aws_elasticsearch_domain" "test" {
 
 func testAccESDomainConfigWithPolicy(randESId int, randRoleId int) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_elasticsearch_domain" "test" {
   domain_name = "tf-test-%d"
@@ -1493,7 +1495,7 @@ resource "aws_elasticsearch_domain" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-	"AWS": "${aws_iam_role.example_role.arn}"
+        "AWS": "${aws_iam_role.example_role.arn}"
       },
       "Action": "es:*",
       "Resource": "arn:${data.aws_partition.current.partition}:es:*"
@@ -1501,11 +1503,12 @@ resource "aws_elasticsearch_domain" "test" {
   ]
   }
 CONFIG
+
 }
 
 resource "aws_iam_role" "example_role" {
   name               = "es-domain-role-%d"
-  assume_role_policy = "${data.aws_iam_policy_document.instance-assume-role-policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
 }
 
 data "aws_iam_policy_document" "instance-assume-role-policy" {
@@ -1569,7 +1572,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   encrypt_at_rest {
     enabled    = true
-    kms_key_id = "${aws_kms_key.es.key_id}"
+    kms_key_id = aws_kms_key.es.key_id
   }
 }
 `, randESId, randESId)
@@ -1664,8 +1667,8 @@ resource "aws_vpc" "elasticsearch_in_vpc" {
 }
 
 resource "aws_subnet" "first" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "192.168.0.0/24"
 
   tags = {
@@ -1674,8 +1677,8 @@ resource "aws_subnet" "first" {
 }
 
 resource "aws_subnet" "second" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "192.168.1.0/24"
 
   tags = {
@@ -1684,11 +1687,11 @@ resource "aws_subnet" "second" {
 }
 
 resource "aws_security_group" "first" {
-  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
 }
 
 resource "aws_security_group" "second" {
-  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
 }
 
 resource "aws_elasticsearch_domain" "test" {
@@ -1706,8 +1709,8 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   vpc_options {
-    security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
-    subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+    security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+    subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
   }
 }
 `, randInt)
@@ -1742,8 +1745,8 @@ resource "aws_vpc" "elasticsearch_in_vpc" {
 }
 
 resource "aws_subnet" "az1_first" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "192.168.0.0/24"
 
   tags = {
@@ -1752,8 +1755,8 @@ resource "aws_subnet" "az1_first" {
 }
 
 resource "aws_subnet" "az2_first" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "192.168.1.0/24"
 
   tags = {
@@ -1762,8 +1765,8 @@ resource "aws_subnet" "az2_first" {
 }
 
 resource "aws_subnet" "az1_second" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "192.168.2.0/24"
 
   tags = {
@@ -1772,8 +1775,8 @@ resource "aws_subnet" "az1_second" {
 }
 
 resource "aws_subnet" "az2_second" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "192.168.3.0/24"
 
   tags = {
@@ -1782,11 +1785,11 @@ resource "aws_subnet" "az2_second" {
 }
 
 resource "aws_security_group" "first" {
-  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
 }
 
 resource "aws_security_group" "second" {
-  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
 }
 
 resource "aws_elasticsearch_domain" "test" {
@@ -1805,7 +1808,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   vpc_options {
     security_group_ids = ["%s"]
-    subnet_ids         = ["${aws_subnet.az1_%s.id}", "${aws_subnet.az2_%s.id}"]
+    subnet_ids         = [aws_subnet.az1_ % s.id, aws_subnet.az2_ % s.id]
   }
 }
 `, randInt, sg_ids, subnet_string, subnet_string)
@@ -1831,8 +1834,8 @@ resource "aws_vpc" "elasticsearch_in_vpc" {
 }
 
 resource "aws_subnet" "first" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "192.168.0.0/24"
 
   tags = {
@@ -1841,8 +1844,8 @@ resource "aws_subnet" "first" {
 }
 
 resource "aws_subnet" "second" {
-  vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "192.168.1.0/24"
 
   tags = {
@@ -1851,11 +1854,11 @@ resource "aws_subnet" "second" {
 }
 
 resource "aws_security_group" "first" {
-  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
 }
 
 resource "aws_security_group" "second" {
-  vpc_id = "${aws_vpc.elasticsearch_in_vpc.id}"
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
 }
 
 resource "aws_elasticsearch_domain" "test" {
@@ -1873,8 +1876,8 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   vpc_options {
-    security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
-    subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+    security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+    subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
   }
 }
 `, randInt)
@@ -1891,12 +1894,12 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   advanced_security_options {
-	enabled = true
-	internal_user_database_enabled = true
-	master_user_options {
-      master_user_name = "testmasteruser"
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
       master_user_password = "Barbarbarbar1!"
-	}
+    }
   }
 
   encrypt_at_rest {
@@ -1904,7 +1907,7 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   domain_endpoint_options {
-    enforce_https = true
+    enforce_https       = true
     tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
@@ -1923,7 +1926,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccESDomainConfig_AdvancedSecurityOptionsIAM(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_elasticsearch_domain" "test" {
@@ -1935,11 +1938,11 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   advanced_security_options {
-	enabled = true
-	internal_user_database_enabled = false
-	master_user_options {
-      master_user_arn = "${aws_iam_user.es_master_user.arn}"
-	}
+    enabled                        = true
+    internal_user_database_enabled = false
+    master_user_options {
+      master_user_arn = aws_iam_user.es_master_user.arn
+    }
   }
 
   encrypt_at_rest {
@@ -1947,7 +1950,7 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   domain_endpoint_options {
-    enforce_https = true
+    enforce_https       = true
     tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
@@ -1974,12 +1977,12 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   advanced_security_options {
-	enabled = false
-	internal_user_database_enabled = true
-	master_user_options {
-      master_user_name = "testmasteruser"
+    enabled                        = false
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
       master_user_password = "Barbarbarbar1!"
-	}
+    }
   }
 
   encrypt_at_rest {
@@ -1987,7 +1990,7 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   domain_endpoint_options {
-    enforce_https = true
+    enforce_https       = true
     tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
 
@@ -2005,7 +2008,8 @@ resource "aws_elasticsearch_domain" "test" {
 
 func testAccESDomainConfig_LogPublishingOptions(randInt int) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_cloudwatch_log_group" "test" {
   name = "tf-test-%d"
@@ -2033,6 +2037,7 @@ resource "aws_cloudwatch_log_resource_policy" "example" {
   ]
 }
 CONFIG
+
 }
 
 resource "aws_elasticsearch_domain" "test" {
@@ -2045,7 +2050,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   log_publishing_options {
     log_type                 = "INDEX_SLOW_LOGS"
-    cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
   }
 }
 `, randInt, randInt, randInt)
@@ -2057,47 +2062,48 @@ func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions boo
 	if includeCognitoOptions {
 		cognitoOptions = `
 		cognito_options {
-			enabled = true
-			user_pool_id = "${aws_cognito_user_pool.example.id}"
-			identity_pool_id = "${aws_cognito_identity_pool.example.id}"
-			role_arn = "${aws_iam_role.example.arn}"
+			enabled          = true
+			user_pool_id     = aws_cognito_user_pool.example.id
+			identity_pool_id = aws_cognito_identity_pool.example.id
+			role_arn         = aws_iam_role.example.arn
 		}`
 	} else {
 		cognitoOptions = ""
 	}
 
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_cognito_user_pool" "example" {
   name = "tf-test-%d"
 }
 
 resource "aws_cognito_user_pool_domain" "example" {
-  domain = "tf-test-%d"
-	user_pool_id = "${aws_cognito_user_pool.example.id}"
+  domain       = "tf-test-%d"
+  user_pool_id = aws_cognito_user_pool.example.id
 }
 
 resource "aws_cognito_identity_pool" "example" {
-  identity_pool_name = "tf_test_%d"
-	allow_unauthenticated_identities = false
+  identity_pool_name               = "tf_test_%d"
+  allow_unauthenticated_identities = false
 
   lifecycle {
-    ignore_changes = ["cognito_identity_providers"]
+    ignore_changes = [cognito_identity_providers]
   }
 }
 
 resource "aws_iam_role" "example" {
-	name = "tf-test-%d"
-	path = "/service-role/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role-policy.json}"
+  name               = "tf-test-%d"
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.assume-role-policy.json
 }
 
 data "aws_iam_policy_document" "assume-role-policy" {
   statement {
     sid     = ""
-		actions = ["sts:AssumeRole"]
-		effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
 
     principals {
       type        = "Service"
@@ -2107,14 +2113,14 @@ data "aws_iam_policy_document" "assume-role-policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "example" {
-	role       = "${aws_iam_role.example.name}"
-	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
 }
 
 resource "aws_elasticsearch_domain" "test" {
-	domain_name = "tf-test-%d"
+  domain_name = "tf-test-%d"
 
-	elasticsearch_version = "6.0"
+  elasticsearch_version = "6.0"
 
 	%s
 
@@ -2124,9 +2130,9 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   depends_on = [
-		"aws_iam_role.example",
-		"aws_iam_role_policy_attachment.example"
-	]
+    aws_iam_role.example,
+    aws_iam_role_policy_attachment.example,
+  ]
 }
 `, randInt, randInt, randInt, randInt, randInt, cognitoOptions)
 }
