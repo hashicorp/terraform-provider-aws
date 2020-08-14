@@ -1,5 +1,9 @@
 ## 3.3.0 (Unreleased)
 
+ENHANCEMENTS
+
+* resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
+
 BUG FIXES
 
 * resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs [GH-14638]
