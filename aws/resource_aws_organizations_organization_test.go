@@ -109,6 +109,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
 			{
@@ -124,10 +125,19 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeAiservicesOptOutPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeAiservicesOptOutPolicy),
+				),
+			},
+			{
 				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
 			{
@@ -135,6 +145,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeBackupPolicy),
 				),
 			},
 			{
@@ -142,6 +153,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeTagPolicy),
 				),
 			},
 			{
