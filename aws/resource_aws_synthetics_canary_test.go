@@ -267,47 +267,6 @@ func testAccCheckAwsSyntheticsCanaryExists(n string) resource.TestCheckFunc {
 	}
 }
 
-//func testAccCheckAwsSyntheticsCanaryDeleteLambda(n string) resource.TestCheckFunc {
-//	return func(s *terraform.State) error {
-//		rs, ok := s.RootModule().Resources[n]
-//		if !ok {
-//			return fmt.Errorf("synthetics Canary not found: %s", n)
-//		}
-//
-//		if rs.Primary.ID == "" {
-//			return fmt.Errorf("synthetics Canary name not set")
-//		}
-//
-//		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
-//		lambdaArn := fmt.Sprintf("%s:%s", rs.Primary.Attributes["engine_arn"], "3")
-//
-//		deleteInput := &lambda.DeleteFunctionInput{
-//			FunctionName: aws.String(lambdaArn),
-//		}
-//
-//		log.Printf("delete sythetics Canary Lambda function request: %#v", deleteInput)
-//
-//		_, err := conn.DeleteFunction(deleteInput)
-//		if err != nil {
-//			return fmt.Errorf("sythetics Canary Lambda (%s) could not be deleted: %w", lambdaArn, err)
-//		}
-//
-//		getInput := &lambda.GetFunctionInput{
-//			FunctionName: aws.String(lambdaArn),
-//		}
-//
-//		_, err = conn.GetFunction(getInput)
-//		if err != nil {
-//			if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
-//				return nil
-//			}
-//			return fmt.Errorf("sythetics Canary Lambda (%s) could not be read: %w", lambdaArn, err)
-//		}
-//
-//		return fmt.Errorf("sythetics Canary Lambda (%s) still exists", lambdaArn)
-//	}
-//}
-
 func testAccAWSSyntheticsCanaryConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -346,7 +305,7 @@ data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -454,7 +413,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -463,19 +422,10 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 0)}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -483,9 +433,9 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 1)}"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 1)
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -493,7 +443,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_security_group" "test1" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -501,7 +451,7 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_security_group" "test2" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -510,7 +460,7 @@ resource "aws_security_group" "test2" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -523,19 +473,19 @@ resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
-  handler  = "exports.handler"
-  zip_file = "test-fixtures/lambdatest.zip"
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
 
   schedule {
     expression = "rate(0 minute)"
   }
 
   vpc_config {
-    subnet_ids         = ["${aws_subnet.test1.id}"]
-    security_group_ids = ["${aws_security_group.test1.id}"]
+    subnet_ids         = [aws_subnet.test1.id]
+    security_group_ids = [aws_security_group.test1.id]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }
@@ -548,20 +498,19 @@ resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
-  handler  = "exports.handler"
-  zip_file = "test-fixtures/lambdatest.zip"
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
 
   schedule {
     expression = "rate(0 minute)"
   }
 
   vpc_config {
-    subnet_ids         = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
-    security_group_ids = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
+    subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id]
+    security_group_ids = [aws_security_group.test1.id, aws_security_group.test2.id]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
-
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }
@@ -574,19 +523,19 @@ resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
-  handler  = "exports.handler"
-  zip_file = "test-fixtures/lambdatest.zip"
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
 
   schedule {
     expression = "rate(0 minute)"
   }
 
   vpc_config {
-    subnet_ids         = ["${aws_subnet.test2.id}"]
-    security_group_ids = ["${aws_security_group.test2.id}"]
+    subnet_ids         = [aws_subnet.test2.id]
+    security_group_ids = [aws_security_group.test2.id]
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }
