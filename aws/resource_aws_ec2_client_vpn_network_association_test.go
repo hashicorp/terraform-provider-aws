@@ -272,12 +272,12 @@ func testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceName stri
 
 func testAccEc2ClientVpnNetworkAssociationConfigBasic(rName string) string {
 	return composeConfig(
-		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName),
 		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
-  subnet_id              = aws_subnet.test[0].id
+  subnet_id              = aws_subnet.test.id
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -299,12 +299,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 func testAccEc2ClientVpnNetworkAssociationTwoSecurityGroups(rName string) string {
 	return composeConfig(
-		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName),
 		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
-  subnet_id              = aws_subnet.test[0].id
+  subnet_id              = aws_subnet.test.id
   security_groups        = [aws_security_group.test1.id, aws_security_group.test2.id]
 }
     
@@ -339,12 +339,12 @@ resource "aws_security_group" "test2" {
 
 func testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rName string) string {
 	return composeConfig(
-		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName),
 		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
-  subnet_id              = aws_subnet.test[0].id
+  subnet_id              = aws_subnet.test.id
   security_groups        = [aws_security_group.test1.id]
 }
 
@@ -377,7 +377,7 @@ resource "aws_security_group" "test2" {
 `, rName))
 }
 
-func testAccEc2ClientVpnNetworkAssociationVpcBase(rName string, subnetCount int) string {
+func testAccEc2ClientVpnNetworkAssociationVpcBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
@@ -403,9 +403,8 @@ resource "aws_default_security_group" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count                   = %[2]d
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   vpc_id                  = aws_vpc.test.id
   map_public_ip_on_launch = true
 
@@ -413,7 +412,7 @@ resource "aws_subnet" "test" {
     Name = "tf-acc-subnet-%[1]s"
   }
 }
-`, rName, subnetCount)
+`, rName)
 }
 
 func testAccEc2ClientVpnNetworkAssociationAcmCertificateBase() string {

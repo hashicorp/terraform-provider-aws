@@ -238,6 +238,8 @@ func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	logGroupResourceName := "aws_cloudwatch_log_group.lg"
+	logStreamResourceName := "aws_cloudwatch_log_stream.ls"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -256,8 +258,8 @@ func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_group"),
-					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_stream"),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStreamResourceName, "name"),
 				),
 			},
 			{
@@ -450,16 +452,11 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "test1" {
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -469,7 +466,7 @@ resource "aws_directory_service_directory" "test" {
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `
