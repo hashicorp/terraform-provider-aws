@@ -372,7 +372,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
 				),
 			},
 			{
@@ -1399,6 +1399,30 @@ resource "aws_launch_template" "test" {
 
   tag_specifications {
     resource_type = "instance"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "volume"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "spot-instances-request"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "elastic-gpu"
 
     tags = {
       Name = "test"
