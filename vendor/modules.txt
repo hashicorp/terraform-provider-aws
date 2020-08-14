@@ -236,7 +236,7 @@ github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/check/sidenavigation
 github.com/bflad/tfproviderdocs/command
 github.com/bflad/tfproviderdocs/version
-# github.com/bflad/tfproviderlint v0.17.0
+# github.com/bflad/tfproviderlint v0.18.0
 ## explicit
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/analysisutils

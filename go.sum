@@ -86,8 +86,8 @@ github.com/bflad/gopaniccheck v0.1.0 h1:tJftp+bv42ouERmUMWLoUn/5bi/iQZjHPznM00cP
 github.com/bflad/gopaniccheck v0.1.0/go.mod h1:ZCj2vSr7EqVeDaqVsWN4n2MwdROx1YL+LFo47TSWtsA=
 github.com/bflad/tfproviderdocs v0.7.0 h1:5cb+zUYLqvC4ZePLWqUE/oCmOl2D2nhJTOFfcWWN0ac=
 github.com/bflad/tfproviderdocs v0.7.0/go.mod h1:W6wVZPtBa6V5bpjaK1eJAoVCL/7B4Amfrld0dro+fHU=
-github.com/bflad/tfproviderlint v0.17.0 h1:p4osmpUPJwNrO+C+jJVKv20sZZuzX7nH4gf0+j97tSM=
-github.com/bflad/tfproviderlint v0.17.0/go.mod h1:0fdh7JywihC58Io8AZ+gpcmQtJggse0MCOXF2tMmnAQ=
+github.com/bflad/tfproviderlint v0.18.0 h1:E4EWq051fp2zjxdUj9x6gNG27AcdyRkxip5XP03N840=
+github.com/bflad/tfproviderlint v0.18.0/go.mod h1:0fdh7JywihC58Io8AZ+gpcmQtJggse0MCOXF2tMmnAQ=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
