@@ -274,6 +274,14 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
+	executionArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
+	}.String()
+	d.Set("execution_arn", executionArn)
 	d.Set("name", stageName)
 	err = d.Set("route_settings", flattenApiGatewayV2RouteSettings(resp.RouteSettings))
 	if err != nil {
@@ -296,17 +304,8 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 
 	switch aws.StringValue(apiOutput.ProtocolType) {
 	case apigatewayv2.ProtocolTypeWebsocket:
-		executionArn := arn.ARN{
-			Partition: meta.(*AWSClient).partition,
-			Service:   "execute-api",
-			Region:    region,
-			AccountID: meta.(*AWSClient).accountid,
-			Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
-		}.String()
-		d.Set("execution_arn", executionArn)
 		d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
 	case apigatewayv2.ProtocolTypeHttp:
-		d.Set("execution_arn", "")
 		if stageName == apigatewayv2DefaultStageName {
 			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/", apiId, region))
 		} else {
