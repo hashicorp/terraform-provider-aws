@@ -21047,6 +21047,15 @@ const (
 	AccessLevelFilterKeyUser = "User"
 )
 
+// AccessLevelFilterKey_Values returns all elements of the AccessLevelFilterKey enum
+func AccessLevelFilterKey_Values() []string {
+	return []string{
+		AccessLevelFilterKeyAccount,
+		AccessLevelFilterKeyRole,
+		AccessLevelFilterKeyUser,
+	}
+}
+
 const (
 	// AccessStatusEnabled is a AccessStatus enum value
 	AccessStatusEnabled = "ENABLED"
@@ -21057,6 +21066,15 @@ const (
 	// AccessStatusDisabled is a AccessStatus enum value
 	AccessStatusDisabled = "DISABLED"
 )
+
+// AccessStatus_Values returns all elements of the AccessStatus enum
+func AccessStatus_Values() []string {
+	return []string{
+		AccessStatusEnabled,
+		AccessStatusUnderChange,
+		AccessStatusDisabled,
+	}
+}
 
 const (
 	// ChangeActionAdd is a ChangeAction enum value
@@ -21069,10 +21087,26 @@ const (
 	ChangeActionRemove = "REMOVE"
 )
 
+// ChangeAction_Values returns all elements of the ChangeAction enum
+func ChangeAction_Values() []string {
+	return []string{
+		ChangeActionAdd,
+		ChangeActionModify,
+		ChangeActionRemove,
+	}
+}
+
 const (
 	// CopyOptionCopyTags is a CopyOption enum value
 	CopyOptionCopyTags = "CopyTags"
 )
+
+// CopyOption_Values returns all elements of the CopyOption enum
+func CopyOption_Values() []string {
+	return []string{
+		CopyOptionCopyTags,
+	}
+}
 
 const (
 	// CopyProductStatusSucceeded is a CopyProductStatus enum value
@@ -21085,6 +21119,15 @@ const (
 	CopyProductStatusFailed = "FAILED"
 )
 
+// CopyProductStatus_Values returns all elements of the CopyProductStatus enum
+func CopyProductStatus_Values() []string {
+	return []string{
+		CopyProductStatusSucceeded,
+		CopyProductStatusInProgress,
+		CopyProductStatusFailed,
+	}
+}
+
 const (
 	// EvaluationTypeStatic is a EvaluationType enum value
 	EvaluationTypeStatic = "STATIC"
@@ -21092,6 +21135,14 @@ const (
 	// EvaluationTypeDynamic is a EvaluationType enum value
 	EvaluationTypeDynamic = "DYNAMIC"
 )
+
+// EvaluationType_Values returns all elements of the EvaluationType enum
+func EvaluationType_Values() []string {
+	return []string{
+		EvaluationTypeStatic,
+		EvaluationTypeDynamic,
+	}
+}
 
 const (
 	// OrganizationNodeTypeOrganization is a OrganizationNodeType enum value
@@ -21104,6 +21155,15 @@ const (
 	OrganizationNodeTypeAccount = "ACCOUNT"
 )
 
+// OrganizationNodeType_Values returns all elements of the OrganizationNodeType enum
+func OrganizationNodeType_Values() []string {
+	return []string{
+		OrganizationNodeTypeOrganization,
+		OrganizationNodeTypeOrganizationalUnit,
+		OrganizationNodeTypeAccount,
+	}
+}
+
 const (
 	// PortfolioShareTypeImported is a PortfolioShareType enum value
 	PortfolioShareTypeImported = "IMPORTED"
@@ -21115,15 +21175,38 @@ const (
 	PortfolioShareTypeAwsOrganizations = "AWS_ORGANIZATIONS"
 )
 
+// PortfolioShareType_Values returns all elements of the PortfolioShareType enum
+func PortfolioShareType_Values() []string {
+	return []string{
+		PortfolioShareTypeImported,
+		PortfolioShareTypeAwsServicecatalog,
+		PortfolioShareTypeAwsOrganizations,
+	}
+}
+
 const (
 	// PrincipalTypeIam is a PrincipalType enum value
 	PrincipalTypeIam = "IAM"
 )
 
+// PrincipalType_Values returns all elements of the PrincipalType enum
+func PrincipalType_Values() []string {
+	return []string{
+		PrincipalTypeIam,
+	}
+}
+
 const (
 	// ProductSourceAccount is a ProductSource enum value
 	ProductSourceAccount = "ACCOUNT"
 )
+
+// ProductSource_Values returns all elements of the ProductSource enum
+func ProductSource_Values() []string {
+	return []string{
+		ProductSourceAccount,
+	}
+}
 
 const (
 	// ProductTypeCloudFormationTemplate is a ProductType enum value
@@ -21132,6 +21215,14 @@ const (
 	// ProductTypeMarketplace is a ProductType enum value
 	ProductTypeMarketplace = "MARKETPLACE"
 )
+
+// ProductType_Values returns all elements of the ProductType enum
+func ProductType_Values() []string {
+	return []string{
+		ProductTypeCloudFormationTemplate,
+		ProductTypeMarketplace,
+	}
+}
 
 const (
 	// ProductViewFilterByFullTextSearch is a ProductViewFilterBy enum value
@@ -21147,6 +21238,16 @@ const (
 	ProductViewFilterBySourceProductId = "SourceProductId"
 )
 
+// ProductViewFilterBy_Values returns all elements of the ProductViewFilterBy enum
+func ProductViewFilterBy_Values() []string {
+	return []string{
+		ProductViewFilterByFullTextSearch,
+		ProductViewFilterByOwner,
+		ProductViewFilterByProductType,
+		ProductViewFilterBySourceProductId,
+	}
+}
+
 const (
 	// ProductViewSortByTitle is a ProductViewSortBy enum value
 	ProductViewSortByTitle = "Title"
@@ -21158,10 +21259,26 @@ const (
 	ProductViewSortByCreationDate = "CreationDate"
 )
 
+// ProductViewSortBy_Values returns all elements of the ProductViewSortBy enum
+func ProductViewSortBy_Values() []string {
+	return []string{
+		ProductViewSortByTitle,
+		ProductViewSortByVersionCount,
+		ProductViewSortByCreationDate,
+	}
+}
+
 const (
 	// PropertyKeyOwner is a PropertyKey enum value
 	PropertyKeyOwner = "OWNER"
 )
+
+// PropertyKey_Values returns all elements of the PropertyKey enum
+func PropertyKey_Values() []string {
+	return []string{
+		PropertyKeyOwner,
+	}
+}
 
 const (
 	// ProvisionedProductPlanStatusCreateInProgress is a ProvisionedProductPlanStatus enum value
@@ -21183,10 +21300,29 @@ const (
 	ProvisionedProductPlanStatusExecuteFailed = "EXECUTE_FAILED"
 )
 
+// ProvisionedProductPlanStatus_Values returns all elements of the ProvisionedProductPlanStatus enum
+func ProvisionedProductPlanStatus_Values() []string {
+	return []string{
+		ProvisionedProductPlanStatusCreateInProgress,
+		ProvisionedProductPlanStatusCreateSuccess,
+		ProvisionedProductPlanStatusCreateFailed,
+		ProvisionedProductPlanStatusExecuteInProgress,
+		ProvisionedProductPlanStatusExecuteSuccess,
+		ProvisionedProductPlanStatusExecuteFailed,
+	}
+}
+
 const (
 	// ProvisionedProductPlanTypeCloudformation is a ProvisionedProductPlanType enum value
 	ProvisionedProductPlanTypeCloudformation = "CLOUDFORMATION"
 )
+
+// ProvisionedProductPlanType_Values returns all elements of the ProvisionedProductPlanType enum
+func ProvisionedProductPlanType_Values() []string {
+	return []string{
+		ProvisionedProductPlanTypeCloudformation,
+	}
+}
 
 const (
 	// ProvisionedProductStatusAvailable is a ProvisionedProductStatus enum value
@@ -21205,10 +21341,28 @@ const (
 	ProvisionedProductStatusPlanInProgress = "PLAN_IN_PROGRESS"
 )
 
+// ProvisionedProductStatus_Values returns all elements of the ProvisionedProductStatus enum
+func ProvisionedProductStatus_Values() []string {
+	return []string{
+		ProvisionedProductStatusAvailable,
+		ProvisionedProductStatusUnderChange,
+		ProvisionedProductStatusTainted,
+		ProvisionedProductStatusError,
+		ProvisionedProductStatusPlanInProgress,
+	}
+}
+
 const (
 	// ProvisionedProductViewFilterBySearchQuery is a ProvisionedProductViewFilterBy enum value
 	ProvisionedProductViewFilterBySearchQuery = "SearchQuery"
 )
+
+// ProvisionedProductViewFilterBy_Values returns all elements of the ProvisionedProductViewFilterBy enum
+func ProvisionedProductViewFilterBy_Values() []string {
+	return []string{
+		ProvisionedProductViewFilterBySearchQuery,
+	}
+}
 
 const (
 	// ProvisioningArtifactGuidanceDefault is a ProvisioningArtifactGuidance enum value
@@ -21218,10 +21372,25 @@ const (
 	ProvisioningArtifactGuidanceDeprecated = "DEPRECATED"
 )
 
+// ProvisioningArtifactGuidance_Values returns all elements of the ProvisioningArtifactGuidance enum
+func ProvisioningArtifactGuidance_Values() []string {
+	return []string{
+		ProvisioningArtifactGuidanceDefault,
+		ProvisioningArtifactGuidanceDeprecated,
+	}
+}
+
 const (
 	// ProvisioningArtifactPropertyNameId is a ProvisioningArtifactPropertyName enum value
 	ProvisioningArtifactPropertyNameId = "Id"
 )
+
+// ProvisioningArtifactPropertyName_Values returns all elements of the ProvisioningArtifactPropertyName enum
+func ProvisioningArtifactPropertyName_Values() []string {
+	return []string{
+		ProvisioningArtifactPropertyNameId,
+	}
+}
 
 const (
 	// ProvisioningArtifactTypeCloudFormationTemplate is a ProvisioningArtifactType enum value
@@ -21233,6 +21402,15 @@ const (
 	// ProvisioningArtifactTypeMarketplaceCar is a ProvisioningArtifactType enum value
 	ProvisioningArtifactTypeMarketplaceCar = "MARKETPLACE_CAR"
 )
+
+// ProvisioningArtifactType_Values returns all elements of the ProvisioningArtifactType enum
+func ProvisioningArtifactType_Values() []string {
+	return []string{
+		ProvisioningArtifactTypeCloudFormationTemplate,
+		ProvisioningArtifactTypeMarketplaceAmi,
+		ProvisioningArtifactTypeMarketplaceCar,
+	}
+}
 
 const (
 	// RecordStatusCreated is a RecordStatus enum value
@@ -21251,6 +21429,17 @@ const (
 	RecordStatusFailed = "FAILED"
 )
 
+// RecordStatus_Values returns all elements of the RecordStatus enum
+func RecordStatus_Values() []string {
+	return []string{
+		RecordStatusCreated,
+		RecordStatusInProgress,
+		RecordStatusInProgressInError,
+		RecordStatusSucceeded,
+		RecordStatusFailed,
+	}
+}
+
 const (
 	// ReplacementTrue is a Replacement enum value
 	ReplacementTrue = "TRUE"
@@ -21262,6 +21451,15 @@ const (
 	ReplacementConditional = "CONDITIONAL"
 )
 
+// Replacement_Values returns all elements of the Replacement enum
+func Replacement_Values() []string {
+	return []string{
+		ReplacementTrue,
+		ReplacementFalse,
+		ReplacementConditional,
+	}
+}
+
 const (
 	// RequiresRecreationNever is a RequiresRecreation enum value
 	RequiresRecreationNever = "NEVER"
@@ -21272,6 +21470,15 @@ const (
 	// RequiresRecreationAlways is a RequiresRecreation enum value
 	RequiresRecreationAlways = "ALWAYS"
 )
+
+// RequiresRecreation_Values returns all elements of the RequiresRecreation enum
+func RequiresRecreation_Values() []string {
+	return []string{
+		RequiresRecreationNever,
+		RequiresRecreationConditionally,
+		RequiresRecreationAlways,
+	}
+}
 
 const (
 	// ResourceAttributeProperties is a ResourceAttribute enum value
@@ -21293,6 +21500,18 @@ const (
 	ResourceAttributeTags = "TAGS"
 )
 
+// ResourceAttribute_Values returns all elements of the ResourceAttribute enum
+func ResourceAttribute_Values() []string {
+	return []string{
+		ResourceAttributeProperties,
+		ResourceAttributeMetadata,
+		ResourceAttributeCreationpolicy,
+		ResourceAttributeUpdatepolicy,
+		ResourceAttributeDeletionpolicy,
+		ResourceAttributeTags,
+	}
+}
+
 const (
 	// ServiceActionAssociationErrorCodeDuplicateResource is a ServiceActionAssociationErrorCode enum value
 	ServiceActionAssociationErrorCodeDuplicateResource = "DUPLICATE_RESOURCE"
@@ -21310,6 +21529,17 @@ const (
 	ServiceActionAssociationErrorCodeThrottling = "THROTTLING"
 )
 
+// ServiceActionAssociationErrorCode_Values returns all elements of the ServiceActionAssociationErrorCode enum
+func ServiceActionAssociationErrorCode_Values() []string {
+	return []string{
+		ServiceActionAssociationErrorCodeDuplicateResource,
+		ServiceActionAssociationErrorCodeInternalFailure,
+		ServiceActionAssociationErrorCodeLimitExceeded,
+		ServiceActionAssociationErrorCodeResourceNotFound,
+		ServiceActionAssociationErrorCodeThrottling,
+	}
+}
+
 const (
 	// ServiceActionDefinitionKeyName is a ServiceActionDefinitionKey enum value
 	ServiceActionDefinitionKeyName = "Name"
@@ -21324,10 +21554,27 @@ const (
 	ServiceActionDefinitionKeyParameters = "Parameters"
 )
 
+// ServiceActionDefinitionKey_Values returns all elements of the ServiceActionDefinitionKey enum
+func ServiceActionDefinitionKey_Values() []string {
+	return []string{
+		ServiceActionDefinitionKeyName,
+		ServiceActionDefinitionKeyVersion,
+		ServiceActionDefinitionKeyAssumeRole,
+		ServiceActionDefinitionKeyParameters,
+	}
+}
+
 const (
 	// ServiceActionDefinitionTypeSsmAutomation is a ServiceActionDefinitionType enum value
 	ServiceActionDefinitionTypeSsmAutomation = "SSM_AUTOMATION"
 )
+
+// ServiceActionDefinitionType_Values returns all elements of the ServiceActionDefinitionType enum
+func ServiceActionDefinitionType_Values() []string {
+	return []string{
+		ServiceActionDefinitionTypeSsmAutomation,
+	}
+}
 
 const (
 	// ShareStatusNotStarted is a ShareStatus enum value
@@ -21346,6 +21593,17 @@ const (
 	ShareStatusError = "ERROR"
 )
 
+// ShareStatus_Values returns all elements of the ShareStatus enum
+func ShareStatus_Values() []string {
+	return []string{
+		ShareStatusNotStarted,
+		ShareStatusInProgress,
+		ShareStatusCompleted,
+		ShareStatusCompletedWithErrors,
+		ShareStatusError,
+	}
+}
+
 const (
 	// SortOrderAscending is a SortOrder enum value
 	SortOrderAscending = "ASCENDING"
@@ -21353,6 +21611,14 @@ const (
 	// SortOrderDescending is a SortOrder enum value
 	SortOrderDescending = "DESCENDING"
 )
+
+// SortOrder_Values returns all elements of the SortOrder enum
+func SortOrder_Values() []string {
+	return []string{
+		SortOrderAscending,
+		SortOrderDescending,
+	}
+}
 
 const (
 	// StackInstanceStatusCurrent is a StackInstanceStatus enum value
@@ -21365,6 +21631,15 @@ const (
 	StackInstanceStatusInoperable = "INOPERABLE"
 )
 
+// StackInstanceStatus_Values returns all elements of the StackInstanceStatus enum
+func StackInstanceStatus_Values() []string {
+	return []string{
+		StackInstanceStatusCurrent,
+		StackInstanceStatusOutdated,
+		StackInstanceStatusInoperable,
+	}
+}
+
 const (
 	// StackSetOperationTypeCreate is a StackSetOperationType enum value
 	StackSetOperationTypeCreate = "CREATE"
@@ -21376,6 +21651,15 @@ const (
 	StackSetOperationTypeDelete = "DELETE"
 )
 
+// StackSetOperationType_Values returns all elements of the StackSetOperationType enum
+func StackSetOperationType_Values() []string {
+	return []string{
+		StackSetOperationTypeCreate,
+		StackSetOperationTypeUpdate,
+		StackSetOperationTypeDelete,
+	}
+}
+
 const (
 	// StatusAvailable is a Status enum value
 	StatusAvailable = "AVAILABLE"
@@ -21386,3 +21670,12 @@ const (
 	// StatusFailed is a Status enum value
 	StatusFailed = "FAILED"
 )
+
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusAvailable,
+		StatusCreating,
+		StatusFailed,
+	}
+}

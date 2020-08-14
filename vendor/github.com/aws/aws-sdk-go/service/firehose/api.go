@@ -8230,6 +8230,17 @@ const (
 	CompressionFormatHadoopSnappy = "HADOOP_SNAPPY"
 )
 
+// CompressionFormat_Values returns all elements of the CompressionFormat enum
+func CompressionFormat_Values() []string {
+	return []string{
+		CompressionFormatUncompressed,
+		CompressionFormatGzip,
+		CompressionFormatZip,
+		CompressionFormatSnappy,
+		CompressionFormatHadoopSnappy,
+	}
+}
+
 const (
 	// ContentEncodingNone is a ContentEncoding enum value
 	ContentEncodingNone = "NONE"
@@ -8237,6 +8248,14 @@ const (
 	// ContentEncodingGzip is a ContentEncoding enum value
 	ContentEncodingGzip = "GZIP"
 )
+
+// ContentEncoding_Values returns all elements of the ContentEncoding enum
+func ContentEncoding_Values() []string {
+	return []string{
+		ContentEncodingNone,
+		ContentEncodingGzip,
+	}
+}
 
 const (
 	// DeliveryStreamEncryptionStatusEnabled is a DeliveryStreamEncryptionStatus enum value
@@ -8257,6 +8276,18 @@ const (
 	// DeliveryStreamEncryptionStatusDisablingFailed is a DeliveryStreamEncryptionStatus enum value
 	DeliveryStreamEncryptionStatusDisablingFailed = "DISABLING_FAILED"
 )
+
+// DeliveryStreamEncryptionStatus_Values returns all elements of the DeliveryStreamEncryptionStatus enum
+func DeliveryStreamEncryptionStatus_Values() []string {
+	return []string{
+		DeliveryStreamEncryptionStatusEnabled,
+		DeliveryStreamEncryptionStatusEnabling,
+		DeliveryStreamEncryptionStatusEnablingFailed,
+		DeliveryStreamEncryptionStatusDisabled,
+		DeliveryStreamEncryptionStatusDisabling,
+		DeliveryStreamEncryptionStatusDisablingFailed,
+	}
+}
 
 const (
 	// DeliveryStreamFailureTypeRetireKmsGrantFailed is a DeliveryStreamFailureType enum value
@@ -8305,6 +8336,27 @@ const (
 	DeliveryStreamFailureTypeUnknownError = "UNKNOWN_ERROR"
 )
 
+// DeliveryStreamFailureType_Values returns all elements of the DeliveryStreamFailureType enum
+func DeliveryStreamFailureType_Values() []string {
+	return []string{
+		DeliveryStreamFailureTypeRetireKmsGrantFailed,
+		DeliveryStreamFailureTypeCreateKmsGrantFailed,
+		DeliveryStreamFailureTypeKmsAccessDenied,
+		DeliveryStreamFailureTypeDisabledKmsKey,
+		DeliveryStreamFailureTypeInvalidKmsKey,
+		DeliveryStreamFailureTypeKmsKeyNotFound,
+		DeliveryStreamFailureTypeKmsOptInRequired,
+		DeliveryStreamFailureTypeCreateEniFailed,
+		DeliveryStreamFailureTypeDeleteEniFailed,
+		DeliveryStreamFailureTypeSubnetNotFound,
+		DeliveryStreamFailureTypeSecurityGroupNotFound,
+		DeliveryStreamFailureTypeEniAccessDenied,
+		DeliveryStreamFailureTypeSubnetAccessDenied,
+		DeliveryStreamFailureTypeSecurityGroupAccessDenied,
+		DeliveryStreamFailureTypeUnknownError,
+	}
+}
+
 const (
 	// DeliveryStreamStatusCreating is a DeliveryStreamStatus enum value
 	DeliveryStreamStatusCreating = "CREATING"
@@ -8322,6 +8374,17 @@ const (
 	DeliveryStreamStatusActive = "ACTIVE"
 )
 
+// DeliveryStreamStatus_Values returns all elements of the DeliveryStreamStatus enum
+func DeliveryStreamStatus_Values() []string {
+	return []string{
+		DeliveryStreamStatusCreating,
+		DeliveryStreamStatusCreatingFailed,
+		DeliveryStreamStatusDeleting,
+		DeliveryStreamStatusDeletingFailed,
+		DeliveryStreamStatusActive,
+	}
+}
+
 const (
 	// DeliveryStreamTypeDirectPut is a DeliveryStreamType enum value
 	DeliveryStreamTypeDirectPut = "DirectPut"
@@ -8329,6 +8392,14 @@ const (
 	// DeliveryStreamTypeKinesisStreamAsSource is a DeliveryStreamType enum value
 	DeliveryStreamTypeKinesisStreamAsSource = "KinesisStreamAsSource"
 )
+
+// DeliveryStreamType_Values returns all elements of the DeliveryStreamType enum
+func DeliveryStreamType_Values() []string {
+	return []string{
+		DeliveryStreamTypeDirectPut,
+		DeliveryStreamTypeKinesisStreamAsSource,
+	}
+}
 
 const (
 	// ElasticsearchIndexRotationPeriodNoRotation is a ElasticsearchIndexRotationPeriod enum value
@@ -8347,6 +8418,17 @@ const (
 	ElasticsearchIndexRotationPeriodOneMonth = "OneMonth"
 )
 
+// ElasticsearchIndexRotationPeriod_Values returns all elements of the ElasticsearchIndexRotationPeriod enum
+func ElasticsearchIndexRotationPeriod_Values() []string {
+	return []string{
+		ElasticsearchIndexRotationPeriodNoRotation,
+		ElasticsearchIndexRotationPeriodOneHour,
+		ElasticsearchIndexRotationPeriodOneDay,
+		ElasticsearchIndexRotationPeriodOneWeek,
+		ElasticsearchIndexRotationPeriodOneMonth,
+	}
+}
+
 const (
 	// ElasticsearchS3BackupModeFailedDocumentsOnly is a ElasticsearchS3BackupMode enum value
 	ElasticsearchS3BackupModeFailedDocumentsOnly = "FailedDocumentsOnly"
@@ -8354,6 +8436,14 @@ const (
 	// ElasticsearchS3BackupModeAllDocuments is a ElasticsearchS3BackupMode enum value
 	ElasticsearchS3BackupModeAllDocuments = "AllDocuments"
 )
+
+// ElasticsearchS3BackupMode_Values returns all elements of the ElasticsearchS3BackupMode enum
+func ElasticsearchS3BackupMode_Values() []string {
+	return []string{
+		ElasticsearchS3BackupModeFailedDocumentsOnly,
+		ElasticsearchS3BackupModeAllDocuments,
+	}
+}
 
 const (
 	// HECEndpointTypeRaw is a HECEndpointType enum value
@@ -8363,6 +8453,14 @@ const (
 	HECEndpointTypeEvent = "Event"
 )
 
+// HECEndpointType_Values returns all elements of the HECEndpointType enum
+func HECEndpointType_Values() []string {
+	return []string{
+		HECEndpointTypeRaw,
+		HECEndpointTypeEvent,
+	}
+}
+
 const (
 	// HttpEndpointS3BackupModeFailedDataOnly is a HttpEndpointS3BackupMode enum value
 	HttpEndpointS3BackupModeFailedDataOnly = "FailedDataOnly"
@@ -8370,6 +8468,14 @@ const (
 	// HttpEndpointS3BackupModeAllData is a HttpEndpointS3BackupMode enum value
 	HttpEndpointS3BackupModeAllData = "AllData"
 )
+
+// HttpEndpointS3BackupMode_Values returns all elements of the HttpEndpointS3BackupMode enum
+func HttpEndpointS3BackupMode_Values() []string {
+	return []string{
+		HttpEndpointS3BackupModeFailedDataOnly,
+		HttpEndpointS3BackupModeAllData,
+	}
+}
 
 const (
 	// KeyTypeAwsOwnedCmk is a KeyType enum value
@@ -8379,10 +8485,25 @@ const (
 	KeyTypeCustomerManagedCmk = "CUSTOMER_MANAGED_CMK"
 )
 
+// KeyType_Values returns all elements of the KeyType enum
+func KeyType_Values() []string {
+	return []string{
+		KeyTypeAwsOwnedCmk,
+		KeyTypeCustomerManagedCmk,
+	}
+}
+
 const (
 	// NoEncryptionConfigNoEncryption is a NoEncryptionConfig enum value
 	NoEncryptionConfigNoEncryption = "NoEncryption"
 )
+
+// NoEncryptionConfig_Values returns all elements of the NoEncryptionConfig enum
+func NoEncryptionConfig_Values() []string {
+	return []string{
+		NoEncryptionConfigNoEncryption,
+	}
+}
 
 const (
 	// OrcCompressionNone is a OrcCompression enum value
@@ -8395,6 +8516,15 @@ const (
 	OrcCompressionSnappy = "SNAPPY"
 )
 
+// OrcCompression_Values returns all elements of the OrcCompression enum
+func OrcCompression_Values() []string {
+	return []string{
+		OrcCompressionNone,
+		OrcCompressionZlib,
+		OrcCompressionSnappy,
+	}
+}
+
 const (
 	// OrcFormatVersionV011 is a OrcFormatVersion enum value
 	OrcFormatVersionV011 = "V0_11"
@@ -8402,6 +8532,14 @@ const (
 	// OrcFormatVersionV012 is a OrcFormatVersion enum value
 	OrcFormatVersionV012 = "V0_12"
 )
+
+// OrcFormatVersion_Values returns all elements of the OrcFormatVersion enum
+func OrcFormatVersion_Values() []string {
+	return []string{
+		OrcFormatVersionV011,
+		OrcFormatVersionV012,
+	}
+}
 
 const (
 	// ParquetCompressionUncompressed is a ParquetCompression enum value
@@ -8414,6 +8552,15 @@ const (
 	ParquetCompressionSnappy = "SNAPPY"
 )
 
+// ParquetCompression_Values returns all elements of the ParquetCompression enum
+func ParquetCompression_Values() []string {
+	return []string{
+		ParquetCompressionUncompressed,
+		ParquetCompressionGzip,
+		ParquetCompressionSnappy,
+	}
+}
+
 const (
 	// ParquetWriterVersionV1 is a ParquetWriterVersion enum value
 	ParquetWriterVersionV1 = "V1"
@@ -8421,6 +8568,14 @@ const (
 	// ParquetWriterVersionV2 is a ParquetWriterVersion enum value
 	ParquetWriterVersionV2 = "V2"
 )
+
+// ParquetWriterVersion_Values returns all elements of the ParquetWriterVersion enum
+func ParquetWriterVersion_Values() []string {
+	return []string{
+		ParquetWriterVersionV1,
+		ParquetWriterVersionV2,
+	}
+}
 
 const (
 	// ProcessorParameterNameLambdaArn is a ProcessorParameterName enum value
@@ -8439,10 +8594,28 @@ const (
 	ProcessorParameterNameBufferIntervalInSeconds = "BufferIntervalInSeconds"
 )
 
+// ProcessorParameterName_Values returns all elements of the ProcessorParameterName enum
+func ProcessorParameterName_Values() []string {
+	return []string{
+		ProcessorParameterNameLambdaArn,
+		ProcessorParameterNameNumberOfRetries,
+		ProcessorParameterNameRoleArn,
+		ProcessorParameterNameBufferSizeInMbs,
+		ProcessorParameterNameBufferIntervalInSeconds,
+	}
+}
+
 const (
 	// ProcessorTypeLambda is a ProcessorType enum value
 	ProcessorTypeLambda = "Lambda"
 )
+
+// ProcessorType_Values returns all elements of the ProcessorType enum
+func ProcessorType_Values() []string {
+	return []string{
+		ProcessorTypeLambda,
+	}
+}
 
 const (
 	// RedshiftS3BackupModeDisabled is a RedshiftS3BackupMode enum value
@@ -8452,6 +8625,14 @@ const (
 	RedshiftS3BackupModeEnabled = "Enabled"
 )
 
+// RedshiftS3BackupMode_Values returns all elements of the RedshiftS3BackupMode enum
+func RedshiftS3BackupMode_Values() []string {
+	return []string{
+		RedshiftS3BackupModeDisabled,
+		RedshiftS3BackupModeEnabled,
+	}
+}
+
 const (
 	// S3BackupModeDisabled is a S3BackupMode enum value
 	S3BackupModeDisabled = "Disabled"
@@ -8460,6 +8641,14 @@ const (
 	S3BackupModeEnabled = "Enabled"
 )
 
+// S3BackupMode_Values returns all elements of the S3BackupMode enum
+func S3BackupMode_Values() []string {
+	return []string{
+		S3BackupModeDisabled,
+		S3BackupModeEnabled,
+	}
+}
+
 const (
 	// SplunkS3BackupModeFailedEventsOnly is a SplunkS3BackupMode enum value
 	SplunkS3BackupModeFailedEventsOnly = "FailedEventsOnly"
@@ -8467,3 +8656,11 @@ const (
 	// SplunkS3BackupModeAllEvents is a SplunkS3BackupMode enum value
 	SplunkS3BackupModeAllEvents = "AllEvents"
 )
+
+// SplunkS3BackupMode_Values returns all elements of the SplunkS3BackupMode enum
+func SplunkS3BackupMode_Values() []string {
+	return []string{
+		SplunkS3BackupModeFailedEventsOnly,
+		SplunkS3BackupModeAllEvents,
+	}
+}

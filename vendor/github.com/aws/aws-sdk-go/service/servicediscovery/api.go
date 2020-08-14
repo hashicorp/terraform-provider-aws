@@ -7544,6 +7544,14 @@ const (
 	CustomHealthStatusUnhealthy = "UNHEALTHY"
 )
 
+// CustomHealthStatus_Values returns all elements of the CustomHealthStatus enum
+func CustomHealthStatus_Values() []string {
+	return []string{
+		CustomHealthStatusHealthy,
+		CustomHealthStatusUnhealthy,
+	}
+}
+
 const (
 	// FilterConditionEq is a FilterCondition enum value
 	FilterConditionEq = "EQ"
@@ -7554,6 +7562,15 @@ const (
 	// FilterConditionBetween is a FilterCondition enum value
 	FilterConditionBetween = "BETWEEN"
 )
+
+// FilterCondition_Values returns all elements of the FilterCondition enum
+func FilterCondition_Values() []string {
+	return []string{
+		FilterConditionEq,
+		FilterConditionIn,
+		FilterConditionBetween,
+	}
+}
 
 const (
 	// HealthCheckTypeHttp is a HealthCheckType enum value
@@ -7566,6 +7583,15 @@ const (
 	HealthCheckTypeTcp = "TCP"
 )
 
+// HealthCheckType_Values returns all elements of the HealthCheckType enum
+func HealthCheckType_Values() []string {
+	return []string{
+		HealthCheckTypeHttp,
+		HealthCheckTypeHttps,
+		HealthCheckTypeTcp,
+	}
+}
+
 const (
 	// HealthStatusHealthy is a HealthStatus enum value
 	HealthStatusHealthy = "HEALTHY"
@@ -7576,6 +7602,15 @@ const (
 	// HealthStatusUnknown is a HealthStatus enum value
 	HealthStatusUnknown = "UNKNOWN"
 )
+
+// HealthStatus_Values returns all elements of the HealthStatus enum
+func HealthStatus_Values() []string {
+	return []string{
+		HealthStatusHealthy,
+		HealthStatusUnhealthy,
+		HealthStatusUnknown,
+	}
+}
 
 const (
 	// HealthStatusFilterHealthy is a HealthStatusFilter enum value
@@ -7588,10 +7623,26 @@ const (
 	HealthStatusFilterAll = "ALL"
 )
 
+// HealthStatusFilter_Values returns all elements of the HealthStatusFilter enum
+func HealthStatusFilter_Values() []string {
+	return []string{
+		HealthStatusFilterHealthy,
+		HealthStatusFilterUnhealthy,
+		HealthStatusFilterAll,
+	}
+}
+
 const (
 	// NamespaceFilterNameType is a NamespaceFilterName enum value
 	NamespaceFilterNameType = "TYPE"
 )
+
+// NamespaceFilterName_Values returns all elements of the NamespaceFilterName enum
+func NamespaceFilterName_Values() []string {
+	return []string{
+		NamespaceFilterNameType,
+	}
+}
 
 const (
 	// NamespaceTypeDnsPublic is a NamespaceType enum value
@@ -7603,6 +7654,15 @@ const (
 	// NamespaceTypeHttp is a NamespaceType enum value
 	NamespaceTypeHttp = "HTTP"
 )
+
+// NamespaceType_Values returns all elements of the NamespaceType enum
+func NamespaceType_Values() []string {
+	return []string{
+		NamespaceTypeDnsPublic,
+		NamespaceTypeDnsPrivate,
+		NamespaceTypeHttp,
+	}
+}
 
 const (
 	// OperationFilterNameNamespaceId is a OperationFilterName enum value
@@ -7621,6 +7681,17 @@ const (
 	OperationFilterNameUpdateDate = "UPDATE_DATE"
 )
 
+// OperationFilterName_Values returns all elements of the OperationFilterName enum
+func OperationFilterName_Values() []string {
+	return []string{
+		OperationFilterNameNamespaceId,
+		OperationFilterNameServiceId,
+		OperationFilterNameStatus,
+		OperationFilterNameType,
+		OperationFilterNameUpdateDate,
+	}
+}
+
 const (
 	// OperationStatusSubmitted is a OperationStatus enum value
 	OperationStatusSubmitted = "SUBMITTED"
@@ -7635,6 +7706,16 @@ const (
 	OperationStatusFail = "FAIL"
 )
 
+// OperationStatus_Values returns all elements of the OperationStatus enum
+func OperationStatus_Values() []string {
+	return []string{
+		OperationStatusSubmitted,
+		OperationStatusPending,
+		OperationStatusSuccess,
+		OperationStatusFail,
+	}
+}
+
 const (
 	// OperationTargetTypeNamespace is a OperationTargetType enum value
 	OperationTargetTypeNamespace = "NAMESPACE"
@@ -7645,6 +7726,15 @@ const (
 	// OperationTargetTypeInstance is a OperationTargetType enum value
 	OperationTargetTypeInstance = "INSTANCE"
 )
+
+// OperationTargetType_Values returns all elements of the OperationTargetType enum
+func OperationTargetType_Values() []string {
+	return []string{
+		OperationTargetTypeNamespace,
+		OperationTargetTypeService,
+		OperationTargetTypeInstance,
+	}
+}
 
 const (
 	// OperationTypeCreateNamespace is a OperationType enum value
@@ -7663,6 +7753,17 @@ const (
 	OperationTypeDeregisterInstance = "DEREGISTER_INSTANCE"
 )
 
+// OperationType_Values returns all elements of the OperationType enum
+func OperationType_Values() []string {
+	return []string{
+		OperationTypeCreateNamespace,
+		OperationTypeDeleteNamespace,
+		OperationTypeUpdateService,
+		OperationTypeRegisterInstance,
+		OperationTypeDeregisterInstance,
+	}
+}
+
 const (
 	// RecordTypeSrv is a RecordType enum value
 	RecordTypeSrv = "SRV"
@@ -7677,6 +7778,16 @@ const (
 	RecordTypeCname = "CNAME"
 )
 
+// RecordType_Values returns all elements of the RecordType enum
+func RecordType_Values() []string {
+	return []string{
+		RecordTypeSrv,
+		RecordTypeA,
+		RecordTypeAaaa,
+		RecordTypeCname,
+	}
+}
+
 const (
 	// RoutingPolicyMultivalue is a RoutingPolicy enum value
 	RoutingPolicyMultivalue = "MULTIVALUE"
@@ -7685,7 +7796,22 @@ const (
 	RoutingPolicyWeighted = "WEIGHTED"
 )
 
+// RoutingPolicy_Values returns all elements of the RoutingPolicy enum
+func RoutingPolicy_Values() []string {
+	return []string{
+		RoutingPolicyMultivalue,
+		RoutingPolicyWeighted,
+	}
+}
+
 const (
 	// ServiceFilterNameNamespaceId is a ServiceFilterName enum value
 	ServiceFilterNameNamespaceId = "NAMESPACE_ID"
 )
+
+// ServiceFilterName_Values returns all elements of the ServiceFilterName enum
+func ServiceFilterName_Values() []string {
+	return []string{
+		ServiceFilterNameNamespaceId,
+	}
+}

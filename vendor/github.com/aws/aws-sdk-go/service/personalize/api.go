@@ -11510,6 +11510,13 @@ const (
 	RecipeProviderService = "SERVICE"
 )
 
+// RecipeProvider_Values returns all elements of the RecipeProvider enum
+func RecipeProvider_Values() []string {
+	return []string{
+		RecipeProviderService,
+	}
+}
+
 const (
 	// TrainingModeFull is a TrainingMode enum value
 	TrainingModeFull = "FULL"
@@ -11517,3 +11524,11 @@ const (
 	// TrainingModeUpdate is a TrainingMode enum value
 	TrainingModeUpdate = "UPDATE"
 )
+
+// TrainingMode_Values returns all elements of the TrainingMode enum
+func TrainingMode_Values() []string {
+	return []string{
+		TrainingModeFull,
+		TrainingModeUpdate,
+	}
+}

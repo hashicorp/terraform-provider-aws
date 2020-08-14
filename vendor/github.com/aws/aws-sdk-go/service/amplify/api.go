@@ -9338,6 +9338,20 @@ const (
 	DomainStatusUpdating = "UPDATING"
 )
 
+// DomainStatus_Values returns all elements of the DomainStatus enum
+func DomainStatus_Values() []string {
+	return []string{
+		DomainStatusPendingVerification,
+		DomainStatusInProgress,
+		DomainStatusAvailable,
+		DomainStatusPendingDeployment,
+		DomainStatusFailed,
+		DomainStatusCreating,
+		DomainStatusRequestingCertificate,
+		DomainStatusUpdating,
+	}
+}
+
 const (
 	// JobStatusPending is a JobStatus enum value
 	JobStatusPending = "PENDING"
@@ -9361,6 +9375,19 @@ const (
 	JobStatusCancelled = "CANCELLED"
 )
 
+// JobStatus_Values returns all elements of the JobStatus enum
+func JobStatus_Values() []string {
+	return []string{
+		JobStatusPending,
+		JobStatusProvisioning,
+		JobStatusRunning,
+		JobStatusFailed,
+		JobStatusSucceed,
+		JobStatusCancelling,
+		JobStatusCancelled,
+	}
+}
+
 const (
 	// JobTypeRelease is a JobType enum value
 	JobTypeRelease = "RELEASE"
@@ -9375,10 +9402,27 @@ const (
 	JobTypeWebHook = "WEB_HOOK"
 )
 
+// JobType_Values returns all elements of the JobType enum
+func JobType_Values() []string {
+	return []string{
+		JobTypeRelease,
+		JobTypeRetry,
+		JobTypeManual,
+		JobTypeWebHook,
+	}
+}
+
 const (
 	// PlatformWeb is a Platform enum value
 	PlatformWeb = "WEB"
 )
+
+// Platform_Values returns all elements of the Platform enum
+func Platform_Values() []string {
+	return []string{
+		PlatformWeb,
+	}
+}
 
 const (
 	// StageProduction is a Stage enum value
@@ -9396,3 +9440,14 @@ const (
 	// StagePullRequest is a Stage enum value
 	StagePullRequest = "PULL_REQUEST"
 )
+
+// Stage_Values returns all elements of the Stage enum
+func Stage_Values() []string {
+	return []string{
+		StageProduction,
+		StageBeta,
+		StageDevelopment,
+		StageExperimental,
+		StagePullRequest,
+	}
+}

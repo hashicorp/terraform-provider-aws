@@ -2673,6 +2673,14 @@ const (
 	ErrorCodeInvalidParameterException = "InvalidParameterException"
 )
 
+// ErrorCode_Values returns all elements of the ErrorCode enum
+func ErrorCode_Values() []string {
+	return []string{
+		ErrorCodeInternalServiceException,
+		ErrorCodeInvalidParameterException,
+	}
+}
+
 const (
 	// GroupByAttributeTargetId is a GroupByAttribute enum value
 	GroupByAttributeTargetId = "TARGET_ID"
@@ -2684,6 +2692,15 @@ const (
 	GroupByAttributeResourceType = "RESOURCE_TYPE"
 )
 
+// GroupByAttribute_Values returns all elements of the GroupByAttribute enum
+func GroupByAttribute_Values() []string {
+	return []string{
+		GroupByAttributeTargetId,
+		GroupByAttributeRegion,
+		GroupByAttributeResourceType,
+	}
+}
+
 const (
 	// TargetIdTypeAccount is a TargetIdType enum value
 	TargetIdTypeAccount = "ACCOUNT"
@@ -2694,3 +2711,12 @@ const (
 	// TargetIdTypeRoot is a TargetIdType enum value
 	TargetIdTypeRoot = "ROOT"
 )
+
+// TargetIdType_Values returns all elements of the TargetIdType enum
+func TargetIdType_Values() []string {
+	return []string{
+		TargetIdTypeAccount,
+		TargetIdTypeOu,
+		TargetIdTypeRoot,
+	}
+}

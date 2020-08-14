@@ -3782,6 +3782,23 @@ const (
 	ComparisonOperatorBetween = "BETWEEN"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorEq,
+		ComparisonOperatorNe,
+		ComparisonOperatorLe,
+		ComparisonOperatorLt,
+		ComparisonOperatorGe,
+		ComparisonOperatorGt,
+		ComparisonOperatorContains,
+		ComparisonOperatorNotContains,
+		ComparisonOperatorBeginsWith,
+		ComparisonOperatorIn,
+		ComparisonOperatorBetween,
+	}
+}
+
 const (
 	// DataLakeResourceTypeCatalog is a DataLakeResourceType enum value
 	DataLakeResourceTypeCatalog = "CATALOG"
@@ -3796,6 +3813,16 @@ const (
 	DataLakeResourceTypeDataLocation = "DATA_LOCATION"
 )
 
+// DataLakeResourceType_Values returns all elements of the DataLakeResourceType enum
+func DataLakeResourceType_Values() []string {
+	return []string{
+		DataLakeResourceTypeCatalog,
+		DataLakeResourceTypeDatabase,
+		DataLakeResourceTypeTable,
+		DataLakeResourceTypeDataLocation,
+	}
+}
+
 const (
 	// FieldNameStringResourceArn is a FieldNameString enum value
 	FieldNameStringResourceArn = "RESOURCE_ARN"
@@ -3806,6 +3833,15 @@ const (
 	// FieldNameStringLastModified is a FieldNameString enum value
 	FieldNameStringLastModified = "LAST_MODIFIED"
 )
+
+// FieldNameString_Values returns all elements of the FieldNameString enum
+func FieldNameString_Values() []string {
+	return []string{
+		FieldNameStringResourceArn,
+		FieldNameStringRoleArn,
+		FieldNameStringLastModified,
+	}
+}
 
 const (
 	// PermissionAll is a Permission enum value
@@ -3838,3 +3874,19 @@ const (
 	// PermissionDataLocationAccess is a Permission enum value
 	PermissionDataLocationAccess = "DATA_LOCATION_ACCESS"
 )
+
+// Permission_Values returns all elements of the Permission enum
+func Permission_Values() []string {
+	return []string{
+		PermissionAll,
+		PermissionSelect,
+		PermissionAlter,
+		PermissionDrop,
+		PermissionDelete,
+		PermissionInsert,
+		PermissionDescribe,
+		PermissionCreateDatabase,
+		PermissionCreateTable,
+		PermissionDataLocationAccess,
+	}
+}

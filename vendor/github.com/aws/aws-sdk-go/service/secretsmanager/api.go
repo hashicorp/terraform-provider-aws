@@ -6549,6 +6549,17 @@ const (
 	FilterNameStringTypeAll = "all"
 )
 
+// FilterNameStringType_Values returns all elements of the FilterNameStringType enum
+func FilterNameStringType_Values() []string {
+	return []string{
+		FilterNameStringTypeDescription,
+		FilterNameStringTypeName,
+		FilterNameStringTypeTagKey,
+		FilterNameStringTypeTagValue,
+		FilterNameStringTypeAll,
+	}
+}
+
 const (
 	// SortOrderTypeAsc is a SortOrderType enum value
 	SortOrderTypeAsc = "asc"
@@ -6556,3 +6567,11 @@ const (
 	// SortOrderTypeDesc is a SortOrderType enum value
 	SortOrderTypeDesc = "desc"
 )
+
+// SortOrderType_Values returns all elements of the SortOrderType enum
+func SortOrderType_Values() []string {
+	return []string{
+		SortOrderTypeAsc,
+		SortOrderTypeDesc,
+	}
+}

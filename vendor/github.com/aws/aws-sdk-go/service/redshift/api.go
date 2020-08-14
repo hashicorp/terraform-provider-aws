@@ -24830,6 +24830,15 @@ const (
 	ActionTypeResizeCluster = "resize-cluster"
 )
 
+// ActionType_Values returns all elements of the ActionType enum
+func ActionType_Values() []string {
+	return []string{
+		ActionTypeRestoreCluster,
+		ActionTypeRecommendNodeConfig,
+		ActionTypeResizeCluster,
+	}
+}
+
 const (
 	// ModeStandard is a Mode enum value
 	ModeStandard = "standard"
@@ -24837,6 +24846,14 @@ const (
 	// ModeHighPerformance is a Mode enum value
 	ModeHighPerformance = "high-performance"
 )
+
+// Mode_Values returns all elements of the Mode enum
+func Mode_Values() []string {
+	return []string{
+		ModeStandard,
+		ModeHighPerformance,
+	}
+}
 
 const (
 	// NodeConfigurationOptionsFilterNameNodeType is a NodeConfigurationOptionsFilterName enum value
@@ -24851,6 +24868,16 @@ const (
 	// NodeConfigurationOptionsFilterNameMode is a NodeConfigurationOptionsFilterName enum value
 	NodeConfigurationOptionsFilterNameMode = "Mode"
 )
+
+// NodeConfigurationOptionsFilterName_Values returns all elements of the NodeConfigurationOptionsFilterName enum
+func NodeConfigurationOptionsFilterName_Values() []string {
+	return []string{
+		NodeConfigurationOptionsFilterNameNodeType,
+		NodeConfigurationOptionsFilterNameNumberOfNodes,
+		NodeConfigurationOptionsFilterNameEstimatedDiskUtilizationPercent,
+		NodeConfigurationOptionsFilterNameMode,
+	}
+}
 
 const (
 	// OperatorTypeEq is a OperatorType enum value
@@ -24875,6 +24902,19 @@ const (
 	OperatorTypeBetween = "between"
 )
 
+// OperatorType_Values returns all elements of the OperatorType enum
+func OperatorType_Values() []string {
+	return []string{
+		OperatorTypeEq,
+		OperatorTypeLt,
+		OperatorTypeGt,
+		OperatorTypeLe,
+		OperatorTypeGe,
+		OperatorTypeIn,
+		OperatorTypeBetween,
+	}
+}
+
 const (
 	// ParameterApplyTypeStatic is a ParameterApplyType enum value
 	ParameterApplyTypeStatic = "static"
@@ -24883,6 +24923,14 @@ const (
 	ParameterApplyTypeDynamic = "dynamic"
 )
 
+// ParameterApplyType_Values returns all elements of the ParameterApplyType enum
+func ParameterApplyType_Values() []string {
+	return []string{
+		ParameterApplyTypeStatic,
+		ParameterApplyTypeDynamic,
+	}
+}
+
 const (
 	// ReservedNodeOfferingTypeRegular is a ReservedNodeOfferingType enum value
 	ReservedNodeOfferingTypeRegular = "Regular"
@@ -24890,6 +24938,14 @@ const (
 	// ReservedNodeOfferingTypeUpgradable is a ReservedNodeOfferingType enum value
 	ReservedNodeOfferingTypeUpgradable = "Upgradable"
 )
+
+// ReservedNodeOfferingType_Values returns all elements of the ReservedNodeOfferingType enum
+func ReservedNodeOfferingType_Values() []string {
+	return []string{
+		ReservedNodeOfferingTypeRegular,
+		ReservedNodeOfferingTypeUpgradable,
+	}
+}
 
 const (
 	// ScheduleStateModifying is a ScheduleState enum value
@@ -24902,6 +24958,15 @@ const (
 	ScheduleStateFailed = "FAILED"
 )
 
+// ScheduleState_Values returns all elements of the ScheduleState enum
+func ScheduleState_Values() []string {
+	return []string{
+		ScheduleStateModifying,
+		ScheduleStateActive,
+		ScheduleStateFailed,
+	}
+}
+
 const (
 	// ScheduledActionFilterNameClusterIdentifier is a ScheduledActionFilterName enum value
 	ScheduledActionFilterNameClusterIdentifier = "cluster-identifier"
@@ -24910,6 +24975,14 @@ const (
 	ScheduledActionFilterNameIamRole = "iam-role"
 )
 
+// ScheduledActionFilterName_Values returns all elements of the ScheduledActionFilterName enum
+func ScheduledActionFilterName_Values() []string {
+	return []string{
+		ScheduledActionFilterNameClusterIdentifier,
+		ScheduledActionFilterNameIamRole,
+	}
+}
+
 const (
 	// ScheduledActionStateActive is a ScheduledActionState enum value
 	ScheduledActionStateActive = "ACTIVE"
@@ -24917,6 +24990,14 @@ const (
 	// ScheduledActionStateDisabled is a ScheduledActionState enum value
 	ScheduledActionStateDisabled = "DISABLED"
 )
+
+// ScheduledActionState_Values returns all elements of the ScheduledActionState enum
+func ScheduledActionState_Values() []string {
+	return []string{
+		ScheduledActionStateActive,
+		ScheduledActionStateDisabled,
+	}
+}
 
 const (
 	// ScheduledActionTypeValuesResizeCluster is a ScheduledActionTypeValues enum value
@@ -24929,6 +25010,15 @@ const (
 	ScheduledActionTypeValuesResumeCluster = "ResumeCluster"
 )
 
+// ScheduledActionTypeValues_Values returns all elements of the ScheduledActionTypeValues enum
+func ScheduledActionTypeValues_Values() []string {
+	return []string{
+		ScheduledActionTypeValuesResizeCluster,
+		ScheduledActionTypeValuesPauseCluster,
+		ScheduledActionTypeValuesResumeCluster,
+	}
+}
+
 const (
 	// SnapshotAttributeToSortBySourceType is a SnapshotAttributeToSortBy enum value
 	SnapshotAttributeToSortBySourceType = "SOURCE_TYPE"
@@ -24940,6 +25030,15 @@ const (
 	SnapshotAttributeToSortByCreateTime = "CREATE_TIME"
 )
 
+// SnapshotAttributeToSortBy_Values returns all elements of the SnapshotAttributeToSortBy enum
+func SnapshotAttributeToSortBy_Values() []string {
+	return []string{
+		SnapshotAttributeToSortBySourceType,
+		SnapshotAttributeToSortByTotalSize,
+		SnapshotAttributeToSortByCreateTime,
+	}
+}
+
 const (
 	// SortByOrderAsc is a SortByOrder enum value
 	SortByOrderAsc = "ASC"
@@ -24947,6 +25046,14 @@ const (
 	// SortByOrderDesc is a SortByOrder enum value
 	SortByOrderDesc = "DESC"
 )
+
+// SortByOrder_Values returns all elements of the SortByOrder enum
+func SortByOrder_Values() []string {
+	return []string{
+		SortByOrderAsc,
+		SortByOrderDesc,
+	}
+}
 
 const (
 	// SourceTypeCluster is a SourceType enum value
@@ -24965,6 +25072,17 @@ const (
 	SourceTypeScheduledAction = "scheduled-action"
 )
 
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeCluster,
+		SourceTypeClusterParameterGroup,
+		SourceTypeClusterSecurityGroup,
+		SourceTypeClusterSnapshot,
+		SourceTypeScheduledAction,
+	}
+}
+
 const (
 	// TableRestoreStatusTypePending is a TableRestoreStatusType enum value
 	TableRestoreStatusTypePending = "PENDING"
@@ -24982,6 +25100,17 @@ const (
 	TableRestoreStatusTypeCanceled = "CANCELED"
 )
 
+// TableRestoreStatusType_Values returns all elements of the TableRestoreStatusType enum
+func TableRestoreStatusType_Values() []string {
+	return []string{
+		TableRestoreStatusTypePending,
+		TableRestoreStatusTypeInProgress,
+		TableRestoreStatusTypeSucceeded,
+		TableRestoreStatusTypeFailed,
+		TableRestoreStatusTypeCanceled,
+	}
+}
+
 const (
 	// UsageLimitBreachActionLog is a UsageLimitBreachAction enum value
 	UsageLimitBreachActionLog = "log"
@@ -24993,6 +25122,15 @@ const (
 	UsageLimitBreachActionDisable = "disable"
 )
 
+// UsageLimitBreachAction_Values returns all elements of the UsageLimitBreachAction enum
+func UsageLimitBreachAction_Values() []string {
+	return []string{
+		UsageLimitBreachActionLog,
+		UsageLimitBreachActionEmitMetric,
+		UsageLimitBreachActionDisable,
+	}
+}
+
 const (
 	// UsageLimitFeatureTypeSpectrum is a UsageLimitFeatureType enum value
 	UsageLimitFeatureTypeSpectrum = "spectrum"
@@ -25001,6 +25139,14 @@ const (
 	UsageLimitFeatureTypeConcurrencyScaling = "concurrency-scaling"
 )
 
+// UsageLimitFeatureType_Values returns all elements of the UsageLimitFeatureType enum
+func UsageLimitFeatureType_Values() []string {
+	return []string{
+		UsageLimitFeatureTypeSpectrum,
+		UsageLimitFeatureTypeConcurrencyScaling,
+	}
+}
+
 const (
 	// UsageLimitLimitTypeTime is a UsageLimitLimitType enum value
 	UsageLimitLimitTypeTime = "time"
@@ -25008,6 +25154,14 @@ const (
 	// UsageLimitLimitTypeDataScanned is a UsageLimitLimitType enum value
 	UsageLimitLimitTypeDataScanned = "data-scanned"
 )
+
+// UsageLimitLimitType_Values returns all elements of the UsageLimitLimitType enum
+func UsageLimitLimitType_Values() []string {
+	return []string{
+		UsageLimitLimitTypeTime,
+		UsageLimitLimitTypeDataScanned,
+	}
+}
 
 const (
 	// UsageLimitPeriodDaily is a UsageLimitPeriod enum value
@@ -25019,3 +25173,12 @@ const (
 	// UsageLimitPeriodMonthly is a UsageLimitPeriod enum value
 	UsageLimitPeriodMonthly = "monthly"
 )
+
+// UsageLimitPeriod_Values returns all elements of the UsageLimitPeriod enum
+func UsageLimitPeriod_Values() []string {
+	return []string{
+		UsageLimitPeriodDaily,
+		UsageLimitPeriodWeekly,
+		UsageLimitPeriodMonthly,
+	}
+}
