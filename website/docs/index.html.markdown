@@ -106,15 +106,10 @@ If you're running Terraform on EKS and have configured [IAM Roles for Service Ac
 
 ### Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about
-the requester i.e. HashiCorp and the Terraform Version and Homepage. To provide additional configuration information in the User-Agent headers,
-the `TF_APPEND_USER_AGENT` environment variable can be set with the format: `name/version/extra0...`.
-Multiple User-Agent configurations can be provided by including a space between each e.g.
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS Go SDK versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. e.g.
 
 ```sh
-$ export TF_APPEND_USER_AGENT="JenkinsAgent1234/1.0"
-$ export TF_APPEND_USER_AGENT="JenkinsAgent1234/1.0 JobID1234/1.0"
-$ export TF_APPEND_USER_AGENT="JenkinsAgent1234/1.0 JobID1234/1.0/extra0,extra1"
+$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
 ```
 
 ### EC2 Instance Metadata Service
