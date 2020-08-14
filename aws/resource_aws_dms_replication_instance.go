@@ -37,6 +37,10 @@ func resourceAwsDmsReplicationInstance() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(5, 6144),
 			},
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -284,6 +288,12 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 			request.AllocatedStorage = aws.Int64(int64(v.(int)))
 			hasChanges = true
 		}
+	}
+
+	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		request.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
+		// as it results in InvalidParameterCombination: No modifications were requested
 	}
 
 	if d.HasChange("engine_version") {
