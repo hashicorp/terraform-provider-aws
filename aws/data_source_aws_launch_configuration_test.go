@@ -77,7 +77,7 @@ func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 	})
 }
 
-func testAccLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
+func TestAccLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_launch_configuration.test"
 	resourceName := "aws_launch_configuration.test"
@@ -85,7 +85,7 @@ func testAccLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName),
