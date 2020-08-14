@@ -64,7 +64,7 @@ func resourceAwsLambdaLayerVersion() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(validLambdaRuntimes, false),
+					ValidateFunc: validateLambdaRuntime,
 				},
 			},
 			"description": {
