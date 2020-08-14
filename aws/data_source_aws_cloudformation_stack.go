@@ -113,7 +113,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	template, err := normalizeCloudFormationTemplate(*tOut.TemplateBody)
+	template, err := normalizeJsonOrYamlString(*tOut.TemplateBody)
 	if err != nil {
 		return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 	}

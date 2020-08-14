@@ -105,8 +105,8 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 			"body": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressOpenAPISpecificationDiffs,
-				ValidateFunc:     validateOpenAPISpecification,
+				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
+				ValidateFunc:     validateStringIsJsonOrYaml,
 			},
 			"protocol_type": {
 				Type:     schema.TypeString,

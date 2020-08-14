@@ -2267,7 +2267,7 @@ func checkYamlString(yamlString interface{}) (string, error) {
 	return s, err
 }
 
-func normalizeCloudFormationTemplate(templateString interface{}) (string, error) {
+func normalizeJsonOrYamlString(templateString interface{}) (string, error) {
 	if looksLikeJsonString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}

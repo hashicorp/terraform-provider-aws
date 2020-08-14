@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
@@ -823,7 +824,7 @@ func TestValidateIAMPolicyJsonString(t *testing.T) {
 	}
 }
 
-func TestValidateCloudFormationTemplate(t *testing.T) {
+func TestValidateStringIsJsonOrYaml(t *testing.T) {
 	type testCases struct {
 		Value    string
 		ErrCount int
@@ -841,7 +842,7 @@ func TestValidateCloudFormationTemplate(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validateCloudFormationTemplate(tc.Value, "template")
+		_, errors := validateStringIsJsonOrYaml(tc.Value, "template")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -859,7 +860,7 @@ func TestValidateCloudFormationTemplate(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := validateCloudFormationTemplate(tc.Value, "template")
+		_, errors := validateStringIsJsonOrYaml(tc.Value, "template")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}

@@ -86,8 +86,8 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ConflictsWith:    []string{"template_url"},
-				DiffSuppressFunc: suppressCloudFormationTemplateBodyDiffs,
-				ValidateFunc:     validateCloudFormationTemplate,
+				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
+				ValidateFunc:     validateStringIsJsonOrYaml,
 			},
 			"template_url": {
 				Type:          schema.TypeString,
