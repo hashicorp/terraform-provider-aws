@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsBackupVaultNotifications() *schema.Resource {
@@ -22,10 +22,13 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"backup_vault_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]$`), "must consist of lowercase letters, numbers, and hyphens."),
+					validation.StringLenBetween(1, 50),
+				),
 			},
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
@@ -38,24 +41,8 @@ func resourceAwsBackupVaultNotifications() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						backup.VaultEventBackupJobStarted,
-						backup.VaultEventBackupJobCompleted,
-						backup.VaultEventBackupJobSuccessful,
-						backup.VaultEventBackupJobFailed,
-						backup.VaultEventBackupJobExpired,
-						backup.VaultEventRestoreJobStarted,
-						backup.VaultEventRestoreJobSuccessful,
-						backup.VaultEventRestoreJobCompleted,
-						backup.VaultEventRestoreJobFailed,
-						backup.VaultEventCopyJobFailed,
-						backup.VaultEventCopyJobStarted,
-						backup.VaultEventCopyJobSuccessful,
-						backup.VaultEventRecoveryPointModified,
-						backup.VaultEventBackupPlanCreated,
-						backup.VaultEventBackupPlanModified,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(backup.VaultEvent_Values(), false),
 				},
 			},
 			"backup_vault_arn": {
