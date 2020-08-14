@@ -12,6 +12,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
+
 func resourceAwsDbClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsDbClusterSnapshotCreate,
@@ -105,9 +107,22 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 		Tags:                        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags(),
 	}
 
-	_, err := conn.CreateDBClusterSnapshot(params)
+	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
+		_, err := conn.CreateDBClusterSnapshot(params)
+		if err != nil {
+			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateDBClusterSnapshot(params)
+	}
 	if err != nil {
-		return fmt.Errorf("error creating RDS DB Cluster Snapshot: %s", err)
+		return fmt.Errorf("error creating RDS DB Cluster Snapshot: %w", err)
 	}
 	d.SetId(d.Get("db_cluster_snapshot_identifier").(string))
 

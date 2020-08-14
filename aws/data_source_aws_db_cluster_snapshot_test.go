@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -92,30 +91,7 @@ func TestAccAWSDbClusterSnapshotDataSource_MostRecent(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsDbClusterAndSnapshot(rName),
-			},
-			{
-				PreConfig: func() {
-					// To prevent InvalidDBClusterStateFault errors,
-					// ensure rds_cluster is in an "available" state before
-					// creating an additional snapshot resource
-					conn := testAccProvider.Meta().(*AWSClient).rdsconn
-					stateConf := &resource.StateChangeConf{
-						Pending:    resourceAwsRdsClusterCreatePendingStates,
-						Target:     []string{"available"},
-						Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, rName),
-						Timeout:    15 * time.Minute,
-						MinTimeout: 10 * time.Second,
-						Delay:      30 * time.Second,
-					}
-
-					_, err := stateConf.WaitForState()
-					if err != nil {
-						t.Fatal(err)
-					}
-				},
-				Config: composeConfig(testAccCheckAwsDbClusterAndSnapshot(rName),
-					testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName)),
+				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
@@ -258,7 +234,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccCheckAwsDbClusterAndSnapshot(rName string) string {
+func testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -306,14 +282,10 @@ resource "aws_db_cluster_snapshot" "incorrect" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = "%[1]s-incorrect"
 }
-`, rName)
-}
 
-func testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
-	return fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = aws_rds_cluster.test.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_identifier          = aws_db_cluster_snapshot.incorrect.db_cluster_identifier
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 data "aws_db_cluster_snapshot" "test" {
