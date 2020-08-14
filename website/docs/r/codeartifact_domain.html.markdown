@@ -19,7 +19,7 @@ resource "aws_kms_key" "example" {
 
 resource "aws_codeartifact_domain" "example" {
   domain         = "example"
-  encryption_key = "${aws_kms_key.example.arn}"
+  encryption_key = aws_kms_key.example.arn
 }
 ```
 
