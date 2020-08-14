@@ -7,6 +7,7 @@ ENHANCEMENTS
 * provider: Upgrade to Terraform Plugin SDK V2. There should be no breaking changes from a practitioner's perspective. Some validation errors should now feature enhanced messaging. [GH-14432]
 * resource/aws_accessanalyzer_analyzer: Support `ORGANIZATION` value in `type` argument [GH-14493]
 * resource/aws_codebuild_project: Support `WINDOWS_SERVER_2019_CONTAINER` value in `environment` `type` argument plan-time validation [GH-14532]
+* resource/aws_organizations_organization: Support `AISERVICES_OPT_OUT_POLICY` value in `enabled_policy_types` argument plan-time validation (Support AI Opt Out policies) [GH-14650]
 * resource/aws_organizations_policy: Support `AISERVICES_OPT_OUT_POLICY` value in `type` argument plan-time validation (Support AI Opt Out policies) [GH-14528]
 * resource/aws_route53_health_check: Add `disabled` argument [GH-14614]
 
