@@ -1,4 +1,9 @@
 ## 3.3.0 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs [GH-14638]
+
 ## 3.2.0 (August 14, 2020)
 
 ENHANCEMENTS
