@@ -132,3 +132,20 @@ func ClientVpnRouteDeleted(conn *ec2.EC2, routeID string) (*ec2.ClientVpnRoute, 
 
 	return nil, err
 }
+
+func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{SecurityGroupStatusNotFound},
+		Target:  []string{SecurityGroupStatusCreated},
+		Refresh: SecurityGroupStatus(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SecurityGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
