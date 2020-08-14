@@ -3,15 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/sync"
 )
 
@@ -80,7 +81,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 //   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
 //   What is here was dangerous and repulsive to us. This message is a warning about danger."
 //   --  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
-func TestAccAwsEc2ClientVpn(t *testing.T) {
+func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
 			"basic":             testAccAwsEc2ClientVpnEndpoint_basic,
@@ -116,6 +117,11 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 		for name, tc := range m {
 			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				t.Cleanup(func() {
+					if os.Getenv(resource.TestEnvVar) != "" {
+						testAccEc2ClientVpnEndpointSemaphore.Notify()
+					}
+				})
 				tc(t)
 			})
 		}
@@ -128,7 +134,7 @@ func testAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -157,7 +163,7 @@ func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -179,7 +185,7 @@ func testAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -206,7 +212,7 @@ func testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -234,7 +240,7 @@ func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -269,7 +275,7 @@ func testAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -295,7 +301,7 @@ func testAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	rStr := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -337,7 +343,7 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -370,8 +376,6 @@ func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
@@ -432,7 +436,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccEc2ClientVpnEndpointMsADBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -447,15 +451,15 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -464,23 +468,23 @@ resource "aws_directory_service_directory" "test" {
   type     = "MicrosoftAD"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.test.id}"
-    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
   }
 }
-`)
+`
 }
 
 func testAccEc2ClientVpnEndpointConfig(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -498,23 +502,23 @@ resource "aws_cloudwatch_log_group" "lg" {
 
 resource "aws_cloudwatch_log_stream" "ls" {
   name           = "${aws_cloudwatch_log_group.lg.name}-stream"
-  log_group_name = "${aws_cloudwatch_log_group.lg.name}"
+  log_group_name = aws_cloudwatch_log_group.lg.name
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
     enabled               = true
-    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
-    cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
+    cloudwatch_log_group  = aws_cloudwatch_log_group.lg.name
+    cloudwatch_log_stream = aws_cloudwatch_log_stream.ls.name
   }
 }
 `, rName, rName)
@@ -524,14 +528,14 @@ func testAccEc2ClientVpnEndpointConfigWithDNSServers(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   dns_servers = ["8.8.8.8", "8.8.4.4"]
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -546,12 +550,12 @@ func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
 		testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                = "directory-service-authentication"
-    active_directory_id = "${aws_directory_service_directory.test.id}"
+    active_directory_id = aws_directory_service_directory.test.id
   }
 
   connection_log_options {
@@ -565,17 +569,17 @@ func testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rName string)
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                = "directory-service-authentication"
-    active_directory_id = "${aws_directory_service_directory.test.id}"
+    active_directory_id = aws_directory_service_directory.test.id
   }
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -589,12 +593,12 @@ func testAccEc2ClientVpnEndpointConfig_tags(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -613,12 +617,12 @@ func testAccEc2ClientVpnEndpointConfig_tagsChanged(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -637,12 +641,12 @@ func testAccEc2ClientVpnEndpointConfigSplitTunnel(rName string, splitTunnel bool
 resource "aws_ec2_client_vpn_endpoint" "test" {
   client_cidr_block      = "10.0.0.0/16"
   description            = %[1]q
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   split_tunnel           = %[2]t
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {

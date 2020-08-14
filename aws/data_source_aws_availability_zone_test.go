@@ -1,11 +1,10 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
@@ -105,7 +104,7 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   state = "available"
 
@@ -119,11 +118,11 @@ data "aws_availability_zone" "test" {
   all_availability_zones = true
   name                   = data.aws_availability_zones.test.names[0]
 }
-`)
+`
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   state = "available"
 
@@ -139,11 +138,11 @@ data "aws_availability_zone" "test" {
     values = [data.aws_availability_zones.test.names[0]]
   }
 }
-`)
+`
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigName() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   state = "available"
 
@@ -156,11 +155,11 @@ data "aws_availability_zones" "test" {
 data "aws_availability_zone" "test" {
   name = data.aws_availability_zones.test.names[0]
 }
-`)
+`
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigZoneId() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   state = "available"
 
@@ -173,5 +172,5 @@ data "aws_availability_zones" "test" {
 data "aws_availability_zone" "test" {
   zone_id = data.aws_availability_zones.test.zone_ids[0]
 }
-`)
+`
 }

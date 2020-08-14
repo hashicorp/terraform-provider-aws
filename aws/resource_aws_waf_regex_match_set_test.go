@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -78,7 +78,7 @@ func testSweepWafRegexMatchSet(region string) error {
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
-func TestAccAWSWafRegexMatchSet(t *testing.T) {
+func TestAccAWSWafRegexMatchSet_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":          testAccAWSWafRegexMatchSet_basic,
 		"changePatterns": testAccAWSWafRegexMatchSet_changePatterns,

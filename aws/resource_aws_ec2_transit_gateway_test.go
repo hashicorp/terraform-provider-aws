@@ -10,8 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -649,9 +649,9 @@ func testAccPreCheckAWSEc2TransitGateway(t *testing.T) {
 }
 
 func testAccAWSEc2TransitGatewayConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {}
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayConfigAmazonSideASN(amazonSideASN int) string {
@@ -671,12 +671,12 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 func testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociationAndPropagationDisabled() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
 }
-`)
+`
 }
 
 func testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociation(defaultRouteTableAssociation string) string {

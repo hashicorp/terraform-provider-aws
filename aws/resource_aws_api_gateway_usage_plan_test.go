@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
@@ -73,6 +73,11 @@ func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicTags2(name, "key1", "value1updated", "key2", "value2"),
@@ -396,6 +401,28 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "api_stages"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayUsagePlan_disappears(t *testing.T) {
+	var conf apigateway.UsagePlan
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	resourceName := "aws_api_gateway_usage_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlan(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

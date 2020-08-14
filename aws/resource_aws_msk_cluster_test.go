@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -153,7 +153,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 }
 
 func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
-	t.Skip("Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
+	TestAccSkip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
 
 	var cluster1 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -187,7 +187,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 }
 
 func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
-	t.Skip("aws_msk_cluster is correctly calling UpdateClusterConfiguration however API is always returning 429 and 500 errors")
+	TestAccSkip(t, "aws_msk_cluster is correctly calling UpdateClusterConfiguration however API is always returning 429 and 500 errors")
 
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -666,7 +666,7 @@ func testAccPreCheckAWSMsk(t *testing.T) {
 }
 
 func testAccMskClusterBaseConfig() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/22"
 
@@ -717,7 +717,7 @@ resource "aws_subnet" "example_subnet_az3" {
 resource "aws_security_group" "example_sg" {
   vpc_id = "${aws_vpc.example_vpc.id}"
 }
-`)
+`
 
 }
 func testAccMskClusterConfig_basic(rName string) string {

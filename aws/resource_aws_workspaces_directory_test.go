@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -443,7 +443,7 @@ resource "aws_directory_service_directory" "main" {
 }
 
 func testAccWorkspacesDirectoryConfigA(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 }
@@ -451,11 +451,11 @@ resource "aws_workspaces_directory" "main" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`)
+`
 }
 
 func testAccWorkspacesDirectoryConfigB(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -467,11 +467,11 @@ resource "aws_workspaces_directory" "main" {
     switch_running_mode  = true
   }
 }
-`)
+`
 }
 
 func testAccWorkspacesDirectoryConfigC(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -480,16 +480,16 @@ resource "aws_workspaces_directory" "main" {
     switch_running_mode = true
   }
 }
-`)
+`
 }
 
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
   subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
 }
-`)
+`
 }
 
 func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {

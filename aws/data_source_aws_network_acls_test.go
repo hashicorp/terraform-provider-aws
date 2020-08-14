@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsNetworkAcls_basic(t *testing.T) {
@@ -96,7 +96,7 @@ resource "aws_vpc" "test" {
 resource "aws_network_acl" "acl" {
   count = 2
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "testacc-acl-%s"
@@ -116,7 +116,7 @@ func testAccDataSourceAwsNetworkAclsConfig_Filter(rName string) string {
 data "aws_network_acls" "test" {
   filter {
     name   = "network-acl-id"
-    values = ["${aws_network_acl.acl.0.id}"]
+    values = [aws_network_acl.acl.0.id]
   }
 }
 `
@@ -126,7 +126,7 @@ func testAccDataSourceAwsNetworkAclsConfig_Tags(rName string) string {
 	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
 data "aws_network_acls" "test" {
   tags = {
-    Name = "${aws_network_acl.acl.0.tags.Name}"
+    Name = aws_network_acl.acl.0.tags.Name
   }
 }
 `
@@ -135,7 +135,7 @@ data "aws_network_acls" "test" {
 func testAccDataSourceAwsNetworkAclsConfig_VpcID(rName string) string {
 	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
 data "aws_network_acls" "test" {
-  vpc_id = "${aws_network_acl.acl.0.vpc_id}"
+  vpc_id = aws_network_acl.acl.0.vpc_id
 }
 `
 }

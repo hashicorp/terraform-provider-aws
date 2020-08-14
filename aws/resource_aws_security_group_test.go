@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
@@ -4125,7 +4125,7 @@ resource "aws_security_group" "test" {
 `
 
 func testAccAWSSecurityGroupConfigEgressConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4155,11 +4155,11 @@ resource "aws_security_group" "test" {
     to_port     = 0
   }
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4175,11 +4175,11 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigEgressConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4197,11 +4197,11 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigIngressConfigModeBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4231,11 +4231,11 @@ resource "aws_security_group" "test" {
     to_port     = 0
   }
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4251,11 +4251,11 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }
 
 func testAccAWSSecurityGroupConfigIngressConfigModeZeroed() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4273,5 +4273,5 @@ resource "aws_security_group" "test" {
 
   vpc_id = "${aws_vpc.test.id}"
 }
-`)
+`
 }

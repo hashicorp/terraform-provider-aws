@@ -1826,6 +1826,103 @@ func (c *Kafka) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsF
 	return out, req.Send()
 }
 
+const opRebootBroker = "RebootBroker"
+
+// RebootBrokerRequest generates a "aws/request.Request" representing the
+// client's request for the RebootBroker operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RebootBroker for more information on using the RebootBroker
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RebootBrokerRequest method.
+//    req, resp := client.RebootBrokerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/RebootBroker
+func (c *Kafka) RebootBrokerRequest(input *RebootBrokerInput) (req *request.Request, output *RebootBrokerOutput) {
+	op := &request.Operation{
+		Name:       opRebootBroker,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/reboot-broker",
+	}
+
+	if input == nil {
+		input = &RebootBrokerInput{}
+	}
+
+	output = &RebootBrokerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RebootBroker API operation for Managed Streaming for Kafka.
+//
+// Executes a reboot on a broker.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation RebootBroker for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/RebootBroker
+func (c *Kafka) RebootBroker(input *RebootBrokerInput) (*RebootBrokerOutput, error) {
+	req, out := c.RebootBrokerRequest(input)
+	return out, req.Send()
+}
+
+// RebootBrokerWithContext is the same as RebootBroker with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RebootBroker for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) RebootBrokerWithContext(ctx aws.Context, input *RebootBrokerInput, opts ...request.Option) (*RebootBrokerOutput, error) {
+	req, out := c.RebootBrokerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
@@ -5960,6 +6057,93 @@ func (s *PrometheusInfo) SetNodeExporter(v *NodeExporterInfo) *PrometheusInfo {
 	return s
 }
 
+// Request body for RebootBrokerNode action.
+type RebootBrokerInput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of broker ids to be rebooted.
+	//
+	// BrokerIds is a required field
+	BrokerIds []*string `locationName:"brokerIds" type:"list" required:"true"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RebootBrokerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RebootBrokerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RebootBrokerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RebootBrokerInput"}
+	if s.BrokerIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("BrokerIds"))
+	}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBrokerIds sets the BrokerIds field's value.
+func (s *RebootBrokerInput) SetBrokerIds(v []*string) *RebootBrokerInput {
+	s.BrokerIds = v
+	return s
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *RebootBrokerInput) SetClusterArn(v string) *RebootBrokerInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// Response body for RebootBrokers action.
+type RebootBrokerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s RebootBrokerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RebootBrokerOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *RebootBrokerOutput) SetClusterArn(v string) *RebootBrokerOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *RebootBrokerOutput) SetClusterOperationArn(v string) *RebootBrokerOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // The details of the Amazon S3 destination for broker logs.
 type S3 struct {
 	_ struct{} `type:"structure"`
@@ -7026,6 +7210,13 @@ const (
 	BrokerAZDistributionDefault = "DEFAULT"
 )
 
+// BrokerAZDistribution_Values returns all elements of the BrokerAZDistribution enum
+func BrokerAZDistribution_Values() []string {
+	return []string{
+		BrokerAZDistributionDefault,
+	}
+}
+
 // Client-broker encryption in transit setting.
 const (
 	// ClientBrokerTls is a ClientBroker enum value
@@ -7037,6 +7228,15 @@ const (
 	// ClientBrokerPlaintext is a ClientBroker enum value
 	ClientBrokerPlaintext = "PLAINTEXT"
 )
+
+// ClientBroker_Values returns all elements of the ClientBroker enum
+func ClientBroker_Values() []string {
+	return []string{
+		ClientBrokerTls,
+		ClientBrokerTlsPlaintext,
+		ClientBrokerPlaintext,
+	}
+}
 
 // The state of a Kafka cluster.
 const (
@@ -7056,6 +7256,17 @@ const (
 	ClusterStateFailed = "FAILED"
 )
 
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateActive,
+		ClusterStateCreating,
+		ClusterStateUpdating,
+		ClusterStateDeleting,
+		ClusterStateFailed,
+	}
+}
+
 // Specifies which metrics are gathered for the MSK cluster. This property has
 // three possible values: DEFAULT, PER_BROKER, and PER_TOPIC_PER_BROKER. For
 // a list of the metrics associated with each of these three levels of monitoring,
@@ -7071,6 +7282,15 @@ const (
 	EnhancedMonitoringPerTopicPerBroker = "PER_TOPIC_PER_BROKER"
 )
 
+// EnhancedMonitoring_Values returns all elements of the EnhancedMonitoring enum
+func EnhancedMonitoring_Values() []string {
+	return []string{
+		EnhancedMonitoringDefault,
+		EnhancedMonitoringPerBroker,
+		EnhancedMonitoringPerTopicPerBroker,
+	}
+}
+
 // The status of a Kafka version.
 const (
 	// KafkaVersionStatusActive is a KafkaVersionStatus enum value
@@ -7080,8 +7300,23 @@ const (
 	KafkaVersionStatusDeprecated = "DEPRECATED"
 )
 
+// KafkaVersionStatus_Values returns all elements of the KafkaVersionStatus enum
+func KafkaVersionStatus_Values() []string {
+	return []string{
+		KafkaVersionStatusActive,
+		KafkaVersionStatusDeprecated,
+	}
+}
+
 // The broker or Zookeeper node.
 const (
 	// NodeTypeBroker is a NodeType enum value
 	NodeTypeBroker = "BROKER"
 )
+
+// NodeType_Values returns all elements of the NodeType enum
+func NodeType_Values() []string {
+	return []string{
+		NodeTypeBroker,
+	}
+}

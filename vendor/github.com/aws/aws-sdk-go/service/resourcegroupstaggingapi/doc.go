@@ -10,6 +10,11 @@
 // EC2 instances, you might assign both a tag key of "Stack." But the value
 // of "Stack" might be "Testing" for one and "Production" for the other.
 //
+// Do not store personally identifiable information (PII) or other confidential
+// or sensitive information in tags. We use tags to provide you with billing
+// and administration services. Tags are not intended to be used for private
+// or sensitive data.
+//
 // Tagging can help you organize your resources and enables you to simplify
 // resource management, access management and cost allocation.
 //
@@ -46,202 +51,242 @@
 // For more information on IAM policies, see Managing IAM Policies (http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage.html)
 // in the IAM User Guide.
 //
+//  Services that support the Resource Groups Tagging API
+//
 // You can use the Resource Groups Tagging API to tag resources for the following
 // AWS services.
 //
-//    * Alexa for Business (a4b)
+//    * Alexa for Business (a4b) (https://docs.aws.amazon.com/a4b)
 //
-//    * API Gateway
+//    * API Gateway (https://docs.aws.amazon.com/apigateway)
 //
-//    * Amazon AppStream
+//    * Amazon AppStream (https://docs.aws.amazon.com/appstream2)
 //
-//    * AWS AppSync
+//    * AWS AppSync (https://docs.aws.amazon.com/appsync)
 //
-//    * AWS App Mesh
+//    * AWS App Mesh (https://docs.aws.amazon.com/app-mesh)
 //
-//    * Amazon Athena
+//    * Amazon Athena (https://docs.aws.amazon.com/athena)
 //
-//    * Amazon Aurora
+//    * Amazon Aurora (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide)
 //
-//    * AWS Backup
+//    * AWS Backup (https://docs.aws.amazon.com/aws-backup)
 //
-//    * AWS Certificate Manager
+//    * AWS Certificate Manager (https://docs.aws.amazon.com/acm)
 //
-//    * AWS Certificate Manager Private CA
+//    * AWS Certificate Manager Private CA (https://docs.aws.amazon.com/acm)
 //
-//    * Amazon Cloud Directory
+//    * Amazon Cloud Directory (https://docs.aws.amazon.com/clouddirectory)
 //
-//    * AWS CloudFormation
+//    * AWS Cloud Map (https://docs.aws.amazon.com/cloud-map)
 //
-//    * Amazon CloudFront
+//    * AWS CloudFormation (https://docs.aws.amazon.com/cloudformation)
 //
-//    * AWS CloudHSM
+//    * Amazon CloudFront (https://docs.aws.amazon.com/cloudfront)
 //
-//    * AWS CloudTrail
+//    * AWS CloudHSM (https://docs.aws.amazon.com/cloudhsm)
 //
-//    * Amazon CloudWatch (alarms only)
+//    * AWS CloudTrail (https://docs.aws.amazon.com/cloudtrail)
 //
-//    * Amazon CloudWatch Events
+//    * Amazon CloudWatch (alarms only) (https://docs.aws.amazon.com/cloudwatch)
 //
-//    * Amazon CloudWatch Logs
+//    * Amazon CloudWatch Events (https://docs.aws.amazon.com/cloudwatch/?id=docs_gateway#amazon-cloudwatch-events)
 //
-//    * AWS CodeBuild
+//    * Amazon CloudWatch Logs (https://docs.aws.amazon.com/cloudwatch/?id=docs_gateway#amazon-cloudwatch-logs)
 //
-//    * AWS CodeCommit
+//    * Amazon Cloudwatch Synthetics (https://docs.aws.amazon.com/cloudwatch)
 //
-//    * AWS CodePipeline
+//    * AWS CodeBuild (https://docs.aws.amazon.com/codebuild)
 //
-//    * AWS CodeStar
+//    * AWS CodeCommit (https://docs.aws.amazon.com/codecommit)
 //
-//    * Amazon Cognito Identity
+//    * AWS CodePipeline (https://docs.aws.amazon.com/codepipeline)
 //
-//    * Amazon Cognito User Pools
+//    * AWS CodeStar (https://docs.aws.amazon.com/codestar)
 //
-//    * Amazon Comprehend
+//    * AWS CodeStar Connections (https://docs.aws.amazon.com/codestar-connections/latest/APIReference/)
 //
-//    * AWS Config
+//    * Amazon Cognito Identity (https://docs.aws.amazon.com/cognito)
 //
-//    * AWS Data Exchange
+//    * Amazon Cognito User Pools (https://docs.aws.amazon.com/cognito)
 //
-//    * AWS Data Pipeline
+//    * Amazon Comprehend (https://docs.aws.amazon.com/comprehend)
 //
-//    * AWS Database Migration Service
+//    * AWS Config (https://docs.aws.amazon.com/config)
 //
-//    * AWS DataSync
+//    * Amazon Connect (http://aws.amazon.com/connect/resources/?whats-new-cards#Documentation)
 //
-//    * AWS Device Farm
+//    * AWS Data Exchange (https://docs.aws.amazon.com/data-exchange)
 //
-//    * AWS Direct Connect
+//    * AWS Data Pipeline (https://docs.aws.amazon.com/data-pipeline)
 //
-//    * AWS Directory Service
+//    * AWS Database Migration Service (https://docs.aws.amazon.com/dms)
 //
-//    * Amazon DynamoDB
+//    * AWS DataSync (https://docs.aws.amazon.com/datasync)
 //
-//    * Amazon EBS
+//    * AWS Device Farm (https://docs.aws.amazon.com/devicefarm)
 //
-//    * Amazon EC2
+//    * AWS Direct Connect (https://docs.aws.amazon.com/directconnect)
 //
-//    * Amazon ECR
+//    * AWS Directory Service (https://docs.aws.amazon.com/directory-service)
 //
-//    * Amazon ECS
+//    * Amazon DynamoDB (https://docs.aws.amazon.com/dynamodb)
 //
-//    * Amazon EKS
+//    * Amazon EBS (https://docs.aws.amazon.com/ebs)
 //
-//    * AWS Elastic Beanstalk
+//    * Amazon EC2 (https://docs.aws.amazon.com/ec2)
 //
-//    * Amazon Elastic File System
+//    * EC2 Image Builder (https://docs.aws.amazon.com/imagebuilder)
 //
-//    * Elastic Load Balancing
+//    * Amazon ECR (https://docs.aws.amazon.com/ecr)
 //
-//    * Amazon ElastiCache
+//    * Amazon ECS (https://docs.aws.amazon.com/ecs)
 //
-//    * Amazon Elasticsearch Service
+//    * Amazon EKS (https://docs.aws.amazon.com/eks)
 //
-//    * AWS Elemental MediaLive
+//    * AWS Elastic Beanstalk (https://docs.aws.amazon.com/elastic-beanstalk)
 //
-//    * AWS Elemental MediaPackage
+//    * Amazon Elastic File System (https://docs.aws.amazon.com/efs)
 //
-//    * AWS Elemental MediaTailor
+//    * Elastic Load Balancing (https://docs.aws.amazon.com/elasticloadbalancing)
 //
-//    * Amazon EMR
+//    * Amazon ElastiCache (https://docs.aws.amazon.com/elasticache)
 //
-//    * Amazon FSx
+//    * Amazon Elasticsearch Service (https://docs.aws.amazon.com/elasticsearch-service)
 //
-//    * Amazon S3 Glacier
+//    * AWS Elemental MediaLive (https://docs.aws.amazon.com/medialive)
 //
-//    * AWS Glue
+//    * AWS Elemental MediaPackage (https://docs.aws.amazon.com/mediapackage)
 //
-//    * Amazon GuardDuty
+//    * AWS Elemental MediaPackage VoD (https://docs.aws.amazon.com/mediapackage)
 //
-//    * Amazon Inspector
+//    * AWS Elemental MediaTailor (https://docs.aws.amazon.com/mediatailor)
 //
-//    * AWS IoT Analytics
+//    * Amazon EMR (https://docs.aws.amazon.com/emr)
 //
-//    * AWS IoT Core
+//    * Amazon EventBridge Schema (https://docs.aws.amazon.com/eventbridge)
 //
-//    * AWS IoT Device Defender
+//    * AWS Firewall Manager (https://docs.aws.amazon.com/firewall-manager)
 //
-//    * AWS IoT Device Management
+//    * Amazon FSx (https://docs.aws.amazon.com/fsx)
 //
-//    * AWS IoT Events
+//    * Amazon S3 Glacier (https://docs.aws.amazon.com/s3/?id=docs_gateway#amazon-s3-glacier)
 //
-//    * AWS IoT Greengrass
+//    * AWS Global Accelerator (https://docs.aws.amazon.com/global-accelerator)
 //
-//    * AWS IoT 1-Click
+//    * AWS Ground Station (https://docs.aws.amazon.com/ground-station)
 //
-//    * AWS IoT Things Graph
+//    * AWS Glue (https://docs.aws.amazon.com/glue)
 //
-//    * AWS Key Management Service
+//    * Amazon GuardDuty (https://docs.aws.amazon.com/guardduty)
 //
-//    * Amazon Kinesis
+//    * Amazon Inspector (https://docs.aws.amazon.com/inspector)
 //
-//    * Amazon Kinesis Data Analytics
+//    * AWS IoT Analytics (https://docs.aws.amazon.com/iotanalytics)
 //
-//    * Amazon Kinesis Data Firehose
+//    * AWS IoT Core (https://docs.aws.amazon.com/iot)
 //
-//    * AWS Lambda
+//    * AWS IoT Device Defender (https://docs.aws.amazon.com/iot-device-defender)
 //
-//    * AWS License Manager
+//    * AWS IoT Device Management (https://docs.aws.amazon.com/iot-device-management)
 //
-//    * Amazon Machine Learning
+//    * AWS IoT Events (https://docs.aws.amazon.com/iotevents)
 //
-//    * Amazon MQ
+//    * AWS IoT Greengrass (https://docs.aws.amazon.com/greengrass)
 //
-//    * Amazon MSK
+//    * AWS IoT 1-Click (https://docs.aws.amazon.com/iot-1-click)
 //
-//    * Amazon Neptune
+//    * AWS IoT Sitewise (https://docs.aws.amazon.com/iot-sitewise)
 //
-//    * AWS OpsWorks
+//    * AWS IoT Things Graph (https://docs.aws.amazon.com/thingsgraph)
 //
-//    * AWS Organizations
+//    * Amazon Kendra (https://docs.aws.amazon.com/kendra)
 //
-//    * Amazon Quantum Ledger Database (QLDB)
+//    * AWS Key Management Service (https://docs.aws.amazon.com/kms)
 //
-//    * Amazon RDS
+//    * Amazon Kinesis (https://docs.aws.amazon.com/kinesis)
 //
-//    * Amazon Redshift
+//    * Amazon Kinesis Data Analytics (https://docs.aws.amazon.com/kinesis/?id=docs_gateway#amazon-kinesis-data-analytics)
 //
-//    * AWS Resource Access Manager
+//    * Amazon Kinesis Data Firehose (https://docs.aws.amazon.com/kinesis/?id=docs_gateway#amazon-kinesis-data-firehose)
 //
-//    * AWS Resource Groups
+//    * AWS Lambda (https://docs.aws.amazon.com/lambda)
 //
-//    * AWS RoboMaker
+//    * Amazon Lex (https://docs.aws.amazon.com/lex)
 //
-//    * Amazon Route 53
+//    * AWS License Manager (https://docs.aws.amazon.com/license-manager)
 //
-//    * Amazon Route 53 Resolver
+//    * Amazon Macie (https://docs.aws.amazon.com/macie)
 //
-//    * Amazon S3 (buckets only)
+//    * Amazon Machine Learning (https://docs.aws.amazon.com/machine-learning)
 //
-//    * Amazon SageMaker
+//    * Amazon MQ (https://docs.aws.amazon.com/amazon-mq)
 //
-//    * AWS Secrets Manager
+//    * Amazon MSK (https://docs.aws.amazon.com/msk)
 //
-//    * AWS Security Hub
+//    * Amazon Neptune (https://docs.aws.amazon.com/neptune)
 //
-//    * AWS Service Catalog
+//    * AWS OpsWorks (https://docs.aws.amazon.com/opsworks)
 //
-//    * Amazon Simple Email Service (SES)
+//    * AWS OpsWorks CM (https://docs.aws.amazon.com/opsworks)
 //
-//    * Amazon Simple Notification Service (SNS)
+//    * AWS Organizations (https://docs.aws.amazon.com/organizations)
 //
-//    * Amazon Simple Queue Service (SQS)
+//    * Amazon Pinpoint (https://docs.aws.amazon.com/pinpoint)
 //
-//    * Amazon Simple Workflow Service
+//    * Amazon Quantum Ledger Database (QLDB) (https://docs.aws.amazon.com/qldb)
 //
-//    * AWS Step Functions
+//    * Amazon RDS (https://docs.aws.amazon.com/rds)
 //
-//    * AWS Storage Gateway
+//    * Amazon Redshift (https://docs.aws.amazon.com/redshift)
 //
-//    * AWS Systems Manager
+//    * AWS Resource Access Manager (https://docs.aws.amazon.com/ram)
 //
-//    * AWS Transfer for SFTP
+//    * AWS Resource Groups (https://docs.aws.amazon.com/ARG)
 //
-//    * AWS WAF Regional
+//    * AWS RoboMaker (https://docs.aws.amazon.com/robomaker)
 //
-//    * Amazon VPC
+//    * Amazon Route 53 (https://docs.aws.amazon.com/route53)
 //
-//    * Amazon WorkSpaces
+//    * Amazon Route 53 Resolver (https://docs.aws.amazon.com/route53)
+//
+//    * Amazon S3 (buckets only) (https://docs.aws.amazon.com/s3)
+//
+//    * Amazon SageMaker (https://docs.aws.amazon.com/sagemaker)
+//
+//    * Savings Plans (https://docs.aws.amazon.com/savingsplans)
+//
+//    * AWS Secrets Manager (https://docs.aws.amazon.com/secretsmanager)
+//
+//    * AWS Security Hub (https://docs.aws.amazon.com/securityhub)
+//
+//    * AWS Service Catalog (https://docs.aws.amazon.com/servicecatalog)
+//
+//    * Amazon Simple Email Service (SES) (https://docs.aws.amazon.com/ses)
+//
+//    * Amazon Simple Notification Service (SNS) (https://docs.aws.amazon.com/sns)
+//
+//    * Amazon Simple Queue Service (SQS) (https://docs.aws.amazon.com/sqs)
+//
+//    * Amazon Simple Workflow Service (https://docs.aws.amazon.com/swf)
+//
+//    * AWS Step Functions (https://docs.aws.amazon.com/step-functions)
+//
+//    * AWS Storage Gateway (https://docs.aws.amazon.com/storagegateway)
+//
+//    * AWS Systems Manager (https://docs.aws.amazon.com/systems-manager)
+//
+//    * AWS Transfer for SFTP (https://docs.aws.amazon.com/transfer)
+//
+//    * Amazon VPC (https://docs.aws.amazon.com/vpc)
+//
+//    * AWS WAFv2 (https://docs.aws.amazon.com/waf)
+//
+//    * AWS WAF Regional (https://docs.aws.amazon.com/waf)
+//
+//    * Amazon WorkLink (https://docs.aws.amazon.com/worklink)
+//
+//    * Amazon WorkSpaces (https://docs.aws.amazon.com/workspaces)
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/resourcegroupstaggingapi-2017-01-26 for more information on this service.
 //

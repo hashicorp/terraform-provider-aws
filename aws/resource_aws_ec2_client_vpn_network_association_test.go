@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
@@ -104,7 +104,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -199,8 +199,6 @@ func testAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
 
 func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_network_association" {

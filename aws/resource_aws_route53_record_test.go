@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"regexp"
@@ -240,6 +240,34 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record2),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID ensures an aws_route53_record
+// created with a name configured with a trailing period and explicit zone_id gets imported correctly
+func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig_nameWithTrailingPeriod,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 		},
 	})
@@ -1177,6 +1205,20 @@ resource "aws_route53_record" "default" {
 }
 `
 
+const testAccRoute53RecordConfig_nameWithTrailingPeriod = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+	zone_id = "${aws_route53_zone.main.zone_id}"
+	name = "www.NOTexamplE.com."
+	type = "A"
+	ttl = "30"
+	records = ["127.0.0.1", "127.0.0.27"]
+}
+`
+
 const testAccRoute53RecordConfigMultiple = `
 resource "aws_route53_zone" "test" {
   name = "notexample.com"
@@ -1739,8 +1781,13 @@ resource "aws_lb" "test" {
   subnets            = ["${aws_subnet.test.id}"]
 }
 
-resource "aws_default_security_group" "test" {
+resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint_service" "test" {
@@ -1750,7 +1797,7 @@ resource "aws_vpc_endpoint_service" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
-  security_group_ids  = ["${aws_default_security_group.test.id}"]
+  security_group_ids  = ["${aws_security_group.test.id}"]
   service_name        = "${aws_vpc_endpoint_service.test.service_name}"
   subnet_ids          = ["${aws_subnet.test.id}"]
   vpc_endpoint_type   = "Interface"
@@ -1768,7 +1815,7 @@ resource "aws_route53_zone" "test" {
 }
 
 func testAccRoute53RecordConfigAliasCustomVpcEndpointSwappedAliasAttributes(rName string) string {
-	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+	return testAccRoute53CustomVpcEndpointBase(rName) + `
 resource "aws_route53_record" "test" {
   name    = "test"
   type    = "A"
@@ -1780,11 +1827,11 @@ resource "aws_route53_record" "test" {
     zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")}"
   }
 }
-`)
+`
 }
 
 func testAccRoute53RecordConfigCustomVpcEndpoint(rName string) string {
-	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+	return testAccRoute53CustomVpcEndpointBase(rName) + `
 resource "aws_route53_record" "test" {
   name    = "test"
   type    = "A"
@@ -1796,7 +1843,7 @@ resource "aws_route53_record" "test" {
     zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")}"
   }
 }
-`)
+`
 }
 
 const testAccRoute53WeightedElbAliasRecord = `
@@ -1934,7 +1981,7 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_route53_record" "sample" {
-	zone_id = "${aws_route53_zone.main.zone_id}"
+  zone_id = "${aws_route53_zone.main.zone_id}"
   name = "sample"
   type = "CNAME"
   ttl = "30"

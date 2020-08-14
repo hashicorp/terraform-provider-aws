@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
@@ -279,6 +279,45 @@ func TestAccAWSRoute53HealthCheck_withSNI(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53HealthCheckExists(resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53HealthCheck_Disabled(t *testing.T) {
+	var check route53.HealthCheck
+	resourceName := "aws_route53_health_check.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53HealthCheckConfigDisabled(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoute53HealthCheckConfigDisabled(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
+				),
+			},
+			{
+				Config: testAccRoute53HealthCheckConfigDisabled(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
 				),
 			},
 		},
@@ -636,3 +675,17 @@ resource "aws_route53_health_check" "test" {
    }
 }
 `
+
+func testAccRoute53HealthCheckConfigDisabled(disabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53_health_check" "test" {
+  disabled          = %[1]t
+  failure_threshold = "2"
+  fqdn              = "dev.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+`, disabled)
+}

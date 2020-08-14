@@ -28,9 +28,9 @@ resource "aws_autoscaling_group" "bar" {
   health_check_type         = "ELB"
   desired_capacity          = 4
   force_delete              = true
-  placement_group           = "${aws_placement_group.test.id}"
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
-  vpc_zone_identifier       = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+  placement_group           = aws_placement_group.test.id
+  launch_configuration      = aws_launch_configuration.foobar.name
+  vpc_zone_identifier       = [aws_subnet.example1.id, aws_subnet.example2.id]
 
   initial_lifecycle_hook {
     name                 = "foobar"
@@ -82,7 +82,7 @@ resource "aws_autoscaling_group" "bar" {
   min_size           = 1
 
   launch_template {
-    id      = "${aws_launch_template.foobar.id}"
+    id      = aws_launch_template.foobar.id
     version = "$Latest"
   }
 }
@@ -93,7 +93,7 @@ resource "aws_autoscaling_group" "bar" {
 ```hcl
 resource "aws_launch_template" "example" {
   name_prefix   = "example"
-  image_id      = "${data.aws_ami.example.id}"
+  image_id      = data.aws_ami.example.id
   instance_type = "c5.large"
 }
 
@@ -106,7 +106,7 @@ resource "aws_autoscaling_group" "example" {
   mixed_instances_policy {
     launch_template {
       launch_template_specification {
-        launch_template_id = "${aws_launch_template.example.id}"
+        launch_template_id = aws_launch_template.example.id
       }
 
       override {
@@ -145,16 +145,24 @@ resource "aws_autoscaling_group" "bar" {
   name                 = "foobar3-terraform-test"
   max_size             = 5
   min_size             = 2
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
-  vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+  launch_configuration = aws_launch_configuration.foobar.name
+  vpc_zone_identifier  = [aws_subnet.example1.id, aws_subnet.example2.id]
 
-  tags = "${concat(
-    list(
-      map("key", "interpolation1", "value", "value3", "propagate_at_launch", true),
-      map("key", "interpolation2", "value", "value4", "propagate_at_launch", true)
-    ),
-    var.extra_tags)
-  }"
+  tags = concat(
+    [
+      {
+        "key"                 = "interpolation1"
+        "value"               = "value3"
+        "propagate_at_launch" = true
+      },
+      {
+        "key"                 = "interpolation2"
+        "value"               = "value4"
+        "propagate_at_launch" = true
+      },
+    ],
+    var.extra_tags,
+  )
 }
 ```
 
@@ -193,7 +201,7 @@ The following arguments are supported:
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the autoscaling
    group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
 * `vpc_zone_identifier` (Optional) A list of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
-* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing.
+* `target_group_arns` (Optional) A set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing.
 * `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`.
 * `suspended_processes` - (Optional) A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.

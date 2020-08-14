@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`

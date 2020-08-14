@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
@@ -238,7 +238,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigInstanceBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   # t2.micro instance type is not available in these Availability Zones
   exclude_zone_ids = ["usw2-az4"]
@@ -288,7 +288,7 @@ resource "aws_vpc" "test" {
     Name = "tf-acc-test-lb-target-group-attachment"
   }
 }
-`)
+`
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigTargetIdInstance(rName string) string {

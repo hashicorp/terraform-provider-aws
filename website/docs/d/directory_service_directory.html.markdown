@@ -14,7 +14,7 @@ Get attributes of AWS Directory Service directory (SimpleAD, Managed AD, AD Conn
 
 ```hcl
 data "aws_directory_service_directory" "example" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 }
 ```
 

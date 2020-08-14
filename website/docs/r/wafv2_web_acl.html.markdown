@@ -368,7 +368,7 @@ You can't nest a `managed_rule_group_statement`, for example for use inside a `n
 
 The `managed_rule_group_statement` block supports the following arguments:
 
-* `excluded_rule` - (Required) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
+* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
 * `name` - (Required) The name of the managed rule group.
 * `vendor_name` - (Required) The name of the managed rule group vendor.
 
@@ -417,7 +417,7 @@ You can't nest a `rule_group_reference_statement`, for example for use inside a 
 The `rule_group_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the `aws_wafv2_rule_group` resource.
-* `excluded_rule` - (Required) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
+* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
 
 ### Size Constraint Statement
 

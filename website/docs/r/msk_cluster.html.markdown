@@ -13,7 +13,6 @@ Manages AWS Managed Streaming for Kafka cluster
 ## Example Usage
 
 ```hcl
-
 resource "aws_vpc" "vpc" {
   cidr_block = "192.168.0.0/22"
 }

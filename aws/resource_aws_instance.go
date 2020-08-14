@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -592,11 +592,11 @@ func resourceAwsInstance() *schema.Resource {
 }
 
 func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	// Suppress diff if volume_type is not io1
+	// Suppress diff if volume_type is not io1 and iops is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
 	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
-	return strings.ToLower(v) != ec2.VolumeTypeIo1
+	return strings.ToLower(v) != ec2.VolumeTypeIo1 && new == "0"
 }
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
@@ -1367,6 +1367,15 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		if d.HasChange("root_block_device.0.iops") {
 			if v, ok := d.Get("root_block_device.0.iops").(int); ok && v != 0 {
+				// Enforce IOPs usage with a valid volume type
+				// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 {
+					if t == "" {
+						// Volume defaults to gp2
+						t = ec2.VolumeTypeGp2
+					}
+					return fmt.Errorf("error updating instance: iops attribute not supported for type %s", t)
+				}
 				modifyVolume = true
 				input.Iops = aws.Int64(int64(v))
 			}
@@ -1823,13 +1832,17 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if ec2.VolumeTypeIo1 == strings.ToLower(v) {
-					// Condition: This parameter is required for requests to create io1
-					// volumes; it is not used in requests to create gp2, st1, sc1, or
-					// standard volumes.
-					// See: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
-					if v, ok := bd["iops"].(int); ok && v > 0 {
-						ebs.Iops = aws.Int64(int64(v))
+				if iops, ok := bd["iops"].(int); ok && iops > 0 {
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) {
+						// Condition: This parameter is required for requests to create io1
+						// volumes; it is not used in requests to create gp2, st1, sc1, or
+						// standard volumes.
+						// See: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
+						ebs.Iops = aws.Int64(int64(iops))
+					} else {
+						// Enforce IOPs usage with a valid volume type
+						// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -1885,18 +1898,20 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-			}
-
-			if v, ok := bd["iops"].(int); ok && v > 0 && aws.StringValue(ebs.VolumeType) == ec2.VolumeTypeIo1 {
-				// Only set the iops attribute if the volume type is io1. Setting otherwise
-				// can trigger a refresh/plan loop based on the computed value that is given
-				// from AWS, and prevent us from specifying 0 as a valid iops.
-				//   See https://github.com/hashicorp/terraform/pull/4146
-				//   See https://github.com/hashicorp/terraform/issues/7765
-				ebs.Iops = aws.Int64(int64(v))
-			} else if v, ok := bd["iops"].(int); ok && v > 0 && aws.StringValue(ebs.VolumeType) != ec2.VolumeTypeIo1 {
-				// Message user about incompatibility
-				log.Print("[WARN] IOPs is only valid on IO1 storage type for EBS Volumes")
+				if iops, ok := bd["iops"].(int); ok && iops > 0 {
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) {
+						// Only set the iops attribute if the volume type is io1. Setting otherwise
+						// can trigger a refresh/plan loop based on the computed value that is given
+						// from AWS, and prevent us from specifying 0 as a valid iops.
+						//   See https://github.com/hashicorp/terraform/pull/4146
+						//   See https://github.com/hashicorp/terraform/issues/7765
+						ebs.Iops = aws.Int64(int64(iops))
+					} else {
+						// Enforce IOPs usage with a valid volume type
+						// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
+					}
+				}
 			}
 
 			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
@@ -2064,8 +2079,7 @@ type awsInstanceOpts struct {
 	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
 }
 
-func buildAwsInstanceOpts(
-	d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
+func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*AWSClient).ec2conn
 
 	instanceType := d.Get("instance_type").(string)

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
@@ -84,6 +84,27 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
+	var conf apigateway.ClientCertificate
+	resourceName := "aws_api_gateway_client_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayClientCertificate(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

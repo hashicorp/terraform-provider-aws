@@ -7,13 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccAwsWafv2IPSet_Basic(t *testing.T) {
+func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
