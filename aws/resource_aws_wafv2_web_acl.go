@@ -401,15 +401,14 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required field but currently only supports "IP"
+				// Required field
 				"aggregate_key_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice([]string{
-						wafv2.RateBasedStatementAggregateKeyTypeIp,
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
 				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -627,6 +626,10 @@ func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 		Limit:            aws.Int64(int64(m["limit"].(int))),
 	}
 
+	if v, ok := m["forwarded_ip_config"]; ok {
+		r.ForwardedIPConfig = expandWafv2ForwardedIPConfig(v.([]interface{}))
+	}
+
 	s := m["scope_down_statement"].([]interface{})
 	if len(s) > 0 && s[0] != nil {
 		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
@@ -819,6 +822,7 @@ func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
 	m := map[string]interface{}{
 		"limit":                int(aws.Int64Value(r.Limit)),
 		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
+		"forwarded_ip_config":  flattenWafv2ForwardedIPConfig(r.ForwardedIPConfig),
 		"scope_down_statement": nil,
 	}
 
