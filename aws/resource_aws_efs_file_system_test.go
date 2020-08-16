@@ -13,6 +13,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -416,12 +417,108 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEFSFileSystemConfigRemovedLifecyclePolicy,
+				Config: testAccAWSEFSFileSystemConfigEmpty,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
 					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter14Days),
 				),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`Expected: %s`, efs.TransitionToIARulesAfter14Days)),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_backupPolicy(t *testing.T) {
+	var providers []*schema.Provider
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEFSFileSystemConfigWithBackupPolicy("invalid_value"),
+				ExpectError: regexp.MustCompile(`got invalid_value`),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithBackupPolicy(efs.StatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckEfsFileSystemBackupPolicy(resourceName, efs.StatusEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_backupPolicy_update(t *testing.T) {
+	var providers []*schema.Provider
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithBackupPolicy(efs.StatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckEfsFileSystemBackupPolicy(resourceName, efs.StatusEnabled),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithBackupPolicy(efs.StatusDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckEfsFileSystemBackupPolicy(resourceName, efs.StatusDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_backupPolicy_removal(t *testing.T) {
+	var providers []*schema.Provider
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithBackupPolicy(efs.StatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckEfsFileSystemBackupPolicy(resourceName, efs.StatusEnabled),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigEmpty,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					testAccCheckEfsFileSystemBackupPolicy(resourceName, efs.StatusDisabled),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -623,6 +720,43 @@ func testAccCheckEfsFileSystemLifecyclePolicy(resourceID string, expectedVal str
 	}
 }
 
+func testAccCheckEfsFileSystemBackupPolicy(resourceID string, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceID]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceID)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+			FileSystemId: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return fmt.Errorf("error describing EFS file systems: %s", err.Error())
+		}
+
+		fs := resp.FileSystems[0]
+
+		res, err := conn.DescribeBackupPolicy(&efs.DescribeBackupPolicyInput{
+			FileSystemId: fs.FileSystemId,
+		})
+		if err != nil {
+			return fmt.Errorf("error describing backup policy for EFS file system (%s): %s",
+				aws.StringValue(fs.FileSystemId), err.Error())
+		}
+
+		if got := *res.BackupPolicy.Status; got != expected {
+			return fmt.Errorf("backup policy mismatch.\nExpected: %s\nFound: %+v", expected, got)
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSEFSFileSystemConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
@@ -793,6 +927,16 @@ resource "aws_efs_file_system" "test" {
 `, lpName, lpVal)
 }
 
-const testAccAWSEFSFileSystemConfigRemovedLifecyclePolicy = `
+func testAccAWSEFSFileSystemConfigWithBackupPolicy(status string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  backup_policy {
+    status = %q
+  }
+}
+`, status)
+}
+
+const testAccAWSEFSFileSystemConfigEmpty = `
 resource "aws_efs_file_system" "test" {}
 `

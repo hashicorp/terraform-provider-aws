@@ -108,6 +108,26 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 					},
 				},
 			},
+
+			"backup_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  efs.StatusDisabled,
+							ValidateFunc: validation.StringInSlice([]string{
+								efs.StatusEnabled,
+								efs.StatusDisabled,
+							}, false),
+						},
+					},
+				},
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+			},
 		},
 	}
 }
@@ -188,6 +208,22 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if v, ok := d.GetOk("backup_policy"); ok {
+		_, err := conn.PutBackupPolicy(&efs.PutBackupPolicyInput{
+			FileSystemId: aws.String(d.Id()),
+			BackupPolicy: expandEfsFileSystemBackupPolicy(v.([]interface{})),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error creating backup policy for EFS file system %q: %s",
+				d.Id(), err.Error())
+		}
+
+		if err := waitForEfsFileSystemBackupPolicy(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EFS file system (%q) to enable backup policy: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsEfsFileSystemRead(d, meta)
 }
 
@@ -243,6 +279,22 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
 				d.Id(), err.Error())
+		}
+	}
+
+	if d.HasChange("backup_policy") {
+		input := &efs.PutBackupPolicyInput{
+			FileSystemId: aws.String(d.Id()),
+			BackupPolicy: expandEfsFileSystemBackupPolicy(d.Get("backup_policy").([]interface{})),
+		}
+
+		if _, err := conn.PutBackupPolicy(input); err != nil {
+			return fmt.Errorf("error updating backup policy for EFS file system %q: %s",
+				d.Id(), err.Error())
+		}
+
+		if err := waitForEfsFileSystemBackupPolicy(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EFS file system (%q) to update backup policy: %s", d.Id(), err)
 		}
 	}
 
@@ -312,7 +364,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
-	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+	ls, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: fs.FileSystemId,
 	})
 	if err != nil {
@@ -320,8 +372,21 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 			aws.StringValue(fs.FileSystemId), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(ls.LifecyclePolicies)); err != nil {
 		return fmt.Errorf("error setting lifecycle_policy: %s", err)
+	}
+
+	bs, err := conn.DescribeBackupPolicy(&efs.DescribeBackupPolicyInput{
+		FileSystemId: fs.FileSystemId,
+	})
+
+	if err != nil {
+		return fmt.Errorf("error describing backup policy for EFS file system (%s): %s",
+			aws.StringValue(fs.FileSystemId), err)
+	}
+
+	if err := d.Set("backup_policy", flattenEfsFileSystemBackupPolicy(bs.BackupPolicy)); err != nil {
+		return fmt.Errorf("error setting backup_policy: %s", err)
 	}
 
 	return nil
@@ -373,6 +438,31 @@ func waitForDeleteEfsFileSystem(conn *efs.EFS, id string, timeout time.Duration)
 		},
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForEfsFileSystemBackupPolicy(conn *efs.EFS, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.StatusEnabling, efs.StatusDisabling},
+		Target:  []string{efs.StatusEnabled, efs.StatusDisabled},
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeBackupPolicy(&efs.DescribeBackupPolicyInput{
+				FileSystemId: aws.String(id),
+			})
+
+			if err != nil {
+				return nil, "error", err
+			}
+
+			state := aws.StringValue(resp.BackupPolicy.Status)
+			log.Printf("[DEBUG] current status of %q: %q", id, state)
+			return resp, state, nil
+		},
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 	_, err := stateConf.WaitForState()
@@ -446,4 +536,14 @@ func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.Lifecycle
 	}
 
 	return apiObjects
+}
+
+func flattenEfsFileSystemBackupPolicy(apiObjects *efs.BackupPolicy) []interface{} {
+	return []interface{}{map[string]interface{}{"status": apiObjects.Status}}
+}
+
+func expandEfsFileSystemBackupPolicy(tfList []interface{}) *efs.BackupPolicy {
+	return &efs.BackupPolicy{
+		Status: aws.String(tfList[0].(map[string]interface{})["status"].(string)),
+	}
 }
