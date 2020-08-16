@@ -21,8 +21,8 @@ data "aws_availability_zones" "available" {}
 resource "aws_autoscaling_group" "example" {
   name_prefix = "example"
 
-  launch_configuration = "${aws_launch_configuration.example.name}"
-  availability_zones   = ["${data.aws_availability_zones.available.names[0]}"]
+  launch_configuration = aws_launch_configuration.example.name
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
 
   min_size = 0
   max_size = 3
@@ -49,7 +49,7 @@ resource "aws_autoscalingplans_scaling_plan" "example" {
   scaling_instruction {
     max_capacity       = 3
     min_capacity       = 0
-    resource_id        = "${format("autoScalingGroup/%s", aws_autoscaling_group.example.name)}"
+    resource_id        = format("autoScalingGroup/%s", aws_autoscaling_group.example.name)
     scalable_dimension = "autoscaling:autoScalingGroup:DesiredCapacity"
     service_namespace  = "autoscaling"
 
@@ -72,8 +72,8 @@ data "aws_availability_zones" "available" {}
 resource "aws_autoscaling_group" "example" {
   name_prefix = "example"
 
-  launch_configuration = "${aws_launch_configuration.example.name}"
-  availability_zones   = ["${data.aws_availability_zones.available.names[0]}"]
+  launch_configuration = aws_launch_configuration.example.name
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
 
   min_size = 0
   max_size = 3
@@ -102,7 +102,7 @@ resource "aws_autoscalingplans_scaling_plan" "example" {
 
     max_capacity       = 3
     min_capacity       = 0
-    resource_id        = "${format("autoScalingGroup/%s", aws_autoscaling_group.example.name)}"
+    resource_id        = format("autoScalingGroup/%s", aws_autoscaling_group.example.name)
     scalable_dimension = "autoscaling:autoScalingGroup:DesiredCapacity"
     service_namespace  = "autoscaling"
 

@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
@@ -111,11 +111,9 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 						"max_capacity":                           "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "0",
-						"predictive_scaling_max_capacity_buffer": "0",
 						"resource_id":                            fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                     "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":         "KeepExternalPolicies",
-						"scheduled_action_buffer_time":           "0",
 						"service_namespace":                      "autoscaling",
 						"target_tracking_configuration.#":        "1",
 					}),
@@ -163,12 +161,10 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 						"predefined_load_metric_specification.#": "1",
 						"predefined_load_metric_specification.0.predefined_load_metric_type": "ASGTotalCPUUtilization",
 						"predictive_scaling_max_capacity_behavior":                           "SetForecastCapacityToMaxCapacity",
-						"predictive_scaling_max_capacity_buffer":                             "0",
 						"predictive_scaling_mode":                                            "ForecastOnly",
 						"resource_id":                                                        fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                                                 "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":                                     "KeepExternalPolicies",
-						"scheduled_action_buffer_time":                                       "0",
 						"service_namespace":                                                  "autoscaling",
 						"target_tracking_configuration.#":                                    "1",
 					}),
@@ -193,10 +189,9 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAutoScalingPlansScalingPlanDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAutoScalingPlansScalingPlanConfigBasicDynamicScaling(rName, rName),
@@ -216,11 +211,9 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 						"max_capacity":                           "3",
 						"min_capacity":                           "0",
 						"predefined_load_metric_specification.#": "0",
-						"predictive_scaling_max_capacity_buffer": "0",
 						"resource_id":                            fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                     "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":         "KeepExternalPolicies",
-						"scheduled_action_buffer_time":           "0",
 						"service_namespace":                      "autoscaling",
 						"target_tracking_configuration.#":        "1",
 					}),
@@ -246,12 +239,10 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 						"predefined_load_metric_specification.#": "1",
 						"predefined_load_metric_specification.0.predefined_load_metric_type": "ASGTotalCPUUtilization",
 						"predictive_scaling_max_capacity_behavior":                           "SetForecastCapacityToMaxCapacity",
-						"predictive_scaling_max_capacity_buffer":                             "0",
 						"predictive_scaling_mode":                                            "ForecastOnly",
 						"resource_id":                                                        fmt.Sprintf("autoScalingGroup/%s", rName),
 						"scalable_dimension":                                                 "autoscaling:autoScalingGroup:DesiredCapacity",
 						"scaling_policy_update_behavior":                                     "KeepExternalPolicies",
-						"scheduled_action_buffer_time":                                       "0",
 						"service_namespace":                                                  "autoscaling",
 						"target_tracking_configuration.#":                                    "1",
 					}),
@@ -379,19 +370,9 @@ func testAccCheckAutoScalingPlansApplicationSourceTags(scalingPlan *autoscalingp
 func testAccAutoScalingPlansScalingPlanConfigBase(rName, tagName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
