@@ -937,9 +937,6 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 						"default_result": "CONTINUE",
 						"name":           "launching",
 					}),
-					// TODO: TypeSet check rewrite check to avoid hash reference
-					testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name"),
 				),
 			},
 			{
@@ -1120,26 +1117,6 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 		*group = *describeGroups.AutoScalingGroups[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(asg, hookAttr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		asgResource, ok := s.RootModule().Resources[asg]
-		if !ok {
-			return fmt.Errorf("Not found: %s", asg)
-		}
-
-		if asgResource.Primary.ID == "" {
-			return fmt.Errorf("No AutoScaling Group ID is set")
-		}
-
-		hookName := asgResource.Primary.Attributes[hookAttr]
-		if hookName == "" {
-			return fmt.Errorf("ASG %s has no hook name %s", asg, hookAttr)
-		}
-
-		return checkLifecycleHookExistsByName(asgResource.Primary.ID, hookName)
 	}
 }
 

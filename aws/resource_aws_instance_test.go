@@ -534,23 +534,26 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"volume_size": "9",
 						"volume_type": "gp2",
 					}),
-					// TODO: TypeSet check develop regex support
-					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
+						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
+					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdc",
 						"volume_size": "10",
 						"volume_type": "io1",
 						"iops":        "100",
 					}),
-					// TODO: TypeSet check develop regex support
-					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
+						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
+					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdd",
 						"encrypted":   "true",
 						"volume_size": "12",
 					}),
-					// TODO: TypeSet check develop regex support
-					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
+						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
+					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						"device_name":  "/dev/sde",

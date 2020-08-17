@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -626,17 +625,8 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 	var v wafv2.WebACL
-	var idx int
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
-	excludedRules := []interface{}{
-		map[string]interface{}{
-			"name": "rule-to-exclude-b",
-		},
-		map[string]interface{}{
-			"name": "rule-to-exclude-a",
-		},
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -650,7 +640,6 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					computeWafv2RuleGroupRefStatementIndex(&v, &idx, []interface{}{}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"name":                      "rule-1",
 						"override_action.#":         "1",
@@ -660,8 +649,9 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 						"statement.0.rule_group_reference_statement.#":                 "1",
 						"statement.0.rule_group_reference_statement.0.excluded_rule.#": "0",
 					}),
-					// TODO: TypeSet check need helper for regex
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.rule_group_reference_statement.0.arn": regexp.MustCompile(`regional/rulegroup/.+$`),
+					}),
 				),
 			},
 			{
@@ -671,7 +661,6 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					computeWafv2RuleGroupRefStatementIndex(&v, &idx, excludedRules),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"name":                      "rule-1",
 						"override_action.#":         "1",
@@ -683,8 +672,9 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 						"statement.0.rule_group_reference_statement.0.excluded_rule.0.name": "rule-to-exclude-b",
 						"statement.0.rule_group_reference_statement.0.excluded_rule.1.name": "rule-to-exclude-a",
 					}),
-					// TODO: TypeSet check need helper for regex
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.rule_group_reference_statement.0.arn": regexp.MustCompile(`regional/rulegroup/.+$`),
+					}),
 				),
 			},
 			{
@@ -828,58 +818,6 @@ func TestAccAwsWafv2WebACL_MaxNestedOperatorStatements(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Calculates the index which isn't static because ARN is generated as part of the test
-func computeWafv2RuleGroupRefStatementIndex(r *wafv2.WebACL, idx *int, e []interface{}) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ruleResource := resourceAwsWafv2WebACL().Schema["rule"].Elem.(*schema.Resource)
-		rule := map[string]interface{}{
-			"name":     "rule-1",
-			"priority": 1,
-			"action":   []interface{}{},
-			"override_action": []interface{}{
-				map[string]interface{}{
-					"none":  []interface{}{},
-					"count": make([]interface{}, 1),
-				},
-			},
-			"statement": []interface{}{
-				map[string]interface{}{
-					"and_statement":                         []interface{}{},
-					"byte_match_statement":                  []interface{}{},
-					"geo_match_statement":                   []interface{}{},
-					"ip_set_reference_statement":            []interface{}{},
-					"managed_rule_group_statement":          []interface{}{},
-					"not_statement":                         []interface{}{},
-					"or_statement":                          []interface{}{},
-					"rate_based_statement":                  []interface{}{},
-					"regex_pattern_set_reference_statement": []interface{}{},
-					"rule_group_reference_statement": []interface{}{
-						map[string]interface{}{
-							"arn":           aws.StringValue(r.Rules[0].Statement.RuleGroupReferenceStatement.ARN),
-							"excluded_rule": e,
-						},
-					},
-					"size_constraint_statement": []interface{}{},
-					"sqli_match_statement":      []interface{}{},
-					"xss_match_statement":       []interface{}{},
-				},
-			},
-			"visibility_config": []interface{}{
-				map[string]interface{}{
-					"cloudwatch_metrics_enabled": false,
-					"metric_name":                "friendly-rule-metric-name",
-					"sampled_requests_enabled":   false,
-				},
-			},
-		}
-
-		f := schema.HashResource(ruleResource)
-		*idx = f(rule)
-
-		return nil
-	}
 }
 
 func testAccCheckAwsWafv2WebACLDestroy(s *terraform.State) error {
