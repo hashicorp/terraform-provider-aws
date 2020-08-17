@@ -5,6 +5,7 @@ API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
 AppMesh
+AppStream
 AppSync
 Application Autoscaling
 Athena
