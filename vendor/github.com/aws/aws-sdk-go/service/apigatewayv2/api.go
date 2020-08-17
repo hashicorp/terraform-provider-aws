@@ -18128,6 +18128,16 @@ const (
 	AuthorizationTypeJwt = "JWT"
 )
 
+// AuthorizationType_Values returns all elements of the AuthorizationType enum
+func AuthorizationType_Values() []string {
+	return []string{
+		AuthorizationTypeNone,
+		AuthorizationTypeAwsIam,
+		AuthorizationTypeCustom,
+		AuthorizationTypeJwt,
+	}
+}
+
 // The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
 // using incoming request parameters. For HTTP APIs, specify JWT to use JSON
 // Web Tokens.
@@ -18139,6 +18149,14 @@ const (
 	AuthorizerTypeJwt = "JWT"
 )
 
+// AuthorizerType_Values returns all elements of the AuthorizerType enum
+func AuthorizerType_Values() []string {
+	return []string{
+		AuthorizerTypeRequest,
+		AuthorizerTypeJwt,
+	}
+}
+
 // Represents a connection type.
 const (
 	// ConnectionTypeInternet is a ConnectionType enum value
@@ -18147,6 +18165,14 @@ const (
 	// ConnectionTypeVpcLink is a ConnectionType enum value
 	ConnectionTypeVpcLink = "VPC_LINK"
 )
+
+// ConnectionType_Values returns all elements of the ConnectionType enum
+func ConnectionType_Values() []string {
+	return []string{
+		ConnectionTypeInternet,
+		ConnectionTypeVpcLink,
+	}
+}
 
 // Specifies how to handle response payload content type conversions. Supported
 // only for WebSocket APIs.
@@ -18157,6 +18183,14 @@ const (
 	// ContentHandlingStrategyConvertToText is a ContentHandlingStrategy enum value
 	ContentHandlingStrategyConvertToText = "CONVERT_TO_TEXT"
 )
+
+// ContentHandlingStrategy_Values returns all elements of the ContentHandlingStrategy enum
+func ContentHandlingStrategy_Values() []string {
+	return []string{
+		ContentHandlingStrategyConvertToBinary,
+		ContentHandlingStrategyConvertToText,
+	}
+}
 
 // Represents a deployment status.
 const (
@@ -18170,6 +18204,15 @@ const (
 	DeploymentStatusDeployed = "DEPLOYED"
 )
 
+// DeploymentStatus_Values returns all elements of the DeploymentStatus enum
+func DeploymentStatus_Values() []string {
+	return []string{
+		DeploymentStatusPending,
+		DeploymentStatusFailed,
+		DeploymentStatusDeployed,
+	}
+}
+
 // The status of the domain name migration. The valid values are AVAILABLE and
 // UPDATING. If the status is UPDATING, the domain cannot be modified further
 // until the existing operation is complete. If it is AVAILABLE, the domain
@@ -18182,6 +18225,14 @@ const (
 	DomainNameStatusUpdating = "UPDATING"
 )
 
+// DomainNameStatus_Values returns all elements of the DomainNameStatus enum
+func DomainNameStatus_Values() []string {
+	return []string{
+		DomainNameStatusAvailable,
+		DomainNameStatusUpdating,
+	}
+}
+
 // Represents an endpoint type.
 const (
 	// EndpointTypeRegional is a EndpointType enum value
@@ -18190,6 +18241,14 @@ const (
 	// EndpointTypeEdge is a EndpointType enum value
 	EndpointTypeEdge = "EDGE"
 )
+
+// EndpointType_Values returns all elements of the EndpointType enum
+func EndpointType_Values() []string {
+	return []string{
+		EndpointTypeRegional,
+		EndpointTypeEdge,
+	}
+}
 
 // Represents an API method integration type.
 const (
@@ -18209,6 +18268,17 @@ const (
 	IntegrationTypeAwsProxy = "AWS_PROXY"
 )
 
+// IntegrationType_Values returns all elements of the IntegrationType enum
+func IntegrationType_Values() []string {
+	return []string{
+		IntegrationTypeAws,
+		IntegrationTypeHttp,
+		IntegrationTypeMock,
+		IntegrationTypeHttpProxy,
+		IntegrationTypeAwsProxy,
+	}
+}
+
 // The logging level.
 const (
 	// LoggingLevelError is a LoggingLevel enum value
@@ -18220,6 +18290,15 @@ const (
 	// LoggingLevelOff is a LoggingLevel enum value
 	LoggingLevelOff = "OFF"
 )
+
+// LoggingLevel_Values returns all elements of the LoggingLevel enum
+func LoggingLevel_Values() []string {
+	return []string{
+		LoggingLevelError,
+		LoggingLevelInfo,
+		LoggingLevelOff,
+	}
+}
 
 // Represents passthrough behavior for an integration response. Supported only
 // for WebSocket APIs.
@@ -18234,6 +18313,15 @@ const (
 	PassthroughBehaviorWhenNoTemplates = "WHEN_NO_TEMPLATES"
 )
 
+// PassthroughBehavior_Values returns all elements of the PassthroughBehavior enum
+func PassthroughBehavior_Values() []string {
+	return []string{
+		PassthroughBehaviorWhenNoMatch,
+		PassthroughBehaviorNever,
+		PassthroughBehaviorWhenNoTemplates,
+	}
+}
+
 // Represents a protocol type.
 const (
 	// ProtocolTypeWebsocket is a ProtocolType enum value
@@ -18242,6 +18330,14 @@ const (
 	// ProtocolTypeHttp is a ProtocolType enum value
 	ProtocolTypeHttp = "HTTP"
 )
+
+// ProtocolType_Values returns all elements of the ProtocolType enum
+func ProtocolType_Values() []string {
+	return []string{
+		ProtocolTypeWebsocket,
+		ProtocolTypeHttp,
+	}
+}
 
 // The Transport Layer Security (TLS) version of the security policy for this
 // domain name. The valid values are TLS_1_0 and TLS_1_2.
@@ -18252,6 +18348,14 @@ const (
 	// SecurityPolicyTls12 is a SecurityPolicy enum value
 	SecurityPolicyTls12 = "TLS_1_2"
 )
+
+// SecurityPolicy_Values returns all elements of the SecurityPolicy enum
+func SecurityPolicy_Values() []string {
+	return []string{
+		SecurityPolicyTls10,
+		SecurityPolicyTls12,
+	}
+}
 
 // The status of the VPC link.
 const (
@@ -18271,8 +18375,26 @@ const (
 	VpcLinkStatusInactive = "INACTIVE"
 )
 
+// VpcLinkStatus_Values returns all elements of the VpcLinkStatus enum
+func VpcLinkStatus_Values() []string {
+	return []string{
+		VpcLinkStatusPending,
+		VpcLinkStatusAvailable,
+		VpcLinkStatusDeleting,
+		VpcLinkStatusFailed,
+		VpcLinkStatusInactive,
+	}
+}
+
 // The version of the VPC link.
 const (
 	// VpcLinkVersionV2 is a VpcLinkVersion enum value
 	VpcLinkVersionV2 = "V2"
 )
+
+// VpcLinkVersion_Values returns all elements of the VpcLinkVersion enum
+func VpcLinkVersion_Values() []string {
+	return []string{
+		VpcLinkVersionV2,
+	}
+}

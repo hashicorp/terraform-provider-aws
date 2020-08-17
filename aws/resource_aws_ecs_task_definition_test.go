@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -135,10 +135,9 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSEcsTaskDefinitionDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsTaskDefinitionWithDockerVolumes(tdName),
@@ -164,10 +163,9 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSEcsTaskDefinitionDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsTaskDefinitionWithDockerVolumesMinimalConfig(tdName),
@@ -193,10 +191,9 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSEcsTaskDefinitionDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsTaskDefinitionWithEFSVolumeMinimal(tdName),
@@ -222,13 +219,67 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSEcsTaskDefinitionDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, "/home/test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	resourceName := "aws_ecs_task_definition.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, "ENABLED", 2999),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithEFSAccessPoint(tdName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -251,10 +302,9 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSEcsTaskDefinitionDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsTaskDefinitionWithTaskScopedDockerVolume(tdName),
@@ -753,20 +803,20 @@ resource "aws_ecs_cluster" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %q
+  family       = %q
   network_mode = "awsvpc"
 
   proxy_configuration {
-    type = %q
+    type           = %q
     container_name = %q
     properties = {
-      IgnoredUID = %q
-      IgnoredGID = %q
-      AppPorts = %q
-      ProxyIngressPort = %q
-      ProxyEgressPort = %q
+      IgnoredUID         = %q
+      IgnoredGID         = %q
+      AppPorts           = %q
+      ProxyIngressPort   = %q
+      ProxyEgressPort    = %q
       EgressIgnoredPorts = %q
-      EgressIgnoredIPs = %q
+      EgressIgnoredIPs   = %q
     }
   }
 
@@ -988,6 +1038,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name      = "jenkins-home"
     host_path = "/ecs/jenkins-home"
@@ -1045,6 +1096,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name      = "jenkins-home"
     host_path = "/ecs/jenkins-home"
@@ -1096,6 +1148,7 @@ resource "aws_ecs_task_definition" "test" {
 	}
 ]
 TASK_DEFINITION
+
 
   volume {
     name      = "jenkins-home"
@@ -1198,6 +1251,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name      = "vol1"
     host_path = "/host/vol1"
@@ -1238,6 +1292,7 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
+
 }
 `, tdName, portMappings)
 }
@@ -1262,6 +1317,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "test" {
@@ -1287,16 +1343,17 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  role       = "${aws_iam_role.test.name}"
-  policy_arn = "${aws_iam_policy.test.arn}"
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_ecs_task_definition" "test" {
   family             = "%s"
-  execution_role_arn = "${aws_iam_role.test.arn}"
+  execution_role_arn = aws_iam_role.test.arn
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1310,6 +1367,7 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
+
 }
 `, roleName, policyName, tdName)
 }
@@ -1331,6 +1389,7 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[1]q
@@ -1356,6 +1415,7 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[1]q
@@ -1399,6 +1459,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name = %[1]q
 
@@ -1428,6 +1489,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name = %[1]q
 
@@ -1442,7 +1504,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithEFSVolumeMinimal(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-	creation_token = %[1]q
+  creation_token = %[1]q
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1461,11 +1523,12 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name = %[1]q
 
     efs_volume_configuration {
-      file_system_id = "${aws_efs_file_system.test.id}"
+      file_system_id = aws_efs_file_system.test.id
     }
   }
 }
@@ -1475,7 +1538,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, rDir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-	creation_token = %[1]q
+  creation_token = %[1]q
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1494,11 +1557,12 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name = %[1]q
 
     efs_volume_configuration {
-      file_system_id = "${aws_efs_file_system.test.id}"
+      file_system_id = aws_efs_file_system.test.id
       root_directory = %[2]q
     }
   }
@@ -1506,6 +1570,90 @@ TASK_DEFINITION
 `, tdName, rDir)
 }
 
+func testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, tEnc string, tEncPort int) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+
+  volume {
+    name = %[1]q
+
+    efs_volume_configuration {
+      file_system_id          = aws_efs_file_system.test.id
+      root_directory          = "/home/test"
+      transit_encryption      = %[2]q
+      transit_encryption_port = %[3]d
+    }
+  }
+}
+`, tdName, tEnc, tEncPort)
+}
+
+func testAccAWSEcsTaskDefinitionWithEFSAccessPoint(tdName, useIam string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+
+resource "aws_efs_access_point" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  posix_user {
+    gid = 1001
+    uid = 1001
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+
+  volume {
+    name = %[1]q
+
+    efs_volume_configuration {
+      file_system_id          = aws_efs_file_system.test.id
+      transit_encryption      = "ENABLED"
+      transit_encryption_port = 2999
+      authorization_config {
+        access_point_id = aws_efs_access_point.test.id
+        iam             = %[2]q
+      }
+    }
+  }
+}
+`, tdName, useIam)
+}
 func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -1527,11 +1675,12 @@ resource "aws_iam_role" "test" {
 	]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -1548,11 +1697,12 @@ resource "aws_iam_role_policy" "test" {
 	]
 }
 EOF
+
 }
 
 resource "aws_ecs_task_definition" "test" {
   family        = %[3]q
-  task_role_arn = "${aws_iam_role.test.arn}"
+  task_role_arn = aws_iam_role.test.arn
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1566,6 +1716,7 @@ resource "aws_ecs_task_definition" "test" {
 	}
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[3]q
@@ -1595,11 +1746,12 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -1615,12 +1767,14 @@ resource "aws_iam_role_policy" "test" {
 	 }
  ]
 }
- EOF
+ 
+EOF
+
 }
 
 resource "aws_ecs_task_definition" "test" {
   family        = %[3]q
-  task_role_arn = "${aws_iam_role.test.arn}"
+  task_role_arn = aws_iam_role.test.arn
   network_mode  = "bridge"
   ipc_mode      = "host"
 
@@ -1636,6 +1790,7 @@ resource "aws_ecs_task_definition" "test" {
  }
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[3]q
@@ -1665,11 +1820,12 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -1685,12 +1841,14 @@ resource "aws_iam_role_policy" "test" {
 	 }
  ]
 }
- EOF
+ 
+EOF
+
 }
 
 resource "aws_ecs_task_definition" "test" {
   family        = %[3]q
-  task_role_arn = "${aws_iam_role.test.arn}"
+  task_role_arn = aws_iam_role.test.arn
   network_mode  = "bridge"
   pid_mode      = "host"
 
@@ -1706,6 +1864,7 @@ resource "aws_ecs_task_definition" "test" {
  }
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[3]q
@@ -1735,11 +1894,12 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
@@ -1755,12 +1915,14 @@ resource "aws_iam_role_policy" "test" {
 	 }
  ]
 }
- EOF
+ 
+EOF
+
 }
 
 resource "aws_ecs_task_definition" "test" {
   family        = %[3]q
-  task_role_arn = "${aws_iam_role.test.arn}"
+  task_role_arn = aws_iam_role.test.arn
   network_mode  = "bridge"
 
   container_definitions = <<TASK_DEFINITION
@@ -1775,6 +1937,7 @@ resource "aws_ecs_task_definition" "test" {
  }
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[3]q
@@ -1791,8 +1954,8 @@ resource "aws_ecs_cluster" "test" {
 
 resource "aws_ecs_service" "test" {
   name            = %[2]q
-  cluster         = "${aws_ecs_cluster.test.id}"
-  task_definition = "${aws_ecs_task_definition.test.arn}"
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
 
@@ -1812,6 +1975,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   volume {
     name = %[3]q
   }
@@ -1827,8 +1991,8 @@ resource "aws_ecs_cluster" "test" {
 
 resource "aws_ecs_service" "test" {
   name            = %[2]q
-  cluster         = "${aws_ecs_cluster.test.id}"
-  task_definition = "${aws_ecs_task_definition.test.arn}"
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
 
@@ -1847,6 +2011,7 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 TASK_DEFINITION
+
 
   volume {
     name = %[3]q
@@ -1898,6 +2063,7 @@ resource "aws_ecs_task_definition" "test" {
 	}
 ]
 TASK_DEFINITION
+
 
   volume {
     name      = "jenkins-home"
@@ -2024,11 +2190,11 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 
+
   inference_accelerator {
     device_name = "device_1"
     device_type = "eia1.medium"
   }
-
 }
 `, tdName)
 }

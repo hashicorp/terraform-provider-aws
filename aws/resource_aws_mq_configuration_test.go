@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
@@ -179,6 +179,7 @@ resource "aws_mq_configuration" "test" {
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
+
 }
 `, configurationName)
 }
@@ -196,6 +197,7 @@ resource "aws_mq_configuration" "test" {
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
+
 }
 `, configurationName)
 }
@@ -231,6 +233,7 @@ resource "aws_mq_configuration" "test" {
   </plugins>
 </broker>
 DATA
+
 }
 `, configurationName)
 }

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSSMActivation_basic(t *testing.T) {
@@ -276,7 +276,7 @@ resource "aws_ssm_activation" "test" {
   description        = "Test"
   iam_role           = "${aws_iam_role.test_role.name}"
   registration_limit = "5"
-  depends_on         = ["aws_iam_role_policy_attachment.test_attach"]
+  depends_on         = [aws_iam_role_policy_attachment.test_attach]
 
   tags = {
     Name = %[2]q
@@ -293,7 +293,7 @@ resource "aws_ssm_activation" "test" {
   expiration_date    = "%[2]s"
   iam_role           = "${aws_iam_role.test_role.name}"
   registration_limit = "5"
-  depends_on         = ["aws_iam_role_policy_attachment.test_attach"]
+  depends_on         = [aws_iam_role_policy_attachment.test_attach]
 }
 `, rName, expirationDate)
 }

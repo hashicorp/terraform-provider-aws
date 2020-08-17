@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
@@ -137,11 +137,12 @@ resource "aws_iam_policy" "policy" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
-  group      = "${aws_iam_group.group.name}"
-  policy_arn = "${aws_iam_policy.policy.arn}"
+  group      = aws_iam_group.group.name
+  policy_arn = aws_iam_policy.policy.arn
 }
 `, groupName, policyName)
 }
@@ -170,6 +171,7 @@ resource "aws_iam_policy" "policy" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy2" {
@@ -190,6 +192,7 @@ resource "aws_iam_policy" "policy2" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "policy3" {
@@ -210,16 +213,17 @@ resource "aws_iam_policy" "policy3" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
-  group      = "${aws_iam_group.group.name}"
-  policy_arn = "${aws_iam_policy.policy2.arn}"
+  group      = aws_iam_group.group.name
+  policy_arn = aws_iam_policy.policy2.arn
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach2" {
-  group      = "${aws_iam_group.group.name}"
-  policy_arn = "${aws_iam_policy.policy3.arn}"
+  group      = aws_iam_group.group.name
+  policy_arn = aws_iam_policy.policy3.arn
 }
 `, groupName, policyName, policyName2, policyName3)
 }

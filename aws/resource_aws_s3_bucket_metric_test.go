@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"sort"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -292,6 +293,8 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11813
+// Disallow Empty filter block
 func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := acctest.RandInt()
@@ -310,6 +313,7 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
 				),
+				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})

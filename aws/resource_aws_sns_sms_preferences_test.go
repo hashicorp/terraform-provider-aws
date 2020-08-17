@@ -7,12 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // The preferences are account-wide, so the tests must be serialized
-func TestAccAWSSNSSMSPreferences(t *testing.T) {
+func TestAccAWSSNSSMSPreferences_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"almostAll":      testAccAWSSNSSMSPreferences_almostAll,
 		"defaultSMSType": testAccAWSSNSSMSPreferences_defaultSMSType,
