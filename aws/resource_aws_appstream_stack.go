@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 	"time"
 )
@@ -89,10 +90,7 @@ func resourceAwsAppstreamStack() *schema.Resource {
 					},
 				},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -192,6 +190,7 @@ func resourceAwsAppstreamStackCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAppstreamStackRead(d *schema.ResourceData, meta interface{}) error {
 
 	svc := meta.(*AWSClient).appstreamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := svc.DescribeStacks(&appstream.DescribeStacksInput{})
 	if err != nil {
@@ -255,15 +254,7 @@ func resourceAwsAppstreamStackRead(d *schema.ResourceData, meta interface{}) err
 				log.Printf("[DEBUG] Apsstream Stack tags (%s) not found", d.Id())
 				return nil
 			}
-
-			if len(tg.Tags) > 0 {
-				tags_attr := make(map[string]string)
-				tags := tg.Tags
-				for k, v := range tags {
-					tags_attr[k] = aws.StringValue(v)
-				}
-				d.Set("tags", tags_attr)
-			}
+			d.Set("tags", keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 			return nil
 		}
 	}
@@ -324,6 +315,16 @@ func resourceAwsAppstreamStackUpdate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		log.Printf("[ERROR] Error updating Appstream Stack: %s", err)
 		return err
+	}
+
+	if d.HasChange("tags") {
+		arn := aws.StringValue(resp.Stack.Arn)
+
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AppstreamUpdateTags(svc, arn, o, n); err != nil {
+			log.Printf("error updating AppStream stack (%s) tags: %s", d.Id(), err)
+			return err
+		}
 	}
 	log.Printf("[DEBUG] %s", resp)
 	return nil

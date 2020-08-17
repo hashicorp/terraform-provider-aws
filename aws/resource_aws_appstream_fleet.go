@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 	"sort"
 	"time"
@@ -116,10 +117,7 @@ func resourceAwsAppstreamFleet() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -270,7 +268,7 @@ func resourceAwsAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
-				log.Printf("[ERROR] Error satrting Appstream Fleet: %s", err)
+				log.Printf("[ERROR] Error starting Appstream Fleet: %s", err)
 				return err
 			}
 			log.Printf("[DEBUG] %s", resp)
@@ -306,6 +304,7 @@ func resourceAwsAppstreamFleetCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsAppstreamFleetRead(d *schema.ResourceData, meta interface{}) error {
 	svc := meta.(*AWSClient).appstreamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{})
 
@@ -340,6 +339,7 @@ func resourceAwsAppstreamFleetRead(d *schema.ResourceData, meta interface{}) err
 			tg, err := svc.ListTagsForResource(&appstream.ListTagsForResourceInput{
 				ResourceArn: v.Arn,
 			})
+
 			if err != nil {
 				log.Printf("[ERROR] Error listing stack tags: %s", err)
 				return err
@@ -348,15 +348,7 @@ func resourceAwsAppstreamFleetRead(d *schema.ResourceData, meta interface{}) err
 				log.Printf("[DEBUG] Apsstream Stack tags (%s) not found", d.Id())
 				return nil
 			}
-
-			if len(tg.Tags) > 0 {
-				tags_attr := make(map[string]string)
-				tags := tg.Tags
-				for k, v := range tags {
-					tags_attr[k] = aws.StringValue(v)
-				}
-				d.Set("tags", tags_attr)
-			}
+			d.Set("tags", keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 			d.Set("state", v.State)
 
@@ -413,7 +405,7 @@ func resourceAwsAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) e
 		UpdateFleetInputOpts.MaxUserDurationInSeconds = aws.Int64(int64(max_user_duration))
 	}
 
-	if d.HasChange("security_group_ids") || d.HasChange("subnet_ids") {
+	if d.HasChanges("security_group_ids", "subnet_ids") {
 		log.Printf("[DEBUG] Modify Fleet")
 		vpcConfig := &appstream.VpcConfig{}
 		convertedSubnets := convertToStringSlice(d.Get("subnet_ids"))
@@ -424,18 +416,31 @@ func resourceAwsAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	resp, err := svc.UpdateFleet(UpdateFleetInputOpts)
-
 	if err != nil {
 		log.Printf("[ERROR] Error updating Appstream Fleet: %s", err)
 		return err
 	}
+
+	if d.HasChange("tags") {
+		arn := aws.StringValue(resp.Fleet.Arn)
+
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AppstreamUpdateTags(svc, arn, o, n); err != nil {
+			log.Printf("error updating AppStream fleet (%s) tags: %s", d.Id(), err)
+			return err
+		}
+	}
+
 	log.Printf("[DEBUG] %s", resp)
 	desired_state := d.Get("state")
 	if d.HasChange("state") {
 		if desired_state == "STOPPED" {
-			svc.StopFleet(&appstream.StopFleetInput{
+			_, err := svc.StopFleet(&appstream.StopFleetInput{
 				Name: aws.String(d.Id()),
 			})
+			if err != nil {
+				return err
+			}
 			for {
 
 				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
@@ -456,9 +461,12 @@ func resourceAwsAppstreamFleetUpdate(d *schema.ResourceData, meta interface{}) e
 				}
 			}
 		} else if desired_state == "RUNNING" {
-			svc.StartFleet(&appstream.StartFleetInput{
+			_, err := svc.StartFleet(&appstream.StartFleetInput{
 				Name: aws.String(d.Id()),
 			})
+			if err != nil {
+				return err
+			}
 			for {
 
 				resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
@@ -502,9 +510,12 @@ func resourceAwsAppstreamFleetDelete(d *schema.ResourceData, meta interface{}) e
 
 	if curr_state == "RUNNING" {
 		desired_state := "STOPPED"
-		svc.StopFleet(&appstream.StopFleetInput{
+		_, err := svc.StopFleet(&appstream.StopFleetInput{
 			Name: aws.String(d.Id()),
 		})
+		if err != nil {
+			return err
+		}
 		for {
 
 			resp, err := svc.DescribeFleets(&appstream.DescribeFleetsInput{
