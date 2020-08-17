@@ -420,13 +420,13 @@ func testAccCheckRoute53HealthCheckDisappears(hCheck *route53.HealthCheck) resou
 
 const testAccRoute53HealthCheckConfig = `
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 80
+  type               = "HTTP"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
 }
 `
@@ -434,13 +434,13 @@ resource "aws_route53_health_check" "test" {
 func testAccRoute53HealthCheckConfigTags1(tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 80
+  type               = "HTTP"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
 
   tags = {
@@ -453,13 +453,13 @@ resource "aws_route53_health_check" "test" {
 func testAccRoute53HealthCheckConfigTags2(tag1Key, tag1Value, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 80
+  type               = "HTTP"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
 
   tags = {
@@ -472,207 +472,207 @@ resource "aws_route53_health_check" "test" {
 
 const testAccRoute53HealthCheckConfigUpdate = `
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
-  failure_threshold = "5"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 80
+  type               = "HTTP"
+  resource_path      = "/"
+  failure_threshold  = "5"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = false
 }
 `
 
 const testAccRoute53HealthCheckIpConfig = `
 resource "aws_route53_health_check" "test" {
-  ip_address = "1.2.3.4"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
+  ip_address        = "1.2.3.4"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
   failure_threshold = "2"
-  request_interval = "30"
+  request_interval  = "30"
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckIpv6Config = `
 resource "aws_route53_health_check" "test" {
-  ip_address = "1234:5678:9abc:6811::4"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
+  ip_address        = "1234:5678:9abc:6811::4"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
   failure_threshold = "2"
-  request_interval = "30"
+  request_interval  = "30"
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckIpv6ExpandedConfig = `
 resource "aws_route53_health_check" "test" {
-  ip_address = "1234:5678:9abc:6811:0:0:0:4"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
+  ip_address        = "1234:5678:9abc:6811:0:0:0:4"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
   failure_threshold = "2"
-  request_interval = "30"
+  request_interval  = "30"
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckConfig_withChildHealthChecks = `
 resource "aws_route53_health_check" "child1" {
-  fqdn = "child1.notexample.com"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
+  fqdn              = "child1.notexample.com"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
   failure_threshold = "2"
-  request_interval = "30"
+  request_interval  = "30"
 }
 
 resource "aws_route53_health_check" "test" {
-  type = "CALCULATED"
+  type                   = "CALCULATED"
   child_health_threshold = 1
-  child_healthchecks = ["${aws_route53_health_check.child1.id}"]
+  child_healthchecks     = [aws_route53_health_check.child1.id]
 
   tags = {
     Name = "tf-test-calculated-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckConfig_withHealthCheckRegions = `
 resource "aws_route53_health_check" "test" {
-  ip_address = "1.2.3.4"
-  port = 80
-  type = "HTTP"
-  resource_path = "/"
+  ip_address        = "1.2.3.4"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
   failure_threshold = "2"
-  request_interval = "30"
+  request_interval  = "30"
 
-  regions = ["us-west-1","us-east-1","eu-west-1"]
+  regions = ["us-west-1", "us-east-1", "eu-west-1"]
 
   tags = {
     Name = "tf-test-check-with-regions"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckCloudWatchAlarm = `
 resource "aws_cloudwatch_metric_alarm" "test" {
-    alarm_name = "cloudwatch-healthcheck-alarm"
-    comparison_operator = "GreaterThanOrEqualToThreshold"
-    evaluation_periods = "2"
-    metric_name = "CPUUtilization"
-    namespace = "AWS/EC2"
-    period = "120"
-    statistic = "Average"
-    threshold = "80"
-    alarm_description = "This metric monitors ec2 cpu utilization"
+  alarm_name          = "cloudwatch-healthcheck-alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors ec2 cpu utilization"
 }
 
 resource "aws_route53_health_check" "test" {
-  type = "CLOUDWATCH_METRIC"
-  cloudwatch_alarm_name = "${aws_cloudwatch_metric_alarm.test.alarm_name}"
-  cloudwatch_alarm_region = "us-west-2"
+  type                            = "CLOUDWATCH_METRIC"
+  cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
+  cloudwatch_alarm_region         = "us-west-2"
   insufficient_data_health_status = "Healthy"
 }
 `
 
 const testAccRoute53HealthCheckConfigWithSearchString = `
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 80
-  type = "HTTP_STR_MATCH"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 80
+  type               = "HTTP_STR_MATCH"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = false
-  search_string = "OK"
+  search_string      = "OK"
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckConfigWithSearchStringUpdate = `
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 80
-  type = "HTTP_STR_MATCH"
-  resource_path = "/"
-  failure_threshold = "5"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 80
+  type               = "HTTP_STR_MATCH"
+  resource_path      = "/"
+  failure_threshold  = "5"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
-  search_string = "FAILED"
+  search_string      = "FAILED"
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckConfigWithoutSNI = `
 resource "aws_route53_health_check" "test" {
-  fqdn = "dev.notexample.com"
-  port = 443
-  type = "HTTPS"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 443
+  type               = "HTTPS"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckConfigWithSNI = `
 resource "aws_route53_health_check" "test" {
-	fqdn = "dev.notexample.com"
-  port = 443
-  type = "HTTPS"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 443
+  type               = "HTTPS"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
-  enable_sni = true
+  enable_sni         = true
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
 const testAccRoute53HealthCheckConfigWithSNIDisabled = `
 resource "aws_route53_health_check" "test" {
-	fqdn = "dev.notexample.com"
-  port = 443
-  type = "HTTPS"
-  resource_path = "/"
-  failure_threshold = "2"
-  request_interval = "30"
-  measure_latency = true
+  fqdn               = "dev.notexample.com"
+  port               = 443
+  type               = "HTTPS"
+  resource_path      = "/"
+  failure_threshold  = "2"
+  request_interval   = "30"
+  measure_latency    = true
   invert_healthcheck = true
-  enable_sni = false
+  enable_sni         = false
 
   tags = {
     Name = "tf-test-health-check"
-   }
+  }
 }
 `
 
