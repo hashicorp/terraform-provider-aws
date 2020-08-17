@@ -148,7 +148,7 @@ data "aws_iam_policy_document" "test" {
     # Allow for testing purposes
     actions   = ["glacier:DeleteArchive"]
     effect    = "Allow"
-    resources = ["${aws_glacier_vault.test.arn}"]
+    resources = [aws_glacier_vault.test.arn]
 
     condition {
       test     = "NumericLessThanEquals"
@@ -166,8 +166,8 @@ data "aws_iam_policy_document" "test" {
 resource "aws_glacier_vault_lock" "test" {
   complete_lock         = %t
   ignore_deletion_error = %t
-  policy                = "${data.aws_iam_policy_document.test.json}"
-  vault_name            = "${aws_glacier_vault.test.name}"
+  policy                = data.aws_iam_policy_document.test.json
+  vault_name            = aws_glacier_vault.test.name
 }
 `, rName, completeLock, completeLock)
 }

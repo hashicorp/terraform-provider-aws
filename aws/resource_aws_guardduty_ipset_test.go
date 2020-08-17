@@ -168,13 +168,13 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
-  bucket  = "${aws_s3_bucket.test.id}"
+  bucket  = aws_s3_bucket.test.id
   key     = "%s"
 }
 
 resource "aws_guardduty_ipset" "test" {
   name        = "%s"
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
   location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
   activate    = %t

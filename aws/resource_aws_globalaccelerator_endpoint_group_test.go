@@ -129,7 +129,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.example.id
   protocol        = "TCP"
 
   port_range {
@@ -143,14 +143,14 @@ data "aws_region" "current" {}
 resource "aws_eip" "example" {}
 
 resource "aws_globalaccelerator_endpoint_group" "example" {
-  listener_arn = "${aws_globalaccelerator_listener.example.id}"
+  listener_arn = aws_globalaccelerator_listener.example.id
 
   endpoint_configuration {
-    endpoint_id = "${aws_eip.example.id}"
-    weight = 10
+    endpoint_id = aws_eip.example.id
+    weight      = 10
   }
 
-  endpoint_group_region         = "${data.aws_region.current.name}"
+  endpoint_group_region         = data.aws_region.current.name
   health_check_interval_seconds = 30
   health_check_path             = "/"
   health_check_port             = 80
@@ -170,7 +170,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.example.id
   protocol        = "TCP"
 
   port_range {
@@ -184,14 +184,14 @@ data "aws_region" "current" {}
 resource "aws_eip" "example" {}
 
 resource "aws_globalaccelerator_endpoint_group" "example" {
-  listener_arn = "${aws_globalaccelerator_listener.example.id}"
+  listener_arn = aws_globalaccelerator_listener.example.id
 
   endpoint_configuration {
-    endpoint_id = "${aws_eip.example.id}"
+    endpoint_id = aws_eip.example.id
     weight      = 20
   }
 
-  endpoint_group_region         = "${data.aws_region.current.name}"
+  endpoint_group_region         = data.aws_region.current.name
   health_check_interval_seconds = 10
   health_check_path             = "/foo"
   health_check_port             = 8080
