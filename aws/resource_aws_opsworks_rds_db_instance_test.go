@@ -149,31 +149,26 @@ func testAccCheckAwsOpsworksRdsDbDestroy(s *terraform.State) error {
 func testAccAwsOpsworksRdsDbInstance(name, userName, password string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  stack_id = aws_opsworks_stack.tf-acc.id
 
-  rds_db_instance_arn = "${aws_db_instance.bar.arn}"
+  rds_db_instance_arn = aws_db_instance.bar.arn
   db_user             = "%s"
   db_password         = "%s"
 }
-
 %s
-
-
 %s
-
 `, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceConfig)
 }
 
 func testAccAwsOpsworksRdsDbInstanceForceNew(name string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  stack_id = aws_opsworks_stack.tf-acc.id
 
-  rds_db_instance_arn = "${aws_db_instance.foo.arn}"
+  rds_db_instance_arn = aws_db_instance.foo.arn
   db_user             = "foo"
   db_password         = "foofoofoofoo"
 }
-
 %s
 
 resource "aws_db_instance" "foo" {

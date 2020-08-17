@@ -77,13 +77,13 @@ func testAccAwsOpsworksGangliaLayerConfigVpcCreate(name string) string {
 		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  stack_id = aws_opsworks_stack.tf-acc.id
   name     = %[1]q
   password = %[1]q
 
   custom_security_group_ids = [
-    "${aws_security_group.tf-ops-acc-layer1.id}",
-    "${aws_security_group.tf-ops-acc-layer2.id}",
+    aws_security_group.tf-ops-acc-layer1.id,
+    aws_security_group.tf-ops-acc-layer2.id,
   ]
 }
 `, name)
@@ -94,13 +94,13 @@ func testAccAwsOpsworksGangliaLayerConfigTags1(name, tagKey1, tagValue1 string) 
 		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  stack_id = aws_opsworks_stack.tf-acc.id
   name     = %[1]q
   password = %[1]q
 
   custom_security_group_ids = [
-    "${aws_security_group.tf-ops-acc-layer1.id}",
-    "${aws_security_group.tf-ops-acc-layer2.id}",
+    aws_security_group.tf-ops-acc-layer1.id,
+    aws_security_group.tf-ops-acc-layer2.id,
   ]
 
   tags = {
@@ -115,13 +115,13 @@ func testAccAwsOpsworksGangliaLayerConfigTags2(name, tagKey1, tagValue1, tagKey2
 		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  stack_id = aws_opsworks_stack.tf-acc.id
   name     = %[1]q
   password = %[1]q
 
   custom_security_group_ids = [
-    "${aws_security_group.tf-ops-acc-layer1.id}",
-    "${aws_security_group.tf-ops-acc-layer2.id}",
+    aws_security_group.tf-ops-acc-layer1.id,
+    aws_security_group.tf-ops-acc-layer2.id,
   ]
 
   tags = {
