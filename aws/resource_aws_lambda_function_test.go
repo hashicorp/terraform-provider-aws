@@ -1352,10 +1352,7 @@ func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config:      testAccAWSLambdaConfigRuntime(rName, lambda.RuntimeNodejs),
-			ExpectError: regexp.MustCompile(`expected runtime to not be any of`),
-		},
-		{
+			// Test invalid runtime.
 			Config:      testAccAWSLambdaConfigRuntime(rName, rName),
 			ExpectError: regexp.MustCompile(`expected runtime to be one of`),
 		},

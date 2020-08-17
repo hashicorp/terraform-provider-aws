@@ -25,12 +25,6 @@ import (
 
 const awsMutexLambdaKey = `aws_lambda_function`
 
-var validateLambdaRuntime = validation.All(
-	validation.StringInSlice(lambda.Runtime_Values(), false),
-	// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-	validation.StringNotInSlice([]string{lambda.RuntimeNodejs}, false),
-)
-
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLambdaFunctionCreate,
@@ -148,7 +142,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"runtime": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLambdaRuntime,
+				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
