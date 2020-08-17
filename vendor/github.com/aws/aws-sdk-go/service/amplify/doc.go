@@ -3,16 +3,13 @@
 // Package amplify provides the client and types for making API
 // requests to AWS Amplify.
 //
-// Welcome to the AWS Amplify API documentation. This reference provides descriptions
-// of the actions and data types for the Amplify API.
-//
 // Amplify enables developers to develop and deploy cloud-powered mobile and
 // web apps. The Amplify Console provides a continuous delivery and hosting
 // service for web applications. For more information, see the Amplify Console
 // User Guide (https://docs.aws.amazon.com/amplify/latest/userguide/welcome.html).
 // The Amplify Framework is a comprehensive set of SDKs, libraries, tools, and
 // documentation for client app development. For more information, see the Amplify
-// Framework. (https://aws-amplify.github.io/docs/)
+// Framework. (https://docs.amplify.aws/)
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25 for more information on this service.
 //

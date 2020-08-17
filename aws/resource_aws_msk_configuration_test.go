@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMskConfiguration_basic(t *testing.T) {
@@ -172,6 +172,7 @@ resource "aws_msk_configuration" "test" {
 auto.create.topics.enable = true
 delete.topic.enable = true
 PROPERTIES
+
 }
 `, rName)
 }
@@ -186,6 +187,7 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 PROPERTIES
+
 }
 `, rName, description)
 }
@@ -199,6 +201,7 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 PROPERTIES
+
 }
 `, rName)
 }
@@ -212,6 +215,7 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 auto.create.topics.enable = false
 PROPERTIES
+
 }
 `, rName)
 }

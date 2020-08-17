@@ -11664,6 +11664,13 @@ const (
 	AccessEndpointTypeStreaming = "STREAMING"
 )
 
+// AccessEndpointType_Values returns all elements of the AccessEndpointType enum
+func AccessEndpointType_Values() []string {
+	return []string{
+		AccessEndpointTypeStreaming,
+	}
+}
+
 const (
 	// ActionClipboardCopyFromLocalDevice is a Action enum value
 	ActionClipboardCopyFromLocalDevice = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
@@ -11681,6 +11688,17 @@ const (
 	ActionPrintingToLocalDevice = "PRINTING_TO_LOCAL_DEVICE"
 )
 
+// Action_Values returns all elements of the Action enum
+func Action_Values() []string {
+	return []string{
+		ActionClipboardCopyFromLocalDevice,
+		ActionClipboardCopyToLocalDevice,
+		ActionFileUpload,
+		ActionFileDownload,
+		ActionPrintingToLocalDevice,
+	}
+}
+
 const (
 	// AuthenticationTypeApi is a AuthenticationType enum value
 	AuthenticationTypeApi = "API"
@@ -11691,6 +11709,15 @@ const (
 	// AuthenticationTypeUserpool is a AuthenticationType enum value
 	AuthenticationTypeUserpool = "USERPOOL"
 )
+
+// AuthenticationType_Values returns all elements of the AuthenticationType enum
+func AuthenticationType_Values() []string {
+	return []string{
+		AuthenticationTypeApi,
+		AuthenticationTypeSaml,
+		AuthenticationTypeUserpool,
+	}
+}
 
 // The fleet attribute.
 const (
@@ -11706,6 +11733,16 @@ const (
 	// FleetAttributeIamRoleArn is a FleetAttribute enum value
 	FleetAttributeIamRoleArn = "IAM_ROLE_ARN"
 )
+
+// FleetAttribute_Values returns all elements of the FleetAttribute enum
+func FleetAttribute_Values() []string {
+	return []string{
+		FleetAttributeVpcConfiguration,
+		FleetAttributeVpcConfigurationSecurityGroupIds,
+		FleetAttributeDomainJoinInfo,
+		FleetAttributeIamRoleArn,
+	}
+}
 
 const (
 	// FleetErrorCodeIamServiceRoleMissingEniDescribeAction is a FleetErrorCode enum value
@@ -11793,6 +11830,40 @@ const (
 	FleetErrorCodeDomainJoinInternalServiceError = "DOMAIN_JOIN_INTERNAL_SERVICE_ERROR"
 )
 
+// FleetErrorCode_Values returns all elements of the FleetErrorCode enum
+func FleetErrorCode_Values() []string {
+	return []string{
+		FleetErrorCodeIamServiceRoleMissingEniDescribeAction,
+		FleetErrorCodeIamServiceRoleMissingEniCreateAction,
+		FleetErrorCodeIamServiceRoleMissingEniDeleteAction,
+		FleetErrorCodeNetworkInterfaceLimitExceeded,
+		FleetErrorCodeInternalServiceError,
+		FleetErrorCodeIamServiceRoleIsMissing,
+		FleetErrorCodeMachineRoleIsMissing,
+		FleetErrorCodeStsDisabledInRegion,
+		FleetErrorCodeSubnetHasInsufficientIpAddresses,
+		FleetErrorCodeIamServiceRoleMissingDescribeSubnetAction,
+		FleetErrorCodeSubnetNotFound,
+		FleetErrorCodeImageNotFound,
+		FleetErrorCodeInvalidSubnetConfiguration,
+		FleetErrorCodeSecurityGroupsNotFound,
+		FleetErrorCodeIgwNotAttached,
+		FleetErrorCodeIamServiceRoleMissingDescribeSecurityGroupsAction,
+		FleetErrorCodeDomainJoinErrorFileNotFound,
+		FleetErrorCodeDomainJoinErrorAccessDenied,
+		FleetErrorCodeDomainJoinErrorLogonFailure,
+		FleetErrorCodeDomainJoinErrorInvalidParameter,
+		FleetErrorCodeDomainJoinErrorMoreData,
+		FleetErrorCodeDomainJoinErrorNoSuchDomain,
+		FleetErrorCodeDomainJoinErrorNotSupported,
+		FleetErrorCodeDomainJoinNerrInvalidWorkgroupName,
+		FleetErrorCodeDomainJoinNerrWorkstationNotStarted,
+		FleetErrorCodeDomainJoinErrorDsMachineAccountQuotaExceeded,
+		FleetErrorCodeDomainJoinNerrPasswordExpired,
+		FleetErrorCodeDomainJoinInternalServiceError,
+	}
+}
+
 const (
 	// FleetStateStarting is a FleetState enum value
 	FleetStateStarting = "STARTING"
@@ -11807,6 +11878,16 @@ const (
 	FleetStateStopped = "STOPPED"
 )
 
+// FleetState_Values returns all elements of the FleetState enum
+func FleetState_Values() []string {
+	return []string{
+		FleetStateStarting,
+		FleetStateRunning,
+		FleetStateStopping,
+		FleetStateStopped,
+	}
+}
+
 const (
 	// FleetTypeAlwaysOn is a FleetType enum value
 	FleetTypeAlwaysOn = "ALWAYS_ON"
@@ -11814,6 +11895,14 @@ const (
 	// FleetTypeOnDemand is a FleetType enum value
 	FleetTypeOnDemand = "ON_DEMAND"
 )
+
+// FleetType_Values returns all elements of the FleetType enum
+func FleetType_Values() []string {
+	return []string{
+		FleetTypeAlwaysOn,
+		FleetTypeOnDemand,
+	}
+}
 
 const (
 	// ImageBuilderStatePending is a ImageBuilderState enum value
@@ -11844,6 +11933,21 @@ const (
 	ImageBuilderStateFailed = "FAILED"
 )
 
+// ImageBuilderState_Values returns all elements of the ImageBuilderState enum
+func ImageBuilderState_Values() []string {
+	return []string{
+		ImageBuilderStatePending,
+		ImageBuilderStateUpdatingAgent,
+		ImageBuilderStateRunning,
+		ImageBuilderStateStopping,
+		ImageBuilderStateStopped,
+		ImageBuilderStateRebooting,
+		ImageBuilderStateSnapshotting,
+		ImageBuilderStateDeleting,
+		ImageBuilderStateFailed,
+	}
+}
+
 const (
 	// ImageBuilderStateChangeReasonCodeInternalError is a ImageBuilderStateChangeReasonCode enum value
 	ImageBuilderStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -11851,6 +11955,14 @@ const (
 	// ImageBuilderStateChangeReasonCodeImageUnavailable is a ImageBuilderStateChangeReasonCode enum value
 	ImageBuilderStateChangeReasonCodeImageUnavailable = "IMAGE_UNAVAILABLE"
 )
+
+// ImageBuilderStateChangeReasonCode_Values returns all elements of the ImageBuilderStateChangeReasonCode enum
+func ImageBuilderStateChangeReasonCode_Values() []string {
+	return []string{
+		ImageBuilderStateChangeReasonCodeInternalError,
+		ImageBuilderStateChangeReasonCodeImageUnavailable,
+	}
+}
 
 const (
 	// ImageStatePending is a ImageState enum value
@@ -11869,6 +11981,17 @@ const (
 	ImageStateDeleting = "DELETING"
 )
 
+// ImageState_Values returns all elements of the ImageState enum
+func ImageState_Values() []string {
+	return []string{
+		ImageStatePending,
+		ImageStateAvailable,
+		ImageStateFailed,
+		ImageStateCopying,
+		ImageStateDeleting,
+	}
+}
+
 const (
 	// ImageStateChangeReasonCodeInternalError is a ImageStateChangeReasonCode enum value
 	ImageStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -11880,6 +12003,15 @@ const (
 	ImageStateChangeReasonCodeImageCopyFailure = "IMAGE_COPY_FAILURE"
 )
 
+// ImageStateChangeReasonCode_Values returns all elements of the ImageStateChangeReasonCode enum
+func ImageStateChangeReasonCode_Values() []string {
+	return []string{
+		ImageStateChangeReasonCodeInternalError,
+		ImageStateChangeReasonCodeImageBuilderNotAvailable,
+		ImageStateChangeReasonCodeImageCopyFailure,
+	}
+}
+
 const (
 	// MessageActionSuppress is a MessageAction enum value
 	MessageActionSuppress = "SUPPRESS"
@@ -11888,6 +12020,14 @@ const (
 	MessageActionResend = "RESEND"
 )
 
+// MessageAction_Values returns all elements of the MessageAction enum
+func MessageAction_Values() []string {
+	return []string{
+		MessageActionSuppress,
+		MessageActionResend,
+	}
+}
+
 const (
 	// PermissionEnabled is a Permission enum value
 	PermissionEnabled = "ENABLED"
@@ -11895,6 +12035,14 @@ const (
 	// PermissionDisabled is a Permission enum value
 	PermissionDisabled = "DISABLED"
 )
+
+// Permission_Values returns all elements of the Permission enum
+func Permission_Values() []string {
+	return []string{
+		PermissionEnabled,
+		PermissionDisabled,
+	}
+}
 
 const (
 	// PlatformTypeWindows is a PlatformType enum value
@@ -11907,6 +12055,15 @@ const (
 	PlatformTypeWindowsServer2019 = "WINDOWS_SERVER_2019"
 )
 
+// PlatformType_Values returns all elements of the PlatformType enum
+func PlatformType_Values() []string {
+	return []string{
+		PlatformTypeWindows,
+		PlatformTypeWindowsServer2016,
+		PlatformTypeWindowsServer2019,
+	}
+}
+
 const (
 	// SessionConnectionStateConnected is a SessionConnectionState enum value
 	SessionConnectionStateConnected = "CONNECTED"
@@ -11914,6 +12071,14 @@ const (
 	// SessionConnectionStateNotConnected is a SessionConnectionState enum value
 	SessionConnectionStateNotConnected = "NOT_CONNECTED"
 )
+
+// SessionConnectionState_Values returns all elements of the SessionConnectionState enum
+func SessionConnectionState_Values() []string {
+	return []string{
+		SessionConnectionStateConnected,
+		SessionConnectionStateNotConnected,
+	}
+}
 
 // Possible values for the state of a streaming session.
 const (
@@ -11926,6 +12091,15 @@ const (
 	// SessionStateExpired is a SessionState enum value
 	SessionStateExpired = "EXPIRED"
 )
+
+// SessionState_Values returns all elements of the SessionState enum
+func SessionState_Values() []string {
+	return []string{
+		SessionStateActive,
+		SessionStatePending,
+		SessionStateExpired,
+	}
+}
 
 const (
 	// StackAttributeStorageConnectors is a StackAttribute enum value
@@ -11962,6 +12136,23 @@ const (
 	StackAttributeAccessEndpoints = "ACCESS_ENDPOINTS"
 )
 
+// StackAttribute_Values returns all elements of the StackAttribute enum
+func StackAttribute_Values() []string {
+	return []string{
+		StackAttributeStorageConnectors,
+		StackAttributeStorageConnectorHomefolders,
+		StackAttributeStorageConnectorGoogleDrive,
+		StackAttributeStorageConnectorOneDrive,
+		StackAttributeRedirectUrl,
+		StackAttributeFeedbackUrl,
+		StackAttributeThemeName,
+		StackAttributeUserSettings,
+		StackAttributeEmbedHostDomains,
+		StackAttributeIamRoleArn,
+		StackAttributeAccessEndpoints,
+	}
+}
+
 const (
 	// StackErrorCodeStorageConnectorError is a StackErrorCode enum value
 	StackErrorCodeStorageConnectorError = "STORAGE_CONNECTOR_ERROR"
@@ -11969,6 +12160,14 @@ const (
 	// StackErrorCodeInternalServiceError is a StackErrorCode enum value
 	StackErrorCodeInternalServiceError = "INTERNAL_SERVICE_ERROR"
 )
+
+// StackErrorCode_Values returns all elements of the StackErrorCode enum
+func StackErrorCode_Values() []string {
+	return []string{
+		StackErrorCodeStorageConnectorError,
+		StackErrorCodeInternalServiceError,
+	}
+}
 
 // The type of storage connector.
 const (
@@ -11982,6 +12181,15 @@ const (
 	StorageConnectorTypeOneDrive = "ONE_DRIVE"
 )
 
+// StorageConnectorType_Values returns all elements of the StorageConnectorType enum
+func StorageConnectorType_Values() []string {
+	return []string{
+		StorageConnectorTypeHomefolders,
+		StorageConnectorTypeGoogleDrive,
+		StorageConnectorTypeOneDrive,
+	}
+}
+
 const (
 	// UsageReportExecutionErrorCodeResourceNotFound is a UsageReportExecutionErrorCode enum value
 	UsageReportExecutionErrorCodeResourceNotFound = "RESOURCE_NOT_FOUND"
@@ -11993,10 +12201,26 @@ const (
 	UsageReportExecutionErrorCodeInternalServiceError = "INTERNAL_SERVICE_ERROR"
 )
 
+// UsageReportExecutionErrorCode_Values returns all elements of the UsageReportExecutionErrorCode enum
+func UsageReportExecutionErrorCode_Values() []string {
+	return []string{
+		UsageReportExecutionErrorCodeResourceNotFound,
+		UsageReportExecutionErrorCodeAccessDenied,
+		UsageReportExecutionErrorCodeInternalServiceError,
+	}
+}
+
 const (
 	// UsageReportScheduleDaily is a UsageReportSchedule enum value
 	UsageReportScheduleDaily = "DAILY"
 )
+
+// UsageReportSchedule_Values returns all elements of the UsageReportSchedule enum
+func UsageReportSchedule_Values() []string {
+	return []string{
+		UsageReportScheduleDaily,
+	}
+}
 
 const (
 	// UserStackAssociationErrorCodeStackNotFound is a UserStackAssociationErrorCode enum value
@@ -12009,6 +12233,15 @@ const (
 	UserStackAssociationErrorCodeInternalError = "INTERNAL_ERROR"
 )
 
+// UserStackAssociationErrorCode_Values returns all elements of the UserStackAssociationErrorCode enum
+func UserStackAssociationErrorCode_Values() []string {
+	return []string{
+		UserStackAssociationErrorCodeStackNotFound,
+		UserStackAssociationErrorCodeUserNameNotFound,
+		UserStackAssociationErrorCodeInternalError,
+	}
+}
+
 const (
 	// VisibilityTypePublic is a VisibilityType enum value
 	VisibilityTypePublic = "PUBLIC"
@@ -12019,3 +12252,12 @@ const (
 	// VisibilityTypeShared is a VisibilityType enum value
 	VisibilityTypeShared = "SHARED"
 )
+
+// VisibilityType_Values returns all elements of the VisibilityType enum
+func VisibilityType_Values() []string {
+	return []string{
+		VisibilityTypePublic,
+		VisibilityTypePrivate,
+		VisibilityTypeShared,
+	}
+}

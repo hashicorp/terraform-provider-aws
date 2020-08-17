@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -435,6 +435,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -442,11 +443,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn         = "${aws_iam_role.test.arn}"
-  log_destination      = "${aws_cloudwatch_log_group.test.arn}"
+  iam_role_arn         = aws_iam_role.test.arn
+  log_destination      = aws_cloudwatch_log_group.test.arn
   log_destination_type = "cloud-watch-logs"
   traffic_type         = "ALL"
-  vpc_id               = "${aws_vpc.test.id}"
+  vpc_id               = aws_vpc.test.id
 }
 `, rName)
 }
@@ -459,10 +460,10 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  log_destination      = "${aws_s3_bucket.test.arn}"
+  log_destination      = aws_s3_bucket.test.arn
   log_destination_type = "s3"
   traffic_type         = "ALL"
-  vpc_id               = "${aws_vpc.test.id}"
+  vpc_id               = aws_vpc.test.id
 }
 `, rName)
 }
@@ -473,7 +474,7 @@ resource "aws_flow_log" "test" {
   log_destination      = "arn:aws:s3:::does-not-exist"
   log_destination_type = "s3"
   traffic_type         = "ALL"
-  vpc_id               = "${aws_vpc.test.id}"
+  vpc_id               = aws_vpc.test.id
 }
 `
 }
@@ -482,7 +483,7 @@ func testAccFlowLogConfig_SubnetID(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_subnet" "test" {
   cidr_block = "10.0.1.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -510,6 +511,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -517,9 +519,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = "${aws_iam_role.test.arn}"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
-  subnet_id      = "${aws_subnet.test.id}"
+  iam_role_arn   = aws_iam_role.test.arn
+  log_group_name = aws_cloudwatch_log_group.test.name
+  subnet_id      = aws_subnet.test.id
   traffic_type   = "ALL"
 }
 `, rName)
@@ -548,6 +550,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -555,10 +558,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = "${aws_iam_role.test.arn}"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  iam_role_arn   = aws_iam_role.test.arn
+  log_group_name = aws_cloudwatch_log_group.test.name
   traffic_type   = "ALL"
-  vpc_id         = "${aws_vpc.test.id}"
+  vpc_id         = aws_vpc.test.id
 }
 `, rName)
 }
@@ -586,6 +589,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -597,13 +601,11 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  log_destination      = "${aws_s3_bucket.test.arn}"
+  log_destination      = aws_s3_bucket.test.arn
   log_destination_type = "s3"
-  iam_role_arn         = "${aws_iam_role.test.arn}"
-
-  traffic_type   = "ALL"
-  vpc_id         = "${aws_vpc.test.id}"
-  log_format     = "$${version} $${vpc-id} $${subnet-id}"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  log_format           = "$${version} $${vpc-id} $${subnet-id}"
 }
 `, rName)
 }
@@ -631,6 +633,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -638,10 +641,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = "${aws_iam_role.test.arn}"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  iam_role_arn   = aws_iam_role.test.arn
+  log_group_name = aws_cloudwatch_log_group.test.name
   traffic_type   = "ALL"
-  vpc_id         = "${aws_vpc.test.id}"
+  vpc_id         = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -673,6 +676,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -680,10 +684,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = "${aws_iam_role.test.arn}"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  iam_role_arn   = aws_iam_role.test.arn
+  log_group_name = aws_cloudwatch_log_group.test.name
   traffic_type   = "ALL"
-  vpc_id         = "${aws_vpc.test.id}"
+  vpc_id         = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -716,6 +720,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -723,10 +728,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = "${aws_iam_role.test.arn}"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  iam_role_arn   = aws_iam_role.test.arn
+  log_group_name = aws_cloudwatch_log_group.test.name
   traffic_type   = "ALL"
-  vpc_id         = "${aws_vpc.test.id}"
+  vpc_id         = aws_vpc.test.id
 
   max_aggregation_interval = 60
 }

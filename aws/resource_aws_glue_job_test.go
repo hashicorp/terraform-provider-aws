@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -683,11 +683,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "${data.aws_iam_policy.AWSGlueServiceRole.arn}"
-  role       = "${aws_iam_role.test.name}"
+  policy_arn = data.aws_iam_policy.AWSGlueServiceRole.arn
+  role       = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -705,7 +706,7 @@ resource "aws_glue_job" "test" {
     script_location = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, scriptLocation)
 }
@@ -728,7 +729,7 @@ resource "aws_glue_job" "test" {
     "--job-language"        = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
 }
@@ -747,7 +748,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), description, rName)
 }
@@ -766,7 +767,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
 }
@@ -788,7 +789,7 @@ resource "aws_glue_job" "test" {
     max_concurrent_runs = %d
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxConcurrentRuns)
 }
@@ -807,7 +808,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), maxRetries, rName)
 }
@@ -829,7 +830,7 @@ resource "aws_glue_job" "test" {
     notify_delay_after = %d
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, notifyDelayAfter)
 }
@@ -847,7 +848,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
 }
@@ -857,7 +858,7 @@ func testAccAWSGlueJobConfigTags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_glue_job" "test" {
   name              = %[1]q
   number_of_workers = 2
-  role_arn          = "${aws_iam_role.test.arn}"
+  role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
   command {
@@ -868,7 +869,7 @@ resource "aws_glue_job" "test" {
     %[2]q = %[3]q
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -878,7 +879,7 @@ func testAccAWSGlueJobConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 
 resource "aws_glue_job" "test" {
   name              = %[1]q
   number_of_workers = 2
-  role_arn          = "${aws_iam_role.test.arn}"
+  role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
   command {
@@ -890,7 +891,7 @@ resource "aws_glue_job" "test" {
     %[4]q = %[5]q
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -909,7 +910,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, timeout)
 }
@@ -928,7 +929,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, securityConfiguration)
 }
@@ -938,16 +939,16 @@ func testAccAWSGlueJobConfig_WorkerType(rName string, workerType string) string 
 %s
 
 resource "aws_glue_job" "test" {
-  name                   = "%s"
-  role_arn               = "${aws_iam_role.test.arn}"
-  worker_type 			 = "%s"
-  number_of_workers      = 10
+  name              = "%s"
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "%s"
+  number_of_workers = 10
 
   command {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, workerType)
 }
@@ -958,7 +959,7 @@ func testAccAWSGlueJobConfig_PythonShell(rName string) string {
 
 resource "aws_glue_job" "test" {
   name         = "%s"
-  role_arn     = "${aws_iam_role.test.arn}"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = 0.0625
 
   command {
@@ -966,7 +967,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
 }
@@ -977,16 +978,16 @@ func testAccAWSGlueJobConfig_PythonShellWithVersion(rName string, pythonVersion 
 
 resource "aws_glue_job" "test" {
   name         = "%s"
-  role_arn     = "${aws_iam_role.test.arn}"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = 0.0625
 
   command {
     name            = "pythonshell"
     script_location = "testscriptlocation"
-		python_version  = "%s"
+    python_version  = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, pythonVersion)
 }
@@ -996,15 +997,15 @@ func testAccAWSGlueJobConfig_MaxCapacity(rName string, maxCapacity float64) stri
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = %g
 
   command {
-	script_location = "testscriptlocation"
+    script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxCapacity)
 }

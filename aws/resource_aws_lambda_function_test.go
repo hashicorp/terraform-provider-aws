@@ -14,9 +14,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -1987,27 +1987,27 @@ data "aws_availability_zones" "available" {
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"
-  role = "${aws_iam_role.iam_for_lambda.id}"
+  role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
-        },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    },
     {
       "Effect": "Allow",
       "Action": [
         "ec2:CreateNetworkInterface",
-				"ec2:DescribeNetworkInterfaces",
-				"ec2:DeleteNetworkInterface"
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface"
       ],
       "Resource": [
         "*"
@@ -2034,6 +2034,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -2054,6 +2055,7 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
@@ -2065,7 +2067,7 @@ resource "aws_vpc" "vpc_for_lambda" {
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-  vpc_id            = "${aws_vpc.vpc_for_lambda.id}"
+  vpc_id            = aws_vpc.vpc_for_lambda.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2077,7 +2079,7 @@ resource "aws_subnet" "subnet_for_lambda" {
 # This is defined here, rather than only in test cases where it's needed is to
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
-  vpc_id            = "${aws_vpc.vpc_for_lambda.id}"
+  vpc_id            = aws_vpc.vpc_for_lambda.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
 
@@ -2089,7 +2091,7 @@ resource "aws_subnet" "subnet_for_lambda_az2" {
 resource "aws_security_group" "sg_for_lambda" {
   name        = "%s"
   description = "Allow all inbound traffic for lambda test"
-  vpc_id      = "${aws_vpc.vpc_for_lambda.id}"
+  vpc_id      = aws_vpc.vpc_for_lambda.id
 
   ingress {
     from_port   = 0
@@ -2111,11 +2113,11 @@ resource "aws_security_group" "sg_for_lambda" {
 func testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 }
 `, funcName)
 }
@@ -2123,12 +2125,12 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigBasicConcurrency(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    reserved_concurrent_executions = 111
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = "%s"
+  role                           = aws_iam_role.iam_for_lambda.arn
+  handler                        = "exports.example"
+  runtime                        = "nodejs12.x"
+  reserved_concurrent_executions = 111
 }
 `, funcName)
 }
@@ -2136,12 +2138,12 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigConcurrencyUpdate(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    reserved_concurrent_executions = 222
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = "%s"
+  role                           = aws_iam_role.iam_for_lambda.arn
+  handler                        = "exports.example"
+  runtime                        = "nodejs12.x"
+  reserved_concurrent_executions = 222
 }
 `, funcName)
 }
@@ -2149,11 +2151,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigBasicUpdateRuntime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs10.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs10.x"
 }
 `, funcName)
 }
@@ -2161,10 +2163,10 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithoutFilenameAndS3Attributes(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-		runtime = "nodejs12.x"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 }
 `, funcName)
 }
@@ -2172,16 +2174,17 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigEnvVariables(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    environment {
-        variables = {
-            foo = "bar"
-        }
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  environment {
+    variables = {
+      foo = "bar"
     }
+  }
 }
 `, funcName)
 }
@@ -2189,17 +2192,18 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigEnvVariablesModified(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    environment {
-        variables = {
-            foo = "baz"
-            foo1 = "bar1"
-        }
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  environment {
+    variables = {
+      foo  = "baz"
+      foo1 = "bar1"
     }
+  }
 }
 `, funcName)
 }
@@ -2207,11 +2211,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigEnvVariablesModifiedWithoutEnvironment(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 }
 `, funcName)
 }
@@ -2219,8 +2223,9 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigEncryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
-    description = "%s"
-    policy = <<POLICY
+  description = "%s"
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -2237,20 +2242,22 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    kms_key_arn = "${aws_kms_key.foo.arn}"
-    runtime = "nodejs12.x"
-    environment {
-        variables = {
-            foo = "bar"
-        }
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  kms_key_arn   = aws_kms_key.foo.arn
+  runtime       = "nodejs12.x"
+
+  environment {
+    variables = {
+      foo = "bar"
     }
+  }
 }
 `, keyDesc, funcName)
 }
@@ -2258,8 +2265,9 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
-    description = "%s"
-    policy = <<POLICY
+  description = "%s"
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -2276,19 +2284,21 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    environment {
-        variables = {
-            foo = "bar"
-        }
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  environment {
+    variables = {
+      foo = "bar"
     }
+  }
 }
 `, keyDesc, funcName)
 }
@@ -2296,12 +2306,12 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigVersioned(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "%s"
-    function_name = "%s"
-    publish = true
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "%s"
+  function_name = "%s"
+  publish       = true
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 }
 `, fileName, funcName)
 }
@@ -2309,55 +2319,55 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaFileSystemConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
-	tags = {
-    	Name = "efs_for_lambda"
-  	}
+  tags = {
+    Name = "efs_for_lambda"
+  }
 }
 
 resource "aws_efs_mount_target" "mount_target_az1" {
-	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
-	subnet_id      = "${aws_subnet.subnet_for_lambda.id}"
-	security_groups = ["${aws_security_group.sg_for_lambda.id}"]
+  file_system_id  = aws_efs_file_system.efs_for_lambda.id
+  subnet_id       = aws_subnet.subnet_for_lambda.id
+  security_groups = [aws_security_group.sg_for_lambda.id]
 }
 
 resource "aws_efs_access_point" "access_point_1" {
-	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+  file_system_id = aws_efs_file_system.efs_for_lambda.id
 
-	root_directory {
-		path = "/lambda1"
-		creation_info {
-			owner_gid   = 1000
-			owner_uid   = 1000
-			permissions = "777"
-		}
-	}
-	
-	posix_user {
-		gid = 1000
-		uid = 1000
-	}
+  root_directory {
+    path = "/lambda1"
+
+    creation_info {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "777"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
 }
 
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    publish = true
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  publish       = true
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    vpc_config {
-        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
-        security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
-    }
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
 
-	file_system_config {
-	   	arn = "${aws_efs_access_point.access_point_1.arn}"
-		local_mount_path = "/mnt/efs"
-	}
+  file_system_config {
+    arn              = aws_efs_access_point.access_point_1.arn
+    local_mount_path = "/mnt/efs"
+  }
 
-	depends_on = [aws_efs_mount_target.mount_target_az1]
-
+  depends_on = [aws_efs_mount_target.mount_target_az1]
 }
 `, funcName)
 }
@@ -2365,55 +2375,55 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaFileSystemUpdateConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
-	tags = {
-    	Name = "efs_for_lambda"
-  	}
+  tags = {
+    Name = "efs_for_lambda"
+  }
 }
 
 resource "aws_efs_mount_target" "mount_target_az2" {
-	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
-	subnet_id      = "${aws_subnet.subnet_for_lambda_az2.id}"
-	security_groups = ["${aws_security_group.sg_for_lambda.id}"]
+  file_system_id  = aws_efs_file_system.efs_for_lambda.id
+  subnet_id       = aws_subnet.subnet_for_lambda_az2.id
+  security_groups = [aws_security_group.sg_for_lambda.id]
 }
 
 resource "aws_efs_access_point" "access_point_2" {
-	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+  file_system_id = aws_efs_file_system.efs_for_lambda.id
 
-	root_directory {
-		path = "/lambda2"
-		creation_info {
-			owner_gid   = 1000
-			owner_uid   = 1000
-			permissions = "777"
-		}
-	}
-	
-	posix_user {
-		gid = 1000
-		uid = 1000
-	}
+  root_directory {
+    path = "/lambda2"
+
+    creation_info {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "777"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
 }
 
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    publish = true
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  publish       = true
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    vpc_config {
-        subnet_ids = ["${aws_subnet.subnet_for_lambda_az2.id}"]
-        security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
-    }
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
 
-	file_system_config {
-	   	arn = "${aws_efs_access_point.access_point_2.arn}"
-	   	local_mount_path = "/mnt/lambda"
-	}
+  file_system_config {
+    arn              = aws_efs_access_point.access_point_2.arn
+    local_mount_path = "/mnt/lambda"
+  }
 
-	depends_on = [aws_efs_mount_target.mount_target_az2]
-
+  depends_on = [aws_efs_mount_target.mount_target_az2]
 }
 `, funcName)
 }
@@ -2421,12 +2431,12 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "%s"
-    function_name = "%s"
-    publish = true
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs10.x"
+  filename      = "%s"
+  function_name = "%s"
+  publish       = true
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs10.x"
 }
 `, fileName, funcName)
 }
@@ -2437,7 +2447,7 @@ data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-  role       = "${aws_iam_role.test.id}"
+  role       = aws_iam_role.test.id
 }
 
 resource "aws_iam_role" "test" {
@@ -2458,6 +2468,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+
 }
 
 resource "aws_vpc" "test" {
@@ -2469,9 +2480,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/24"
 
   tags = {
@@ -2480,10 +2491,10 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   name   = %[1]q
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -2496,13 +2507,13 @@ resource "aws_security_group" "test" {
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 
   vpc_config {
-    subnet_ids         = ["${aws_subnet.test.id}"]
-    security_group_ids = ["${aws_security_group.test.id}"]
+    subnet_ids         = [aws_subnet.test.id]
+    security_group_ids = [aws_security_group.test.id]
   }
 }
 `, rName)
@@ -2511,15 +2522,15 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithTracingConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    tracing_config {
-        mode = "Active"
-    }
+  tracing_config {
+    mode = "Active"
+  }
 }
 `, funcName)
 }
@@ -2527,15 +2538,15 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithTracingConfigUpdated(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    tracing_config {
-        mode = "PassThrough"
-    }
+  tracing_config {
+    mode = "PassThrough"
+  }
 }
 `, funcName)
 }
@@ -2543,19 +2554,19 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    dead_letter_config {
-        target_arn = "${aws_sns_topic.test.arn}"
-    }
+  dead_letter_config {
+    target_arn = aws_sns_topic.test.arn
+  }
 }
 
 resource "aws_sns_topic" "test" {
-	name = "%s"
+  name = "%s"
 }
 `, funcName, topicName)
 }
@@ -2564,23 +2575,23 @@ func testAccAWSLambdaConfigWithDeadLetterConfigUpdated(funcName, topic1Name, top
 	roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    dead_letter_config {
-        target_arn = "${aws_sns_topic.test_2.arn}"
-    }
+  dead_letter_config {
+    target_arn = aws_sns_topic.test_2.arn
+  }
 }
 
 resource "aws_sns_topic" "test" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_sns_topic" "test_2" {
-	name = "%s"
+  name = "%s"
 }
 `, funcName, topic1Name, topic2Name)
 }
@@ -2588,15 +2599,15 @@ resource "aws_sns_topic" "test_2" {
 func testAccAWSLambdaConfigWithNilDeadLetterConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    dead_letter_config {
-        target_arn = ""
-    }
+  dead_letter_config {
+    target_arn = ""
+  }
 }
 `, funcName)
 }
@@ -2624,14 +2635,15 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   handler       = "exports.example"
-  kms_key_arn   = "${aws_kms_key.test.arn}"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  kms_key_arn   = aws_kms_key.test.arn
+  role          = aws_iam_role.iam_for_lambda.arn
   runtime       = "nodejs12.x"
 }
 `, rName)
@@ -2640,18 +2652,18 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    layer_name = "%s"
-    compatible_runtimes = ["nodejs12.x"]
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = "%s"
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    layers = ["${aws_lambda_layer_version.test.arn}"]
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  layers        = [aws_lambda_layer_version.test.arn]
 }
 `, layerName, funcName)
 }
@@ -2659,27 +2671,27 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    layer_name = "%s"
-    compatible_runtimes = ["nodejs12.x"]
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = "%s"
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 resource "aws_lambda_layer_version" "test_2" {
-    filename = "test-fixtures/lambdatest_modified.zip"
-    layer_name = "%s"
-    compatible_runtimes = ["nodejs12.x"]
+  filename            = "test-fixtures/lambdatest_modified.zip"
+  layer_name          = "%s"
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
-    layers = [
-        "${aws_lambda_layer_version.test.arn}",
-        "${aws_lambda_layer_version.test_2.arn}",
-    ]
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  layers = [
+    aws_lambda_layer_version.test.arn,
+    aws_lambda_layer_version.test_2.arn,
+  ]
 }
 `, layerName, layer2Name, funcName)
 }
@@ -2687,16 +2699,16 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    vpc_config {
-        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
-        security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
-    }
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
 }
 `, funcName)
 }
@@ -2704,35 +2716,35 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigWithVPCUpdated(funcName, policyName, roleName, sgName, sgName2 string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    vpc_config {
-        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_az2.id}"]
-        security_group_ids = ["${aws_security_group.sg_for_lambda.id}", "${aws_security_group.sg_for_lambda_2.id}"]
-    }
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id, aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id, aws_security_group.sg_for_lambda_2.id]
+  }
 }
 
 resource "aws_security_group" "sg_for_lambda_2" {
-  name = "sg_for_lambda_%s"
+  name        = "sg_for_lambda_%s"
   description = "Allow all inbound traffic for lambda test"
-  vpc_id = "${aws_vpc.vpc_for_lambda.id}"
+  vpc_id      = aws_vpc.vpc_for_lambda.id
 
   ingress {
-      from_port = 80
-      to_port = 80
-      protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 `, funcName, sgName2)
@@ -2741,16 +2753,16 @@ resource "aws_security_group" "sg_for_lambda_2" {
 func testAccAWSLambdaConfigWithEmptyVpcConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename      = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role          = "${aws_iam_role.iam_for_lambda.arn}"
-    handler       = "exports.example"
-    runtime       = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-    vpc_config {
-        subnet_ids         = []
-        security_group_ids = []
-    }
+  vpc_config {
+    subnet_ids         = []
+    security_group_ids = []
+  }
 }
 `, funcName)
 }
@@ -2762,7 +2774,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
 }
 
 resource "aws_s3_bucket_object" "lambda_code" {
-  bucket = "${aws_s3_bucket.lambda_bucket.id}"
+  bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
@@ -2785,13 +2797,14 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket     = "${aws_s3_bucket.lambda_bucket.id}"
-  s3_key        = "${aws_s3_bucket_object.lambda_code.id}"
+  s3_bucket     = aws_s3_bucket.lambda_bucket.id
+  s3_key        = aws_s3_bucket_object.lambda_code.id
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -2801,10 +2814,10 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigNoRuntime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
 }
 `, funcName)
 }
@@ -2812,11 +2825,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigNodeJs10xRuntime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs10.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs10.x"
 }
 `, funcName)
 }
@@ -2824,11 +2837,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigNodeJs12xRuntime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 }
 `, funcName)
 }
@@ -2836,11 +2849,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigPython27Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "python2.7"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "python2.7"
 }
 `, funcName)
 }
@@ -2848,11 +2861,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigJava8Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "java8"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "java8"
 }
 `, funcName)
 }
@@ -2860,11 +2873,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigJava11Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "java11"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "java11"
 }
 `, funcName)
 }
@@ -2872,15 +2885,16 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigTags(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
   tags = {
-		Key1 = "Value One"
-		Description = "Very interesting"
-    }
+    Key1        = "Value One"
+    Description = "Very interesting"
+  }
 }
 `, funcName)
 }
@@ -2888,16 +2902,17 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigTagsModified(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
   tags = {
-		Key1 = "Value One Changed"
-		Key2 = "Value Two"
-		Key3 = "Value Three"
-    }
+    Key1 = "Value One Changed"
+    Key2 = "Value Two"
+    Key3 = "Value Three"
+  }
 }
 `, funcName)
 }
@@ -2905,11 +2920,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigProvidedRuntime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "provided"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "provided"
 }
 `, funcName)
 }
@@ -2917,11 +2932,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigPython36Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "python3.6"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "python3.6"
 }
 `, funcName)
 }
@@ -2929,11 +2944,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigPython37Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "python3.7"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "python3.7"
 }
 `, funcName)
 }
@@ -2941,11 +2956,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigPython38Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "python3.8"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "python3.8"
 }
 `, funcName)
 }
@@ -2953,11 +2968,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigRuby25Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "ruby2.5"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "ruby2.5"
 }
 `, funcName)
 }
@@ -2965,11 +2980,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigRuby27Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "ruby2.7"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "ruby2.7"
 }
 `, funcName)
 }
@@ -2977,11 +2992,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaConfigDotNetCore31Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "dotnetcore3.1"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "dotnetcore3.1"
 }
 `, funcName)
 }
@@ -3006,13 +3021,14 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename         = "%s"
-  source_code_hash = "${filebase64sha256("%s")}"
+  source_code_hash = filebase64sha256("%s")
   function_name    = "%s"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
 }
@@ -3043,12 +3059,13 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "%s"
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -3068,10 +3085,10 @@ resource "aws_s3_bucket" "artifacts" {
 }
 
 resource "aws_s3_bucket_object" "o" {
-  bucket = "${aws_s3_bucket.artifacts.bucket}"
+  bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
-  etag   = "${filemd5("%s")}"
+  etag   = filemd5("%s")
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -3092,14 +3109,15 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket         = "${aws_s3_bucket_object.o.bucket}"
-  s3_key            = "${aws_s3_bucket_object.o.key}"
-  s3_object_version = "${aws_s3_bucket_object.o.version_id}"
+  s3_bucket         = aws_s3_bucket_object.o.bucket
+  s3_key            = aws_s3_bucket_object.o.key
+  s3_object_version = aws_s3_bucket_object.o.version_id
   function_name     = "%s"
-  role              = "${aws_iam_role.iam_for_lambda.arn}"
+  role              = aws_iam_role.iam_for_lambda.arn
   handler           = "exports.example"
   runtime           = "nodejs12.x"
 }
@@ -3115,10 +3133,10 @@ resource "aws_s3_bucket" "artifacts" {
 }
 
 resource "aws_s3_bucket_object" "o" {
-  bucket = "${aws_s3_bucket.artifacts.bucket}"
+  bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
-  etag   = "${filemd5("%s")}"
+  etag   = filemd5("%s")
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -3139,13 +3157,14 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
+
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket     = "${aws_s3_bucket_object.o.bucket}"
-  s3_key        = "${aws_s3_bucket_object.o.key}"
+  s3_bucket     = aws_s3_bucket_object.o.bucket
+  s3_key        = aws_s3_bucket_object.o.key
   function_name = "%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }

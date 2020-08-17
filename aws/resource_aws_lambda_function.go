@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,9 +16,9 @@ import (
 
 	"errors"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
@@ -293,7 +294,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 	}
 }
 
-func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
+func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if needsFunctionCodeUpdate(d) {
 		d.SetNewComputed("last_modified")
 		publish := d.Get("publish").(bool)

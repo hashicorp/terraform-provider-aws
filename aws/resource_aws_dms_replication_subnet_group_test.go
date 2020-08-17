@@ -6,10 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
@@ -112,43 +112,43 @@ resource "aws_vpc" "dms_vpc" {
 resource "aws_subnet" "dms_subnet_1" {
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.dms_vpc.id}"
+  vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
     Name = "tf-acc-dms-replication-subnet-group-1"
   }
 
-  depends_on = ["aws_vpc.dms_vpc"]
+  depends_on = [aws_vpc.dms_vpc]
 }
 
 resource "aws_subnet" "dms_subnet_2" {
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.dms_vpc.id}"
+  vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
     Name = "tf-acc-dms-replication-subnet-group-2"
   }
 
-  depends_on = ["aws_vpc.dms_vpc"]
+  depends_on = [aws_vpc.dms_vpc]
 }
 
 resource "aws_subnet" "dms_subnet_3" {
   cidr_block        = "10.1.3.0/24"
   availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.dms_vpc.id}"
+  vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
     Name = "tf-acc-dms-replication-subnet-group-3"
   }
 
-  depends_on = ["aws_vpc.dms_vpc"]
+  depends_on = [aws_vpc.dms_vpc]
 }
 
 resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
   replication_subnet_group_id          = "tf-test-dms-replication-subnet-group-%[1]s"
   replication_subnet_group_description = "terraform test for replication subnet group"
-  subnet_ids                           = ["${aws_subnet.dms_subnet_1.id}", "${aws_subnet.dms_subnet_2.id}"]
+  subnet_ids                           = [aws_subnet.dms_subnet_1.id, aws_subnet.dms_subnet_2.id]
 
   tags = {
     Name   = "tf-test-dms-replication-subnet-group-%[1]s"
@@ -172,43 +172,43 @@ resource "aws_vpc" "dms_vpc" {
 resource "aws_subnet" "dms_subnet_1" {
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.dms_vpc.id}"
+  vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
     Name = "tf-acc-dms-replication-subnet-group-1"
   }
 
-  depends_on = ["aws_vpc.dms_vpc"]
+  depends_on = [aws_vpc.dms_vpc]
 }
 
 resource "aws_subnet" "dms_subnet_2" {
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.dms_vpc.id}"
+  vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
     Name = "tf-acc-dms-replication-subnet-group-2"
   }
 
-  depends_on = ["aws_vpc.dms_vpc"]
+  depends_on = [aws_vpc.dms_vpc]
 }
 
 resource "aws_subnet" "dms_subnet_3" {
   cidr_block        = "10.1.3.0/24"
   availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.dms_vpc.id}"
+  vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
     Name = "tf-acc-dms-replication-subnet-group-3"
   }
 
-  depends_on = ["aws_vpc.dms_vpc"]
+  depends_on = [aws_vpc.dms_vpc]
 }
 
 resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
   replication_subnet_group_id          = "tf-test-dms-replication-subnet-group-%[1]s"
   replication_subnet_group_description = "terraform test for replication subnet group"
-  subnet_ids                           = ["${aws_subnet.dms_subnet_1.id}", "${aws_subnet.dms_subnet_3.id}"]
+  subnet_ids                           = [aws_subnet.dms_subnet_1.id, aws_subnet.dms_subnet_3.id]
 
   tags = {
     Name   = "tf-test-dms-replication-subnet-group-%[1]s"

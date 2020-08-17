@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
@@ -149,7 +149,7 @@ resource "aws_route53_record" "domain_identity_verification" {
 resource "aws_ses_domain_identity_verification" "test" {
   domain = "${aws_ses_domain_identity.test.id}"
 
-  depends_on = ["aws_route53_record.domain_identity_verification"]
+  depends_on = [aws_route53_record.domain_identity_verification]
 }
 `, rootDomain, domain)
 }

@@ -29,12 +29,12 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_vpn_gateway" "example" {
-  vpc_id = "${aws_vpc.example.id}"
+  vpc_id = aws_vpc.example.id
 }
 
 resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = "${aws_dx_gateway.example.id}"
-  associated_gateway_id = "${aws_vpn_gateway.example.id}"
+  dx_gateway_id         = aws_dx_gateway.example.id
+  associated_gateway_id = aws_vpn_gateway.example.id
 }
 ```
 
@@ -46,11 +46,12 @@ resource "aws_dx_gateway" "example" {
   amazon_side_asn = "64512"
 }
 
-resource "aws_ec2_transit_gateway" "example" {}
+resource "aws_ec2_transit_gateway" "example" {
+}
 
 resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = "${aws_dx_gateway.example.id}"
-  associated_gateway_id = "${aws_ec2_transit_gateway.example.id}"
+  dx_gateway_id         = aws_dx_gateway.example.id
+  associated_gateway_id = aws_ec2_transit_gateway.example.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -72,12 +73,12 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_vpn_gateway" "example" {
-  vpc_id = "${aws_vpc.example.id}"
+  vpc_id = aws_vpc.example.id
 }
 
 resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = "${aws_dx_gateway.example.id}"
-  associated_gateway_id = "${aws_vpn_gateway.example.id}"
+  dx_gateway_id         = aws_dx_gateway.example.id
+  associated_gateway_id = aws_vpn_gateway.example.id
 
   allowed_prefixes = [
     "210.52.109.0/24",

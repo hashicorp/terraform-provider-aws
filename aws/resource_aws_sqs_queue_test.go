@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
@@ -672,7 +672,7 @@ resource "aws_sns_topic" "test_topic" {
 
 resource "aws_sqs_queue" "test-email-events" {
   name                       = "${var.sqs_name}"
-  depends_on                 = ["aws_sns_topic.test_topic"]
+  depends_on                 = [aws_sns_topic.test_topic]
   delay_seconds              = 90
   max_message_size           = 2048
   message_retention_seconds  = 86400

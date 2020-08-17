@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsApiGatewayMethodSettings() *schema.Resource {
@@ -52,6 +53,11 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"OFF",
+								"ERROR",
+								"INFO",
+							}, false),
 						},
 						"data_trace_enabled": {
 							Type:     schema.TypeBool,
@@ -91,6 +97,11 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 						"unauthorized_cache_control_header_strategy": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								apigateway.UnauthorizedCacheControlHeaderStrategyFailWith403,
+								apigateway.UnauthorizedCacheControlHeaderStrategySucceedWithResponseHeader,
+								apigateway.UnauthorizedCacheControlHeaderStrategySucceedWithoutResponseHeader,
+							}, false),
 							Computed: true,
 						},
 					},
@@ -145,7 +156,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("settings", flattenAwsApiGatewayMethodSettings(settings)); err != nil {
-		return fmt.Errorf("error setting settings: %s", err)
+		return fmt.Errorf("error setting settings: %w", err)
 	}
 
 	return nil
@@ -201,13 +212,15 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.caching_enabled").(bool))),
 		})
 	}
-	if d.HasChange("settings.0.cache_ttl_in_seconds") {
+
+	if v, ok := d.GetOkExists("settings.0.cache_ttl_in_seconds"); ok {
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String(prefix + "caching/ttlInSeconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.cache_ttl_in_seconds").(int))),
+			Value: aws.String(fmt.Sprintf("%d", v.(int))),
 		})
 	}
+
 	if d.HasChange("settings.0.cache_data_encrypted") {
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
@@ -240,7 +253,7 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
 	_, err := conn.UpdateStage(&input)
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
+		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
 
 	d.SetId(restApiId + "-" + stageName + "-" + methodPath)
@@ -265,7 +278,7 @@ func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
 	_, err := conn.UpdateStage(&input)
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
+		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
 
 	return nil

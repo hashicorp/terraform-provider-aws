@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -869,9 +869,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
@@ -880,7 +880,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_elasticache_replication_group" "test" {
@@ -889,7 +889,7 @@ resource "aws_elasticache_replication_group" "test" {
   port                          = 6379
   replication_group_description = "test description"
   replication_group_id          = %[1]q
-  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
 }
 `, rName)
 }
@@ -993,49 +993,52 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-    cidr_block = "192.168.0.0/16"
+  cidr_block = "192.168.0.0/16"
+
   tags = {
-        Name = "terraform-testacc-elasticache-replication-group-in-vpc"
-    }
+    Name = "terraform-testacc-elasticache-replication-group-in-vpc"
+  }
 }
 
 resource "aws_subnet" "test" {
-    vpc_id = "${aws_vpc.test.id}"
-    cidr_block = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
-        Name = "tf-acc-elasticache-replication-group-in-vpc"
-    }
+    Name = "tf-acc-elasticache-replication-group-in-vpc"
+  }
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-    name = "tf-test-cache-subnet-%03d"
-    description = "tf-test-cache-subnet-group-descr"
-    subnet_ids = ["${aws_subnet.test.id}"]
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids  = [aws_subnet.test.id]
 }
 
 resource "aws_security_group" "test" {
-    name = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    vpc_id = "${aws_vpc.test.id}"
-    ingress {
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_elasticache_replication_group" "test" {
-    replication_group_id = "tf-%s"
-    replication_group_description = "test description"
-    node_type = "cache.t3.small"
-    number_cache_clusters = 1
-    port = 6379
-    subnet_group_name = "${aws_elasticache_subnet_group.test.name}"
-    security_group_ids = ["${aws_security_group.test.id}"]
-    availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-    auto_minor_version_upgrade = false
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 1
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0]}
+  auto_minor_version_upgrade    = false
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
@@ -1048,59 +1051,69 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
+
 resource "aws_vpc" "test" {
-    cidr_block = "192.168.0.0/16"
+  cidr_block = "192.168.0.0/16"
+
   tags = {
-        Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
-    }
+    Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
+  }
 }
+
 resource "aws_subnet" "test" {
-    vpc_id = "${aws_vpc.test.id}"
-    cidr_block = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
-        Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-foo"
-    }
+    Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-foo"
+  }
 }
+
 resource "aws_subnet" "test2" {
-    vpc_id = "${aws_vpc.test.id}"
-    cidr_block = "192.168.16.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.16.0/20"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
   tags = {
-        Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-bar"
-    }
+    Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-bar"
+  }
 }
+
 resource "aws_elasticache_subnet_group" "test" {
-    name = "tf-test-cache-subnet-%03d"
-    description = "tf-test-cache-subnet-group-descr"
-    subnet_ids = [
-        "${aws_subnet.test.id}",
-        "${aws_subnet.test2.id}"
-    ]
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids  = [
+    aws_subnet.test.id,
+    aws_subnet.test2.id,
+  ]
 }
+
 resource "aws_security_group" "test" {
-    name = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    vpc_id = "${aws_vpc.test.id}"
-    ingress {
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
+
 resource "aws_elasticache_replication_group" "test" {
-    replication_group_id = "tf-%s"
-    replication_group_description = "test description"
-    node_type = "cache.t3.small"
-    number_cache_clusters = 2
-    port = 6379
-    subnet_group_name = "${aws_elasticache_subnet_group.test.name}"
-    security_group_ids = ["${aws_security_group.test.id}"]
-    availability_zones = ["${data.aws_availability_zones.available.names[0]}","${data.aws_availability_zones.available.names[1]}"]
-    automatic_failover_enabled = true
-    snapshot_window = "02:00-03:00"
-    snapshot_retention_limit = 7
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 2
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  automatic_failover_enabled    = true
+  snapshot_window               = "02:00-03:00"
+  snapshot_retention_limit      = 7
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
@@ -1115,63 +1128,73 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-  resource "aws_vpc" "test" {
-	  cidr_block = "192.168.0.0/16"
-	tags = {
-		  Name = "terraform-testacc-elasticache-replication-group-redis-cluster-in-vpc"
-	  }
+
+resource "aws_vpc" "test" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-replication-group-redis-cluster-in-vpc"
   }
-  resource "aws_subnet" "test" {
-	  vpc_id = "${aws_vpc.test.id}"
-	  cidr_block = "192.168.0.0/20"
-	  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-	tags = {
-		  Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-foo"
-	  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-foo"
   }
-  resource "aws_subnet" "test2" {
-	  vpc_id = "${aws_vpc.test.id}"
-	  cidr_block = "192.168.16.0/20"
-	  availability_zone = "${data.aws_availability_zones.available.names[1]}"
-	tags = {
-		  Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-bar"
-	  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id = aws_vpc.test.id
+  cidr_block = "192.168.16.0/20"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-bar"
   }
-  resource "aws_elasticache_subnet_group" "test" {
-	  name = "tf-test-cache-subnet-%03d"
-	  description = "tf-test-cache-subnet-group-descr"
-	  subnet_ids = [
-		  "${aws_subnet.test.id}",
-		  "${aws_subnet.test2.id}"
-	  ]
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids  = [
+    aws_subnet.test.id,
+    aws_subnet.test2.id,
+  ]
+}
+
+resource "aws_security_group" "test" {
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
-  resource "aws_security_group" "test" {
-	  name = "tf-test-security-group-%03d"
-	  description = "tf-test-security-group-descr"
-	  vpc_id = "${aws_vpc.test.id}"
-	  ingress {
-		  from_port = -1
-		  to_port = -1
-		  protocol = "icmp"
-		  cidr_blocks = ["0.0.0.0/0"]
-	  }
-  }
-  resource "aws_elasticache_replication_group" "test" {
-	  replication_group_id = "tf-%s"
-	  replication_group_description = "test description"
-	  node_type = "cache.m3.medium"
-	  number_cache_clusters = "2"
-	  port = 6379
-	  subnet_group_name = "${aws_elasticache_subnet_group.test.name}"
-	  security_group_ids = ["${aws_security_group.test.id}"]
-	  availability_zones = ["${data.aws_availability_zones.available.names[0]}","${data.aws_availability_zones.available.names[1]}"]
-	  automatic_failover_enabled = false
-	  snapshot_window = "02:00-03:00"
-	  snapshot_retention_limit = 7
-	  engine_version = "3.2.4"
-	  maintenance_window = "thu:03:00-thu:04:00"
-  }
-  `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.m3.medium"
+  number_cache_clusters         = "2"
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  availability_zones            = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  automatic_failover_enabled    = false
+  snapshot_window               = "02:00-03:00"
+  snapshot_retention_limit      = 7
+  engine_version                = "3.2.4"
+  maintenance_window            = "thu:03:00-thu:04:00"
+}
+`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 func testAccAWSElasticacheReplicationGroupNativeRedisClusterErrorConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
@@ -1193,9 +1216,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "192.168.0.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-test"
@@ -1203,9 +1226,9 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "192.168.16.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-test"
@@ -1217,15 +1240,15 @@ resource "aws_elasticache_subnet_group" "test" {
   description = "tf-test-cache-subnet-group-descr"
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
+    aws_subnet.test.id,
   ]
 }
 
 resource "aws_security_group" "test" {
   name        = "tf-test-security-group-%03d"
   description = "tf-test-security-group-descr"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = -1
@@ -1240,8 +1263,8 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   port                          = 6379
-  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
-  security_group_ids            = ["${aws_security_group.test.id}"]
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
   automatic_failover_enabled    = true
 
   cluster_mode {
@@ -1274,9 +1297,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "192.168.0.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-native-redis-cluster-test"
@@ -1284,9 +1307,9 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "192.168.16.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-native-redis-cluster-test"
@@ -1298,15 +1321,15 @@ resource "aws_elasticache_subnet_group" "test" {
   description = "tf-test-cache-subnet-group-descr"
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
+    aws_subnet.test.id,
   ]
 }
 
 resource "aws_security_group" "test" {
   name        = "tf-test-%[1]s"
   description = "tf-test-security-group-descr"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = -1
@@ -1321,8 +1344,8 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "test description"
   node_type                     = "cache.t2.micro"
   port                          = 6379
-  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
-  security_group_ids            = ["${aws_security_group.test.id}"]
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
   automatic_failover_enabled    = true
 
   cluster_mode {
@@ -1353,9 +1376,9 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "192.168.0.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
@@ -1367,14 +1390,14 @@ resource "aws_elasticache_subnet_group" "bar" {
   description = "tf-test-cache-subnet-group-descr"
 
   subnet_ids = [
-    "${aws_subnet.foo.id}",
+    aws_subnet.foo.id,
   ]
 }
 
 resource "aws_security_group" "bar" {
   name        = "tf-test-security-group-%03d"
   description = "tf-test-security-group-descr"
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
     from_port   = -1
@@ -1385,7 +1408,7 @@ resource "aws_security_group" "bar" {
 }
 
 resource "aws_kms_key" "bar" {
-  description         = "tf-test-cmk-kms-key-id"
+  description = "tf-test-cmk-kms-key-id"
 }
 
 resource "aws_elasticache_replication_group" "bar" {
@@ -1394,13 +1417,13 @@ resource "aws_elasticache_replication_group" "bar" {
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
   port                          = 6379
-  subnet_group_name             = "${aws_elasticache_subnet_group.bar.name}"
-  security_group_ids            = ["${aws_security_group.bar.id}"]
+  subnet_group_name             = aws_elasticache_subnet_group.bar.name
+  security_group_ids            = [aws_security_group.bar.id]
   parameter_group_name          = "default.redis3.2"
-  availability_zones            = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
   engine_version                = "3.2.6"
-	at_rest_encryption_enabled    = true
-	kms_key_id										= "${aws_kms_key.bar.arn}"
+  at_rest_encryption_enabled    = true
+  kms_key_id                    = aws_kms_key.bar.arn
 }
 `, rInt, rInt, rString)
 }
@@ -1425,9 +1448,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "192.168.0.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
@@ -1439,14 +1462,14 @@ resource "aws_elasticache_subnet_group" "test" {
   description = "tf-test-cache-subnet-group-descr"
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 }
 
 resource "aws_security_group" "test" {
   name        = "tf-test-security-group-%03d"
   description = "tf-test-security-group-descr"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = -1
@@ -1462,10 +1485,10 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
   port                          = 6379
-  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
-  security_group_ids            = ["${aws_security_group.test.id}"]
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
   parameter_group_name          = "default.redis3.2"
-  availability_zones            = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
   engine_version                = "3.2.6"
   at_rest_encryption_enabled    = true
 }
@@ -1492,9 +1515,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "192.168.0.0/20"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-auth-token-transit-encryption"
@@ -1506,14 +1529,14 @@ resource "aws_elasticache_subnet_group" "test" {
   description = "tf-test-cache-subnet-group-descr"
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 }
 
 resource "aws_security_group" "test" {
   name        = "tf-test-security-group-%03d"
   description = "tf-test-security-group-descr"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = -1
@@ -1529,10 +1552,10 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t2.micro"
   number_cache_clusters         = "1"
   port                          = 6379
-  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
-  security_group_ids            = ["${aws_security_group.test.id}"]
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
   parameter_group_name          = "default.redis3.2"
-  availability_zones            = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
   engine_version                = "3.2.6"
   transit_encryption_enabled    = true
   auth_token                    = "%s"
@@ -1564,9 +1587,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
@@ -1575,7 +1598,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_elasticache_replication_group" "test" {
@@ -1585,7 +1608,7 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters         = %[3]d
   replication_group_id          = "%[1]s"
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
-  subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
 }
 `, rName, autoFailover, numberCacheClusters)
 }

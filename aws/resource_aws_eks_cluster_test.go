@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -154,10 +154,10 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksClusterConfig_Version(rName, "1.13"),
+				Config: testAccAWSEksClusterConfig_Version(rName, "1.16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.13"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.16"),
 				),
 			},
 			{
@@ -166,11 +166,11 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksClusterConfig_Version(rName, "1.14"),
+				Config: testAccAWSEksClusterConfig_Version(rName, "1.17"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.14"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.17"),
 				),
 			},
 		},
@@ -545,16 +545,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = "${aws_iam_role.test.name}"
-}
-
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSServicePolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_vpc" "test" {
@@ -569,9 +565,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name                       = "terraform-testacc-eks-cluster-base"
@@ -587,13 +583,13 @@ func testAccAWSEksClusterConfig_Required(rName string) string {
 
 resource "aws_eks_cluster" "test" {
   name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName)
 }
@@ -604,14 +600,14 @@ func testAccAWSEksClusterConfig_Version(rName, version string) string {
 
 resource "aws_eks_cluster" "test" {
   name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
   version  = "%s"
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, version)
 }
@@ -622,14 +618,14 @@ func testAccAWSEksClusterConfig_Logging(rName string, logTypes []string) string 
 
 resource "aws_eks_cluster" "test" {
   name                      = "%s"
-  role_arn                  = "${aws_iam_role.test.arn}"
+  role_arn                  = aws_iam_role.test.arn
   enabled_cluster_log_types = ["%v"]
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, strings.Join(logTypes, "\", \""))
 }
@@ -638,17 +634,17 @@ func testAccAWSEksClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   tags = {
     %[2]q = %[3]q
   }
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -657,7 +653,7 @@ func testAccAWSEksClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValu
 	return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -665,10 +661,10 @@ resource "aws_eks_cluster" "test" {
   }
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -696,7 +692,7 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName)
 }
@@ -706,7 +702,7 @@ func testAccAWSEksClusterConfig_VpcConfig_SecurityGroupIds(rName string) string 
 %s
 
 resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-eks-cluster-sg"
@@ -715,14 +711,14 @@ resource "aws_security_group" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   vpc_config {
-    security_group_ids = ["${aws_security_group.test.id}"]
-    subnet_ids         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName)
 }
@@ -733,15 +729,15 @@ func testAccAWSEksClusterConfig_VpcConfig_EndpointPrivateAccess(rName string, en
 
 resource "aws_eks_cluster" "test" {
   name     = %[2]q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   vpc_config {
     endpoint_private_access = %[3]t
     endpoint_public_access  = true
-    subnet_ids              = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids              = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, endpointPrivateAccess)
 }
@@ -752,15 +748,15 @@ func testAccAWSEksClusterConfig_VpcConfig_EndpointPublicAccess(rName string, end
 
 resource "aws_eks_cluster" "test" {
   name     = %[2]q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = %[3]t
-    subnet_ids              = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnet_ids              = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, endpointPublicAccess)
 }
@@ -771,16 +767,16 @@ func testAccAWSEksClusterConfig_VpcConfig_PublicAccessCidrs(rName string, public
 
 resource "aws_eks_cluster" "test" {
   name     = %[2]q
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn = aws_iam_role.test.arn
 
   vpc_config {
     endpoint_private_access = true
-	endpoint_public_access  = true
-	public_access_cidrs     = %s
-    subnet_ids              = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    endpoint_public_access  = true
+    public_access_cidrs     = %s
+    subnet_ids              = aws_subnet.test[*].id
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, publicAccessCidr)
 }

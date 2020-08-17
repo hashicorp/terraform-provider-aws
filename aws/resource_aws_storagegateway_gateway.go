@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -27,7 +28,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 		Update: resourceAwsStorageGatewayGatewayUpdate,
 		Delete: resourceAwsStorageGatewayGatewayDelete,
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("smb_active_directory_settings", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
 			}),
 		),
