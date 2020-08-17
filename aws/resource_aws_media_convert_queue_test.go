@@ -300,7 +300,6 @@ func testAccMediaConvertQueueConfig_Basic(rName string) string {
 resource "aws_media_convert_queue" "test" {
   name = %[1]q
 }
-
 `, rName)
 }
 
@@ -310,7 +309,6 @@ resource "aws_media_convert_queue" "test" {
   name   = %[1]q
   status = %[2]q
 }
-
 `, rName, status)
 }
 
@@ -320,21 +318,19 @@ resource "aws_media_convert_queue" "test" {
   name        = %[1]q
   description = %[2]q
 }
-
 `, rName, description)
 }
 
 func testAccMediaConvertQueueConfig_withTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_media_convert_queue" "test" {
-  name   = %[1]q
-  
+  name = %[1]q
+
   tags = {
-	  %[2]s = %[3]q
-	  %[4]s = %[5]q
+    %[2]s = %[3]q
+    %[4]s = %[5]q
   }
 }
-
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
@@ -345,11 +341,10 @@ resource "aws_media_convert_queue" "test" {
   pricing_plan = %[2]q
 
   reservation_plan_settings {
-	commitment     = %[3]q
-	renewal_type   = %[4]q
-	reserved_slots = %[5]d
+    commitment     = %[3]q
+    renewal_type   = %[4]q
+    reserved_slots = %[5]d
   }
 }
-
 `, rName, mediaconvert.PricingPlanReserved, commitment, renewalType, reservedSlots)
 }

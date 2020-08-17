@@ -179,6 +179,7 @@ resource "aws_mq_configuration" "test" {
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
+
 }
 `, configurationName)
 }
@@ -196,6 +197,7 @@ resource "aws_mq_configuration" "test" {
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
+
 }
 `, configurationName)
 }
@@ -231,6 +233,7 @@ resource "aws_mq_configuration" "test" {
   </plugins>
 </broker>
 DATA
+
 }
 `, configurationName)
 }
