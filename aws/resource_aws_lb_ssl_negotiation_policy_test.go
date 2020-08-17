@@ -209,20 +209,20 @@ resource "aws_iam_server_certificate" "test" {
 
 resource "aws_elb" "test" {
   name               = "%[1]s"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 8000
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.test.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test.arn
   }
 }
 
 resource "aws_lb_ssl_negotiation_policy" "test" {
   name          = "foo-policy"
-  load_balancer = "${aws_elb.test.id}"
+  load_balancer = aws_elb.test.id
   lb_port       = 443
 
   attribute {
