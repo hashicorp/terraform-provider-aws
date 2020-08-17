@@ -64,4 +64,4 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-No attributes are exported at this point.
+* `name` - Identifier for this AppStream stack, as specified in input
