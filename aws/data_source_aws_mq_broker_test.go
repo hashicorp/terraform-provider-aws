@@ -199,7 +199,7 @@ resource "aws_mq_broker" "acctest" {
     groups         = ["dragon", "salamander", "leopard"]
   }
 
-  depends_on = ["aws_internet_gateway.acctest"]
+  depends_on = [aws_internet_gateway.acctest]
 }
 `, prefix, brokerName)
 }

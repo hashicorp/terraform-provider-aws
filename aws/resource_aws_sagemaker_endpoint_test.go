@@ -267,7 +267,7 @@ resource "aws_sagemaker_model" "test" {
     model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
   }
 
-  depends_on = ["aws_iam_role_policy.test"]
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {

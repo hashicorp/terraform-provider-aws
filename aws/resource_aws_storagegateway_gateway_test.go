@@ -560,7 +560,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_route.test"]
+  depends_on = [aws_route.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
@@ -588,7 +588,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_CACHED_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_route.test"]
+  depends_on = [aws_route.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_CACHED_latest.value
   associate_public_ip_address = true

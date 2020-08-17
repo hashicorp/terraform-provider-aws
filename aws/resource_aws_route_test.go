@@ -1113,7 +1113,7 @@ resource "aws_route" "bar" {
   gateway_id             = aws_internet_gateway.foo.id
 
   # Forcing endpoint to create before route - without this the crash is a race.
-  depends_on = ["aws_vpc_endpoint.baz"]
+  depends_on = [aws_vpc_endpoint.baz]
 }
 
 resource "aws_vpc_endpoint" "baz" {

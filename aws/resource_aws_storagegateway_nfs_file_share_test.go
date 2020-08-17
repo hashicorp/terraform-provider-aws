@@ -565,7 +565,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_storagegateway_gateway" "test" {
-  depends_on = ["aws_iam_role_policy.test"]
+  depends_on = [aws_iam_role_policy.test]
 
   gateway_ip_address = "${aws_instance.test.public_ip}"
   gateway_name       = %q

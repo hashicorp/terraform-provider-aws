@@ -1405,7 +1405,7 @@ resource "aws_spot_fleet_request" "test" {
         ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1428,7 +1428,7 @@ resource "aws_spot_fleet_request" "test" {
     tags = {
       %[2]q = %[3]q
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, tagKey1, tagValue1)
 }
@@ -1452,7 +1452,7 @@ resource "aws_spot_fleet_request" "test" {
       %[2]q = %[3]q
       %[4]q = %[5]q
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -1472,7 +1472,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         associate_public_ip_address = true
     }
-	depends_on = ["aws_iam_policy_attachment.test"]
+	depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1491,7 +1491,7 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1522,7 +1522,7 @@ resource "aws_spot_fleet_request" "test" {
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test"]
+  depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -1576,7 +1576,7 @@ resource "aws_spot_fleet_request" "test" {
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test"]
+  depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -1618,7 +1618,7 @@ resource "aws_spot_fleet_request" "test" {
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test"]
+  depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -1638,7 +1638,7 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1657,7 +1657,7 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1720,7 +1720,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         iam_instance_profile_arn = "${aws_iam_instance_profile.test-iam-instance-profile1.arn}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil)
 }
@@ -1739,7 +1739,7 @@ resource "aws_spot_fleet_request" "test" {
         ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1765,7 +1765,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[1]}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -1819,7 +1819,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.bar.id}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -1881,7 +1881,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil)
 }
@@ -1954,7 +1954,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil)
 }
@@ -1980,7 +1980,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2024,7 +2024,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -2051,7 +2051,7 @@ resource "aws_spot_fleet_request" "test" {
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         spot_price = "0.05"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2076,7 +2076,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2109,7 +2109,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2142,7 +2142,7 @@ resource "aws_spot_fleet_request" "test" {
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2170,7 +2170,7 @@ resource "aws_spot_fleet_request" "test" {
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "3"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2200,7 +2200,7 @@ resource "aws_spot_fleet_request" "test" {
         volume_size = "100"
         }
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2242,7 +2242,7 @@ resource "aws_spot_fleet_request" "test" {
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test"]
+  depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -2277,7 +2277,7 @@ resource "aws_spot_fleet_request" "test" {
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test"]
+  depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
 }
@@ -2299,7 +2299,7 @@ resource "aws_spot_fleet_request" "test" {
 	  instance_type = "c3.large"
     }
 
-	depends_on = ["aws_iam_policy_attachment.test"]
+	depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2321,7 +2321,7 @@ resource "aws_spot_fleet_request" "test" {
             Second = "Terraform"
         }
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }
@@ -2346,7 +2346,7 @@ resource "aws_spot_fleet_request" "test" {
 		placement_tenancy = "dedicated"
 		placement_group = "${aws_placement_group.test.name}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil)
 }
@@ -2366,7 +2366,7 @@ resource "aws_spot_fleet_request" "test" {
         ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
         key_name      = "${aws_key_pair.test.key_name}"
     }
-    depends_on = ["aws_iam_policy_attachment.test"]
+    depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
 }

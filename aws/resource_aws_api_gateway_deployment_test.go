@@ -418,7 +418,7 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSAPIGatewayDeploymentConfigDescription(description string) string {
 	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   description = %q
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
@@ -429,7 +429,7 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSAPIGatewayDeploymentConfigRequired() string {
 	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + `
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
 }
@@ -439,7 +439,7 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSAPIGatewayDeploymentConfigStageDescription(stageDescription string) string {
 	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id       = "${aws_api_gateway_rest_api.test.id}"
   stage_description = %q
@@ -451,7 +451,7 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSAPIGatewayDeploymentConfigStageName(stageName string) string {
 	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name  = %q
@@ -462,7 +462,7 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSAPIGatewayDeploymentConfigVariables(key1, value1 string) string {
 	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
 

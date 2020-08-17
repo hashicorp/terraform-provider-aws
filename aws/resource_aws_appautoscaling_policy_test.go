@@ -675,7 +675,7 @@ resource "aws_appautoscaling_policy" "dynamo_test" {
     target_value       = 70
   }
 
-  depends_on = ["aws_appautoscaling_target.dynamo_test"]
+  depends_on = [aws_appautoscaling_target.dynamo_test]
 }
 `, randPolicyName)
 }
@@ -862,7 +862,7 @@ resource "aws_appautoscaling_policy" "write" {
     target_value       = 70
   }
 
-  depends_on = ["aws_appautoscaling_target.write"]
+  depends_on = [aws_appautoscaling_target.write]
 }
 
 resource "aws_appautoscaling_target" "read" {
@@ -890,7 +890,7 @@ resource "aws_appautoscaling_policy" "read" {
     target_value       = 70
   }
 
-  depends_on = ["aws_appautoscaling_target.read"]
+  depends_on = [aws_appautoscaling_target.read]
 }
 `, tableName, namePrefix, namePrefix)
 }
@@ -965,7 +965,7 @@ resource "aws_appautoscaling_policy" "foobar_out" {
     }
   }
 
-  depends_on = ["aws_appautoscaling_target.tgt"]
+  depends_on = [aws_appautoscaling_target.tgt]
 }
 
 resource "aws_appautoscaling_policy" "foobar_in" {
@@ -997,7 +997,7 @@ resource "aws_appautoscaling_policy" "foobar_in" {
     }
   }
 
-  depends_on = ["aws_appautoscaling_target.tgt"]
+  depends_on = [aws_appautoscaling_target.tgt]
 }
 `, randClusterName, randPolicyNamePrefix, randPolicyNamePrefix)
 }
@@ -1056,7 +1056,7 @@ resource "aws_appautoscaling_target" "test" {
 
 resource "aws_appautoscaling_policy" "test" {
   # The usage of depends_on here is intentional as this used to be a documented example
-  depends_on = ["aws_appautoscaling_target.test"]
+  depends_on = [aws_appautoscaling_target.test]
 
   name               = %[1]q
   resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test1.name}"
@@ -1105,7 +1105,7 @@ resource "aws_appautoscaling_target" "test" {
 
 resource "aws_appautoscaling_policy" "test" {
   # The usage of depends_on here is intentional as this used to be a documented example
-  depends_on = ["aws_appautoscaling_target.test"]
+  depends_on = [aws_appautoscaling_target.test]
 
   name               = %[1]q
   resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test2.name}"

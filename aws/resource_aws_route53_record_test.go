@@ -1179,7 +1179,7 @@ resource "aws_route53_record" "default" {
 }
 
 resource "aws_route53_record" "overwriting" {
-  depends_on = ["aws_route53_record.default"]
+  depends_on = [aws_route53_record.default]
 
   allow_overwrite = %v
   zone_id = "${aws_route53_zone.main.zone_id}"

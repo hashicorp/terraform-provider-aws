@@ -1790,7 +1790,7 @@ resource "aws_lb" "lb_test" {
     allocation_id = aws_eip.lb.1.id
   }
 
-  depends_on = ["aws_internet_gateway.default"]
+  depends_on = [aws_internet_gateway.default]
 }
 
 resource "aws_eip" "lb" {

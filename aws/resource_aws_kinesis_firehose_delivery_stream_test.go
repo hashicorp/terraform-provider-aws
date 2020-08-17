@@ -1642,7 +1642,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-cloudwatch-%d"
   destination = "s3"
 
@@ -1662,7 +1662,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3basic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "s3"
 
@@ -1677,7 +1677,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName string, rIn
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "%s"
   destination = "s3"
 
@@ -1697,7 +1697,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rI
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "%s"
   destination = "s3"
 
@@ -1718,7 +1718,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName str
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "%s"
   destination = "s3"
 
@@ -1736,7 +1736,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
+  depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.kinesis_source]
   name       = "terraform-kinesis-firehose-basictest-%d"
 
   kinesis_source_configuration {
@@ -1755,7 +1755,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3Updates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-s3test-%d"
   destination = "s3"
 
@@ -1771,7 +1771,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
 
@@ -1799,7 +1799,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3_KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
+  depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.kinesis_source]
   name       = "terraform-kinesis-firehose-basictest-%d"
 
   kinesis_source_configuration {
@@ -1867,7 +1867,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName, enabled)
 }
@@ -1921,7 +1921,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -1989,7 +1989,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -2043,7 +2043,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -2097,7 +2097,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -2114,7 +2114,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn            = aws_iam_role.firehose.arn
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, errorOutputPrefix)
 }
@@ -2132,7 +2132,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     processing_configuration {}
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName)
 }
@@ -2143,7 +2143,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
 
@@ -2170,7 +2170,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_Initial = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
 
@@ -2206,7 +2206,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_RemoveProcessors = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
 
@@ -2354,7 +2354,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basicsplunktest-%d"
   destination = "splunk"
 
@@ -2372,7 +2372,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-basicsplunktest-%d"
   destination = "splunk"
 
@@ -2463,7 +2463,7 @@ EOF
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
@@ -2484,7 +2484,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"

@@ -2480,7 +2480,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/24"
@@ -2491,7 +2491,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   name   = %[1]q
   vpc_id = aws_vpc.test.id

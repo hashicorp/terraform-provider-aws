@@ -672,7 +672,7 @@ resource "aws_sns_topic" "test_topic" {
 
 resource "aws_sqs_queue" "test-email-events" {
   name                       = "${var.sqs_name}"
-  depends_on                 = ["aws_sns_topic.test_topic"]
+  depends_on                 = [aws_sns_topic.test_topic]
   delay_seconds              = 90
   max_message_size           = 2048
   message_retention_seconds  = 86400

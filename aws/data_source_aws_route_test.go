@@ -169,13 +169,13 @@ data "aws_route" "by_peering_connection_id" {
 data "aws_route" "by_destination_cidr_block" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = "10.0.1.0/24"
-  depends_on             = ["aws_route.test"]
+  depends_on             = [aws_route.test]
 }
 
 data "aws_route" "by_instance_id" {
   route_table_id = aws_route_table.test.id
   instance_id    = aws_instance.web.id
-  depends_on     = ["aws_route.test"]
+  depends_on     = [aws_route.test]
 }
 `
 }

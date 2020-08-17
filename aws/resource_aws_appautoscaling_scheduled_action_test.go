@@ -282,7 +282,7 @@ resource "aws_emr_cluster" "hoge" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_main_route_table_association.hoge"]
+  depends_on = [aws_main_route_table_association.hoge]
 
   service_role     = "${aws_iam_role.emr_role.arn}"
   autoscaling_role = "${aws_iam_role.autoscale_role.arn}"
@@ -313,7 +313,7 @@ resource "aws_security_group" "hoge" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.hoge"]
+  depends_on = [aws_subnet.hoge]
 
   lifecycle {
     ignore_changes = ["ingress", "egress"]

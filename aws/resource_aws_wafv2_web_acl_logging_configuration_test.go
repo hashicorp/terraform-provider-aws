@@ -379,7 +379,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-	depends_on = ["aws_iam_role_policy.test"]
+	depends_on = [aws_iam_role_policy.test]
 	name = "aws-waf-logs-%s"
 	destination = "s3"
 

@@ -378,7 +378,7 @@ EOF
   description = "%s"
   name        = "%s"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 `, description, rName)
 }
@@ -391,7 +391,7 @@ resource "aws_organizations_policy" "test" {
   content = %s
   name    = "%s"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 `, strconv.Quote(content), rName)
 }
@@ -414,7 +414,7 @@ EOF
 
   name = "%[1]s1"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test2" {
@@ -431,7 +431,7 @@ EOF
 
   name = "%[1]s2"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test3" {
@@ -448,7 +448,7 @@ EOF
 
   name = "%[1]s3"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test4" {
@@ -465,7 +465,7 @@ EOF
 
   name = "%[1]s4"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test5" {
@@ -482,7 +482,7 @@ EOF
 
   name = "%[1]s5"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 `, rName)
 }
@@ -496,7 +496,7 @@ resource "aws_organizations_policy" "test" {
   name    = "%s"
   type    = "%s"
 
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 }
 `, strconv.Quote(content), rName, policyType)
 }

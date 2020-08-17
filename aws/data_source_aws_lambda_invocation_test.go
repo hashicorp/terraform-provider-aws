@@ -117,7 +117,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 func testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
@@ -148,7 +148,7 @@ JSON
 func testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
@@ -181,7 +181,7 @@ JSON
 func testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"

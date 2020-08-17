@@ -235,7 +235,7 @@ resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
   subnet_id     = aws_subnet.public.id
 
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `
 
@@ -249,7 +249,7 @@ resource "aws_nat_gateway" "test" {
     %[1]q = %[2]q
   }
 
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `, tagKey1, tagValue1)
 }
@@ -265,7 +265,7 @@ resource "aws_nat_gateway" "test" {
     %[3]q = %[4]q
   }
 
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }

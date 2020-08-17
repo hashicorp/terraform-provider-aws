@@ -2376,7 +2376,7 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_launch_configuration" "foobar" {
@@ -2475,7 +2475,7 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_launch_configuration" "foobar" {
@@ -3704,7 +3704,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_elb" "test" {
   count = %[2]d
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 
   subnets = [aws_subnet.test.id]
 

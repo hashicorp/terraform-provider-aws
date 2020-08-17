@@ -430,7 +430,7 @@ resource "aws_datasync_location_nfs" "test" {
 func testAccAWSDataSyncLocationNfsConfigAgentArnsMultiple(rName string) string {
 	return testAccAWSDataSyncLocationNfsConfigBase(rName) + fmt.Sprintf(`
 resource "aws_instance" "test2" {
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 
   ami                         = data.aws_ami.aws-thinstaller.id
   associate_public_ip_address = true

@@ -126,7 +126,7 @@ resource "aws_guardduty_member" "member" {
 }
 
 resource "aws_guardduty_invite_accepter" "test" {
-  depends_on = ["aws_guardduty_member.member"]
+  depends_on = [aws_guardduty_member.member]
 
   detector_id       = "${aws_guardduty_detector.member.id}"
   master_account_id = "${aws_guardduty_detector.master.account_id}"

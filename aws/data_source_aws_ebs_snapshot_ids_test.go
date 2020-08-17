@@ -106,7 +106,7 @@ resource "aws_ebs_snapshot" "b" {
   // We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than
   // 'aws_ebs_snapshot.b.creation_date'/ so that we can ensure that the
   // snapshots are being sorted correctly.
-  depends_on = ["aws_ebs_snapshot.a"]
+  depends_on = [aws_ebs_snapshot.a]
 }
 `, rName, rName)
 }

@@ -103,27 +103,27 @@ data "aws_vpc_peering_connection" "test_by_id" {
 data "aws_vpc_peering_connection" "test_by_requester_vpc_id" {
   vpc_id = aws_vpc.foo.id
 
-  depends_on = ["aws_vpc_peering_connection.test"]
+  depends_on = [aws_vpc_peering_connection.test]
 }
 
 data "aws_vpc_peering_connection" "test_by_accepter_vpc_id" {
   peer_vpc_id = aws_vpc.bar.id
 
-  depends_on = ["aws_vpc_peering_connection.test"]
+  depends_on = [aws_vpc_peering_connection.test]
 }
 
 data "aws_vpc_peering_connection" "test_by_requester_cidr_block" {
   cidr_block = "10.1.0.0/16"
   status     = "active"
 
-  depends_on = ["aws_vpc_peering_connection.test"]
+  depends_on = [aws_vpc_peering_connection.test]
 }
 
 data "aws_vpc_peering_connection" "test_by_accepter_cidr_block" {
   peer_cidr_block = "10.2.0.0/16"
   status          = "active"
 
-  depends_on = ["aws_vpc_peering_connection.test"]
+  depends_on = [aws_vpc_peering_connection.test]
 }
 
 data "aws_vpc_peering_connection" "test_by_owner_ids" {
@@ -131,6 +131,6 @@ data "aws_vpc_peering_connection" "test_by_owner_ids" {
   peer_owner_id = data.aws_caller_identity.current.account_id
   status        = "active"
 
-  depends_on = ["aws_vpc_peering_connection.test"]
+  depends_on = [aws_vpc_peering_connection.test]
 }
 `

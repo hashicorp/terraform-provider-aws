@@ -1120,7 +1120,7 @@ resource "aws_glue_classifier" "test2" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   classifiers   = ["${aws_glue_classifier.test1.id}"]
   name          = %q
@@ -1159,7 +1159,7 @@ resource "aws_glue_classifier" "test2" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   classifiers   = ["${aws_glue_classifier.test1.id}", "${aws_glue_classifier.test2.id}"]
   name          = %q
@@ -1180,7 +1180,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   configuration = %s
   database_name = "${aws_glue_catalog_database.test.name}"
@@ -1201,7 +1201,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   description   = %q
@@ -1222,7 +1222,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1252,7 +1252,7 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1283,7 +1283,7 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1315,7 +1315,7 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1347,7 +1347,7 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1373,7 +1373,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1421,7 +1421,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1469,7 +1469,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1489,7 +1489,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1509,7 +1509,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1530,7 +1530,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1551,7 +1551,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1592,7 +1592,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %[1]q
@@ -1643,7 +1643,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test[0].name}"
   name          = %[1]q
@@ -1682,7 +1682,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1703,7 +1703,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1728,7 +1728,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %q
@@ -1749,7 +1749,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %[1]q
@@ -1774,7 +1774,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = %[1]q
@@ -1818,7 +1818,7 @@ resource "aws_glue_security_configuration" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name          = "${aws_glue_catalog_database.test.name}"
   name                   = %q
