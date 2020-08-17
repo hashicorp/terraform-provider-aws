@@ -260,10 +260,11 @@ resource "aws_iam_role" "test_role" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_role_policy_attachment" "test_attach" {
-  role       = "${aws_iam_role.test_role.name}"
+  role       = aws_iam_role.test_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 `, rName)
@@ -274,7 +275,7 @@ func testAccAWSSSMActivationBasicConfig(rName string, rTag string) string {
 resource "aws_ssm_activation" "test" {
   name               = %[1]q
   description        = "Test"
-  iam_role           = "${aws_iam_role.test_role.name}"
+  iam_role           = aws_iam_role.test_role.name
   registration_limit = "5"
   depends_on         = [aws_iam_role_policy_attachment.test_attach]
 
@@ -291,7 +292,7 @@ resource "aws_ssm_activation" "test" {
   name               = "test_ssm_activation-%[1]s"
   description        = "Test"
   expiration_date    = "%[2]s"
-  iam_role           = "${aws_iam_role.test_role.name}"
+  iam_role           = aws_iam_role.test_role.name
   registration_limit = "5"
   depends_on         = [aws_iam_role_policy_attachment.test_attach]
 }

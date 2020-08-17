@@ -524,6 +524,7 @@ func testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName string) str
 	return testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -539,10 +540,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -560,6 +563,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -573,6 +577,7 @@ func testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName string) string 
 	return testAccAWSStorageGatewayGatewayConfig_SmbGuestPassword(rName, "smbguestpassword") + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -588,10 +593,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_iam_role_policy" "test" {
-  role = "${aws_iam_role.test.name}"
+  role = aws_iam_role.test.name
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -609,6 +616,7 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -622,9 +630,9 @@ func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_ActiveDirectory(r
 	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + `
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication = "ActiveDirectory"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
-  role_arn       = "${aws_iam_role.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 }
 `
 }
@@ -633,9 +641,9 @@ func testAccAWSStorageGatewaySmbFileShareConfig_Authentication_GuestAccess(rName
 	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + `
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication = "GuestAccess"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
-  role_arn       = "${aws_iam_role.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 }
 `
 }
@@ -646,9 +654,9 @@ resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication        = "GuestAccess"
   default_storage_class = %q
-  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
-  location_arn          = "${aws_s3_bucket.test.arn}"
-  role_arn              = "${aws_iam_role.test.arn}"
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
 }
 `, defaultStorageClass)
 }
@@ -658,10 +666,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_GuessMIMETypeEnabled(rName strin
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication          = "GuestAccess"
-  gateway_arn             = "${aws_storagegateway_gateway.test.arn}"
+  gateway_arn             = aws_storagegateway_gateway.test.arn
   guess_mime_type_enabled = %t
-  location_arn            = "${aws_s3_bucket.test.arn}"
-  role_arn                = "${aws_iam_role.test.arn}"
+  location_arn            = aws_s3_bucket.test.arn
+  role_arn                = aws_iam_role.test.arn
 }
 `, guessMimeTypeEnabled)
 }
@@ -671,10 +679,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Single(rName, in
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication    = "ActiveDirectory"
-  gateway_arn       = "${aws_storagegateway_gateway.test.arn}"
+  gateway_arn       = aws_storagegateway_gateway.test.arn
   invalid_user_list = [%q]
-  location_arn      = "${aws_s3_bucket.test.arn}"
-  role_arn          = "${aws_iam_role.test.arn}"
+  location_arn      = aws_s3_bucket.test.arn
+  role_arn          = aws_iam_role.test.arn
 }
 `, invalidUser1)
 }
@@ -684,10 +692,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_InvalidUserList_Multiple(rName, 
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
   authentication    = "ActiveDirectory"
-  gateway_arn       = "${aws_storagegateway_gateway.test.arn}"
+  gateway_arn       = aws_storagegateway_gateway.test.arn
   invalid_user_list = [%q, %q]
-  location_arn      = "${aws_s3_bucket.test.arn}"
-  role_arn          = "${aws_iam_role.test.arn}"
+  location_arn      = aws_s3_bucket.test.arn
+  role_arn          = aws_iam_role.test.arn
 }
 `, invalidUser1, invalidUser2)
 }
@@ -697,10 +705,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_KMSEncrypted(rName string, kmsEn
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication = "GuestAccess"
-  gateway_arn   = "${aws_storagegateway_gateway.test.arn}"
-  kms_encrypted = %t
-  location_arn  = "${aws_s3_bucket.test.arn}"
-  role_arn      = "${aws_iam_role.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  kms_encrypted  = %t
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 }
 `, kmsEncrypted)
 }
@@ -717,11 +725,11 @@ resource "aws_kms_key" "test" {
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication = "GuestAccess"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
   kms_encrypted  = true
-  kms_key_arn    = "${aws_kms_key.test.0.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
-  role_arn       = "${aws_iam_role.test.arn}"
+  kms_key_arn    = aws_kms_key.test.0.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 }
 `
 }
@@ -738,11 +746,11 @@ resource "aws_kms_key" "test" {
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication = "GuestAccess"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
   kms_encrypted  = true
-  kms_key_arn    = "${aws_kms_key.test.1.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
-  role_arn       = "${aws_iam_role.test.arn}"
+  kms_key_arn    = aws_kms_key.test.1.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 }
 `
 }
@@ -752,10 +760,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_ObjectACL(rName, objectACL strin
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication = "GuestAccess"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
   object_acl     = %q
-  role_arn       = "${aws_iam_role.test.arn}"
+  role_arn       = aws_iam_role.test.arn
 }
 `, objectACL)
 }
@@ -765,10 +773,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_ReadOnly(rName string, readOnly 
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication = "GuestAccess"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
   read_only      = %t
-  role_arn       = "${aws_iam_role.test.arn}"
+  role_arn       = aws_iam_role.test.arn
 }
 `, readOnly)
 }
@@ -778,10 +786,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_RequesterPays(rName string, requ
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication = "GuestAccess"
-  gateway_arn    = "${aws_storagegateway_gateway.test.arn}"
-  location_arn   = "${aws_s3_bucket.test.arn}"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
   requester_pays = %t
-  role_arn       = "${aws_iam_role.test.arn}"
+  role_arn       = aws_iam_role.test.arn
 }
 `, requesterPays)
 }
@@ -790,10 +798,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Single(rName, vali
 	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
-  authentication    = "ActiveDirectory"
-  gateway_arn     = "${aws_storagegateway_gateway.test.arn}"
-  location_arn    = "${aws_s3_bucket.test.arn}"
-  role_arn        = "${aws_iam_role.test.arn}"
+  authentication  = "ActiveDirectory"
+  gateway_arn     = aws_storagegateway_gateway.test.arn
+  location_arn    = aws_s3_bucket.test.arn
+  role_arn        = aws_iam_role.test.arn
   valid_user_list = [%q]
 }
 `, validUser1)
@@ -803,10 +811,10 @@ func testAccAWSStorageGatewaySmbFileShareConfig_ValidUserList_Multiple(rName, va
 	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Must be ActiveDirectory
-  authentication    = "ActiveDirectory"
-  gateway_arn     = "${aws_storagegateway_gateway.test.arn}"
-  location_arn    = "${aws_s3_bucket.test.arn}"
-  role_arn        = "${aws_iam_role.test.arn}"
+  authentication  = "ActiveDirectory"
+  gateway_arn     = aws_storagegateway_gateway.test.arn
+  location_arn    = aws_s3_bucket.test.arn
+  role_arn        = aws_iam_role.test.arn
   valid_user_list = [%q, %q]
 }
 `, validUser1, validUser2)
@@ -816,13 +824,13 @@ func testAccAWSStorageGatewaySmbFileShareConfigTags1(rName, tagKey1, tagValue1 s
 	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
-  authentication        = "GuestAccess"
-  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
-  location_arn          = "${aws_s3_bucket.test.arn}"
-  role_arn              = "${aws_iam_role.test.arn}"
+  authentication = "GuestAccess"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 
   tags = {
-	%q = %q
+    %q = %q
   }
 }
 `, tagKey1, tagValue1)
@@ -832,14 +840,14 @@ func testAccAWSStorageGatewaySmbFileShareConfigTags2(rName, tagKey1, tagValue1, 
 	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
-  authentication        = "GuestAccess"
-  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
-  location_arn          = "${aws_s3_bucket.test.arn}"
-  role_arn              = "${aws_iam_role.test.arn}"
+  authentication = "GuestAccess"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 
   tags = {
-	%q = %q
-	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
