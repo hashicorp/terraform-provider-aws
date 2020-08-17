@@ -187,7 +187,7 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_query_log" "test" {
-  depends_on = ["aws_cloudwatch_log_resource_policy.test"]
+  depends_on = [aws_cloudwatch_log_resource_policy.test]
 
   cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
   zone_id                  = "${aws_route53_zone.test.zone_id}"

@@ -751,7 +751,7 @@ resource "aws_neptune_cluster" "test" {
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot                  = true
 
-  depends_on = ["aws_iam_role.test", "aws_iam_role.test-2"]
+  depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
 `, rName)
 }
@@ -842,7 +842,7 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn, aws_iam_role.test-2.arn]
 
-  depends_on = ["aws_iam_role.test", "aws_iam_role.test-2"]
+  depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
 `, rName)
 }
@@ -894,7 +894,7 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn]
 
-  depends_on = ["aws_iam_role.test"]
+  depends_on = [aws_iam_role.test]
 }
 `, rName)
 }

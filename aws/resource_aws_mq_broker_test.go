@@ -1094,7 +1094,7 @@ resource "aws_mq_broker" "test" {
     groups         = ["first", "second", "third"]
   }
 
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `, sgName, sgName, cfgName, cfgBody, brokerName)
 }

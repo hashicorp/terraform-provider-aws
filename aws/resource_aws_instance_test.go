@@ -3395,7 +3395,7 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 
-  depends_on  = ["aws_ebs_volume.test"]
+  depends_on  = [aws_ebs_volume.test]
 }
 `, rName))
 }
@@ -4143,13 +4143,13 @@ resource "aws_instance" "test" {
   vpc_security_group_ids      = ["${aws_security_group.test.id}"]
   subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
-  depends_on                  = ["aws_internet_gateway.test"]
+  depends_on                  = [aws_internet_gateway.test]
 }
 
 resource "aws_eip" "test" {
   instance   = "${aws_instance.test.id}"
   vpc        = true
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `
 }
@@ -4164,13 +4164,13 @@ resource "aws_instance" "test" {
   instance_type          = "t1.micro"
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
   subnet_id              = "${aws_subnet.test.id}"
-  depends_on             = ["aws_internet_gateway.test"]
+  depends_on             = [aws_internet_gateway.test]
 }
 
 resource "aws_eip" "test" {
   instance   = "${aws_instance.test.id}"
   vpc        = true
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `
 }
@@ -4185,13 +4185,13 @@ resource "aws_instance" "test" {
   instance_type          = "t1.micro"
   vpc_security_group_ids = []
   subnet_id              = "${aws_subnet.test.id}"
-  depends_on             = ["aws_internet_gateway.test"]
+  depends_on             = [aws_internet_gateway.test]
 }
 
 resource "aws_eip" "test" {
   instance   = "${aws_instance.test.id}"
   vpc        = true
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `
 }

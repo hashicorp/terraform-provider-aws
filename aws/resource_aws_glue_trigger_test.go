@@ -483,7 +483,7 @@ resource "aws_glue_job" "test2" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 
 resource "aws_glue_trigger" "test" {
@@ -509,7 +509,7 @@ func testAccAWSGlueTriggerConfig_Crawler(rName, state string) string {
 %s
 
 resource "aws_glue_crawler" "test2" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = "${aws_glue_catalog_database.test.name}"
   name          = "%scrawl2"

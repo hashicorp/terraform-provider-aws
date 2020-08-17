@@ -666,7 +666,7 @@ EOF
 func testAccAWSSNSTopicConfig_deliveryStatus(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  depends_on                               = ["aws_iam_role_policy.example"]
+  depends_on                               = [aws_iam_role_policy.example]
   name                                     = "sns-delivery-status-topic-%s"
   application_success_feedback_role_arn    = "${aws_iam_role.example.arn}"
   application_success_feedback_sample_rate = 100

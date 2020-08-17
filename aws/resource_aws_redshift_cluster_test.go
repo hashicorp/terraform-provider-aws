@@ -1173,7 +1173,7 @@ resource "aws_redshift_cluster" "default" {
   publicly_accessible                 = false
   skip_final_snapshot                 = true
 
-  depends_on = ["aws_internet_gateway.foo"]
+  depends_on = [aws_internet_gateway.foo]
 }
 `, rInt, rInt)
 }
@@ -1245,7 +1245,7 @@ resource "aws_redshift_cluster" "default" {
   publicly_accessible                 = true
   skip_final_snapshot                 = true
 
-  depends_on = ["aws_internet_gateway.foo"]
+  depends_on = [aws_internet_gateway.foo]
 }
 `, rInt, rInt)
 }

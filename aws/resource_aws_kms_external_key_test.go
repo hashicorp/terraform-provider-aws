@@ -560,7 +560,9 @@ resource "aws_kms_external_key" "test" {
 
   policy = <<POLICY
 %[1]s
+
 POLICY
+
 }
 `, policy)
 }

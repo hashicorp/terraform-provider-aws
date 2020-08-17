@@ -149,7 +149,7 @@ resource "aws_route53_record" "domain_identity_verification" {
 resource "aws_ses_domain_identity_verification" "test" {
   domain = "${aws_ses_domain_identity.test.id}"
 
-  depends_on = ["aws_route53_record.domain_identity_verification"]
+  depends_on = [aws_route53_record.domain_identity_verification]
 }
 `, rootDomain, domain)
 }

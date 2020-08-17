@@ -1190,7 +1190,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   cluster_identifier  = "${aws_rds_cluster.test.id}"
   identifier          = %[1]q
@@ -1257,7 +1257,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   cluster_identifier  = "${aws_rds_cluster.test.id}"
   identifier          = %[1]q

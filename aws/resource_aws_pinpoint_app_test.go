@@ -276,7 +276,7 @@ resource "aws_pinpoint_app" "test" {
     mode                 = "DELIVERY"
   }
 
-  depends_on = ["aws_lambda_permission.test"]
+  depends_on = [aws_lambda_permission.test]
 }
 
 resource "aws_lambda_function" "test" {

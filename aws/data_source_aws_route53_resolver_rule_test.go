@@ -251,7 +251,7 @@ resource "aws_ram_principal_association" "test" {
 data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
   resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
 
-  depends_on = ["aws_ram_resource_association.test", "aws_ram_principal_association.test"]
+  depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
 }
 `, rName)
 }
@@ -297,7 +297,7 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 
   resolver_endpoint_id = aws_route53_resolver_rule.example.resolver_endpoint_id
 
-  depends_on = ["aws_ram_resource_association.test", "aws_ram_principal_association.test"]
+  depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
 }
 `, rName)
 }

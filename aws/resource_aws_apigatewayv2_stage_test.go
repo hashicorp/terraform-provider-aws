@@ -1174,7 +1174,7 @@ resource "aws_apigatewayv2_stage" "test" {
     format          = %[2]q
   }
 
-  depends_on = ["aws_api_gateway_account.test"]
+  depends_on = [aws_api_gateway_account.test]
 }
 `, rName, format)
 }

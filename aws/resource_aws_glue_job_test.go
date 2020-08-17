@@ -705,7 +705,7 @@ resource "aws_glue_job" "test" {
     script_location = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, scriptLocation)
 }
@@ -728,7 +728,7 @@ resource "aws_glue_job" "test" {
     "--job-language"        = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
 }
@@ -747,7 +747,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), description, rName)
 }
@@ -766,7 +766,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
 }
@@ -788,7 +788,7 @@ resource "aws_glue_job" "test" {
     max_concurrent_runs = %d
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxConcurrentRuns)
 }
@@ -807,7 +807,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), maxRetries, rName)
 }
@@ -829,7 +829,7 @@ resource "aws_glue_job" "test" {
     notify_delay_after = %d
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, notifyDelayAfter)
 }
@@ -847,7 +847,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
 }
@@ -868,7 +868,7 @@ resource "aws_glue_job" "test" {
     %[2]q = %[3]q
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -890,7 +890,7 @@ resource "aws_glue_job" "test" {
     %[4]q = %[5]q
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -909,7 +909,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, timeout)
 }
@@ -928,7 +928,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, securityConfiguration)
 }
@@ -947,7 +947,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, workerType)
 }
@@ -966,7 +966,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
 }
@@ -986,7 +986,7 @@ resource "aws_glue_job" "test" {
 		python_version  = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, pythonVersion)
 }
@@ -1004,7 +1004,7 @@ resource "aws_glue_job" "test" {
 	script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxCapacity)
 }

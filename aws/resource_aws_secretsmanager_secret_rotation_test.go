@@ -163,7 +163,7 @@ resource "aws_secretsmanager_secret_rotation" "test" {
     automatically_after_days = %[2]d
 	}
 
-	depends_on = ["aws_lambda_permission.test1"]
+	depends_on = [aws_lambda_permission.test1]
 }
 `, rName, automaticallyAfterDays)
 }

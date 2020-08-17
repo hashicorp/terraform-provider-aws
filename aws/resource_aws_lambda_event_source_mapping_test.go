@@ -1036,7 +1036,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size        = 100
   event_source_arn  = aws_kinesis_stream.kinesis_stream_test.arn
   enabled           = true
-  depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  depends_on        = [aws_iam_policy_attachment.policy_attachment_for_role]
   function_name     = aws_lambda_function.lambda_function_test_create.arn
   starting_position = "TRIM_HORIZON"
 }
@@ -1128,7 +1128,7 @@ resource "aws_lambda_function" "lambda_function_test_update" {
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   event_source_arn  = aws_kinesis_stream.kinesis_stream_test.arn
   enabled           = true
-  depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  depends_on        = [aws_iam_policy_attachment.policy_attachment_for_role]
   function_name     = aws_lambda_function.lambda_function_test_create.arn
   starting_position = "TRIM_HORIZON"
 }
@@ -1221,7 +1221,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size        = 200
   event_source_arn  = aws_kinesis_stream.kinesis_stream_test.arn
   enabled           = false
-  depends_on        = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  depends_on        = [aws_iam_policy_attachment.policy_attachment_for_role]
   function_name     = aws_lambda_function.lambda_function_test_update.arn
   starting_position = "TRIM_HORIZON"
 }
@@ -1304,7 +1304,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 10
   event_source_arn = aws_sqs_queue.sqs_queue_test.arn
   enabled          = true
-  depends_on       = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  depends_on       = [aws_iam_policy_attachment.policy_attachment_for_role]
   function_name    = aws_lambda_function.lambda_function_test_create.arn
 }
 `, roleName, policyName, attName, streamName, funcName, uFuncName)
@@ -1386,7 +1386,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 5
   event_source_arn = aws_sqs_queue.sqs_queue_test.arn
   enabled          = false
-  depends_on       = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  depends_on       = [aws_iam_policy_attachment.policy_attachment_for_role]
   function_name    = aws_lambda_function.lambda_function_test_update.arn
 }
 `, roleName, policyName, attName, streamName, funcName, uFuncName)
@@ -1458,7 +1458,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 5
   event_source_arn = aws_sqs_queue.sqs_queue_test.arn
-  depends_on       = ["aws_iam_policy_attachment.policy_attachment_for_role"]
+  depends_on       = [aws_iam_policy_attachment.policy_attachment_for_role]
   enabled          = false
   function_name    = "%[5]s"
 }

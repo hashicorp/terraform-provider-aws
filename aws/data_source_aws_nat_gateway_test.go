@@ -84,7 +84,7 @@ resource "aws_nat_gateway" "test" {
     OtherTag = "some-value"
   }
 
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 
 data "aws_nat_gateway" "test_by_id" {

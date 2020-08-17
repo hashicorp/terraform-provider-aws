@@ -183,7 +183,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  depends_on = ["aws_s3_bucket_policy.test"]
+  depends_on = [aws_s3_bucket_policy.test]
 
   cluster_identifier  = "tf-redshift-cluster-%[1]d"
   cluster_type        = "single-node"

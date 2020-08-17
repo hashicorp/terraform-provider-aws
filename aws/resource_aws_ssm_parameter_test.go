@@ -621,7 +621,7 @@ resource "aws_ssm_parameter" "secret_test" {
   type        = "SecureString"
   value       = "%[2]s"
   key_id      = "alias/%[3]s"
-  depends_on  = ["aws_kms_alias.test_alias"]
+  depends_on  = [aws_kms_alias.test_alias]
 }
 
 resource "aws_kms_key" "test_key" {

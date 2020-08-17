@@ -121,7 +121,7 @@ func testAccAWSSecurityHubMemberConfig_basic(accountId, email string) string {
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
-  depends_on = ["aws_securityhub_account.example"]
+  depends_on = [aws_securityhub_account.example]
   account_id = "%s"
   email      = "%s"
 }
@@ -133,7 +133,7 @@ func testAccAWSSecurityHubMemberConfig_invite(accountId, email string, invite bo
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
-  depends_on = ["aws_securityhub_account.example"]
+  depends_on = [aws_securityhub_account.example]
   account_id = "%s"
   email      = "%s"
   invite     = %t

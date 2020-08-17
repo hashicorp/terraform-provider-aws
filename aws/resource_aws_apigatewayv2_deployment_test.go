@@ -227,7 +227,7 @@ resource "aws_apigatewayv2_deployment" "test" {
   api_id      = "${aws_apigatewayv2_api.test.id}"
   description = %[1]q
 
-  depends_on  = ["aws_apigatewayv2_route.test"]
+  depends_on  = [aws_apigatewayv2_route.test]
 }
 `, description)
 }

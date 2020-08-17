@@ -295,7 +295,7 @@ resource "aws_api_gateway_integration_response" "test" {
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration_response.test"]
+  depends_on = [aws_api_gateway_integration_response.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
 }

@@ -355,7 +355,7 @@ resource "aws_batch_compute_environment" "test" {
     type               = "EC2"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }

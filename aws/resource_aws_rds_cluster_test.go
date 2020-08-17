@@ -2783,7 +2783,7 @@ resource "aws_rds_cluster" "test" {
     Environment = "production"
   }
 
-  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
+  depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
 `, n, n, n, n, n)
 }
@@ -2877,7 +2877,7 @@ resource "aws_rds_cluster" "test" {
     Environment = "production"
   }
 
-  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
+  depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
 `, n, n, n, n, n)
 }
@@ -2934,7 +2934,7 @@ resource "aws_rds_cluster" "test" {
     Environment = "production"
   }
 
-  depends_on = ["aws_iam_role.another_rds_sample_role"]
+  depends_on = [aws_iam_role.another_rds_sample_role]
 }
 `, n, n, n)
 }

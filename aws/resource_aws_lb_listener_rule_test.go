@@ -2566,7 +2566,7 @@ resource "aws_lb_listener_rule" "third" {
     }
   }
 
-  depends_on = ["aws_lb_listener_rule.first"]
+  depends_on = [aws_lb_listener_rule.first]
 }
 `
 }

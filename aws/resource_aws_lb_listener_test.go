@@ -1241,7 +1241,7 @@ resource "aws_lb" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_lb_target_group" "test" {

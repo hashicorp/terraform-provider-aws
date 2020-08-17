@@ -210,7 +210,7 @@ resource "aws_organizations_organization" "test" {
 }
 
 resource "aws_organizations_policy" "test" {
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 
   name    = "%s"
   type    = "%s"
@@ -236,7 +236,7 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 
 resource "aws_organizations_policy" "test" {
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 
   content = <<EOF
 {
@@ -266,7 +266,7 @@ resource "aws_organizations_organization" "test" {
 }
 
 resource "aws_organizations_policy" "test" {
-  depends_on = ["aws_organizations_organization.test"]
+  depends_on = [aws_organizations_organization.test]
 
   content = <<EOF
 {

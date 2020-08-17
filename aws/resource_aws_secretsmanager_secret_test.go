@@ -593,7 +593,7 @@ resource "aws_secretsmanager_secret" "test" {
   name                = "%[1]s"
   rotation_lambda_arn = "${aws_lambda_function.test1.arn}"
 
-  depends_on = ["aws_lambda_permission.test1"]
+  depends_on = [aws_lambda_permission.test1]
 }
 
 # Not a real rotation function
@@ -656,7 +656,7 @@ resource "aws_secretsmanager_secret" "test" {
     automatically_after_days = %[2]d
   }
 
-  depends_on = ["aws_lambda_permission.test"]
+  depends_on = [aws_lambda_permission.test]
 }
 `, rName, automaticallyAfterDays)
 }
