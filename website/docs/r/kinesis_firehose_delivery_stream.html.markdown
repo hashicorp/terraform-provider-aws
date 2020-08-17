@@ -137,7 +137,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 ```hcl
 resource "aws_redshift_cluster" "test_cluster" {
-  cluster_identifier = "tf-redshift-cluster-%d"
+  cluster_identifier = "tf-redshift-cluster"
   database_name      = "test"
   master_username    = "testuser"
   master_password    = "T3stPass"
@@ -214,6 +214,84 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
           parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
         }
       }
+    }
+  }
+}
+```
+
+### Elasticsearch Destination With VPC
+
+```hcl
+resource "aws_elasticsearch_domain" "test_cluster" {
+  domain_name = "es-test"
+  cluster_config {
+    instance_count         = 2
+    zone_awareness_enabled = true
+    instance_type          = "t2.small.elasticsearch"
+  }
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  vpc_options {
+    security_group_ids = ["${aws_security_group.first.id}"]
+    subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+  }
+}
+resource "aws_iam_role_policy" "firehose-elasticsearch" {
+  name   = "elasticsearch"
+  role   = "${aws_iam_role.firehose.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "es:*"
+      ],
+      "Resource": [
+        "${aws_elasticsearch_domain.test_cluster.arn}",
+        "${aws_elasticsearch_domain.test_cluster.arn}/*"
+      ]
+	},
+	{
+	  "Effect": "Allow",
+	  "Action": [
+         "ec2:DescribeVpcs",
+         "ec2:DescribeVpcAttribute",
+         "ec2:DescribeSubnets",
+         "ec2:DescribeSecurityGroups",
+         "ec2:DescribeNetworkInterfaces",
+         "ec2:CreateNetworkInterface",
+         "ec2:CreateNetworkInterfacePermission",
+         "ec2:DeleteNetworkInterface"
+	  ],
+	  "Resource": [
+	    "*"
+	  ]
+	}
+  ]
+}
+EOF
+}
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  name        = "terraform-kinesis-firehose-es"
+  destination = "elasticsearch"
+  s3_configuration {
+    role_arn   = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+  }
+  elasticsearch_configuration {
+    domain_arn = "${aws_elasticsearch_domain.test_cluster.arn}"
+    role_arn   = "${aws_iam_role.firehose.arn}"
+    index_name = "test"
+    type_name  = "test"
+    vpc_config {
+      subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+      security_group_ids = ["${aws_security_group.first.id}"]
+      role_arn           = "${aws_iam_role.firehose.arn}"
     }
   }
 }
@@ -320,6 +398,7 @@ The `elasticsearch_configuration` object supports the following:
 * `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Required) The Elasticsearch type name with maximum length of 100 characters.
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to Elastic Search associated with the VPC. More details are given below
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
@@ -354,6 +433,12 @@ The `parameters` array objects support the following:
 
 * `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
+
+The `vpc_config` object supports the following:
+
+* `subnet_ids` - (Required) A list of subnet IDs to associate with Kinesis Firehose.
+* `security_group_ids` - (Required) A list of security group IDs to associate with Kinesis Firehose.
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon EC2 configuration API and for creating network interfaces. Make sure role has necessary [IAM permissions](https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-es-vpc)
 
 ### data_format_conversion_configuration
 
