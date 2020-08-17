@@ -1501,6 +1501,7 @@ func testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(name string) 
 resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "%[1]s"
   scope = "REGIONAL"
+
   regular_expression {
     regex_string = "one"
   }
@@ -1542,15 +1543,18 @@ resource "aws_wafv2_web_acl" "test" {
                 statement {
                   regex_pattern_set_reference_statement {
                     arn = aws_wafv2_regex_pattern_set.test.arn
+
                     field_to_match {
                       uri_path {}
                     }
+
                     text_transformation {
                       type     = "LOWERCASE"
                       priority = 1
                     }
                   }
                 }
+
                 statement {
                   ip_set_reference_statement {
                     arn = aws_wafv2_ip_set.test.arn
@@ -1584,6 +1588,7 @@ func testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(name string) s
 resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "%[1]s"
   scope = "REGIONAL"
+
   regular_expression {
     regex_string = "one"
   }
@@ -1622,15 +1627,18 @@ resource "aws_wafv2_web_acl" "test" {
                 statement {
                   regex_pattern_set_reference_statement {
                     arn = aws_wafv2_regex_pattern_set.test.arn
+
                     field_to_match {
                       uri_path {}
                     }
+
                     text_transformation {
                       type     = "LOWERCASE"
                       priority = 1
                     }
                   }
                 }
+
                 statement {
                   ip_set_reference_statement {
                     arn = aws_wafv2_ip_set.test.arn
@@ -1640,6 +1648,7 @@ resource "aws_wafv2_web_acl" "test" {
             }
           }
         }
+
         statement {
           geo_match_statement {
             country_codes = ["NL"]

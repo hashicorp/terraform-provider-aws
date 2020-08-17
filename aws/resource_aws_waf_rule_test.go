@@ -444,7 +444,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -469,7 +469,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -508,7 +508,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_byte_match_set.set.id}"
+    data_id = aws_waf_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }
@@ -541,7 +541,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_geo_match_set.geo_match_set.id}"
+    data_id = aws_waf_geo_match_set.geo_match_set.id
     negated = true
     type    = "GeoMatch"
   }
@@ -566,13 +566,13 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
 
   tags = {
-  	%q = %q
+    %q = %q
   }
 }
 `, rName, rName, rName, tag1Key, tag1Value)
@@ -595,14 +595,14 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
 
   tags = {
-  	%q = %q
-  	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, rName, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
