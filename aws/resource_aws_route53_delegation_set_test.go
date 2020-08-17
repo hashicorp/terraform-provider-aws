@@ -172,12 +172,12 @@ resource "aws_route53_delegation_set" "test" {
 
 resource "aws_route53_zone" "primary" {
   name              = "%s"
-  delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  delegation_set_id = aws_route53_delegation_set.test.id
 }
 
 resource "aws_route53_zone" "secondary" {
   name              = "%s"
-  delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  delegation_set_id = aws_route53_delegation_set.test.id
 }
 `, refName, zoneName1, zoneName2)
 }

@@ -175,8 +175,8 @@ resource "aws_route53_resolver_rule" "example" {
 
 resource "aws_route53_resolver_rule_association" "example" {
   name             = %[1]q
-  resolver_rule_id = "${aws_route53_resolver_rule.example.id}"
-  vpc_id           = "${aws_vpc.example.id}"
+  resolver_rule_id = aws_route53_resolver_rule.example.id
+  vpc_id           = aws_vpc.example.id
 }
 `, name)
 }

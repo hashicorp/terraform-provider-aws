@@ -560,24 +560,24 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = "terraform-testacc-route-table"
+    Name = "terraform-testacc-route-table"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-  	Name = "terraform-testacc-route-table"
+    Name = "terraform-testacc-route-table"
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "10.2.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 `
@@ -592,7 +592,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-route-table"
@@ -600,23 +600,23 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "10.3.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 
   route {
     cidr_block = "10.4.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 `
 
 const testAccRouteTableConfigIpv6 = `
 resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -625,15 +625,15 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    ipv6_cidr_block = "::/0"
-    egress_only_gateway_id = "${aws_egress_only_internet_gateway.test.id}"
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.test.id
   }
 }
 `
@@ -644,12 +644,12 @@ data "aws_ami" "amzn-ami-minimal-hvm" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
 
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
@@ -658,31 +658,31 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = "terraform-testacc-route-table-instance"
+    Name = "terraform-testacc-route-table-instance"
   }
 }
 
 resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
-  	Name = "tf-acc-route-table-instance"
+    Name = "tf-acc-route-table-instance"
   }
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm.id
   instance_type = "t2.micro"
-  subnet_id     = "${aws_subnet.test.id}"
+  subnet_id     = aws_subnet.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    instance_id = "${aws_instance.test.id}"
+    cidr_block  = "10.2.0.0/16"
+    instance_id = aws_instance.test.id
   }
 }
 `
@@ -697,7 +697,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     foo = "bar"
@@ -715,7 +715,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     bar = "baz"
@@ -727,13 +727,14 @@ resource "aws_route_table" "test" {
 const testAccRouteTableVpcPeeringConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-route-table-vpc-peering-foo"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-route-table-vpc-peering-foo"
@@ -749,7 +750,7 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_internet_gateway" "bar" {
-  vpc_id = "${aws_vpc.bar.id}"
+  vpc_id = aws_vpc.bar.id
 
   tags = {
     Name = "terraform-testacc-route-table-vpc-peering-bar"
@@ -757,8 +758,8 @@ resource "aws_internet_gateway" "bar" {
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.bar.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.bar.id
 
   tags = {
     foo = "bar"
@@ -766,11 +767,11 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
+    cidr_block                = "10.2.0.0/16"
+    vpc_peering_connection_id = aws_vpc_peering_connection.test.id
   }
 }
 `
@@ -785,12 +786,12 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id           = "${aws_vpc.test.id}"
-  propagating_vgws = ["${aws_vpn_gateway.test.id}"]
+  vpc_id           = aws_vpc.test.id
+  propagating_vgws = [aws_vpn_gateway.test.id]
 }
 `
 
@@ -805,7 +806,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {}
 }
@@ -826,20 +827,20 @@ resource "aws_internet_gateway" "test" {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "10.1.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 
   route {
     cidr_block = "10.2.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 `
@@ -860,11 +861,11 @@ resource "aws_internet_gateway" "test" {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -884,12 +885,12 @@ resource "aws_internet_gateway" "test" {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
   route  = []
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -916,9 +917,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
@@ -928,17 +929,17 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block         = "0.0.0.0/0"
-    transit_gateway_id = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
+    transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
   }
 }
 `
@@ -957,7 +958,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -965,13 +966,12 @@ resource "aws_egress_only_internet_gateway" "test" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-
 
 locals {
   ipv6             = %[2]t
@@ -980,12 +980,12 @@ locals {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block      = "${local.ipv6 ? "" : local.destination}"
-    ipv6_cidr_block = "${local.ipv6 ? local.destination_ipv6 : ""}"
-    gateway_id      = "${aws_internet_gateway.test.id}"
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+    gateway_id      = aws_internet_gateway.test.id
   }
 
   tags = {

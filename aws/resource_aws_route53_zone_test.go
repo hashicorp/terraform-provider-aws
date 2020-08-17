@@ -610,7 +610,7 @@ func testAccRoute53ZoneConfigDelegationSetID(zoneName string) string {
 resource "aws_route53_delegation_set" "test" {}
 
 resource "aws_route53_zone" "test" {
-  delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  delegation_set_id = aws_route53_delegation_set.test.id
   name              = "%s."
 }
 `, zoneName)
@@ -673,7 +673,7 @@ resource "aws_route53_zone" "test" {
   name = "%s."
 
   vpc {
-    vpc_id = "${aws_vpc.test1.id}"
+    vpc_id = aws_vpc.test1.id
   }
 }
 `, rName, zoneName)
@@ -701,11 +701,11 @@ resource "aws_route53_zone" "test" {
   name = "%s."
 
   vpc {
-    vpc_id = "${aws_vpc.test1.id}"
+    vpc_id = aws_vpc.test1.id
   }
 
   vpc {
-    vpc_id = "${aws_vpc.test2.id}"
+    vpc_id = aws_vpc.test2.id
   }
 }
 `, rName, rName, zoneName)
