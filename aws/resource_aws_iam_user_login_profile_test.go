@@ -339,12 +339,12 @@ data "aws_iam_policy_document" "user" {
 
 resource "aws_iam_user_policy" "user" {
   name   = "AllowChangeOwnPassword"
-  user   = "${aws_iam_user.user.name}"
-  policy = "${data.aws_iam_policy_document.user.json}"
+  user   = aws_iam_user.user.name
+  policy = data.aws_iam_policy_document.user.json
 }
 
 resource "aws_iam_access_key" "user" {
-  user = "${aws_iam_user.user.name}"
+  user = aws_iam_user.user.name
 }
 `, rName, path)
 }
@@ -354,12 +354,13 @@ func testAccAWSUserLoginProfileConfig_PasswordLength(rName, path, pgpKey string,
 %s
 
 resource "aws_iam_user_login_profile" "user" {
-  user            = "${aws_iam_user.user.name}"
+  user            = aws_iam_user.user.name
   password_length = %d
 
   pgp_key = <<EOF
 %s
 EOF
+
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
 }
@@ -369,11 +370,12 @@ func testAccAWSUserLoginProfileConfig_Required(rName, path, pgpKey string) strin
 %s
 
 resource "aws_iam_user_login_profile" "user" {
-  user = "${aws_iam_user.user.name}"
+  user = aws_iam_user.user.name
 
   pgp_key = <<EOF
 %s
 EOF
+
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
 }

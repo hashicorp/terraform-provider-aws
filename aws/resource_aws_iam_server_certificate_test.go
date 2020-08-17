@@ -321,7 +321,7 @@ func testAccIAMServerCertConfig_file(rInt int, fName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "terraform-test-cert-%d"
-  certificate_body = "${file("%s")}"
+  certificate_body = file("%s")
 
   private_key = <<EOF
 -----BEGIN RSA PRIVATE KEY-----
@@ -340,6 +340,7 @@ oRYkfTSxQzabVyqkOGvhAkBtbjUxOD8wgBIjb4T6mAMokQo6PeEAZGUTyPifjJNo
 detWVr2WRvgNgQvcRnNPECwfq1RtMJJpavaI3kgeaSxg
 -----END RSA PRIVATE KEY-----
 EOF
+
 }
 `, rInt, fName)
 }

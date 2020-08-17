@@ -764,7 +764,6 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 }
 
 func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 
 		sshKey, err := ioutil.ReadFile("./test-fixtures/public-ssh-key.pub")
