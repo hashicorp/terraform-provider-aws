@@ -2,6 +2,7 @@
 
 ENHANCEMENTS
 
+* resource/aws_apigatewayv2_api: Add `body` argument [GH-12567]
 * resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
 
 BUG FIXES
