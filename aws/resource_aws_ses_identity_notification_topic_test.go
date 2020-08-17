@@ -135,19 +135,20 @@ func testAccCheckAwsSESIdentityNotificationTopicExists(n string) resource.TestCh
 
 const testAccAwsSESIdentityNotificationTopicConfig_basic = `
 resource "aws_ses_identity_notification_topic" "test" {
-	identity = "${aws_ses_domain_identity.test.arn}"
-	notification_type = "Complaint"
+  identity          = aws_ses_domain_identity.test.arn
+  notification_type = "Complaint"
 }
 
 resource "aws_ses_domain_identity" "test" {
   domain = "%s"
 }
 `
+
 const testAccAwsSESIdentityNotificationTopicConfig_update = `
 resource "aws_ses_identity_notification_topic" "test" {
-	topic_arn = "${aws_sns_topic.test.arn}"
-	identity = "${aws_ses_domain_identity.test.arn}"
-	notification_type = "Complaint"
+  topic_arn         = aws_sns_topic.test.arn
+  identity          = aws_ses_domain_identity.test.arn
+  notification_type = "Complaint"
 }
 
 resource "aws_ses_domain_identity" "test" {
@@ -161,10 +162,10 @@ resource "aws_sns_topic" "test" {
 
 const testAccAwsSESIdentityNotificationTopicConfig_headers = `
 resource "aws_ses_identity_notification_topic" "test" {
-	topic_arn = "${aws_sns_topic.test.arn}"
-	identity = "${aws_ses_domain_identity.test.arn}"
-	notification_type = "Complaint"
-	include_original_headers = true
+  topic_arn                = aws_sns_topic.test.arn
+  identity                 = aws_ses_domain_identity.test.arn
+  notification_type        = "Complaint"
+  include_original_headers = true
 }
 
 resource "aws_ses_domain_identity" "test" {

@@ -150,9 +150,10 @@ func testAccAWSSfnActivityBasicConfigTags1(rName, tag1Key, tag1Value string) str
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"
+
   tags = {
-	%q = %q
-}
+    %q = %q
+  }
 }
 `, rName, tag1Key, tag1Value)
 }
@@ -161,10 +162,11 @@ func testAccAWSSfnActivityBasicConfigTags2(rName, tag1Key, tag1Value, tag2Key, t
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"
+
   tags = {
-	%q = %q
-	%q = %q
-}
+    %q = %q
+    %q = %q
+  }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

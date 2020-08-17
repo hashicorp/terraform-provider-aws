@@ -125,9 +125,10 @@ func testAccCheckAwsSESDomainDkimTokens(n string) resource.TestCheckFunc {
 
 const testAccAwsSESDomainDkimConfig = `
 resource "aws_ses_domain_identity" "test" {
-	domain = "%s"
+  domain = "%s"
 }
+
 resource "aws_ses_domain_dkim" "test" {
-	domain = "${aws_ses_domain_identity.test.domain}"
+  domain = aws_ses_domain_identity.test.domain
 }
 `

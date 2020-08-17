@@ -147,7 +147,7 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 func testAccAWSSESConfigurationSetConfig(escRandomInteger int) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
-    name = "some-configuration-set-%d"
+  name = "some-configuration-set-%d"
 }
 `, escRandomInteger)
 }

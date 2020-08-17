@@ -109,11 +109,11 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 func testAccAWSSESActiveReceiptRuleSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
-	rule_set_name = "%s"
+  rule_set_name = "%s"
 }
 
 resource "aws_ses_active_receipt_rule_set" "test" {
-	rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
 }
 `, name)
 }
