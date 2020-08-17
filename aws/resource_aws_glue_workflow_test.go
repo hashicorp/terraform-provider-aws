@@ -215,12 +215,12 @@ func testAccCheckAWSGlueWorkflowDestroy(s *terraform.State) error {
 func testAccAWSGlueWorkflowConfig_DefaultRunProperties(rName, firstPropValue, secondPropValue string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_workflow" "test" {
- name               = "%s"
+  name = "%s"
 
- default_run_properties = {
-   "--run-prop1" = "%s"
-   "--run-prop2" = "%s"
- }
+  default_run_properties = {
+    "--run-prop1" = "%s"
+    "--run-prop2" = "%s"
+  }
 }
 `, rName, firstPropValue, secondPropValue)
 }
@@ -228,8 +228,8 @@ resource "aws_glue_workflow" "test" {
 func testAccAWSGlueWorkflowConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_workflow" "test" {
- description        = "%s"
- name               = "%s"
+  description = "%s"
+  name        = "%s"
 }
 `, description, rName)
 }
@@ -237,7 +237,7 @@ resource "aws_glue_workflow" "test" {
 func testAccAWSGlueWorkflowConfig_Required(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_workflow" "test" {
- name               = "%s"
+  name = "%s"
 }
 `, rName)
 }
