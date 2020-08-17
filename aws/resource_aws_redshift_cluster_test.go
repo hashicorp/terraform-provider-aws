@@ -785,22 +785,23 @@ resource "aws_kms_key" "foo" {
   description = "Terraform acc test %d"
 
   policy = <<POLICY
-	{
-	"Version": "2012-10-17",
-	"Id": "kms-tf-1",
-	"Statement": [
-		{
-		"Sid": "Enable IAM User Permissions",
-		"Effect": "Allow",
-		"Principal": {
-			"AWS": "*"
-		},
-		"Action": "kms:*",
-		"Resource": "*"
-		}
-	]
-	}
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
 	POLICY
+
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -814,7 +815,7 @@ resource "aws_redshift_cluster" "default" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
   encrypted                           = true
-  kms_key_id                          = "${aws_kms_key.foo.arn}"
+  kms_key_id                          = aws_kms_key.foo.arn
 }
 `, rInt, rInt)
 }
@@ -827,22 +828,23 @@ resource "aws_kms_key" "foo" {
   description = "Terraform acc test %d"
 
   policy = <<POLICY
-	{
-	"Version": "2012-10-17",
-	"Id": "kms-tf-1",
-	"Statement": [
-		{
-		"Sid": "Enable IAM User Permissions",
-		"Effect": "Allow",
-		"Principal": {
-			"AWS": "*"
-		},
-		"Action": "kms:*",
-		"Resource": "*"
-		}
-	]
-	}
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
 	POLICY
+
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -898,6 +900,7 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
+
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -909,7 +912,7 @@ resource "aws_redshift_cluster" "default" {
   node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
-  kms_key_id                          = "${aws_kms_key.foo.arn}"
+  kms_key_id                          = aws_kms_key.foo.arn
   encrypted                           = true
   skip_final_snapshot                 = true
 }
@@ -981,29 +984,30 @@ resource "aws_s3_bucket" "bucket" {
 
   policy = <<EOF
 {
- "Version": "2008-10-17",
- "Statement": [
-	 {
-		 "Sid": "Stmt1376526643067",
-		 "Effect": "Allow",
-		 "Principal": {
-			 "AWS": "${data.aws_redshift_service_account.main.arn}"
-		 },
-		 "Action": "s3:PutObject",
-		 "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d/*"
-	 },
-	 {
-		 "Sid": "Stmt137652664067",
-		 "Effect": "Allow",
-		 "Principal": {
-			 "AWS": "${data.aws_redshift_service_account.main.arn}"
-		 },
-		 "Action": "s3:GetBucketAcl",
-		 "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d"
-	 }
- ]
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1376526643067",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_redshift_service_account.main.arn}"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d/*"
+    },
+    {
+      "Sid": "Stmt137652664067",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_redshift_service_account.main.arn}"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d"
+    }
+  ]
 }
 EOF
+
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1018,7 +1022,7 @@ resource "aws_redshift_cluster" "default" {
 
   logging {
     enable      = true
-    bucket_name = "${aws_s3_bucket.bucket.bucket}"
+    bucket_name = aws_s3_bucket.bucket.bucket
   }
 
   skip_final_snapshot = true
@@ -1117,7 +1121,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     foo = "bar"
@@ -1127,7 +1131,7 @@ resource "aws_internet_gateway" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-redshift-cluster-not-publicly-accessible-foo"
@@ -1137,7 +1141,7 @@ resource "aws_subnet" "foo" {
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-redshift-cluster-not-publicly-accessible-bar"
@@ -1147,7 +1151,7 @@ resource "aws_subnet" "bar" {
 resource "aws_subnet" "foobar" {
   cidr_block        = "10.1.3.0/24"
   availability_zone = "us-west-2c"
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-redshift-cluster-not-publicly-accessible-foobar"
@@ -1157,7 +1161,7 @@ resource "aws_subnet" "foobar" {
 resource "aws_redshift_subnet_group" "foo" {
   name        = "foo-%d"
   description = "foo description"
-  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
+  subnet_ids  = [aws_subnet.foo.id, aws_subnet.bar.id, aws_subnet.foobar.id]
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1169,7 +1173,7 @@ resource "aws_redshift_cluster" "default" {
   node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
-  cluster_subnet_group_name           = "${aws_redshift_subnet_group.foo.name}"
+  cluster_subnet_group_name           = aws_redshift_subnet_group.foo.name
   publicly_accessible                 = false
   skip_final_snapshot                 = true
 
@@ -1189,7 +1193,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     foo = "bar"
@@ -1199,7 +1203,7 @@ resource "aws_internet_gateway" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foo"
@@ -1209,7 +1213,7 @@ resource "aws_subnet" "foo" {
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-redshift-cluster-upd-publicly-accessible-bar"
@@ -1219,7 +1223,7 @@ resource "aws_subnet" "bar" {
 resource "aws_subnet" "foobar" {
   cidr_block        = "10.1.3.0/24"
   availability_zone = "us-west-2c"
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foobar"
@@ -1229,7 +1233,7 @@ resource "aws_subnet" "foobar" {
 resource "aws_redshift_subnet_group" "foo" {
   name        = "foo-%d"
   description = "foo description"
-  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
+  subnet_ids  = [aws_subnet.foo.id, aws_subnet.bar.id, aws_subnet.foobar.id]
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1241,7 +1245,7 @@ resource "aws_redshift_cluster" "default" {
   node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
-  cluster_subnet_group_name           = "${aws_redshift_subnet_group.foo.name}"
+  cluster_subnet_group_name           = aws_redshift_subnet_group.foo.name
   publicly_accessible                 = true
   skip_final_snapshot                 = true
 
@@ -1253,15 +1257,53 @@ resource "aws_redshift_cluster" "default" {
 func testAccAWSRedshiftClusterConfig_iamRoles(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
-  name               = "test-role-ec2-%d"
-  path               = "/"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name = "test-role-ec2-%d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
 }
 
 resource "aws_iam_role" "lambda-role" {
-  name               = "test-role-lambda-%d"
-  path               = "/"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"lambda.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name = "test-role-lambda-%d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "lambda.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1273,7 +1315,7 @@ resource "aws_redshift_cluster" "default" {
   node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
-  iam_roles                           = ["${aws_iam_role.ec2-role.arn}", "${aws_iam_role.lambda-role.arn}"]
+  iam_roles                           = [aws_iam_role.ec2-role.arn, aws_iam_role.lambda-role.arn]
   skip_final_snapshot                 = true
 }
 `, rInt, rInt, rInt)
@@ -1282,15 +1324,53 @@ resource "aws_redshift_cluster" "default" {
 func testAccAWSRedshiftClusterConfig_updateIamRoles(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
-  name               = "test-role-ec2-%d"
-  path               = "/"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name = "test-role-ec2-%d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
 }
 
 resource "aws_iam_role" "lambda-role" {
-  name               = "test-role-lambda-%d"
-  path               = "/"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"lambda.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name = "test-role-lambda-%d"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "lambda.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1302,7 +1382,7 @@ resource "aws_redshift_cluster" "default" {
   node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
-  iam_roles                           = ["${aws_iam_role.ec2-role.arn}"]
+  iam_roles                           = [aws_iam_role.ec2-role.arn]
   skip_final_snapshot                 = true
 }
 `, rInt, rInt, rInt)

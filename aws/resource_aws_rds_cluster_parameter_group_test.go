@@ -445,7 +445,6 @@ func testAccCheckAWSRDSClusterParameterNotUserDefined(n, paramName string) resou
 
 func testAccCheckAWSDBClusterParameterGroupAttributes(v *rds.DBClusterParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.DBClusterParameterGroupName != name {
 			return fmt.Errorf("bad name: %#v expected: %v", *v.DBClusterParameterGroupName, name)
 		}
@@ -626,14 +625,14 @@ resource "aws_rds_cluster_parameter_group" "test" {
 const testAccAWSDBClusterParameterGroupConfig_namePrefix = `
 resource "aws_rds_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
-  family = "aurora5.6"
+  family      = "aurora5.6"
 }
 `
 
 const testAccAWSDBClusterParameterGroupConfig_namePrefix_Parameter = `
 resource "aws_rds_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
-  family = "aurora5.6"
+  family      = "aurora5.6"
 
   parameter {
     name  = "character_set_server"
