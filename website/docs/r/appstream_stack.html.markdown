@@ -14,38 +14,38 @@ Provides an AppStream stack.
 
 ```hcl
 resource "aws_appstream_stack" "appstream_stack" {
-    name                    = "stack name"
-    description             = "stack description"
-    display_name            = "stack display name"
-    feedback_url            = "http://your-domain/feedback"
-    redirect_url            = "http://your-domain/redirect"
-    storage_connectors  {
-        connector_type      = "HOMEFOLDERS"
-    }
-    user_settings {
-      action = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
-      enabled = true
-    }
-    user_settings {
-      action = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
-      enabled = true
-    }
-    user_settings {
-      action = "FILE_UPLOAD"
-      enabled = true
-    }
-    user_settings {
-      action = "FILE_DOWNLOAD"
-      enabled = true
-    }
-    application_settings {
-      enabled        = true
-      settings_group = "SettingsGroup"
-    }
+  name         = "stack name"
+  description  = "stack description"
+  display_name = "stack display name"
+  feedback_url = "http://your-domain/feedback"
+  redirect_url = "http://your-domain/redirect"
+  storage_connectors {
+    connector_type = "HOMEFOLDERS"
+  }
+  user_settings {
+    action  = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
+    enabled = true
+  }
+  user_settings {
+    action  = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
+    enabled = true
+  }
+  user_settings {
+    action  = "FILE_UPLOAD"
+    enabled = true
+  }
+  user_settings {
+    action  = "FILE_DOWNLOAD"
+    enabled = true
+  }
+  application_settings {
+    enabled        = true
+    settings_group = "SettingsGroup"
+  }
 
-    tags = {
-       TagName = "TagValue"
-    }
+  tags = {
+    TagName = "TagValue"
+  }
 }
 ```
 
