@@ -96,16 +96,7 @@ data "aws_ec2_instance_type_offering" "test" {
 }
 
 func testAccAWSEc2InstanceTypeOfferingDataSourceConfigLocationType() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + `
 # Rather than hardcode an instance type in the testing,
 # use the first result from all available offerings.
 data "aws_ec2_instance_type_offerings" "test" {
