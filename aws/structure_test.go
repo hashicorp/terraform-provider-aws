@@ -1266,12 +1266,12 @@ abc:
 	}
 }
 
-func TestNormalizeCloudFormationTemplate(t *testing.T) {
+func TestNormalizeJsonOrYamlString(t *testing.T) {
 	var err error
 	var actual string
 
 	validNormalizedJson := `{"abc":"1"}`
-	actual, err = normalizeCloudFormationTemplate(validNormalizedJson)
+	actual, err = normalizeJsonOrYamlString(validNormalizedJson)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
@@ -1281,7 +1281,7 @@ func TestNormalizeCloudFormationTemplate(t *testing.T) {
 
 	validNormalizedYaml := `abc: 1
 `
-	actual, err = normalizeCloudFormationTemplate(validNormalizedYaml)
+	actual, err = normalizeJsonOrYamlString(validNormalizedYaml)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
