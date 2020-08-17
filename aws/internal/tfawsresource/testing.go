@@ -2,6 +2,7 @@ package tfawsresource
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -38,7 +39,6 @@ func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string
 			return err
 		}
 
-		matches := make(map[string]int)
 		attrParts := strings.Split(attr, ".")
 		if attrParts[len(attrParts)-1] != sentinelIndex {
 			return fmt.Errorf("%q does not end with the special value %q", attr, sentinelIndex)
@@ -55,37 +55,53 @@ func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string
 		if matchCount == 0 {
 			return fmt.Errorf("%#v has no non-empty values", values)
 		}
-		for stateKey, stateValue := range is.Attributes {
-			stateKeyParts := strings.Split(stateKey, ".")
-			// a Set/List item with nested attrs would have a flatmap address of
-			// at least length 3
-			// foo.0.name = "bar"
-			if len(stateKeyParts) < 3 {
-				continue
-			}
-			var pathMatch bool
-			for i := range attrParts {
-				if attrParts[i] != stateKeyParts[i] && attrParts[i] != sentinelIndex {
-					break
-				}
-				if i == len(attrParts)-1 {
-					pathMatch = true
-				}
-			}
-			if !pathMatch {
-				continue
-			}
-			id := stateKeyParts[len(attrParts)-1]
-			nestedAttr := strings.Join(stateKeyParts[len(attrParts):], ".")
-			if v, keyExists := values[nestedAttr]; keyExists && v == stateValue {
-				matches[id] = matches[id] + 1
-				if matches[id] == matchCount {
-					return nil
-				}
-			}
+
+		if testCheckTypeSetElemNestedAttrsInState(is, attrParts, matchCount, values) {
+			return nil
+		}
+		return fmt.Errorf("%q no TypeSet element %q, with nested attrs %#v in state: %#v", name, attr, values, is.Attributes)
+	}
+}
+
+// TestMatchTypeSetElemNestedAttrs is a resource.TestCheckFunc similar to TestCheckTypeSetElemNestedAttrs
+// with the exception that it verifies that an element matches a *regexp.Regexp.
+//
+// You may check for unset keys, however this will also match keys set to empty
+// string. Please provide a map with at least 1 non-empty value e.g.
+//
+//   map[string]*regexp.Regexp{
+//	     "key1": regexp.MustCompile("value"),
+//       "key2": regexp,.MustCompile(""),
+//   }
+//
+func TestMatchTypeSetElemNestedAttrs(name, attr string, values map[string]*regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := instanceState(s, name)
+		if err != nil {
+			return err
 		}
 
-		return fmt.Errorf("%q no TypeSet element %q, with nested attrs %#v in state: %#v", name, attr, values, is.Attributes)
+		attrParts := strings.Split(attr, ".")
+		if attrParts[len(attrParts)-1] != sentinelIndex {
+			return fmt.Errorf("%q does not end with the special value %q", attr, sentinelIndex)
+		}
+		// account for cases where the user is trying to see if the value is unset/empty
+		// there may be ambiguous scenarios where a field was deliberately unset vs set
+		// to the empty string, this will match both, which may be a false positive.
+		var matchCount int
+		for _, v := range values {
+			if v != nil {
+				matchCount++
+			}
+		}
+		if matchCount == 0 {
+			return fmt.Errorf("%#v has no non-empty values", values)
+		}
+
+		if testCheckTypeSetElemNestedAttrsInState(is, attrParts, matchCount, values) {
+			return nil
+		}
+		return fmt.Errorf("%q no TypeSet element %q, with the regex provided, match in state: %#v", name, attr, is.Attributes)
 	}
 }
 
@@ -177,4 +193,56 @@ func testCheckTypeSetElem(is *terraform.InstanceState, attr, value string) error
 	}
 
 	return fmt.Errorf("no TypeSet element %q, with value %q in state: %#v", attr, value, is.Attributes)
+}
+
+// testCheckTypeSetElemNestedAttrsInState is a helper function
+// to determine if nested attributes and their values are equal to those
+// in the instance state. Currently, the function accepts a "values" param of type
+// map[string]string or map[string]*regexp.Regexp.
+// Returns true if all attributes match, else false.
+func testCheckTypeSetElemNestedAttrsInState(is *terraform.InstanceState, attrParts []string, matchCount int, values interface{}) bool {
+	matches := make(map[string]int)
+
+	for stateKey, stateValue := range is.Attributes {
+		stateKeyParts := strings.Split(stateKey, ".")
+		// a Set/List item with nested attrs would have a flatmap address of
+		// at least length 3
+		// foo.0.name = "bar"
+		if len(stateKeyParts) < 3 {
+			continue
+		}
+		var pathMatch bool
+		for i := range attrParts {
+			if attrParts[i] != stateKeyParts[i] && attrParts[i] != sentinelIndex {
+				break
+			}
+			if i == len(attrParts)-1 {
+				pathMatch = true
+			}
+		}
+		if !pathMatch {
+			continue
+		}
+		id := stateKeyParts[len(attrParts)-1]
+		nestedAttr := strings.Join(stateKeyParts[len(attrParts):], ".")
+
+		var match bool
+		switch t := values.(type) {
+		case map[string]string:
+			if v, keyExists := t[nestedAttr]; keyExists && v == stateValue {
+				match = true
+			}
+		case map[string]*regexp.Regexp:
+			if v, keyExists := t[nestedAttr]; keyExists && v.MatchString(stateValue) {
+				match = true
+			}
+		}
+		if match {
+			matches[id] = matches[id] + 1
+			if matches[id] == matchCount {
+				return true
+			}
+		}
+	}
+	return false
 }
