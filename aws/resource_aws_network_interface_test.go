@@ -365,7 +365,6 @@ func testAccCheckAWSENIExists(n string, res *ec2.NetworkInterface) resource.Test
 
 func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if conf.Attachment != nil {
 			return fmt.Errorf("expected attachment to be nil")
 		}
@@ -415,7 +414,6 @@ func testAccCheckAWSENIAvailabilityZone(name, attr string, conf *ec2.NetworkInte
 
 func testAccCheckAWSENIAttributesWithAttachment(conf *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if conf.Attachment == nil {
 			return fmt.Errorf("expected attachment to be set, but was nil")
 		}
@@ -502,31 +500,33 @@ func testAccAWSENIConfig() string {
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface"
   }
 }
 
 data "aws_availability_zones" "available" {
-   state = "available"
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface"
   }
 }
 
 resource "aws_security_group" "foo" {
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
   description = "foo"
   name        = "foo"
 
@@ -539,10 +539,11 @@ resource "aws_security_group" "foo" {
 }
 
 resource "aws_network_interface" "bar" {
-  subnet_id       = "${aws_subnet.foo.id}"
+  subnet_id       = aws_subnet.foo.id
   private_ips     = ["172.16.10.100"]
-  security_groups = ["${aws_security_group.foo.id}"]
+  security_groups = [aws_security_group.foo.id]
   description     = "Managed by Terraform"
+
   tags = {
     Name = "bar_interface"
   }
@@ -555,6 +556,7 @@ func testAccAWSENIConfigUpdatedDescription() string {
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-update-desc"
   }
@@ -570,16 +572,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-update-desc"
   }
 }
 
 resource "aws_security_group" "foo" {
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
   description = "foo"
   name        = "foo"
 
@@ -592,10 +595,11 @@ resource "aws_security_group" "foo" {
 }
 
 resource "aws_network_interface" "bar" {
-  subnet_id       = "${aws_subnet.foo.id}"
+  subnet_id       = aws_subnet.foo.id
   private_ips     = ["172.16.10.100"]
-  security_groups = ["${aws_security_group.foo.id}"]
+  security_groups = [aws_security_group.foo.id]
   description     = "Updated ENI Description"
+
   tags = {
     Name = "bar_interface"
   }
@@ -608,6 +612,7 @@ func testAccAWSENIConfigWithSourceDestCheck() string {
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-w-source-dest-check"
   }
@@ -623,16 +628,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-source-dest-check"
   }
 }
 
 resource "aws_network_interface" "bar" {
-  subnet_id         = "${aws_subnet.foo.id}"
+  subnet_id         = aws_subnet.foo.id
   source_dest_check = false
   private_ips       = ["172.16.10.100"]
 }
@@ -644,6 +650,7 @@ func testAccAWSENIConfigWithNoPrivateIPs() string {
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-w-no-private-ips"
   }
@@ -659,16 +666,17 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-no-private-ips"
   }
 }
 
 resource "aws_network_interface" "bar" {
-  subnet_id         = "${aws_subnet.foo.id}"
+  subnet_id         = aws_subnet.foo.id
   source_dest_check = false
 }
 `)
@@ -679,40 +687,43 @@ func testAccAWSENIConfigWithAttachment() string {
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-w-attachment"
   }
 }
 
 data "aws_availability_zones" "available" {
-   state = "available"
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-attachment-foo"
   }
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.11.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-attachment-bar"
   }
 }
 
 resource "aws_security_group" "foo" {
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
   description = "foo"
   name        = "foo"
 }
@@ -720,26 +731,30 @@ resource "aws_security_group" "foo" {
 resource "aws_instance" "foo" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
-  subnet_id                   = "${aws_subnet.bar.id}"
+  subnet_id                   = aws_subnet.bar.id
   associate_public_ip_address = false
   private_ip                  = "172.16.11.50"
+
   tags = {
     Name = "foo-tf-eni-test"
   }
 }
 
 resource "aws_network_interface" "bar" {
-  subnet_id       = "${aws_subnet.foo.id}"
+  subnet_id       = aws_subnet.foo.id
   private_ips     = ["172.16.10.100"]
-  security_groups = ["${aws_security_group.foo.id}"]
+  security_groups = [aws_security_group.foo.id]
+
   attachment {
-    instance     = "${aws_instance.foo.id}"
+    instance     = aws_instance.foo.id
     device_index = 1
   }
+
   tags = {
     Name = "bar_interface"
   }
-}`)
+}
+`)
 }
 
 func testAccAWSENIConfigExternalAttachment() string {
@@ -747,40 +762,43 @@ func testAccAWSENIConfigExternalAttachment() string {
 resource "aws_vpc" "foo" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-external-attachment"
   }
 }
 
 data "aws_availability_zones" "available" {
-   state = "available"
+  state = "available"
 
-   filter {
-     name   = "opt-in-status"
-     values = ["opt-in-not-required"]
-   }
- }
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-external-attachment-foo"
   }
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
   cidr_block        = "172.16.11.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-external-attachment-bar"
   }
 }
 
 resource "aws_security_group" "foo" {
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
   description = "foo"
   name        = "foo"
 }
@@ -788,18 +806,20 @@ resource "aws_security_group" "foo" {
 resource "aws_instance" "foo" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
-  subnet_id                   = "${aws_subnet.bar.id}"
+  subnet_id                   = aws_subnet.bar.id
   associate_public_ip_address = false
   private_ip                  = "172.16.11.50"
+
   tags = {
     Name = "tf-eni-test"
   }
 }
 
 resource "aws_network_interface" "bar" {
-  subnet_id       = "${aws_subnet.foo.id}"
+  subnet_id       = aws_subnet.foo.id
   private_ips     = ["172.16.10.100"]
-  security_groups = ["${aws_security_group.foo.id}"]
+  security_groups = [aws_security_group.foo.id]
+
   tags = {
     Name = "bar_interface"
   }
@@ -819,7 +839,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-network-interface-private-ips-count"
@@ -828,7 +848,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_network_interface" "test" {
   private_ips_count = %[1]d
-  subnet_id         = "${aws_subnet.test.id}"
+  subnet_id         = aws_subnet.test.id
 }
 `, privateIpsCount)
 }
