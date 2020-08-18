@@ -2,8 +2,11 @@
 
 ENHANCEMENTS
 
+* data-source/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
 * resource/aws_apigatewayv2_api: Add `body` argument [GH-12567]
 * resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
+* resource/aws_lambda_function: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
+* resource/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `compatible_runtimes` argument plan-time validation [GH-14663]
 
 BUG FIXES
 
