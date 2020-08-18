@@ -249,7 +249,10 @@ The following arguments are supported:
 the `Configurations` field instead of providing empty list as value `"Configurations": []`.
 
 ```hcl
-configurations_json = <<EOF
+resource "aws_emr_cluster" "cluster" {
+  # ... other configuration ...
+
+  configurations_json = <<EOF
   [
     {
       "Classification": "hadoop-env",
@@ -265,6 +268,7 @@ configurations_json = <<EOF
     }
   ]
 EOF
+}
 ```
 
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`

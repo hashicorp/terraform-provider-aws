@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -12,10 +13,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -159,7 +160,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 		},
-		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 			// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
 			if diff.Get("validation_method").(string) == "DNS" && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
 				domainValidationOptionsList := []interface{}{map[string]interface{}{

@@ -6,7 +6,6 @@ import (
 	"go/types"
 
 	"github.com/bflad/tfproviderlint/helper/astutils"
-	tfschema "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -49,11 +48,59 @@ const (
 	TypeNameValueType = `ValueType`
 )
 
+// schemaType is an internal representation of the SDK helper/schema.Schema type
+//
+// This is used to prevent importing the real type since the project supports
+// multiple versions of the Terraform Plugin SDK, while allowing passes to
+// access the data in a familiar manner.
+type schemaType struct {
+	AtLeastOneOf     []string
+	Computed         bool
+	ConflictsWith    []string
+	Default          interface{}
+	DefaultFunc      func() (interface{}, error)
+	DiffSuppressFunc func(string, string, string, interface{}) bool
+	Description      string
+	Elem             interface{}
+	ExactlyOneOf     []string
+	ForceNew         bool
+	InputDefault     string
+	MaxItems         int
+	MinItems         int
+	Optional         bool
+	PromoteSingle    bool
+	Required         bool
+	RequiredWith     []string
+	Sensitive        bool
+	StateFunc        func(interface{}) string
+	Type             valueType
+	ValidateFunc     func(interface{}, string) ([]string, []error)
+}
+
+// ValueType is an internal representation of the SDK helper/schema.ValueType type
+//
+// This is used to prevent importing the real type since the project supports
+// multiple versions of the Terraform Plugin SDK, while allowing passes to
+// access the data in a familiar manner.
+type valueType int
+
+const (
+	typeInvalid valueType = iota
+	typeBool
+	typeInt
+	typeFloat
+	typeString
+	typeList
+	typeMap
+	typeSet
+	typeObject
+)
+
 // SchemaInfo represents all gathered Schema data for easier access
 type SchemaInfo struct {
 	AstCompositeLit *ast.CompositeLit
 	Fields          map[string]*ast.KeyValueExpr
-	Schema          *tfschema.Schema
+	Schema          *schemaType
 	SchemaValueType string
 	TypesInfo       *types.Info
 }
@@ -63,7 +110,7 @@ func NewSchemaInfo(cl *ast.CompositeLit, info *types.Info) *SchemaInfo {
 	result := &SchemaInfo{
 		AstCompositeLit: cl,
 		Fields:          astutils.CompositeLitFields(cl),
-		Schema:          &tfschema.Schema{},
+		Schema:          &schemaType{},
 		SchemaValueType: typeSchemaType(cl, info),
 		TypesInfo:       info,
 	}
@@ -86,15 +133,15 @@ func NewSchemaInfo(cl *ast.CompositeLit, info *types.Info) *SchemaInfo {
 
 	if kvExpr := result.Fields[SchemaFieldDefault]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
 		switch result.Schema.Type {
-		case tfschema.TypeBool:
+		case typeBool:
 			if ptr := astutils.ExprBoolValue(kvExpr.Value); ptr != nil {
 				result.Schema.Default = *ptr
 			}
-		case tfschema.TypeInt:
+		case typeInt:
 			if ptr := astutils.ExprIntValue(kvExpr.Value); ptr != nil {
 				result.Schema.Default = *ptr
 			}
-		case tfschema.TypeString:
+		case typeString:
 			if ptr := astutils.ExprStringValue(kvExpr.Value); ptr != nil {
 				result.Schema.Default = *ptr
 			}
@@ -116,7 +163,7 @@ func NewSchemaInfo(cl *ast.CompositeLit, info *types.Info) *SchemaInfo {
 	}
 
 	if kvExpr := result.Fields[SchemaFieldDiffSuppressFunc]; kvExpr != nil && astutils.ExprValue(kvExpr.Value) != nil {
-		result.Schema.DiffSuppressFunc = func(k, old, new string, d *tfschema.ResourceData) bool { return false }
+		result.Schema.DiffSuppressFunc = func(k, old, new string, d interface{}) bool { return false }
 	}
 
 	if kvExpr := result.Fields[SchemaFieldForceNew]; kvExpr != nil && astutils.ExprBoolValue(kvExpr.Value) != nil {
@@ -276,21 +323,21 @@ func IsValueType(e ast.Expr, info *types.Info) bool {
 }
 
 // ValueType returns the schema value type
-func ValueType(e ast.Expr, info *types.Info) tfschema.ValueType {
+func ValueType(e ast.Expr, info *types.Info) valueType {
 	switch e := e.(type) {
 	case *ast.SelectorExpr:
 		switch t := info.ObjectOf(e.Sel).(type) {
 		case *types.Const:
 			v, ok := constant.Int64Val(t.Val())
 			if !ok {
-				return tfschema.TypeInvalid
+				return typeInvalid
 			}
-			return tfschema.ValueType(v)
+			return valueType(v)
 		default:
-			return tfschema.TypeInvalid
+			return typeInvalid
 		}
 	default:
-		return tfschema.TypeInvalid
+		return typeInvalid
 	}
 }
 

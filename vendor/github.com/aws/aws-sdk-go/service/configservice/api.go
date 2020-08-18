@@ -23401,6 +23401,15 @@ const (
 	AggregatedSourceStatusTypeOutdated = "OUTDATED"
 )
 
+// AggregatedSourceStatusType_Values returns all elements of the AggregatedSourceStatusType enum
+func AggregatedSourceStatusType_Values() []string {
+	return []string{
+		AggregatedSourceStatusTypeFailed,
+		AggregatedSourceStatusTypeSucceeded,
+		AggregatedSourceStatusTypeOutdated,
+	}
+}
+
 const (
 	// AggregatedSourceTypeAccount is a AggregatedSourceType enum value
 	AggregatedSourceTypeAccount = "ACCOUNT"
@@ -23409,6 +23418,14 @@ const (
 	AggregatedSourceTypeOrganization = "ORGANIZATION"
 )
 
+// AggregatedSourceType_Values returns all elements of the AggregatedSourceType enum
+func AggregatedSourceType_Values() []string {
+	return []string{
+		AggregatedSourceTypeAccount,
+		AggregatedSourceTypeOrganization,
+	}
+}
+
 const (
 	// ChronologicalOrderReverse is a ChronologicalOrder enum value
 	ChronologicalOrderReverse = "Reverse"
@@ -23416,6 +23433,14 @@ const (
 	// ChronologicalOrderForward is a ChronologicalOrder enum value
 	ChronologicalOrderForward = "Forward"
 )
+
+// ChronologicalOrder_Values returns all elements of the ChronologicalOrder enum
+func ChronologicalOrder_Values() []string {
+	return []string{
+		ChronologicalOrderReverse,
+		ChronologicalOrderForward,
+	}
+}
 
 const (
 	// ComplianceTypeCompliant is a ComplianceType enum value
@@ -23431,6 +23456,16 @@ const (
 	ComplianceTypeInsufficientData = "INSUFFICIENT_DATA"
 )
 
+// ComplianceType_Values returns all elements of the ComplianceType enum
+func ComplianceType_Values() []string {
+	return []string{
+		ComplianceTypeCompliant,
+		ComplianceTypeNonCompliant,
+		ComplianceTypeNotApplicable,
+		ComplianceTypeInsufficientData,
+	}
+}
+
 const (
 	// ConfigRuleComplianceSummaryGroupKeyAccountId is a ConfigRuleComplianceSummaryGroupKey enum value
 	ConfigRuleComplianceSummaryGroupKeyAccountId = "ACCOUNT_ID"
@@ -23438,6 +23473,14 @@ const (
 	// ConfigRuleComplianceSummaryGroupKeyAwsRegion is a ConfigRuleComplianceSummaryGroupKey enum value
 	ConfigRuleComplianceSummaryGroupKeyAwsRegion = "AWS_REGION"
 )
+
+// ConfigRuleComplianceSummaryGroupKey_Values returns all elements of the ConfigRuleComplianceSummaryGroupKey enum
+func ConfigRuleComplianceSummaryGroupKey_Values() []string {
+	return []string{
+		ConfigRuleComplianceSummaryGroupKeyAccountId,
+		ConfigRuleComplianceSummaryGroupKeyAwsRegion,
+	}
+}
 
 const (
 	// ConfigRuleStateActive is a ConfigRuleState enum value
@@ -23452,6 +23495,16 @@ const (
 	// ConfigRuleStateEvaluating is a ConfigRuleState enum value
 	ConfigRuleStateEvaluating = "EVALUATING"
 )
+
+// ConfigRuleState_Values returns all elements of the ConfigRuleState enum
+func ConfigRuleState_Values() []string {
+	return []string{
+		ConfigRuleStateActive,
+		ConfigRuleStateDeleting,
+		ConfigRuleStateDeletingResults,
+		ConfigRuleStateEvaluating,
+	}
+}
 
 const (
 	// ConfigurationItemStatusOk is a ConfigurationItemStatus enum value
@@ -23470,6 +23523,17 @@ const (
 	ConfigurationItemStatusResourceDeletedNotRecorded = "ResourceDeletedNotRecorded"
 )
 
+// ConfigurationItemStatus_Values returns all elements of the ConfigurationItemStatus enum
+func ConfigurationItemStatus_Values() []string {
+	return []string{
+		ConfigurationItemStatusOk,
+		ConfigurationItemStatusResourceDiscovered,
+		ConfigurationItemStatusResourceNotRecorded,
+		ConfigurationItemStatusResourceDeleted,
+		ConfigurationItemStatusResourceDeletedNotRecorded,
+	}
+}
+
 const (
 	// ConformancePackComplianceTypeCompliant is a ConformancePackComplianceType enum value
 	ConformancePackComplianceTypeCompliant = "COMPLIANT"
@@ -23477,6 +23541,14 @@ const (
 	// ConformancePackComplianceTypeNonCompliant is a ConformancePackComplianceType enum value
 	ConformancePackComplianceTypeNonCompliant = "NON_COMPLIANT"
 )
+
+// ConformancePackComplianceType_Values returns all elements of the ConformancePackComplianceType enum
+func ConformancePackComplianceType_Values() []string {
+	return []string{
+		ConformancePackComplianceTypeCompliant,
+		ConformancePackComplianceTypeNonCompliant,
+	}
+}
 
 const (
 	// ConformancePackStateCreateInProgress is a ConformancePackState enum value
@@ -23495,6 +23567,17 @@ const (
 	ConformancePackStateDeleteFailed = "DELETE_FAILED"
 )
 
+// ConformancePackState_Values returns all elements of the ConformancePackState enum
+func ConformancePackState_Values() []string {
+	return []string{
+		ConformancePackStateCreateInProgress,
+		ConformancePackStateCreateComplete,
+		ConformancePackStateCreateFailed,
+		ConformancePackStateDeleteInProgress,
+		ConformancePackStateDeleteFailed,
+	}
+}
+
 const (
 	// DeliveryStatusSuccess is a DeliveryStatus enum value
 	DeliveryStatusSuccess = "Success"
@@ -23506,10 +23589,26 @@ const (
 	DeliveryStatusNotApplicable = "Not_Applicable"
 )
 
+// DeliveryStatus_Values returns all elements of the DeliveryStatus enum
+func DeliveryStatus_Values() []string {
+	return []string{
+		DeliveryStatusSuccess,
+		DeliveryStatusFailure,
+		DeliveryStatusNotApplicable,
+	}
+}
+
 const (
 	// EventSourceAwsConfig is a EventSource enum value
 	EventSourceAwsConfig = "aws.config"
 )
+
+// EventSource_Values returns all elements of the EventSource enum
+func EventSource_Values() []string {
+	return []string{
+		EventSourceAwsConfig,
+	}
+}
 
 const (
 	// MaximumExecutionFrequencyOneHour is a MaximumExecutionFrequency enum value
@@ -23527,6 +23626,17 @@ const (
 	// MaximumExecutionFrequencyTwentyFourHours is a MaximumExecutionFrequency enum value
 	MaximumExecutionFrequencyTwentyFourHours = "TwentyFour_Hours"
 )
+
+// MaximumExecutionFrequency_Values returns all elements of the MaximumExecutionFrequency enum
+func MaximumExecutionFrequency_Values() []string {
+	return []string{
+		MaximumExecutionFrequencyOneHour,
+		MaximumExecutionFrequencyThreeHours,
+		MaximumExecutionFrequencySixHours,
+		MaximumExecutionFrequencyTwelveHours,
+		MaximumExecutionFrequencyTwentyFourHours,
+	}
+}
 
 const (
 	// MemberAccountRuleStatusCreateSuccessful is a MemberAccountRuleStatus enum value
@@ -23557,6 +23667,21 @@ const (
 	MemberAccountRuleStatusUpdateFailed = "UPDATE_FAILED"
 )
 
+// MemberAccountRuleStatus_Values returns all elements of the MemberAccountRuleStatus enum
+func MemberAccountRuleStatus_Values() []string {
+	return []string{
+		MemberAccountRuleStatusCreateSuccessful,
+		MemberAccountRuleStatusCreateInProgress,
+		MemberAccountRuleStatusCreateFailed,
+		MemberAccountRuleStatusDeleteSuccessful,
+		MemberAccountRuleStatusDeleteFailed,
+		MemberAccountRuleStatusDeleteInProgress,
+		MemberAccountRuleStatusUpdateSuccessful,
+		MemberAccountRuleStatusUpdateInProgress,
+		MemberAccountRuleStatusUpdateFailed,
+	}
+}
+
 const (
 	// MessageTypeConfigurationItemChangeNotification is a MessageType enum value
 	MessageTypeConfigurationItemChangeNotification = "ConfigurationItemChangeNotification"
@@ -23571,6 +23696,16 @@ const (
 	MessageTypeOversizedConfigurationItemChangeNotification = "OversizedConfigurationItemChangeNotification"
 )
 
+// MessageType_Values returns all elements of the MessageType enum
+func MessageType_Values() []string {
+	return []string{
+		MessageTypeConfigurationItemChangeNotification,
+		MessageTypeConfigurationSnapshotDeliveryCompleted,
+		MessageTypeScheduledNotification,
+		MessageTypeOversizedConfigurationItemChangeNotification,
+	}
+}
+
 const (
 	// OrganizationConfigRuleTriggerTypeConfigurationItemChangeNotification is a OrganizationConfigRuleTriggerType enum value
 	OrganizationConfigRuleTriggerTypeConfigurationItemChangeNotification = "ConfigurationItemChangeNotification"
@@ -23581,6 +23716,15 @@ const (
 	// OrganizationConfigRuleTriggerTypeScheduledNotification is a OrganizationConfigRuleTriggerType enum value
 	OrganizationConfigRuleTriggerTypeScheduledNotification = "ScheduledNotification"
 )
+
+// OrganizationConfigRuleTriggerType_Values returns all elements of the OrganizationConfigRuleTriggerType enum
+func OrganizationConfigRuleTriggerType_Values() []string {
+	return []string{
+		OrganizationConfigRuleTriggerTypeConfigurationItemChangeNotification,
+		OrganizationConfigRuleTriggerTypeOversizedConfigurationItemChangeNotification,
+		OrganizationConfigRuleTriggerTypeScheduledNotification,
+	}
+}
 
 const (
 	// OrganizationResourceDetailedStatusCreateSuccessful is a OrganizationResourceDetailedStatus enum value
@@ -23611,6 +23755,21 @@ const (
 	OrganizationResourceDetailedStatusUpdateFailed = "UPDATE_FAILED"
 )
 
+// OrganizationResourceDetailedStatus_Values returns all elements of the OrganizationResourceDetailedStatus enum
+func OrganizationResourceDetailedStatus_Values() []string {
+	return []string{
+		OrganizationResourceDetailedStatusCreateSuccessful,
+		OrganizationResourceDetailedStatusCreateInProgress,
+		OrganizationResourceDetailedStatusCreateFailed,
+		OrganizationResourceDetailedStatusDeleteSuccessful,
+		OrganizationResourceDetailedStatusDeleteFailed,
+		OrganizationResourceDetailedStatusDeleteInProgress,
+		OrganizationResourceDetailedStatusUpdateSuccessful,
+		OrganizationResourceDetailedStatusUpdateInProgress,
+		OrganizationResourceDetailedStatusUpdateFailed,
+	}
+}
+
 const (
 	// OrganizationResourceStatusCreateSuccessful is a OrganizationResourceStatus enum value
 	OrganizationResourceStatusCreateSuccessful = "CREATE_SUCCESSFUL"
@@ -23639,6 +23798,21 @@ const (
 	// OrganizationResourceStatusUpdateFailed is a OrganizationResourceStatus enum value
 	OrganizationResourceStatusUpdateFailed = "UPDATE_FAILED"
 )
+
+// OrganizationResourceStatus_Values returns all elements of the OrganizationResourceStatus enum
+func OrganizationResourceStatus_Values() []string {
+	return []string{
+		OrganizationResourceStatusCreateSuccessful,
+		OrganizationResourceStatusCreateInProgress,
+		OrganizationResourceStatusCreateFailed,
+		OrganizationResourceStatusDeleteSuccessful,
+		OrganizationResourceStatusDeleteFailed,
+		OrganizationResourceStatusDeleteInProgress,
+		OrganizationResourceStatusUpdateSuccessful,
+		OrganizationResourceStatusUpdateInProgress,
+		OrganizationResourceStatusUpdateFailed,
+	}
+}
 
 const (
 	// OrganizationRuleStatusCreateSuccessful is a OrganizationRuleStatus enum value
@@ -23669,6 +23843,21 @@ const (
 	OrganizationRuleStatusUpdateFailed = "UPDATE_FAILED"
 )
 
+// OrganizationRuleStatus_Values returns all elements of the OrganizationRuleStatus enum
+func OrganizationRuleStatus_Values() []string {
+	return []string{
+		OrganizationRuleStatusCreateSuccessful,
+		OrganizationRuleStatusCreateInProgress,
+		OrganizationRuleStatusCreateFailed,
+		OrganizationRuleStatusDeleteSuccessful,
+		OrganizationRuleStatusDeleteFailed,
+		OrganizationRuleStatusDeleteInProgress,
+		OrganizationRuleStatusUpdateSuccessful,
+		OrganizationRuleStatusUpdateInProgress,
+		OrganizationRuleStatusUpdateFailed,
+	}
+}
+
 const (
 	// OwnerCustomLambda is a Owner enum value
 	OwnerCustomLambda = "CUSTOM_LAMBDA"
@@ -23676,6 +23865,14 @@ const (
 	// OwnerAws is a Owner enum value
 	OwnerAws = "AWS"
 )
+
+// Owner_Values returns all elements of the Owner enum
+func Owner_Values() []string {
+	return []string{
+		OwnerCustomLambda,
+		OwnerAws,
+	}
+}
 
 const (
 	// RecorderStatusPending is a RecorderStatus enum value
@@ -23687,6 +23884,15 @@ const (
 	// RecorderStatusFailure is a RecorderStatus enum value
 	RecorderStatusFailure = "Failure"
 )
+
+// RecorderStatus_Values returns all elements of the RecorderStatus enum
+func RecorderStatus_Values() []string {
+	return []string{
+		RecorderStatusPending,
+		RecorderStatusSuccess,
+		RecorderStatusFailure,
+	}
+}
 
 const (
 	// RemediationExecutionStateQueued is a RemediationExecutionState enum value
@@ -23702,6 +23908,16 @@ const (
 	RemediationExecutionStateFailed = "FAILED"
 )
 
+// RemediationExecutionState_Values returns all elements of the RemediationExecutionState enum
+func RemediationExecutionState_Values() []string {
+	return []string{
+		RemediationExecutionStateQueued,
+		RemediationExecutionStateInProgress,
+		RemediationExecutionStateSucceeded,
+		RemediationExecutionStateFailed,
+	}
+}
+
 const (
 	// RemediationExecutionStepStateSucceeded is a RemediationExecutionStepState enum value
 	RemediationExecutionStepStateSucceeded = "SUCCEEDED"
@@ -23713,10 +23929,26 @@ const (
 	RemediationExecutionStepStateFailed = "FAILED"
 )
 
+// RemediationExecutionStepState_Values returns all elements of the RemediationExecutionStepState enum
+func RemediationExecutionStepState_Values() []string {
+	return []string{
+		RemediationExecutionStepStateSucceeded,
+		RemediationExecutionStepStatePending,
+		RemediationExecutionStepStateFailed,
+	}
+}
+
 const (
 	// RemediationTargetTypeSsmDocument is a RemediationTargetType enum value
 	RemediationTargetTypeSsmDocument = "SSM_DOCUMENT"
 )
+
+// RemediationTargetType_Values returns all elements of the RemediationTargetType enum
+func RemediationTargetType_Values() []string {
+	return []string{
+		RemediationTargetTypeSsmDocument,
+	}
+}
 
 const (
 	// ResourceCountGroupKeyResourceType is a ResourceCountGroupKey enum value
@@ -23728,6 +23960,15 @@ const (
 	// ResourceCountGroupKeyAwsRegion is a ResourceCountGroupKey enum value
 	ResourceCountGroupKeyAwsRegion = "AWS_REGION"
 )
+
+// ResourceCountGroupKey_Values returns all elements of the ResourceCountGroupKey enum
+func ResourceCountGroupKey_Values() []string {
+	return []string{
+		ResourceCountGroupKeyResourceType,
+		ResourceCountGroupKeyAccountId,
+		ResourceCountGroupKeyAwsRegion,
+	}
+}
 
 const (
 	// ResourceTypeAwsEc2CustomerGateway is a ResourceType enum value
@@ -24010,7 +24251,113 @@ const (
 	ResourceTypeAwsSsmFileData = "AWS::SSM::FileData"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeAwsEc2CustomerGateway,
+		ResourceTypeAwsEc2Eip,
+		ResourceTypeAwsEc2Host,
+		ResourceTypeAwsEc2Instance,
+		ResourceTypeAwsEc2InternetGateway,
+		ResourceTypeAwsEc2NetworkAcl,
+		ResourceTypeAwsEc2NetworkInterface,
+		ResourceTypeAwsEc2RouteTable,
+		ResourceTypeAwsEc2SecurityGroup,
+		ResourceTypeAwsEc2Subnet,
+		ResourceTypeAwsCloudTrailTrail,
+		ResourceTypeAwsEc2Volume,
+		ResourceTypeAwsEc2Vpc,
+		ResourceTypeAwsEc2Vpnconnection,
+		ResourceTypeAwsEc2Vpngateway,
+		ResourceTypeAwsEc2RegisteredHainstance,
+		ResourceTypeAwsEc2NatGateway,
+		ResourceTypeAwsEc2EgressOnlyInternetGateway,
+		ResourceTypeAwsEc2Vpcendpoint,
+		ResourceTypeAwsEc2VpcendpointService,
+		ResourceTypeAwsEc2FlowLog,
+		ResourceTypeAwsEc2VpcpeeringConnection,
+		ResourceTypeAwsElasticsearchDomain,
+		ResourceTypeAwsIamGroup,
+		ResourceTypeAwsIamPolicy,
+		ResourceTypeAwsIamRole,
+		ResourceTypeAwsIamUser,
+		ResourceTypeAwsElasticLoadBalancingV2LoadBalancer,
+		ResourceTypeAwsAcmCertificate,
+		ResourceTypeAwsRdsDbinstance,
+		ResourceTypeAwsRdsDbsubnetGroup,
+		ResourceTypeAwsRdsDbsecurityGroup,
+		ResourceTypeAwsRdsDbsnapshot,
+		ResourceTypeAwsRdsDbcluster,
+		ResourceTypeAwsRdsDbclusterSnapshot,
+		ResourceTypeAwsRdsEventSubscription,
+		ResourceTypeAwsS3Bucket,
+		ResourceTypeAwsS3AccountPublicAccessBlock,
+		ResourceTypeAwsRedshiftCluster,
+		ResourceTypeAwsRedshiftClusterSnapshot,
+		ResourceTypeAwsRedshiftClusterParameterGroup,
+		ResourceTypeAwsRedshiftClusterSecurityGroup,
+		ResourceTypeAwsRedshiftClusterSubnetGroup,
+		ResourceTypeAwsRedshiftEventSubscription,
+		ResourceTypeAwsSsmManagedInstanceInventory,
+		ResourceTypeAwsCloudWatchAlarm,
+		ResourceTypeAwsCloudFormationStack,
+		ResourceTypeAwsElasticLoadBalancingLoadBalancer,
+		ResourceTypeAwsAutoScalingAutoScalingGroup,
+		ResourceTypeAwsAutoScalingLaunchConfiguration,
+		ResourceTypeAwsAutoScalingScalingPolicy,
+		ResourceTypeAwsAutoScalingScheduledAction,
+		ResourceTypeAwsDynamoDbTable,
+		ResourceTypeAwsCodeBuildProject,
+		ResourceTypeAwsWafRateBasedRule,
+		ResourceTypeAwsWafRule,
+		ResourceTypeAwsWafRuleGroup,
+		ResourceTypeAwsWafWebAcl,
+		ResourceTypeAwsWafregionalRateBasedRule,
+		ResourceTypeAwsWafregionalRule,
+		ResourceTypeAwsWafregionalRuleGroup,
+		ResourceTypeAwsWafregionalWebAcl,
+		ResourceTypeAwsCloudFrontDistribution,
+		ResourceTypeAwsCloudFrontStreamingDistribution,
+		ResourceTypeAwsLambdaFunction,
+		ResourceTypeAwsElasticBeanstalkApplication,
+		ResourceTypeAwsElasticBeanstalkApplicationVersion,
+		ResourceTypeAwsElasticBeanstalkEnvironment,
+		ResourceTypeAwsWafv2WebAcl,
+		ResourceTypeAwsWafv2RuleGroup,
+		ResourceTypeAwsWafv2Ipset,
+		ResourceTypeAwsWafv2RegexPatternSet,
+		ResourceTypeAwsWafv2ManagedRuleSet,
+		ResourceTypeAwsXrayEncryptionConfig,
+		ResourceTypeAwsSsmAssociationCompliance,
+		ResourceTypeAwsSsmPatchCompliance,
+		ResourceTypeAwsShieldProtection,
+		ResourceTypeAwsShieldRegionalProtection,
+		ResourceTypeAwsConfigResourceCompliance,
+		ResourceTypeAwsApiGatewayStage,
+		ResourceTypeAwsApiGatewayRestApi,
+		ResourceTypeAwsApiGatewayV2Stage,
+		ResourceTypeAwsApiGatewayV2Api,
+		ResourceTypeAwsCodePipelinePipeline,
+		ResourceTypeAwsServiceCatalogCloudFormationProvisionedProduct,
+		ResourceTypeAwsServiceCatalogCloudFormationProduct,
+		ResourceTypeAwsServiceCatalogPortfolio,
+		ResourceTypeAwsSqsQueue,
+		ResourceTypeAwsKmsKey,
+		ResourceTypeAwsQldbLedger,
+		ResourceTypeAwsSecretsManagerSecret,
+		ResourceTypeAwsSnsTopic,
+		ResourceTypeAwsSsmFileData,
+	}
+}
+
 const (
 	// ResourceValueTypeResourceId is a ResourceValueType enum value
 	ResourceValueTypeResourceId = "RESOURCE_ID"
 )
+
+// ResourceValueType_Values returns all elements of the ResourceValueType enum
+func ResourceValueType_Values() []string {
+	return []string{
+		ResourceValueTypeResourceId,
+	}
+}

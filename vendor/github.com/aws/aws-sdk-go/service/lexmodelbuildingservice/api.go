@@ -12583,6 +12583,15 @@ const (
 	ChannelStatusFailed = "FAILED"
 )
 
+// ChannelStatus_Values returns all elements of the ChannelStatus enum
+func ChannelStatus_Values() []string {
+	return []string{
+		ChannelStatusInProgress,
+		ChannelStatusCreated,
+		ChannelStatusFailed,
+	}
+}
+
 const (
 	// ChannelTypeFacebook is a ChannelType enum value
 	ChannelTypeFacebook = "Facebook"
@@ -12597,6 +12606,16 @@ const (
 	ChannelTypeKik = "Kik"
 )
 
+// ChannelType_Values returns all elements of the ChannelType enum
+func ChannelType_Values() []string {
+	return []string{
+		ChannelTypeFacebook,
+		ChannelTypeSlack,
+		ChannelTypeTwilioSms,
+		ChannelTypeKik,
+	}
+}
+
 const (
 	// ContentTypePlainText is a ContentType enum value
 	ContentTypePlainText = "PlainText"
@@ -12608,6 +12627,15 @@ const (
 	ContentTypeCustomPayload = "CustomPayload"
 )
 
+// ContentType_Values returns all elements of the ContentType enum
+func ContentType_Values() []string {
+	return []string{
+		ContentTypePlainText,
+		ContentTypeSsml,
+		ContentTypeCustomPayload,
+	}
+}
+
 const (
 	// DestinationCloudwatchLogs is a Destination enum value
 	DestinationCloudwatchLogs = "CLOUDWATCH_LOGS"
@@ -12615,6 +12643,14 @@ const (
 	// DestinationS3 is a Destination enum value
 	DestinationS3 = "S3"
 )
+
+// Destination_Values returns all elements of the Destination enum
+func Destination_Values() []string {
+	return []string{
+		DestinationCloudwatchLogs,
+		DestinationS3,
+	}
+}
 
 const (
 	// ExportStatusInProgress is a ExportStatus enum value
@@ -12627,6 +12663,15 @@ const (
 	ExportStatusFailed = "FAILED"
 )
 
+// ExportStatus_Values returns all elements of the ExportStatus enum
+func ExportStatus_Values() []string {
+	return []string{
+		ExportStatusInProgress,
+		ExportStatusReady,
+		ExportStatusFailed,
+	}
+}
+
 const (
 	// ExportTypeAlexaSkillsKit is a ExportType enum value
 	ExportTypeAlexaSkillsKit = "ALEXA_SKILLS_KIT"
@@ -12635,6 +12680,14 @@ const (
 	ExportTypeLex = "LEX"
 )
 
+// ExportType_Values returns all elements of the ExportType enum
+func ExportType_Values() []string {
+	return []string{
+		ExportTypeAlexaSkillsKit,
+		ExportTypeLex,
+	}
+}
+
 const (
 	// FulfillmentActivityTypeReturnIntent is a FulfillmentActivityType enum value
 	FulfillmentActivityTypeReturnIntent = "ReturnIntent"
@@ -12642,6 +12695,14 @@ const (
 	// FulfillmentActivityTypeCodeHook is a FulfillmentActivityType enum value
 	FulfillmentActivityTypeCodeHook = "CodeHook"
 )
+
+// FulfillmentActivityType_Values returns all elements of the FulfillmentActivityType enum
+func FulfillmentActivityType_Values() []string {
+	return []string{
+		FulfillmentActivityTypeReturnIntent,
+		FulfillmentActivityTypeCodeHook,
+	}
+}
 
 const (
 	// ImportStatusInProgress is a ImportStatus enum value
@@ -12654,6 +12715,15 @@ const (
 	ImportStatusFailed = "FAILED"
 )
 
+// ImportStatus_Values returns all elements of the ImportStatus enum
+func ImportStatus_Values() []string {
+	return []string{
+		ImportStatusInProgress,
+		ImportStatusComplete,
+		ImportStatusFailed,
+	}
+}
+
 const (
 	// LocaleEnUs is a Locale enum value
 	LocaleEnUs = "en-US"
@@ -12665,6 +12735,15 @@ const (
 	LocaleDeDe = "de-DE"
 )
 
+// Locale_Values returns all elements of the Locale enum
+func Locale_Values() []string {
+	return []string{
+		LocaleEnUs,
+		LocaleEnGb,
+		LocaleDeDe,
+	}
+}
+
 const (
 	// LogTypeAudio is a LogType enum value
 	LogTypeAudio = "AUDIO"
@@ -12672,6 +12751,14 @@ const (
 	// LogTypeText is a LogType enum value
 	LogTypeText = "TEXT"
 )
+
+// LogType_Values returns all elements of the LogType enum
+func LogType_Values() []string {
+	return []string{
+		LogTypeAudio,
+		LogTypeText,
+	}
+}
 
 const (
 	// MergeStrategyOverwriteLatest is a MergeStrategy enum value
@@ -12681,6 +12768,14 @@ const (
 	MergeStrategyFailOnConflict = "FAIL_ON_CONFLICT"
 )
 
+// MergeStrategy_Values returns all elements of the MergeStrategy enum
+func MergeStrategy_Values() []string {
+	return []string{
+		MergeStrategyOverwriteLatest,
+		MergeStrategyFailOnConflict,
+	}
+}
+
 const (
 	// ObfuscationSettingNone is a ObfuscationSetting enum value
 	ObfuscationSettingNone = "NONE"
@@ -12689,6 +12784,14 @@ const (
 	ObfuscationSettingDefaultObfuscation = "DEFAULT_OBFUSCATION"
 )
 
+// ObfuscationSetting_Values returns all elements of the ObfuscationSetting enum
+func ObfuscationSetting_Values() []string {
+	return []string{
+		ObfuscationSettingNone,
+		ObfuscationSettingDefaultObfuscation,
+	}
+}
+
 const (
 	// ProcessBehaviorSave is a ProcessBehavior enum value
 	ProcessBehaviorSave = "SAVE"
@@ -12696,6 +12799,14 @@ const (
 	// ProcessBehaviorBuild is a ProcessBehavior enum value
 	ProcessBehaviorBuild = "BUILD"
 )
+
+// ProcessBehavior_Values returns all elements of the ProcessBehavior enum
+func ProcessBehavior_Values() []string {
+	return []string{
+		ProcessBehaviorSave,
+		ProcessBehaviorBuild,
+	}
+}
 
 const (
 	// ReferenceTypeIntent is a ReferenceType enum value
@@ -12711,6 +12822,16 @@ const (
 	ReferenceTypeBotChannel = "BotChannel"
 )
 
+// ReferenceType_Values returns all elements of the ReferenceType enum
+func ReferenceType_Values() []string {
+	return []string{
+		ReferenceTypeIntent,
+		ReferenceTypeBot,
+		ReferenceTypeBotAlias,
+		ReferenceTypeBotChannel,
+	}
+}
+
 const (
 	// ResourceTypeBot is a ResourceType enum value
 	ResourceTypeBot = "BOT"
@@ -12722,6 +12843,15 @@ const (
 	ResourceTypeSlotType = "SLOT_TYPE"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeBot,
+		ResourceTypeIntent,
+		ResourceTypeSlotType,
+	}
+}
+
 const (
 	// SlotConstraintRequired is a SlotConstraint enum value
 	SlotConstraintRequired = "Required"
@@ -12730,6 +12860,14 @@ const (
 	SlotConstraintOptional = "Optional"
 )
 
+// SlotConstraint_Values returns all elements of the SlotConstraint enum
+func SlotConstraint_Values() []string {
+	return []string{
+		SlotConstraintRequired,
+		SlotConstraintOptional,
+	}
+}
+
 const (
 	// SlotValueSelectionStrategyOriginalValue is a SlotValueSelectionStrategy enum value
 	SlotValueSelectionStrategyOriginalValue = "ORIGINAL_VALUE"
@@ -12737,6 +12875,14 @@ const (
 	// SlotValueSelectionStrategyTopResolution is a SlotValueSelectionStrategy enum value
 	SlotValueSelectionStrategyTopResolution = "TOP_RESOLUTION"
 )
+
+// SlotValueSelectionStrategy_Values returns all elements of the SlotValueSelectionStrategy enum
+func SlotValueSelectionStrategy_Values() []string {
+	return []string{
+		SlotValueSelectionStrategyOriginalValue,
+		SlotValueSelectionStrategyTopResolution,
+	}
+}
 
 const (
 	// StatusBuilding is a Status enum value
@@ -12755,6 +12901,17 @@ const (
 	StatusNotBuilt = "NOT_BUILT"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusBuilding,
+		StatusReady,
+		StatusReadyBasicTesting,
+		StatusFailed,
+		StatusNotBuilt,
+	}
+}
+
 const (
 	// StatusTypeDetected is a StatusType enum value
 	StatusTypeDetected = "Detected"
@@ -12762,3 +12919,11 @@ const (
 	// StatusTypeMissed is a StatusType enum value
 	StatusTypeMissed = "Missed"
 )
+
+// StatusType_Values returns all elements of the StatusType enum
+func StatusType_Values() []string {
+	return []string{
+		StatusTypeDetected,
+		StatusTypeMissed,
+	}
+}

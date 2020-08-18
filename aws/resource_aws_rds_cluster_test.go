@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -380,8 +380,9 @@ func TestAccAWSRDSCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
-/// This is a regression test to make sure that we always cover the scenario as hightlighted in
-/// https://github.com/hashicorp/terraform/issues/11568
+// This is a regression test to make sure that we always cover the scenario as highlighted in
+// https://github.com/hashicorp/terraform/issues/11568
+// Expected error updated to match API response
 func TestAccAWSRDSCluster_missingUserNameCausesError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -390,7 +391,7 @@ func TestAccAWSRDSCluster_missingUserNameCausesError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSClusterConfigWithoutUserNameAndPassword(acctest.RandInt()),
-				ExpectError: regexp.MustCompile(`required field is not set`),
+				ExpectError: regexp.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
 			},
 		},
 	})
@@ -2263,7 +2264,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   cluster_identifier  = %[1]q
   master_password     = "mustbeeightcharaters"
   master_username     = "test"
@@ -2311,7 +2312,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   master_username      = "root"
   master_password      = "password"
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
 }
 
@@ -2324,9 +2325,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-rds-cluster-name-prefix-a"
@@ -2334,9 +2335,9 @@ resource "aws_subnet" "a" {
 }
 
 resource "aws_subnet" "b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-rds-cluster-name-prefix-b"
@@ -2345,7 +2346,7 @@ resource "aws_subnet" "b" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
+  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
 }
 `, rName)
 }
@@ -2366,10 +2367,10 @@ resource "aws_s3_bucket" "xtrabackup" {
 }
 
 resource "aws_s3_bucket_object" "xtrabackup_db" {
-  bucket = "${aws_s3_bucket.xtrabackup.id}"
+  bucket = aws_s3_bucket.xtrabackup.id
   key    = "%[2]s/mysql-5-6-xtrabackup.tar.gz"
   source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
-  etag   = "${filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")}"
+  etag   = filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")
 }
 
 resource "aws_iam_role" "rds_s3_access_role" {
@@ -2397,19 +2398,19 @@ resource "aws_iam_policy" "test" {
 
   policy = <<POLICY
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:*"
-            ],
-            "Resource": [
-                "${aws_s3_bucket.xtrabackup.arn}",
-                "${aws_s3_bucket.xtrabackup.arn}/*"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.xtrabackup.arn}",
+        "${aws_s3_bucket.xtrabackup.arn}/*"
+      ]
+    }
+  ]
 }
 POLICY
 }
@@ -2418,10 +2419,10 @@ resource "aws_iam_policy_attachment" "test-attach" {
   name = "%[3]s-policy-attachment"
 
   roles = [
-    "${aws_iam_role.rds_s3_access_role.name}",
+    aws_iam_role.rds_s3_access_role.name,
   ]
 
-  policy_arn = "${aws_iam_policy.test.arn}"
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2434,9 +2435,9 @@ resource "aws_rds_cluster" "test" {
     source_engine         = "mysql"
     source_engine_version = "5.6"
 
-    bucket_name    = "${aws_s3_bucket.xtrabackup.bucket}"
+    bucket_name    = aws_s3_bucket.xtrabackup.bucket
     bucket_prefix  = "%[2]s"
-    ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
+    ingestion_role = aws_iam_role.rds_s3_access_role.arn
   }
 }
 `, bucketName, bucketPrefix, uniqueId)
@@ -2445,9 +2446,9 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfig_generatedName() string {
 	return `
 resource "aws_rds_cluster" "test" {
-  master_username      = "root"
-  master_password      = "password"
-  skip_final_snapshot  = true
+  master_username     = "root"
+  master_password     = "password"
+  skip_final_snapshot = true
 }
 `
 }
@@ -2550,47 +2551,50 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
 
- resource "aws_kms_key" "foo" {
-     description = "Terraform acc test %d"
-     policy = <<POLICY
- {
-   "Version": "2012-10-17",
-   "Id": "kms-tf-1",
-   "Statement": [
-     {
-       "Sid": "Enable IAM User Permissions",
-       "Effect": "Allow",
-       "Principal": {
-         "AWS": "*"
-       },
-       "Action": "kms:*",
-       "Resource": "*"
-     }
-   ]
- }
- POLICY
- }
+resource "aws_kms_key" "foo" {
+  description = "Terraform acc test %d"
 
- resource "aws_rds_cluster" "test" {
-   cluster_identifier = "tf-aurora-cluster-%d"
-   database_name = "mydb"
-   master_username = "foo"
-   master_password = "mustbeeightcharaters"
-   db_cluster_parameter_group_name = "default.aurora5.6"
-   storage_encrypted = true
-   kms_key_id = "${aws_kms_key.foo.arn}"
-   skip_final_snapshot = true
- }`, n, n)
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+ POLICY
+
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  storage_encrypted               = true
+  kms_key_id                      = aws_kms_key.foo.arn
+  skip_final_snapshot             = true
+}
+`, n, n)
 }
 
 func testAccAWSClusterConfig_encrypted(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  storage_encrypted = true
+  cluster_identifier  = "tf-aurora-cluster-%d"
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  storage_encrypted   = true
   skip_final_snapshot = true
 }
 `, n)
@@ -2672,8 +2676,8 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_rds_cluster_instance" "test" {
   identifier         = "tf-acc-test-%d"
-  cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
-  engine             = "${aws_rds_cluster.test.engine}"
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  engine             = aws_rds_cluster.test.engine
   instance_class     = "db.r4.large"
 }
 `, rInt, engine, engineVersion, rInt)
@@ -2719,7 +2723,7 @@ EOF
 
 resource "aws_iam_role_policy" "rds_policy" {
   name = "rds_sample_role_policy_%d"
-  role = "${aws_iam_role.rds_sample_role.name}"
+  role = aws_iam_role.rds_sample_role.name
 
   policy = <<EOF
 {
@@ -2756,7 +2760,7 @@ EOF
 
 resource "aws_iam_role_policy" "another_rds_policy" {
   name = "another_rds_sample_role_policy_%d"
-  role = "${aws_iam_role.another_rds_sample_role.name}"
+  role = aws_iam_role.another_rds_sample_role.name
 
   policy = <<EOF
 {
@@ -2782,7 +2786,7 @@ resource "aws_rds_cluster" "test" {
     Environment = "production"
   }
 
-  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
+  depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
 `, n, n, n, n, n)
 }
@@ -2812,7 +2816,7 @@ EOF
 
 resource "aws_iam_role_policy" "rds_policy" {
   name = "rds_sample_role_policy_%d"
-  role = "${aws_iam_role.rds_sample_role.name}"
+  role = aws_iam_role.rds_sample_role.name
 
   policy = <<EOF
 {
@@ -2849,7 +2853,7 @@ EOF
 
 resource "aws_iam_role_policy" "another_rds_policy" {
   name = "another_rds_sample_role_policy_%d"
-  role = "${aws_iam_role.another_rds_sample_role.name}"
+  role = aws_iam_role.another_rds_sample_role.name
 
   policy = <<EOF
 {
@@ -2870,13 +2874,13 @@ resource "aws_rds_cluster" "test" {
   master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
-  iam_roles                       = ["${aws_iam_role.rds_sample_role.arn}", "${aws_iam_role.another_rds_sample_role.arn}"]
+  iam_roles                       = [aws_iam_role.rds_sample_role.arn, aws_iam_role.another_rds_sample_role.arn]
 
   tags = {
     Environment = "production"
   }
 
-  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
+  depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
 `, n, n, n, n, n)
 }
@@ -2906,7 +2910,7 @@ EOF
 
 resource "aws_iam_role_policy" "another_rds_policy" {
   name = "another_rds_sample_role_policy_%d"
-  role = "${aws_iam_role.another_rds_sample_role.name}"
+  role = aws_iam_role.another_rds_sample_role.name
 
   policy = <<EOF
 {
@@ -2927,13 +2931,13 @@ resource "aws_rds_cluster" "test" {
   master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
-  iam_roles                       = ["${aws_iam_role.another_rds_sample_role.arn}"]
+  iam_roles                       = [aws_iam_role.another_rds_sample_role.arn]
 
   tags = {
     Environment = "production"
   }
 
-  depends_on = ["aws_iam_role.another_rds_sample_role"]
+  depends_on = [aws_iam_role.another_rds_sample_role]
 }
 `, n, n, n)
 }
@@ -2990,22 +2994,23 @@ resource "aws_kms_key" "alternate" {
   description = %[1]q
 
   policy = <<POLICY
-  {
-    "Version": "2012-10-17",
-    "Id": "kms-tf-1",
-    "Statement": [
-      {
-        "Sid": "Enable IAM User Permissions",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": "*"
-        },
-        "Action": "kms:*",
-        "Resource": "*"
-      }
-    ]
-  }
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
   POLICY
+
 }
 
 resource "aws_vpc" "alternate" {
@@ -3073,9 +3078,9 @@ resource "aws_rds_cluster" "test" {
   master_username     = "foo"
   skip_final_snapshot = true
 
-//   scaling_configuration {
-// 	min_capacity = 2
-//   }
+  #   scaling_configuration {
+  # 	min_capacity = 2
+  #   }
 }
 `, rName, engineMode)
 }
@@ -3100,9 +3105,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-test-rds-cluster-multimaster"
@@ -3110,9 +3115,9 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-test-rds-cluster-multimaster"
@@ -3121,13 +3126,13 @@ resource "aws_subnet" "test2" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
 }
 
 # multimaster requires db_subnet_group_name
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
   engine_mode          = "multimaster"
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -3144,7 +3149,7 @@ resource "aws_rds_global_cluster" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier        = %q
-  global_cluster_identifier = "${aws_rds_global_cluster.test.id}"
+  global_cluster_identifier = aws_rds_global_cluster.test.id
   engine_mode               = "global"
   master_password           = "barbarbarbar"
   master_username           = "foo"
@@ -3163,7 +3168,7 @@ resource "aws_rds_global_cluster" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier        = %q
-  global_cluster_identifier = "${%s.id}"
+  global_cluster_identifier = %s.id
   engine_mode               = "global"
   master_password           = "barbarbarbar"
   master_username           = "foo"
@@ -3200,7 +3205,7 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "alternate" {
   provider = "awsalternate"
-  state = "available"
+  state    = "available"
 
   filter {
     name   = "opt-in-status"
@@ -3215,14 +3220,14 @@ resource "aws_rds_global_cluster" "test" {
 }
 
 resource "aws_rds_cluster" "primary" {
-  cluster_identifier              = "%[2]s"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "barbarbar"
-  skip_final_snapshot             = true
-  global_cluster_identifier       = aws_rds_global_cluster.test.id
-  engine                          = aws_rds_global_cluster.test.engine
-  engine_version                  = aws_rds_global_cluster.test.engine_version
+  cluster_identifier        = "%[2]s"
+  database_name             = "mydb"
+  master_username           = "foo"
+  master_password           = "barbarbar"
+  skip_final_snapshot       = true
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
 }
 
 resource "aws_rds_cluster_instance" "primary" {
@@ -3261,15 +3266,15 @@ resource "aws_db_subnet_group" "alternate" {
 }
 
 resource "aws_rds_cluster" "secondary" {
-  provider                      = "awsalternate"
-  cluster_identifier            = "%[3]s"
-  db_subnet_group_name          = aws_db_subnet_group.alternate.name
-  skip_final_snapshot           = true
-  source_region                 = data.aws_region.current.name
-  global_cluster_identifier     = aws_rds_global_cluster.test.id
-  engine                        = aws_rds_global_cluster.test.engine
-  engine_version                = aws_rds_global_cluster.test.engine_version
-  depends_on                    = [aws_rds_cluster_instance.primary]
+  provider                  = "awsalternate"
+  cluster_identifier        = "%[3]s"
+  db_subnet_group_name      = aws_db_subnet_group.alternate.name
+  skip_final_snapshot       = true
+  source_region             = data.aws_region.current.name
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  depends_on                = [aws_rds_cluster_instance.primary]
 
   lifecycle {
     ignore_changes = [
@@ -3297,7 +3302,7 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "alternate" {
   provider = "awsalternate"
-  state = "available"
+  state    = "available"
 
   filter {
     name   = "opt-in-status"
@@ -3327,7 +3332,7 @@ resource "aws_rds_cluster_instance" "primary" {
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
   identifier         = "%[1]s-primary"
-  instance_class     = "db.r4.large"                          # only db.r4 or db.r5 are valid for Aurora global db
+  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
 }
 
 resource "aws_vpc" "alternate" {
@@ -3432,14 +3437,14 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %q
   skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, rName, rName)
 }
@@ -3454,7 +3459,7 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
@@ -3462,7 +3467,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier  = %q
   deletion_protection = %t
   skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, rName, rName, deletionProtection)
 }
@@ -3478,7 +3483,7 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
@@ -3486,7 +3491,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier  = %q
   engine_mode         = %q
   skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, engineMode, rName, rName, engineMode)
 }
@@ -3503,7 +3508,7 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
@@ -3512,7 +3517,7 @@ resource "aws_rds_cluster" "test" {
   engine              = %q
   engine_version      = %q
   skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, engine, engineVersionSource, rName, rName, engine, engineVersion)
 }
@@ -3527,15 +3532,15 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier      = %[1]q
-  master_password         = %[2]q
-  skip_final_snapshot     = true
-  snapshot_identifier     = "${aws_db_cluster_snapshot.test.id}"
+  cluster_identifier  = %[1]q
+  master_password     = %[2]q
+  skip_final_snapshot = true
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, masterPassword)
 }
@@ -3550,15 +3555,15 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier      = %[1]q
-  master_username         = %[2]q
-  skip_final_snapshot     = true
-  snapshot_identifier     = "${aws_db_cluster_snapshot.test.id}"
+  cluster_identifier  = %[1]q
+  master_username     = %[2]q
+  skip_final_snapshot = true
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, masterUsername)
 }
@@ -3573,7 +3578,7 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
@@ -3581,7 +3586,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier      = %q
   preferred_backup_window = %q
   skip_final_snapshot     = true
-  snapshot_identifier     = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier     = aws_db_cluster_snapshot.test.id
 }
 `, rName, rName, rName, preferredBackupWindow)
 }
@@ -3596,7 +3601,7 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
@@ -3604,7 +3609,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier           = %q
   preferred_maintenance_window = %q
   skip_final_snapshot          = true
-  snapshot_identifier          = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier          = aws_db_cluster_snapshot.test.id
 }
 `, rName, rName, rName, preferredMaintenanceWindow)
 }
@@ -3619,14 +3624,14 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %q
   skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 
   tags = {
     key1 = "value1"
@@ -3643,7 +3648,7 @@ data "aws_vpc" "default" {
 
 data "aws_security_group" "default" {
   name   = "default"
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 resource "aws_rds_cluster" "source" {
@@ -3654,15 +3659,15 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier     = %q
   skip_final_snapshot    = true
-  snapshot_identifier    = "${aws_db_cluster_snapshot.test.id}"
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
+  snapshot_identifier    = aws_db_cluster_snapshot.test.id
+  vpc_security_group_ids = [data.aws_security_group.default.id]
 }
 `, rName, rName, rName)
 }
@@ -3675,7 +3680,7 @@ data "aws_vpc" "default" {
 
 data "aws_security_group" "default" {
   name   = "default"
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 resource "aws_rds_cluster" "source" {
@@ -3686,15 +3691,15 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier     = %q
   skip_final_snapshot    = true
-  snapshot_identifier    = "${aws_db_cluster_snapshot.test.id}"
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
+  snapshot_identifier    = aws_db_cluster_snapshot.test.id
+  vpc_security_group_ids = [data.aws_security_group.default.id]
 
   tags = {
     key1 = "value1"
@@ -3715,17 +3720,17 @@ resource "aws_rds_cluster" "source" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_rds_cluster.source.id}"
+  db_cluster_identifier          = aws_rds_cluster.source.id
   db_cluster_snapshot_identifier = %q
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %q
   skip_final_snapshot = true
-  snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
 
   storage_encrypted = true
-  kms_key_id        = "${aws_kms_key.test.arn}"
+  kms_key_id        = aws_kms_key.test.arn
 }
 `, rName, rName, rName)
 }
@@ -3747,12 +3752,12 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName string, enableHttpEndpoint bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier    = %q
-  engine_mode           = "serverless"
-  master_password       = "barbarbarbar"
-  master_username       = "foo"
-  skip_final_snapshot   = true
-  enable_http_endpoint  = %t
+  cluster_identifier   = %q
+  engine_mode          = "serverless"
+  master_password      = "barbarbarbar"
+  master_username      = "foo"
+  skip_final_snapshot  = true
+  enable_http_endpoint = %t
 
   scaling_configuration {
     auto_pause               = false

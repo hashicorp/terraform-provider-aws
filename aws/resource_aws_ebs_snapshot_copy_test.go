@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
@@ -234,12 +234,12 @@ data "aws_availability_zones" "available" {
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfig"
@@ -247,8 +247,8 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
-  source_snapshot_id = "${aws_ebs_snapshot.test.id}"
-  source_region      = "${data.aws_region.current.name}"
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
 }
 `
 
@@ -263,15 +263,16 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfig"
@@ -279,12 +280,12 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
-  source_snapshot_id = "${aws_ebs_snapshot.test.id}"
-  source_region      = "${data.aws_region.current.name}"
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfig"
-	"%s" = "%s"
+    "%s" = "%s"
   }
 }
 `, tagKey1, tagValue1)
@@ -301,15 +302,16 @@ data "aws_availability_zones" "available" {
   }
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfig"
@@ -317,13 +319,13 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
-  source_snapshot_id = "${aws_ebs_snapshot.test.id}"
-  source_region      = "${data.aws_region.current.name}"
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfig"
-	"%s" = "%s"
-	"%s" = "%s"
+    "%s" = "%s"
+    "%s" = "%s"
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
@@ -342,7 +344,7 @@ data "aws_availability_zones" "available" {
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
@@ -351,7 +353,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id   = "${aws_ebs_volume.test.id}"
+  volume_id   = aws_ebs_volume.test.id
   description = "EBS Snapshot Acceptance Test"
 
   tags = {
@@ -361,8 +363,8 @@ resource "aws_ebs_snapshot" "test" {
 
 resource "aws_ebs_snapshot_copy" "test" {
   description        = "Copy Snapshot Acceptance Test"
-  source_snapshot_id = "${aws_ebs_snapshot.test.id}"
-  source_region      = "${data.aws_region.current.name}"
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithDescription"
@@ -387,7 +389,7 @@ data "aws_region" "alternate" {
 
 resource "aws_ebs_volume" "test" {
   provider          = "awsalternate"
-  availability_zone = "${data.aws_availability_zones.alternate_available.names[0]}"
+  availability_zone = data.aws_availability_zones.alternate_available.names[0]
   size              = 1
 
   tags = {
@@ -397,7 +399,7 @@ resource "aws_ebs_volume" "test" {
 
 resource "aws_ebs_snapshot" "test" {
   provider  = "awsalternate"
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithRegions"
@@ -405,8 +407,8 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
-  source_snapshot_id = "${aws_ebs_snapshot.test.id}"
-  source_region      = "${data.aws_region.alternate.name}"
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.alternate.name
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithRegions"
@@ -432,7 +434,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
@@ -441,7 +443,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithKms"
@@ -449,10 +451,10 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
-  source_snapshot_id = "${aws_ebs_snapshot.test.id}"
-  source_region      = "${data.aws_region.current.name}"
+  source_snapshot_id = aws_ebs_snapshot.test.id
+  source_region      = data.aws_region.current.name
   encrypted          = true
-  kms_key_id         = "${aws_kms_key.test.arn}"
+  kms_key_id         = aws_kms_key.test.arn
 
   tags = {
     Name = "testAccAwsEbsSnapshotCopyConfigWithKms"

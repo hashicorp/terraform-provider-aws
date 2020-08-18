@@ -9168,6 +9168,17 @@ const (
 	ActionTypeEnumFixedResponse = "fixed-response"
 )
 
+// ActionTypeEnum_Values returns all elements of the ActionTypeEnum enum
+func ActionTypeEnum_Values() []string {
+	return []string{
+		ActionTypeEnumForward,
+		ActionTypeEnumAuthenticateOidc,
+		ActionTypeEnumAuthenticateCognito,
+		ActionTypeEnumRedirect,
+		ActionTypeEnumFixedResponse,
+	}
+}
+
 const (
 	// AuthenticateCognitoActionConditionalBehaviorEnumDeny is a AuthenticateCognitoActionConditionalBehaviorEnum enum value
 	AuthenticateCognitoActionConditionalBehaviorEnumDeny = "deny"
@@ -9178,6 +9189,15 @@ const (
 	// AuthenticateCognitoActionConditionalBehaviorEnumAuthenticate is a AuthenticateCognitoActionConditionalBehaviorEnum enum value
 	AuthenticateCognitoActionConditionalBehaviorEnumAuthenticate = "authenticate"
 )
+
+// AuthenticateCognitoActionConditionalBehaviorEnum_Values returns all elements of the AuthenticateCognitoActionConditionalBehaviorEnum enum
+func AuthenticateCognitoActionConditionalBehaviorEnum_Values() []string {
+	return []string{
+		AuthenticateCognitoActionConditionalBehaviorEnumDeny,
+		AuthenticateCognitoActionConditionalBehaviorEnumAllow,
+		AuthenticateCognitoActionConditionalBehaviorEnumAuthenticate,
+	}
+}
 
 const (
 	// AuthenticateOidcActionConditionalBehaviorEnumDeny is a AuthenticateOidcActionConditionalBehaviorEnum enum value
@@ -9190,6 +9210,15 @@ const (
 	AuthenticateOidcActionConditionalBehaviorEnumAuthenticate = "authenticate"
 )
 
+// AuthenticateOidcActionConditionalBehaviorEnum_Values returns all elements of the AuthenticateOidcActionConditionalBehaviorEnum enum
+func AuthenticateOidcActionConditionalBehaviorEnum_Values() []string {
+	return []string{
+		AuthenticateOidcActionConditionalBehaviorEnumDeny,
+		AuthenticateOidcActionConditionalBehaviorEnumAllow,
+		AuthenticateOidcActionConditionalBehaviorEnumAuthenticate,
+	}
+}
+
 const (
 	// IpAddressTypeIpv4 is a IpAddressType enum value
 	IpAddressTypeIpv4 = "ipv4"
@@ -9198,6 +9227,14 @@ const (
 	IpAddressTypeDualstack = "dualstack"
 )
 
+// IpAddressType_Values returns all elements of the IpAddressType enum
+func IpAddressType_Values() []string {
+	return []string{
+		IpAddressTypeIpv4,
+		IpAddressTypeDualstack,
+	}
+}
+
 const (
 	// LoadBalancerSchemeEnumInternetFacing is a LoadBalancerSchemeEnum enum value
 	LoadBalancerSchemeEnumInternetFacing = "internet-facing"
@@ -9205,6 +9242,14 @@ const (
 	// LoadBalancerSchemeEnumInternal is a LoadBalancerSchemeEnum enum value
 	LoadBalancerSchemeEnumInternal = "internal"
 )
+
+// LoadBalancerSchemeEnum_Values returns all elements of the LoadBalancerSchemeEnum enum
+func LoadBalancerSchemeEnum_Values() []string {
+	return []string{
+		LoadBalancerSchemeEnumInternetFacing,
+		LoadBalancerSchemeEnumInternal,
+	}
+}
 
 const (
 	// LoadBalancerStateEnumActive is a LoadBalancerStateEnum enum value
@@ -9220,6 +9265,16 @@ const (
 	LoadBalancerStateEnumFailed = "failed"
 )
 
+// LoadBalancerStateEnum_Values returns all elements of the LoadBalancerStateEnum enum
+func LoadBalancerStateEnum_Values() []string {
+	return []string{
+		LoadBalancerStateEnumActive,
+		LoadBalancerStateEnumProvisioning,
+		LoadBalancerStateEnumActiveImpaired,
+		LoadBalancerStateEnumFailed,
+	}
+}
+
 const (
 	// LoadBalancerTypeEnumApplication is a LoadBalancerTypeEnum enum value
 	LoadBalancerTypeEnumApplication = "application"
@@ -9227,6 +9282,14 @@ const (
 	// LoadBalancerTypeEnumNetwork is a LoadBalancerTypeEnum enum value
 	LoadBalancerTypeEnumNetwork = "network"
 )
+
+// LoadBalancerTypeEnum_Values returns all elements of the LoadBalancerTypeEnum enum
+func LoadBalancerTypeEnum_Values() []string {
+	return []string{
+		LoadBalancerTypeEnumApplication,
+		LoadBalancerTypeEnumNetwork,
+	}
+}
 
 const (
 	// ProtocolEnumHttp is a ProtocolEnum enum value
@@ -9248,6 +9311,18 @@ const (
 	ProtocolEnumTcpUdp = "TCP_UDP"
 )
 
+// ProtocolEnum_Values returns all elements of the ProtocolEnum enum
+func ProtocolEnum_Values() []string {
+	return []string{
+		ProtocolEnumHttp,
+		ProtocolEnumHttps,
+		ProtocolEnumTcp,
+		ProtocolEnumTls,
+		ProtocolEnumUdp,
+		ProtocolEnumTcpUdp,
+	}
+}
+
 const (
 	// RedirectActionStatusCodeEnumHttp301 is a RedirectActionStatusCodeEnum enum value
 	RedirectActionStatusCodeEnumHttp301 = "HTTP_301"
@@ -9255,6 +9330,14 @@ const (
 	// RedirectActionStatusCodeEnumHttp302 is a RedirectActionStatusCodeEnum enum value
 	RedirectActionStatusCodeEnumHttp302 = "HTTP_302"
 )
+
+// RedirectActionStatusCodeEnum_Values returns all elements of the RedirectActionStatusCodeEnum enum
+func RedirectActionStatusCodeEnum_Values() []string {
+	return []string{
+		RedirectActionStatusCodeEnumHttp301,
+		RedirectActionStatusCodeEnumHttp302,
+	}
+}
 
 const (
 	// TargetHealthReasonEnumElbRegistrationInProgress is a TargetHealthReasonEnum enum value
@@ -9294,6 +9377,24 @@ const (
 	TargetHealthReasonEnumElbInternalError = "Elb.InternalError"
 )
 
+// TargetHealthReasonEnum_Values returns all elements of the TargetHealthReasonEnum enum
+func TargetHealthReasonEnum_Values() []string {
+	return []string{
+		TargetHealthReasonEnumElbRegistrationInProgress,
+		TargetHealthReasonEnumElbInitialHealthChecking,
+		TargetHealthReasonEnumTargetResponseCodeMismatch,
+		TargetHealthReasonEnumTargetTimeout,
+		TargetHealthReasonEnumTargetFailedHealthChecks,
+		TargetHealthReasonEnumTargetNotRegistered,
+		TargetHealthReasonEnumTargetNotInUse,
+		TargetHealthReasonEnumTargetDeregistrationInProgress,
+		TargetHealthReasonEnumTargetInvalidState,
+		TargetHealthReasonEnumTargetIpUnusable,
+		TargetHealthReasonEnumTargetHealthCheckDisabled,
+		TargetHealthReasonEnumElbInternalError,
+	}
+}
+
 const (
 	// TargetHealthStateEnumInitial is a TargetHealthStateEnum enum value
 	TargetHealthStateEnumInitial = "initial"
@@ -9314,6 +9415,18 @@ const (
 	TargetHealthStateEnumUnavailable = "unavailable"
 )
 
+// TargetHealthStateEnum_Values returns all elements of the TargetHealthStateEnum enum
+func TargetHealthStateEnum_Values() []string {
+	return []string{
+		TargetHealthStateEnumInitial,
+		TargetHealthStateEnumHealthy,
+		TargetHealthStateEnumUnhealthy,
+		TargetHealthStateEnumUnused,
+		TargetHealthStateEnumDraining,
+		TargetHealthStateEnumUnavailable,
+	}
+}
+
 const (
 	// TargetTypeEnumInstance is a TargetTypeEnum enum value
 	TargetTypeEnumInstance = "instance"
@@ -9324,3 +9437,12 @@ const (
 	// TargetTypeEnumLambda is a TargetTypeEnum enum value
 	TargetTypeEnumLambda = "lambda"
 )
+
+// TargetTypeEnum_Values returns all elements of the TargetTypeEnum enum
+func TargetTypeEnum_Values() []string {
+	return []string{
+		TargetTypeEnumInstance,
+		TargetTypeEnumIp,
+		TargetTypeEnumLambda,
+	}
+}

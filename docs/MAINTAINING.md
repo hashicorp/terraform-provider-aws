@@ -18,6 +18,7 @@
 - [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
 - [Label Dictionary](#label-dictionary)
+- [Release Process](#release-process)
 
 <!-- /TOC -->
 
@@ -513,3 +514,14 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 [upstream]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream
 [waiting-response-badge]: https://img.shields.io/badge/waiting--response-5319e7
 [waiting-response]: https://github.com/terraform-providers/terraform-provider-aws/labels/waiting-response
+
+## Release Process
+
+- Create a milestone for the next release after this release (generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
+- Check the existing release milestone for open items and either work through them or move them to the next milestone
+- Run the HashiCorp (non-OSS) TeamCity release job either via:
+    - Slack command: `/tcrelease aws #.#.#` (no `v` prefix)
+    - Web interface: With the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
+- Wait for the TeamCity release job to complete either by watching the build logs or Slack notifications
+- Close the release milestone
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the entries from the CHANGELOG to the release notes. This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.

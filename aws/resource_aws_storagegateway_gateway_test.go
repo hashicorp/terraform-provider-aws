@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -560,7 +560,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_route.test"]
+  depends_on = [aws_route.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
@@ -588,7 +588,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_CACHED_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_route.test"]
+  depends_on = [aws_route.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_CACHED_latest.value
   associate_public_ip_address = true
@@ -606,7 +606,7 @@ resource "aws_instance" "test" {
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName string) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "CACHED"
@@ -617,7 +617,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_FileS3(rName string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
@@ -632,11 +632,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address 		= "${aws_instance.test.public_ip}"
-  gateway_name       		= %[1]q
-  gateway_timezone   		= "GMT"
-  gateway_type       		= "FILE_S3"
-  cloudwatch_log_group_arn	= "${aws_cloudwatch_log_group.test.arn}"
+  gateway_ip_address       = aws_instance.test.public_ip
+  gateway_name             = %[1]q
+  gateway_timezone         = "GMT"
+  gateway_type             = "FILE_S3"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
 }
 `, rName)
 }
@@ -644,7 +644,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName string) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "STORED"
@@ -655,7 +655,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_Vtl(rName string) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "VTL"
@@ -666,7 +666,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_GatewayTimezone(rName, gatewayTimezone string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = %q
   gateway_type       = "FILE_S3"
@@ -835,7 +835,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfig_SmbGuestPassword(rName, smbGuestPassword string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
@@ -847,13 +847,13 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "CACHED"
 
   tags = {
-	%q = %q
+    %q = %q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -862,14 +862,14 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %q
   gateway_timezone   = "GMT"
   gateway_type       = "CACHED"
 
   tags = {
-	%q = %q
-	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)

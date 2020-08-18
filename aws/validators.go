@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -976,7 +976,7 @@ func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validateCloudFormationTemplate(v interface{}, k string) (ws []string, errors []error) {
+func validateStringIsJsonOrYaml(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJsonString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))

@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -937,9 +937,6 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 						"default_result": "CONTINUE",
 						"name":           "launching",
 					}),
-					// TODO: TypeSet check rewrite check to avoid hash reference
-					testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name"),
 				),
 			},
 			{
@@ -1120,26 +1117,6 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 		*group = *describeGroups.AutoScalingGroups[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(asg, hookAttr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		asgResource, ok := s.RootModule().Resources[asg]
-		if !ok {
-			return fmt.Errorf("Not found: %s", asg)
-		}
-
-		if asgResource.Primary.ID == "" {
-			return fmt.Errorf("No AutoScaling Group ID is set")
-		}
-
-		hookName := asgResource.Primary.Attributes[hookAttr]
-		if hookName == "" {
-			return fmt.Errorf("ASG %s has no hook name %s", asg, hookAttr)
-		}
-
-		return checkLifecycleHookExistsByName(asgResource.Primary.ID, hookName)
 	}
 }
 
@@ -2376,7 +2353,7 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_launch_configuration" "foobar" {
@@ -2475,7 +2452,7 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_launch_configuration" "foobar" {
@@ -3704,7 +3681,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_elb" "test" {
   count = %[2]d
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 
   subnets = [aws_subnet.test.id]
 

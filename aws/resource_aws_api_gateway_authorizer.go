@@ -1,14 +1,15 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const defaultAuthorizerTTL = 300
@@ -279,7 +280,7 @@ func resourceAwsApiGatewayAuthorizerDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGatewayAuthorizerCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+func resourceAwsApiGatewayAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
 	if diff.HasChange("type") {
 		o, n := diff.GetChange("type")

@@ -14125,6 +14125,14 @@ const (
 	ArtifactNamespaceBuildId = "BUILD_ID"
 )
 
+// ArtifactNamespace_Values returns all elements of the ArtifactNamespace enum
+func ArtifactNamespace_Values() []string {
+	return []string{
+		ArtifactNamespaceNone,
+		ArtifactNamespaceBuildId,
+	}
+}
+
 const (
 	// ArtifactPackagingNone is a ArtifactPackaging enum value
 	ArtifactPackagingNone = "NONE"
@@ -14132,6 +14140,14 @@ const (
 	// ArtifactPackagingZip is a ArtifactPackaging enum value
 	ArtifactPackagingZip = "ZIP"
 )
+
+// ArtifactPackaging_Values returns all elements of the ArtifactPackaging enum
+func ArtifactPackaging_Values() []string {
+	return []string{
+		ArtifactPackagingNone,
+		ArtifactPackagingZip,
+	}
+}
 
 const (
 	// ArtifactsTypeCodepipeline is a ArtifactsType enum value
@@ -14144,6 +14160,15 @@ const (
 	ArtifactsTypeNoArtifacts = "NO_ARTIFACTS"
 )
 
+// ArtifactsType_Values returns all elements of the ArtifactsType enum
+func ArtifactsType_Values() []string {
+	return []string{
+		ArtifactsTypeCodepipeline,
+		ArtifactsTypeS3,
+		ArtifactsTypeNoArtifacts,
+	}
+}
+
 const (
 	// AuthTypeOauth is a AuthType enum value
 	AuthTypeOauth = "OAUTH"
@@ -14154,6 +14179,15 @@ const (
 	// AuthTypePersonalAccessToken is a AuthType enum value
 	AuthTypePersonalAccessToken = "PERSONAL_ACCESS_TOKEN"
 )
+
+// AuthType_Values returns all elements of the AuthType enum
+func AuthType_Values() []string {
+	return []string{
+		AuthTypeOauth,
+		AuthTypeBasicAuth,
+		AuthTypePersonalAccessToken,
+	}
+}
 
 const (
 	// BuildBatchPhaseTypeSubmitted is a BuildBatchPhaseType enum value
@@ -14177,6 +14211,19 @@ const (
 	// BuildBatchPhaseTypeStopped is a BuildBatchPhaseType enum value
 	BuildBatchPhaseTypeStopped = "STOPPED"
 )
+
+// BuildBatchPhaseType_Values returns all elements of the BuildBatchPhaseType enum
+func BuildBatchPhaseType_Values() []string {
+	return []string{
+		BuildBatchPhaseTypeSubmitted,
+		BuildBatchPhaseTypeDownloadBatchspec,
+		BuildBatchPhaseTypeInProgress,
+		BuildBatchPhaseTypeCombineArtifacts,
+		BuildBatchPhaseTypeSucceeded,
+		BuildBatchPhaseTypeFailed,
+		BuildBatchPhaseTypeStopped,
+	}
+}
 
 const (
 	// BuildPhaseTypeSubmitted is a BuildPhaseType enum value
@@ -14213,6 +14260,23 @@ const (
 	BuildPhaseTypeCompleted = "COMPLETED"
 )
 
+// BuildPhaseType_Values returns all elements of the BuildPhaseType enum
+func BuildPhaseType_Values() []string {
+	return []string{
+		BuildPhaseTypeSubmitted,
+		BuildPhaseTypeQueued,
+		BuildPhaseTypeProvisioning,
+		BuildPhaseTypeDownloadSource,
+		BuildPhaseTypeInstall,
+		BuildPhaseTypePreBuild,
+		BuildPhaseTypeBuild,
+		BuildPhaseTypePostBuild,
+		BuildPhaseTypeUploadArtifacts,
+		BuildPhaseTypeFinalizing,
+		BuildPhaseTypeCompleted,
+	}
+}
+
 const (
 	// CacheModeLocalDockerLayerCache is a CacheMode enum value
 	CacheModeLocalDockerLayerCache = "LOCAL_DOCKER_LAYER_CACHE"
@@ -14224,6 +14288,15 @@ const (
 	CacheModeLocalCustomCache = "LOCAL_CUSTOM_CACHE"
 )
 
+// CacheMode_Values returns all elements of the CacheMode enum
+func CacheMode_Values() []string {
+	return []string{
+		CacheModeLocalDockerLayerCache,
+		CacheModeLocalSourceCache,
+		CacheModeLocalCustomCache,
+	}
+}
+
 const (
 	// CacheTypeNoCache is a CacheType enum value
 	CacheTypeNoCache = "NO_CACHE"
@@ -14234,6 +14307,15 @@ const (
 	// CacheTypeLocal is a CacheType enum value
 	CacheTypeLocal = "LOCAL"
 )
+
+// CacheType_Values returns all elements of the CacheType enum
+func CacheType_Values() []string {
+	return []string{
+		CacheTypeNoCache,
+		CacheTypeS3,
+		CacheTypeLocal,
+	}
+}
 
 const (
 	// ComputeTypeBuildGeneral1Small is a ComputeType enum value
@@ -14249,10 +14331,27 @@ const (
 	ComputeTypeBuildGeneral12xlarge = "BUILD_GENERAL1_2XLARGE"
 )
 
+// ComputeType_Values returns all elements of the ComputeType enum
+func ComputeType_Values() []string {
+	return []string{
+		ComputeTypeBuildGeneral1Small,
+		ComputeTypeBuildGeneral1Medium,
+		ComputeTypeBuildGeneral1Large,
+		ComputeTypeBuildGeneral12xlarge,
+	}
+}
+
 const (
 	// CredentialProviderTypeSecretsManager is a CredentialProviderType enum value
 	CredentialProviderTypeSecretsManager = "SECRETS_MANAGER"
 )
+
+// CredentialProviderType_Values returns all elements of the CredentialProviderType enum
+func CredentialProviderType_Values() []string {
+	return []string{
+		CredentialProviderTypeSecretsManager,
+	}
+}
 
 const (
 	// EnvironmentTypeWindowsContainer is a EnvironmentType enum value
@@ -14271,6 +14370,17 @@ const (
 	EnvironmentTypeWindowsServer2019Container = "WINDOWS_SERVER_2019_CONTAINER"
 )
 
+// EnvironmentType_Values returns all elements of the EnvironmentType enum
+func EnvironmentType_Values() []string {
+	return []string{
+		EnvironmentTypeWindowsContainer,
+		EnvironmentTypeLinuxContainer,
+		EnvironmentTypeLinuxGpuContainer,
+		EnvironmentTypeArmContainer,
+		EnvironmentTypeWindowsServer2019Container,
+	}
+}
+
 const (
 	// EnvironmentVariableTypePlaintext is a EnvironmentVariableType enum value
 	EnvironmentVariableTypePlaintext = "PLAINTEXT"
@@ -14282,10 +14392,26 @@ const (
 	EnvironmentVariableTypeSecretsManager = "SECRETS_MANAGER"
 )
 
+// EnvironmentVariableType_Values returns all elements of the EnvironmentVariableType enum
+func EnvironmentVariableType_Values() []string {
+	return []string{
+		EnvironmentVariableTypePlaintext,
+		EnvironmentVariableTypeParameterStore,
+		EnvironmentVariableTypeSecretsManager,
+	}
+}
+
 const (
 	// FileSystemTypeEfs is a FileSystemType enum value
 	FileSystemTypeEfs = "EFS"
 )
+
+// FileSystemType_Values returns all elements of the FileSystemType enum
+func FileSystemType_Values() []string {
+	return []string{
+		FileSystemTypeEfs,
+	}
+}
 
 const (
 	// ImagePullCredentialsTypeCodebuild is a ImagePullCredentialsType enum value
@@ -14294,6 +14420,14 @@ const (
 	// ImagePullCredentialsTypeServiceRole is a ImagePullCredentialsType enum value
 	ImagePullCredentialsTypeServiceRole = "SERVICE_ROLE"
 )
+
+// ImagePullCredentialsType_Values returns all elements of the ImagePullCredentialsType enum
+func ImagePullCredentialsType_Values() []string {
+	return []string{
+		ImagePullCredentialsTypeCodebuild,
+		ImagePullCredentialsTypeServiceRole,
+	}
+}
 
 const (
 	// LanguageTypeJava is a LanguageType enum value
@@ -14327,6 +14461,22 @@ const (
 	LanguageTypePhp = "PHP"
 )
 
+// LanguageType_Values returns all elements of the LanguageType enum
+func LanguageType_Values() []string {
+	return []string{
+		LanguageTypeJava,
+		LanguageTypePython,
+		LanguageTypeNodeJs,
+		LanguageTypeRuby,
+		LanguageTypeGolang,
+		LanguageTypeDocker,
+		LanguageTypeAndroid,
+		LanguageTypeDotnet,
+		LanguageTypeBase,
+		LanguageTypePhp,
+	}
+}
+
 const (
 	// LogsConfigStatusTypeEnabled is a LogsConfigStatusType enum value
 	LogsConfigStatusTypeEnabled = "ENABLED"
@@ -14334,6 +14484,14 @@ const (
 	// LogsConfigStatusTypeDisabled is a LogsConfigStatusType enum value
 	LogsConfigStatusTypeDisabled = "DISABLED"
 )
+
+// LogsConfigStatusType_Values returns all elements of the LogsConfigStatusType enum
+func LogsConfigStatusType_Values() []string {
+	return []string{
+		LogsConfigStatusTypeEnabled,
+		LogsConfigStatusTypeDisabled,
+	}
+}
 
 const (
 	// PlatformTypeDebian is a PlatformType enum value
@@ -14349,6 +14507,16 @@ const (
 	PlatformTypeWindowsServer = "WINDOWS_SERVER"
 )
 
+// PlatformType_Values returns all elements of the PlatformType enum
+func PlatformType_Values() []string {
+	return []string{
+		PlatformTypeDebian,
+		PlatformTypeAmazonLinux,
+		PlatformTypeUbuntu,
+		PlatformTypeWindowsServer,
+	}
+}
+
 const (
 	// ProjectSortByTypeName is a ProjectSortByType enum value
 	ProjectSortByTypeName = "NAME"
@@ -14360,6 +14528,15 @@ const (
 	ProjectSortByTypeLastModifiedTime = "LAST_MODIFIED_TIME"
 )
 
+// ProjectSortByType_Values returns all elements of the ProjectSortByType enum
+func ProjectSortByType_Values() []string {
+	return []string{
+		ProjectSortByTypeName,
+		ProjectSortByTypeCreatedTime,
+		ProjectSortByTypeLastModifiedTime,
+	}
+}
+
 const (
 	// ReportCodeCoverageSortByTypeLineCoveragePercentage is a ReportCodeCoverageSortByType enum value
 	ReportCodeCoverageSortByTypeLineCoveragePercentage = "LINE_COVERAGE_PERCENTAGE"
@@ -14368,6 +14545,14 @@ const (
 	ReportCodeCoverageSortByTypeFilePath = "FILE_PATH"
 )
 
+// ReportCodeCoverageSortByType_Values returns all elements of the ReportCodeCoverageSortByType enum
+func ReportCodeCoverageSortByType_Values() []string {
+	return []string{
+		ReportCodeCoverageSortByTypeLineCoveragePercentage,
+		ReportCodeCoverageSortByTypeFilePath,
+	}
+}
+
 const (
 	// ReportExportConfigTypeS3 is a ReportExportConfigType enum value
 	ReportExportConfigTypeS3 = "S3"
@@ -14375,6 +14560,14 @@ const (
 	// ReportExportConfigTypeNoExport is a ReportExportConfigType enum value
 	ReportExportConfigTypeNoExport = "NO_EXPORT"
 )
+
+// ReportExportConfigType_Values returns all elements of the ReportExportConfigType enum
+func ReportExportConfigType_Values() []string {
+	return []string{
+		ReportExportConfigTypeS3,
+		ReportExportConfigTypeNoExport,
+	}
+}
 
 const (
 	// ReportGroupSortByTypeName is a ReportGroupSortByType enum value
@@ -14387,6 +14580,15 @@ const (
 	ReportGroupSortByTypeLastModifiedTime = "LAST_MODIFIED_TIME"
 )
 
+// ReportGroupSortByType_Values returns all elements of the ReportGroupSortByType enum
+func ReportGroupSortByType_Values() []string {
+	return []string{
+		ReportGroupSortByTypeName,
+		ReportGroupSortByTypeCreatedTime,
+		ReportGroupSortByTypeLastModifiedTime,
+	}
+}
+
 const (
 	// ReportPackagingTypeZip is a ReportPackagingType enum value
 	ReportPackagingTypeZip = "ZIP"
@@ -14394,6 +14596,14 @@ const (
 	// ReportPackagingTypeNone is a ReportPackagingType enum value
 	ReportPackagingTypeNone = "NONE"
 )
+
+// ReportPackagingType_Values returns all elements of the ReportPackagingType enum
+func ReportPackagingType_Values() []string {
+	return []string{
+		ReportPackagingTypeZip,
+		ReportPackagingTypeNone,
+	}
+}
 
 const (
 	// ReportStatusTypeGenerating is a ReportStatusType enum value
@@ -14412,6 +14622,17 @@ const (
 	ReportStatusTypeDeleting = "DELETING"
 )
 
+// ReportStatusType_Values returns all elements of the ReportStatusType enum
+func ReportStatusType_Values() []string {
+	return []string{
+		ReportStatusTypeGenerating,
+		ReportStatusTypeSucceeded,
+		ReportStatusTypeFailed,
+		ReportStatusTypeIncomplete,
+		ReportStatusTypeDeleting,
+	}
+}
+
 const (
 	// ReportTypeTest is a ReportType enum value
 	ReportTypeTest = "TEST"
@@ -14420,6 +14641,14 @@ const (
 	ReportTypeCodeCoverage = "CODE_COVERAGE"
 )
 
+// ReportType_Values returns all elements of the ReportType enum
+func ReportType_Values() []string {
+	return []string{
+		ReportTypeTest,
+		ReportTypeCodeCoverage,
+	}
+}
+
 const (
 	// RetryBuildBatchTypeRetryAllBuilds is a RetryBuildBatchType enum value
 	RetryBuildBatchTypeRetryAllBuilds = "RETRY_ALL_BUILDS"
@@ -14427,6 +14656,14 @@ const (
 	// RetryBuildBatchTypeRetryFailedBuilds is a RetryBuildBatchType enum value
 	RetryBuildBatchTypeRetryFailedBuilds = "RETRY_FAILED_BUILDS"
 )
+
+// RetryBuildBatchType_Values returns all elements of the RetryBuildBatchType enum
+func RetryBuildBatchType_Values() []string {
+	return []string{
+		RetryBuildBatchTypeRetryAllBuilds,
+		RetryBuildBatchTypeRetryFailedBuilds,
+	}
+}
 
 const (
 	// ServerTypeGithub is a ServerType enum value
@@ -14439,6 +14676,15 @@ const (
 	ServerTypeGithubEnterprise = "GITHUB_ENTERPRISE"
 )
 
+// ServerType_Values returns all elements of the ServerType enum
+func ServerType_Values() []string {
+	return []string{
+		ServerTypeGithub,
+		ServerTypeBitbucket,
+		ServerTypeGithubEnterprise,
+	}
+}
+
 const (
 	// SharedResourceSortByTypeArn is a SharedResourceSortByType enum value
 	SharedResourceSortByTypeArn = "ARN"
@@ -14446,6 +14692,14 @@ const (
 	// SharedResourceSortByTypeModifiedTime is a SharedResourceSortByType enum value
 	SharedResourceSortByTypeModifiedTime = "MODIFIED_TIME"
 )
+
+// SharedResourceSortByType_Values returns all elements of the SharedResourceSortByType enum
+func SharedResourceSortByType_Values() []string {
+	return []string{
+		SharedResourceSortByTypeArn,
+		SharedResourceSortByTypeModifiedTime,
+	}
+}
 
 const (
 	// SortOrderTypeAscending is a SortOrderType enum value
@@ -14455,10 +14709,25 @@ const (
 	SortOrderTypeDescending = "DESCENDING"
 )
 
+// SortOrderType_Values returns all elements of the SortOrderType enum
+func SortOrderType_Values() []string {
+	return []string{
+		SortOrderTypeAscending,
+		SortOrderTypeDescending,
+	}
+}
+
 const (
 	// SourceAuthTypeOauth is a SourceAuthType enum value
 	SourceAuthTypeOauth = "OAUTH"
 )
+
+// SourceAuthType_Values returns all elements of the SourceAuthType enum
+func SourceAuthType_Values() []string {
+	return []string{
+		SourceAuthTypeOauth,
+	}
+}
 
 const (
 	// SourceTypeCodecommit is a SourceType enum value
@@ -14483,6 +14752,19 @@ const (
 	SourceTypeNoSource = "NO_SOURCE"
 )
 
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeCodecommit,
+		SourceTypeCodepipeline,
+		SourceTypeGithub,
+		SourceTypeS3,
+		SourceTypeBitbucket,
+		SourceTypeGithubEnterprise,
+		SourceTypeNoSource,
+	}
+}
+
 const (
 	// StatusTypeSucceeded is a StatusType enum value
 	StatusTypeSucceeded = "SUCCEEDED"
@@ -14503,6 +14785,18 @@ const (
 	StatusTypeStopped = "STOPPED"
 )
 
+// StatusType_Values returns all elements of the StatusType enum
+func StatusType_Values() []string {
+	return []string{
+		StatusTypeSucceeded,
+		StatusTypeFailed,
+		StatusTypeFault,
+		StatusTypeTimedOut,
+		StatusTypeInProgress,
+		StatusTypeStopped,
+	}
+}
+
 const (
 	// WebhookBuildTypeBuild is a WebhookBuildType enum value
 	WebhookBuildTypeBuild = "BUILD"
@@ -14510,6 +14804,14 @@ const (
 	// WebhookBuildTypeBuildBatch is a WebhookBuildType enum value
 	WebhookBuildTypeBuildBatch = "BUILD_BATCH"
 )
+
+// WebhookBuildType_Values returns all elements of the WebhookBuildType enum
+func WebhookBuildType_Values() []string {
+	return []string{
+		WebhookBuildTypeBuild,
+		WebhookBuildTypeBuildBatch,
+	}
+}
 
 const (
 	// WebhookFilterTypeEvent is a WebhookFilterType enum value
@@ -14530,3 +14832,15 @@ const (
 	// WebhookFilterTypeCommitMessage is a WebhookFilterType enum value
 	WebhookFilterTypeCommitMessage = "COMMIT_MESSAGE"
 )
+
+// WebhookFilterType_Values returns all elements of the WebhookFilterType enum
+func WebhookFilterType_Values() []string {
+	return []string{
+		WebhookFilterTypeEvent,
+		WebhookFilterTypeBaseRef,
+		WebhookFilterTypeHeadRef,
+		WebhookFilterTypeActorAccountId,
+		WebhookFilterTypeFilePath,
+		WebhookFilterTypeCommitMessage,
+	}
+}

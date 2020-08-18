@@ -1,19 +1,19 @@
 ---
 subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_ec2_instance_spot_price"
+page_title: "AWS: aws_ec2_spot_price"
 description: |-
   Information about most recent Spot Price for a given EC2 instance.
 ---
 
-# Data Source: aws_ec2_instance_spot_price
+# Data Source: aws_ec2_spot_price
 
 Information about most recent Spot Price for a given EC2 instance.
 
 ## Example Usage
 
 ```hcl
-data "aws_ec2_instance_spot_price" "example" {
+data "aws_ec2_spot_price" "example" {
   instance_type     = "t3.medium"
   availability_zone = "us-west-2a"
 

@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -660,16 +660,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	} else {
 
-		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
-			if _, ok := d.GetOk("master_password"); !ok {
-				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_password": required field is not set`, d.Get("database_name").(string))
-			}
-
-			if _, ok := d.GetOk("master_username"); !ok {
-				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_username": required field is not set`, d.Get("database_name").(string))
-			}
-		}
-
 		createOpts := &rds.CreateDBClusterInput{
 			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:  aws.String(identifier),
@@ -680,6 +670,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                 tags,
 		}
 
+		// Note: Username and password credentials are required and valid
+		// unless the cluster is a read-replica. This also applies to clusters
+		// within a global cluster. Providing a password and/or username for
+		// a replica will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok && v.(string) != "" {
 			createOpts.MasterUserPassword = aws.String(v.(string))
 		}

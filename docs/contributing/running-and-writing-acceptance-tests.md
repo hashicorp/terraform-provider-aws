@@ -99,6 +99,8 @@ PASS
 ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 ```
 
+Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
+
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
 ### Running Cross-Account Tests
@@ -777,7 +779,7 @@ Writing acceptance testing for data sources is similar to resources, with the bi
 - Adding `DataSource` to the test and configuration naming, such as `TestAccAwsExampleThingDataSource_Filter`
 - The basic test _may_ be named after the easiest lookup attribute instead, e.g. `TestAccAwsExampleThingDataSource_Name`
 - No disappears testing
-- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
+- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
 - The usage of an additional `dataSourceName` variable to store a data source reference, e.g. `data.aws_example_thing.test`
 
 Data sources testing should still utilize the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is ran.
@@ -842,7 +844,7 @@ $ make sweep
 To run a specific resource sweeper:
 
 ```console
-$ SWEEPARGS=-sweep-run=aws_example_thing make sweep 
+$ SWEEPARGS=-sweep-run=aws_example_thing make sweep
 ```
 
 ### Writing Test Sweepers
@@ -1012,18 +1014,25 @@ The below are location-based items that _may_ be noted during review and are rec
   }
   ```
 
-- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). A common pattern is declaring `data "aws_availability_zones" "available" {...}` and referencing it via `data.aws_availability_zones.available.names[0]` or `data.aws_availability_zones.available.names[count.index]` in resources utilizing `count`.
+- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). Use the convenience function called `testAccAvailableAZsNoOptInConfig()` (defined in `resource_aws_instance_test.go`) to declare `data "aws_availability_zones" "available" {...}`. You can then reference the data source via `data.aws_availability_zones.available.names[0]` or `data.aws_availability_zones.available.names[count.index]` in resources utilizing `count`.
 
-  ```hcl
-  data "aws_availability_zones" "available" {
-    state = "available"
+Here's an example of using `testAccAvailableAZsNoOptInConfig()` and `data.aws_availability_zones.available.names[0]`:
 
-    filter {
-      name   = "opt-in-status"
-      values = ["opt-in-not-required"]
-    }
+```go
+func testAccAwsInstanceVpcConfigBasic(rName string) string {
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+resource "aws_subnet" "test" {
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  cidr_block              = "10.0.0.0/24"
+  vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
   }
-  ```
+}
+`, rName)
+}
+```
 
 - [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
 - [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`

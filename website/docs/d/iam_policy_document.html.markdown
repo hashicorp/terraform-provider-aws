@@ -109,8 +109,8 @@ each accept the following arguments:
   does *not* apply to. Used to apply a policy statement to all resources
   *except* those listed.
 * `principals` (Optional) - A nested configuration block (described below)
-  specifying a resource (or resource pattern) to which this statement applies.
-* `not_principals` (Optional) - Like `principals` except gives resources that
+  specifying a principal (or principal pattern) to which this statement applies.
+* `not_principals` (Optional) - Like `principals` except gives principals that
   the statement does *not* apply to.
 * `condition` (Optional) - A nested configuration block (described below)
   that defines a further, possibly-service-specific condition that constrains

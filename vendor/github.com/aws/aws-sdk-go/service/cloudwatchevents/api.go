@@ -8084,6 +8084,14 @@ const (
 	AssignPublicIpDisabled = "DISABLED"
 )
 
+// AssignPublicIp_Values returns all elements of the AssignPublicIp enum
+func AssignPublicIp_Values() []string {
+	return []string{
+		AssignPublicIpEnabled,
+		AssignPublicIpDisabled,
+	}
+}
+
 const (
 	// EventSourceStatePending is a EventSourceState enum value
 	EventSourceStatePending = "PENDING"
@@ -8095,6 +8103,15 @@ const (
 	EventSourceStateDeleted = "DELETED"
 )
 
+// EventSourceState_Values returns all elements of the EventSourceState enum
+func EventSourceState_Values() []string {
+	return []string{
+		EventSourceStatePending,
+		EventSourceStateActive,
+		EventSourceStateDeleted,
+	}
+}
+
 const (
 	// LaunchTypeEc2 is a LaunchType enum value
 	LaunchTypeEc2 = "EC2"
@@ -8103,6 +8120,14 @@ const (
 	LaunchTypeFargate = "FARGATE"
 )
 
+// LaunchType_Values returns all elements of the LaunchType enum
+func LaunchType_Values() []string {
+	return []string{
+		LaunchTypeEc2,
+		LaunchTypeFargate,
+	}
+}
+
 const (
 	// RuleStateEnabled is a RuleState enum value
 	RuleStateEnabled = "ENABLED"
@@ -8110,3 +8135,11 @@ const (
 	// RuleStateDisabled is a RuleState enum value
 	RuleStateDisabled = "DISABLED"
 )
+
+// RuleState_Values returns all elements of the RuleState enum
+func RuleState_Values() []string {
+	return []string{
+		RuleStateEnabled,
+		RuleStateDisabled,
+	}
+}

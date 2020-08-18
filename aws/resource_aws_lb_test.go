@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -1095,8 +1095,8 @@ func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = [aws_subnet.alb_test_1.id, aws_subnet.alb_test_2.id]
 
   ip_address_type = "dualstack"
 
@@ -1109,12 +1109,12 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.lb_test.id}"
+  load_balancer_arn = aws_lb.lb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1123,7 +1123,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   deregistration_delay = 200
 
@@ -1145,7 +1145,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "igw" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1158,15 +1158,15 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 }
 
 resource "aws_subnet" "alb_test_1" {
-  vpc_id                  = "${aws_vpc.alb_test.id}"
+  vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-1"
@@ -1174,11 +1174,11 @@ resource "aws_subnet" "alb_test_1" {
 }
 
 resource "aws_subnet" "alb_test_2" {
-  vpc_id                  = "${aws_vpc.alb_test.id}"
+  vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-2"
@@ -1188,7 +1188,7 @@ resource "aws_subnet" "alb_test_2" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1208,8 +1208,8 @@ func testAccAWSLBConfigWithIpAddressType(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = [aws_subnet.alb_test_1.id, aws_subnet.alb_test_2.id]
 
   ip_address_type = "ipv4"
 
@@ -1222,12 +1222,12 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.lb_test.id}"
+  load_balancer_arn = aws_lb.lb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1236,7 +1236,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   deregistration_delay = 200
 
@@ -1258,7 +1258,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "igw" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1271,15 +1271,15 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 }
 
 resource "aws_subnet" "alb_test_1" {
-  vpc_id                  = "${aws_vpc.alb_test.id}"
+  vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-1"
@@ -1287,11 +1287,11 @@ resource "aws_subnet" "alb_test_1" {
 }
 
 resource "aws_subnet" "alb_test_2" {
-  vpc_id                  = "${aws_vpc.alb_test.id}"
+  vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-2"
@@ -1301,7 +1301,7 @@ resource "aws_subnet" "alb_test_2" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1322,8 +1322,8 @@ func testAccAWSLBConfig_basic(lbName string) string {
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1357,10 +1357,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-basic"
@@ -1370,7 +1370,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1398,8 +1398,8 @@ func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1435,10 +1435,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-basic-${count.index}"
@@ -1448,7 +1448,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1476,8 +1476,8 @@ func testAccAWSLBConfig_enableDropInvalidHeaderFields(lbName string, dropInvalid
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1513,10 +1513,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-basic-${count.index}"
@@ -1526,7 +1526,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1554,8 +1554,8 @@ func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protect
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = %t
@@ -1589,10 +1589,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-basic-${count.index}"
@@ -1602,7 +1602,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1639,9 +1639,9 @@ resource "aws_lb" "lb_test" {
   name = "%s"
 
   subnets = [
-    "${aws_subnet.alb_test_1.id}",
-    "${aws_subnet.alb_test_2.id}",
-    "${aws_subnet.alb_test_3.id}",
+    aws_subnet.alb_test_1.id,
+    aws_subnet.alb_test_2.id,
+    aws_subnet.alb_test_3.id,
   ]
 
   load_balancer_type               = "network"
@@ -1656,7 +1656,7 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_subnet" "alb_test_1" {
-  vpc_id            = "${aws_vpc.alb_test.id}"
+  vpc_id            = aws_vpc.alb_test.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
@@ -1666,7 +1666,7 @@ resource "aws_subnet" "alb_test_1" {
 }
 
 resource "aws_subnet" "alb_test_2" {
-  vpc_id            = "${aws_vpc.alb_test.id}"
+  vpc_id            = aws_vpc.alb_test.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
@@ -1676,7 +1676,7 @@ resource "aws_subnet" "alb_test_2" {
 }
 
 resource "aws_subnet" "alb_test_3" {
-  vpc_id            = "${aws_vpc.alb_test.id}"
+  vpc_id            = aws_vpc.alb_test.id
   cidr_block        = "10.0.3.0/24"
   availability_zone = "us-west-2c"
 
@@ -1698,7 +1698,7 @@ resource "aws_lb" "lb_test" {
   enable_cross_zone_load_balancing = %t
 
   subnet_mapping {
-    subnet_id = "${aws_subnet.alb_test.id}"
+    subnet_id = aws_subnet.alb_test.id
   }
 
   tags = {
@@ -1715,7 +1715,7 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_subnet" "alb_test" {
-  vpc_id                  = "${aws_vpc.alb_test.id}"
+  vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.10.0.0/21"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
@@ -1747,10 +1747,10 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  count             = "${length(data.aws_availability_zones.available.names)}"
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  count             = length(data.aws_availability_zones.available.names)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.10.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
@@ -1758,22 +1758,22 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_internet_gateway" "default" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "public" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.default.id}"
+    gateway_id = aws_internet_gateway.default.id
   }
 }
 
 resource "aws_route_table_association" "a" {
-  count          = "${length(data.aws_availability_zones.available.names)}"
-  subnet_id      = "${aws_subnet.public.*.id[count.index]}"
-  route_table_id = "${aws_route_table.public.id}"
+  count          = length(data.aws_availability_zones.available.names)
+  subnet_id      = aws_subnet.public.*.id[count.index]
+  route_table_id = aws_route_table.public.id
 }
 
 resource "aws_lb" "lb_test" {
@@ -1781,16 +1781,16 @@ resource "aws_lb" "lb_test" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id     = "${aws_subnet.public.0.id}"
-    allocation_id = "${aws_eip.lb.0.id}"
+    subnet_id     = aws_subnet.public.0.id
+    allocation_id = aws_eip.lb.0.id
   }
 
   subnet_mapping {
-    subnet_id     = "${aws_subnet.public.1.id}"
-    allocation_id = "${aws_eip.lb.1.id}"
+    subnet_id     = aws_subnet.public.1.id
+    allocation_id = aws_eip.lb.1.id
   }
 
-  depends_on = ["aws_internet_gateway.default"]
+  depends_on = [aws_internet_gateway.default]
 }
 
 resource "aws_eip" "lb" {
@@ -1852,8 +1852,8 @@ func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
 resource "aws_alb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1887,10 +1887,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-bc-${count.index}"
@@ -1900,7 +1900,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1928,8 +1928,8 @@ func testAccAWSLBConfig_updateSubnets(lbName string) string {
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1963,10 +1963,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 3
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-update-subnets-${count.index}"
@@ -1976,7 +1976,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2003,10 +2003,10 @@ func testAccAWSLBConfig_generatedName() string {
 	return `
 resource "aws_lb" "lb_test" {
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2037,7 +2037,7 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 
   tags = {
     Name = "TestAccAWSALB_basic"
@@ -2046,10 +2046,10 @@ resource "aws_internet_gateway" "gw" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-generated-name-${count.index}"
@@ -2059,7 +2059,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2078,7 +2078,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`
+}
+`
 }
 
 func testAccAWSLBConfig_zeroValueName() string {
@@ -2086,10 +2087,10 @@ func testAccAWSLBConfig_zeroValueName() string {
 resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2099,7 +2100,7 @@ resource "aws_lb" "lb_test" {
 
 # See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = "${aws_lb.lb_test.name}"
+  value = aws_lb.lb_test.name
 }
 
 variable "subnets" {
@@ -2125,7 +2126,7 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 
   tags = {
     Name = "TestAccAWSALB_basic"
@@ -2134,10 +2135,10 @@ resource "aws_internet_gateway" "gw" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-zero-value-name-${count.index}"
@@ -2147,7 +2148,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2166,7 +2167,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`
+}
+`
 }
 
 func testAccAWSLBConfig_namePrefix() string {
@@ -2174,10 +2176,10 @@ func testAccAWSLBConfig_namePrefix() string {
 resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2209,10 +2211,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-name-prefix-${count.index}"
@@ -2222,7 +2224,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2241,22 +2243,23 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`
+}
+`
 }
 func testAccAWSLBConfig_updatedTags(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test.*.id
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
     Environment = "Production"
-    Type = "Sample Type Tag"
+    Type        = "Sample Type Tag"
   }
 }
 
@@ -2284,10 +2287,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-updated-tags-${count.index}"
@@ -2297,7 +2300,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2344,9 +2347,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "alb_test" {
   count = 2
 
-  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-lb-access-logs-${count.index}"
@@ -2366,14 +2369,14 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "AWS"
-      identifiers = ["${data.aws_elb_service_account.current.arn}"]
+      identifiers = [data.aws_elb_service_account.current.arn]
     }
   }
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = "${aws_s3_bucket.test.bucket}"
-  policy = "${data.aws_iam_policy_document.test.json}"
+  bucket = aws_s3_bucket.test.bucket
+  policy = data.aws_iam_policy_document.test.json
 }
 `, bucketName)
 }
@@ -2383,10 +2386,10 @@ func testAccAWSLBConfigALBAccessLogs(enabled bool, lbName, bucketName, bucketPre
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = "${aws_subnet.alb_test.*.id}"
+  subnets  = aws_subnet.alb_test.*.id
 
   access_logs {
-    bucket  = "${aws_s3_bucket_policy.test.bucket}"
+    bucket  = aws_s3_bucket_policy.test.bucket
     enabled = %[2]t
     prefix  = %[3]q
   }
@@ -2399,7 +2402,7 @@ func testAccAWSLBConfigALBAccessLogsNoBlocks(lbName, bucketName string) string {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = "${aws_subnet.alb_test.*.id}"
+  subnets  = aws_subnet.alb_test.*.id
 }
 `, lbName)
 }
@@ -2428,9 +2431,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "alb_test" {
   count = 2
 
-  availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-lb-access-logs-${count.index}"
@@ -2457,7 +2460,7 @@ data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["s3:GetBucketAcl"]
     effect    = "Allow"
-    resources = ["${aws_s3_bucket.test.arn}"]
+    resources = [aws_s3_bucket.test.arn]
 
     principals {
       type        = "Service"
@@ -2467,8 +2470,8 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = "${aws_s3_bucket.test.bucket}"
-  policy = "${data.aws_iam_policy_document.test.json}"
+  bucket = aws_s3_bucket.test.bucket
+  policy = data.aws_iam_policy_document.test.json
 }
 `, bucketName)
 }
@@ -2479,10 +2482,10 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
-  subnets            = "${aws_subnet.alb_test.*.id}"
+  subnets            = aws_subnet.alb_test.*.id
 
   access_logs {
-    bucket  = "${aws_s3_bucket_policy.test.bucket}"
+    bucket  = aws_s3_bucket_policy.test.bucket
     enabled = %[2]t
     prefix  = %[3]q
   }
@@ -2496,7 +2499,7 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
-  subnets            = "${aws_subnet.alb_test.*.id}"
+  subnets            = aws_subnet.alb_test.*.id
 }
 `, lbName)
 }
@@ -2506,7 +2509,7 @@ func testAccAWSLBConfig_nosg(lbName string) string {
 resource "aws_lb" "lb_test" {
   name     = "%s"
   internal = true
-  subnets  = "${aws_subnet.alb_test.*.id}"
+  subnets  = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2540,10 +2543,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-no-sg-${count.index}"
@@ -2557,8 +2560,8 @@ func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
-  subnets         = "${aws_subnet.alb_test.*.id}"
+  security_groups = [aws_security_group.alb_test.id, aws_security_group.alb_test_2.id]
+  subnets         = aws_subnet.alb_test.*.id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2592,10 +2595,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-update-security-groups-${count.index}"
@@ -2605,7 +2608,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test_2" {
   name        = "allow_all_alb_test_2"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 80
@@ -2622,7 +2625,7 @@ resource "aws_security_group" "alb_test_2" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0

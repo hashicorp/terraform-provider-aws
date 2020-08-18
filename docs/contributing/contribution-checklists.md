@@ -216,7 +216,7 @@ Some AWS components support [resource-based IAM policies](https://docs.aws.amazo
 - Splitting the resources allows operators to logically split their infrastructure on purely operational and security boundaries with separate configurations/modules.
 - Splitting the resources prevents any separate policy API calls from needing to be permitted in the main resource in environments with restrictive IAM permissions, which can be undesirable.
 
-Follow the [New Resource section][#new-resource] for more information about implementing the separate resource.
+See the [New Resource section](#new-resource) for more information about implementing the separate resource.
 
 ## Adding Resource Tagging Support
 
@@ -402,7 +402,7 @@ More details about this code generation, including fixes for potential error mes
       subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
   }
   `, rName, tagKey1, tagValue1)
   }
@@ -422,7 +422,7 @@ More details about this code generation, including fixes for potential error mes
       subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
   }
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
   }
@@ -474,12 +474,9 @@ guidelines.
 - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
    converted from `CamelCase` to `camel_case`.
-- [ ] __Documentation__: Each resource gets a page in the Terraform
-   documentation. The [Terraform website][website] source is in this
-   repo and includes instructions for getting a local copy of the site up and
-   running if you'd like to preview your changes. For a resource, you'll want
-   to add a new file in the appropriate place and add a link to the sidebar for
-   that page.
+- [ ] __Documentation__: Each data source and resource gets a page in the Terraform
+   documentation, which lives at `website/docs/d/<service>_<name>.html.markdown` and
+   `website/docs/r/<service>_<name>.html.markdown` respectively.
 - [ ] __Well-formed Code__: Do your best to follow existing conventions you
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with

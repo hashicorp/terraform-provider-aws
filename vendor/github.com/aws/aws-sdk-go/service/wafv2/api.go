@@ -14615,6 +14615,18 @@ const (
 	ComparisonOperatorGt = "GT"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorEq,
+		ComparisonOperatorNe,
+		ComparisonOperatorLe,
+		ComparisonOperatorLt,
+		ComparisonOperatorGe,
+		ComparisonOperatorGt,
+	}
+}
+
 const (
 	// CountryCodeAf is a CountryCode enum value
 	CountryCodeAf = "AF"
@@ -15364,6 +15376,261 @@ const (
 	CountryCodeZw = "ZW"
 )
 
+// CountryCode_Values returns all elements of the CountryCode enum
+func CountryCode_Values() []string {
+	return []string{
+		CountryCodeAf,
+		CountryCodeAx,
+		CountryCodeAl,
+		CountryCodeDz,
+		CountryCodeAs,
+		CountryCodeAd,
+		CountryCodeAo,
+		CountryCodeAi,
+		CountryCodeAq,
+		CountryCodeAg,
+		CountryCodeAr,
+		CountryCodeAm,
+		CountryCodeAw,
+		CountryCodeAu,
+		CountryCodeAt,
+		CountryCodeAz,
+		CountryCodeBs,
+		CountryCodeBh,
+		CountryCodeBd,
+		CountryCodeBb,
+		CountryCodeBy,
+		CountryCodeBe,
+		CountryCodeBz,
+		CountryCodeBj,
+		CountryCodeBm,
+		CountryCodeBt,
+		CountryCodeBo,
+		CountryCodeBq,
+		CountryCodeBa,
+		CountryCodeBw,
+		CountryCodeBv,
+		CountryCodeBr,
+		CountryCodeIo,
+		CountryCodeBn,
+		CountryCodeBg,
+		CountryCodeBf,
+		CountryCodeBi,
+		CountryCodeKh,
+		CountryCodeCm,
+		CountryCodeCa,
+		CountryCodeCv,
+		CountryCodeKy,
+		CountryCodeCf,
+		CountryCodeTd,
+		CountryCodeCl,
+		CountryCodeCn,
+		CountryCodeCx,
+		CountryCodeCc,
+		CountryCodeCo,
+		CountryCodeKm,
+		CountryCodeCg,
+		CountryCodeCd,
+		CountryCodeCk,
+		CountryCodeCr,
+		CountryCodeCi,
+		CountryCodeHr,
+		CountryCodeCu,
+		CountryCodeCw,
+		CountryCodeCy,
+		CountryCodeCz,
+		CountryCodeDk,
+		CountryCodeDj,
+		CountryCodeDm,
+		CountryCodeDo,
+		CountryCodeEc,
+		CountryCodeEg,
+		CountryCodeSv,
+		CountryCodeGq,
+		CountryCodeEr,
+		CountryCodeEe,
+		CountryCodeEt,
+		CountryCodeFk,
+		CountryCodeFo,
+		CountryCodeFj,
+		CountryCodeFi,
+		CountryCodeFr,
+		CountryCodeGf,
+		CountryCodePf,
+		CountryCodeTf,
+		CountryCodeGa,
+		CountryCodeGm,
+		CountryCodeGe,
+		CountryCodeDe,
+		CountryCodeGh,
+		CountryCodeGi,
+		CountryCodeGr,
+		CountryCodeGl,
+		CountryCodeGd,
+		CountryCodeGp,
+		CountryCodeGu,
+		CountryCodeGt,
+		CountryCodeGg,
+		CountryCodeGn,
+		CountryCodeGw,
+		CountryCodeGy,
+		CountryCodeHt,
+		CountryCodeHm,
+		CountryCodeVa,
+		CountryCodeHn,
+		CountryCodeHk,
+		CountryCodeHu,
+		CountryCodeIs,
+		CountryCodeIn,
+		CountryCodeId,
+		CountryCodeIr,
+		CountryCodeIq,
+		CountryCodeIe,
+		CountryCodeIm,
+		CountryCodeIl,
+		CountryCodeIt,
+		CountryCodeJm,
+		CountryCodeJp,
+		CountryCodeJe,
+		CountryCodeJo,
+		CountryCodeKz,
+		CountryCodeKe,
+		CountryCodeKi,
+		CountryCodeKp,
+		CountryCodeKr,
+		CountryCodeKw,
+		CountryCodeKg,
+		CountryCodeLa,
+		CountryCodeLv,
+		CountryCodeLb,
+		CountryCodeLs,
+		CountryCodeLr,
+		CountryCodeLy,
+		CountryCodeLi,
+		CountryCodeLt,
+		CountryCodeLu,
+		CountryCodeMo,
+		CountryCodeMk,
+		CountryCodeMg,
+		CountryCodeMw,
+		CountryCodeMy,
+		CountryCodeMv,
+		CountryCodeMl,
+		CountryCodeMt,
+		CountryCodeMh,
+		CountryCodeMq,
+		CountryCodeMr,
+		CountryCodeMu,
+		CountryCodeYt,
+		CountryCodeMx,
+		CountryCodeFm,
+		CountryCodeMd,
+		CountryCodeMc,
+		CountryCodeMn,
+		CountryCodeMe,
+		CountryCodeMs,
+		CountryCodeMa,
+		CountryCodeMz,
+		CountryCodeMm,
+		CountryCodeNa,
+		CountryCodeNr,
+		CountryCodeNp,
+		CountryCodeNl,
+		CountryCodeNc,
+		CountryCodeNz,
+		CountryCodeNi,
+		CountryCodeNe,
+		CountryCodeNg,
+		CountryCodeNu,
+		CountryCodeNf,
+		CountryCodeMp,
+		CountryCodeNo,
+		CountryCodeOm,
+		CountryCodePk,
+		CountryCodePw,
+		CountryCodePs,
+		CountryCodePa,
+		CountryCodePg,
+		CountryCodePy,
+		CountryCodePe,
+		CountryCodePh,
+		CountryCodePn,
+		CountryCodePl,
+		CountryCodePt,
+		CountryCodePr,
+		CountryCodeQa,
+		CountryCodeRe,
+		CountryCodeRo,
+		CountryCodeRu,
+		CountryCodeRw,
+		CountryCodeBl,
+		CountryCodeSh,
+		CountryCodeKn,
+		CountryCodeLc,
+		CountryCodeMf,
+		CountryCodePm,
+		CountryCodeVc,
+		CountryCodeWs,
+		CountryCodeSm,
+		CountryCodeSt,
+		CountryCodeSa,
+		CountryCodeSn,
+		CountryCodeRs,
+		CountryCodeSc,
+		CountryCodeSl,
+		CountryCodeSg,
+		CountryCodeSx,
+		CountryCodeSk,
+		CountryCodeSi,
+		CountryCodeSb,
+		CountryCodeSo,
+		CountryCodeZa,
+		CountryCodeGs,
+		CountryCodeSs,
+		CountryCodeEs,
+		CountryCodeLk,
+		CountryCodeSd,
+		CountryCodeSr,
+		CountryCodeSj,
+		CountryCodeSz,
+		CountryCodeSe,
+		CountryCodeCh,
+		CountryCodeSy,
+		CountryCodeTw,
+		CountryCodeTj,
+		CountryCodeTz,
+		CountryCodeTh,
+		CountryCodeTl,
+		CountryCodeTg,
+		CountryCodeTk,
+		CountryCodeTo,
+		CountryCodeTt,
+		CountryCodeTn,
+		CountryCodeTr,
+		CountryCodeTm,
+		CountryCodeTc,
+		CountryCodeTv,
+		CountryCodeUg,
+		CountryCodeUa,
+		CountryCodeAe,
+		CountryCodeGb,
+		CountryCodeUs,
+		CountryCodeUm,
+		CountryCodeUy,
+		CountryCodeUz,
+		CountryCodeVu,
+		CountryCodeVe,
+		CountryCodeVn,
+		CountryCodeVg,
+		CountryCodeVi,
+		CountryCodeWf,
+		CountryCodeEh,
+		CountryCodeYe,
+		CountryCodeZm,
+		CountryCodeZw,
+	}
+}
+
 const (
 	// FallbackBehaviorMatch is a FallbackBehavior enum value
 	FallbackBehaviorMatch = "MATCH"
@@ -15371,6 +15638,14 @@ const (
 	// FallbackBehaviorNoMatch is a FallbackBehavior enum value
 	FallbackBehaviorNoMatch = "NO_MATCH"
 )
+
+// FallbackBehavior_Values returns all elements of the FallbackBehavior enum
+func FallbackBehavior_Values() []string {
+	return []string{
+		FallbackBehaviorMatch,
+		FallbackBehaviorNoMatch,
+	}
+}
 
 const (
 	// ForwardedIPPositionFirst is a ForwardedIPPosition enum value
@@ -15383,6 +15658,15 @@ const (
 	ForwardedIPPositionAny = "ANY"
 )
 
+// ForwardedIPPosition_Values returns all elements of the ForwardedIPPosition enum
+func ForwardedIPPosition_Values() []string {
+	return []string{
+		ForwardedIPPositionFirst,
+		ForwardedIPPositionLast,
+		ForwardedIPPositionAny,
+	}
+}
+
 const (
 	// IPAddressVersionIpv4 is a IPAddressVersion enum value
 	IPAddressVersionIpv4 = "IPV4"
@@ -15390,6 +15674,14 @@ const (
 	// IPAddressVersionIpv6 is a IPAddressVersion enum value
 	IPAddressVersionIpv6 = "IPV6"
 )
+
+// IPAddressVersion_Values returns all elements of the IPAddressVersion enum
+func IPAddressVersion_Values() []string {
+	return []string{
+		IPAddressVersionIpv4,
+		IPAddressVersionIpv6,
+	}
+}
 
 const (
 	// ParameterExceptionFieldWebAcl is a ParameterExceptionField enum value
@@ -15522,6 +15814,55 @@ const (
 	ParameterExceptionFieldHeaderName = "HEADER_NAME"
 )
 
+// ParameterExceptionField_Values returns all elements of the ParameterExceptionField enum
+func ParameterExceptionField_Values() []string {
+	return []string{
+		ParameterExceptionFieldWebAcl,
+		ParameterExceptionFieldRuleGroup,
+		ParameterExceptionFieldRegexPatternSet,
+		ParameterExceptionFieldIpSet,
+		ParameterExceptionFieldManagedRuleSet,
+		ParameterExceptionFieldRule,
+		ParameterExceptionFieldExcludedRule,
+		ParameterExceptionFieldStatement,
+		ParameterExceptionFieldByteMatchStatement,
+		ParameterExceptionFieldSqliMatchStatement,
+		ParameterExceptionFieldXssMatchStatement,
+		ParameterExceptionFieldSizeConstraintStatement,
+		ParameterExceptionFieldGeoMatchStatement,
+		ParameterExceptionFieldRateBasedStatement,
+		ParameterExceptionFieldRuleGroupReferenceStatement,
+		ParameterExceptionFieldRegexPatternReferenceStatement,
+		ParameterExceptionFieldIpSetReferenceStatement,
+		ParameterExceptionFieldManagedRuleSetStatement,
+		ParameterExceptionFieldAndStatement,
+		ParameterExceptionFieldOrStatement,
+		ParameterExceptionFieldNotStatement,
+		ParameterExceptionFieldIpAddress,
+		ParameterExceptionFieldIpAddressVersion,
+		ParameterExceptionFieldFieldToMatch,
+		ParameterExceptionFieldTextTransformation,
+		ParameterExceptionFieldSingleQueryArgument,
+		ParameterExceptionFieldSingleHeader,
+		ParameterExceptionFieldDefaultAction,
+		ParameterExceptionFieldRuleAction,
+		ParameterExceptionFieldEntityLimit,
+		ParameterExceptionFieldOverrideAction,
+		ParameterExceptionFieldScopeValue,
+		ParameterExceptionFieldResourceArn,
+		ParameterExceptionFieldResourceType,
+		ParameterExceptionFieldTags,
+		ParameterExceptionFieldTagKeys,
+		ParameterExceptionFieldMetricName,
+		ParameterExceptionFieldFirewallManagerStatement,
+		ParameterExceptionFieldFallbackBehavior,
+		ParameterExceptionFieldPosition,
+		ParameterExceptionFieldForwardedIpConfig,
+		ParameterExceptionFieldIpSetForwardedIpConfig,
+		ParameterExceptionFieldHeaderName,
+	}
+}
+
 const (
 	// PositionalConstraintExactly is a PositionalConstraint enum value
 	PositionalConstraintExactly = "EXACTLY"
@@ -15539,6 +15880,17 @@ const (
 	PositionalConstraintContainsWord = "CONTAINS_WORD"
 )
 
+// PositionalConstraint_Values returns all elements of the PositionalConstraint enum
+func PositionalConstraint_Values() []string {
+	return []string{
+		PositionalConstraintExactly,
+		PositionalConstraintStartsWith,
+		PositionalConstraintEndsWith,
+		PositionalConstraintContains,
+		PositionalConstraintContainsWord,
+	}
+}
+
 const (
 	// RateBasedStatementAggregateKeyTypeIp is a RateBasedStatementAggregateKeyType enum value
 	RateBasedStatementAggregateKeyTypeIp = "IP"
@@ -15546,6 +15898,14 @@ const (
 	// RateBasedStatementAggregateKeyTypeForwardedIp is a RateBasedStatementAggregateKeyType enum value
 	RateBasedStatementAggregateKeyTypeForwardedIp = "FORWARDED_IP"
 )
+
+// RateBasedStatementAggregateKeyType_Values returns all elements of the RateBasedStatementAggregateKeyType enum
+func RateBasedStatementAggregateKeyType_Values() []string {
+	return []string{
+		RateBasedStatementAggregateKeyTypeIp,
+		RateBasedStatementAggregateKeyTypeForwardedIp,
+	}
+}
 
 const (
 	// ResourceTypeApplicationLoadBalancer is a ResourceType enum value
@@ -15555,6 +15915,14 @@ const (
 	ResourceTypeApiGateway = "API_GATEWAY"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeApplicationLoadBalancer,
+		ResourceTypeApiGateway,
+	}
+}
+
 const (
 	// ScopeCloudfront is a Scope enum value
 	ScopeCloudfront = "CLOUDFRONT"
@@ -15562,6 +15930,14 @@ const (
 	// ScopeRegional is a Scope enum value
 	ScopeRegional = "REGIONAL"
 )
+
+// Scope_Values returns all elements of the Scope enum
+func Scope_Values() []string {
+	return []string{
+		ScopeCloudfront,
+		ScopeRegional,
+	}
+}
 
 const (
 	// TextTransformationTypeNone is a TextTransformationType enum value
@@ -15582,3 +15958,15 @@ const (
 	// TextTransformationTypeUrlDecode is a TextTransformationType enum value
 	TextTransformationTypeUrlDecode = "URL_DECODE"
 )
+
+// TextTransformationType_Values returns all elements of the TextTransformationType enum
+func TextTransformationType_Values() []string {
+	return []string{
+		TextTransformationTypeNone,
+		TextTransformationTypeCompressWhiteSpace,
+		TextTransformationTypeHtmlEntityDecode,
+		TextTransformationTypeLowercase,
+		TextTransformationTypeCmdLine,
+		TextTransformationTypeUrlDecode,
+	}
+}

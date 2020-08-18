@@ -47253,6 +47253,17 @@ const (
 	AssociationComplianceSeverityUnspecified = "UNSPECIFIED"
 )
 
+// AssociationComplianceSeverity_Values returns all elements of the AssociationComplianceSeverity enum
+func AssociationComplianceSeverity_Values() []string {
+	return []string{
+		AssociationComplianceSeverityCritical,
+		AssociationComplianceSeverityHigh,
+		AssociationComplianceSeverityMedium,
+		AssociationComplianceSeverityLow,
+		AssociationComplianceSeverityUnspecified,
+	}
+}
+
 const (
 	// AssociationExecutionFilterKeyExecutionId is a AssociationExecutionFilterKey enum value
 	AssociationExecutionFilterKeyExecutionId = "ExecutionId"
@@ -47264,6 +47275,15 @@ const (
 	AssociationExecutionFilterKeyCreatedTime = "CreatedTime"
 )
 
+// AssociationExecutionFilterKey_Values returns all elements of the AssociationExecutionFilterKey enum
+func AssociationExecutionFilterKey_Values() []string {
+	return []string{
+		AssociationExecutionFilterKeyExecutionId,
+		AssociationExecutionFilterKeyStatus,
+		AssociationExecutionFilterKeyCreatedTime,
+	}
+}
+
 const (
 	// AssociationExecutionTargetsFilterKeyStatus is a AssociationExecutionTargetsFilterKey enum value
 	AssociationExecutionTargetsFilterKeyStatus = "Status"
@@ -47274,6 +47294,15 @@ const (
 	// AssociationExecutionTargetsFilterKeyResourceType is a AssociationExecutionTargetsFilterKey enum value
 	AssociationExecutionTargetsFilterKeyResourceType = "ResourceType"
 )
+
+// AssociationExecutionTargetsFilterKey_Values returns all elements of the AssociationExecutionTargetsFilterKey enum
+func AssociationExecutionTargetsFilterKey_Values() []string {
+	return []string{
+		AssociationExecutionTargetsFilterKeyStatus,
+		AssociationExecutionTargetsFilterKeyResourceId,
+		AssociationExecutionTargetsFilterKeyResourceType,
+	}
+}
 
 const (
 	// AssociationFilterKeyInstanceId is a AssociationFilterKey enum value
@@ -47301,6 +47330,20 @@ const (
 	AssociationFilterKeyResourceGroupName = "ResourceGroupName"
 )
 
+// AssociationFilterKey_Values returns all elements of the AssociationFilterKey enum
+func AssociationFilterKey_Values() []string {
+	return []string{
+		AssociationFilterKeyInstanceId,
+		AssociationFilterKeyName,
+		AssociationFilterKeyAssociationId,
+		AssociationFilterKeyAssociationStatusName,
+		AssociationFilterKeyLastExecutedBefore,
+		AssociationFilterKeyLastExecutedAfter,
+		AssociationFilterKeyAssociationName,
+		AssociationFilterKeyResourceGroupName,
+	}
+}
+
 const (
 	// AssociationFilterOperatorTypeEqual is a AssociationFilterOperatorType enum value
 	AssociationFilterOperatorTypeEqual = "EQUAL"
@@ -47311,6 +47354,15 @@ const (
 	// AssociationFilterOperatorTypeGreaterThan is a AssociationFilterOperatorType enum value
 	AssociationFilterOperatorTypeGreaterThan = "GREATER_THAN"
 )
+
+// AssociationFilterOperatorType_Values returns all elements of the AssociationFilterOperatorType enum
+func AssociationFilterOperatorType_Values() []string {
+	return []string{
+		AssociationFilterOperatorTypeEqual,
+		AssociationFilterOperatorTypeLessThan,
+		AssociationFilterOperatorTypeGreaterThan,
+	}
+}
 
 const (
 	// AssociationStatusNamePending is a AssociationStatusName enum value
@@ -47323,6 +47375,15 @@ const (
 	AssociationStatusNameFailed = "Failed"
 )
 
+// AssociationStatusName_Values returns all elements of the AssociationStatusName enum
+func AssociationStatusName_Values() []string {
+	return []string{
+		AssociationStatusNamePending,
+		AssociationStatusNameSuccess,
+		AssociationStatusNameFailed,
+	}
+}
+
 const (
 	// AssociationSyncComplianceAuto is a AssociationSyncCompliance enum value
 	AssociationSyncComplianceAuto = "AUTO"
@@ -47331,10 +47392,25 @@ const (
 	AssociationSyncComplianceManual = "MANUAL"
 )
 
+// AssociationSyncCompliance_Values returns all elements of the AssociationSyncCompliance enum
+func AssociationSyncCompliance_Values() []string {
+	return []string{
+		AssociationSyncComplianceAuto,
+		AssociationSyncComplianceManual,
+	}
+}
+
 const (
 	// AttachmentHashTypeSha256 is a AttachmentHashType enum value
 	AttachmentHashTypeSha256 = "Sha256"
 )
+
+// AttachmentHashType_Values returns all elements of the AttachmentHashType enum
+func AttachmentHashType_Values() []string {
+	return []string{
+		AttachmentHashTypeSha256,
+	}
+}
 
 const (
 	// AttachmentsSourceKeySourceUrl is a AttachmentsSourceKey enum value
@@ -47346,6 +47422,15 @@ const (
 	// AttachmentsSourceKeyAttachmentReference is a AttachmentsSourceKey enum value
 	AttachmentsSourceKeyAttachmentReference = "AttachmentReference"
 )
+
+// AttachmentsSourceKey_Values returns all elements of the AttachmentsSourceKey enum
+func AttachmentsSourceKey_Values() []string {
+	return []string{
+		AttachmentsSourceKeySourceUrl,
+		AttachmentsSourceKeyS3fileUrl,
+		AttachmentsSourceKeyAttachmentReference,
+	}
+}
 
 const (
 	// AutomationExecutionFilterKeyDocumentNamePrefix is a AutomationExecutionFilterKey enum value
@@ -47376,6 +47461,21 @@ const (
 	AutomationExecutionFilterKeyTagKey = "TagKey"
 )
 
+// AutomationExecutionFilterKey_Values returns all elements of the AutomationExecutionFilterKey enum
+func AutomationExecutionFilterKey_Values() []string {
+	return []string{
+		AutomationExecutionFilterKeyDocumentNamePrefix,
+		AutomationExecutionFilterKeyExecutionStatus,
+		AutomationExecutionFilterKeyExecutionId,
+		AutomationExecutionFilterKeyParentExecutionId,
+		AutomationExecutionFilterKeyCurrentAction,
+		AutomationExecutionFilterKeyStartTimeBefore,
+		AutomationExecutionFilterKeyStartTimeAfter,
+		AutomationExecutionFilterKeyAutomationType,
+		AutomationExecutionFilterKeyTagKey,
+	}
+}
+
 const (
 	// AutomationExecutionStatusPending is a AutomationExecutionStatus enum value
 	AutomationExecutionStatusPending = "Pending"
@@ -47402,6 +47502,20 @@ const (
 	AutomationExecutionStatusFailed = "Failed"
 )
 
+// AutomationExecutionStatus_Values returns all elements of the AutomationExecutionStatus enum
+func AutomationExecutionStatus_Values() []string {
+	return []string{
+		AutomationExecutionStatusPending,
+		AutomationExecutionStatusInProgress,
+		AutomationExecutionStatusWaiting,
+		AutomationExecutionStatusSuccess,
+		AutomationExecutionStatusTimedOut,
+		AutomationExecutionStatusCancelling,
+		AutomationExecutionStatusCancelled,
+		AutomationExecutionStatusFailed,
+	}
+}
+
 const (
 	// AutomationTypeCrossAccount is a AutomationType enum value
 	AutomationTypeCrossAccount = "CrossAccount"
@@ -47410,6 +47524,14 @@ const (
 	AutomationTypeLocal = "Local"
 )
 
+// AutomationType_Values returns all elements of the AutomationType enum
+func AutomationType_Values() []string {
+	return []string{
+		AutomationTypeCrossAccount,
+		AutomationTypeLocal,
+	}
+}
+
 const (
 	// CalendarStateOpen is a CalendarState enum value
 	CalendarStateOpen = "OPEN"
@@ -47417,6 +47539,14 @@ const (
 	// CalendarStateClosed is a CalendarState enum value
 	CalendarStateClosed = "CLOSED"
 )
+
+// CalendarState_Values returns all elements of the CalendarState enum
+func CalendarState_Values() []string {
+	return []string{
+		CalendarStateOpen,
+		CalendarStateClosed,
+	}
+}
 
 const (
 	// CommandFilterKeyInvokedAfter is a CommandFilterKey enum value
@@ -47434,6 +47564,17 @@ const (
 	// CommandFilterKeyDocumentName is a CommandFilterKey enum value
 	CommandFilterKeyDocumentName = "DocumentName"
 )
+
+// CommandFilterKey_Values returns all elements of the CommandFilterKey enum
+func CommandFilterKey_Values() []string {
+	return []string{
+		CommandFilterKeyInvokedAfter,
+		CommandFilterKeyInvokedBefore,
+		CommandFilterKeyStatus,
+		CommandFilterKeyExecutionStage,
+		CommandFilterKeyDocumentName,
+	}
+}
 
 const (
 	// CommandInvocationStatusPending is a CommandInvocationStatus enum value
@@ -47461,6 +47602,20 @@ const (
 	CommandInvocationStatusCancelling = "Cancelling"
 )
 
+// CommandInvocationStatus_Values returns all elements of the CommandInvocationStatus enum
+func CommandInvocationStatus_Values() []string {
+	return []string{
+		CommandInvocationStatusPending,
+		CommandInvocationStatusInProgress,
+		CommandInvocationStatusDelayed,
+		CommandInvocationStatusSuccess,
+		CommandInvocationStatusCancelled,
+		CommandInvocationStatusTimedOut,
+		CommandInvocationStatusFailed,
+		CommandInvocationStatusCancelling,
+	}
+}
+
 const (
 	// CommandPluginStatusPending is a CommandPluginStatus enum value
 	CommandPluginStatusPending = "Pending"
@@ -47480,6 +47635,18 @@ const (
 	// CommandPluginStatusFailed is a CommandPluginStatus enum value
 	CommandPluginStatusFailed = "Failed"
 )
+
+// CommandPluginStatus_Values returns all elements of the CommandPluginStatus enum
+func CommandPluginStatus_Values() []string {
+	return []string{
+		CommandPluginStatusPending,
+		CommandPluginStatusInProgress,
+		CommandPluginStatusSuccess,
+		CommandPluginStatusTimedOut,
+		CommandPluginStatusCancelled,
+		CommandPluginStatusFailed,
+	}
+}
 
 const (
 	// CommandStatusPending is a CommandStatus enum value
@@ -47504,6 +47671,19 @@ const (
 	CommandStatusCancelling = "Cancelling"
 )
 
+// CommandStatus_Values returns all elements of the CommandStatus enum
+func CommandStatus_Values() []string {
+	return []string{
+		CommandStatusPending,
+		CommandStatusInProgress,
+		CommandStatusSuccess,
+		CommandStatusCancelled,
+		CommandStatusFailed,
+		CommandStatusTimedOut,
+		CommandStatusCancelling,
+	}
+}
+
 const (
 	// ComplianceQueryOperatorTypeEqual is a ComplianceQueryOperatorType enum value
 	ComplianceQueryOperatorTypeEqual = "EQUAL"
@@ -47520,6 +47700,17 @@ const (
 	// ComplianceQueryOperatorTypeGreaterThan is a ComplianceQueryOperatorType enum value
 	ComplianceQueryOperatorTypeGreaterThan = "GREATER_THAN"
 )
+
+// ComplianceQueryOperatorType_Values returns all elements of the ComplianceQueryOperatorType enum
+func ComplianceQueryOperatorType_Values() []string {
+	return []string{
+		ComplianceQueryOperatorTypeEqual,
+		ComplianceQueryOperatorTypeNotEqual,
+		ComplianceQueryOperatorTypeBeginWith,
+		ComplianceQueryOperatorTypeLessThan,
+		ComplianceQueryOperatorTypeGreaterThan,
+	}
+}
 
 const (
 	// ComplianceSeverityCritical is a ComplianceSeverity enum value
@@ -47541,6 +47732,18 @@ const (
 	ComplianceSeverityUnspecified = "UNSPECIFIED"
 )
 
+// ComplianceSeverity_Values returns all elements of the ComplianceSeverity enum
+func ComplianceSeverity_Values() []string {
+	return []string{
+		ComplianceSeverityCritical,
+		ComplianceSeverityHigh,
+		ComplianceSeverityMedium,
+		ComplianceSeverityLow,
+		ComplianceSeverityInformational,
+		ComplianceSeverityUnspecified,
+	}
+}
+
 const (
 	// ComplianceStatusCompliant is a ComplianceStatus enum value
 	ComplianceStatusCompliant = "COMPLIANT"
@@ -47548,6 +47751,14 @@ const (
 	// ComplianceStatusNonCompliant is a ComplianceStatus enum value
 	ComplianceStatusNonCompliant = "NON_COMPLIANT"
 )
+
+// ComplianceStatus_Values returns all elements of the ComplianceStatus enum
+func ComplianceStatus_Values() []string {
+	return []string{
+		ComplianceStatusCompliant,
+		ComplianceStatusNonCompliant,
+	}
+}
 
 const (
 	// ComplianceUploadTypeComplete is a ComplianceUploadType enum value
@@ -47557,6 +47768,14 @@ const (
 	ComplianceUploadTypePartial = "PARTIAL"
 )
 
+// ComplianceUploadType_Values returns all elements of the ComplianceUploadType enum
+func ComplianceUploadType_Values() []string {
+	return []string{
+		ComplianceUploadTypeComplete,
+		ComplianceUploadTypePartial,
+	}
+}
+
 const (
 	// ConnectionStatusConnected is a ConnectionStatus enum value
 	ConnectionStatusConnected = "Connected"
@@ -47564,6 +47783,14 @@ const (
 	// ConnectionStatusNotConnected is a ConnectionStatus enum value
 	ConnectionStatusNotConnected = "NotConnected"
 )
+
+// ConnectionStatus_Values returns all elements of the ConnectionStatus enum
+func ConnectionStatus_Values() []string {
+	return []string{
+		ConnectionStatusConnected,
+		ConnectionStatusNotConnected,
+	}
+}
 
 const (
 	// DescribeActivationsFilterKeysActivationIds is a DescribeActivationsFilterKeys enum value
@@ -47575,6 +47802,15 @@ const (
 	// DescribeActivationsFilterKeysIamRole is a DescribeActivationsFilterKeys enum value
 	DescribeActivationsFilterKeysIamRole = "IamRole"
 )
+
+// DescribeActivationsFilterKeys_Values returns all elements of the DescribeActivationsFilterKeys enum
+func DescribeActivationsFilterKeys_Values() []string {
+	return []string{
+		DescribeActivationsFilterKeysActivationIds,
+		DescribeActivationsFilterKeysDefaultInstanceName,
+		DescribeActivationsFilterKeysIamRole,
+	}
+}
 
 const (
 	// DocumentFilterKeyName is a DocumentFilterKey enum value
@@ -47590,6 +47826,16 @@ const (
 	DocumentFilterKeyDocumentType = "DocumentType"
 )
 
+// DocumentFilterKey_Values returns all elements of the DocumentFilterKey enum
+func DocumentFilterKey_Values() []string {
+	return []string{
+		DocumentFilterKeyName,
+		DocumentFilterKeyOwner,
+		DocumentFilterKeyPlatformTypes,
+		DocumentFilterKeyDocumentType,
+	}
+}
+
 const (
 	// DocumentFormatYaml is a DocumentFormat enum value
 	DocumentFormatYaml = "YAML"
@@ -47601,6 +47847,15 @@ const (
 	DocumentFormatText = "TEXT"
 )
 
+// DocumentFormat_Values returns all elements of the DocumentFormat enum
+func DocumentFormat_Values() []string {
+	return []string{
+		DocumentFormatYaml,
+		DocumentFormatJson,
+		DocumentFormatText,
+	}
+}
+
 const (
 	// DocumentHashTypeSha256 is a DocumentHashType enum value
 	DocumentHashTypeSha256 = "Sha256"
@@ -47608,6 +47863,14 @@ const (
 	// DocumentHashTypeSha1 is a DocumentHashType enum value
 	DocumentHashTypeSha1 = "Sha1"
 )
+
+// DocumentHashType_Values returns all elements of the DocumentHashType enum
+func DocumentHashType_Values() []string {
+	return []string{
+		DocumentHashTypeSha256,
+		DocumentHashTypeSha1,
+	}
+}
 
 const (
 	// DocumentParameterTypeString is a DocumentParameterType enum value
@@ -47617,10 +47880,25 @@ const (
 	DocumentParameterTypeStringList = "StringList"
 )
 
+// DocumentParameterType_Values returns all elements of the DocumentParameterType enum
+func DocumentParameterType_Values() []string {
+	return []string{
+		DocumentParameterTypeString,
+		DocumentParameterTypeStringList,
+	}
+}
+
 const (
 	// DocumentPermissionTypeShare is a DocumentPermissionType enum value
 	DocumentPermissionTypeShare = "Share"
 )
+
+// DocumentPermissionType_Values returns all elements of the DocumentPermissionType enum
+func DocumentPermissionType_Values() []string {
+	return []string{
+		DocumentPermissionTypeShare,
+	}
+}
 
 // The status of a document.
 const (
@@ -47639,6 +47917,17 @@ const (
 	// DocumentStatusFailed is a DocumentStatus enum value
 	DocumentStatusFailed = "Failed"
 )
+
+// DocumentStatus_Values returns all elements of the DocumentStatus enum
+func DocumentStatus_Values() []string {
+	return []string{
+		DocumentStatusCreating,
+		DocumentStatusActive,
+		DocumentStatusUpdating,
+		DocumentStatusDeleting,
+		DocumentStatusFailed,
+	}
+}
 
 const (
 	// DocumentTypeCommand is a DocumentType enum value
@@ -47669,6 +47958,21 @@ const (
 	DocumentTypeChangeCalendar = "ChangeCalendar"
 )
 
+// DocumentType_Values returns all elements of the DocumentType enum
+func DocumentType_Values() []string {
+	return []string{
+		DocumentTypeCommand,
+		DocumentTypePolicy,
+		DocumentTypeAutomation,
+		DocumentTypeSession,
+		DocumentTypePackage,
+		DocumentTypeApplicationConfiguration,
+		DocumentTypeApplicationConfigurationSchema,
+		DocumentTypeDeploymentStrategy,
+		DocumentTypeChangeCalendar,
+	}
+}
+
 const (
 	// ExecutionModeAuto is a ExecutionMode enum value
 	ExecutionModeAuto = "Auto"
@@ -47676,6 +47980,14 @@ const (
 	// ExecutionModeInteractive is a ExecutionMode enum value
 	ExecutionModeInteractive = "Interactive"
 )
+
+// ExecutionMode_Values returns all elements of the ExecutionMode enum
+func ExecutionMode_Values() []string {
+	return []string{
+		ExecutionModeAuto,
+		ExecutionModeInteractive,
+	}
+}
 
 const (
 	// FaultClient is a Fault enum value
@@ -47687,6 +47999,15 @@ const (
 	// FaultUnknown is a Fault enum value
 	FaultUnknown = "Unknown"
 )
+
+// Fault_Values returns all elements of the Fault enum
+func Fault_Values() []string {
+	return []string{
+		FaultClient,
+		FaultServer,
+		FaultUnknown,
+	}
+}
 
 const (
 	// InstanceInformationFilterKeyInstanceIds is a InstanceInformationFilterKey enum value
@@ -47714,6 +48035,20 @@ const (
 	InstanceInformationFilterKeyAssociationStatus = "AssociationStatus"
 )
 
+// InstanceInformationFilterKey_Values returns all elements of the InstanceInformationFilterKey enum
+func InstanceInformationFilterKey_Values() []string {
+	return []string{
+		InstanceInformationFilterKeyInstanceIds,
+		InstanceInformationFilterKeyAgentVersion,
+		InstanceInformationFilterKeyPingStatus,
+		InstanceInformationFilterKeyPlatformTypes,
+		InstanceInformationFilterKeyActivationIds,
+		InstanceInformationFilterKeyIamRole,
+		InstanceInformationFilterKeyResourceType,
+		InstanceInformationFilterKeyAssociationStatus,
+	}
+}
+
 const (
 	// InstancePatchStateOperatorTypeEqual is a InstancePatchStateOperatorType enum value
 	InstancePatchStateOperatorTypeEqual = "Equal"
@@ -47728,6 +48063,16 @@ const (
 	InstancePatchStateOperatorTypeGreaterThan = "GreaterThan"
 )
 
+// InstancePatchStateOperatorType_Values returns all elements of the InstancePatchStateOperatorType enum
+func InstancePatchStateOperatorType_Values() []string {
+	return []string{
+		InstancePatchStateOperatorTypeEqual,
+		InstancePatchStateOperatorTypeNotEqual,
+		InstancePatchStateOperatorTypeLessThan,
+		InstancePatchStateOperatorTypeGreaterThan,
+	}
+}
+
 const (
 	// InventoryAttributeDataTypeString is a InventoryAttributeDataType enum value
 	InventoryAttributeDataTypeString = "string"
@@ -47736,6 +48081,14 @@ const (
 	InventoryAttributeDataTypeNumber = "number"
 )
 
+// InventoryAttributeDataType_Values returns all elements of the InventoryAttributeDataType enum
+func InventoryAttributeDataType_Values() []string {
+	return []string{
+		InventoryAttributeDataTypeString,
+		InventoryAttributeDataTypeNumber,
+	}
+}
+
 const (
 	// InventoryDeletionStatusInProgress is a InventoryDeletionStatus enum value
 	InventoryDeletionStatusInProgress = "InProgress"
@@ -47743,6 +48096,14 @@ const (
 	// InventoryDeletionStatusComplete is a InventoryDeletionStatus enum value
 	InventoryDeletionStatusComplete = "Complete"
 )
+
+// InventoryDeletionStatus_Values returns all elements of the InventoryDeletionStatus enum
+func InventoryDeletionStatus_Values() []string {
+	return []string{
+		InventoryDeletionStatusInProgress,
+		InventoryDeletionStatusComplete,
+	}
+}
 
 const (
 	// InventoryQueryOperatorTypeEqual is a InventoryQueryOperatorType enum value
@@ -47764,6 +48125,18 @@ const (
 	InventoryQueryOperatorTypeExists = "Exists"
 )
 
+// InventoryQueryOperatorType_Values returns all elements of the InventoryQueryOperatorType enum
+func InventoryQueryOperatorType_Values() []string {
+	return []string{
+		InventoryQueryOperatorTypeEqual,
+		InventoryQueryOperatorTypeNotEqual,
+		InventoryQueryOperatorTypeBeginWith,
+		InventoryQueryOperatorTypeLessThan,
+		InventoryQueryOperatorTypeGreaterThan,
+		InventoryQueryOperatorTypeExists,
+	}
+}
+
 const (
 	// InventorySchemaDeleteOptionDisableSchema is a InventorySchemaDeleteOption enum value
 	InventorySchemaDeleteOptionDisableSchema = "DisableSchema"
@@ -47771,6 +48144,14 @@ const (
 	// InventorySchemaDeleteOptionDeleteSchema is a InventorySchemaDeleteOption enum value
 	InventorySchemaDeleteOptionDeleteSchema = "DeleteSchema"
 )
+
+// InventorySchemaDeleteOption_Values returns all elements of the InventorySchemaDeleteOption enum
+func InventorySchemaDeleteOption_Values() []string {
+	return []string{
+		InventorySchemaDeleteOptionDisableSchema,
+		InventorySchemaDeleteOptionDeleteSchema,
+	}
+}
 
 const (
 	// LastResourceDataSyncStatusSuccessful is a LastResourceDataSyncStatus enum value
@@ -47782,6 +48163,15 @@ const (
 	// LastResourceDataSyncStatusInProgress is a LastResourceDataSyncStatus enum value
 	LastResourceDataSyncStatusInProgress = "InProgress"
 )
+
+// LastResourceDataSyncStatus_Values returns all elements of the LastResourceDataSyncStatus enum
+func LastResourceDataSyncStatus_Values() []string {
+	return []string{
+		LastResourceDataSyncStatusSuccessful,
+		LastResourceDataSyncStatusFailed,
+		LastResourceDataSyncStatusInProgress,
+	}
+}
 
 const (
 	// MaintenanceWindowExecutionStatusPending is a MaintenanceWindowExecutionStatus enum value
@@ -47809,6 +48199,20 @@ const (
 	MaintenanceWindowExecutionStatusSkippedOverlapping = "SKIPPED_OVERLAPPING"
 )
 
+// MaintenanceWindowExecutionStatus_Values returns all elements of the MaintenanceWindowExecutionStatus enum
+func MaintenanceWindowExecutionStatus_Values() []string {
+	return []string{
+		MaintenanceWindowExecutionStatusPending,
+		MaintenanceWindowExecutionStatusInProgress,
+		MaintenanceWindowExecutionStatusSuccess,
+		MaintenanceWindowExecutionStatusFailed,
+		MaintenanceWindowExecutionStatusTimedOut,
+		MaintenanceWindowExecutionStatusCancelling,
+		MaintenanceWindowExecutionStatusCancelled,
+		MaintenanceWindowExecutionStatusSkippedOverlapping,
+	}
+}
+
 const (
 	// MaintenanceWindowResourceTypeInstance is a MaintenanceWindowResourceType enum value
 	MaintenanceWindowResourceTypeInstance = "INSTANCE"
@@ -47816,6 +48220,14 @@ const (
 	// MaintenanceWindowResourceTypeResourceGroup is a MaintenanceWindowResourceType enum value
 	MaintenanceWindowResourceTypeResourceGroup = "RESOURCE_GROUP"
 )
+
+// MaintenanceWindowResourceType_Values returns all elements of the MaintenanceWindowResourceType enum
+func MaintenanceWindowResourceType_Values() []string {
+	return []string{
+		MaintenanceWindowResourceTypeInstance,
+		MaintenanceWindowResourceTypeResourceGroup,
+	}
+}
 
 const (
 	// MaintenanceWindowTaskTypeRunCommand is a MaintenanceWindowTaskType enum value
@@ -47830,6 +48242,16 @@ const (
 	// MaintenanceWindowTaskTypeLambda is a MaintenanceWindowTaskType enum value
 	MaintenanceWindowTaskTypeLambda = "LAMBDA"
 )
+
+// MaintenanceWindowTaskType_Values returns all elements of the MaintenanceWindowTaskType enum
+func MaintenanceWindowTaskType_Values() []string {
+	return []string{
+		MaintenanceWindowTaskTypeRunCommand,
+		MaintenanceWindowTaskTypeAutomation,
+		MaintenanceWindowTaskTypeStepFunctions,
+		MaintenanceWindowTaskTypeLambda,
+	}
+}
 
 const (
 	// NotificationEventAll is a NotificationEvent enum value
@@ -47851,6 +48273,18 @@ const (
 	NotificationEventFailed = "Failed"
 )
 
+// NotificationEvent_Values returns all elements of the NotificationEvent enum
+func NotificationEvent_Values() []string {
+	return []string{
+		NotificationEventAll,
+		NotificationEventInProgress,
+		NotificationEventSuccess,
+		NotificationEventTimedOut,
+		NotificationEventCancelled,
+		NotificationEventFailed,
+	}
+}
+
 const (
 	// NotificationTypeCommand is a NotificationType enum value
 	NotificationTypeCommand = "Command"
@@ -47858,6 +48292,14 @@ const (
 	// NotificationTypeInvocation is a NotificationType enum value
 	NotificationTypeInvocation = "Invocation"
 )
+
+// NotificationType_Values returns all elements of the NotificationType enum
+func NotificationType_Values() []string {
+	return []string{
+		NotificationTypeCommand,
+		NotificationTypeInvocation,
+	}
+}
 
 const (
 	// OperatingSystemWindows is a OperatingSystem enum value
@@ -47888,6 +48330,21 @@ const (
 	OperatingSystemDebian = "DEBIAN"
 )
 
+// OperatingSystem_Values returns all elements of the OperatingSystem enum
+func OperatingSystem_Values() []string {
+	return []string{
+		OperatingSystemWindows,
+		OperatingSystemAmazonLinux,
+		OperatingSystemAmazonLinux2,
+		OperatingSystemUbuntu,
+		OperatingSystemRedhatEnterpriseLinux,
+		OperatingSystemSuse,
+		OperatingSystemCentos,
+		OperatingSystemOracleLinux,
+		OperatingSystemDebian,
+	}
+}
+
 const (
 	// OpsFilterOperatorTypeEqual is a OpsFilterOperatorType enum value
 	OpsFilterOperatorTypeEqual = "Equal"
@@ -47908,6 +48365,18 @@ const (
 	OpsFilterOperatorTypeExists = "Exists"
 )
 
+// OpsFilterOperatorType_Values returns all elements of the OpsFilterOperatorType enum
+func OpsFilterOperatorType_Values() []string {
+	return []string{
+		OpsFilterOperatorTypeEqual,
+		OpsFilterOperatorTypeNotEqual,
+		OpsFilterOperatorTypeBeginWith,
+		OpsFilterOperatorTypeLessThan,
+		OpsFilterOperatorTypeGreaterThan,
+		OpsFilterOperatorTypeExists,
+	}
+}
+
 const (
 	// OpsItemDataTypeSearchableString is a OpsItemDataType enum value
 	OpsItemDataTypeSearchableString = "SearchableString"
@@ -47915,6 +48384,14 @@ const (
 	// OpsItemDataTypeString is a OpsItemDataType enum value
 	OpsItemDataTypeString = "String"
 )
+
+// OpsItemDataType_Values returns all elements of the OpsItemDataType enum
+func OpsItemDataType_Values() []string {
+	return []string{
+		OpsItemDataTypeSearchableString,
+		OpsItemDataTypeString,
+	}
+}
 
 const (
 	// OpsItemFilterKeyStatus is a OpsItemFilterKey enum value
@@ -47963,6 +48440,27 @@ const (
 	OpsItemFilterKeySeverity = "Severity"
 )
 
+// OpsItemFilterKey_Values returns all elements of the OpsItemFilterKey enum
+func OpsItemFilterKey_Values() []string {
+	return []string{
+		OpsItemFilterKeyStatus,
+		OpsItemFilterKeyCreatedBy,
+		OpsItemFilterKeySource,
+		OpsItemFilterKeyPriority,
+		OpsItemFilterKeyTitle,
+		OpsItemFilterKeyOpsItemId,
+		OpsItemFilterKeyCreatedTime,
+		OpsItemFilterKeyLastModifiedTime,
+		OpsItemFilterKeyOperationalData,
+		OpsItemFilterKeyOperationalDataKey,
+		OpsItemFilterKeyOperationalDataValue,
+		OpsItemFilterKeyResourceId,
+		OpsItemFilterKeyAutomationId,
+		OpsItemFilterKeyCategory,
+		OpsItemFilterKeySeverity,
+	}
+}
+
 const (
 	// OpsItemFilterOperatorEqual is a OpsItemFilterOperator enum value
 	OpsItemFilterOperatorEqual = "Equal"
@@ -47977,6 +48475,16 @@ const (
 	OpsItemFilterOperatorLessThan = "LessThan"
 )
 
+// OpsItemFilterOperator_Values returns all elements of the OpsItemFilterOperator enum
+func OpsItemFilterOperator_Values() []string {
+	return []string{
+		OpsItemFilterOperatorEqual,
+		OpsItemFilterOperatorContains,
+		OpsItemFilterOperatorGreaterThan,
+		OpsItemFilterOperatorLessThan,
+	}
+}
+
 const (
 	// OpsItemStatusOpen is a OpsItemStatus enum value
 	OpsItemStatusOpen = "Open"
@@ -47987,6 +48495,15 @@ const (
 	// OpsItemStatusResolved is a OpsItemStatus enum value
 	OpsItemStatusResolved = "Resolved"
 )
+
+// OpsItemStatus_Values returns all elements of the OpsItemStatus enum
+func OpsItemStatus_Values() []string {
+	return []string{
+		OpsItemStatusOpen,
+		OpsItemStatusInProgress,
+		OpsItemStatusResolved,
+	}
+}
 
 const (
 	// ParameterTierStandard is a ParameterTier enum value
@@ -47999,6 +48516,15 @@ const (
 	ParameterTierIntelligentTiering = "Intelligent-Tiering"
 )
 
+// ParameterTier_Values returns all elements of the ParameterTier enum
+func ParameterTier_Values() []string {
+	return []string{
+		ParameterTierStandard,
+		ParameterTierAdvanced,
+		ParameterTierIntelligentTiering,
+	}
+}
+
 const (
 	// ParameterTypeString is a ParameterType enum value
 	ParameterTypeString = "String"
@@ -48009,6 +48535,15 @@ const (
 	// ParameterTypeSecureString is a ParameterType enum value
 	ParameterTypeSecureString = "SecureString"
 )
+
+// ParameterType_Values returns all elements of the ParameterType enum
+func ParameterType_Values() []string {
+	return []string{
+		ParameterTypeString,
+		ParameterTypeStringList,
+		ParameterTypeSecureString,
+	}
+}
 
 const (
 	// ParametersFilterKeyName is a ParametersFilterKey enum value
@@ -48021,6 +48556,15 @@ const (
 	ParametersFilterKeyKeyId = "KeyId"
 )
 
+// ParametersFilterKey_Values returns all elements of the ParametersFilterKey enum
+func ParametersFilterKey_Values() []string {
+	return []string{
+		ParametersFilterKeyName,
+		ParametersFilterKeyType,
+		ParametersFilterKeyKeyId,
+	}
+}
+
 const (
 	// PatchActionAllowAsDependency is a PatchAction enum value
 	PatchActionAllowAsDependency = "ALLOW_AS_DEPENDENCY"
@@ -48028,6 +48572,14 @@ const (
 	// PatchActionBlock is a PatchAction enum value
 	PatchActionBlock = "BLOCK"
 )
+
+// PatchAction_Values returns all elements of the PatchAction enum
+func PatchAction_Values() []string {
+	return []string{
+		PatchActionAllowAsDependency,
+		PatchActionBlock,
+	}
+}
 
 const (
 	// PatchComplianceDataStateInstalled is a PatchComplianceDataState enum value
@@ -48052,6 +48604,19 @@ const (
 	PatchComplianceDataStateFailed = "FAILED"
 )
 
+// PatchComplianceDataState_Values returns all elements of the PatchComplianceDataState enum
+func PatchComplianceDataState_Values() []string {
+	return []string{
+		PatchComplianceDataStateInstalled,
+		PatchComplianceDataStateInstalledOther,
+		PatchComplianceDataStateInstalledPendingReboot,
+		PatchComplianceDataStateInstalledRejected,
+		PatchComplianceDataStateMissing,
+		PatchComplianceDataStateNotApplicable,
+		PatchComplianceDataStateFailed,
+	}
+}
+
 const (
 	// PatchComplianceLevelCritical is a PatchComplianceLevel enum value
 	PatchComplianceLevelCritical = "CRITICAL"
@@ -48072,6 +48637,18 @@ const (
 	PatchComplianceLevelUnspecified = "UNSPECIFIED"
 )
 
+// PatchComplianceLevel_Values returns all elements of the PatchComplianceLevel enum
+func PatchComplianceLevel_Values() []string {
+	return []string{
+		PatchComplianceLevelCritical,
+		PatchComplianceLevelHigh,
+		PatchComplianceLevelMedium,
+		PatchComplianceLevelLow,
+		PatchComplianceLevelInformational,
+		PatchComplianceLevelUnspecified,
+	}
+}
+
 const (
 	// PatchDeploymentStatusApproved is a PatchDeploymentStatus enum value
 	PatchDeploymentStatusApproved = "APPROVED"
@@ -48085,6 +48662,16 @@ const (
 	// PatchDeploymentStatusExplicitRejected is a PatchDeploymentStatus enum value
 	PatchDeploymentStatusExplicitRejected = "EXPLICIT_REJECTED"
 )
+
+// PatchDeploymentStatus_Values returns all elements of the PatchDeploymentStatus enum
+func PatchDeploymentStatus_Values() []string {
+	return []string{
+		PatchDeploymentStatusApproved,
+		PatchDeploymentStatusPendingApproval,
+		PatchDeploymentStatusExplicitApproved,
+		PatchDeploymentStatusExplicitRejected,
+	}
+}
 
 const (
 	// PatchFilterKeyPatchSet is a PatchFilterKey enum value
@@ -48115,6 +48702,21 @@ const (
 	PatchFilterKeySeverity = "SEVERITY"
 )
 
+// PatchFilterKey_Values returns all elements of the PatchFilterKey enum
+func PatchFilterKey_Values() []string {
+	return []string{
+		PatchFilterKeyPatchSet,
+		PatchFilterKeyProduct,
+		PatchFilterKeyProductFamily,
+		PatchFilterKeyClassification,
+		PatchFilterKeyMsrcSeverity,
+		PatchFilterKeyPatchId,
+		PatchFilterKeySection,
+		PatchFilterKeyPriority,
+		PatchFilterKeySeverity,
+	}
+}
+
 const (
 	// PatchOperationTypeScan is a PatchOperationType enum value
 	PatchOperationTypeScan = "Scan"
@@ -48122,6 +48724,14 @@ const (
 	// PatchOperationTypeInstall is a PatchOperationType enum value
 	PatchOperationTypeInstall = "Install"
 )
+
+// PatchOperationType_Values returns all elements of the PatchOperationType enum
+func PatchOperationType_Values() []string {
+	return []string{
+		PatchOperationTypeScan,
+		PatchOperationTypeInstall,
+	}
+}
 
 const (
 	// PatchPropertyProduct is a PatchProperty enum value
@@ -48143,6 +48753,18 @@ const (
 	PatchPropertySeverity = "SEVERITY"
 )
 
+// PatchProperty_Values returns all elements of the PatchProperty enum
+func PatchProperty_Values() []string {
+	return []string{
+		PatchPropertyProduct,
+		PatchPropertyProductFamily,
+		PatchPropertyClassification,
+		PatchPropertyMsrcSeverity,
+		PatchPropertyPriority,
+		PatchPropertySeverity,
+	}
+}
+
 const (
 	// PatchSetOs is a PatchSet enum value
 	PatchSetOs = "OS"
@@ -48150,6 +48772,14 @@ const (
 	// PatchSetApplication is a PatchSet enum value
 	PatchSetApplication = "APPLICATION"
 )
+
+// PatchSet_Values returns all elements of the PatchSet enum
+func PatchSet_Values() []string {
+	return []string{
+		PatchSetOs,
+		PatchSetApplication,
+	}
+}
 
 const (
 	// PingStatusOnline is a PingStatus enum value
@@ -48162,6 +48792,15 @@ const (
 	PingStatusInactive = "Inactive"
 )
 
+// PingStatus_Values returns all elements of the PingStatus enum
+func PingStatus_Values() []string {
+	return []string{
+		PingStatusOnline,
+		PingStatusConnectionLost,
+		PingStatusInactive,
+	}
+}
+
 const (
 	// PlatformTypeWindows is a PlatformType enum value
 	PlatformTypeWindows = "Windows"
@@ -48169,6 +48808,14 @@ const (
 	// PlatformTypeLinux is a PlatformType enum value
 	PlatformTypeLinux = "Linux"
 )
+
+// PlatformType_Values returns all elements of the PlatformType enum
+func PlatformType_Values() []string {
+	return []string{
+		PlatformTypeWindows,
+		PlatformTypeLinux,
+	}
+}
 
 const (
 	// RebootOptionRebootIfNeeded is a RebootOption enum value
@@ -48178,10 +48825,25 @@ const (
 	RebootOptionNoReboot = "NoReboot"
 )
 
+// RebootOption_Values returns all elements of the RebootOption enum
+func RebootOption_Values() []string {
+	return []string{
+		RebootOptionRebootIfNeeded,
+		RebootOptionNoReboot,
+	}
+}
+
 const (
 	// ResourceDataSyncS3FormatJsonSerDe is a ResourceDataSyncS3Format enum value
 	ResourceDataSyncS3FormatJsonSerDe = "JsonSerDe"
 )
+
+// ResourceDataSyncS3Format_Values returns all elements of the ResourceDataSyncS3Format enum
+func ResourceDataSyncS3Format_Values() []string {
+	return []string{
+		ResourceDataSyncS3FormatJsonSerDe,
+	}
+}
 
 const (
 	// ResourceTypeManagedInstance is a ResourceType enum value
@@ -48193,6 +48855,15 @@ const (
 	// ResourceTypeEc2instance is a ResourceType enum value
 	ResourceTypeEc2instance = "EC2Instance"
 )
+
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeManagedInstance,
+		ResourceTypeDocument,
+		ResourceTypeEc2instance,
+	}
+}
 
 const (
 	// ResourceTypeForTaggingDocument is a ResourceTypeForTagging enum value
@@ -48214,6 +48885,18 @@ const (
 	ResourceTypeForTaggingOpsItem = "OpsItem"
 )
 
+// ResourceTypeForTagging_Values returns all elements of the ResourceTypeForTagging enum
+func ResourceTypeForTagging_Values() []string {
+	return []string{
+		ResourceTypeForTaggingDocument,
+		ResourceTypeForTaggingManagedInstance,
+		ResourceTypeForTaggingMaintenanceWindow,
+		ResourceTypeForTaggingParameter,
+		ResourceTypeForTaggingPatchBaseline,
+		ResourceTypeForTaggingOpsItem,
+	}
+}
+
 const (
 	// SessionFilterKeyInvokedAfter is a SessionFilterKey enum value
 	SessionFilterKeyInvokedAfter = "InvokedAfter"
@@ -48231,6 +48914,17 @@ const (
 	SessionFilterKeyStatus = "Status"
 )
 
+// SessionFilterKey_Values returns all elements of the SessionFilterKey enum
+func SessionFilterKey_Values() []string {
+	return []string{
+		SessionFilterKeyInvokedAfter,
+		SessionFilterKeyInvokedBefore,
+		SessionFilterKeyTarget,
+		SessionFilterKeyOwner,
+		SessionFilterKeyStatus,
+	}
+}
+
 const (
 	// SessionStateActive is a SessionState enum value
 	SessionStateActive = "Active"
@@ -48238,6 +48932,14 @@ const (
 	// SessionStateHistory is a SessionState enum value
 	SessionStateHistory = "History"
 )
+
+// SessionState_Values returns all elements of the SessionState enum
+func SessionState_Values() []string {
+	return []string{
+		SessionStateActive,
+		SessionStateHistory,
+	}
+}
 
 const (
 	// SessionStatusConnected is a SessionStatus enum value
@@ -48259,6 +48961,18 @@ const (
 	SessionStatusFailed = "Failed"
 )
 
+// SessionStatus_Values returns all elements of the SessionStatus enum
+func SessionStatus_Values() []string {
+	return []string{
+		SessionStatusConnected,
+		SessionStatusConnecting,
+		SessionStatusDisconnected,
+		SessionStatusTerminated,
+		SessionStatusTerminating,
+		SessionStatusFailed,
+	}
+}
+
 const (
 	// SignalTypeApprove is a SignalType enum value
 	SignalTypeApprove = "Approve"
@@ -48275,6 +48989,17 @@ const (
 	// SignalTypeResume is a SignalType enum value
 	SignalTypeResume = "Resume"
 )
+
+// SignalType_Values returns all elements of the SignalType enum
+func SignalType_Values() []string {
+	return []string{
+		SignalTypeApprove,
+		SignalTypeReject,
+		SignalTypeStartStep,
+		SignalTypeStopStep,
+		SignalTypeResume,
+	}
+}
 
 const (
 	// StepExecutionFilterKeyStartTimeBefore is a StepExecutionFilterKey enum value
@@ -48296,6 +49021,18 @@ const (
 	StepExecutionFilterKeyAction = "Action"
 )
 
+// StepExecutionFilterKey_Values returns all elements of the StepExecutionFilterKey enum
+func StepExecutionFilterKey_Values() []string {
+	return []string{
+		StepExecutionFilterKeyStartTimeBefore,
+		StepExecutionFilterKeyStartTimeAfter,
+		StepExecutionFilterKeyStepExecutionStatus,
+		StepExecutionFilterKeyStepExecutionId,
+		StepExecutionFilterKeyStepName,
+		StepExecutionFilterKeyAction,
+	}
+}
+
 const (
 	// StopTypeComplete is a StopType enum value
 	StopTypeComplete = "Complete"
@@ -48303,3 +49040,11 @@ const (
 	// StopTypeCancel is a StopType enum value
 	StopTypeCancel = "Cancel"
 )
+
+// StopType_Values returns all elements of the StopType enum
+func StopType_Values() []string {
+	return []string{
+		StopTypeComplete,
+		StopTypeCancel,
+	}
+}

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
@@ -183,7 +183,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  depends_on = ["aws_s3_bucket_policy.test"]
+  depends_on = [aws_s3_bucket_policy.test]
 
   cluster_identifier  = "tf-redshift-cluster-%[1]d"
   cluster_type        = "single-node"

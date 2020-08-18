@@ -5947,6 +5947,16 @@ const (
 	AdMarkersDaterange = "DATERANGE"
 )
 
+// AdMarkers_Values returns all elements of the AdMarkers enum
+func AdMarkers_Values() []string {
+	return []string{
+		AdMarkersNone,
+		AdMarkersScte35Enhanced,
+		AdMarkersPassthrough,
+		AdMarkersDaterange,
+	}
+}
+
 // This setting allows the delivery restriction flags on SCTE-35 segmentation
 // descriptors todetermine whether a message signals an ad. Choosing "NONE"
 // means no SCTE-35 messages becomeads. Choosing "RESTRICTED" means SCTE-35
@@ -5971,6 +5981,16 @@ const (
 	AdsOnDeliveryRestrictionsBoth = "BOTH"
 )
 
+// AdsOnDeliveryRestrictions_Values returns all elements of the AdsOnDeliveryRestrictions enum
+func AdsOnDeliveryRestrictions_Values() []string {
+	return []string{
+		AdsOnDeliveryRestrictionsNone,
+		AdsOnDeliveryRestrictionsRestricted,
+		AdsOnDeliveryRestrictionsUnrestricted,
+		AdsOnDeliveryRestrictionsBoth,
+	}
+}
+
 const (
 	// EncryptionMethodAes128 is a EncryptionMethod enum value
 	EncryptionMethodAes128 = "AES_128"
@@ -5978,6 +5998,14 @@ const (
 	// EncryptionMethodSampleAes is a EncryptionMethod enum value
 	EncryptionMethodSampleAes = "SAMPLE_AES"
 )
+
+// EncryptionMethod_Values returns all elements of the EncryptionMethod enum
+func EncryptionMethod_Values() []string {
+	return []string{
+		EncryptionMethodAes128,
+		EncryptionMethodSampleAes,
+	}
+}
 
 const (
 	// ManifestLayoutFull is a ManifestLayout enum value
@@ -5987,6 +6015,14 @@ const (
 	ManifestLayoutCompact = "COMPACT"
 )
 
+// ManifestLayout_Values returns all elements of the ManifestLayout enum
+func ManifestLayout_Values() []string {
+	return []string{
+		ManifestLayoutFull,
+		ManifestLayoutCompact,
+	}
+}
+
 const (
 	// OriginationAllow is a Origination enum value
 	OriginationAllow = "ALLOW"
@@ -5994,6 +6030,14 @@ const (
 	// OriginationDeny is a Origination enum value
 	OriginationDeny = "DENY"
 )
+
+// Origination_Values returns all elements of the Origination enum
+func Origination_Values() []string {
+	return []string{
+		OriginationAllow,
+		OriginationDeny,
+	}
+}
 
 const (
 	// PlaylistTypeNone is a PlaylistType enum value
@@ -6006,6 +6050,15 @@ const (
 	PlaylistTypeVod = "VOD"
 )
 
+// PlaylistType_Values returns all elements of the PlaylistType enum
+func PlaylistType_Values() []string {
+	return []string{
+		PlaylistTypeNone,
+		PlaylistTypeEvent,
+		PlaylistTypeVod,
+	}
+}
+
 const (
 	// ProfileNone is a Profile enum value
 	ProfileNone = "NONE"
@@ -6013,6 +6066,14 @@ const (
 	// ProfileHbbtv15 is a Profile enum value
 	ProfileHbbtv15 = "HBBTV_1_5"
 )
+
+// Profile_Values returns all elements of the Profile enum
+func Profile_Values() []string {
+	return []string{
+		ProfileNone,
+		ProfileHbbtv15,
+	}
+}
 
 const (
 	// SegmentTemplateFormatNumberWithTimeline is a SegmentTemplateFormat enum value
@@ -6025,6 +6086,15 @@ const (
 	SegmentTemplateFormatNumberWithDuration = "NUMBER_WITH_DURATION"
 )
 
+// SegmentTemplateFormat_Values returns all elements of the SegmentTemplateFormat enum
+func SegmentTemplateFormat_Values() []string {
+	return []string{
+		SegmentTemplateFormatNumberWithTimeline,
+		SegmentTemplateFormatTimeWithTimeline,
+		SegmentTemplateFormatNumberWithDuration,
+	}
+}
+
 const (
 	// StatusInProgress is a Status enum value
 	StatusInProgress = "IN_PROGRESS"
@@ -6036,6 +6106,15 @@ const (
 	StatusFailed = "FAILED"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusInProgress,
+		StatusSucceeded,
+		StatusFailed,
+	}
+}
+
 const (
 	// StreamOrderOriginal is a StreamOrder enum value
 	StreamOrderOriginal = "ORIGINAL"
@@ -6046,6 +6125,15 @@ const (
 	// StreamOrderVideoBitrateDescending is a StreamOrder enum value
 	StreamOrderVideoBitrateDescending = "VIDEO_BITRATE_DESCENDING"
 )
+
+// StreamOrder_Values returns all elements of the StreamOrder enum
+func StreamOrder_Values() []string {
+	return []string{
+		StreamOrderOriginal,
+		StreamOrderVideoBitrateAscending,
+		StreamOrderVideoBitrateDescending,
+	}
+}
 
 const (
 	// __AdTriggersElementSpliceInsert is a __AdTriggersElement enum value
@@ -6073,7 +6161,28 @@ const (
 	__AdTriggersElementDistributorOverlayPlacementOpportunity = "DISTRIBUTOR_OVERLAY_PLACEMENT_OPPORTUNITY"
 )
 
+// __AdTriggersElement_Values returns all elements of the __AdTriggersElement enum
+func __AdTriggersElement_Values() []string {
+	return []string{
+		__AdTriggersElementSpliceInsert,
+		__AdTriggersElementBreak,
+		__AdTriggersElementProviderAdvertisement,
+		__AdTriggersElementDistributorAdvertisement,
+		__AdTriggersElementProviderPlacementOpportunity,
+		__AdTriggersElementDistributorPlacementOpportunity,
+		__AdTriggersElementProviderOverlayPlacementOpportunity,
+		__AdTriggersElementDistributorOverlayPlacementOpportunity,
+	}
+}
+
 const (
 	// __PeriodTriggersElementAds is a __PeriodTriggersElement enum value
 	__PeriodTriggersElementAds = "ADS"
 )
+
+// __PeriodTriggersElement_Values returns all elements of the __PeriodTriggersElement enum
+func __PeriodTriggersElement_Values() []string {
+	return []string{
+		__PeriodTriggersElementAds,
+	}
+}

@@ -185,6 +185,94 @@ func IsPackageType(t types.Type, packageSuffix string, typeName string) bool {
 	return false
 }
 
+// IsStdlibPackageReceiverMethod returns true if the package suffix (for vendoring), receiver name, and method name match
+//
+// This function checks an explicit import path without vendoring. To allow
+// vendored paths, use IsPackageReceiverMethod instead.
+func IsStdlibPackageReceiverMethod(e ast.Expr, info *types.Info, packagePath string, receiverName, methodName string) bool {
+	switch e := e.(type) {
+	case *ast.SelectorExpr:
+		if e.Sel.Name != methodName {
+			return false
+		}
+
+		return IsStdlibPackageType(info.TypeOf(e.X), packagePath, receiverName)
+	}
+
+	return false
+}
+
+// IsStdlibPackageFunc returns true if the function package suffix (for vendoring) and name matches
+//
+// This function checks an explicit import path without vendoring. To allow
+// vendored paths, use IsPackageFunc instead.
+func IsStdlibPackageFunc(e ast.Expr, info *types.Info, packagePath string, funcName string) bool {
+	switch e := e.(type) {
+	case *ast.SelectorExpr:
+		if e.Sel.Name != funcName {
+			return false
+		}
+
+		switch x := e.X.(type) {
+		case *ast.Ident:
+			return info.ObjectOf(x).(*types.PkgName).Imported().Path() == packagePath
+		}
+	case *ast.StarExpr:
+		return IsStdlibPackageFunc(e.X, info, packagePath, funcName)
+	}
+
+	return false
+}
+
+// IsStdlibPackageFunctionFieldListType returns true if the function parameter package suffix (for vendoring) and name matches
+//
+// This function checks an explicit import path without vendoring. To allow
+// vendored paths, use IsPackageFunctionFieldListType instead.
+func IsStdlibPackageFunctionFieldListType(e ast.Expr, info *types.Info, packagePath string, typeName string) bool {
+	switch e := e.(type) {
+	case *ast.SelectorExpr:
+		if e.Sel.Name != typeName {
+			return false
+		}
+
+		switch x := e.X.(type) {
+		case *ast.Ident:
+			return info.ObjectOf(x).(*types.PkgName).Imported().Path() == packagePath
+		}
+	case *ast.StarExpr:
+		return IsStdlibPackageFunctionFieldListType(e.X, info, packagePath, typeName)
+	}
+
+	return false
+}
+
+// IsStdlibPackageNamedType returns if the type name matches and is from the package suffix
+//
+// This function checks an explicit import path without vendoring. To allow
+// vendored paths, use IsPackageNamedType instead.
+func IsStdlibPackageNamedType(t *types.Named, packagePath string, typeName string) bool {
+	if t.Obj().Name() != typeName {
+		return false
+	}
+
+	return t.Obj().Pkg().Path() == packagePath
+}
+
+// IsStdlibPackageType returns true if the type name can be matched and is from the package suffix
+//
+// This function checks an explicit import path without vendoring. To allow
+// vendored paths, use IsPackageType instead.
+func IsStdlibPackageType(t types.Type, packagePath string, typeName string) bool {
+	switch t := t.(type) {
+	case *types.Named:
+		return IsStdlibPackageNamedType(t, packagePath, typeName)
+	case *types.Pointer:
+		return IsStdlibPackageType(t.Elem(), packagePath, typeName)
+	}
+
+	return false
+}
+
 func isModulePackagePath(module string, packageSuffix string, path string) bool {
 	// Only check end of path due to vendoring
 	r := regexp.MustCompile(fmt.Sprintf("%s(/v[1-9][0-9]*)?/%s$", module, packageSuffix))

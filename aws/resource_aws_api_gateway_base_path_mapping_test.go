@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -262,7 +262,7 @@ resource "aws_api_gateway_integration" "test" {
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name  = "test"
-  depends_on  = ["aws_api_gateway_integration.test"]
+  depends_on  = [aws_api_gateway_integration.test]
 }
 `, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

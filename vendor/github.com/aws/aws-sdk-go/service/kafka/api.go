@@ -7210,6 +7210,13 @@ const (
 	BrokerAZDistributionDefault = "DEFAULT"
 )
 
+// BrokerAZDistribution_Values returns all elements of the BrokerAZDistribution enum
+func BrokerAZDistribution_Values() []string {
+	return []string{
+		BrokerAZDistributionDefault,
+	}
+}
+
 // Client-broker encryption in transit setting.
 const (
 	// ClientBrokerTls is a ClientBroker enum value
@@ -7221,6 +7228,15 @@ const (
 	// ClientBrokerPlaintext is a ClientBroker enum value
 	ClientBrokerPlaintext = "PLAINTEXT"
 )
+
+// ClientBroker_Values returns all elements of the ClientBroker enum
+func ClientBroker_Values() []string {
+	return []string{
+		ClientBrokerTls,
+		ClientBrokerTlsPlaintext,
+		ClientBrokerPlaintext,
+	}
+}
 
 // The state of a Kafka cluster.
 const (
@@ -7240,6 +7256,17 @@ const (
 	ClusterStateFailed = "FAILED"
 )
 
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateActive,
+		ClusterStateCreating,
+		ClusterStateUpdating,
+		ClusterStateDeleting,
+		ClusterStateFailed,
+	}
+}
+
 // Specifies which metrics are gathered for the MSK cluster. This property has
 // three possible values: DEFAULT, PER_BROKER, and PER_TOPIC_PER_BROKER. For
 // a list of the metrics associated with each of these three levels of monitoring,
@@ -7255,6 +7282,15 @@ const (
 	EnhancedMonitoringPerTopicPerBroker = "PER_TOPIC_PER_BROKER"
 )
 
+// EnhancedMonitoring_Values returns all elements of the EnhancedMonitoring enum
+func EnhancedMonitoring_Values() []string {
+	return []string{
+		EnhancedMonitoringDefault,
+		EnhancedMonitoringPerBroker,
+		EnhancedMonitoringPerTopicPerBroker,
+	}
+}
+
 // The status of a Kafka version.
 const (
 	// KafkaVersionStatusActive is a KafkaVersionStatus enum value
@@ -7264,8 +7300,23 @@ const (
 	KafkaVersionStatusDeprecated = "DEPRECATED"
 )
 
+// KafkaVersionStatus_Values returns all elements of the KafkaVersionStatus enum
+func KafkaVersionStatus_Values() []string {
+	return []string{
+		KafkaVersionStatusActive,
+		KafkaVersionStatusDeprecated,
+	}
+}
+
 // The broker or Zookeeper node.
 const (
 	// NodeTypeBroker is a NodeType enum value
 	NodeTypeBroker = "BROKER"
 )
+
+// NodeType_Values returns all elements of the NodeType enum
+func NodeType_Values() []string {
+	return []string{
+		NodeTypeBroker,
+	}
+}

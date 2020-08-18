@@ -7486,6 +7486,14 @@ const (
 	AgentStatusOffline = "OFFLINE"
 )
 
+// AgentStatus_Values returns all elements of the AgentStatus enum
+func AgentStatus_Values() []string {
+	return []string{
+		AgentStatusOnline,
+		AgentStatusOffline,
+	}
+}
+
 const (
 	// AtimeNone is a Atime enum value
 	AtimeNone = "NONE"
@@ -7493,6 +7501,14 @@ const (
 	// AtimeBestEffort is a Atime enum value
 	AtimeBestEffort = "BEST_EFFORT"
 )
+
+// Atime_Values returns all elements of the Atime enum
+func Atime_Values() []string {
+	return []string{
+		AtimeNone,
+		AtimeBestEffort,
+	}
+}
 
 const (
 	// EndpointTypePublic is a EndpointType enum value
@@ -7505,10 +7521,26 @@ const (
 	EndpointTypeFips = "FIPS"
 )
 
+// EndpointType_Values returns all elements of the EndpointType enum
+func EndpointType_Values() []string {
+	return []string{
+		EndpointTypePublic,
+		EndpointTypePrivateLink,
+		EndpointTypeFips,
+	}
+}
+
 const (
 	// FilterTypeSimplePattern is a FilterType enum value
 	FilterTypeSimplePattern = "SIMPLE_PATTERN"
 )
+
+// FilterType_Values returns all elements of the FilterType enum
+func FilterType_Values() []string {
+	return []string{
+		FilterTypeSimplePattern,
+	}
+}
 
 const (
 	// GidNone is a Gid enum value
@@ -7524,6 +7556,16 @@ const (
 	GidBoth = "BOTH"
 )
 
+// Gid_Values returns all elements of the Gid enum
+func Gid_Values() []string {
+	return []string{
+		GidNone,
+		GidIntValue,
+		GidName,
+		GidBoth,
+	}
+}
+
 const (
 	// LogLevelOff is a LogLevel enum value
 	LogLevelOff = "OFF"
@@ -7535,6 +7577,15 @@ const (
 	LogLevelTransfer = "TRANSFER"
 )
 
+// LogLevel_Values returns all elements of the LogLevel enum
+func LogLevel_Values() []string {
+	return []string{
+		LogLevelOff,
+		LogLevelBasic,
+		LogLevelTransfer,
+	}
+}
+
 const (
 	// MtimeNone is a Mtime enum value
 	MtimeNone = "NONE"
@@ -7542,6 +7593,14 @@ const (
 	// MtimePreserve is a Mtime enum value
 	MtimePreserve = "PRESERVE"
 )
+
+// Mtime_Values returns all elements of the Mtime enum
+func Mtime_Values() []string {
+	return []string{
+		MtimeNone,
+		MtimePreserve,
+	}
+}
 
 const (
 	// NfsVersionAutomatic is a NfsVersion enum value
@@ -7557,6 +7616,16 @@ const (
 	NfsVersionNfs41 = "NFS4_1"
 )
 
+// NfsVersion_Values returns all elements of the NfsVersion enum
+func NfsVersion_Values() []string {
+	return []string{
+		NfsVersionAutomatic,
+		NfsVersionNfs3,
+		NfsVersionNfs40,
+		NfsVersionNfs41,
+	}
+}
+
 const (
 	// ObjectStorageServerProtocolHttps is a ObjectStorageServerProtocol enum value
 	ObjectStorageServerProtocolHttps = "HTTPS"
@@ -7565,6 +7634,14 @@ const (
 	ObjectStorageServerProtocolHttp = "HTTP"
 )
 
+// ObjectStorageServerProtocol_Values returns all elements of the ObjectStorageServerProtocol enum
+func ObjectStorageServerProtocol_Values() []string {
+	return []string{
+		ObjectStorageServerProtocolHttps,
+		ObjectStorageServerProtocolHttp,
+	}
+}
+
 const (
 	// OverwriteModeAlways is a OverwriteMode enum value
 	OverwriteModeAlways = "ALWAYS"
@@ -7572,6 +7649,14 @@ const (
 	// OverwriteModeNever is a OverwriteMode enum value
 	OverwriteModeNever = "NEVER"
 )
+
+// OverwriteMode_Values returns all elements of the OverwriteMode enum
+func OverwriteMode_Values() []string {
+	return []string{
+		OverwriteModeAlways,
+		OverwriteModeNever,
+	}
+}
 
 const (
 	// PhaseStatusPending is a PhaseStatus enum value
@@ -7584,6 +7669,15 @@ const (
 	PhaseStatusError = "ERROR"
 )
 
+// PhaseStatus_Values returns all elements of the PhaseStatus enum
+func PhaseStatus_Values() []string {
+	return []string{
+		PhaseStatusPending,
+		PhaseStatusSuccess,
+		PhaseStatusError,
+	}
+}
+
 const (
 	// PosixPermissionsNone is a PosixPermissions enum value
 	PosixPermissionsNone = "NONE"
@@ -7591,6 +7685,14 @@ const (
 	// PosixPermissionsPreserve is a PosixPermissions enum value
 	PosixPermissionsPreserve = "PRESERVE"
 )
+
+// PosixPermissions_Values returns all elements of the PosixPermissions enum
+func PosixPermissions_Values() []string {
+	return []string{
+		PosixPermissionsNone,
+		PosixPermissionsPreserve,
+	}
+}
 
 const (
 	// PreserveDeletedFilesPreserve is a PreserveDeletedFiles enum value
@@ -7600,6 +7702,14 @@ const (
 	PreserveDeletedFilesRemove = "REMOVE"
 )
 
+// PreserveDeletedFiles_Values returns all elements of the PreserveDeletedFiles enum
+func PreserveDeletedFiles_Values() []string {
+	return []string{
+		PreserveDeletedFilesPreserve,
+		PreserveDeletedFilesRemove,
+	}
+}
+
 const (
 	// PreserveDevicesNone is a PreserveDevices enum value
 	PreserveDevicesNone = "NONE"
@@ -7607,6 +7717,14 @@ const (
 	// PreserveDevicesPreserve is a PreserveDevices enum value
 	PreserveDevicesPreserve = "PRESERVE"
 )
+
+// PreserveDevices_Values returns all elements of the PreserveDevices enum
+func PreserveDevices_Values() []string {
+	return []string{
+		PreserveDevicesNone,
+		PreserveDevicesPreserve,
+	}
+}
 
 const (
 	// S3StorageClassStandard is a S3StorageClass enum value
@@ -7628,6 +7746,18 @@ const (
 	S3StorageClassDeepArchive = "DEEP_ARCHIVE"
 )
 
+// S3StorageClass_Values returns all elements of the S3StorageClass enum
+func S3StorageClass_Values() []string {
+	return []string{
+		S3StorageClassStandard,
+		S3StorageClassStandardIa,
+		S3StorageClassOnezoneIa,
+		S3StorageClassIntelligentTiering,
+		S3StorageClassGlacier,
+		S3StorageClassDeepArchive,
+	}
+}
+
 const (
 	// SmbVersionAutomatic is a SmbVersion enum value
 	SmbVersionAutomatic = "AUTOMATIC"
@@ -7638,6 +7768,15 @@ const (
 	// SmbVersionSmb3 is a SmbVersion enum value
 	SmbVersionSmb3 = "SMB3"
 )
+
+// SmbVersion_Values returns all elements of the SmbVersion enum
+func SmbVersion_Values() []string {
+	return []string{
+		SmbVersionAutomatic,
+		SmbVersionSmb2,
+		SmbVersionSmb3,
+	}
+}
 
 const (
 	// TaskExecutionStatusQueued is a TaskExecutionStatus enum value
@@ -7662,6 +7801,19 @@ const (
 	TaskExecutionStatusError = "ERROR"
 )
 
+// TaskExecutionStatus_Values returns all elements of the TaskExecutionStatus enum
+func TaskExecutionStatus_Values() []string {
+	return []string{
+		TaskExecutionStatusQueued,
+		TaskExecutionStatusLaunching,
+		TaskExecutionStatusPreparing,
+		TaskExecutionStatusTransferring,
+		TaskExecutionStatusVerifying,
+		TaskExecutionStatusSuccess,
+		TaskExecutionStatusError,
+	}
+}
+
 const (
 	// TaskQueueingEnabled is a TaskQueueing enum value
 	TaskQueueingEnabled = "ENABLED"
@@ -7669,6 +7821,14 @@ const (
 	// TaskQueueingDisabled is a TaskQueueing enum value
 	TaskQueueingDisabled = "DISABLED"
 )
+
+// TaskQueueing_Values returns all elements of the TaskQueueing enum
+func TaskQueueing_Values() []string {
+	return []string{
+		TaskQueueingEnabled,
+		TaskQueueingDisabled,
+	}
+}
 
 const (
 	// TaskStatusAvailable is a TaskStatus enum value
@@ -7687,6 +7847,17 @@ const (
 	TaskStatusUnavailable = "UNAVAILABLE"
 )
 
+// TaskStatus_Values returns all elements of the TaskStatus enum
+func TaskStatus_Values() []string {
+	return []string{
+		TaskStatusAvailable,
+		TaskStatusCreating,
+		TaskStatusQueued,
+		TaskStatusRunning,
+		TaskStatusUnavailable,
+	}
+}
+
 const (
 	// TransferModeChanged is a TransferMode enum value
 	TransferModeChanged = "CHANGED"
@@ -7694,6 +7865,14 @@ const (
 	// TransferModeAll is a TransferMode enum value
 	TransferModeAll = "ALL"
 )
+
+// TransferMode_Values returns all elements of the TransferMode enum
+func TransferMode_Values() []string {
+	return []string{
+		TransferModeChanged,
+		TransferModeAll,
+	}
+}
 
 const (
 	// UidNone is a Uid enum value
@@ -7709,6 +7888,16 @@ const (
 	UidBoth = "BOTH"
 )
 
+// Uid_Values returns all elements of the Uid enum
+func Uid_Values() []string {
+	return []string{
+		UidNone,
+		UidIntValue,
+		UidName,
+		UidBoth,
+	}
+}
+
 const (
 	// VerifyModePointInTimeConsistent is a VerifyMode enum value
 	VerifyModePointInTimeConsistent = "POINT_IN_TIME_CONSISTENT"
@@ -7719,3 +7908,12 @@ const (
 	// VerifyModeNone is a VerifyMode enum value
 	VerifyModeNone = "NONE"
 )
+
+// VerifyMode_Values returns all elements of the VerifyMode enum
+func VerifyMode_Values() []string {
+	return []string{
+		VerifyModePointInTimeConsistent,
+		VerifyModeOnlyFilesTransferred,
+		VerifyModeNone,
+	}
+}

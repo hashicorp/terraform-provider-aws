@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSAcmCertificateValidation_basic(t *testing.T) {
@@ -239,7 +239,7 @@ resource "aws_route53_record" "test" {
 }
 
 resource "aws_acm_certificate_validation" "test" {
-  depends_on = ["aws_route53_record.test"]
+  depends_on = [aws_route53_record.test]
 
   certificate_arn = aws_acm_certificate.test.arn
 }

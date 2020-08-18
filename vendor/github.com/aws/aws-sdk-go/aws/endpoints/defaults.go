@@ -452,6 +452,30 @@ var awsPartition = partition{
 						Region: "eu-west-3",
 					},
 				},
+				"fips-dkr-us-east-1": endpoint{
+					Hostname: "ecr-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				"fips-dkr-us-east-2": endpoint{
+					Hostname: "ecr-fips.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				"fips-dkr-us-west-1": endpoint{
+					Hostname: "ecr-fips.us-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-1",
+					},
+				},
+				"fips-dkr-us-west-2": endpoint{
+					Hostname: "ecr-fips.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
 				"fips-us-east-1": endpoint{
 					Hostname: "ecr-fips.us-east-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -2084,6 +2108,7 @@ var awsPartition = partition{
 				Protocols: []string{"http", "https"},
 			},
 			Endpoints: endpoints{
+				"af-south-1":     endpoint{},
 				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
@@ -2093,6 +2118,7 @@ var awsPartition = partition{
 				"ca-central-1":   endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-north-1":     endpoint{},
+				"eu-south-1":     endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
 				"eu-west-3":      endpoint{},
@@ -3959,6 +3985,12 @@ var awsPartition = partition{
 		"neptune": service{
 
 			Endpoints: endpoints{
+				"ap-east-1": endpoint{
+					Hostname: "rds.ap-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-east-1",
+					},
+				},
 				"ap-northeast-1": endpoint{
 					Hostname: "rds.ap-northeast-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -4029,6 +4061,12 @@ var awsPartition = partition{
 					Hostname: "rds.me-south-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "me-south-1",
+					},
+				},
+				"sa-east-1": endpoint{
+					Hostname: "rds.sa-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "sa-east-1",
 					},
 				},
 				"us-east-1": endpoint{
@@ -7232,6 +7270,18 @@ var awsusgovPartition = partition{
 		"api.ecr": service{
 
 			Endpoints: endpoints{
+				"fips-dkr-us-gov-east-1": endpoint{
+					Hostname: "ecr-fips.us-gov-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-east-1",
+					},
+				},
+				"fips-dkr-us-gov-west-1": endpoint{
+					Hostname: "ecr-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 				"fips-us-gov-east-1": endpoint{
 					Hostname: "ecr-fips.us-gov-east-1.amazonaws.com",
 					CredentialScope: credentialScope{

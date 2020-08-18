@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
@@ -398,7 +398,6 @@ resource "aws_cloud9_environment_ec2" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-
   }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)

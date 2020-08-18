@@ -4568,6 +4568,16 @@ const (
 	InventoryFilterConditionContains = "CONTAINS"
 )
 
+// InventoryFilterCondition_Values returns all elements of the InventoryFilterCondition enum
+func InventoryFilterCondition_Values() []string {
+	return []string{
+		InventoryFilterConditionEquals,
+		InventoryFilterConditionNotEquals,
+		InventoryFilterConditionBeginsWith,
+		InventoryFilterConditionContains,
+	}
+}
+
 const (
 	// LicenseConfigurationStatusAvailable is a LicenseConfigurationStatus enum value
 	LicenseConfigurationStatusAvailable = "AVAILABLE"
@@ -4575,6 +4585,14 @@ const (
 	// LicenseConfigurationStatusDisabled is a LicenseConfigurationStatus enum value
 	LicenseConfigurationStatusDisabled = "DISABLED"
 )
+
+// LicenseConfigurationStatus_Values returns all elements of the LicenseConfigurationStatus enum
+func LicenseConfigurationStatus_Values() []string {
+	return []string{
+		LicenseConfigurationStatusAvailable,
+		LicenseConfigurationStatusDisabled,
+	}
+}
 
 const (
 	// LicenseCountingTypeVCpu is a LicenseCountingType enum value
@@ -4589,6 +4607,16 @@ const (
 	// LicenseCountingTypeSocket is a LicenseCountingType enum value
 	LicenseCountingTypeSocket = "Socket"
 )
+
+// LicenseCountingType_Values returns all elements of the LicenseCountingType enum
+func LicenseCountingType_Values() []string {
+	return []string{
+		LicenseCountingTypeVCpu,
+		LicenseCountingTypeInstance,
+		LicenseCountingTypeCore,
+		LicenseCountingTypeSocket,
+	}
+}
 
 const (
 	// ResourceTypeEc2Instance is a ResourceType enum value
@@ -4606,3 +4634,14 @@ const (
 	// ResourceTypeSystemsManagerManagedInstance is a ResourceType enum value
 	ResourceTypeSystemsManagerManagedInstance = "SYSTEMS_MANAGER_MANAGED_INSTANCE"
 )
+
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeEc2Instance,
+		ResourceTypeEc2Host,
+		ResourceTypeEc2Ami,
+		ResourceTypeRds,
+		ResourceTypeSystemsManagerManagedInstance,
+	}
+}

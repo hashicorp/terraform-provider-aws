@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
@@ -66,16 +66,7 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAwsEbsVolumeDataSourceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsVolumeDataSourceConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -101,16 +92,7 @@ data "aws_ebs_volume" "test" {
 }
 `
 
-const testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
@@ -323,6 +323,7 @@ resource "aws_storagegateway_cache" "test" {
   # Step 0 error: After applying this step, the plan was not empty:
   #   disk_id:     "0b68f77a-709b-4c79-ad9d-d7728014b291" => "/dev/xvdc" (forces new resource)
   # We expect this data source value to change due to how Storage Gateway works.
+
   lifecycle {
     ignore_changes = ["disk_id"]
   }
@@ -351,10 +352,10 @@ func testAccAWSStorageGatewayCachedIscsiVolumeConfigTags1(rName, tagKey1, tagVal
 		testAccAWSStorageGatewayCachedIscsiVolumeConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
- gateway_arn          = aws_storagegateway_cache.test.gateway_arn
- network_interface_id = aws_instance.test.private_ip
- target_name          = %[1]q
- volume_size_in_bytes = 5368709120
+  gateway_arn          = aws_storagegateway_cache.test.gateway_arn
+  network_interface_id = aws_instance.test.private_ip
+  target_name          = %[1]q
+  volume_size_in_bytes = 5368709120
 
   tags = {
     %[2]q = %[3]q
@@ -368,10 +369,10 @@ func testAccAWSStorageGatewayCachedIscsiVolumeConfigTags2(rName, tagKey1, tagVal
 		testAccAWSStorageGatewayCachedIscsiVolumeConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
- gateway_arn          = aws_storagegateway_cache.test.gateway_arn
- network_interface_id = aws_instance.test.private_ip
- target_name          = %[1]q
- volume_size_in_bytes = 5368709120
+  gateway_arn          = aws_storagegateway_cache.test.gateway_arn
+  network_interface_id = aws_instance.test.private_ip
+  target_name          = %[1]q
+  volume_size_in_bytes = 5368709120
 
   tags = {
     %[2]q = %[3]q
