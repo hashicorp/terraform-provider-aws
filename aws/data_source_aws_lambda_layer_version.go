@@ -28,7 +28,7 @@ func dataSourceAwsLambdaLayerVersion() *schema.Resource {
 			"compatible_runtime": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ValidateFunc:  validation.StringInSlice(validLambdaRuntimes, false),
+				ValidateFunc:  validation.StringInSlice(lambda.Runtime_Values(), false),
 				ConflictsWith: []string{"version"},
 			},
 			"compatible_runtimes": {
