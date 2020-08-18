@@ -626,6 +626,161 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2WebACL_GeoMatchStatement(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+	countryCode := fmt.Sprintf("%q", "US")
+	countryCodes := fmt.Sprintf("%s, %q", countryCode, "CA")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement(webACLName, countryCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                              "rule-1",
+						"action.#":                          "1",
+						"action.0.allow.#":                  "0",
+						"action.0.block.#":                  "1",
+						"action.0.count.#":                  "0",
+						"priority":                          "1",
+						"statement.#":                       "1",
+						"statement.0.geo_match_statement.#": "1",
+						"statement.0.geo_match_statement.0.country_codes.#":       "1",
+						"statement.0.geo_match_statement.0.country_codes.0":       "US",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
+						"visibility_config.#":                            "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement(webACLName, countryCodes),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                              "rule-1",
+						"action.#":                          "1",
+						"action.0.allow.#":                  "0",
+						"action.0.block.#":                  "1",
+						"action.0.count.#":                  "0",
+						"priority":                          "1",
+						"statement.#":                       "1",
+						"statement.0.geo_match_statement.#": "1",
+						"statement.0.geo_match_statement.0.country_codes.#":       "2",
+						"statement.0.geo_match_statement.0.country_codes.0":       "US",
+						"statement.0.geo_match_statement.0.country_codes.1":       "CA",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
+						"visibility_config.#":                                     "1",
+						"visibility_config.0.cloudwatch_metrics_enabled":          "false",
+						"visibility_config.0.metric_name":                         "friendly-rule-metric-name",
+						"visibility_config.0.sampled_requests_enabled":            "false",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACL_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement_ForwardedIPConfig(webACLName, "MATCH", "X-Forwarded-For"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                            "1",
+						"statement.0.or_statement.#":             "1",
+						"statement.0.or_statement.0.statement.#": "2",
+						"statement.0.or_statement.0.statement.0.geo_match_statement.#":                                         "1",
+						"statement.0.or_statement.0.statement.0.geo_match_statement.0.country_codes.#":                         "1",
+						"statement.0.or_statement.0.statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "0",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.#":                                         "1",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.country_codes.#":                         "1",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2WebACLConfig_GeoMatchStatement_ForwardedIPConfig(webACLName, "NO_MATCH", "Updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                            "1",
+						"statement.0.or_statement.#":             "1",
+						"statement.0.or_statement.0.statement.#": "2",
+						"statement.0.or_statement.0.statement.0.geo_match_statement.#":                                         "1",
+						"statement.0.or_statement.0.statement.0.geo_match_statement.0.country_codes.#":                         "1",
+						"statement.0.or_statement.0.statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "0",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.#":                                         "1",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.country_codes.#":                         "1",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
+						"statement.0.or_statement.0.statement.1.geo_match_statement.0.forwarded_ip_config.0.header_name":       "Updated",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2WebACL_RateBasedStatement_ForwardedIPConfig(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1172,6 +1327,107 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name, ruleName1, priority1, ruleName2, priority2)
+}
+
+func testAccAwsWafv2WebACLConfig_GeoMatchStatement(name, countryCodes string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = [%[2]s]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, countryCodes)
+}
+
+func testAccAwsWafv2WebACLConfig_GeoMatchStatement_ForwardedIPConfig(name, fallbackBehavior, headerName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      or_statement {
+        statement {
+          geo_match_statement {
+            country_codes = ["US"]
+          }
+        }
+
+        statement {
+          geo_match_statement {
+            country_codes = ["CA"]
+            forwarded_ip_config {
+              fallback_behavior = "%s"
+              header_name       = "%s"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, fallbackBehavior, headerName)
 }
 
 func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(name string) string {
