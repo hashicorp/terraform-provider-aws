@@ -68,6 +68,8 @@ Spot Instance Requests support all the same arguments as
 * `valid_from` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
+~> **Note:** the `tags` argument applies to the Spot Instance Request itself, not any launched instance.
+
 ### Timeouts
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
