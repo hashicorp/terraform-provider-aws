@@ -169,7 +169,7 @@ func testAccAWSSESIdentityPolicyConfigIdentityDomain(domain string) string {
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["SES:SendEmail", "SES:SendRawEmail"]
-    resources = ["${aws_ses_domain_identity.test.arn}"]
+    resources = [aws_ses_domain_identity.test.arn]
 
     principals {
       identifiers = ["*"]
@@ -183,9 +183,9 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_identity_policy" "test" {
-  identity = "${aws_ses_domain_identity.test.arn}"
+  identity = aws_ses_domain_identity.test.arn
   name     = "test"
-  policy   = "${data.aws_iam_policy_document.test.json}"
+  policy   = data.aws_iam_policy_document.test.json
 }
 `, domain)
 }
@@ -195,7 +195,7 @@ func testAccAWSSESIdentityPolicyConfigIdentityEmail(email string) string {
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["SES:SendEmail", "SES:SendRawEmail"]
-    resources = ["${aws_ses_email_identity.test.arn}"]
+    resources = [aws_ses_email_identity.test.arn]
 
     principals {
       identifiers = ["*"]
@@ -209,9 +209,9 @@ resource "aws_ses_email_identity" "test" {
 }
 
 resource "aws_ses_identity_policy" "test" {
-  identity = "${aws_ses_email_identity.test.email}"
+  identity = aws_ses_email_identity.test.email
   name     = "test"
-  policy   = "${data.aws_iam_policy_document.test.json}"
+  policy   = data.aws_iam_policy_document.test.json
 }
 `, email)
 }
@@ -221,7 +221,7 @@ func testAccAWSSESIdentityPolicyConfigPolicy1(domain string) string {
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["SES:SendEmail", "SES:SendRawEmail"]
-    resources = ["${aws_ses_domain_identity.test.arn}"]
+    resources = [aws_ses_domain_identity.test.arn]
 
     principals {
       identifiers = ["*"]
@@ -235,9 +235,9 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_identity_policy" "test" {
-  identity = "${aws_ses_domain_identity.test.arn}"
+  identity = aws_ses_domain_identity.test.arn
   name     = "test"
-  policy   = "${data.aws_iam_policy_document.test.json}"
+  policy   = data.aws_iam_policy_document.test.json
 }
 `, domain)
 }
@@ -249,10 +249,10 @@ data "aws_caller_identity" "current" {}
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["SES:SendEmail", "SES:SendRawEmail"]
-    resources = ["${aws_ses_domain_identity.test.arn}"]
+    resources = [aws_ses_domain_identity.test.arn]
 
     principals {
-      identifiers = ["${data.aws_caller_identity.current.account_id}"]
+      identifiers = [data.aws_caller_identity.current.account_id]
       type        = "AWS"
     }
   }
@@ -263,9 +263,9 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_identity_policy" "test" {
-  identity = "${aws_ses_domain_identity.test.arn}"
+  identity = aws_ses_domain_identity.test.arn
   name     = "test"
-  policy   = "${data.aws_iam_policy_document.test.json}"
+  policy   = data.aws_iam_policy_document.test.json
 }
 `, domain)
 }
