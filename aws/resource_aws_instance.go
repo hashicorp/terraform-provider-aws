@@ -1341,6 +1341,21 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("Error updating metadata options: %s", err)
 				}
+				stateConf := &resource.StateChangeConf{
+					Pending:    []string{ec2.InstanceMetadataOptionsStatePending},
+					Target:     []string{ec2.InstanceMetadataOptionsStateApplied, ec2.InstanceStateNameRunning},
+					Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
+					Timeout:    d.Timeout(schema.TimeoutUpdate),
+					Delay:      10 * time.Second,
+					MinTimeout: 3 * time.Second,
+				}
+
+				_, err = stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf(
+						"Error waiting for instance (%s) to apply metadata options update: %s",
+						d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1418,6 +1433,16 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						},
 					},
 				})
+
+				stateConf := &resource.StateChangeConf{
+					Pending:    []string{ec2.InstanceStateNamePending},
+					Target:     []string{ec2.InstanceStateNameRunning},
+					Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
+					Timeout:    d.Timeout(schema.TimeoutUpdate),
+					Delay:      10 * time.Second,
+					MinTimeout: 3 * time.Second,
+				}
+				_, err = stateConf.WaitForState()
 				if err != nil {
 					return fmt.Errorf("error modifying delete on termination attribute for EC2 instance %q block device %q: %w", d.Id(), deviceName, err)
 				}
