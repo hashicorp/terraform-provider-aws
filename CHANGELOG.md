@@ -7,6 +7,7 @@ ENHANCEMENTS
 * resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
 * resource/aws_lambda_function: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
 * resource/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `compatible_runtimes` argument plan-time validation [GH-14663]
+* resource/aws_launch_template: Support `elastic-gpu` and `spot-instances-request` in `tag_specifications` `resource_type` argument plan-time validation [GH-14662]
 
 BUG FIXES
 
