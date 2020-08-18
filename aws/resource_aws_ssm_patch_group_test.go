@@ -94,7 +94,7 @@ resource "aws_ssm_patch_baseline" "foo" {
 }
 
 resource "aws_ssm_patch_group" "patchgroup" {
-  baseline_id = "${aws_ssm_patch_baseline.foo.id}"
+  baseline_id = aws_ssm_patch_baseline.foo.id
   patch_group = "patch-group"
 }
 `, rName)

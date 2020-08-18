@@ -193,6 +193,7 @@ resource "aws_storagegateway_cache" "test" {
   # Step 0 error: After applying this step, the plan was not empty:
   #   disk_id:     "877ee674-99d3-4cd4-99f0-aadae7e3942b" => "/dev/nvme1n1" (forces new resource)
   # We expect this data source value to change due to how Storage Gateway works.
+
   lifecycle {
     ignore_changes = ["disk_id"]
   }
@@ -233,6 +234,7 @@ resource "aws_storagegateway_cache" "test" {
   # Step 0 error: After applying this step, the plan was not empty:
   #   disk_id:     "0b68f77a-709b-4c79-ad9d-d7728014b291" => "/dev/xvdc" (forces new resource)
   # We expect this data source value to change due to how Storage Gateway works.
+
   lifecycle {
     ignore_changes = ["disk_id"]
   }
