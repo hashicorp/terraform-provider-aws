@@ -435,7 +435,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -511,7 +510,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -550,7 +548,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -589,7 +586,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -633,7 +629,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -676,7 +671,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -720,7 +714,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {

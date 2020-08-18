@@ -858,7 +858,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -918,7 +917,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -956,7 +954,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), description)
 }
@@ -994,7 +991,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), executionRoleName)
 }
@@ -1031,7 +1027,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
 }
@@ -1072,7 +1067,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParameters1(rName), value1)
 }
@@ -1114,7 +1108,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParameters2(rName), value1, value2)
 }
@@ -1151,7 +1144,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersDefault1(rName))
 }
@@ -1192,7 +1184,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersDefault1(rName), value1)
 }
@@ -1233,7 +1224,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyParametersNoEcho1(rName), value1)
 }
@@ -1274,7 +1264,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1)
 }
@@ -1316,7 +1305,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1, value2)
 }
@@ -1353,7 +1341,6 @@ resource "aws_cloudformation_stack_set" "test" {
   template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
-
 }
 `, rName, templateBody)
 }
@@ -1394,7 +1381,6 @@ resource "aws_s3_bucket_object" "test" {
 
   content = <<CONTENT
 %[2]s
-
 CONTENT
 
   key = "%[1]s-template1.yml"
@@ -1444,7 +1430,6 @@ resource "aws_s3_bucket_object" "test" {
 
   content = <<CONTENT
 %[2]s
-
 CONTENT
 
   key = "%[1]s-template2.yml"

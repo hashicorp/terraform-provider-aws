@@ -753,7 +753,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 `, funcName, roleName)
 }
@@ -802,7 +801,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, rName)
 }
@@ -842,7 +840,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 `, funcName, roleName)
 }
@@ -882,7 +879,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -932,7 +928,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 `, aliasName, funcName, roleName)
 }
@@ -979,7 +974,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 `
 
@@ -1041,7 +1035,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, bucketName, funcName, roleName)
 }
@@ -1092,7 +1085,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, topicName, funcName, roleName)
 }
@@ -1132,7 +1124,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, funcName, roleName)
 }

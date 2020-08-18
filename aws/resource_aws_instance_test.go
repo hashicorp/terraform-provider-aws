@@ -4221,7 +4221,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfigRootBlockDeviceMismatch(rName string) string {
 	return testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
-  // This is an AMI in us-west-2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
+  # This is an AMI in us-west-2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
   ami           = "ami-ef5b69df"
   instance_type = "t1.micro"
   subnet_id     = "${aws_subnet.test.id}"

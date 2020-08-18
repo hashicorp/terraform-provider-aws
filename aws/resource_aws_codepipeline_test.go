@@ -594,7 +594,6 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
@@ -628,7 +627,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -652,7 +650,6 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
@@ -693,7 +690,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -894,7 +890,6 @@ resource "aws_iam_role" "codepipeline_action_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_action_policy" {
@@ -920,7 +915,6 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
   ]
 }
 EOF
-
 }
 `, rName)
 }

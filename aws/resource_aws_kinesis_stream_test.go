@@ -639,7 +639,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 `, rInt, rInt)
 }

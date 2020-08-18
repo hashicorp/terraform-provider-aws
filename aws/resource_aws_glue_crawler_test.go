@@ -1409,7 +1409,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
@@ -1458,7 +1457,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
@@ -1617,7 +1615,6 @@ resource "aws_glue_crawler" "test" {
   }
 }
 EOF
-
 }
 `, rName, tableCount)
 }
@@ -1674,7 +1671,6 @@ resource "aws_glue_crawler" "test" {
   }
 }
 EOF
-
 }
 `, rName)
 }

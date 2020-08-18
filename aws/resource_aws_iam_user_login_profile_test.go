@@ -360,7 +360,6 @@ resource "aws_iam_user_login_profile" "user" {
   pgp_key = <<EOF
 %s
 EOF
-
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
 }
@@ -375,7 +374,6 @@ resource "aws_iam_user_login_profile" "user" {
   pgp_key = <<EOF
 %s
 EOF
-
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
 }

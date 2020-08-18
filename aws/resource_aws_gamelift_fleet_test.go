@@ -862,7 +862,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -887,7 +886,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {

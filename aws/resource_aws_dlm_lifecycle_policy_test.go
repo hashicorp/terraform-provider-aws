@@ -229,7 +229,6 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_dlm_lifecycle_policy" "basic" {
@@ -279,7 +278,6 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_dlm_lifecycle_policy" "full" {
@@ -338,7 +336,6 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_dlm_lifecycle_policy" "full" {

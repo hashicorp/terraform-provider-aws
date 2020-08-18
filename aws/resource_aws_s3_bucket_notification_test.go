@@ -496,7 +496,6 @@ resource "aws_sns_topic" "topic" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -560,7 +559,6 @@ resource "aws_sqs_queue" "queue" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -607,7 +605,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_permission" "allow_bucket" {
@@ -739,7 +736,6 @@ resource "aws_sns_topic" "topic" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bucket" {

@@ -409,9 +409,7 @@ resource "aws_cloudwatch_event_rule" "test" {
   schedule_expression = "rate(1 hour)"
   event_pattern       = <<PATTERN
 	%s
-	
 PATTERN
-
 }
 `, name, pattern)
 }
@@ -492,7 +490,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudwatch_event_rule" "test" {

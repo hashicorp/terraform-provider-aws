@@ -892,7 +892,6 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "profile" {

@@ -487,7 +487,6 @@ resource "aws_cloudformation_stack" "test" {
   }
 }
 STACK
-
 }
 `, stackName)
 }
@@ -516,7 +515,6 @@ Outputs:
     Description: The VPC ID
     Value: !Ref MyVPC
 STACK
-
 }
 `, stackName)
 }

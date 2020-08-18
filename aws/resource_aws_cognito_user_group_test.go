@@ -225,7 +225,6 @@ resource "aws_iam_role" "group_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_group" "main" {
@@ -262,7 +261,6 @@ resource "aws_iam_role" "group_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_group" "main" {
@@ -297,7 +295,6 @@ resource "aws_iam_role" "group_role_updated" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_group" "main" {

@@ -705,7 +705,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -750,7 +749,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -795,7 +793,6 @@ resource "aws_s3_bucket" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -820,7 +817,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -843,7 +839,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 `, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
@@ -888,7 +883,6 @@ resource "aws_s3_bucket" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -917,7 +911,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -940,7 +933,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 `, randInt, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
@@ -983,7 +975,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1030,7 +1021,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1075,7 +1065,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1118,7 +1107,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1145,7 +1133,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudtrail" "foobar" {
@@ -1185,7 +1172,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1227,7 +1213,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `
 
@@ -1269,7 +1254,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1363,7 +1347,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bar" {
@@ -1415,7 +1398,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1493,7 +1475,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bar" {
@@ -1519,7 +1500,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "lambda_function_test" {
@@ -1569,7 +1549,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }

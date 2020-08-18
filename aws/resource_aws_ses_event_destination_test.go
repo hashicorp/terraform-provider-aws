@@ -188,7 +188,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

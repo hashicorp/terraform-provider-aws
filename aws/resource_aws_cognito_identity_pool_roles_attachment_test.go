@@ -252,7 +252,6 @@ resource "aws_iam_role" "unauthenticated" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "unauthenticated" {
@@ -276,7 +275,6 @@ resource "aws_iam_role_policy" "unauthenticated" {
   ]
 }
 EOF
-
 }
 
 # Authenticated Role
@@ -305,7 +303,6 @@ resource "aws_iam_role" "authenticated" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "authenticated" {
@@ -330,7 +327,6 @@ resource "aws_iam_role_policy" "authenticated" {
   ]
 }
 EOF
-
 }
 `, name)
 }

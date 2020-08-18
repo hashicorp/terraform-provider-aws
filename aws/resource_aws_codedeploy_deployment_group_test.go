@@ -2297,7 +2297,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "test" {
@@ -2320,7 +2319,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2388,7 +2386,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "test_updated" {
@@ -2411,7 +2408,6 @@ resource "aws_iam_role" "test_updated" {
   ]
 }
 EOF
-
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2449,7 +2445,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "test" {
@@ -2472,7 +2467,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_codedeploy_deployment_group" "test" {
@@ -2524,7 +2518,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "test" {
@@ -2545,7 +2538,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_sns_topic" "test" {
@@ -3382,7 +3374,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3434,7 +3425,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -3468,7 +3458,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }

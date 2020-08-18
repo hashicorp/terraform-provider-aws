@@ -1115,7 +1115,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_rds_cluster" "default" {
@@ -1175,7 +1174,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -1243,7 +1241,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {

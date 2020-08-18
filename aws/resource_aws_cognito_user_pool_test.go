@@ -1617,7 +1617,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -1667,7 +1666,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -1847,7 +1845,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -1870,7 +1867,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_pool" "test" {

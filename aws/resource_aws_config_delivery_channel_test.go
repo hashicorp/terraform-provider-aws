@@ -235,7 +235,6 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "p" {
@@ -259,7 +258,6 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "b" {
@@ -300,7 +298,6 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "p" {
@@ -324,7 +321,6 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "b" {

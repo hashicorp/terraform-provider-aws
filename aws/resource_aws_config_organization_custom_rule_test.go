@@ -523,7 +523,6 @@ resource "aws_iam_role" "config" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy_attachment" "config" {
@@ -549,7 +548,6 @@ resource "aws_iam_role" "lambda" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy_attachment" "lambda" {
@@ -615,7 +613,6 @@ resource "aws_iam_role" "lambda" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy_attachment" "lambda" {
@@ -679,7 +676,6 @@ resource "aws_config_organization_custom_rule" "test" {
 
   input_parameters = <<PARAMS
 %[2]s
-
 PARAMS
 
   lambda_function_arn = aws_lambda_function.test.arn

@@ -1830,7 +1830,6 @@ resource "aws_vpc_endpoint" "s3-us-west-2" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_security_group" "egress" {

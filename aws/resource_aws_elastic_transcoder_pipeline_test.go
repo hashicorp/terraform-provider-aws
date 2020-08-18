@@ -333,7 +333,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -364,7 +363,6 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_elastictranscoder_pipeline" "test" {
@@ -393,7 +391,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -439,7 +436,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "content_bucket" {
@@ -495,7 +491,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "content_bucket" {
@@ -563,7 +558,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -605,7 +599,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -631,7 +624,6 @@ resource "aws_sns_topic" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -667,7 +659,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -693,7 +684,6 @@ resource "aws_sns_topic" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }

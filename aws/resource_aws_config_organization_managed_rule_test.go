@@ -486,7 +486,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -560,7 +559,6 @@ resource "aws_config_organization_managed_rule" "test" {
 
   input_parameters = <<PARAMS
 %[2]s
-
 PARAMS
 
   name            = %[1]q

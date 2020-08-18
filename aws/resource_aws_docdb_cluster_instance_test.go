@@ -477,7 +477,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_docdb_cluster" "default" {

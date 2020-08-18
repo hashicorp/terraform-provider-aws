@@ -151,7 +151,6 @@ resource "aws_efs_file_system_policy" "test" {
     ]
 }
 POLICY
-
 }
 `, rName)
 }
@@ -187,7 +186,6 @@ resource "aws_efs_file_system_policy" "test" {
     ]
 }
 POLICY
-
 }
 `, rName)
 }

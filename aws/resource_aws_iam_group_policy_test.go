@@ -289,7 +289,6 @@ resource "aws_iam_group_policy" "foo" {
   }
 }
 EOF
-
 }
 `, rInt, rInt)
 }
@@ -315,7 +314,6 @@ resource "aws_iam_group_policy" "test" {
   }
 }
 EOF
-
 }
 `, rInt, rInt, policyAction)
 }
@@ -340,7 +338,6 @@ resource "aws_iam_group_policy" "test" {
   }
 }
 EOF
-
 }
 `, rInt, policyAction)
 }
@@ -366,7 +363,6 @@ resource "aws_iam_group_policy" "foo" {
   }
 }
 EOF
-
 }
 
 resource "aws_iam_group_policy" "bar" {
@@ -383,7 +379,6 @@ resource "aws_iam_group_policy" "bar" {
   }
 }
 EOF
-
 }
 `, rInt, rInt, rInt)
 }

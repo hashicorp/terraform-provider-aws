@@ -1503,7 +1503,6 @@ resource "aws_elasticsearch_domain" "test" {
   ]
   }
 CONFIG
-
 }
 
 resource "aws_iam_role" "example_role" {
@@ -2037,7 +2036,6 @@ resource "aws_cloudwatch_log_resource_policy" "example" {
   ]
 }
 CONFIG
-
 }
 
 resource "aws_elasticsearch_domain" "test" {
