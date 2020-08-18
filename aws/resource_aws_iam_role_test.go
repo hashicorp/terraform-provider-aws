@@ -659,7 +659,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, maxSessionDuration)
 }
@@ -717,7 +716,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -747,7 +745,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -777,7 +774,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -806,7 +802,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -834,7 +829,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
@@ -856,7 +850,6 @@ resource "aws_iam_role_policy" "role_update_test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
@@ -890,7 +883,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
@@ -912,7 +904,6 @@ resource "aws_iam_role_policy" "role_update_test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
@@ -943,7 +934,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }
@@ -968,7 +958,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -989,7 +978,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -1016,7 +1004,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, rName, rName)
 }

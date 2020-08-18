@@ -593,7 +593,6 @@ resource "aws_iam_role" "iam_role" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
@@ -619,7 +618,6 @@ resource "aws_iam_role_policy" "dms_dynamodb_access" {
 	]
 }
 EOF
-
 }
 `, randId)
 }
@@ -657,7 +655,6 @@ resource "aws_iam_role" "iam_role" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
@@ -683,7 +680,6 @@ resource "aws_iam_role_policy" "dms_dynamodb_access" {
 	]
 }
 EOF
-
 }
 `, randId)
 }
@@ -728,7 +724,6 @@ resource "aws_iam_role" "iam_role" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
@@ -759,7 +754,6 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 	]
 }
 EOF
-
 }
 `, randId)
 }
@@ -807,7 +801,6 @@ resource "aws_iam_role" "iam_role" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
@@ -838,7 +831,6 @@ resource "aws_iam_role_policy" "dms_s3_access" {
 	]
 }
 EOF
-
 }
 `, randId)
 }
@@ -1020,7 +1012,6 @@ resource "aws_iam_role" "iam_role" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "dms_kinesis_access" {
@@ -1087,7 +1078,6 @@ resource "aws_iam_role" "iam_role" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "dms_kinesis_access" {

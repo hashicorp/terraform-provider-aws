@@ -537,7 +537,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "policy" {
@@ -558,7 +557,6 @@ resource "aws_iam_role_policy" "policy" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_permission" "apigw_lambda" {
@@ -663,7 +661,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "policy" {
@@ -684,7 +681,6 @@ resource "aws_iam_role_policy" "policy" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_permission" "apigw_lambda" {
@@ -729,7 +725,6 @@ resource "aws_iam_role" "invocation_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "invocation_policy" {
@@ -748,7 +743,6 @@ resource "aws_iam_role_policy" "invocation_policy" {
   ]
 }
 EOF
-
 }
 
 resource "aws_api_gateway_authorizer" "test" {

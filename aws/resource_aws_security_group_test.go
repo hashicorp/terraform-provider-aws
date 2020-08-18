@@ -3895,7 +3895,6 @@ resource "aws_vpc_endpoint" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_security_group" "test" {
@@ -3946,7 +3945,6 @@ resource "aws_vpc_endpoint" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_security_group" "test" {
@@ -4002,7 +4000,6 @@ resource "aws_vpc_endpoint" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_security_group" "source1" {

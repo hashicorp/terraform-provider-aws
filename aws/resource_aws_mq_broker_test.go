@@ -938,7 +938,6 @@ resource "aws_mq_configuration" "test" {
   data = <<DATA
 %s
 DATA
-
 }
 
 resource "aws_mq_broker" "test" {
@@ -1047,7 +1046,6 @@ resource "aws_mq_configuration" "test" {
   data = <<DATA
 %s
 DATA
-
 }
 
 resource "aws_mq_broker" "test" {

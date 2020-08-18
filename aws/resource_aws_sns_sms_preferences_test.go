@@ -187,7 +187,6 @@ resource "aws_iam_role" "test_smsdelivery_role" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test_smsdelivery_role_policy" {
@@ -213,6 +212,5 @@ resource "aws_iam_role_policy" "test_smsdelivery_role_policy" {
   ]
 }
 POLICY
-
 }
 `

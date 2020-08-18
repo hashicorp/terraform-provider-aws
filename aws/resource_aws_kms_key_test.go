@@ -466,7 +466,6 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }

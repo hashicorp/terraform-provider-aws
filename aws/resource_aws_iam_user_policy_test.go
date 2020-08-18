@@ -388,7 +388,6 @@ resource "aws_iam_user_policy" "foo_%[1]s" {
   }
 }
 EOF
-
 }
 `, suffix)
 }

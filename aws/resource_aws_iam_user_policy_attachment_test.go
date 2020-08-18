@@ -149,7 +149,6 @@ resource "aws_iam_policy" "policy" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
@@ -183,7 +182,6 @@ resource "aws_iam_policy" "policy" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy2" {
@@ -204,7 +202,6 @@ resource "aws_iam_policy" "policy2" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy3" {
@@ -225,7 +222,6 @@ resource "aws_iam_policy" "policy3" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {

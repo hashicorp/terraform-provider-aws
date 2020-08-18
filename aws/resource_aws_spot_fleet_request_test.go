@@ -1384,7 +1384,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "test" {
@@ -1706,7 +1705,6 @@ resource "aws_iam_role" "test-role1" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test-role-policy1" {
@@ -1723,7 +1721,6 @@ resource "aws_iam_role_policy" "test-role-policy1" {
   }
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "test-iam-instance-profile1" {

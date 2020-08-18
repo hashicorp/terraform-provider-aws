@@ -349,7 +349,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 `, description, rName)
 }
@@ -373,7 +372,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -397,7 +395,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 `, namePrefix)
 }
@@ -422,7 +419,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 `, rName, path)
 }

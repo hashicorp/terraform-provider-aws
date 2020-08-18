@@ -2391,7 +2391,6 @@ resource "aws_iam_role" "rds_s3_access_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -2414,7 +2413,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
@@ -2721,7 +2719,6 @@ resource "aws_iam_role" "rds_sample_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "rds_policy" {
@@ -2738,7 +2735,6 @@ resource "aws_iam_role_policy" "rds_policy" {
   }
 }
 EOF
-
 }
 
 resource "aws_iam_role" "another_rds_sample_role" {
@@ -2760,7 +2756,6 @@ resource "aws_iam_role" "another_rds_sample_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "another_rds_policy" {
@@ -2777,7 +2772,6 @@ resource "aws_iam_role_policy" "another_rds_policy" {
   }
 }
 EOF
-
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2818,7 +2812,6 @@ resource "aws_iam_role" "rds_sample_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "rds_policy" {
@@ -2835,7 +2828,6 @@ resource "aws_iam_role_policy" "rds_policy" {
   }
 }
 EOF
-
 }
 
 resource "aws_iam_role" "another_rds_sample_role" {
@@ -2857,7 +2849,6 @@ resource "aws_iam_role" "another_rds_sample_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "another_rds_policy" {
@@ -2874,7 +2865,6 @@ resource "aws_iam_role_policy" "another_rds_policy" {
   }
 }
 EOF
-
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2916,7 +2906,6 @@ resource "aws_iam_role" "another_rds_sample_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "another_rds_policy" {
@@ -2933,7 +2922,6 @@ resource "aws_iam_role_policy" "another_rds_policy" {
   }
 }
 EOF
-
 }
 
 resource "aws_rds_cluster" "test" {

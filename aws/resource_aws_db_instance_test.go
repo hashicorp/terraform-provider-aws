@@ -3203,7 +3203,6 @@ resource "aws_iam_role" "rds_s3_access_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -3226,7 +3225,6 @@ resource "aws_iam_policy" "test" {
     ]
 }
 POLICY
-
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
@@ -3358,7 +3356,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -3423,7 +3420,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -3934,7 +3930,6 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "attatch-policy" {
@@ -4061,7 +4056,6 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "attatch-policy" {
@@ -4192,7 +4186,6 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "attatch-policy" {
@@ -5516,7 +5509,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -6304,7 +6296,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -6719,7 +6710,6 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_db_instance" "source" {
@@ -6768,7 +6758,6 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_db_instance" "source" {

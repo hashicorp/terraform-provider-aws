@@ -686,7 +686,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -703,7 +702,6 @@ resource "aws_iam_role_policy" "test" {
   }
 }
 EOF
-
 }
 
 resource "aws_iam_role" "test-2" {
@@ -725,7 +723,6 @@ resource "aws_iam_role" "test-2" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test-2" {
@@ -742,7 +739,6 @@ resource "aws_iam_role_policy" "test-2" {
   }
 }
 EOF
-
 }
 
 resource "aws_neptune_cluster" "test" {
@@ -777,7 +773,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -794,7 +789,6 @@ resource "aws_iam_role_policy" "test" {
   }
 }
 EOF
-
 }
 
 resource "aws_iam_role" "test-2" {
@@ -816,7 +810,6 @@ resource "aws_iam_role" "test-2" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test-2" {
@@ -833,7 +826,6 @@ resource "aws_iam_role_policy" "test-2" {
   }
 }
 EOF
-
 }
 
 resource "aws_neptune_cluster" "test" {
@@ -868,7 +860,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -885,7 +876,6 @@ resource "aws_iam_role_policy" "test" {
   }
 }
 EOF
-
 }
 
 resource "aws_neptune_cluster" "test" {

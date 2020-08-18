@@ -3104,7 +3104,6 @@ resource "aws_iam_role" "emr_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy_attachment" "emr_service" {
@@ -3177,7 +3176,6 @@ resource "aws_iam_policy" "emr_service" {
     }]
 }
 EOT
-
 }
 `, r)
 }
@@ -3202,7 +3200,6 @@ resource "aws_iam_role" "emr_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy_attachment" "emr_service" {
@@ -3278,7 +3275,6 @@ resource "aws_iam_policy" "emr_service" {
     }]
 }
 EOT
-
 }
 `, r)
 }
@@ -3308,7 +3304,6 @@ resource "aws_iam_role" "emr_instance_profile" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy_attachment" "emr_instance_profile" {
@@ -3352,7 +3347,6 @@ resource "aws_iam_policy" "emr_instance_profile" {
     }]
 }
 EOT
-
 }
 `, r)
 }

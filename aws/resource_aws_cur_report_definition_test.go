@@ -148,7 +148,6 @@ resource "aws_s3_bucket_policy" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cur_report_definition" "test" {

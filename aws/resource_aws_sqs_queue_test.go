@@ -648,7 +648,6 @@ resource "aws_sqs_queue" "my_queue" {
   "deadLetterTargetArn": "${aws_sqs_queue.my_dead_letter_queue.arn}"
 }
 EOF
-
 }
 
 resource "aws_sqs_queue" "my_dead_letter_queue" {
@@ -700,7 +699,6 @@ resource "aws_sqs_queue" "test-email-events" {
   ]
 }
 EOF
-
 }
 
 resource "aws_sns_topic_subscription" "test_queue_target" {

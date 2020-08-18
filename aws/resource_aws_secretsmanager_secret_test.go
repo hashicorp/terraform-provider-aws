@@ -718,7 +718,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_secretsmanager_secret" "test" {
@@ -740,7 +739,6 @@ resource "aws_secretsmanager_secret" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }

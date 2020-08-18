@@ -1308,7 +1308,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1340,7 +1339,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1372,7 +1370,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1531,7 +1528,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1569,7 +1565,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1641,7 +1636,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1677,7 +1671,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1728,7 +1721,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1765,7 +1757,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1860,7 +1851,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -1958,7 +1948,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -2033,7 +2022,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2054,7 +2042,6 @@ resource "aws_iam_role" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2080,7 +2067,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2182,7 +2168,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2201,7 +2186,6 @@ resource "aws_iam_role" "ecs_service" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2226,7 +2210,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_elb" "main" {
@@ -2279,7 +2262,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -2348,7 +2330,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2367,7 +2348,6 @@ resource "aws_iam_role" "ecs_service" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2392,7 +2372,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_elb" "main" {
@@ -2455,7 +2434,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2487,7 +2465,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2519,7 +2496,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -2551,7 +2527,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2617,7 +2592,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2638,7 +2612,6 @@ resource "aws_iam_role" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2664,7 +2637,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2767,7 +2739,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2923,7 +2894,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -3019,7 +2989,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3128,7 +3097,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3166,7 +3134,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -3198,7 +3165,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -3290,7 +3256,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3350,7 +3315,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3455,7 +3419,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3534,7 +3497,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {

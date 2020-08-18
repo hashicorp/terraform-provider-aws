@@ -198,7 +198,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -229,7 +228,6 @@ resource "aws_iam_role_policy" "iam_policy_for_sfn" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "iam_for_sfn" {
@@ -250,7 +248,6 @@ resource "aws_iam_role" "iam_for_sfn" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -284,7 +281,6 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
-
 }
 `, rName, rMaxAttempts)
 }

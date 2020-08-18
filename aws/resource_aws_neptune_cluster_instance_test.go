@@ -533,7 +533,6 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_neptune_cluster" "default" {

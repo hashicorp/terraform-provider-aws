@@ -1340,7 +1340,6 @@ resource "aws_s3_bucket" "accesslogs_bucket" {
   "Version": "2012-10-17"
 }
 EOF
-
 }
 `, r)
 }

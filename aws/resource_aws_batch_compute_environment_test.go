@@ -623,7 +623,6 @@ resource "aws_iam_role" "ecs_instance_role" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
@@ -655,7 +654,6 @@ resource "aws_iam_role" "aws_batch_service_role" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
@@ -682,7 +680,6 @@ resource "aws_iam_role" "aws_ec2_spot_fleet_role" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "aws_ec2_spot_fleet_role" {

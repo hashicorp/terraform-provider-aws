@@ -377,7 +377,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -491,7 +490,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy_attachment" "a" {
@@ -538,7 +536,6 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "p" {
@@ -570,7 +567,6 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 POLICY
-
 }
 `, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }

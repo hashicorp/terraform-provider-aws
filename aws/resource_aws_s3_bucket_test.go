@@ -3662,7 +3662,6 @@ resource "aws_iam_role" "role" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "destination" {
@@ -4207,7 +4206,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }

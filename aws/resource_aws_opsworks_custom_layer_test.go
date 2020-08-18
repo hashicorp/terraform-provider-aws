@@ -441,7 +441,6 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
   "layer_key": "layer_value2"
 }
 EOF
-
 }
 
 %s

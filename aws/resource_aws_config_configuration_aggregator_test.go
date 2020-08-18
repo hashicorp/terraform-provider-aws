@@ -309,7 +309,6 @@ resource "aws_iam_role" "example" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "example" {

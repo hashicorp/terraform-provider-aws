@@ -263,7 +263,6 @@ resource "aws_iam_role" "service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "service" {
@@ -289,7 +288,6 @@ resource "aws_iam_role_policy" "service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "instance" {
@@ -310,7 +308,6 @@ resource "aws_iam_role" "instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "test" {

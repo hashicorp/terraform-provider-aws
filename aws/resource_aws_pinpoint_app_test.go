@@ -306,7 +306,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 data "aws_caller_identity" "aws" {}

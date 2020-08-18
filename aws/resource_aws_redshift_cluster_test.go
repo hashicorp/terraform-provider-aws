@@ -900,7 +900,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1007,7 +1006,6 @@ resource "aws_s3_bucket" "bucket" {
   ]
 }
 EOF
-
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1278,7 +1276,6 @@ resource "aws_iam_role" "ec2-role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "lambda-role" {
@@ -1303,7 +1300,6 @@ resource "aws_iam_role" "lambda-role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_redshift_cluster" "default" {
@@ -1345,7 +1341,6 @@ resource "aws_iam_role" "ec2-role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "lambda-role" {
@@ -1370,7 +1365,6 @@ resource "aws_iam_role" "lambda-role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_redshift_cluster" "default" {

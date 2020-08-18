@@ -1651,7 +1651,6 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -1672,7 +1671,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
@@ -1847,7 +1845,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -1889,7 +1886,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -2073,7 +2069,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_vpc" "test" {
@@ -2240,7 +2235,6 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -2402,7 +2396,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -2471,7 +2464,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -2509,7 +2501,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -2559,7 +2550,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {
@@ -2607,7 +2597,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "test" {

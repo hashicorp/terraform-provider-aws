@@ -1382,7 +1382,6 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -1403,7 +1402,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 `, policyName, roleName)
 }
@@ -1448,7 +1446,6 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -1493,7 +1490,6 @@ resource "aws_iam_role_policy" "firehose" {
   ]
 }
 EOF
-
 }
 `
 
@@ -1526,7 +1522,6 @@ resource "aws_iam_role" "kinesis_source" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "kinesis_source" {
@@ -1552,7 +1547,6 @@ resource "aws_iam_role_policy" "kinesis_source" {
   ]
 }
 EOF
-
 }
 `
 
@@ -1585,7 +1579,6 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "firehose" {
@@ -1624,7 +1617,6 @@ resource "aws_iam_role_policy" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -2457,7 +2449,6 @@ resource "aws_iam_role_policy" "firehose-elasticsearch" {
   ]
 }
 EOF
-
 }
 `
 
@@ -2539,7 +2530,6 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "firehose" {
@@ -2578,7 +2568,6 @@ resource "aws_iam_role_policy" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "bucket" {

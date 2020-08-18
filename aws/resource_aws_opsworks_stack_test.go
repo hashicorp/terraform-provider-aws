@@ -256,7 +256,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -282,7 +281,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -303,7 +301,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -347,7 +344,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -373,7 +369,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -394,7 +389,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -770,7 +764,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -796,7 +789,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -817,7 +809,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -870,7 +861,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -896,7 +886,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -917,7 +906,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -970,7 +958,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -996,7 +983,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1017,7 +1003,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -1070,7 +1055,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_service_new" {
@@ -1091,7 +1075,6 @@ resource "aws_iam_role" "opsworks_service_new" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service_new" {
@@ -1117,7 +1100,6 @@ resource "aws_iam_role_policy" "opsworks_service_new" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -1143,7 +1125,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1164,7 +1145,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -1236,7 +1216,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -1262,7 +1241,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1283,7 +1261,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -1359,7 +1336,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -1385,7 +1361,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1406,7 +1381,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
@@ -1489,7 +1463,6 @@ resource "aws_iam_role" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "opsworks_service" {
@@ -1515,7 +1488,6 @@ resource "aws_iam_role_policy" "opsworks_service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "opsworks_instance" {
@@ -1536,7 +1508,6 @@ resource "aws_iam_role" "opsworks_instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {

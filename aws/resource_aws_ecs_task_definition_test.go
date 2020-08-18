@@ -831,7 +831,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 `, rName, rName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
 }
@@ -1317,7 +1316,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -1343,7 +1341,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -1675,7 +1672,6 @@ resource "aws_iam_role" "test" {
 	]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -1697,7 +1693,6 @@ resource "aws_iam_role_policy" "test" {
 	]
 }
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1746,7 +1741,6 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -1769,7 +1763,6 @@ resource "aws_iam_role_policy" "test" {
 }
  
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1820,7 +1813,6 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -1843,7 +1835,6 @@ resource "aws_iam_role_policy" "test" {
 }
  
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1894,7 +1885,6 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -1917,7 +1907,6 @@ resource "aws_iam_role_policy" "test" {
 }
  
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {

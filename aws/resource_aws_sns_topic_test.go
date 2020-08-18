@@ -558,7 +558,6 @@ resource "aws_sns_topic" "test" {
   "Id": "Policy1445931846145"
 }
 EOF
-
 }
 `, r)
 }
@@ -585,7 +584,6 @@ resource "aws_iam_role" "example" {
   ]
 }
 EOF
-
 }
 
 resource "aws_sns_topic" "test" {
@@ -608,7 +606,6 @@ resource "aws_sns_topic" "test" {
   "Id": "Policy1445931846145"
 }
 EOF
-
 }
 `, r, r)
 }
@@ -635,7 +632,6 @@ resource "aws_sns_topic" "test" {
   }
 }
 EOF
-
 }
 `, r)
 }
@@ -663,7 +659,6 @@ resource "aws_sns_topic" "test" {
   "Id": "Policy1445931846145"
 }
 EOF
-
 }
 `, r)
 }
@@ -705,7 +700,6 @@ resource "aws_iam_role" "example" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "example" {
@@ -732,7 +726,6 @@ resource "aws_iam_role_policy" "example" {
   ]
 }
 EOF
-
 }
 `, r, r, r)
 }

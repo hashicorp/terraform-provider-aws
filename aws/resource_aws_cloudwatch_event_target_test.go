@@ -487,7 +487,6 @@ resource "aws_iam_role" "role" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test_policy" {
@@ -511,7 +510,6 @@ resource "aws_iam_role_policy" "test_policy" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_event_target" "test" {
@@ -558,7 +556,6 @@ resource "aws_ssm_document" "test" {
       }
     }
 DOC
-
 }
 
 resource "aws_cloudwatch_event_rule" "console" {
@@ -572,7 +569,6 @@ resource "aws_cloudwatch_event_rule" "console" {
   ]
 }
 PATTERN
-
 }
 
 resource "aws_cloudwatch_event_target" "test" {
@@ -604,7 +600,6 @@ resource "aws_iam_role" "test_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test_policy" {
@@ -625,7 +620,6 @@ resource "aws_iam_role_policy" "test_policy" {
     ]
 }
 EOF
-
 }
 `, rName, rName, rName, rName)
 }
@@ -682,7 +676,6 @@ resource "aws_iam_role" "test_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test_policy" {
@@ -705,7 +698,6 @@ resource "aws_iam_role_policy" "test_policy" {
     ]
 }
 EOF
-
 }
 
 resource "aws_ecs_cluster" "test" {
@@ -730,7 +722,6 @@ resource "aws_ecs_task_definition" "task" {
   }
 ]
 EOF
-
 }
 `, rName, rName, rName, rName, rName)
 }
@@ -786,7 +777,6 @@ resource "aws_iam_role" "test_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test_policy" {
@@ -809,7 +799,6 @@ resource "aws_iam_role_policy" "test_policy" {
     ]
 }
 EOF
-
 }
 
 resource "aws_ecs_cluster" "test" {
@@ -834,7 +823,6 @@ resource "aws_ecs_task_definition" "task" {
   }
 ]
 EOF
-
 }
 `, rName)
 }
@@ -881,7 +869,6 @@ resource "aws_iam_role" "event_iam_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "ecs_iam_role" {
@@ -901,7 +888,6 @@ resource "aws_iam_role" "ecs_iam_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_policy_attachment" {
@@ -931,7 +917,6 @@ resource "aws_iam_role" "batch_iam_role" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "batch_policy_attachment" {
@@ -1044,7 +1029,6 @@ resource "aws_iam_role" "iam_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_stream" "kinesis_stream" {
@@ -1098,7 +1082,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "lambda" {

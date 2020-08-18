@@ -102,7 +102,6 @@ resource "aws_elasticsearch_domain_policy" "main" {
   access_policies = <<POLICIES
 %s
 POLICIES
-
 }
 `, randInt, policy)
 }
