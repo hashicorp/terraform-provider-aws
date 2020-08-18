@@ -1092,7 +1092,7 @@ func testAccCheckAWSLBDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = [aws_security_group.alb_test.id]
@@ -1165,7 +1165,7 @@ resource "aws_subnet" "alb_test_1" {
   vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = "us-west-2a"
+  availability_zone       = data.aws_availability_zones.available.names[0]
   ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)
 
   tags = {
@@ -1177,7 +1177,7 @@ resource "aws_subnet" "alb_test_2" {
   vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = "us-west-2b"
+  availability_zone       = data.aws_availability_zones.available.names[1]
   ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)
 
   tags = {
@@ -1201,11 +1201,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName, lbName)
+`, lbName, lbName))
 }
 
 func testAccAWSLBConfigWithIpAddressType(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = [aws_security_group.alb_test.id]
@@ -1278,7 +1278,7 @@ resource "aws_subnet" "alb_test_1" {
   vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = "us-west-2a"
+  availability_zone       = data.aws_availability_zones.available.names[0]
   ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)
 
   tags = {
@@ -1290,7 +1290,7 @@ resource "aws_subnet" "alb_test_2" {
   vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = "us-west-2b"
+  availability_zone       = data.aws_availability_zones.available.names[1]
   ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)
 
   tags = {
@@ -1314,11 +1314,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName, lbName)
+`, lbName, lbName))
 }
 
 func testAccAWSLBConfig_basic(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1336,15 +1336,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1390,11 +1381,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1416,15 +1407,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1468,11 +1450,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName, http2)
+`, lbName, http2))
 }
 
 func testAccAWSLBConfig_enableDropInvalidHeaderFields(lbName string, dropInvalid bool) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1494,15 +1476,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1546,11 +1519,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName, dropInvalid)
+`, lbName, dropInvalid))
 }
 
 func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protection bool) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1570,15 +1543,6 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1622,11 +1586,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName, deletion_protection)
+`, lbName, deletion_protection))
 }
 
 func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1658,7 +1622,7 @@ resource "aws_lb" "lb_test" {
 resource "aws_subnet" "alb_test_1" {
   vpc_id            = aws_vpc.alb_test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-lb-network-load-balancer-subnets-1"
@@ -1668,7 +1632,7 @@ resource "aws_subnet" "alb_test_1" {
 resource "aws_subnet" "alb_test_2" {
   vpc_id            = aws_vpc.alb_test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-lb-network-load-balancer-subnets-2"
@@ -1678,17 +1642,17 @@ resource "aws_subnet" "alb_test_2" {
 resource "aws_subnet" "alb_test_3" {
   vpc_id            = aws_vpc.alb_test.id
   cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-west-2c"
+  availability_zone = data.aws_availability_zones.available.names[2]
 
   tags = {
     Name = "tf-acc-lb-network-load-balancer-subnets-3"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name               = "%s"
   internal           = true
@@ -1718,26 +1682,17 @@ resource "aws_subnet" "alb_test" {
   vpc_id                  = aws_vpc.alb_test.id
   cidr_block              = "10.10.0.0/21"
   map_public_ip_on_launch = true
-  availability_zone       = "us-west-2a"
+  availability_zone       = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-network-load-balancer"
   }
 }
-`, lbName, cz)
+`, lbName, cz))
 }
 
 func testAccAWSLBConfig_networkLoadBalancerEIP(lbName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
 
@@ -1796,20 +1751,11 @@ resource "aws_lb" "lb_test" {
 resource "aws_eip" "lb" {
   count = "2"
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_networkLoadBalancerPrivateIPV4Address(lbName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name                       = "%s"
   internal                   = true
@@ -1844,11 +1790,11 @@ resource "aws_subnet" "test" {
     Name = "TestAccAWSALB_privateipv4address"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_alb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1866,15 +1812,6 @@ resource "aws_alb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1920,11 +1857,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_updateSubnets(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -1942,15 +1879,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1996,11 +1924,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_generatedName() string {
-	return `
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
@@ -2017,15 +1945,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2079,11 +1998,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`
+`)
 }
 
 func testAccAWSLBConfig_zeroValueName() string {
-	return `
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
@@ -2106,15 +2025,6 @@ output "lb_name" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2168,11 +2078,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`
+`)
 }
 
 func testAccAWSLBConfig_namePrefix() string {
-	return `
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
@@ -2190,15 +2100,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2244,10 +2145,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`
+`)
 }
+
 func testAccAWSLBConfig_updatedTags(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -2266,15 +2168,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2320,20 +2213,11 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfigALBAccessLogsBase(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_elb_service_account" "current" {}
 
 resource "aws_vpc" "test" {
@@ -2378,11 +2262,11 @@ resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
   policy = data.aws_iam_policy_document.test.json
 }
-`, bucketName)
+`, bucketName))
 }
 
 func testAccAWSLBConfigALBAccessLogs(enabled bool, lbName, bucketName, bucketPrefix string) string {
-	return testAccAWSLBConfigALBAccessLogsBase(bucketName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSLBConfigALBAccessLogsBase(bucketName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
@@ -2394,30 +2278,21 @@ resource "aws_lb" "test" {
     prefix  = %[3]q
   }
 }
-`, lbName, enabled, bucketPrefix)
+`, lbName, enabled, bucketPrefix))
 }
 
 func testAccAWSLBConfigALBAccessLogsNoBlocks(lbName, bucketName string) string {
-	return testAccAWSLBConfigALBAccessLogsBase(bucketName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSLBConfigALBAccessLogsBase(bucketName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
   subnets  = aws_subnet.alb_test.*.id
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfigNLBAccessLogsBase(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_elb_service_account" "current" {}
 
 resource "aws_vpc" "test" {
@@ -2473,11 +2348,11 @@ resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
   policy = data.aws_iam_policy_document.test.json
 }
-`, bucketName)
+`, bucketName))
 }
 
 func testAccAWSLBConfigNLBAccessLogs(enabled bool, lbName, bucketName, bucketPrefix string) string {
-	return testAccAWSLBConfigNLBAccessLogsBase(bucketName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSLBConfigNLBAccessLogsBase(bucketName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
@@ -2490,22 +2365,22 @@ resource "aws_lb" "test" {
     prefix  = %[3]q
   }
 }
-`, lbName, enabled, bucketPrefix)
+`, lbName, enabled, bucketPrefix))
 }
 
 func testAccAWSLBConfigNLBAccessLogsNoBlocks(lbName, bucketName string) string {
-	return testAccAWSLBConfigNLBAccessLogsBase(bucketName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSLBConfigNLBAccessLogsBase(bucketName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
   subnets            = aws_subnet.alb_test.*.id
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_nosg(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name     = "%s"
   internal = true
@@ -2522,15 +2397,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2552,11 +2418,11 @@ resource "aws_subnet" "alb_test" {
     Name = "tf-acc-lb-no-sg-${count.index}"
   }
 }
-`, lbName)
+`, lbName))
 }
 
 func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
@@ -2574,15 +2440,6 @@ resource "aws_lb" "lb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2645,5 +2502,5 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_basic"
   }
 }
-`, lbName)
+`, lbName))
 }
