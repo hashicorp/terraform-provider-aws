@@ -159,9 +159,9 @@ data "aws_servicequotas_service_quota" "test" {
 }
 
 resource "aws_servicequotas_service_quota" "test" {
-  quota_code   = "${data.aws_servicequotas_service_quota.test.quota_code}"
-  service_code = "${data.aws_servicequotas_service_quota.test.service_code}"
-  value        = "${data.aws_servicequotas_service_quota.test.value}"
+  quota_code   = data.aws_servicequotas_service_quota.test.quota_code
+  service_code = data.aws_servicequotas_service_quota.test.service_code
+  value        = data.aws_servicequotas_service_quota.test.value
 }
 `, quotaCode, serviceCode)
 }
