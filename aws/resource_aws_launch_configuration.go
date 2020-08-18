@@ -251,6 +251,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -258,18 +259,21 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataEndpointStateEnabled, autoscaling.InstanceMetadataEndpointStateDisabled}, false),
 						},
 						"http_tokens": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
 					},

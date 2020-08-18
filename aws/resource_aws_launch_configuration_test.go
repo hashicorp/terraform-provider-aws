@@ -718,6 +718,8 @@ func testAccAWSLaunchConfigurationConfigMetadataOptions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name = %[1]q
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t3.nano"
 
   metadata_options {
     http_endpoint               = "enabled"
