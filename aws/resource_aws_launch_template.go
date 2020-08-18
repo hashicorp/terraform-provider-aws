@@ -567,6 +567,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.ResourceTypeInstance,
 								ec2.ResourceTypeVolume,
+								ec2.ResourceTypeSpotInstancesRequest,
+								ec2.ResourceTypeElasticGpu,
 							}, false),
 						},
 						"tags": tagsSchema(),
