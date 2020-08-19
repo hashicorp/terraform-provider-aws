@@ -2,8 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -69,6 +70,38 @@ func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFu
 			return err
 		}
 
+		if resp.ManagedScalingPolicy == nil {
+			return fmt.Errorf("EMR Managed Scaling Policy is empty which shouldn't happen")
+		}
 		return nil
 	}
+}
+
+func testAccCheckAWSEmrManagedScalingPolicyDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_emr_managed_scaling_policy" {
+			continue
+		}
+
+		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
+			Name: aws.String(rs.Primary.ID),
+		})
+
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if resp != nil {
+			return fmt.Errorf("Error: EMR Managed Scaling Policy still exists")
+		}
+
+		return nil
+	}
+
+	return nil
 }
