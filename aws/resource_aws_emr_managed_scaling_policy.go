@@ -1,10 +1,11 @@
 package aws
 
 import (
-	"log"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"log"
 )
 
 func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
@@ -35,9 +36,9 @@ func computeLimitsSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"unit_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(emr.ComputeLimitsUnitType_Values(), false),
 			},
 			"minimum_capacity_units": {
