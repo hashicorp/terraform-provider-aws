@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -379,7 +379,7 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-	depends_on = ["aws_iam_role_policy.test"]
+	depends_on = [aws_iam_role_policy.test]
 	name = "aws-waf-logs-%s"
 	destination = "s3"
 

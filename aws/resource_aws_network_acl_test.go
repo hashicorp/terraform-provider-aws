@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -835,7 +835,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     action          = "allow"
@@ -858,32 +858,36 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclIpv6Config = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-ipv6"
   }
 }
 
 resource "aws_subnet" "blob" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-ipv6"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   ingress {
-    protocol = 6
-    rule_no = 1
-    action = "allow"
-    ipv6_cidr_block =  "::/0"
-    from_port = 0
-    to_port = 22
+    protocol        = 6
+    rule_no         = 1
+    action          = "allow"
+    ipv6_cidr_block = "::/0"
+    from_port       = 0
+    to_port         = 22
   }
 
-  subnet_ids = ["${aws_subnet.blob.id}"]
+  subnet_ids = [aws_subnet.blob.id]
+
   tags = {
     Name = "tf-acc-acl-ipv6"
   }
@@ -892,7 +896,7 @@ resource "aws_network_acl" "test" {
 
 const testAccAWSNetworkAclIpv6VpcConfig = `
 resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -901,15 +905,17 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   ingress {
-    protocol = 6
-    rule_no = 1
-    action = "allow"
-    ipv6_cidr_block =  "2600:1f16:d1e:9a00::/56"
-    from_port = 0
-    to_port = 22
+    protocol        = 6
+    rule_no         = 1
+    action          = "allow"
+    ipv6_cidr_block = "2600:1f16:d1e:9a00::/56"
+    from_port       = 0
+    to_port         = 22
   }
+
   tags = {
     Name = "tf-acc-acl-ipv6"
   }
@@ -919,40 +925,45 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclIngressConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-ingress"
   }
 }
 
 resource "aws_subnet" "blob" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-ingress"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   ingress {
-    protocol = 6
-    rule_no = 1
-    action = "deny"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 0
-    to_port = 22
-  }
-  ingress {
-    protocol = 6
-    rule_no = 2
-    action = "deny"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 443
-    to_port = 443
+    protocol   = 6
+    rule_no    = 1
+    action     = "deny"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 0
+    to_port    = 22
   }
 
-  subnet_ids = ["${aws_subnet.blob.id}"]
+  ingress {
+    protocol   = 6
+    rule_no    = 2
+    action     = "deny"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 443
+    to_port    = 443
+  }
+
+  subnet_ids = [aws_subnet.blob.id]
+
   tags = {
     Name = "tf-acc-acl-ingress"
   }
@@ -962,31 +973,36 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclCaseSensitiveConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-ingress"
   }
 }
 
 resource "aws_subnet" "blob" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-ingress"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   ingress {
-    protocol = 6
-    rule_no = 1
-    action = "Allow"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 0
-    to_port = 22
+    protocol   = 6
+    rule_no    = 1
+    action     = "Allow"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 0
+    to_port    = 22
   }
-  subnet_ids = ["${aws_subnet.blob.id}"]
+
+  subnet_ids = [aws_subnet.blob.id]
+
   tags = {
     Name = "tf-acc-acl-case-sensitive"
   }
@@ -996,31 +1012,36 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclIngressConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-ingress"
   }
 }
 
 resource "aws_subnet" "blob" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-ingress"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   ingress {
-    protocol = 6
-    rule_no = 1
-    action = "deny"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 0
-    to_port = 22
+    protocol   = 6
+    rule_no    = 1
+    action     = "deny"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 0
+    to_port    = 22
   }
-  subnet_ids = ["${aws_subnet.blob.id}"]
+
+  subnet_ids = [aws_subnet.blob.id]
+
   tags = {
     Name = "tf-acc-acl-ingress"
   }
@@ -1030,60 +1051,63 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclEgressConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.2.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-egress"
   }
 }
 
 resource "aws_subnet" "blob" {
-  cidr_block = "10.2.0.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.2.0.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-egress"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   egress {
-    protocol = 6
-    rule_no = 2
-    action = "allow"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 443
-    to_port = 443
+    protocol   = 6
+    rule_no    = 2
+    action     = "allow"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 443
+    to_port    = 443
   }
 
   egress {
-    protocol = "-1"
-    rule_no = 4
-    action = "allow"
+    protocol   = "-1"
+    rule_no    = 4
+    action     = "allow"
     cidr_block = "0.0.0.0/0"
-    from_port = 0
-    to_port = 0
+    from_port  = 0
+    to_port    = 0
   }
 
   egress {
-    protocol = 6
-    rule_no = 1
-    action = "allow"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 80
-    to_port = 80
+    protocol   = 6
+    rule_no    = 1
+    action     = "allow"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 80
+    to_port    = 80
   }
 
   egress {
-    protocol = 6
-    rule_no = 3
-    action = "allow"
-    cidr_block =  "10.2.0.0/18"
-    from_port = 22
-    to_port = 22
+    protocol   = 6
+    rule_no    = 3
+    action     = "allow"
+    cidr_block = "10.2.0.0/18"
+    from_port  = 22
+    to_port    = 22
   }
 
   tags = {
-    foo = "bar"
+    foo  = "bar"
     Name = "tf-acc-acl-egress"
   }
 }
@@ -1092,81 +1116,91 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclEgressNIngressConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.3.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-egress-and-ingress"
   }
 }
 
 resource "aws_subnet" "blob" {
-  cidr_block = "10.3.0.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.3.0.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-egress-and-ingress"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
+
   egress {
-    protocol = 6
-    rule_no = 2
-    action = "allow"
-    cidr_block =  "10.3.0.0/18"
-    from_port = 443
-    to_port = 443
+    protocol   = 6
+    rule_no    = 2
+    action     = "allow"
+    cidr_block = "10.3.0.0/18"
+    from_port  = 443
+    to_port    = 443
   }
 
   ingress {
-    protocol = 6
-    rule_no = 1
-    action = "allow"
-    cidr_block =  "10.3.0.0/18"
-    from_port = 80
-    to_port = 80
+    protocol   = 6
+    rule_no    = 1
+    action     = "allow"
+    cidr_block = "10.3.0.0/18"
+    from_port  = 80
+    to_port    = 80
   }
+
   tags = {
     Name = "tf-acc-acl-egress-and-ingress"
   }
 }
 `
+
 const testAccAWSNetworkAclSubnetConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-subnet-change"
   }
 }
 
 resource "aws_subnet" "old" {
-  cidr_block = "10.1.111.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.111.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-subnet-change-old"
   }
 }
 
 resource "aws_subnet" "new" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-subnet-change-new"
   }
 }
 
 resource "aws_network_acl" "roll" {
-  vpc_id = "${aws_vpc.foo.id}"
-  subnet_ids = ["${aws_subnet.new.id}"]
+  vpc_id     = aws_vpc.foo.id
+  subnet_ids = [aws_subnet.new.id]
+
   tags = {
     Name = "tf-acc-acl-subnet-change-roll"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
-  subnet_ids = ["${aws_subnet.old.id}"]
+  vpc_id     = aws_vpc.foo.id
+  subnet_ids = [aws_subnet.old.id]
+
   tags = {
     Name = "tf-acc-acl-subnet-change-test"
   }
@@ -1176,32 +1210,36 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclSubnetConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-subnet-change"
   }
 }
 
 resource "aws_subnet" "old" {
-  cidr_block = "10.1.111.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.111.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-subnet-change-old"
   }
 }
 
 resource "aws_subnet" "new" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.foo.id
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-network-acl-subnet-change-new"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
-  subnet_ids = ["${aws_subnet.new.id}"]
+  vpc_id     = aws_vpc.foo.id
+  subnet_ids = [aws_subnet.new.id]
+
   tags = {
     Name = "tf-acc-acl-subnet-change-test"
   }
@@ -1211,6 +1249,7 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclSubnet_SubnetIds = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-subnet-ids"
   }
@@ -1218,7 +1257,8 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-one"
   }
@@ -1226,15 +1266,17 @@ resource "aws_subnet" "one" {
 
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-two"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
-  subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
+  vpc_id     = aws_vpc.foo.id
+  subnet_ids = [aws_subnet.one.id, aws_subnet.two.id]
+
   tags = {
     Name = "tf-acc-acl-subnet-ids"
   }
@@ -1244,6 +1286,7 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclSubnet_SubnetIdsUpdate = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-subnet-ids"
   }
@@ -1251,7 +1294,8 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-one"
   }
@@ -1259,7 +1303,8 @@ resource "aws_subnet" "one" {
 
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-two"
   }
@@ -1267,7 +1312,8 @@ resource "aws_subnet" "two" {
 
 resource "aws_subnet" "three" {
   cidr_block = "10.1.222.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-three"
   }
@@ -1275,19 +1321,21 @@ resource "aws_subnet" "three" {
 
 resource "aws_subnet" "four" {
   cidr_block = "10.1.4.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-four"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
   subnet_ids = [
-    "${aws_subnet.one.id}",
-    "${aws_subnet.three.id}",
-    "${aws_subnet.four.id}",
+    aws_subnet.one.id,
+    aws_subnet.three.id,
+    aws_subnet.four.id,
   ]
+
   tags = {
     Name = "tf-acc-acl-subnet-ids"
   }
@@ -1297,6 +1345,7 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclSubnet_SubnetIdsDeleteOne = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-subnet-ids"
   }
@@ -1304,15 +1353,17 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
+
   tags = {
     Name = "tf-acc-network-acl-subnet-ids-one"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
-  subnet_ids = ["${aws_subnet.one.id}"]
+  vpc_id     = aws_vpc.foo.id
+  subnet_ids = [aws_subnet.one.id]
+
   tags = {
     Name = "tf-acc-acl-subnet-ids"
   }
@@ -1322,13 +1373,14 @@ resource "aws_network_acl" "test" {
 const testAccAWSNetworkAclEsp = `
 resource "aws_vpc" "testvpc" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-network-acl-esp"
   }
 }
 
 resource "aws_network_acl" "test" {
-  vpc_id = "${aws_vpc.testvpc.id}"
+  vpc_id = aws_vpc.testvpc.id
 
   egress {
     protocol   = "esp"
@@ -1360,11 +1412,11 @@ resource "aws_network_acl" "test" {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   egress {
     action     = "allow"
-    cidr_block = "${aws_vpc.test.cidr_block}"
+    cidr_block = aws_vpc.test.cidr_block
     from_port  = 0
     protocol   = 6
     rule_no    = 1
@@ -1373,7 +1425,7 @@ resource "aws_network_acl" "test" {
 
   egress {
     action     = "allow"
-    cidr_block = "${aws_vpc.test.cidr_block}"
+    cidr_block = aws_vpc.test.cidr_block
     from_port  = 0
     protocol   = "udp"
     rule_no    = 2
@@ -1398,7 +1450,7 @@ resource "aws_network_acl" "test" {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -1420,7 +1472,7 @@ resource "aws_network_acl" "test" {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -1440,11 +1492,11 @@ resource "aws_network_acl" "test" {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     action     = "allow"
-    cidr_block = "${aws_vpc.test.cidr_block}"
+    cidr_block = aws_vpc.test.cidr_block
     from_port  = 0
     protocol   = 6
     rule_no    = 1
@@ -1453,7 +1505,7 @@ resource "aws_network_acl" "test" {
 
   ingress {
     action     = "allow"
-    cidr_block = "${aws_vpc.test.cidr_block}"
+    cidr_block = aws_vpc.test.cidr_block
     from_port  = 0
     protocol   = "udp"
     rule_no    = 2
@@ -1478,7 +1530,7 @@ resource "aws_network_acl" "test" {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -1500,7 +1552,7 @@ resource "aws_network_acl" "test" {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }

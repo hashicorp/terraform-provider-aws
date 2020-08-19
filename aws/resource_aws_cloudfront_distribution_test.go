@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -1111,28 +1111,28 @@ func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
 
 var originBucket = `
 resource "aws_s3_bucket" "s3_bucket_origin" {
-	bucket = "mybucket.${var.rand_id}"
-	acl = "public-read"
+  bucket = "mybucket.${var.rand_id}"
+  acl    = "public-read"
 }
 `
 
 var backupBucket = `
 resource "aws_s3_bucket" "s3_backup_bucket_origin" {
-	bucket = "mybucket-backup.${var.rand_id}"
-	acl = "public-read"
+  bucket = "mybucket-backup.${var.rand_id}"
+  acl    = "public-read"
 }
 `
 
 var logBucket = `
 resource "aws_s3_bucket" "s3_bucket_logs" {
-	bucket = "mylogs.${var.rand_id}"
-	acl = "public-read"
+  bucket = "mylogs.${var.rand_id}"
+  acl    = "public-read"
 }
 `
 
 var testAccAWSCloudFrontDistributionS3Config = `
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 # origin bucket
@@ -1142,49 +1142,59 @@ variable rand_id {
 %s
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
-	origin {
-		domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-		origin_id = "myS3Origin"
-	}
-	enabled = true
-	default_root_object = "index.html"
-	logging_config {
-		include_cookies = false
-		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
-		prefix = "myprefix"
-	}
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myS3Origin"
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "none"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    origin_id   = "myS3Origin"
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `
 
 var testAccAWSCloudFrontDistributionS3ConfigWithTags = `
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 # origin bucket
@@ -1194,48 +1204,58 @@ variable rand_id {
 %s
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
-	origin {
-		domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-		origin_id = "myS3Origin"
-	}
-	enabled = true
-	default_root_object = "index.html"
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myS3Origin"
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "none"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	tags = {
-            environment = "production"
-            account = "main"
-	}
-	%s
+  origin {
+    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    origin_id   = "myS3Origin"
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    environment = "production"
+    account     = "main"
+  }
+
+  %s
 }
 `
 
 var testAccAWSCloudFrontDistributionS3ConfigWithTagsUpdated = `
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 # origin bucket
@@ -1245,106 +1265,127 @@ variable rand_id {
 %s
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
-	origin {
-		domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-		origin_id = "myS3Origin"
-	}
-	enabled = true
-	default_root_object = "index.html"
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myS3Origin"
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "none"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	tags = {
-            environment = "dev"
-	}
-	%s
+  origin {
+    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    origin_id   = "myS3Origin"
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    environment = "dev"
+  }
+
+  %s
 }
 `
 
 var testAccAWSCloudFrontDistributionCustomConfig = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 # log bucket
 %s
 
 resource "aws_cloudfront_distribution" "custom_distribution" {
-	origin {
-		domain_name = "www.example.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-			origin_read_timeout = 30
-			origin_keepalive_timeout = 5
-		}
-	}
-	enabled = true
-	comment = "Some comment"
-	default_root_object = "index.html"
-	logging_config {
-		include_cookies = false
-		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
-		prefix = "myprefix"
-	}
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		smooth_streaming = false
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	price_class = "PriceClass_200"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["SSLv3", "TLSv1"]
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+
+  enabled             = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), logBucket, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionMultiOriginConfig = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 # origin bucket
@@ -1354,188 +1395,227 @@ variable rand_id {
 %s
 
 resource "aws_cloudfront_distribution" "multi_origin_distribution" {
-	origin {
-		domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
-		origin_id = "myS3Origin"
-	}
-	origin {
-		domain_name = "www.example.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-			origin_keepalive_timeout = 45
-		}
-	}
-	enabled = true
-	comment = "Some comment"
-	default_root_object = "index.html"
-	logging_config {
-		include_cookies = false
-		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
-		prefix = "myprefix"
-	}
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myS3Origin"
-		smooth_streaming = true
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		min_ttl = 100
-		default_ttl = 100
-		max_ttl = 100
-		viewer_protocol_policy = "allow-all"
-	}
-	ordered_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myS3Origin"
-		forwarded_values {
-			query_string = true
-			cookies {
-				forward = "none"
-			}
-		}
-		min_ttl = 50
-		default_ttl = 50
-		max_ttl = 50
-		viewer_protocol_policy = "allow-all"
-		path_pattern = "images1/*.jpg"
-	}
-	ordered_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		forwarded_values {
-			query_string = true
-			cookies {
-				forward = "none"
-			}
-		}
-		min_ttl = 50
-		default_ttl = 50
-		max_ttl = 50
-		viewer_protocol_policy = "allow-all"
-		path_pattern = "images2/*.jpg"
-	}
+  origin {
+    domain_name = "${aws_s3_bucket.s3_bucket_origin.id}.s3.amazonaws.com"
+    origin_id   = "myS3Origin"
+  }
 
-	price_class = "PriceClass_All"
-	custom_error_response {
-		error_code = 404
-		response_page_path = "/error-pages/404.html"
-		response_code = 200
-		error_caching_min_ttl = 30
-	}
-	restrictions {
-		geo_restriction {
-			restriction_type = "none"
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["SSLv3", "TLSv1"]
+      origin_keepalive_timeout = 45
+    }
+  }
+
+  enabled             = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+    smooth_streaming = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    min_ttl                = 100
+    default_ttl            = 100
+    max_ttl                = 100
+    viewer_protocol_policy = "allow-all"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 50
+    default_ttl            = 50
+    max_ttl                = 50
+    viewer_protocol_policy = "allow-all"
+    path_pattern           = "images1/*.jpg"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 50
+    default_ttl            = 50
+    max_ttl                = 50
+    viewer_protocol_policy = "allow-all"
+    path_pattern           = "images2/*.jpg"
+  }
+
+  price_class = "PriceClass_All"
+
+  custom_error_response {
+    error_code            = 404
+    response_page_path    = "/error-pages/404.html"
+    response_code         = 200
+    error_caching_min_ttl = 30
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionNoCustomErroResponseInfo = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 resource "aws_cloudfront_distribution" "no_custom_error_responses" {
-	origin {
-		domain_name = "www.example.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-		}
-	}
-	enabled = true
-	comment = "Some comment"
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		smooth_streaming = false
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	custom_error_response {
-		error_code = 404
-		error_caching_min_ttl = 30
-	}
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  custom_error_response {
+    error_code            = 404
+    error_caching_min_ttl = 30
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionNoOptionalItemsConfig = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 resource "aws_cloudfront_distribution" "no_optional_items" {
-	origin {
-		domain_name = "www.example.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-		}
-	}
-	enabled = true
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		smooth_streaming = false
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-	}
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
@@ -1544,36 +1624,45 @@ resource "aws_cloudfront_distribution" "Origin_EmptyDomainName" {
   origin {
     domain_name = ""
     origin_id   = "myCustomOrigin"
+
     custom_origin_config {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = [ "SSLv3", "TLSv1" ]
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
     }
   }
+
   enabled = true
+
   default_cache_behavior {
-    allowed_methods  = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-    cached_methods   = [ "GET", "HEAD" ]
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
     target_origin_id = "myCustomOrigin"
     smooth_streaming = false
+
     forwarded_values {
       query_string = false
+
       cookies {
         forward = "all"
       }
     }
+
     viewer_protocol_policy = "allow-all"
   }
+
   restrictions {
     geo_restriction {
       restriction_type = "whitelist"
-      locations        = [ "US", "CA", "GB", "DE" ]
+      locations        = ["US", "CA", "GB", "DE"]
     }
   }
+
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
   %s
 }
 `, testAccAWSCloudFrontDistributionRetainConfig())
@@ -1583,269 +1672,329 @@ resource "aws_cloudfront_distribution" "Origin_EmptyOriginID" {
   origin {
     domain_name = "www.example.com"
     origin_id   = ""
+
     custom_origin_config {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = [ "SSLv3", "TLSv1" ]
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
     }
   }
+
   enabled = true
+
   default_cache_behavior {
-    allowed_methods  = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-    cached_methods   = [ "GET", "HEAD" ]
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
     target_origin_id = "myCustomOrigin"
     smooth_streaming = false
+
     forwarded_values {
       query_string = false
+
       cookies {
         forward = "all"
       }
     }
+
     viewer_protocol_policy = "allow-all"
   }
+
   restrictions {
     geo_restriction {
       restriction_type = "whitelist"
-      locations        = [ "US", "CA", "GB", "DE" ]
+      locations        = ["US", "CA", "GB", "DE"]
     }
   }
+
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
   %s
 }
 `, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionHTTP11Config = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 resource "aws_cloudfront_distribution" "http_1_1" {
-	origin {
-		domain_name = "www.example.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-		}
-	}
-	enabled = true
-	comment = "Some comment"
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		smooth_streaming = false
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	http_version = "http1.1"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  http_version = "http1.1"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionIsIPV6EnabledConfig = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 resource "aws_cloudfront_distribution" "is_ipv6_enabled" {
-	origin {
-		domain_name = "www.example.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-		}
-	}
-	enabled = true
-	is_ipv6_enabled = true
-	comment = "Some comment"
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		smooth_streaming = false
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-		min_ttl = 0
-		default_ttl = 3600
-		max_ttl = 86400
-	}
-	http_version = "http1.1"
-	restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled         = true
+  is_ipv6_enabled = true
+  comment         = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  http_version = "http1.1"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionOrderedCacheBehavior = fmt.Sprintf(`
 variable rand_id {
-	default = %d
+  default = %d
 }
 
 resource "aws_cloudfront_distribution" "main" {
-	origin {
-		domain_name = "www.hashicorp.com"
-		origin_id = "myCustomOrigin"
-		custom_origin_config {
-			http_port = 80
-			https_port = 443
-			origin_protocol_policy = "http-only"
-			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
-		}
-	}
-	enabled = true
-	comment = "Some comment"
-	default_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		smooth_streaming = true
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "all"
-			}
-		}
-		min_ttl = 100
-		default_ttl = 100
-		max_ttl = 100
-		viewer_protocol_policy = "allow-all"
-	}
-	ordered_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		forwarded_values {
-			query_string = true
-			cookies {
-				forward = "none"
-			}
-		}
-		min_ttl = 50
-		default_ttl = 50
-		max_ttl = 50
-		viewer_protocol_policy = "allow-all"
-		path_pattern = "images1/*.jpg"
-	}
-	ordered_cache_behavior {
-		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "myCustomOrigin"
-		forwarded_values {
-			query_string = true
-			cookies {
-				forward = "none"
-			}
-		}
-		min_ttl = 51
-		default_ttl = 51
-		max_ttl = 51
-		viewer_protocol_policy = "allow-all"
-		path_pattern = "images2/*.jpg"
-	}
+  origin {
+    domain_name = "www.hashicorp.com"
+    origin_id   = "myCustomOrigin"
 
-	price_class = "PriceClass_All"
-	restrictions {
-		geo_restriction {
-			restriction_type = "none"
-		}
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    min_ttl                = 100
+    default_ttl            = 100
+    max_ttl                = 100
+    viewer_protocol_policy = "allow-all"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 50
+    default_ttl            = 50
+    max_ttl                = 50
+    viewer_protocol_policy = "allow-all"
+    path_pattern           = "images1/*.jpg"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 51
+    default_ttl            = 51
+    max_ttl                = 51
+    viewer_protocol_policy = "allow-all"
+    path_pattern           = "images2/*.jpg"
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionOriginGroupsConfig = `
 variable rand_id {
-	default = %d
+  default = %d
 }
 # origin bucket
 %s
+
 # backup bucket
 %s
+
 resource "aws_cloudfront_distribution" "failover_distribution" {
-	origin {
-		domain_name = "${aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name}"
-		origin_id = "primaryS3"
-	}
   origin {
-    domain_name = "${aws_s3_bucket.s3_backup_bucket_origin.bucket_regional_domain_name}"
-    origin_id = "failoverS3"
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
+    origin_id   = "primaryS3"
   }
+
+  origin {
+    domain_name = aws_s3_bucket.s3_backup_bucket_origin.bucket_regional_domain_name
+    origin_id   = "failoverS3"
+  }
+
   origin_group {
     origin_id = "groupS3"
+
     failover_criteria {
       status_codes = [403, 404, 500, 502]
     }
+
     member {
       origin_id = "primaryS3"
     }
+
     member {
       origin_id = "failoverS3"
     }
   }
+
   enabled = true
+
   restrictions {
-		geo_restriction {
-			restriction_type = "whitelist"
-			locations = [ "US", "CA", "GB", "DE" ]
-		}
-	}
-	default_cache_behavior {
-		allowed_methods = [ "GET", "HEAD" ]
-		cached_methods = [ "GET", "HEAD" ]
-		target_origin_id = "groupS3"
-		forwarded_values {
-			query_string = false
-			cookies {
-				forward = "none"
-			}
-		}
-		viewer_protocol_policy = "allow-all"
-	}
-	viewer_certificate {
-		cloudfront_default_certificate = true
-	}
-	%s
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "groupS3"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+  %s
 }
 `
 
@@ -2455,7 +2604,7 @@ resource "aws_cloudfront_distribution" "test" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = "${aws_acm_certificate.test.arn}"
+    acm_certificate_arn = aws_acm_certificate.test.arn
     ssl_support_method  = "sni-only"
   }
 }
@@ -2502,7 +2651,7 @@ resource "aws_cloudfront_distribution" "test" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = "${aws_acm_certificate.test.arn}"
+    acm_certificate_arn            = aws_acm_certificate.test.arn
     cloudfront_default_certificate = false
     ssl_support_method             = "sni-only"
   }

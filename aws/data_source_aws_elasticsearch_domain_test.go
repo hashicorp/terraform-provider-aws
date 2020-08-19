@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
@@ -113,9 +113,11 @@ POLICY
     instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
+
     zone_awareness_config {
       availability_zone_count = 2
     }
+
     zone_awareness_enabled = true
   }
 
@@ -137,16 +139,7 @@ data "aws_elasticsearch_domain" "test" {
 }
 
 func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -238,9 +231,11 @@ POLICY
     instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
+
     zone_awareness_config {
       availability_zone_count = 2
     }
+
     zone_awareness_enabled = true
   }
 

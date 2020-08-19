@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
@@ -198,13 +198,13 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "${aws_vpc_endpoint.test.service_name}"
+  vpc_id       = aws_vpc.test.id
+  service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
 `, rName)
@@ -223,12 +223,12 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 data "aws_vpc_endpoint" "test" {
-  id = "${aws_vpc_endpoint.test.id}"
+  id = aws_vpc_endpoint.test.id
 }
 `, rName)
 }
@@ -246,14 +246,14 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 data "aws_vpc_endpoint" "test" {
   filter {
     name   = "vpc-endpoint-id"
-    values = ["${aws_vpc_endpoint.test.id}"]
+    values = [aws_vpc_endpoint.test.id]
   }
 }
 `, rName)
@@ -272,7 +272,7 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 
   tags = {
@@ -283,7 +283,7 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id = "${aws_vpc_endpoint.test.vpc_id}"
+  vpc_id = aws_vpc_endpoint.test.vpc_id
 
   tags = {
     Key1 = "Value1"
@@ -305,7 +305,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -315,11 +315,11 @@ resource "aws_route_table" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 
   route_table_ids = [
-    "${aws_route_table.test.id}",
+    aws_route_table.test.id,
   ]
 
   tags = {
@@ -328,8 +328,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "${aws_vpc_endpoint.test.service_name}"
+  vpc_id       = aws_vpc.test.id
+  service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
 `, rName)
@@ -355,9 +355,9 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${aws_vpc.test.cidr_block}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = aws_vpc.test.cidr_block
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -365,7 +365,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
   name   = %[1]q
 
   tags = {
@@ -376,17 +376,17 @@ resource "aws_security_group" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id              = "${aws_vpc.test.id}"
+  vpc_id              = aws_vpc.test.id
   vpc_endpoint_type   = "Interface"
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
   private_dns_enabled = false
 
   subnet_ids = [
-    "${aws_subnet.test.id}",
+    aws_subnet.test.id,
   ]
 
   security_group_ids = [
-    "${aws_security_group.test.id}",
+    aws_security_group.test.id,
   ]
 
   tags = {
@@ -395,8 +395,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 data "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "${aws_vpc_endpoint.test.service_name}"
+  vpc_id       = aws_vpc.test.id
+  service_name = aws_vpc_endpoint.test.service_name
   state        = "available"
 }
 `, rName)

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
@@ -199,7 +199,7 @@ resource "aws_mq_broker" "acctest" {
     groups         = ["dragon", "salamander", "leopard"]
   }
 
-  depends_on = ["aws_internet_gateway.acctest"]
+  depends_on = [aws_internet_gateway.acctest]
 }
 `, prefix, brokerName)
 }

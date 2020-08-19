@@ -12469,6 +12469,13 @@ const (
 	ConditionTypeStringequals = "STRINGEQUALS"
 )
 
+// ConditionType_Values returns all elements of the ConditionType enum
+func ConditionType_Values() []string {
+	return []string{
+		ConditionTypeStringequals,
+	}
+}
+
 const (
 	// CopyJobStateCreated is a CopyJobState enum value
 	CopyJobStateCreated = "CREATED"
@@ -12482,6 +12489,16 @@ const (
 	// CopyJobStateFailed is a CopyJobState enum value
 	CopyJobStateFailed = "FAILED"
 )
+
+// CopyJobState_Values returns all elements of the CopyJobState enum
+func CopyJobState_Values() []string {
+	return []string{
+		CopyJobStateCreated,
+		CopyJobStateRunning,
+		CopyJobStateCompleted,
+		CopyJobStateFailed,
+	}
+}
 
 const (
 	// JobStateCreated is a JobState enum value
@@ -12509,6 +12526,20 @@ const (
 	JobStateExpired = "EXPIRED"
 )
 
+// JobState_Values returns all elements of the JobState enum
+func JobState_Values() []string {
+	return []string{
+		JobStateCreated,
+		JobStatePending,
+		JobStateRunning,
+		JobStateAborting,
+		JobStateAborted,
+		JobStateCompleted,
+		JobStateFailed,
+		JobStateExpired,
+	}
+}
+
 const (
 	// RecoveryPointStatusCompleted is a RecoveryPointStatus enum value
 	RecoveryPointStatusCompleted = "COMPLETED"
@@ -12522,6 +12553,16 @@ const (
 	// RecoveryPointStatusExpired is a RecoveryPointStatus enum value
 	RecoveryPointStatusExpired = "EXPIRED"
 )
+
+// RecoveryPointStatus_Values returns all elements of the RecoveryPointStatus enum
+func RecoveryPointStatus_Values() []string {
+	return []string{
+		RecoveryPointStatusCompleted,
+		RecoveryPointStatusPartial,
+		RecoveryPointStatusDeleting,
+		RecoveryPointStatusExpired,
+	}
+}
 
 const (
 	// RestoreJobStatusPending is a RestoreJobStatus enum value
@@ -12540,6 +12581,17 @@ const (
 	RestoreJobStatusFailed = "FAILED"
 )
 
+// RestoreJobStatus_Values returns all elements of the RestoreJobStatus enum
+func RestoreJobStatus_Values() []string {
+	return []string{
+		RestoreJobStatusPending,
+		RestoreJobStatusRunning,
+		RestoreJobStatusCompleted,
+		RestoreJobStatusAborted,
+		RestoreJobStatusFailed,
+	}
+}
+
 const (
 	// StorageClassWarm is a StorageClass enum value
 	StorageClassWarm = "WARM"
@@ -12550,6 +12602,15 @@ const (
 	// StorageClassDeleted is a StorageClass enum value
 	StorageClassDeleted = "DELETED"
 )
+
+// StorageClass_Values returns all elements of the StorageClass enum
+func StorageClass_Values() []string {
+	return []string{
+		StorageClassWarm,
+		StorageClassCold,
+		StorageClassDeleted,
+	}
+}
 
 const (
 	// VaultEventBackupJobStarted is a VaultEvent enum value
@@ -12597,3 +12658,24 @@ const (
 	// VaultEventBackupPlanModified is a VaultEvent enum value
 	VaultEventBackupPlanModified = "BACKUP_PLAN_MODIFIED"
 )
+
+// VaultEvent_Values returns all elements of the VaultEvent enum
+func VaultEvent_Values() []string {
+	return []string{
+		VaultEventBackupJobStarted,
+		VaultEventBackupJobCompleted,
+		VaultEventBackupJobSuccessful,
+		VaultEventBackupJobFailed,
+		VaultEventBackupJobExpired,
+		VaultEventRestoreJobStarted,
+		VaultEventRestoreJobCompleted,
+		VaultEventRestoreJobSuccessful,
+		VaultEventRestoreJobFailed,
+		VaultEventCopyJobStarted,
+		VaultEventCopyJobSuccessful,
+		VaultEventCopyJobFailed,
+		VaultEventRecoveryPointModified,
+		VaultEventBackupPlanCreated,
+		VaultEventBackupPlanModified,
+	}
+}

@@ -6603,6 +6603,14 @@ const (
 	EncryptionStatusActive = "ACTIVE"
 )
 
+// EncryptionStatus_Values returns all elements of the EncryptionStatus enum
+func EncryptionStatus_Values() []string {
+	return []string{
+		EncryptionStatusUpdating,
+		EncryptionStatusActive,
+	}
+}
+
 const (
 	// EncryptionTypeNone is a EncryptionType enum value
 	EncryptionTypeNone = "NONE"
@@ -6610,6 +6618,14 @@ const (
 	// EncryptionTypeKms is a EncryptionType enum value
 	EncryptionTypeKms = "KMS"
 )
+
+// EncryptionType_Values returns all elements of the EncryptionType enum
+func EncryptionType_Values() []string {
+	return []string{
+		EncryptionTypeNone,
+		EncryptionTypeKms,
+	}
+}
 
 const (
 	// SamplingStrategyNamePartialScan is a SamplingStrategyName enum value
@@ -6619,6 +6635,14 @@ const (
 	SamplingStrategyNameFixedRate = "FixedRate"
 )
 
+// SamplingStrategyName_Values returns all elements of the SamplingStrategyName enum
+func SamplingStrategyName_Values() []string {
+	return []string{
+		SamplingStrategyNamePartialScan,
+		SamplingStrategyNameFixedRate,
+	}
+}
+
 const (
 	// TimeRangeTypeTraceId is a TimeRangeType enum value
 	TimeRangeTypeTraceId = "TraceId"
@@ -6626,3 +6650,11 @@ const (
 	// TimeRangeTypeEvent is a TimeRangeType enum value
 	TimeRangeTypeEvent = "Event"
 )
+
+// TimeRangeType_Values returns all elements of the TimeRangeType enum
+func TimeRangeType_Values() []string {
+	return []string{
+		TimeRangeTypeTraceId,
+		TimeRangeTypeEvent,
+	}
+}

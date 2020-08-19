@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -348,8 +348,8 @@ resource "aws_redshift_security_group" "test" {
   description = "this is a description"
 
   ingress {
-    security_group_name     = "${aws_security_group.redshift.name}"
-    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+    security_group_name     = aws_security_group.redshift.name
+    security_group_owner_id = aws_security_group.redshift.owner_id
   }
 }
 `, rInt, rInt)
@@ -398,18 +398,18 @@ resource "aws_redshift_security_group" "test" {
   description = "this is a description"
 
   ingress {
-    security_group_name     = "${aws_security_group.redshift.name}"
-    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+    security_group_name     = aws_security_group.redshift.name
+    security_group_owner_id = aws_security_group.redshift.owner_id
   }
 
   ingress {
-    security_group_name     = "${aws_security_group.redshift2.name}"
-    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+    security_group_name     = aws_security_group.redshift2.name
+    security_group_owner_id = aws_security_group.redshift.owner_id
   }
 
   ingress {
-    security_group_name     = "${aws_security_group.redshift3.name}"
-    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+    security_group_name     = aws_security_group.redshift3.name
+    security_group_owner_id = aws_security_group.redshift.owner_id
   }
 }
 `, rInt, rInt, rInt, rInt)
@@ -446,13 +446,13 @@ resource "aws_redshift_security_group" "test" {
   description = "this is a description"
 
   ingress {
-    security_group_name     = "${aws_security_group.redshift.name}"
-    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+    security_group_name     = aws_security_group.redshift.name
+    security_group_owner_id = aws_security_group.redshift.owner_id
   }
 
   ingress {
-    security_group_name     = "${aws_security_group.redshift2.name}"
-    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+    security_group_name     = aws_security_group.redshift2.name
+    security_group_owner_id = aws_security_group.redshift.owner_id
   }
 }
 `, rInt, rInt, rInt)

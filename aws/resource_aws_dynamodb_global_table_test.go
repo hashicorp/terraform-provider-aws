@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
@@ -155,7 +155,8 @@ func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
 
 func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 resource "aws_dynamodb_table" "test" {
   hash_key         = "myAttribute"
@@ -172,12 +173,12 @@ resource "aws_dynamodb_table" "test" {
 }
 
 resource "aws_dynamodb_global_table" "test" {
-  depends_on = ["aws_dynamodb_table.test"]
+  depends_on = [aws_dynamodb_table.test]
 
   name = "%s"
 
   replica {
-    region_name = "${data.aws_region.current.name}"
+    region_name = data.aws_region.current.name
   }
 }
 `, tableName, tableName)

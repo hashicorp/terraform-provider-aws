@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsBatchComputeEnvironment_basic(t *testing.T) {
@@ -154,7 +154,7 @@ resource "aws_batch_compute_environment" "test" {
 
   service_role = aws_iam_role.aws_batch_service_role.arn
   type         = "MANAGED"
-  depends_on   = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 
 resource "aws_batch_compute_environment" "wrong" {
@@ -183,7 +183,7 @@ resource "aws_batch_compute_environment" "wrong" {
 
   service_role = aws_iam_role.aws_batch_service_role.arn
   type         = "MANAGED"
-  depends_on   = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 
 data "aws_batch_compute_environment" "by_name" {

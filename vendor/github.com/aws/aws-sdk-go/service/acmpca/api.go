@@ -5882,6 +5882,15 @@ const (
 	ActionTypeListPermissions = "ListPermissions"
 )
 
+// ActionType_Values returns all elements of the ActionType enum
+func ActionType_Values() []string {
+	return []string{
+		ActionTypeIssueCertificate,
+		ActionTypeGetCertificate,
+		ActionTypeListPermissions,
+	}
+}
+
 const (
 	// AuditReportResponseFormatJson is a AuditReportResponseFormat enum value
 	AuditReportResponseFormatJson = "JSON"
@@ -5889,6 +5898,14 @@ const (
 	// AuditReportResponseFormatCsv is a AuditReportResponseFormat enum value
 	AuditReportResponseFormatCsv = "CSV"
 )
+
+// AuditReportResponseFormat_Values returns all elements of the AuditReportResponseFormat enum
+func AuditReportResponseFormat_Values() []string {
+	return []string{
+		AuditReportResponseFormatJson,
+		AuditReportResponseFormatCsv,
+	}
+}
 
 const (
 	// AuditReportStatusCreating is a AuditReportStatus enum value
@@ -5900,6 +5917,15 @@ const (
 	// AuditReportStatusFailed is a AuditReportStatus enum value
 	AuditReportStatusFailed = "FAILED"
 )
+
+// AuditReportStatus_Values returns all elements of the AuditReportStatus enum
+func AuditReportStatus_Values() []string {
+	return []string{
+		AuditReportStatusCreating,
+		AuditReportStatusSuccess,
+		AuditReportStatusFailed,
+	}
+}
 
 const (
 	// CertificateAuthorityStatusCreating is a CertificateAuthorityStatus enum value
@@ -5924,6 +5950,19 @@ const (
 	CertificateAuthorityStatusFailed = "FAILED"
 )
 
+// CertificateAuthorityStatus_Values returns all elements of the CertificateAuthorityStatus enum
+func CertificateAuthorityStatus_Values() []string {
+	return []string{
+		CertificateAuthorityStatusCreating,
+		CertificateAuthorityStatusPendingCertificate,
+		CertificateAuthorityStatusActive,
+		CertificateAuthorityStatusDeleted,
+		CertificateAuthorityStatusDisabled,
+		CertificateAuthorityStatusExpired,
+		CertificateAuthorityStatusFailed,
+	}
+}
+
 const (
 	// CertificateAuthorityTypeRoot is a CertificateAuthorityType enum value
 	CertificateAuthorityTypeRoot = "ROOT"
@@ -5931,6 +5970,14 @@ const (
 	// CertificateAuthorityTypeSubordinate is a CertificateAuthorityType enum value
 	CertificateAuthorityTypeSubordinate = "SUBORDINATE"
 )
+
+// CertificateAuthorityType_Values returns all elements of the CertificateAuthorityType enum
+func CertificateAuthorityType_Values() []string {
+	return []string{
+		CertificateAuthorityTypeRoot,
+		CertificateAuthorityTypeSubordinate,
+	}
+}
 
 const (
 	// FailureReasonRequestTimedOut is a FailureReason enum value
@@ -5942,6 +5989,15 @@ const (
 	// FailureReasonOther is a FailureReason enum value
 	FailureReasonOther = "OTHER"
 )
+
+// FailureReason_Values returns all elements of the FailureReason enum
+func FailureReason_Values() []string {
+	return []string{
+		FailureReasonRequestTimedOut,
+		FailureReasonUnsupportedAlgorithm,
+		FailureReasonOther,
+	}
+}
 
 const (
 	// KeyAlgorithmRsa2048 is a KeyAlgorithm enum value
@@ -5956,6 +6012,16 @@ const (
 	// KeyAlgorithmEcSecp384r1 is a KeyAlgorithm enum value
 	KeyAlgorithmEcSecp384r1 = "EC_secp384r1"
 )
+
+// KeyAlgorithm_Values returns all elements of the KeyAlgorithm enum
+func KeyAlgorithm_Values() []string {
+	return []string{
+		KeyAlgorithmRsa2048,
+		KeyAlgorithmRsa4096,
+		KeyAlgorithmEcPrime256v1,
+		KeyAlgorithmEcSecp384r1,
+	}
+}
 
 const (
 	// RevocationReasonUnspecified is a RevocationReason enum value
@@ -5983,6 +6049,20 @@ const (
 	RevocationReasonAACompromise = "A_A_COMPROMISE"
 )
 
+// RevocationReason_Values returns all elements of the RevocationReason enum
+func RevocationReason_Values() []string {
+	return []string{
+		RevocationReasonUnspecified,
+		RevocationReasonKeyCompromise,
+		RevocationReasonCertificateAuthorityCompromise,
+		RevocationReasonAffiliationChanged,
+		RevocationReasonSuperseded,
+		RevocationReasonCessationOfOperation,
+		RevocationReasonPrivilegeWithdrawn,
+		RevocationReasonAACompromise,
+	}
+}
+
 const (
 	// SigningAlgorithmSha256withecdsa is a SigningAlgorithm enum value
 	SigningAlgorithmSha256withecdsa = "SHA256WITHECDSA"
@@ -6003,6 +6083,18 @@ const (
 	SigningAlgorithmSha512withrsa = "SHA512WITHRSA"
 )
 
+// SigningAlgorithm_Values returns all elements of the SigningAlgorithm enum
+func SigningAlgorithm_Values() []string {
+	return []string{
+		SigningAlgorithmSha256withecdsa,
+		SigningAlgorithmSha384withecdsa,
+		SigningAlgorithmSha512withecdsa,
+		SigningAlgorithmSha256withrsa,
+		SigningAlgorithmSha384withrsa,
+		SigningAlgorithmSha512withrsa,
+	}
+}
+
 const (
 	// ValidityPeriodTypeEndDate is a ValidityPeriodType enum value
 	ValidityPeriodTypeEndDate = "END_DATE"
@@ -6019,3 +6111,14 @@ const (
 	// ValidityPeriodTypeYears is a ValidityPeriodType enum value
 	ValidityPeriodTypeYears = "YEARS"
 )
+
+// ValidityPeriodType_Values returns all elements of the ValidityPeriodType enum
+func ValidityPeriodType_Values() []string {
+	return []string{
+		ValidityPeriodTypeEndDate,
+		ValidityPeriodTypeAbsolute,
+		ValidityPeriodTypeDays,
+		ValidityPeriodTypeMonths,
+		ValidityPeriodTypeYears,
+	}
+}

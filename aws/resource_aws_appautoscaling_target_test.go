@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
@@ -393,7 +393,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_main_route_table_association.a"]
+  depends_on = [aws_main_route_table_association.a]
 
   service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
@@ -424,7 +424,7 @@ resource "aws_security_group" "allow_all" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.main"]
+  depends_on = [aws_subnet.main]
 
   lifecycle {
     ignore_changes = ["ingress", "egress"]

@@ -26088,6 +26088,14 @@ const (
 	AcceptanceTypeReject = "REJECT"
 )
 
+// AcceptanceType_Values returns all elements of the AcceptanceType enum
+func AcceptanceType_Values() []string {
+	return []string{
+		AcceptanceTypeAccept,
+		AcceptanceTypeReject,
+	}
+}
+
 const (
 	// BackfillModeAutomatic is a BackfillMode enum value
 	BackfillModeAutomatic = "AUTOMATIC"
@@ -26096,6 +26104,14 @@ const (
 	BackfillModeManual = "MANUAL"
 )
 
+// BackfillMode_Values returns all elements of the BackfillMode enum
+func BackfillMode_Values() []string {
+	return []string{
+		BackfillModeAutomatic,
+		BackfillModeManual,
+	}
+}
+
 const (
 	// BalancingStrategySpotOnly is a BalancingStrategy enum value
 	BalancingStrategySpotOnly = "SPOT_ONLY"
@@ -26103,6 +26119,14 @@ const (
 	// BalancingStrategySpotPreferred is a BalancingStrategy enum value
 	BalancingStrategySpotPreferred = "SPOT_PREFERRED"
 )
+
+// BalancingStrategy_Values returns all elements of the BalancingStrategy enum
+func BalancingStrategy_Values() []string {
+	return []string{
+		BalancingStrategySpotOnly,
+		BalancingStrategySpotPreferred,
+	}
+}
 
 const (
 	// BuildStatusInitialized is a BuildStatus enum value
@@ -26115,6 +26139,15 @@ const (
 	BuildStatusFailed = "FAILED"
 )
 
+// BuildStatus_Values returns all elements of the BuildStatus enum
+func BuildStatus_Values() []string {
+	return []string{
+		BuildStatusInitialized,
+		BuildStatusReady,
+		BuildStatusFailed,
+	}
+}
+
 const (
 	// CertificateTypeDisabled is a CertificateType enum value
 	CertificateTypeDisabled = "DISABLED"
@@ -26122,6 +26155,14 @@ const (
 	// CertificateTypeGenerated is a CertificateType enum value
 	CertificateTypeGenerated = "GENERATED"
 )
+
+// CertificateType_Values returns all elements of the CertificateType enum
+func CertificateType_Values() []string {
+	return []string{
+		CertificateTypeDisabled,
+		CertificateTypeGenerated,
+	}
+}
 
 const (
 	// ComparisonOperatorTypeGreaterThanOrEqualToThreshold is a ComparisonOperatorType enum value
@@ -26136,6 +26177,16 @@ const (
 	// ComparisonOperatorTypeLessThanOrEqualToThreshold is a ComparisonOperatorType enum value
 	ComparisonOperatorTypeLessThanOrEqualToThreshold = "LessThanOrEqualToThreshold"
 )
+
+// ComparisonOperatorType_Values returns all elements of the ComparisonOperatorType enum
+func ComparisonOperatorType_Values() []string {
+	return []string{
+		ComparisonOperatorTypeGreaterThanOrEqualToThreshold,
+		ComparisonOperatorTypeGreaterThanThreshold,
+		ComparisonOperatorTypeLessThanThreshold,
+		ComparisonOperatorTypeLessThanOrEqualToThreshold,
+	}
+}
 
 const (
 	// EC2InstanceTypeT2Micro is a EC2InstanceType enum value
@@ -26313,6 +26364,70 @@ const (
 	EC2InstanceTypeM524xlarge = "m5.24xlarge"
 )
 
+// EC2InstanceType_Values returns all elements of the EC2InstanceType enum
+func EC2InstanceType_Values() []string {
+	return []string{
+		EC2InstanceTypeT2Micro,
+		EC2InstanceTypeT2Small,
+		EC2InstanceTypeT2Medium,
+		EC2InstanceTypeT2Large,
+		EC2InstanceTypeC3Large,
+		EC2InstanceTypeC3Xlarge,
+		EC2InstanceTypeC32xlarge,
+		EC2InstanceTypeC34xlarge,
+		EC2InstanceTypeC38xlarge,
+		EC2InstanceTypeC4Large,
+		EC2InstanceTypeC4Xlarge,
+		EC2InstanceTypeC42xlarge,
+		EC2InstanceTypeC44xlarge,
+		EC2InstanceTypeC48xlarge,
+		EC2InstanceTypeC5Large,
+		EC2InstanceTypeC5Xlarge,
+		EC2InstanceTypeC52xlarge,
+		EC2InstanceTypeC54xlarge,
+		EC2InstanceTypeC59xlarge,
+		EC2InstanceTypeC512xlarge,
+		EC2InstanceTypeC518xlarge,
+		EC2InstanceTypeC524xlarge,
+		EC2InstanceTypeR3Large,
+		EC2InstanceTypeR3Xlarge,
+		EC2InstanceTypeR32xlarge,
+		EC2InstanceTypeR34xlarge,
+		EC2InstanceTypeR38xlarge,
+		EC2InstanceTypeR4Large,
+		EC2InstanceTypeR4Xlarge,
+		EC2InstanceTypeR42xlarge,
+		EC2InstanceTypeR44xlarge,
+		EC2InstanceTypeR48xlarge,
+		EC2InstanceTypeR416xlarge,
+		EC2InstanceTypeR5Large,
+		EC2InstanceTypeR5Xlarge,
+		EC2InstanceTypeR52xlarge,
+		EC2InstanceTypeR54xlarge,
+		EC2InstanceTypeR58xlarge,
+		EC2InstanceTypeR512xlarge,
+		EC2InstanceTypeR516xlarge,
+		EC2InstanceTypeR524xlarge,
+		EC2InstanceTypeM3Medium,
+		EC2InstanceTypeM3Large,
+		EC2InstanceTypeM3Xlarge,
+		EC2InstanceTypeM32xlarge,
+		EC2InstanceTypeM4Large,
+		EC2InstanceTypeM4Xlarge,
+		EC2InstanceTypeM42xlarge,
+		EC2InstanceTypeM44xlarge,
+		EC2InstanceTypeM410xlarge,
+		EC2InstanceTypeM5Large,
+		EC2InstanceTypeM5Xlarge,
+		EC2InstanceTypeM52xlarge,
+		EC2InstanceTypeM54xlarge,
+		EC2InstanceTypeM58xlarge,
+		EC2InstanceTypeM512xlarge,
+		EC2InstanceTypeM516xlarge,
+		EC2InstanceTypeM524xlarge,
+	}
+}
+
 const (
 	// EventCodeGenericEvent is a EventCode enum value
 	EventCodeGenericEvent = "GENERIC_EVENT"
@@ -26414,10 +26529,56 @@ const (
 	EventCodeInstanceInterrupted = "INSTANCE_INTERRUPTED"
 )
 
+// EventCode_Values returns all elements of the EventCode enum
+func EventCode_Values() []string {
+	return []string{
+		EventCodeGenericEvent,
+		EventCodeFleetCreated,
+		EventCodeFleetDeleted,
+		EventCodeFleetScalingEvent,
+		EventCodeFleetStateDownloading,
+		EventCodeFleetStateValidating,
+		EventCodeFleetStateBuilding,
+		EventCodeFleetStateActivating,
+		EventCodeFleetStateActive,
+		EventCodeFleetStateError,
+		EventCodeFleetInitializationFailed,
+		EventCodeFleetBinaryDownloadFailed,
+		EventCodeFleetValidationLaunchPathNotFound,
+		EventCodeFleetValidationExecutableRuntimeFailure,
+		EventCodeFleetValidationTimedOut,
+		EventCodeFleetActivationFailed,
+		EventCodeFleetActivationFailedNoInstances,
+		EventCodeFleetNewGameSessionProtectionPolicyUpdated,
+		EventCodeServerProcessInvalidPath,
+		EventCodeServerProcessSdkInitializationTimeout,
+		EventCodeServerProcessProcessReadyTimeout,
+		EventCodeServerProcessCrashed,
+		EventCodeServerProcessTerminatedUnhealthy,
+		EventCodeServerProcessForceTerminated,
+		EventCodeServerProcessProcessExitTimeout,
+		EventCodeGameSessionActivationTimeout,
+		EventCodeFleetCreationExtractingBuild,
+		EventCodeFleetCreationRunningInstaller,
+		EventCodeFleetCreationValidatingRuntimeConfig,
+		EventCodeFleetVpcPeeringSucceeded,
+		EventCodeFleetVpcPeeringFailed,
+		EventCodeFleetVpcPeeringDeleted,
+		EventCodeInstanceInterrupted,
+	}
+}
+
 const (
 	// FleetActionAutoScaling is a FleetAction enum value
 	FleetActionAutoScaling = "AUTO_SCALING"
 )
+
+// FleetAction_Values returns all elements of the FleetAction enum
+func FleetAction_Values() []string {
+	return []string{
+		FleetActionAutoScaling,
+	}
+}
 
 const (
 	// FleetStatusNew is a FleetStatus enum value
@@ -26448,6 +26609,21 @@ const (
 	FleetStatusTerminated = "TERMINATED"
 )
 
+// FleetStatus_Values returns all elements of the FleetStatus enum
+func FleetStatus_Values() []string {
+	return []string{
+		FleetStatusNew,
+		FleetStatusDownloading,
+		FleetStatusValidating,
+		FleetStatusBuilding,
+		FleetStatusActivating,
+		FleetStatusActive,
+		FleetStatusDeleting,
+		FleetStatusError,
+		FleetStatusTerminated,
+	}
+}
+
 const (
 	// FleetTypeOnDemand is a FleetType enum value
 	FleetTypeOnDemand = "ON_DEMAND"
@@ -26456,15 +26632,37 @@ const (
 	FleetTypeSpot = "SPOT"
 )
 
+// FleetType_Values returns all elements of the FleetType enum
+func FleetType_Values() []string {
+	return []string{
+		FleetTypeOnDemand,
+		FleetTypeSpot,
+	}
+}
+
 const (
 	// GameServerClaimStatusClaimed is a GameServerClaimStatus enum value
 	GameServerClaimStatusClaimed = "CLAIMED"
 )
 
+// GameServerClaimStatus_Values returns all elements of the GameServerClaimStatus enum
+func GameServerClaimStatus_Values() []string {
+	return []string{
+		GameServerClaimStatusClaimed,
+	}
+}
+
 const (
 	// GameServerGroupActionReplaceInstanceTypes is a GameServerGroupAction enum value
 	GameServerGroupActionReplaceInstanceTypes = "REPLACE_INSTANCE_TYPES"
 )
+
+// GameServerGroupAction_Values returns all elements of the GameServerGroupAction enum
+func GameServerGroupAction_Values() []string {
+	return []string{
+		GameServerGroupActionReplaceInstanceTypes,
+	}
+}
 
 const (
 	// GameServerGroupDeleteOptionSafeDelete is a GameServerGroupDeleteOption enum value
@@ -26476,6 +26674,15 @@ const (
 	// GameServerGroupDeleteOptionRetain is a GameServerGroupDeleteOption enum value
 	GameServerGroupDeleteOptionRetain = "RETAIN"
 )
+
+// GameServerGroupDeleteOption_Values returns all elements of the GameServerGroupDeleteOption enum
+func GameServerGroupDeleteOption_Values() []string {
+	return []string{
+		GameServerGroupDeleteOptionSafeDelete,
+		GameServerGroupDeleteOptionForceDelete,
+		GameServerGroupDeleteOptionRetain,
+	}
+}
 
 const (
 	// GameServerGroupInstanceTypeC4Large is a GameServerGroupInstanceType enum value
@@ -26599,6 +26806,52 @@ const (
 	GameServerGroupInstanceTypeM524xlarge = "m5.24xlarge"
 )
 
+// GameServerGroupInstanceType_Values returns all elements of the GameServerGroupInstanceType enum
+func GameServerGroupInstanceType_Values() []string {
+	return []string{
+		GameServerGroupInstanceTypeC4Large,
+		GameServerGroupInstanceTypeC4Xlarge,
+		GameServerGroupInstanceTypeC42xlarge,
+		GameServerGroupInstanceTypeC44xlarge,
+		GameServerGroupInstanceTypeC48xlarge,
+		GameServerGroupInstanceTypeC5Large,
+		GameServerGroupInstanceTypeC5Xlarge,
+		GameServerGroupInstanceTypeC52xlarge,
+		GameServerGroupInstanceTypeC54xlarge,
+		GameServerGroupInstanceTypeC59xlarge,
+		GameServerGroupInstanceTypeC512xlarge,
+		GameServerGroupInstanceTypeC518xlarge,
+		GameServerGroupInstanceTypeC524xlarge,
+		GameServerGroupInstanceTypeR4Large,
+		GameServerGroupInstanceTypeR4Xlarge,
+		GameServerGroupInstanceTypeR42xlarge,
+		GameServerGroupInstanceTypeR44xlarge,
+		GameServerGroupInstanceTypeR48xlarge,
+		GameServerGroupInstanceTypeR416xlarge,
+		GameServerGroupInstanceTypeR5Large,
+		GameServerGroupInstanceTypeR5Xlarge,
+		GameServerGroupInstanceTypeR52xlarge,
+		GameServerGroupInstanceTypeR54xlarge,
+		GameServerGroupInstanceTypeR58xlarge,
+		GameServerGroupInstanceTypeR512xlarge,
+		GameServerGroupInstanceTypeR516xlarge,
+		GameServerGroupInstanceTypeR524xlarge,
+		GameServerGroupInstanceTypeM4Large,
+		GameServerGroupInstanceTypeM4Xlarge,
+		GameServerGroupInstanceTypeM42xlarge,
+		GameServerGroupInstanceTypeM44xlarge,
+		GameServerGroupInstanceTypeM410xlarge,
+		GameServerGroupInstanceTypeM5Large,
+		GameServerGroupInstanceTypeM5Xlarge,
+		GameServerGroupInstanceTypeM52xlarge,
+		GameServerGroupInstanceTypeM54xlarge,
+		GameServerGroupInstanceTypeM58xlarge,
+		GameServerGroupInstanceTypeM512xlarge,
+		GameServerGroupInstanceTypeM516xlarge,
+		GameServerGroupInstanceTypeM524xlarge,
+	}
+}
+
 const (
 	// GameServerGroupStatusNew is a GameServerGroupStatus enum value
 	GameServerGroupStatusNew = "NEW"
@@ -26622,10 +26875,30 @@ const (
 	GameServerGroupStatusError = "ERROR"
 )
 
+// GameServerGroupStatus_Values returns all elements of the GameServerGroupStatus enum
+func GameServerGroupStatus_Values() []string {
+	return []string{
+		GameServerGroupStatusNew,
+		GameServerGroupStatusActivating,
+		GameServerGroupStatusActive,
+		GameServerGroupStatusDeleteScheduled,
+		GameServerGroupStatusDeleting,
+		GameServerGroupStatusDeleted,
+		GameServerGroupStatusError,
+	}
+}
+
 const (
 	// GameServerHealthCheckHealthy is a GameServerHealthCheck enum value
 	GameServerHealthCheckHealthy = "HEALTHY"
 )
+
+// GameServerHealthCheck_Values returns all elements of the GameServerHealthCheck enum
+func GameServerHealthCheck_Values() []string {
+	return []string{
+		GameServerHealthCheckHealthy,
+	}
+}
 
 const (
 	// GameServerProtectionPolicyNoProtection is a GameServerProtectionPolicy enum value
@@ -26635,6 +26908,14 @@ const (
 	GameServerProtectionPolicyFullProtection = "FULL_PROTECTION"
 )
 
+// GameServerProtectionPolicy_Values returns all elements of the GameServerProtectionPolicy enum
+func GameServerProtectionPolicy_Values() []string {
+	return []string{
+		GameServerProtectionPolicyNoProtection,
+		GameServerProtectionPolicyFullProtection,
+	}
+}
+
 const (
 	// GameServerUtilizationStatusAvailable is a GameServerUtilizationStatus enum value
 	GameServerUtilizationStatusAvailable = "AVAILABLE"
@@ -26642,6 +26923,14 @@ const (
 	// GameServerUtilizationStatusUtilized is a GameServerUtilizationStatus enum value
 	GameServerUtilizationStatusUtilized = "UTILIZED"
 )
+
+// GameServerUtilizationStatus_Values returns all elements of the GameServerUtilizationStatus enum
+func GameServerUtilizationStatus_Values() []string {
+	return []string{
+		GameServerUtilizationStatusAvailable,
+		GameServerUtilizationStatusUtilized,
+	}
+}
 
 const (
 	// GameSessionPlacementStatePending is a GameSessionPlacementState enum value
@@ -26660,6 +26949,17 @@ const (
 	GameSessionPlacementStateFailed = "FAILED"
 )
 
+// GameSessionPlacementState_Values returns all elements of the GameSessionPlacementState enum
+func GameSessionPlacementState_Values() []string {
+	return []string{
+		GameSessionPlacementStatePending,
+		GameSessionPlacementStateFulfilled,
+		GameSessionPlacementStateCancelled,
+		GameSessionPlacementStateTimedOut,
+		GameSessionPlacementStateFailed,
+	}
+}
+
 const (
 	// GameSessionStatusActive is a GameSessionStatus enum value
 	GameSessionStatusActive = "ACTIVE"
@@ -26677,10 +26977,28 @@ const (
 	GameSessionStatusError = "ERROR"
 )
 
+// GameSessionStatus_Values returns all elements of the GameSessionStatus enum
+func GameSessionStatus_Values() []string {
+	return []string{
+		GameSessionStatusActive,
+		GameSessionStatusActivating,
+		GameSessionStatusTerminated,
+		GameSessionStatusTerminating,
+		GameSessionStatusError,
+	}
+}
+
 const (
 	// GameSessionStatusReasonInterrupted is a GameSessionStatusReason enum value
 	GameSessionStatusReasonInterrupted = "INTERRUPTED"
 )
+
+// GameSessionStatusReason_Values returns all elements of the GameSessionStatusReason enum
+func GameSessionStatusReason_Values() []string {
+	return []string{
+		GameSessionStatusReasonInterrupted,
+	}
+}
 
 const (
 	// InstanceStatusPending is a InstanceStatus enum value
@@ -26693,6 +27011,15 @@ const (
 	InstanceStatusTerminating = "TERMINATING"
 )
 
+// InstanceStatus_Values returns all elements of the InstanceStatus enum
+func InstanceStatus_Values() []string {
+	return []string{
+		InstanceStatusPending,
+		InstanceStatusActive,
+		InstanceStatusTerminating,
+	}
+}
+
 const (
 	// IpProtocolTcp is a IpProtocol enum value
 	IpProtocolTcp = "TCP"
@@ -26700,6 +27027,14 @@ const (
 	// IpProtocolUdp is a IpProtocol enum value
 	IpProtocolUdp = "UDP"
 )
+
+// IpProtocol_Values returns all elements of the IpProtocol enum
+func IpProtocol_Values() []string {
+	return []string{
+		IpProtocolTcp,
+		IpProtocolUdp,
+	}
+}
 
 const (
 	// MatchmakingConfigurationStatusCancelled is a MatchmakingConfigurationStatus enum value
@@ -26726,6 +27061,20 @@ const (
 	// MatchmakingConfigurationStatusTimedOut is a MatchmakingConfigurationStatus enum value
 	MatchmakingConfigurationStatusTimedOut = "TIMED_OUT"
 )
+
+// MatchmakingConfigurationStatus_Values returns all elements of the MatchmakingConfigurationStatus enum
+func MatchmakingConfigurationStatus_Values() []string {
+	return []string{
+		MatchmakingConfigurationStatusCancelled,
+		MatchmakingConfigurationStatusCompleted,
+		MatchmakingConfigurationStatusFailed,
+		MatchmakingConfigurationStatusPlacing,
+		MatchmakingConfigurationStatusQueued,
+		MatchmakingConfigurationStatusRequiresAcceptance,
+		MatchmakingConfigurationStatusSearching,
+		MatchmakingConfigurationStatusTimedOut,
+	}
+}
 
 const (
 	// MetricNameActivatingGameSessions is a MetricName enum value
@@ -26762,6 +27111,23 @@ const (
 	MetricNameWaitTime = "WaitTime"
 )
 
+// MetricName_Values returns all elements of the MetricName enum
+func MetricName_Values() []string {
+	return []string{
+		MetricNameActivatingGameSessions,
+		MetricNameActiveGameSessions,
+		MetricNameActiveInstances,
+		MetricNameAvailableGameSessions,
+		MetricNameAvailablePlayerSessions,
+		MetricNameCurrentPlayerSessions,
+		MetricNameIdleInstances,
+		MetricNamePercentAvailableGameSessions,
+		MetricNamePercentIdleInstances,
+		MetricNameQueueDepth,
+		MetricNameWaitTime,
+	}
+}
+
 const (
 	// OperatingSystemWindows2012 is a OperatingSystem enum value
 	OperatingSystemWindows2012 = "WINDOWS_2012"
@@ -26773,6 +27139,15 @@ const (
 	OperatingSystemAmazonLinux2 = "AMAZON_LINUX_2"
 )
 
+// OperatingSystem_Values returns all elements of the OperatingSystem enum
+func OperatingSystem_Values() []string {
+	return []string{
+		OperatingSystemWindows2012,
+		OperatingSystemAmazonLinux,
+		OperatingSystemAmazonLinux2,
+	}
+}
+
 const (
 	// PlayerSessionCreationPolicyAcceptAll is a PlayerSessionCreationPolicy enum value
 	PlayerSessionCreationPolicyAcceptAll = "ACCEPT_ALL"
@@ -26780,6 +27155,14 @@ const (
 	// PlayerSessionCreationPolicyDenyAll is a PlayerSessionCreationPolicy enum value
 	PlayerSessionCreationPolicyDenyAll = "DENY_ALL"
 )
+
+// PlayerSessionCreationPolicy_Values returns all elements of the PlayerSessionCreationPolicy enum
+func PlayerSessionCreationPolicy_Values() []string {
+	return []string{
+		PlayerSessionCreationPolicyAcceptAll,
+		PlayerSessionCreationPolicyDenyAll,
+	}
+}
 
 const (
 	// PlayerSessionStatusReserved is a PlayerSessionStatus enum value
@@ -26795,6 +27178,16 @@ const (
 	PlayerSessionStatusTimedout = "TIMEDOUT"
 )
 
+// PlayerSessionStatus_Values returns all elements of the PlayerSessionStatus enum
+func PlayerSessionStatus_Values() []string {
+	return []string{
+		PlayerSessionStatusReserved,
+		PlayerSessionStatusActive,
+		PlayerSessionStatusCompleted,
+		PlayerSessionStatusTimedout,
+	}
+}
+
 const (
 	// PolicyTypeRuleBased is a PolicyType enum value
 	PolicyTypeRuleBased = "RuleBased"
@@ -26802,6 +27195,14 @@ const (
 	// PolicyTypeTargetBased is a PolicyType enum value
 	PolicyTypeTargetBased = "TargetBased"
 )
+
+// PolicyType_Values returns all elements of the PolicyType enum
+func PolicyType_Values() []string {
+	return []string{
+		PolicyTypeRuleBased,
+		PolicyTypeTargetBased,
+	}
+}
 
 const (
 	// ProtectionPolicyNoProtection is a ProtectionPolicy enum value
@@ -26811,6 +27212,14 @@ const (
 	ProtectionPolicyFullProtection = "FullProtection"
 )
 
+// ProtectionPolicy_Values returns all elements of the ProtectionPolicy enum
+func ProtectionPolicy_Values() []string {
+	return []string{
+		ProtectionPolicyNoProtection,
+		ProtectionPolicyFullProtection,
+	}
+}
+
 const (
 	// RoutingStrategyTypeSimple is a RoutingStrategyType enum value
 	RoutingStrategyTypeSimple = "SIMPLE"
@@ -26818,6 +27227,14 @@ const (
 	// RoutingStrategyTypeTerminal is a RoutingStrategyType enum value
 	RoutingStrategyTypeTerminal = "TERMINAL"
 )
+
+// RoutingStrategyType_Values returns all elements of the RoutingStrategyType enum
+func RoutingStrategyType_Values() []string {
+	return []string{
+		RoutingStrategyTypeSimple,
+		RoutingStrategyTypeTerminal,
+	}
+}
 
 const (
 	// ScalingAdjustmentTypeChangeInCapacity is a ScalingAdjustmentType enum value
@@ -26829,6 +27246,15 @@ const (
 	// ScalingAdjustmentTypePercentChangeInCapacity is a ScalingAdjustmentType enum value
 	ScalingAdjustmentTypePercentChangeInCapacity = "PercentChangeInCapacity"
 )
+
+// ScalingAdjustmentType_Values returns all elements of the ScalingAdjustmentType enum
+func ScalingAdjustmentType_Values() []string {
+	return []string{
+		ScalingAdjustmentTypeChangeInCapacity,
+		ScalingAdjustmentTypeExactCapacity,
+		ScalingAdjustmentTypePercentChangeInCapacity,
+	}
+}
 
 const (
 	// ScalingStatusTypeActive is a ScalingStatusType enum value
@@ -26853,6 +27279,19 @@ const (
 	ScalingStatusTypeError = "ERROR"
 )
 
+// ScalingStatusType_Values returns all elements of the ScalingStatusType enum
+func ScalingStatusType_Values() []string {
+	return []string{
+		ScalingStatusTypeActive,
+		ScalingStatusTypeUpdateRequested,
+		ScalingStatusTypeUpdating,
+		ScalingStatusTypeDeleteRequested,
+		ScalingStatusTypeDeleting,
+		ScalingStatusTypeDeleted,
+		ScalingStatusTypeError,
+	}
+}
+
 const (
 	// SortOrderAscending is a SortOrder enum value
 	SortOrderAscending = "ASCENDING"
@@ -26860,3 +27299,11 @@ const (
 	// SortOrderDescending is a SortOrder enum value
 	SortOrderDescending = "DESCENDING"
 )
+
+// SortOrder_Values returns all elements of the SortOrder enum
+func SortOrder_Values() []string {
+	return []string{
+		SortOrderAscending,
+		SortOrderDescending,
+	}
+}

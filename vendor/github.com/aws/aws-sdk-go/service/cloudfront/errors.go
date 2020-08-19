@@ -22,6 +22,20 @@ const (
 	// The CNAME specified is already defined for CloudFront.
 	ErrCodeCNAMEAlreadyExists = "CNAMEAlreadyExists"
 
+	// ErrCodeCachePolicyAlreadyExists for service response error code
+	// "CachePolicyAlreadyExists".
+	//
+	// A cache policy with this name already exists. You must provide a unique name.
+	// To modify an existing cache policy, use UpdateCachePolicy.
+	ErrCodeCachePolicyAlreadyExists = "CachePolicyAlreadyExists"
+
+	// ErrCodeCachePolicyInUse for service response error code
+	// "CachePolicyInUse".
+	//
+	// Cannot delete the cache policy because it is attached to one or more cache
+	// behaviors.
+	ErrCodeCachePolicyInUse = "CachePolicyInUse"
+
 	// ErrCodeCannotChangeImmutablePublicKeyFields for service response error code
 	// "CannotChangeImmutablePublicKeyFields".
 	//
@@ -72,6 +86,12 @@ const (
 	// The maximum size of a profile for field-level encryption was exceeded.
 	ErrCodeFieldLevelEncryptionProfileSizeExceeded = "FieldLevelEncryptionProfileSizeExceeded"
 
+	// ErrCodeIllegalDelete for service response error code
+	// "IllegalDelete".
+	//
+	// You cannot delete a managed policy.
+	ErrCodeIllegalDelete = "IllegalDelete"
+
 	// ErrCodeIllegalFieldLevelEncryptionConfigAssociationWithCacheBehavior for service response error code
 	// "IllegalFieldLevelEncryptionConfigAssociationWithCacheBehavior".
 	//
@@ -82,7 +102,7 @@ const (
 	// ErrCodeIllegalUpdate for service response error code
 	// "IllegalUpdate".
 	//
-	// Origin and CallerReference cannot be updated.
+	// The update contains modifications that are not allowed.
 	ErrCodeIllegalUpdate = "IllegalUpdate"
 
 	// ErrCodeInconsistentQuantities for service response error code
@@ -133,7 +153,7 @@ const (
 	// ErrCodeInvalidIfMatchVersion for service response error code
 	// "InvalidIfMatchVersion".
 	//
-	// The If-Match version is missing or not valid for the distribution.
+	// The If-Match version is missing or not valid.
 	ErrCodeInvalidIfMatchVersion = "InvalidIfMatchVersion"
 
 	// ErrCodeInvalidLambdaFunctionAssociation for service response error code
@@ -247,6 +267,12 @@ const (
 	// header is set.
 	ErrCodeMissingBody = "MissingBody"
 
+	// ErrCodeNoSuchCachePolicy for service response error code
+	// "NoSuchCachePolicy".
+	//
+	// The cache policy does not exist.
+	ErrCodeNoSuchCachePolicy = "NoSuchCachePolicy"
+
 	// ErrCodeNoSuchCloudFrontOriginAccessIdentity for service response error code
 	// "NoSuchCloudFrontOriginAccessIdentity".
 	//
@@ -283,6 +309,12 @@ const (
 	// No origin exists with the specified Origin Id.
 	ErrCodeNoSuchOrigin = "NoSuchOrigin"
 
+	// ErrCodeNoSuchOriginRequestPolicy for service response error code
+	// "NoSuchOriginRequestPolicy".
+	//
+	// The origin request policy does not exist.
+	ErrCodeNoSuchOriginRequestPolicy = "NoSuchOriginRequestPolicy"
+
 	// ErrCodeNoSuchPublicKey for service response error code
 	// "NoSuchPublicKey".
 	//
@@ -315,6 +347,20 @@ const (
 	//
 	// The Origin Access Identity specified is already in use.
 	ErrCodeOriginAccessIdentityInUse = "CloudFrontOriginAccessIdentityInUse"
+
+	// ErrCodeOriginRequestPolicyAlreadyExists for service response error code
+	// "OriginRequestPolicyAlreadyExists".
+	//
+	// An origin request policy with this name already exists. You must provide
+	// a unique name. To modify an existing origin request policy, use UpdateOriginRequestPolicy.
+	ErrCodeOriginRequestPolicyAlreadyExists = "OriginRequestPolicyAlreadyExists"
+
+	// ErrCodeOriginRequestPolicyInUse for service response error code
+	// "OriginRequestPolicyInUse".
+	//
+	// Cannot delete the origin request policy because it is attached to one or
+	// more cache behaviors.
+	ErrCodeOriginRequestPolicyInUse = "OriginRequestPolicyInUse"
 
 	// ErrCodePreconditionFailed for service response error code
 	// "PreconditionFailed".
@@ -361,6 +407,14 @@ const (
 	// You cannot create more cache behaviors for the distribution.
 	ErrCodeTooManyCacheBehaviors = "TooManyCacheBehaviors"
 
+	// ErrCodeTooManyCachePolicies for service response error code
+	// "TooManyCachePolicies".
+	//
+	// You have reached the maximum number of cache policies for this AWS account.
+	// For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyCachePolicies = "TooManyCachePolicies"
+
 	// ErrCodeTooManyCertificates for service response error code
 	// "TooManyCertificates".
 	//
@@ -381,6 +435,22 @@ const (
 	// per cache behavior.
 	ErrCodeTooManyCookieNamesInWhiteList = "TooManyCookieNamesInWhiteList"
 
+	// ErrCodeTooManyCookiesInCachePolicy for service response error code
+	// "TooManyCookiesInCachePolicy".
+	//
+	// The number of cookies in the cache policy exceeds the maximum. For more information,
+	// see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyCookiesInCachePolicy = "TooManyCookiesInCachePolicy"
+
+	// ErrCodeTooManyCookiesInOriginRequestPolicy for service response error code
+	// "TooManyCookiesInOriginRequestPolicy".
+	//
+	// The number of cookies in the origin request policy exceeds the maximum. For
+	// more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyCookiesInOriginRequestPolicy = "TooManyCookiesInOriginRequestPolicy"
+
 	// ErrCodeTooManyDistributionCNAMEs for service response error code
 	// "TooManyDistributionCNAMEs".
 	//
@@ -394,6 +464,14 @@ const (
 	// allowed.
 	ErrCodeTooManyDistributions = "TooManyDistributions"
 
+	// ErrCodeTooManyDistributionsAssociatedToCachePolicy for service response error code
+	// "TooManyDistributionsAssociatedToCachePolicy".
+	//
+	// The maximum number of distributions have been associated with the specified
+	// cache policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyDistributionsAssociatedToCachePolicy = "TooManyDistributionsAssociatedToCachePolicy"
+
 	// ErrCodeTooManyDistributionsAssociatedToFieldLevelEncryptionConfig for service response error code
 	// "TooManyDistributionsAssociatedToFieldLevelEncryptionConfig".
 	//
@@ -401,12 +479,27 @@ const (
 	// configuration for field-level encryption.
 	ErrCodeTooManyDistributionsAssociatedToFieldLevelEncryptionConfig = "TooManyDistributionsAssociatedToFieldLevelEncryptionConfig"
 
+	// ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy for service response error code
+	// "TooManyDistributionsAssociatedToOriginRequestPolicy".
+	//
+	// The maximum number of distributions have been associated with the specified
+	// origin request policy. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyDistributionsAssociatedToOriginRequestPolicy = "TooManyDistributionsAssociatedToOriginRequestPolicy"
+
 	// ErrCodeTooManyDistributionsWithLambdaAssociations for service response error code
 	// "TooManyDistributionsWithLambdaAssociations".
 	//
 	// Processing your request would cause the maximum number of distributions with
 	// Lambda function associations per owner to be exceeded.
 	ErrCodeTooManyDistributionsWithLambdaAssociations = "TooManyDistributionsWithLambdaAssociations"
+
+	// ErrCodeTooManyDistributionsWithSingleFunctionARN for service response error code
+	// "TooManyDistributionsWithSingleFunctionARN".
+	//
+	// The maximum number of distributions have been associated with the specified
+	// Lambda function.
+	ErrCodeTooManyDistributionsWithSingleFunctionARN = "TooManyDistributionsWithSingleFunctionARN"
 
 	// ErrCodeTooManyFieldLevelEncryptionConfigs for service response error code
 	// "TooManyFieldLevelEncryptionConfigs".
@@ -449,11 +542,27 @@ const (
 	// been created.
 	ErrCodeTooManyFieldLevelEncryptionQueryArgProfiles = "TooManyFieldLevelEncryptionQueryArgProfiles"
 
+	// ErrCodeTooManyHeadersInCachePolicy for service response error code
+	// "TooManyHeadersInCachePolicy".
+	//
+	// The number of headers in the cache policy exceeds the maximum. For more information,
+	// see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyHeadersInCachePolicy = "TooManyHeadersInCachePolicy"
+
 	// ErrCodeTooManyHeadersInForwardedValues for service response error code
 	// "TooManyHeadersInForwardedValues".
 	//
 	// Your request contains too many headers in forwarded values.
 	ErrCodeTooManyHeadersInForwardedValues = "TooManyHeadersInForwardedValues"
+
+	// ErrCodeTooManyHeadersInOriginRequestPolicy for service response error code
+	// "TooManyHeadersInOriginRequestPolicy".
+	//
+	// The number of headers in the origin request policy exceeds the maximum. For
+	// more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyHeadersInOriginRequestPolicy = "TooManyHeadersInOriginRequestPolicy"
 
 	// ErrCodeTooManyInvalidationsInProgress for service response error code
 	// "TooManyInvalidationsInProgress".
@@ -482,6 +591,14 @@ const (
 	// groups allowed.
 	ErrCodeTooManyOriginGroupsPerDistribution = "TooManyOriginGroupsPerDistribution"
 
+	// ErrCodeTooManyOriginRequestPolicies for service response error code
+	// "TooManyOriginRequestPolicies".
+	//
+	// You have reached the maximum number of origin request policies for this AWS
+	// account. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyOriginRequestPolicies = "TooManyOriginRequestPolicies"
+
 	// ErrCodeTooManyOrigins for service response error code
 	// "TooManyOrigins".
 	//
@@ -500,6 +617,22 @@ const (
 	//
 	// Your request contains too many query string parameters.
 	ErrCodeTooManyQueryStringParameters = "TooManyQueryStringParameters"
+
+	// ErrCodeTooManyQueryStringsInCachePolicy for service response error code
+	// "TooManyQueryStringsInCachePolicy".
+	//
+	// The number of query strings in the cache policy exceeds the maximum. For
+	// more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyQueryStringsInCachePolicy = "TooManyQueryStringsInCachePolicy"
+
+	// ErrCodeTooManyQueryStringsInOriginRequestPolicy for service response error code
+	// "TooManyQueryStringsInOriginRequestPolicy".
+	//
+	// The number of query strings in the origin request policy exceeds the maximum.
+	// For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyQueryStringsInOriginRequestPolicy = "TooManyQueryStringsInOriginRequestPolicy"
 
 	// ErrCodeTooManyStreamingDistributionCNAMEs for service response error code
 	// "TooManyStreamingDistributionCNAMEs".

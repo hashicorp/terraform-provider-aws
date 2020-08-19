@@ -163,8 +163,12 @@ the `aws_default_network_acl` entry.
 As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
 
 ```hcl
-lifecycle {
-  ignore_changes = [subnet_ids]
+resource "aws_default_network_acl" "default" {
+  # ... other configuration ...
+
+  lifecycle {
+    ignore_changes = [subnet_ids]
+  }
 }
 ```
 
