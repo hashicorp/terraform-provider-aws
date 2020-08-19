@@ -112,7 +112,9 @@ func resourceAwsImageBuilderRecipe() *schema.Resource {
 				Required: true,
 				MinItems: 1,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"datecreated": {
 				Type:     schema.TypeString,
@@ -160,11 +162,11 @@ func resourceAwsImageBuilderRecipeCreate(d *schema.ResourceData, meta interface{
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken:         aws.String(resource.UniqueId()),
-		Components:          expandImageBuilderComponentConfig(d.Get("components").([]interface{})),
+		Components:          expandImageBuilderRecipeComponents(d.Get("components").([]interface{})),
 		Name:                aws.String(d.Get("name").(string)),
 		ParentImage:         aws.String(d.Get("parent_image").(string)),
 		SemanticVersion:     aws.String(d.Get("semantic_version").(string)),
-		BlockDeviceMappings: expandImageBuilderBlockDevices(d),
+		BlockDeviceMappings: expandImageBuilderRecipeBlockDeviceMappings(d),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -205,8 +207,8 @@ func resourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("arn", resp.ImageRecipe.Arn)
-	d.Set("block_device_mappings", resp.ImageRecipe.BlockDeviceMappings)
-	d.Set("components", resp.ImageRecipe.Components)
+	d.Set("block_device_mappings", flattenImageBuilderRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
+	d.Set("components", flattenImageBuilderRecipeComponents(resp.ImageRecipe.Components))
 	d.Set("description", resp.ImageRecipe.Description)
 	d.Set("name", resp.ImageRecipe.Name)
 	d.Set("owner", resp.ImageRecipe.Owner)
@@ -257,7 +259,7 @@ func resourceAwsImageBuilderRecipeDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func expandImageBuilderComponentConfig(comps []interface{}) []*imagebuilder.ComponentConfiguration {
+func expandImageBuilderRecipeComponents(comps []interface{}) []*imagebuilder.ComponentConfiguration {
 	var configs []*imagebuilder.ComponentConfiguration
 
 	for _, line := range comps {
@@ -269,7 +271,21 @@ func expandImageBuilderComponentConfig(comps []interface{}) []*imagebuilder.Comp
 	return configs
 }
 
-func expandImageBuilderBlockDevices(d *schema.ResourceData) []*imagebuilder.InstanceBlockDeviceMapping {
+func flattenImageBuilderRecipeComponents(comps []*imagebuilder.ComponentConfiguration) []interface{} {
+	if len(comps) == 0 {
+		return nil
+	}
+
+	res := make([]interface{}, len(comps))
+
+	for i, comp := range comps {
+		res[i] = &comp.ComponentArn
+	}
+
+	return res
+}
+
+func expandImageBuilderRecipeBlockDeviceMappings(d *schema.ResourceData) []*imagebuilder.InstanceBlockDeviceMapping {
 	var bdmres []*imagebuilder.InstanceBlockDeviceMapping
 
 	v, ok := d.GetOk("block_device_mappings")
@@ -283,14 +299,33 @@ func expandImageBuilderBlockDevices(d *schema.ResourceData) []*imagebuilder.Inst
 		if bdm == nil {
 			continue
 		}
-		blockDeviceMapping := readIBBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
+		blockDeviceMapping := expandImageBuilderBlockDeviceMapping(bdm.(map[string]interface{}))
 		bdmres = append(bdmres, blockDeviceMapping)
 	}
 
 	return bdmres
 }
 
-func readIBBlockDeviceMappingFromConfig(bdm map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
+func flattenImageBuilderRecipeBlockDeviceMappings(blockdevs []*imagebuilder.InstanceBlockDeviceMapping) []map[string]interface{} {
+	if len(blockdevs) == 0 {
+		return nil
+	}
+
+	bdmlist := make([]map[string]interface{}, 0, len(blockdevs))
+
+	for _, bdm := range blockdevs {
+		newbdm := map[string]interface{}{}
+		newbdm["device_name"] = bdm.DeviceName
+		newbdm["no_device"] = bdm.NoDevice
+		newbdm["virtual_name"] = bdm.VirtualName
+		newbdm["ebs"] = flattenImageBuilderBlockDeviceMapping(bdm.Ebs)
+		bdmlist = append(bdmlist, newbdm)
+	}
+
+	return bdmlist
+}
+
+func expandImageBuilderBlockDeviceMapping(bdm map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
 	blockDeviceMapping := &imagebuilder.InstanceBlockDeviceMapping{}
 
 	if v := bdm["device_name"].(string); v != "" {
@@ -309,15 +344,29 @@ func readIBBlockDeviceMappingFromConfig(bdm map[string]interface{}) *imagebuilde
 		ebs := v.([]interface{})
 		if len(ebs) > 0 && ebs[0] != nil {
 			ebsData := ebs[0].(map[string]interface{})
-			imagebuilderEbsBlockDeviceRequest := readIBEbsBlockDeviceFromConfig(ebsData)
-			blockDeviceMapping.Ebs = imagebuilderEbsBlockDeviceRequest
+			blockDeviceMapping.Ebs = expandImageBuilderEbsBlockDevice(ebsData)
 		}
 	}
 
 	return blockDeviceMapping
 }
 
-func readIBEbsBlockDeviceFromConfig(ebs map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
+func flattenImageBuilderBlockDeviceMapping(ebsspec *imagebuilder.EbsInstanceBlockDeviceSpecification) []map[string]interface{} {
+
+	ebs := map[string]interface{}{}
+
+	ebs["delete_on_termination"] = ebsspec.DeleteOnTermination
+	ebs["encrypted"] = ebsspec.Encrypted
+	ebs["iops"] = ebsspec.Iops
+	ebs["kms_key_id"] = ebsspec.KmsKeyId
+	ebs["snapshot_id"] = ebsspec.SnapshotId
+	ebs["volume_size"] = ebsspec.VolumeSize
+	ebs["volume_type"] = ebsspec.VolumeType
+
+	return []map[string]interface{}{ebs}
+}
+
+func expandImageBuilderEbsBlockDevice(ebs map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
 	ebsDevice := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
 
 	if v, ok := ebs["delete_on_termination"]; ok {

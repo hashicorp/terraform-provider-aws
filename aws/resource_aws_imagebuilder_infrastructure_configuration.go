@@ -185,7 +185,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 	d.Set("instance_profile_name", resp.InfrastructureConfiguration.InstanceProfileName)
 	d.Set("instance_types", resp.InfrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", resp.InfrastructureConfiguration.KeyPair)
-	d.Set("logging", flattenAwsImageBuilderLogsConfig(resp.InfrastructureConfiguration.Logging))
+	d.Set("logging", flattenAwsImageBuilderInfrastructureConfigLogging(resp.InfrastructureConfiguration.Logging))
 	d.Set("name", resp.InfrastructureConfiguration.Name)
 	d.Set("security_group_ids", resp.InfrastructureConfiguration.SecurityGroupIds)
 	d.Set("sns_topic_arn", resp.InfrastructureConfiguration.SnsTopicArn)
@@ -286,7 +286,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationDelete(d *schema.Resource
 	return nil
 }
 
-func flattenAwsImageBuilderLogsConfig(logsConfig *imagebuilder.Logging) []interface{} {
+func flattenAwsImageBuilderInfrastructureConfigLogging(logsConfig *imagebuilder.Logging) []interface{} {
 	if logsConfig == nil || logsConfig.S3Logs == nil {
 		return []interface{}{}
 	}

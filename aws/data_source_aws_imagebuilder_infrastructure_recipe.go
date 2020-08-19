@@ -16,11 +16,11 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"block_device_mappings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_name": {
@@ -30,68 +30,54 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 						},
 						"ebs": {
 							Type:     schema.TypeList,
-							Required: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
 										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
+										Computed: true,
 									},
 									"encrypted": {
 										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
+										Computed: true,
 									},
 									"iops": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(100, 10000),
+										Type:     schema.TypeInt,
+										Computed: true,
 									},
 									"kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validateArn,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"volume_size": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 16000),
+										Type:     schema.TypeInt,
+										Computed: true,
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											imagebuilder.EbsVolumeTypeStandard,
-											imagebuilder.EbsVolumeTypeIo1,
-											imagebuilder.EbsVolumeTypeGp2,
-											imagebuilder.EbsVolumeTypeSc1,
-											imagebuilder.EbsVolumeTypeSt1,
-										}, true),
+										Computed: true,
 									},
 								},
 							},
 						},
 						"no_device": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"virtual_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"components": {
 				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"datecreated": {
@@ -99,32 +85,28 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"parent_image": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"semantic_version": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags": tagsSchema(),
 		},
@@ -136,7 +118,7 @@ func dataSourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetImageRecipe(&imagebuilder.GetImageRecipeInput{
-		ImageRecipeArn: aws.String(d.Id()),
+		ImageRecipeArn: aws.String(d.Get("arn").(string)),
 	})
 
 	if err != nil {
@@ -144,9 +126,8 @@ func dataSourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId(*resp.ImageRecipe.Arn)
-	d.Set("arn", resp.ImageRecipe.Arn)
-	d.Set("block_device_mappings", resp.ImageRecipe.BlockDeviceMappings)
-	d.Set("components", resp.ImageRecipe.Components)
+	d.Set("block_device_mappings", flattenImageBuilderRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
+	d.Set("components", flattenImageBuilderRecipeComponents(resp.ImageRecipe.Components))
 	d.Set("datecreated", resp.ImageRecipe.DateCreated)
 	d.Set("description", resp.ImageRecipe.Description)
 	d.Set("name", resp.ImageRecipe.Name)
