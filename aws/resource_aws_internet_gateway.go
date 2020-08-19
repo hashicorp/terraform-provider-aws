@@ -48,7 +48,10 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	// Create the gateway
 	log.Printf("[DEBUG] Creating internet gateway")
 	var err error
-	resp, err := conn.CreateInternetGateway(nil)
+	input := &ec2.CreateInternetGatewayInput{
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeInternetGateway),
+	}
+	resp, err := conn.CreateInternetGateway(input)
 	if err != nil {
 		return fmt.Errorf("Error creating internet gateway: %s", err)
 	}
@@ -77,12 +80,6 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	if err != nil {
 		return fmt.Errorf("Error refreshing internet gateway state: %s", err)
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 Internet Gateway (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	// Attach the new gateway to the correct vpc

@@ -74,6 +74,7 @@ func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 				Config: testAccAWSEgressOnlyInternetGatewayConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSEgressOnlyInternetGatewayExists(resourceName, &igw),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
