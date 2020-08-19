@@ -2,8 +2,6 @@ package aws
 
 import (
 	"log"
-	// "time"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,35 +35,30 @@ func computeLimitsSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"unit_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsEmrComputeLimitsUnitType(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice(emr.ComputeLimitsUnitType_Values(), false),
 			},
 			"minimum_capacity_units": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Default:  1,
 			},
 			"maximum_capacity_units": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Default:  1,
 			},
 			"maximum_core_capacity_units": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
-				Default:  1,
 			},
 			"maximum_ondemand_capacity_units": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
-				Default:  1,
 			},
 		},
 	}
@@ -94,7 +87,7 @@ func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta inter
 
 		if err != nil {
 			log.Printf("[ERROR] EMR.PutManagedScalingPolicy %s", err)
-			return err
+			return fmt.Errorf("error putting EMR Managed Scaling Policy: %w", err)
 		}
 	}
 
@@ -105,7 +98,7 @@ func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta inter
 func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 	resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
-		ClusterId: aws.String(d.Get("cluster_id").(string)),
+		ClusterId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if isAWSErr(err, "InvalidRequestException", "does not exist") {
@@ -113,16 +106,16 @@ func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interfa
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error getting EMR Managed Scaling Policy (%s): %w", d.Id(), err)
 	}
 
 	if resp.ManagedScalingPolicy != nil {
 		attrs := make(map[string]interface{})
-		attrs["unit_type"] = *resp.ManagedScalingPolicy.ComputeLimits.UnitType
-		attrs["minimum_capacity_units"] = *resp.ManagedScalingPolicy.ComputeLimits.MinimumCapacityUnits
-		attrs["maximum_capacity_units"] = *resp.ManagedScalingPolicy.ComputeLimits.MaximumCapacityUnits
-		attrs["maximum_core_capacity_units"] = *resp.ManagedScalingPolicy.ComputeLimits.MaximumCoreCapacityUnits
-		attrs["maximum_ondemand_capacity_units"] = *resp.ManagedScalingPolicy.ComputeLimits.MaximumOnDemandCapacityUnits
+		attrs["unit_type"] = aws.StringValue(resp.ManagedScalingPolicy.ComputeLimits.UnitType)
+		attrs["minimum_capacity_units"] = aws.Int64Value(resp.ManagedScalingPolicy.ComputeLimits.MinimumCapacityUnits)
+		attrs["maximum_capacity_units"] = aws.Int64Value(resp.ManagedScalingPolicy.ComputeLimits.MaximumCapacityUnits)
+		attrs["maximum_core_capacity_units"] = aws.Int64Value(resp.ManagedScalingPolicy.ComputeLimits.MaximumCoreCapacityUnits)
+		attrs["maximum_ondemand_capacity_units"] = aws.Int64Value(resp.ManagedScalingPolicy.ComputeLimits.MaximumOnDemandCapacityUnits)
 
 		computeLimits := make([]interface{}, 0)
 		computeLimits = append(computeLimits, attrs)
@@ -141,7 +134,7 @@ func resourceAwsEMRManagedScalingPolicyDelete(d *schema.ResourceData, meta inter
 		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("error removing EMR Managed Scaling Policy (%s): %w", d.Id(), err)
 	}
 	return nil
 }
