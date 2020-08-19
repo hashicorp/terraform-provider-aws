@@ -10,7 +10,6 @@ import (
 const (
 	// Maximum amount of time to wait for an Operation to return Success
 	UserPoolDomainDeleteTimeout = 1 * time.Minute
-	UserPoolDomainCreateTimeout = 1 * time.Minute
 )
 
 // UserPoolDomainDeleted waits for an Operation to return Success
@@ -43,9 +42,8 @@ func UserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProvider
 		Target: []string{
 			cognitoidentityprovider.DomainStatusTypeActive,
 		},
-		Refresh:    UserPoolDomainStatus(conn, domain),
-		MinTimeout: UserPoolDomainCreateTimeout,
-		Timeout:    timeout,
+		Refresh: UserPoolDomainStatus(conn, domain),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
