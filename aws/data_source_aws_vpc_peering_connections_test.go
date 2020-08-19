@@ -51,8 +51,8 @@ resource "aws_vpc" "baz" {
 }
 
 resource "aws_vpc_peering_connection" "conn1" {
-	vpc_id = "${aws_vpc.foo.id}"
-	peer_vpc_id = "${aws_vpc.bar.id}"
+	vpc_id = aws_vpc.foo.id
+	peer_vpc_id = aws_vpc.bar.id
 	auto_accept = true
 
     tags = {
@@ -62,8 +62,8 @@ resource "aws_vpc_peering_connection" "conn1" {
 }
 
 resource "aws_vpc_peering_connection" "conn2" {
-	vpc_id = "${aws_vpc.foo.id}"
-	peer_vpc_id = "${aws_vpc.baz.id}"
+	vpc_id = aws_vpc.foo.id
+	peer_vpc_id = aws_vpc.baz.id
 	auto_accept = true
 
     tags = {
@@ -75,7 +75,7 @@ resource "aws_vpc_peering_connection" "conn2" {
 data "aws_vpc_peering_connections" "test_by_filters" {
   filter {
     name = "requester-vpc-info.vpc-id"
-    values = ["${aws_vpc.foo.id}"]
+    values = [aws_vpc.foo.id]
   }
 
 	depends_on = ["aws_vpc_peering_connection.conn1", "aws_vpc_peering_connection.conn2"]
