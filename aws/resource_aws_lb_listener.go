@@ -97,7 +97,6 @@ func resourceAwsLbListener() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 50000),
 						},
 
 						"target_group_arn": {
@@ -126,7 +125,6 @@ func resourceAwsLbListener() *schema.Resource {
 												},
 												"weight": {
 													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      1,
 													Optional:     true,
 												},
@@ -148,7 +146,6 @@ func resourceAwsLbListener() *schema.Resource {
 												"duration": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 604800),
 												},
 											},
 										},
