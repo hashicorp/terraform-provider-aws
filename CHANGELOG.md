@@ -6,6 +6,7 @@ ENHANCEMENTS
 * provider: Support for appending information to User-Agent request headers with the `TF_APPEND_USER_AGENT` environment variable [GH-14555]
 * resource/aws_apigatewayv2_api: Add `body` argument [GH-12567]
 * resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
+* resource/aws_eks_node_group: Support `AL2_ARM_64` value for `ami_type` argument plan-time validation [GH-14729]
 * resource/aws_lambda_function: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
 * resource/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `compatible_runtimes` argument plan-time validation [GH-14663]
 * resource/aws_launch_template: Support `elastic-gpu` and `spot-instances-request` in `tag_specifications` `resource_type` argument plan-time validation [GH-14662]
