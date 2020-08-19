@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSXrayEncryptionConfig_basic(t *testing.T) {
@@ -110,7 +110,7 @@ POLICY
 
 resource "aws_xray_encryption_config" "test" {
   type   = "KMS"
-  key_id = "${aws_kms_key.test.arn}"
+  key_id = aws_kms_key.test.arn
 }
 `, acctest.RandString(8))
 }
