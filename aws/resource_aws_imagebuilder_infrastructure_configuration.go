@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -169,7 +168,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 		InfrastructureConfigurationArn: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Infrastructure Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
