@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connections"
-sidebar_current: "docs-aws-datasource-vpc-peering-connections"
 description: |-
     Lists peering connections
 ---
