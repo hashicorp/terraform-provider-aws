@@ -32,9 +32,10 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateServiceDiscoveryNamespaceName,
 			},
 			"description": {
 				Type:     schema.TypeString,
