@@ -40,6 +40,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					eks.AMITypesAl2X8664,
 					eks.AMITypesAl2X8664Gpu,
+					eks.AMITypesAl2Arm64,
 				}, false),
 			},
 			"arn": {

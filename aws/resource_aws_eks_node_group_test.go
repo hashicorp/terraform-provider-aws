@@ -147,7 +147,7 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 }
 
 func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
-	var nodeGroup1 eks.Nodegroup
+	var nodeGroup1, nodeGroup2 eks.Nodegroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
@@ -167,6 +167,13 @@ func TestAccAWSEksNodeGroup_AmiType(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigAmiType(rName, eks.AMITypesAl2Arm64),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup2),
+					resource.TestCheckResourceAttr(resourceName, "ami_type", eks.AMITypesAl2Arm64),
+				),
 			},
 		},
 	})
