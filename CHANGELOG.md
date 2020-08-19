@@ -14,6 +14,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs [GH-14638]
+* resource/aws_user_pool_domain: Ensure state removal when deleted outside Terraform [GH-14732]
 * resource/aws_ssm_parameter: Handle retries after creation for asynchronous `data_type` validation process [GH-14514]
 
 ## 3.2.0 (August 14, 2020)
