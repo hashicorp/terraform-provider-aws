@@ -1,9 +1,9 @@
 package waiter
 
 import (
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
