@@ -195,7 +195,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
-			// Update state to indicate the subnet no longer exists.
+			log.Printf("[WARN] Subnet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
