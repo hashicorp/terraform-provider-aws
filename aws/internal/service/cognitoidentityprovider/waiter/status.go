@@ -6,6 +6,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+const (
+	userPoolDomainStatusNotFound = "NotFound"
+	userPoolDomainStatusUnknown  = "Unknown"
+)
+
 // UserPoolDomainStatus fetches the Operation and its Status
 func UserPoolDomainStatus(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -16,11 +21,11 @@ func UserPoolDomainStatus(conn *cognitoidentityprovider.CognitoIdentityProvider,
 		output, err := conn.DescribeUserPoolDomain(input)
 
 		if err != nil {
-			return nil, "", err
+			return nil, userPoolDomainStatusUnknown, err
 		}
 
 		if output == nil {
-			return nil, "", nil
+			return nil, userPoolDomainStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.DomainDescription.Status), nil
