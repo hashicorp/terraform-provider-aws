@@ -14,8 +14,6 @@ for more information.
 
 To configure [Instance Groups](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for [task nodes](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-task), see the [`aws_emr_instance_group` resource](/docs/providers/aws/r/emr_instance_group.html).
 
--> Support for [Instance Fleets](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-fleets) will be made available in an upcoming release.
-
 ## Example Usage
 
 ```hcl
@@ -148,6 +146,98 @@ Started](https://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr
 guide for more information on these IAM roles. There is also a fully-bootable
 example Terraform configuration at the bottom of this page.
 
+## Instance Fleet
+
+```hcl
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+  master_instance_fleet {
+    instance_fleet_type = "MASTER"
+    instance_type_configs {
+      instance_type = "m4.xlarge"
+    }
+    target_on_demand_capacity = 1
+  }
+  core_instance_fleet {
+    instance_fleet_type = "CORE"
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 80
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m3.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.2xlarge"
+      weighted_capacity = 2
+    }
+    launch_specifications {
+      spot_specification {
+        block_duration_minutes   = 0
+        timeout_action           = "SWITCH_TO_ON_DEMAND"
+        timeout_duration_minutes = 10
+      }
+    }
+    name                      = "core fleet"
+    target_on_demand_capacity = 2
+    target_spot_capacity      = 2
+  }
+}
+resource "aws_emr_instance_fleet" "task" {
+  cluster_id          = aws_emr_cluster.example.id
+  instance_fleet_type = "TASK"
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    instance_type     = "m4.xlarge"
+    weighted_capacity = 1
+  }
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    instance_type     = "m4.2xlarge"
+    weighted_capacity = 2
+  }
+  launch_specifications {
+    spot_specification {
+      block_duration_minutes   = 0
+      timeout_action           = "TERMINATE_CLUSTER"
+      timeout_duration_minutes = 10
+    }
+  }
+  name                      = "task fleet"
+  target_on_demand_capacity = 0
+  target_spot_capacity      = 10
+}
+```
+
 ### Enable Debug Logging
 
 [Debug logging in EMR](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-debugging.html)
@@ -228,11 +318,13 @@ The following arguments are supported:
 * `name` - (Required) The name of the job flow
 * `release_label` - (Required) The release label for the Amazon EMR release
 * `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
+* `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `additional_info` - (Optional) A JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
 * `core_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [core node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-core).
+* `core_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the core node type. Cannot be specified if any `core_instance_group` configuration blocks are set. Detailed below.
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
@@ -367,6 +459,37 @@ Attributes for Hadoop job step configuration
 * `jar` - (Required) Path to a JAR file run during the step.
 * `main_class` - (Optional) Name of the main class in the specified Java file. If not specified, the JAR file should specify a Main-Class in its manifest file.
 * `properties` - (Optional) Key-Value map of Java properties that are set when the step runs. You can use these properties to pass key value pairs to your main function.
+
+## master_instance_fleet Configuration Block
+
+Supported nested arguments for the `master_instance_fleet` configuration block:
+
+* `instance_fleet_type` - (Required) has to be `MASTER`.
+* `instance_type_configs` - (Optional) Configuration block for instance fleet
+* `launch_specifications` - (Optional) Configuration block for launch specification
+* `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.
+* `target_spot_capacity` - (Optional) The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision.
+* `name` - (Optional) Friendly name given to the instance fleet.
+
+## core_instance_fleet Configuration Block
+
+Supported nested arguments for the `core_instance_fleet` configuration block:
+
+* `instance_fleet_type` - (Required) has to be `CORE`.
+* `instance_type_configs` - (Optional) Configuration block for instance fleet
+* `launch_specifications` - (Optional) Configuration block for launch specification
+* `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.
+* `target_spot_capacity` - (Optional) The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision.
+* `name` - (Optional) Friendly name given to the instance fleet.
+
+## instance_type_configs Configuration Block
+
+* `bid_price` - (Optional) The bid price for each EC2 Spot instance type as defined by `instance_type`. Expressed in USD. If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
+* `bid_price_as_percentage_of_on_demand_price` - (Optional) The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instance_type`. Expressed as a number (for example, 20 specifies 20%). If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
+* `configurations` - (Optional) A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. List of `configuration` blocks.
+* `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `instance_type` - (Required) An EC2 instance type, such as m4.xlarge.
+* `weighted_capacity` - (Optional) The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `aws_emr_instance_fleet`.
 
 ## Attributes Reference
 
