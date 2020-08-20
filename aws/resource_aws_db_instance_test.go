@@ -2537,7 +2537,6 @@ func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 
 func testAccCheckAWSDBInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.Engine != "mysql" {
 			return fmt.Errorf("bad engine: %#v", *v.Engine)
 		}
@@ -2556,7 +2555,6 @@ func testAccCheckAWSDBInstanceAttributes(v *rds.DBInstance) resource.TestCheckFu
 
 func testAccCheckAWSDBInstanceAttributes_MSSQL(v *rds.DBInstance, tz string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.Engine != "sqlserver-ex" {
 			return fmt.Errorf("bad engine: %#v", *v.Engine)
 		}
@@ -2605,7 +2603,6 @@ func testAccCheckAWSDBInstanceParameterApplyStatusInSync(dbInstance *rds.DBInsta
 
 func testAccCheckAWSDBInstanceReplicaAttributes(source, replica *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if replica.ReadReplicaSourceDBInstanceIdentifier != nil && *replica.ReadReplicaSourceDBInstanceIdentifier != *source.DBInstanceIdentifier {
 			return fmt.Errorf("bad source identifier for replica, expected: '%s', got: '%s'", *source.DBInstanceIdentifier, *replica.ReadReplicaSourceDBInstanceIdentifier)
 		}
@@ -3052,7 +3049,8 @@ resource "aws_db_instance" "test" {
 var testAccAWSDBInstanceConfigKmsKeyId = `
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %s"
-  policy      = <<POLICY
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -3103,7 +3101,8 @@ resource "aws_db_instance" "bar" {
   password            = "barbarbarbar"
   skip_final_snapshot = true
   username            = "foo"
-}`
+}
+`
 
 func testAccAWSDBInstanceConfigWithOptionGroup(rName string) string {
 	return fmt.Sprintf(`
@@ -3173,7 +3172,7 @@ resource "aws_db_instance" "snapshot" {
 }
 
 func testAccAWSDBInstanceConfig_S3Import(bucketName string, bucketPrefix string, uniqueId string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = "%s"
 }
@@ -3210,19 +3209,19 @@ resource "aws_iam_policy" "test" {
 
   policy = <<POLICY
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:*"
-            ],
-            "Resource": [
-                "${aws_s3_bucket.xtrabackup.arn}",
-                "${aws_s3_bucket.xtrabackup.arn}/*"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.xtrabackup.arn}",
+        "${aws_s3_bucket.xtrabackup.arn}/*"
+      ]
+    }
+  ]
 }
 POLICY
 }
@@ -3248,7 +3247,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -3258,7 +3257,7 @@ resource "aws_subnet" "foo" {
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -3303,7 +3302,7 @@ resource "aws_db_instance" "s3" {
     ingestion_role = aws_iam_role.rds_s3_access_role.arn
   }
 }
-`, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId, uniqueId, bucketPrefix)
+`, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId, uniqueId, bucketPrefix))
 }
 
 func testAccAWSDBInstanceConfig_FinalSnapshotIdentifier(rInt int) string {
@@ -3508,7 +3507,7 @@ resource "aws_db_instance" "bar" {
 }
 
 func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -3519,7 +3518,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -3529,7 +3528,7 @@ resource "aws_subnet" "foo" {
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -3563,11 +3562,11 @@ resource "aws_db_instance" "bar" {
   backup_retention_period = 0
   apply_immediately       = true
 }
-`, rName, rName)
+`, rName, rName))
 }
 
 func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -3586,7 +3585,7 @@ resource "aws_vpc" "bar" {
 
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -3596,7 +3595,7 @@ resource "aws_subnet" "foo" {
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -3606,7 +3605,7 @@ resource "aws_subnet" "bar" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.10.3.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.bar.id
 
   tags = {
@@ -3616,7 +3615,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "another_test" {
   cidr_block        = "10.10.4.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.bar.id
 
   tags = {
@@ -3660,11 +3659,11 @@ resource "aws_db_instance" "bar" {
 
   apply_immediately = true
 }
-`, rName, rName, rName)
+`, rName, rName, rName))
 }
 
 func testAccAWSDBMSSQL_timezone(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -3683,7 +3682,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -3693,7 +3692,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -3735,11 +3734,11 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 
   security_group_id = aws_security_group.rds-mssql.id
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt, rInt))
 }
 
 func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -3758,7 +3757,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -3768,7 +3767,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -3811,11 +3810,11 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 
   security_group_id = aws_security_group.rds-mssql.id
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt, rInt))
 }
 
 func testAccAWSDBMSSQLDomain(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -3834,7 +3833,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -3844,7 +3843,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -3936,11 +3935,11 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = aws_iam_role.role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt))
 }
 
 func testAccAWSDBMSSQLUpdateDomain(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -3959,7 +3958,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -3969,7 +3968,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4062,11 +4061,11 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = aws_iam_role.role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt, rInt))
 }
 
 func testAccAWSDBMSSQLDomainSnapshotRestore(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -4085,7 +4084,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -4095,7 +4094,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4192,11 +4191,11 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = aws_iam_role.role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccAWSDBMySQLSnapshotRestoreWithEngineVersion(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -4215,7 +4214,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -4225,7 +4224,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4284,7 +4283,7 @@ resource "aws_security_group_rule" "rds-mysql-1" {
 
   security_group_id = aws_security_group.rds-mysql.id
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccAWSDBInstanceConfigAllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
@@ -4319,7 +4318,7 @@ resource "aws_db_instance" "bar" {
 `, acctest.RandInt())
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -4338,7 +4337,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -4348,7 +4347,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4374,11 +4373,11 @@ resource "aws_db_instance" "bar" {
     "error",
   ]
 }
-`, rInt, rInt)
+`, rInt, rInt))
 }
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -4397,7 +4396,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -4407,7 +4406,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4436,11 +4435,11 @@ resource "aws_db_instance" "bar" {
     "general",
   ]
 }
-`, rInt, rInt)
+`, rInt, rInt))
 }
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -4459,7 +4458,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -4469,7 +4468,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4498,11 +4497,11 @@ resource "aws_db_instance" "bar" {
     "slowquery",
   ]
 }
-`, rInt, rInt)
+`, rInt, rInt))
 }
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -4521,7 +4520,7 @@ resource "aws_db_subnet_group" "rds_one" {
 
 resource "aws_subnet" "main" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
 
   tags = {
@@ -4531,7 +4530,7 @@ resource "aws_subnet" "main" {
 
 resource "aws_subnet" "other" {
   vpc_id            = aws_vpc.foo.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.1.2.0/24"
 
   tags = {
@@ -4554,7 +4553,7 @@ resource "aws_db_instance" "bar" {
 
   apply_immediately = true
 }
-`, rInt, rInt)
+`, rInt, rInt))
 }
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
@@ -4597,16 +4596,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_DbSubnetGroupName(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4642,7 +4632,7 @@ resource "aws_db_instance" "test" {
   username             = "tfacctest"
   skip_final_snapshot  = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSDBInstanceConfig_DbSubnetGroupName_RamShared(rName string) string {
@@ -4733,16 +4723,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -4784,7 +4765,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSDBInstanceConfig_DeletionProtection(rName string, deletionProtection bool) string {
@@ -4969,16 +4950,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AvailabilityZone(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
@@ -4997,7 +4969,7 @@ resource "aws_db_instance" "test" {
   replicate_source_db = aws_db_instance.source.id
   skip_final_snapshot = true
 }
-`, rName, rName)
+`, rName, rName))
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupRetentionPeriod(rName string, backupRetentionPeriod int) string {
@@ -5050,19 +5022,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName(rName string) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+	return testAccAlternateRegionProviderConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
   provider = "awsalternate"
 
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
@@ -5093,7 +5056,7 @@ resource "aws_subnet" "alternate" {
   count    = 2
   provider = "awsalternate"
 
-  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.1.${count.index}.0/24"
   vpc_id            = aws_vpc.alternate.id
 
@@ -5200,7 +5163,7 @@ resource "aws_subnet" "sameaccountalternateregion" {
   count    = 2
   provider = "awssameaccountalternateregion"
 
-  availability_zone = data.aws_availability_zones.sameaccountalternateregion.names[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.1.${count.index}.0/24"
   vpc_id            = aws_vpc.sameaccountalternateregion.id
 
@@ -5213,7 +5176,7 @@ resource "aws_subnet" "alternateaccountsameregion" {
   count    = 2
   provider = "awsalternateaccountsameregion"
 
-  availability_zone = data.aws_availability_zones.alternateaccountsameregion.names[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = aws_vpc.alternateaccountsameregion.id
 
@@ -5290,19 +5253,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+	return testAccAlternateRegionProviderConfig() + testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "alternate" {
   provider = "awsalternate"
 
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
@@ -5338,7 +5292,7 @@ resource "aws_subnet" "alternate" {
   count    = 2
   provider = "awsalternate"
 
-  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.1.${count.index}.0/24"
   vpc_id            = aws_vpc.alternate.id
 
@@ -5820,16 +5774,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_AvailabilityZone(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
   engine              = "mariadb"
@@ -5852,7 +5797,7 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = aws_db_snapshot.test.id
   skip_final_snapshot = true
 }
-`, rName, rName, rName)
+`, rName, rName, rName))
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod(rName string, backupRetentionPeriod int) string {
@@ -5941,16 +5886,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -5998,7 +5934,7 @@ resource "aws_db_instance" "test" {
   snapshot_identifier  = aws_db_snapshot.test.id
   skip_final_snapshot  = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_RamShared(rName string) string {
@@ -6101,16 +6037,7 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccAvailableAZsNoOptInConfig()+fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -6164,7 +6091,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
