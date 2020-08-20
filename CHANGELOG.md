@@ -23,6 +23,7 @@ ENHANCEMENTS
 * resource/aws_spot_instance_request: Support tag on create  [GH-14501]
 * resource/aws_storagegatway_smb_file_share: Add `audit_destination_arn` and `smb_acl_enabled` arguments [GH-13572]
 * resource/aws_subnet: Support tag on create  [GH-14501]
+* resource/aws_subnet: Add plan-time validation to `ipv6_cidr_block` argument [GH-12303]
 * resource/aws_vpc_dhcp_options: Support tag on create  [GH-14501]
 * resource/aws_vpc_peering_connection: Support tag on create  [GH-14501]
 * resource/aws_vpn_connection: Support tag on create  [GH-14501]
@@ -39,6 +40,7 @@ BUG FIXES
 * resource/aws_user_pool_domain: Ensure state removal when deleted outside Terraform [GH-14732]
 * resource/aws_rds_cluster_parameter_group: Restore ability to update `parameter` configuration values [GH-12112]
 * resource/aws_ssm_parameter: Handle retries after creation for asynchronous `data_type` validation process [GH-14514]
+* resource/aws_subnet: Ensure `ipv6_cidr_block` argument performs removal when removed from configuration [GH-12303]
 
 ## 3.2.0 (August 14, 2020)
 
