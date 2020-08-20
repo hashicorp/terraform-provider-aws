@@ -1,47 +1,47 @@
-## 3.3.0 (Unreleased)
+## 3.3.0 (August 20, 2020)
 
 ENHANCEMENTS
 
-* data-source/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
-* provider: Support for appending information to User-Agent request headers with the `TF_APPEND_USER_AGENT` environment variable [GH-14555]
-* resource/aws_apigatewayv2_api: Add `body` argument [GH-12567]
-* resource/aws_customer_gateway: Support tag on create [GH-14501]
-* resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
-* resource/aws_ec2_client_vpn_network_association: Allow specifying custom security groups [GH-14146]
-* resource/aws_ec2_client_vpn_network_association: Support resource import [GH-14146]
-* resource/aws_egress_only_intrenet_gateway:-Ssupport tag on create  [GH-14501]
-* resource/aws_eks_node_group: Support `AL2_ARM_64` value for `ami_type` argument plan-time validation [GH-14729]
-* resource/aws_eks_node_group: Add `launch_template` configuration block [GH-14639]
-* resource/aws_internet_gateway: Support tag on create  [GH-14501]
-* resource/aws_lambda_function: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
-* resource/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `compatible_runtimes` argument plan-time validation [GH-14663]
-* resource/aws_launch_template: Support `elastic-gpu` and `spot-instances-request` in `tag_specifications` `resource_type` argument plan-time validation [GH-14662]
-* resource/aws_network_acl: Support tag on create  [GH-14501]
-* resource/aws_network_interface: Support tag on create  [GH-14501]
-* resource/aws_route_table: Support tag on create  [GH-14501]
-* resource/aws_security_group: Support tag on create  [GH-14501]
-* resource/aws_spot_instance_request: Support tag on create  [GH-14501]
-* resource/aws_storagegatway_smb_file_share: Add `audit_destination_arn` and `smb_acl_enabled` arguments [GH-13572]
-* resource/aws_subnet: Support tag on create  [GH-14501]
-* resource/aws_subnet: Add plan-time validation to `ipv6_cidr_block` argument [GH-12303]
-* resource/aws_vpc_dhcp_options: Support tag on create  [GH-14501]
-* resource/aws_vpc_peering_connection: Support tag on create  [GH-14501]
-* resource/aws_vpn_connection: Support tag on create  [GH-14501]
-* resource/aws_vpn_gateway: Support tag on create  [GH-14501]
-* resource/aws_wafv2_rule_group: Add `forwarded_ip_config` configuration block to `geo_match_statement` [GH-14685]
-* resource/aws_wafv2_web_acl: Add `forwarded_ip_config` configuration block to `rate_based_statement` and `geo_match_statement` [GH-14685]
-* resource/aws_wafv2_web_acl: Support `FORWARDED_IP` value for `rate_based_statement` `aggregate_key_type` argument plan-time validation [GH-14685]
+* data-source/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation ([#14663](https://github.com/terraform-providers/terraform-provider-aws/issues/14663))
+* provider: Support for appending information to User-Agent request headers with the `TF_APPEND_USER_AGENT` environment variable ([#14555](https://github.com/terraform-providers/terraform-provider-aws/issues/14555))
+* resource/aws_apigatewayv2_api: Add `body` argument ([#12567](https://github.com/terraform-providers/terraform-provider-aws/issues/12567))
+* resource/aws_customer_gateway: Support tag on create ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument ([#14550](https://github.com/terraform-providers/terraform-provider-aws/issues/14550))
+* resource/aws_ec2_client_vpn_network_association: Allow specifying custom security groups ([#14146](https://github.com/terraform-providers/terraform-provider-aws/issues/14146))
+* resource/aws_ec2_client_vpn_network_association: Support resource import ([#14146](https://github.com/terraform-providers/terraform-provider-aws/issues/14146))
+* resource/aws_egress_only_intrenet_gateway:-Ssupport tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_eks_node_group: Support `AL2_ARM_64` value for `ami_type` argument plan-time validation ([#14729](https://github.com/terraform-providers/terraform-provider-aws/issues/14729))
+* resource/aws_eks_node_group: Add `launch_template` configuration block ([#14639](https://github.com/terraform-providers/terraform-provider-aws/issues/14639))
+* resource/aws_internet_gateway: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_lambda_function: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation ([#14663](https://github.com/terraform-providers/terraform-provider-aws/issues/14663))
+* resource/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `compatible_runtimes` argument plan-time validation ([#14663](https://github.com/terraform-providers/terraform-provider-aws/issues/14663))
+* resource/aws_launch_template: Support `elastic-gpu` and `spot-instances-request` in `tag_specifications` `resource_type` argument plan-time validation ([#14662](https://github.com/terraform-providers/terraform-provider-aws/issues/14662))
+* resource/aws_network_acl: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_network_interface: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_route_table: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_security_group: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_spot_instance_request: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_storagegatway_smb_file_share: Add `audit_destination_arn` and `smb_acl_enabled` arguments ([#13572](https://github.com/terraform-providers/terraform-provider-aws/issues/13572))
+* resource/aws_subnet: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_subnet: Add plan-time validation to `ipv6_cidr_block` argument ([#12303](https://github.com/terraform-providers/terraform-provider-aws/issues/12303))
+* resource/aws_vpc_dhcp_options: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_vpc_peering_connection: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_vpn_connection: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_vpn_gateway: Support tag on create  ([#14501](https://github.com/terraform-providers/terraform-provider-aws/issues/14501))
+* resource/aws_wafv2_rule_group: Add `forwarded_ip_config` configuration block to `geo_match_statement` ([#14685](https://github.com/terraform-providers/terraform-provider-aws/issues/14685))
+* resource/aws_wafv2_web_acl: Add `forwarded_ip_config` configuration block to `rate_based_statement` and `geo_match_statement` ([#14685](https://github.com/terraform-providers/terraform-provider-aws/issues/14685))
+* resource/aws_wafv2_web_acl: Support `FORWARDED_IP` value for `rate_based_statement` `aggregate_key_type` argument plan-time validation ([#14685](https://github.com/terraform-providers/terraform-provider-aws/issues/14685))
 
 BUG FIXES
 
-* resource/aws_api_gateway_vpc_link: Increase create, update, and delete timeouts to 20 minutes [GH-10407]
-* resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs [GH-14638]
-* resource/aws_db_parameter_group: Restore ability to update `parameter` configuration values [GH-12112]
-* resource/aws_user_pool_domain: Ensure state removal when deleted outside Terraform [GH-14732]
-* resource/aws_rds_cluster_parameter_group: Restore ability to update `parameter` configuration values [GH-12112]
-* resource/aws_ssm_parameter: Handle retries after creation for asynchronous `data_type` validation process [GH-14514]
-* resource/aws_storagegateway_nfs_file_share: Skip `UpdateSMBFileShare` API call when only `tags` change and remove extraneous `ListTagsForResource` API call during read [GH-13590]
-* resource/aws_subnet: Ensure `ipv6_cidr_block` argument performs removal when removed from configuration [GH-12303]
+* resource/aws_api_gateway_vpc_link: Increase create, update, and delete timeouts to 20 minutes ([#10407](https://github.com/terraform-providers/terraform-provider-aws/issues/10407))
+* resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs ([#14638](https://github.com/terraform-providers/terraform-provider-aws/issues/14638))
+* resource/aws_db_parameter_group: Restore ability to update `parameter` configuration values ([#12112](https://github.com/terraform-providers/terraform-provider-aws/issues/12112))
+* resource/aws_user_pool_domain: Ensure state removal when deleted outside Terraform ([#14732](https://github.com/terraform-providers/terraform-provider-aws/issues/14732))
+* resource/aws_rds_cluster_parameter_group: Restore ability to update `parameter` configuration values ([#12112](https://github.com/terraform-providers/terraform-provider-aws/issues/12112))
+* resource/aws_ssm_parameter: Handle retries after creation for asynchronous `data_type` validation process ([#14514](https://github.com/terraform-providers/terraform-provider-aws/issues/14514))
+* resource/aws_storagegateway_nfs_file_share: Skip `UpdateSMBFileShare` API call when only `tags` change and remove extraneous `ListTagsForResource` API call during read ([#13590](https://github.com/terraform-providers/terraform-provider-aws/issues/13590))
+* resource/aws_subnet: Ensure `ipv6_cidr_block` argument performs removal when removed from configuration ([#12303](https://github.com/terraform-providers/terraform-provider-aws/issues/12303))
 
 ## 3.2.0 (August 14, 2020)
 
