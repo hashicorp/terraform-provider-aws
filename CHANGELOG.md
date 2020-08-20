@@ -40,6 +40,7 @@ BUG FIXES
 * resource/aws_user_pool_domain: Ensure state removal when deleted outside Terraform [GH-14732]
 * resource/aws_rds_cluster_parameter_group: Restore ability to update `parameter` configuration values [GH-12112]
 * resource/aws_ssm_parameter: Handle retries after creation for asynchronous `data_type` validation process [GH-14514]
+* resource/aws_storagegateway_nfs_file_share: Skip `UpdateSMBFileShare` API call when only `tags` change and remove extraneous `ListTagsForResource` API call during read [GH-13590]
 * resource/aws_subnet: Ensure `ipv6_cidr_block` argument performs removal when removed from configuration [GH-12303]
 
 ## 3.2.0 (August 14, 2020)
