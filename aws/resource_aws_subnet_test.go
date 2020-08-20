@@ -337,7 +337,7 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfigAvailabilityZoneId,
+				Config: testAccSubnetConfigAvailabilityZoneId(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
@@ -653,7 +653,8 @@ resource "aws_subnet" "test" {
 }
 `
 
-const testAccSubnetConfigAvailabilityZoneId = `
+func testAccSubnetConfigAvailabilityZoneId() string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 data "aws_availability_zones" "test" {
   state = "available"
 
@@ -680,7 +681,8 @@ resource "aws_subnet" "test" {
     Name = "tf-acc-subnet"
   }
 }
-`
+`)
+}
 
 func testAccSubnetConfigOutpost() string {
 	return `
