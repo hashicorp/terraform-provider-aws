@@ -7,6 +7,8 @@ ENHANCEMENTS
 * resource/aws_apigatewayv2_api: Add `body` argument [GH-12567]
 * resource/aws_customer_gateway: Support tag on create [GH-14501]
 * resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
+* resource/aws_ec2_client_vpn_network_association: Allow specifying custom security groups [GH-14146]
+* resource/aws_ec2_client_vpn_network_association: Support resource import [GH-14146]
 * resource/aws_egress_only_intrenet_gateway:-Ssupport tag on create  [GH-14501]
 * resource/aws_eks_node_group: Support `AL2_ARM_64` value for `ami_type` argument plan-time validation [GH-14729]
 * resource/aws_eks_node_group: Add `launch_template` configuration block [GH-14639]
