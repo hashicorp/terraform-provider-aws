@@ -71,7 +71,7 @@ func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string
 //
 //   map[string]*regexp.Regexp{
 //	     "key1": regexp.MustCompile("value"),
-//       "key2": regexp,.MustCompile(""),
+//       "key2": regexp.MustCompile(""),
 //   }
 //
 func TestMatchTypeSetElemNestedAttrs(name, attr string, values map[string]*regexp.Regexp) resource.TestCheckFunc {
@@ -233,7 +233,7 @@ func testCheckTypeSetElemNestedAttrsInState(is *terraform.InstanceState, attrPar
 				match = true
 			}
 		case map[string]*regexp.Regexp:
-			if v, keyExists := t[nestedAttr]; keyExists && v.MatchString(stateValue) {
+			if v, keyExists := t[nestedAttr]; keyExists && v != nil && v.MatchString(stateValue) {
 				match = true
 			}
 		}
