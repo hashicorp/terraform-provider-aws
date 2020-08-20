@@ -462,6 +462,81 @@ func TestAccAWSStorageGatewaySmbFileShare_ValidUserList(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_smb_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "smb_acl_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "smb_acl_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "smb_acl_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewaySmbFileShare_audit(t *testing.T) {
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_smb_file_share.test"
+	logResourceName := "aws_cloudwatch_log_group.test"
+	logResourceNameSecond := "aws_cloudwatch_log_group.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareAuditDestinationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareAuditDestinationUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
 
@@ -851,4 +926,54 @@ resource "aws_storagegateway_smb_file_share" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName string, enabled bool) string {
+	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_smb_file_share" "test" {
+  authentication  = "ActiveDirectory"
+  gateway_arn     = "${aws_storagegateway_gateway.test.arn}"
+  location_arn    = "${aws_s3_bucket.test.arn}"
+  role_arn        = "${aws_iam_role.test.arn}"
+  smb_acl_enabled = %[1]t
+}
+`, enabled)
+}
+
+func testAccAWSStorageGatewaySmbFileShareAuditDestinationConfig(rName string) string {
+	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication        = "GuestAccess"
+  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
+  location_arn          = "${aws_s3_bucket.test.arn}"
+  role_arn              = "${aws_iam_role.test.arn}"
+  audit_destination_arn = "${aws_cloudwatch_log_group.test.arn}"
+}
+`, rName)
+}
+
+func testAccAWSStorageGatewaySmbFileShareAuditDestinationUpdatedConfig(rName string) string {
+	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name = "%[1]s-updated"
+}
+
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication        = "GuestAccess"
+  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
+  location_arn          = "${aws_s3_bucket.test.arn}"
+  role_arn              = "${aws_iam_role.test.arn}"
+  audit_destination_arn = "${aws_cloudwatch_log_group.test2.arn}"
+}
+`, rName)
 }

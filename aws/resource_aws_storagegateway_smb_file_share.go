@@ -43,6 +43,11 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 					"GuestAccess",
 				}, false),
 			},
+			"audit_destination_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
 			"default_storage_class": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,6 +128,10 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
+			"smb_acl_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"valid_user_list": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -155,6 +164,14 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
 		input.KMSKey = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("audit_destination_arn"); ok && v.(string) != "" {
+		input.AuditDestinationARN = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("smb_acl_enabled"); ok {
+		input.SMBACLEnabled = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
@@ -216,7 +233,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 
-	if err := d.Set("invalid_user_list", schema.NewSet(schema.HashString, flattenStringList(fileshare.InvalidUserList))); err != nil {
+	if err := d.Set("invalid_user_list", flattenStringSet(fileshare.InvalidUserList)); err != nil {
 		return fmt.Errorf("error setting invalid_user_list: %s", err)
 	}
 
@@ -228,16 +245,14 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set("role_arn", fileshare.Role)
+	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
+	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
 
-	if err := d.Set("valid_user_list", schema.NewSet(schema.HashString, flattenStringList(fileshare.ValidUserList))); err != nil {
+	if err := d.Set("valid_user_list", flattenStringSet(fileshare.ValidUserList)); err != nil {
 		return fmt.Errorf("error setting valid_user_list: %s", err)
 	}
 
-	tags, err := keyvaluetags.StoragegatewayListTags(conn, *arn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", *arn, err)
-	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -254,39 +269,48 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	input := &storagegateway.UpdateSMBFileShareInput{
-		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
-		FileShareARN:         aws.String(d.Id()),
-		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		InvalidUserList:      expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
-		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
-		ObjectACL:            aws.String(d.Get("object_acl").(string)),
-		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
-		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
-		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
-	}
+	if d.HasChanges("default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
+		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
+		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled") {
+		input := &storagegateway.UpdateSMBFileShareInput{
+			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
+			FileShareARN:         aws.String(d.Id()),
+			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
+			InvalidUserList:      expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
+			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
+			ObjectACL:            aws.String(d.Get("object_acl").(string)),
+			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
+			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
+			ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+			SMBACLEnabled:        aws.Bool(d.Get("smb_acl_enabled").(bool)),
+		}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
-		input.KMSKey = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
+			input.KMSKey = aws.String(v.(string))
+		}
 
-	log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
-	_, err := conn.UpdateSMBFileShare(input)
-	if err != nil {
-		return fmt.Errorf("error updating Storage Gateway SMB File Share: %s", err)
-	}
+		if v, ok := d.GetOk("audit_destination_arn"); ok && v.(string) != "" {
+			input.AuditDestinationARN = aws.String(v.(string))
+		}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"UPDATING"},
-		Target:     []string{"AVAILABLE"},
-		Refresh:    storageGatewaySmbFileShareRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway SMB File Share update: %s", err)
+		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
+		_, err := conn.UpdateSMBFileShare(input)
+		if err != nil {
+			return fmt.Errorf("error updating Storage Gateway SMB File Share: %s", err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"UPDATING"},
+			Target:     []string{"AVAILABLE"},
+			Refresh:    storageGatewaySmbFileShareRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      5 * time.Second,
+			MinTimeout: 5 * time.Second,
+		}
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for Storage Gateway SMB File Share update: %s", err)
+		}
 	}
 
 	return resourceAwsStorageGatewaySmbFileShareRead(d, meta)
