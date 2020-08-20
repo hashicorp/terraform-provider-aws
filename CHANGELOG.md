@@ -9,6 +9,7 @@ ENHANCEMENTS
 * resource/aws_dms_replication_instance: Add `allow_major_version_upgrade` argument [GH-14550]
 * resource/aws_egress_only_intrenet_gateway:-Ssupport tag on create  [GH-14501]
 * resource/aws_eks_node_group: Support `AL2_ARM_64` value for `ami_type` argument plan-time validation [GH-14729]
+* resource/aws_eks_node_group: Add `launch_template` configuration block [GH-14639]
 * resource/aws_internet_gateway: Support tag on create  [GH-14501]
 * resource/aws_lambda_function: Support `java8.al2` and `provided.al2` in `runtime` argument plan-time validation [GH-14663]
 * resource/aws_lambda_layer_version: Support `java8.al2` and `provided.al2` in `compatible_runtimes` argument plan-time validation [GH-14663]
