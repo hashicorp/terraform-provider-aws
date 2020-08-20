@@ -33,8 +33,8 @@ The following arguments are supported:
 * `guess_mime_type_enabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `kms_encrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
-* `nfs_file_share_defaults` - (Optional) Nested argument with file share default values. More information below.
-* `cache_attributes` - (Optional) Refresh cache information. see
+* `nfs_file_share_defaults` - (Optional) Nested argument with file share default values. More information below. see [NFS File Share Defaults](#nfs_file_share_defaults) for more details.
+* `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `object_acl` - (Optional) Access Control List permission for S3 bucket objects. Defaults to `private`.
 * `read_only` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.
 * `requester_pays` - (Optional) Boolean who pays the cost of the request and the data download from the Amazon S3 bucket. Set this value to `true` if you want the requester to pay instead of the bucket owner. Defaults to `false`.
