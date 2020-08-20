@@ -32,6 +32,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_api_gateway_vpc_link: Increase create, update, and delete timeouts to 20 minutes [GH-10407]
 * resource/aws_apigatewayv2_stage: Set `execution_arn` attribute for HTTP APIs [GH-14638]
 * resource/aws_db_parameter_group: Restore ability to update `parameter` configuration values [GH-12112]
 * resource/aws_user_pool_domain: Ensure state removal when deleted outside Terraform [GH-14732]
