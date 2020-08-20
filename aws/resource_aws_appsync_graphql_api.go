@@ -13,13 +13,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-var validAppsyncAuthTypes = []string{
-	appsync.AuthenticationTypeApiKey,
-	appsync.AuthenticationTypeAwsIam,
-	appsync.AuthenticationTypeAmazonCognitoUserPools,
-	appsync.AuthenticationTypeOpenidConnect,
-}
-
 func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppsyncGraphqlApiCreate,
@@ -40,7 +33,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 						"authentication_type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(validAppsyncAuthTypes, false),
+							ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
 						},
 						"openid_connect_config": {
 							Type:     schema.TypeList,
@@ -95,7 +88,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 			"authentication_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(validAppsyncAuthTypes, false),
+				ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
 			},
 			"schema": {
 				Type:     schema.TypeString,

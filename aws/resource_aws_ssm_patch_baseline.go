@@ -11,25 +11,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-var ssmPatchComplianceLevels = []string{
-	ssm.PatchComplianceLevelCritical,
-	ssm.PatchComplianceLevelHigh,
-	ssm.PatchComplianceLevelMedium,
-	ssm.PatchComplianceLevelLow,
-	ssm.PatchComplianceLevelInformational,
-	ssm.PatchComplianceLevelUnspecified,
-}
-
-var ssmPatchOSs = []string{
-	ssm.OperatingSystemWindows,
-	ssm.OperatingSystemAmazonLinux,
-	ssm.OperatingSystemUbuntu,
-	ssm.OperatingSystemRedhatEnterpriseLinux,
-	ssm.OperatingSystemCentos,
-	ssm.OperatingSystemAmazonLinux2,
-	ssm.OperatingSystemSuse,
-}
-
 func resourceAwsSsmPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsmPatchBaselineCreate,
@@ -84,7 +65,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ssm.PatchComplianceLevelUnspecified,
-							ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
+							ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 						},
 
 						"enable_non_security": {
@@ -134,14 +115,14 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      ssm.OperatingSystemWindows,
-				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
 			},
 
 			"approved_patches_compliance_level": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      ssm.PatchComplianceLevelUnspecified,
-				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
+				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 			},
 			"tags": tagsSchema(),
 		},
