@@ -315,13 +315,13 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
-	}
+			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+		}
 
-	log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
-	_, err := conn.UpdateNFSFileShare(input)
-	if err != nil {
-		return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
+		log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
+		_, err := conn.UpdateNFSFileShare(input)
+		if err != nil {
+			return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
 		}
 
 		stateConf := &resource.StateChangeConf{
