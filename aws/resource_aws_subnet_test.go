@@ -547,7 +547,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -569,7 +569,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-  	Name = "terraform-testacc-subnet-ipv6"
+    Name = "terraform-testacc-subnet-ipv6"
   }
 }
 
@@ -579,7 +579,7 @@ resource "aws_subnet" "test" {
   map_public_ip_on_launch = true
 
   tags = {
-  	Name = "tf-acc-subnet-ipv6"
+    Name = "tf-acc-subnet-ipv6"
   }
 }
 `
@@ -590,7 +590,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-  	Name = "terraform-testacc-subnet-ipv6"
+    Name = "terraform-testacc-subnet-ipv6"
   }
 }
 
@@ -602,7 +602,7 @@ resource "aws_subnet" "test" {
   assign_ipv6_address_on_creation = true
 
   tags = {
-  	Name = "tf-acc-subnet-ipv6"
+    Name = "tf-acc-subnet-ipv6"
   }
 }
 `
@@ -613,7 +613,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-  	Name = "terraform-testacc-subnet-assign-ipv6-on-creation"
+    Name = "terraform-testacc-subnet-assign-ipv6-on-creation"
   }
 }
 
@@ -625,7 +625,7 @@ resource "aws_subnet" "test" {
   assign_ipv6_address_on_creation = false
 
   tags = {
-  	Name = "tf-acc-subnet-assign-ipv6-on-creation"
+    Name = "tf-acc-subnet-assign-ipv6-on-creation"
   }
 }
 `
@@ -636,7 +636,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-  	Name = "terraform-testacc-subnet-ipv6-update-cidr"
+    Name = "terraform-testacc-subnet-ipv6-update-cidr"
   }
 }
 
@@ -648,22 +648,13 @@ resource "aws_subnet" "test" {
   assign_ipv6_address_on_creation = false
 
   tags = {
-  	Name = "tf-acc-subnet-ipv6-update-cidr"
+    Name = "tf-acc-subnet-ipv6-update-cidr"
   }
 }
 `
 
 func testAccSubnetConfigAvailabilityZoneId() string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -675,7 +666,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block           = "10.1.1.0/24"
   vpc_id               = aws_vpc.test.id
-  availability_zone_id = data.aws_availability_zones.test.zone_ids[0]
+  availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
 
   tags = {
     Name = "tf-acc-subnet"
