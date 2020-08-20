@@ -23,7 +23,10 @@ ENHANCEMENTS
 * resource/aws_vpc_dhcp_options: Support tag on create  [GH-14501]
 * resource/aws_vpc_peering_connection: Support tag on create  [GH-14501]
 * resource/aws_vpn_connection: Support tag on create  [GH-14501]
-* resource/aws_vpn_gateway: Ssupport tag on create  [GH-14501]
+* resource/aws_vpn_gateway: Support tag on create  [GH-14501]
+* resource/aws_wafv2_rule_group: Add `forwarded_ip_config` configuration block to `geo_match_statement` [GH-14685]
+* resource/aws_wafv2_web_acl: Add `forwarded_ip_config` configuration block to `rate_based_statement` and `geo_match_statement` [GH-14685]
+* resource/aws_wafv2_web_acl: Support `FORWARDED_IP` value for `rate_based_statement` `aggregate_key_type` argument plan-time validation [GH-14685]
 
 BUG FIXES
 
