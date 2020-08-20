@@ -502,6 +502,28 @@ func TestAccAWSStorageGatewayNfsFileShare_cacheAttributes(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayNfsFileShare_disappears(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayNfsFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayNfsFileShare(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewayNfsFileShareDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
 
