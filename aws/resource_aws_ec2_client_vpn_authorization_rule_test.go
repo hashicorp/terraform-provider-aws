@@ -17,7 +17,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -47,7 +47,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	rStr := acctest.RandString(5)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
 	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	group1Name := "group_one"
 	group2Name := "group_two"

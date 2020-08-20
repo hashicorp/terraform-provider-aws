@@ -18,7 +18,7 @@ func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -52,7 +52,7 @@ func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },

@@ -111,6 +111,39 @@ func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string)
 }
 
 const (
+	ClientVpnNetworkAssociationStatusNotFound = "NotFound"
+
+	ClientVpnNetworkAssociationStatusUnknown = "Unknown"
+)
+
+func ClientVpnNetworkAssociationStatus(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+			ClientVpnEndpointId: aws.String(cvepID),
+			AssociationIds:      []*string{aws.String(cvnaID)},
+		})
+
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAssociationIdNotFound) || tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
+			return nil, ClientVpnNetworkAssociationStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, ClientVpnNetworkAssociationStatusUnknown, err
+		}
+
+		if result == nil || len(result.ClientVpnTargetNetworks) == 0 || result.ClientVpnTargetNetworks[0] == nil {
+			return nil, ClientVpnNetworkAssociationStatusNotFound, nil
+		}
+
+		network := result.ClientVpnTargetNetworks[0]
+		if network.Status == nil || network.Status.Code == nil {
+			return network, ClientVpnNetworkAssociationStatusUnknown, nil
+		}
+
+		return network, aws.StringValue(network.Status.Code), nil
+	}
+}
+
+const (
 	ClientVpnRouteStatusNotFound = "NotFound"
 
 	ClientVpnRouteStatusUnknown = "Unknown"

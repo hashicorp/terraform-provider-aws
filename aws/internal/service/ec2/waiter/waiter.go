@@ -113,6 +113,56 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 }
 
 const (
+	ClientVpnNetworkAssociationAssociatedTimeout = 10 * time.Minute
+
+	ClientVpnNetworkAssociationAssociatedDelay = 4 * time.Minute
+
+	ClientVpnNetworkAssociationDisassociatedTimeout = 10 * time.Minute
+
+	ClientVpnNetworkAssociationDisassociatedDelay = 4 * time.Minute
+
+	ClientVpnNetworkAssociationStatusPollInterval = 10 * time.Second
+)
+
+func ClientVpnNetworkAssociationAssociated(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) (*ec2.TargetNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{ec2.AssociationStatusCodeAssociating},
+		Target:       []string{ec2.AssociationStatusCodeAssociated},
+		Refresh:      ClientVpnNetworkAssociationStatus(conn, networkAssociationID, clientVpnEndpointID),
+		Timeout:      ClientVpnNetworkAssociationAssociatedTimeout,
+		Delay:        ClientVpnNetworkAssociationAssociatedDelay,
+		PollInterval: ClientVpnNetworkAssociationStatusPollInterval,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TargetNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ClientVpnNetworkAssociationDisassociated(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) (*ec2.TargetNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{ec2.AssociationStatusCodeDisassociating},
+		Target:       []string{},
+		Refresh:      ClientVpnNetworkAssociationStatus(conn, networkAssociationID, clientVpnEndpointID),
+		Timeout:      ClientVpnNetworkAssociationDisassociatedTimeout,
+		Delay:        ClientVpnNetworkAssociationDisassociatedDelay,
+		PollInterval: ClientVpnNetworkAssociationStatusPollInterval,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TargetNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	ClientVpnRouteDeletedTimeout = 1 * time.Minute
 )
 
