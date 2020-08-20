@@ -21,6 +21,7 @@ ENHANCEMENTS
 * resource/aws_route_table: Support tag on create  [GH-14501]
 * resource/aws_security_group: Support tag on create  [GH-14501]
 * resource/aws_spot_instance_request: Support tag on create  [GH-14501]
+* resource/aws_storagegatway_smb_file_share: Add `audit_destination_arn` and `smb_acl_enabled` arguments [GH-13572]
 * resource/aws_subnet: Support tag on create  [GH-14501]
 * resource/aws_vpc_dhcp_options: Support tag on create  [GH-14501]
 * resource/aws_vpc_peering_connection: Support tag on create  [GH-14501]
