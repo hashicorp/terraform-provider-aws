@@ -689,11 +689,12 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "2",
-						"statement.0.geo_match_statement.0.country_codes.0": "US",
-						"statement.0.geo_match_statement.0.country_codes.1": "NL",
+						"statement.#":                                             "1",
+						"statement.0.geo_match_statement.#":                       "1",
+						"statement.0.geo_match_statement.0.country_codes.#":       "2",
+						"statement.0.geo_match_statement.0.country_codes.0":       "US",
+						"statement.0.geo_match_statement.0.country_codes.1":       "NL",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
 					}),
 				),
 			},
@@ -704,12 +705,69 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "3",
-						"statement.0.geo_match_statement.0.country_codes.0": "ZM",
-						"statement.0.geo_match_statement.0.country_codes.1": "EE",
-						"statement.0.geo_match_statement.0.country_codes.2": "MM",
+						"statement.#":                                             "1",
+						"statement.0.geo_match_statement.#":                       "1",
+						"statement.0.geo_match_statement.0.country_codes.#":       "3",
+						"statement.0.geo_match_statement.0.country_codes.0":       "ZM",
+						"statement.0.geo_match_statement.0.country_codes.1":       "EE",
+						"statement.0.geo_match_statement.0.country_codes.2":       "MM",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                               "1",
+						"statement.0.geo_match_statement.#":                                         "1",
+						"statement.0.geo_match_statement.0.country_codes.#":                         "2",
+						"statement.0.geo_match_statement.0.country_codes.0":                         "US",
+						"statement.0.geo_match_statement.0.country_codes.1":                         "NL",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(ruleGroupName, "NO_MATCH", "Updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                               "1",
+						"statement.0.geo_match_statement.#":                                         "1",
+						"statement.0.geo_match_statement.0.country_codes.#":                         "2",
+						"statement.0.geo_match_statement.0.country_codes.0":                         "US",
+						"statement.0.geo_match_statement.0.country_codes.1":                         "NL",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.header_name":       "Updated",
 					}),
 				),
 			},
@@ -2075,6 +2133,47 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(name, fallbackBehavior, headerName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "NL"]
+        forwarded_ip_config {
+          fallback_behavior = "%s"
+          header_name       = "%s"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, fallbackBehavior, headerName)
 }
 
 func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(name string) string {
