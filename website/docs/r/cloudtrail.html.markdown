@@ -133,6 +133,20 @@ resource "aws_cloudtrail" "example" {
 }
 ```
 
+#### Sending Events to CloudWatch Logs
+
+```hcl
+resource "aws_cloudwatch_log_group" "example" {
+  name = "Example"
+}
+
+resource "aws_cloudtrail" "example" {
+  # ... other configuration ...
+
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.example.arn}:*" # CloudTrail requires the Log Stream wildcard
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -144,7 +158,7 @@ The following arguments are supported:
 * `cloud_watch_logs_role_arn` - (Optional) Specifies the role for the CloudWatch Logs
     endpoint to assume to write to a user’s log group.
 * `cloud_watch_logs_group_arn` - (Optional) Specifies a log group name using an Amazon Resource Name (ARN),
-    that represents the log group to which CloudTrail logs will be delivered.
+    that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `enable_logging` - (Optional) Enables logging for the trail. Defaults to `true`.
     Setting this to `false` will pause logging.
 * `include_global_service_events` - (Optional) Specifies whether the trail is publishing events
