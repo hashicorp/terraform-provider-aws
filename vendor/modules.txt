@@ -344,10 +344,12 @@ github.com/bflad/tfproviderlint/passes/helper/validation/iprangecallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/iprangeselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/singleipcallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/singleipselectorexpr
+github.com/bflad/tfproviderlint/passes/helper/validation/stringinslicecallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/validatejsonstringselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/validatelistuniquestringsselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/validateregexpselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/validaterfc3339timestringselectorexpr
+github.com/bflad/tfproviderlint/passes/stdlib/fmtsprintfcallexpr
 github.com/bflad/tfproviderlint/passes/testaccfuncdecl
 github.com/bflad/tfproviderlint/passes/testfuncdecl
 github.com/bflad/tfproviderlint/version
