@@ -49,9 +49,9 @@ func TestAccDataSourceAwsSubnetIDs_filter(t *testing.T) {
 }
 
 func testAccDataSourceAwsSubnetIDsConfigWithDataSource(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block = "172.%[1]d.0.0/16"
 
   tags = {
     Name = "terraform-testacc-subnet-ids-data-source"
@@ -60,8 +60,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test_public_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.123.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-subnet-ids-data-source-public-a"
@@ -71,8 +71,8 @@ resource "aws_subnet" "test_public_a" {
 
 resource "aws_subnet" "test_private_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.125.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.125.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-subnet-ids-data-source-private-a"
@@ -82,8 +82,8 @@ resource "aws_subnet" "test_private_a" {
 
 resource "aws_subnet" "test_private_b" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.126.0/24"
-  availability_zone = "us-west-2b"
+  cidr_block        = "172.%[1]d.126.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-subnet-ids-data-source-private-b"
@@ -102,13 +102,13 @@ data "aws_subnet_ids" "private" {
     Tier = "Private"
   }
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt))
 }
 
 func testAccDataSourceAwsSubnetIDsConfig(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block = "172.%[1]d.0.0/16"
 
   tags = {
     Name = "terraform-testacc-subnet-ids-data-source"
@@ -117,8 +117,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test_public_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.123.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-subnet-ids-data-source-public-a"
@@ -128,8 +128,8 @@ resource "aws_subnet" "test_public_a" {
 
 resource "aws_subnet" "test_private_a" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.125.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.125.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-subnet-ids-data-source-private-a"
@@ -139,21 +139,21 @@ resource "aws_subnet" "test_private_a" {
 
 resource "aws_subnet" "test_private_b" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.126.0/24"
-  availability_zone = "us-west-2b"
+  cidr_block        = "172.%[1]d.126.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-subnet-ids-data-source-private-b"
     Tier = "Private"
   }
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt))
 }
 
 func testAccDataSourceAwsSubnetIDs_filter(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block = "172.%[1]d.0.0/16"
 
   tags = {
     Name = "terraform-testacc-subnet-ids-data-source"
@@ -162,20 +162,20 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test_a_one" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.1.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_subnet" "test_a_two" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.2.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_subnet" "test_b" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.3.0/24"
-  availability_zone = "us-west-2b"
+  cidr_block        = "172.%[1]d.3.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
 }
 
 data "aws_subnet_ids" "test" {
@@ -186,5 +186,5 @@ data "aws_subnet_ids" "test" {
     values = [aws_subnet.test_a_one.availability_zone]
   }
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt))
 }
