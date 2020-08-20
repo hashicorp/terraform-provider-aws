@@ -128,18 +128,10 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				},
 			},
 			"object_acl": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  storagegateway.ObjectACLPrivate,
-				ValidateFunc: validation.StringInSlice([]string{
-					storagegateway.ObjectACLAuthenticatedRead,
-					storagegateway.ObjectACLAwsExecRead,
-					storagegateway.ObjectACLBucketOwnerFullControl,
-					storagegateway.ObjectACLBucketOwnerRead,
-					storagegateway.ObjectACLPrivate,
-					storagegateway.ObjectACLPublicRead,
-					storagegateway.ObjectACLPublicReadWrite,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      storagegateway.ObjectACLPrivate,
+				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
 			},
 			"path": {
 				Type:     schema.TypeString,
