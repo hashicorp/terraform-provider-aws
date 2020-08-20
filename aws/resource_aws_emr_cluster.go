@@ -332,6 +332,25 @@ func resourceAwsEMRCluster() *schema.Resource {
 					},
 				},
 			},
+			"master_instance_fleet": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"core_instance_group", "master_instance_group"},
+				Elem:          InstanceFleetConfigSchema(),
+			},
+			"core_instance_fleet": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"core_instance_group", "master_instance_group"},
+				Elem:          InstanceFleetConfigSchema(),
+			},
+
 			"bootstrap_action": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -485,6 +504,80 @@ func resourceAwsEMRCluster() *schema.Resource {
 	}
 }
 
+func ebsConfigurationSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"iops": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
+			"size": {
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
+			},
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAwsEmrEbsVolumeType(),
+			},
+			"volumes_per_instance": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+				Default:  1,
+			},
+		},
+	}
+}
+
+func InstanceFleetConfigSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_fleet_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(emr.InstanceFleetType_Values(), false),
+			},
+			"instance_type_configs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				// ForceNew: true,
+				Elem: instanceTypeConfigSchema(),
+			},
+			"launch_specifications": {
+				Type:     schema.TypeList,
+				Optional: true,
+				// ForceNew: true,
+				MaxItems: 1,
+				Elem:     launchSpecificationsSchema(),
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"target_on_demand_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"target_spot_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+		},
+	}
+}
+
 func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 
@@ -560,6 +653,16 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		expandEbsConfig(m, instanceGroup)
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
+	}
+
+	if l := d.Get("master_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}))
+		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
+	}
+
+	if l := d.Get("core_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}))
+		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
 	}
 
 	var instanceProfile string
@@ -796,25 +899,42 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
 
-	if err != nil {
-		return err
+	if err == nil { // find instance group
+
+		coreGroup := emrCoreInstanceGroup(instanceGroups)
+		masterGroup := findMasterGroup(instanceGroups)
+
+		flattenedCoreInstanceGroup, err := flattenEmrCoreInstanceGroup(coreGroup)
+
+		if err != nil {
+			return fmt.Errorf("error flattening core_instance_group: %s", err)
+		}
+
+		if err := d.Set("core_instance_group", flattenedCoreInstanceGroup); err != nil {
+			return fmt.Errorf("error setting core_instance_group: %s", err)
+		}
+
+		if err := d.Set("master_instance_group", flattenEmrMasterInstanceGroup(masterGroup)); err != nil {
+			return fmt.Errorf("error setting master_instance_group: %s", err)
+		}
 	}
 
-	coreGroup := emrCoreInstanceGroup(instanceGroups)
-	masterGroup := findMasterGroup(instanceGroups)
+	instanceFleets, err := fetchAllEMRInstanceFleets(emrconn, d.Id())
 
-	flattenedCoreInstanceGroup, err := flattenEmrCoreInstanceGroup(coreGroup)
+	if err == nil { // find instance fleets
 
-	if err != nil {
-		return fmt.Errorf("error flattening core_instance_group: %s", err)
-	}
+		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceRoleTypeCore)
+		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceRoleTypeMaster)
 
-	if err := d.Set("core_instance_group", flattenedCoreInstanceGroup); err != nil {
-		return fmt.Errorf("error setting core_instance_group: %s", err)
-	}
+		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
+		if err := d.Set("core_instance_fleet", []interface{}{flattenedCoreInstanceFleet}); err != nil {
+			return fmt.Errorf("error setting core_instance_fleet: %s", err)
+		}
 
-	if err := d.Set("master_instance_group", flattenEmrMasterInstanceGroup(masterGroup)); err != nil {
-		return fmt.Errorf("error setting master_instance_group: %s", err)
+		flattenedMasterInstanceFleet := flattenInstanceFleet(masterFleet)
+		if err := d.Set("master_instance_fleet", []interface{}{flattenedMasterInstanceFleet}); err != nil {
+			return fmt.Errorf("error setting master_instance_fleet: %s", err)
+		}
 	}
 
 	if err := d.Set("tags", keyvaluetags.EmrKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -1743,4 +1863,121 @@ func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.Instance
 	})
 
 	return groups, err
+}
+
+func readInstanceFleetConfig(data map[string]interface{}) *emr.InstanceFleetConfig {
+
+	config := &emr.InstanceFleetConfig{
+		InstanceFleetType:      aws.String(data["instance_fleet_type"].(string)),
+		Name:                   aws.String(data["name"].(string)),
+		TargetOnDemandCapacity: aws.Int64(int64(data["target_on_demand_capacity"].(int))),
+		TargetSpotCapacity:     aws.Int64(int64(data["target_spot_capacity"].(int))),
+	}
+
+	if v, ok := data["instance_type_configs"].(*schema.Set); ok && v.Len() > 0 {
+		config.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
+	}
+
+	if v, ok := data["launch_specifications"].(*schema.Set); ok && v.Len() == 1 {
+		config.LaunchSpecifications = expandLaunchSpecification(v.List()[0])
+	}
+
+	return config
+}
+
+func fetchAllEMRInstanceFleets(conn *emr.EMR, clusterID string) ([]*emr.InstanceFleet, error) {
+	input := &emr.ListInstanceFleetsInput{
+		ClusterId: aws.String(clusterID),
+	}
+	var fleets []*emr.InstanceFleet
+
+	err := conn.ListInstanceFleetsPages(input, func(page *emr.ListInstanceFleetsOutput, lastPage bool) bool {
+		fleets = append(fleets, page.InstanceFleets...)
+
+		return !lastPage
+	})
+
+	return fleets, err
+}
+
+func findInstanceFleet(instanceFleets []*emr.InstanceFleet, instanceRoleType string) *emr.InstanceFleet {
+	for _, instanceFleet := range instanceFleets {
+		if instanceFleet.InstanceFleetType != nil {
+			if *instanceFleet.InstanceFleetType == instanceRoleType {
+				return instanceFleet
+			}
+		}
+	}
+	return nil
+}
+
+func flatteninstanceTypeConfig(itc *emr.InstanceTypeSpecification) map[string]interface{} {
+	attrs := map[string]interface{}{}
+	if itc.BidPrice != nil {
+		attrs["bid_price"] = *itc.BidPrice
+	}
+	if itc.BidPriceAsPercentageOfOnDemandPrice != nil {
+		attrs["bid_price_as_percentage_of_on_demand_price"] = *itc.BidPriceAsPercentageOfOnDemandPrice
+	}
+	attrs["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
+	attrs["instance_type"] = *itc.InstanceType
+	attrs["weighted_capacity"] = *itc.WeightedCapacity
+	return attrs
+}
+
+func flattenInstanceFleet(ig *emr.InstanceFleet) map[string]interface{} {
+	attrs := map[string]interface{}{}
+
+	attrs["id"] = *ig.Id
+	attrs["name"] = *ig.Name
+	attrs["instance_fleet_type"] = *ig.InstanceFleetType
+	attrs["target_on_demand_capacity"] = *ig.TargetOnDemandCapacity
+	attrs["target_spot_capacity"] = *ig.TargetSpotCapacity
+	instanceTypeConfigs := []interface{}{}
+	for _, itc := range ig.InstanceTypeSpecifications {
+		flattenTypeConfig := flatteninstanceTypeConfig(itc)
+		instanceTypeConfigs = append(instanceTypeConfigs, flattenTypeConfig)
+	}
+	attrs["instance_type_configs"] = instanceTypeConfigs
+
+	if ig.LaunchSpecifications != nil {
+		spotProvisioningSpecification := make(map[string]interface{})
+		if ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes != nil {
+			spotProvisioningSpecification["block_duration_minutes"] = *ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes
+		}
+		spotProvisioningSpecification["timeout_action"] = *ig.LaunchSpecifications.SpotSpecification.TimeoutAction
+		spotProvisioningSpecification["timeout_duration_minutes"] = *ig.LaunchSpecifications.SpotSpecification.TimeoutDurationMinutes
+
+		launchSpecifications := make([]interface{}, 0)
+		launchSpecification := make(map[string]interface{})
+		spotSpecifications := make([]interface{}, 0)
+		spotSpecifications = append(spotSpecifications, spotProvisioningSpecification)
+		launchSpecification["spot_specification"] = spotSpecifications
+		launchSpecifications = append(launchSpecifications, launchSpecification)
+		attrs["launch_specifications"] = launchSpecifications
+	}
+	return attrs
+}
+
+func expandEbsConfiguration(ebsConfigurations []interface{}) *emr.EbsConfiguration {
+	ebsConfig := &emr.EbsConfiguration{}
+	ebsConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
+	for _, ebsConfiguration := range ebsConfigurations {
+		cfg := ebsConfiguration.(map[string]interface{})
+		ebs := &emr.EbsBlockDeviceConfig{}
+		volumeSpec := &emr.VolumeSpecification{
+			SizeInGB:   aws.Int64(int64(cfg["size"].(int))),
+			VolumeType: aws.String(cfg["type"].(string)),
+		}
+		if v, ok := cfg["iops"].(int); ok && v != 0 {
+			volumeSpec.Iops = aws.Int64(int64(v))
+		}
+		if v, ok := cfg["volumes_per_instance"].(int); ok && v != 0 {
+			ebs.VolumesPerInstance = aws.Int64(int64(v))
+		}
+		ebs.VolumeSpecification = volumeSpec
+		ebsConfigs = append(ebsConfigs, ebs)
+	}
+	ebsConfig.EbsBlockDeviceConfigs = ebsConfigs
+	return ebsConfig
 }
