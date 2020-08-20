@@ -544,7 +544,9 @@ resource "aws_subnet" "test" {
 func testAccSubnetTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"tags = {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
   	Name = %[1]q
   }
 }
