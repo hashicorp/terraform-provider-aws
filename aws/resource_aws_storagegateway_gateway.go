@@ -301,7 +301,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if v, ok := d.GetOk("smb_security_strategy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("smb_security_strategy"); ok {
 		input := &storagegateway.UpdateSMBSecurityStrategyInput{
 			GatewayARN:          aws.String(d.Id()),
 			SMBSecurityStrategy: aws.String(v.(string)),
