@@ -13,6 +13,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	// Maximum amount of time for VpcLink to become available
+	apigatewayVpcLinkAvailableTimeout = 20 * time.Minute
+	// Maximum amount of time for VpcLink to delete
+	apigatewayVpcLinkDeleteTimeout = 20 * time.Minute
+)
+
 func resourceAwsApiGatewayVpcLink() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsApiGatewayVpcLinkCreate,
@@ -22,12 +29,6 @@ func resourceAwsApiGatewayVpcLink() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(8 * time.Minute),
-			Update: schema.DefaultTimeout(8 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -79,7 +80,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, *resp.Id),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    apigatewayVpcLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -175,7 +176,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Timeout:    apigatewayVpcLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -204,7 +205,7 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForApiGatewayVpcLinkDeletion(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForApiGatewayVpcLinkDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -224,13 +225,13 @@ func apigatewayVpcLinkRefreshStatusFunc(conn *apigateway.APIGateway, vl string) 
 	}
 }
 
-func waitForApiGatewayVpcLinkDeletion(conn *apigateway.APIGateway, vpcLinkID string, timeout time.Duration) error {
+func waitForApiGatewayVpcLinkDeletion(conn *apigateway.APIGateway, vpcLinkID string) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{apigateway.VpcLinkStatusPending,
 			apigateway.VpcLinkStatusAvailable,
 			apigateway.VpcLinkStatusDeleting},
 		Target:     []string{""},
-		Timeout:    timeout,
+		Timeout:    apigatewayVpcLinkDeleteTimeout,
 		MinTimeout: 1 * time.Second,
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
