@@ -18,6 +18,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+const (
+	LambdaEventSourceMappingCreating  = "Creating"
+	LambdaEventSourceMappingEnabling  = "Enabling"
+	LambdaEventSourceMappingUpdating  = "Updating"
+	LambdaEventSourceMappingDisabling = "Disabling"
+	LambdaEventSourceMappingEnabled   = "Enabled"
+	LambdaEventSourceMappingDisabled  = "Disabled"
+)
+
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLambdaEventSourceMappingCreate,
@@ -257,6 +266,11 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	// No error
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 	d.SetId(*eventSourceMappingConfiguration.UUID)
+
+	if err := waitForLambdaEventSourceMapping(conn, *eventSourceMappingConfiguration.UUID); err != nil {
+		return err
+	}
+
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
 }
 
@@ -303,12 +317,12 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
 
 	switch state {
-	case "Enabled", "Enabling":
+	case LambdaEventSourceMappingEnabled:
 		d.Set("enabled", true)
-	case "Disabled", "Disabling":
+	case LambdaEventSourceMappingDisabled:
 		d.Set("enabled", false)
 	default:
-		log.Printf("[DEBUG] Lambda event source mapping is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
+		return fmt.Errorf("state is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
 	}
 
 	return nil
@@ -406,5 +420,35 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error updating Lambda event source mapping: %s", err)
 	}
 
+	if err := waitForLambdaEventSourceMapping(conn, d.Id()); err != nil {
+		return err
+	}
+
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
+}
+
+func waitForLambdaEventSourceMapping(conn *lambda.Lambda, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{LambdaEventSourceMappingCreating, LambdaEventSourceMappingEnabling, LambdaEventSourceMappingUpdating, LambdaEventSourceMappingDisabling},
+		Target:  []string{LambdaEventSourceMappingEnabled, LambdaEventSourceMappingDisabled},
+		Refresh: func() (interface{}, string, error) {
+			params := &lambda.GetEventSourceMappingInput{
+				UUID: aws.String(id),
+			}
+
+			res, err := conn.GetEventSourceMapping(params)
+			if err != nil {
+				return nil, "", err
+			}
+
+			return res, aws.StringValue(res.State), err
+		},
+		Timeout: 10 * time.Minute,
+		Delay:   5 * time.Second,
+	}
+
+	log.Printf("[DEBUG] Waiting for LambdaEventSourceMapping state update: %s", id)
+	_, err := stateConf.WaitForState()
+
+	return err
 }
