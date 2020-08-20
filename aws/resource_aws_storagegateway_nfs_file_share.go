@@ -262,11 +262,7 @@ func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("role_arn", fileshare.Role)
 	d.Set("squash", fileshare.Squash)
 
-	tags, err := keyvaluetags.StoragegatewayListTags(conn, *arn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", *arn, err)
-	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -283,40 +279,44 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	input := &storagegateway.UpdateNFSFileShareInput{
-		ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
-		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
-		FileShareARN:         aws.String(d.Id()),
-		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
-		NFSFileShareDefaults: expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{})),
-		ObjectACL:            aws.String(d.Get("object_acl").(string)),
-		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
-		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
-		Squash:               aws.String(d.Get("squash").(string)),
-	}
+	if d.HasChanges("client_list", "default_storage_class", "guess_mime_type_enabled", "kms_encrypted",
+		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn") {
 
-	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
-		input.KMSKey = aws.String(v.(string))
-	}
+		input := &storagegateway.UpdateNFSFileShareInput{
+			ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
+			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
+			FileShareARN:         aws.String(d.Id()),
+			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
+			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
+			NFSFileShareDefaults: expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{})),
+			ObjectACL:            aws.String(d.Get("object_acl").(string)),
+			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
+			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
+			Squash:               aws.String(d.Get("squash").(string)),
+		}
 
-	log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
-	_, err := conn.UpdateNFSFileShare(input)
-	if err != nil {
-		return fmt.Errorf("error updating Storage Gateway NFS File Share: %s", err)
-	}
+		if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
+			input.KMSKey = aws.String(v.(string))
+		}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"UPDATING"},
-		Target:     []string{"AVAILABLE"},
-		Refresh:    storageGatewayNfsFileShareRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway NFS File Share update: %s", err)
+		log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
+		_, err := conn.UpdateNFSFileShare(input)
+		if err != nil {
+			return fmt.Errorf("error updating Storage Gateway NFS File Share: %s", err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"UPDATING"},
+			Target:     []string{"AVAILABLE"},
+			Refresh:    storageGatewayNfsFileShareRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      5 * time.Second,
+			MinTimeout: 5 * time.Second,
+		}
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for Storage Gateway NFS File Share update: %s", err)
+		}
 	}
 
 	return resourceAwsStorageGatewayNfsFileShareRead(d, meta)
