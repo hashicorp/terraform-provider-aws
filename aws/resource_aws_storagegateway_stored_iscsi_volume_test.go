@@ -201,7 +201,7 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName string, s
 		output, err := conn.DescribeStorediSCSIVolumes(input)
 
 		if err != nil {
-			return fmt.Errorf("error reading Storage Gateway stored iSCSI volume: %s", err)
+			return fmt.Errorf("error reading Storage Gateway stored iSCSI volume: %w", err)
 		}
 
 		if output == nil || len(output.StorediSCSIVolumes) == 0 || output.StorediSCSIVolumes[0] == nil || aws.StringValue(output.StorediSCSIVolumes[0].VolumeARN) != rs.Primary.ID {
@@ -263,10 +263,10 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy(s *terraform.State) e
 	return nil
 }
 
-func testAccAWSStorageGatewayStoredIscsiVolumeConfig_Basic(rName string) string {
+func testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName string) string {
 	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${aws_instance.test.availability_zone}"
+  availability_zone = aws_instance.test.availability_zone
   size              = 10
   type              = "gp2"
 
@@ -278,46 +278,31 @@ resource "aws_ebs_volume" "test" {
 resource "aws_volume_attachment" "test" {
   device_name  = "/dev/xvdc"
   force_detach = true
-  instance_id  = "${aws_instance.test.id}"
-  volume_id    = "${aws_ebs_volume.test.id}"
+  instance_id  = aws_instance.test.id
+  volume_id    = aws_ebs_volume.test.id
 }
 
 data "aws_storagegateway_local_disk" "test" {
-  disk_path   = "${aws_volume_attachment.test.device_name}"
-  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+  disk_path   = aws_volume_attachment.test.device_name
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+`, rName)
 }
 
+func testAccAWSStorageGatewayStoredIscsiVolumeConfig_Basic(rName string) string {
+	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
-  gateway_arn            = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
-  network_interface_id   = "${aws_instance.test.private_ip}"
+  gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+  network_interface_id   = aws_instance.test.private_ip
   target_name            = %[1]q
   preserve_existing_data = false
-  disk_id                = "${data.aws_storagegateway_local_disk.test.id}"
+  disk_id                = data.aws_storagegateway_local_disk.test.id
 }
 `, rName)
 }
 
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigKMSEncrypted(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = "${aws_instance.test.availability_zone}"
-  size              = 10
-  type              = "gp2"
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_volume_attachment" "test" {
-  device_name  = "/dev/xvdc"
-  force_detach = true
-  instance_id  = "${aws_instance.test.id}"
-  volume_id    = "${aws_ebs_volume.test.id}"
-}
-data "aws_storagegateway_local_disk" "test" {
-  disk_path   = "${aws_volume_attachment.test.device_name}"
-  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
-}
-
+	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
     description = "Terraform acc test %[1]s"
     policy = <<POLICY
@@ -340,47 +325,25 @@ POLICY
 }
 
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
-  gateway_arn            = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
-  network_interface_id   = "${aws_instance.test.private_ip}"
+  gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+  network_interface_id   = aws_instance.test.private_ip
   target_name            = %[1]q
   preserve_existing_data = false
-  disk_id                = "${data.aws_storagegateway_local_disk.test.id}"
+  disk_id                = data.aws_storagegateway_local_disk.test.id
   kms_encrypted          = true
-  kms_key                = "${aws_kms_key.test.arn}"
+  kms_key                = aws_kms_key.test.arn
 }
 `, rName)
 }
 
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
- availability_zone = "${aws_instance.test.availability_zone}"
- size              = 10
- type              = "gp2"
-
- tags = {
-   Name = %[1]q
- }
-}
-
-resource "aws_volume_attachment" "test" {
- device_name  = "/dev/xvdc"
- force_detach = true
- instance_id  = "${aws_instance.test.id}"
- volume_id    = "${aws_ebs_volume.test.id}"
-}
-
-data "aws_storagegateway_local_disk" "test" {
- disk_path   = "${aws_volume_attachment.test.device_name}"
- gateway_arn = "${aws_storagegateway_gateway.test.arn}"
-}
-
+	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
- gateway_arn           = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
- network_interface_id  = "${aws_instance.test.private_ip}"
+ gateway_arn           = data.aws_storagegateway_local_disk.test.gateway_arn
+ network_interface_id  = aws_instance.test.private_ip
  target_name           = %[1]q
  preserve_existing_data = false
- disk_id               = "${data.aws_storagegateway_local_disk.test.id}"
+ disk_id               = data.aws_storagegateway_local_disk.test.id
 
   tags = {
 	%[2]q = %[3]q
@@ -390,35 +353,13 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 }
 
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
- availability_zone = "${aws_instance.test.availability_zone}"
- size              = 10
- type              = "gp2"
-
- tags = {
-   Name = %[1]q
- }
-}
-
-resource "aws_volume_attachment" "test" {
- device_name  = "/dev/xvdc"
- force_detach = true
- instance_id  = "${aws_instance.test.id}"
- volume_id    = "${aws_ebs_volume.test.id}"
-}
-
-data "aws_storagegateway_local_disk" "test" {
- disk_path   = "${aws_volume_attachment.test.device_name}"
- gateway_arn = "${aws_storagegateway_gateway.test.arn}"
-}
-
+	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
- gateway_arn           = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
- network_interface_id  = "${aws_instance.test.private_ip}"
+ gateway_arn           = data.aws_storagegateway_local_disk.test.gateway_arn
+ network_interface_id  = aws_instance.test.private_ip
  target_name           = %[1]q
 preserve_existing_data = false
- disk_id               = "${data.aws_storagegateway_local_disk.test.id}"
+ disk_id               = data.aws_storagegateway_local_disk.test.id
 
   tags = {
 	%[2]q = %[3]q
@@ -429,31 +370,9 @@ preserve_existing_data = false
 }
 
 func testAccAWSStorageGatewayStoredIscsiVolumeConfig_SnapshotId(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
-resource "aws_ebs_volume" "cachevolume" {
-  availability_zone = "${aws_instance.test.availability_zone}"
-  size              = 10
-  type              = "gp2"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_volume_attachment" "test" {
-  device_name  = "/dev/xvdc"
-  force_detach = true
-  instance_id  = "${aws_instance.test.id}"
-  volume_id    = "${aws_ebs_volume.cachevolume.id}"
-}
-
-data "aws_storagegateway_local_disk" "test" {
-  disk_path   = "${aws_volume_attachment.test.device_name}"
-  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
-}
-
+	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "snapvolume" {
-  availability_zone = "${aws_instance.test.availability_zone}"
+  availability_zone = aws_instance.test.availability_zone
   size              = 5
   type              = "gp2"
 
@@ -463,7 +382,7 @@ resource "aws_ebs_volume" "snapvolume" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.snapvolume.id}"
+  volume_id = aws_ebs_volume.snapvolume.id
 
   tags = {
     Name = %[1]q
@@ -471,12 +390,12 @@ resource "aws_ebs_snapshot" "test" {
 }
 
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
-  gateway_arn            = "${data.aws_storagegateway_local_disk.test.gateway_arn}"
-  network_interface_id   = "${aws_instance.test.private_ip}"
-  snapshot_id            = "${aws_ebs_snapshot.test.id}"
+  gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+  network_interface_id   = aws_instance.test.private_ip
+  snapshot_id            = aws_ebs_snapshot.test.id
   target_name            = %[1]q
   preserve_existing_data = false
-  disk_id                = "${data.aws_storagegateway_local_disk.test.id}"
+  disk_id                = data.aws_storagegateway_local_disk.test.id
 }
 `, rName)
 }
