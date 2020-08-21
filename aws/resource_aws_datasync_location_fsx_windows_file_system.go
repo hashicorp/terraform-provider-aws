@@ -117,7 +117,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 		input.Domain = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx Windows File System: %s", input)
+	log.Printf("[DEBUG] Creating DataSync Location Fsx Windows File System: %#v", input)
 	output, err := conn.CreateLocationFsxWindows(input)
 	if err != nil {
 		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %w", err)
@@ -136,7 +136,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 		LocationArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading DataSync Location Fsx Windows: %s", input)
+	log.Printf("[DEBUG] Reading DataSync Location Fsx Windows: %#v", input)
 	output, err := conn.DescribeLocationFsxWindows(input)
 
 	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
@@ -203,7 +203,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceDat
 		LocationArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting DataSync Location Fsx Windows File System: %s", input)
+	log.Printf("[DEBUG] Deleting DataSync Location Fsx Windows File System: %#v", input)
 	_, err := conn.DeleteLocation(input)
 
 	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
