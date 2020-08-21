@@ -548,13 +548,9 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											cognitoidentityprovider.RecoveryOptionNameTypeAdminOnly,
-											cognitoidentityprovider.RecoveryOptionNameTypeVerifiedEmail,
-											cognitoidentityprovider.RecoveryOptionNameTypeVerifiedPhoneNumber,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.RecoveryOptionNameType_Values(), false),
 									},
 									"priority": {
 										Type:     schema.TypeInt,
