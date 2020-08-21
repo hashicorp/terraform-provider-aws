@@ -10,6 +10,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_acmpca_certificate_authority: Ensure `DELETED` status triggers state removal [GH-13684]
 * resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
 
 ## 3.3.0 (August 20, 2020)
