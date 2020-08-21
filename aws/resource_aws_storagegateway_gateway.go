@@ -178,7 +178,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
 		request, err := http.NewRequest("GET", requestURL, nil)
 		if err != nil {
-			return fmt.Errorf("error creating HTTP request: %s", err)
+			return fmt.Errorf("error creating HTTP request: %w", err)
 		}
 
 		var response *http.Response
@@ -193,7 +193,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 					return resource.RetryableError(errMessage)
 				}
 
-				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
+				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %w", err))
 			}
 
 			for _, retryableStatusCode := range []int{504} {
@@ -210,7 +210,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 			response, err = client.Do(request)
 		}
 		if err != nil {
-			return fmt.Errorf("error retrieving activation key from IP Address (%s): %s", gatewayIpAddress, err)
+			return fmt.Errorf("error retrieving activation key from IP Address (%s): %w", gatewayIpAddress, err)
 		}
 
 		log.Printf("[DEBUG] Received HTTP response: %#v", response)
@@ -220,7 +220,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 		redirectURL, err := response.Location()
 		if err != nil {
-			return fmt.Errorf("error extracting HTTP Location header: %s", err)
+			return fmt.Errorf("error extracting HTTP Location header: %w", err)
 		}
 
 		activationKey = redirectURL.Query().Get("activationKey")
@@ -249,13 +249,13 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Activating Storage Gateway Gateway: %s", input)
 	output, err := conn.ActivateGateway(input)
 	if err != nil {
-		return fmt.Errorf("error activating Storage Gateway Gateway: %s", err)
+		return fmt.Errorf("error activating Storage Gateway Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.GatewayARN))
 
 	if _, err := WaitForStorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway Gateway activation: %s", err)
+		return fmt.Errorf("error waiting for Storage Gateway Gateway activation: %w", err)
 	}
 
 	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
@@ -271,7 +271,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), m["domain_name"].(string))
 		_, err := conn.JoinDomain(input)
 		if err != nil {
-			return fmt.Errorf("error joining Active Directory domain: %s", err)
+			return fmt.Errorf("error joining Active Directory domain: %w", err)
 		}
 	}
 
@@ -284,7 +284,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB guest password", d.Id())
 		_, err := conn.SetSMBGuestPassword(input)
 		if err != nil {
-			return fmt.Errorf("error setting SMB guest password: %s", err)
+			return fmt.Errorf("error setting SMB guest password: %w", err)
 		}
 	}
 
@@ -297,7 +297,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q setting CloudWatch Log Group", input)
 		_, err := conn.UpdateGatewayInformation(input)
 		if err != nil {
-			return fmt.Errorf("error setting CloudWatch Log Group: %s", err)
+			return fmt.Errorf("error setting CloudWatch Log Group: %w", err)
 		}
 	}
 
@@ -310,7 +310,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB Security Strategy", input)
 		_, err := conn.UpdateSMBSecurityStrategy(input)
 		if err != nil {
-			return fmt.Errorf("error setting SMB Security Strategy: %s", err)
+			return fmt.Errorf("error setting SMB Security Strategy: %w", err)
 		}
 	}
 
@@ -335,11 +335,11 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Storage Gateway Gateway: %s", err)
+		return fmt.Errorf("error reading Storage Gateway Gateway: %w", err)
 	}
 
 	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	smbSettingsInput := &storagegateway.DescribeSMBSettingsInput{
@@ -354,7 +354,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Storage Gateway SMB Settings: %s", err)
+		return fmt.Errorf("error reading Storage Gateway SMB Settings: %w", err)
 	}
 
 	// The Storage Gateway API currently provides no way to read this value
@@ -381,7 +381,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	// to simplify schema and difference logic
 	if smbSettingsOutput == nil || aws.StringValue(smbSettingsOutput.DomainName) == "" {
 		if err := d.Set("smb_active_directory_settings", []interface{}{}); err != nil {
-			return fmt.Errorf("error setting smb_active_directory_settings: %s", err)
+			return fmt.Errorf("error setting smb_active_directory_settings: %w", err)
 		}
 	} else {
 		m := map[string]interface{}{
@@ -401,7 +401,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 			m["username"] = configM["username"]
 		}
 		if err := d.Set("smb_active_directory_settings", []map[string]interface{}{m}); err != nil {
-			return fmt.Errorf("error setting smb_active_directory_settings: %s", err)
+			return fmt.Errorf("error setting smb_active_directory_settings: %w", err)
 		}
 	}
 
@@ -437,14 +437,14 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Updating Storage Gateway Gateway: %s", input)
 		_, err := conn.UpdateGatewayInformation(input)
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway Gateway: %s", err)
+			return fmt.Errorf("error updating Storage Gateway Gateway: %w", err)
 		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -462,7 +462,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), m["domain_name"].(string))
 		_, err := conn.JoinDomain(input)
 		if err != nil {
-			return fmt.Errorf("error joining Active Directory domain: %s", err)
+			return fmt.Errorf("error joining Active Directory domain: %w", err)
 		}
 	}
 
@@ -475,7 +475,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB guest password", d.Id())
 		_, err := conn.SetSMBGuestPassword(input)
 		if err != nil {
-			return fmt.Errorf("error setting SMB guest password: %s", err)
+			return fmt.Errorf("error setting SMB guest password: %w", err)
 		}
 	}
 
@@ -488,7 +488,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q updating SMB Security Strategy", input)
 		_, err := conn.UpdateSMBSecurityStrategy(input)
 		if err != nil {
-			return fmt.Errorf("error updating SMB Security Strategy: %s", err)
+			return fmt.Errorf("error updating SMB Security Strategy: %w", err)
 		}
 	}
 
@@ -508,7 +508,7 @@ func resourceAwsStorageGatewayGatewayDelete(d *schema.ResourceData, meta interfa
 		if isAWSErrStorageGatewayGatewayNotFound(err) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Storage Gateway Gateway: %s", err)
+		return fmt.Errorf("error deleting Storage Gateway Gateway: %w", err)
 	}
 
 	return nil
