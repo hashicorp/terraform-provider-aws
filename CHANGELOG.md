@@ -6,6 +6,10 @@ ENHANCEMENTS
 * resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument [GH-13563]
 * resource/aws_storagegateway_gateway: Add plan-time validation for `gateway_ip_address` argument [GH-13563]
 
+BUG FIXES
+
+* resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
+
 ## 3.3.0 (August 20, 2020)
 
 ENHANCEMENTS
