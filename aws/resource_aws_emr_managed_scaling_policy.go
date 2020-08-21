@@ -28,39 +28,36 @@ func resourceAwsEMRManagedScalingPolicy() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
-				Elem:     computeLimitsSchema(),
-			},
-		},
-	}
-}
-func computeLimitsSchema() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"unit_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(emr.ComputeLimitsUnitType_Values(), false),
-			},
-			"minimum_capacity_units": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"maximum_capacity_units": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"maximum_core_capacity_units": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"maximum_ondemand_capacity_units": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"unit_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(emr.ComputeLimitsUnitType_Values(), false),
+						},
+						"minimum_capacity_units": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+						"maximum_capacity_units": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+						"maximum_core_capacity_units": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"maximum_ondemand_capacity_units": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 		},
 	}
