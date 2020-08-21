@@ -3,6 +3,8 @@
 ENHANCEMENTS
 
 * resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
+* resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument [GH-13563]
+* resource/aws_storagegateway_gateway: Add plan-time validation for `gateway_ip_address` argument [GH-13563]
 
 ## 3.3.0 (August 20, 2020)
 
