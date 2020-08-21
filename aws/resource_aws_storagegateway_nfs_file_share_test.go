@@ -47,6 +47,7 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 				),
 			},
 			{
@@ -458,6 +459,71 @@ func TestAccAWSStorageGatewayNfsFileShare_Squash(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayNfsFileShare_cacheAttributes(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayNfsFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigCacheAttributes(rName, 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigCacheAttributes(rName, 500),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "500"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigCacheAttributes(rName, 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayNfsFileShare_disappears(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayNfsFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayNfsFileShare(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewayNfsFileShareDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
 
@@ -782,4 +848,19 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   squash       = %q
 }
 `, squash)
+}
+
+func testAccAWSStorageGatewayNfsFileShareConfigCacheAttributes(rName string, timeout int) string {
+	return testAccAWSStorageGateway_S3FileShareBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list  = ["0.0.0.0/0"]
+  gateway_arn  = aws_storagegateway_gateway.test.arn
+  location_arn = aws_s3_bucket.test.arn
+  role_arn     = aws_iam_role.test.arn
+
+  cache_attributes {
+    cache_stale_timeout_in_seconds = %[1]d
+  }
+}
+`, timeout)
 }
