@@ -470,6 +470,28 @@ func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayGateway(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewayGatewayDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
 
