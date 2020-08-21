@@ -78,8 +78,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 					// trailing period, no longer requiring a custom StateFunc
 					// to prevent ACM API error
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 253),
+						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+					),
 				},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},

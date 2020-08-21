@@ -308,6 +308,23 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificate_SubjectAlternativeNames_EmptyString(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(""), acm.ValidationMethodDns),
+				ExpectError: regexp.MustCompile(`expected length`),
+			},
+		},
+	})
+}
+
 func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
