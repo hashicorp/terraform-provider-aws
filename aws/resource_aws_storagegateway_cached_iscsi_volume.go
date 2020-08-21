@@ -97,6 +97,7 @@ func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+				RequiredWith: []string{"kms_encrypted"},
 			},
 		},
 	}
