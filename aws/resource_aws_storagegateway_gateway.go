@@ -570,23 +570,23 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		}
 
 		needsDelete := false
-		removeDown := oDown != nil && nDown == nil
-		removeUp := oUp != nil && nUp == nil
+		removeDown := oDown != 0 && nDown == 0
+		removeUp := oUp != 0 && nUp == 0
 		removeAll := removeDown && removeUp
 
 		if removeAll {
-			deleteInput.BandwidthType = aws.String("All")
+			deleteInput.BandwidthType = aws.String("ALL")
 			needsDelete = true
 			removeAll = true
 		}
 
 		if removeDown && !removeUp {
-			deleteInput.BandwidthType = aws.String("Download")
+			deleteInput.BandwidthType = aws.String("DOWNLOAD")
 			needsDelete = true
 		}
 
 		if removeUp && !removeDown {
-			deleteInput.BandwidthType = aws.String("Upload")
+			deleteInput.BandwidthType = aws.String("UPLOAD")
 			needsDelete = true
 		}
 
