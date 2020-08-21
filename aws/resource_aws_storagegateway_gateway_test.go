@@ -23,7 +23,7 @@ func init() {
 func testSweepStorageGatewayGateways(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).storagegatewayconn
 
@@ -57,7 +57,7 @@ func testSweepStorageGatewayGateways(region string) error {
 			log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Storage Gateway Gateways: %s", err)
+		return fmt.Errorf("Error retrieving Storage Gateway Gateways: %w", err)
 	}
 	return nil
 }
