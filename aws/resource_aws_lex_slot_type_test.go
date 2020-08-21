@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -20,7 +21,7 @@ func TestAccAwsLexSlotType_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
@@ -61,7 +62,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
@@ -103,7 +104,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
@@ -143,7 +144,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
@@ -189,7 +190,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID1, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID1),
@@ -229,7 +230,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
@@ -269,7 +270,7 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, LexSlotTypeVersionLatest),
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
@@ -301,7 +302,7 @@ func testAccCheckAwsLexSlotTypeExistsWithVersion(rName, slotTypeVersion string, 
 			Name:    aws.String(rs.Primary.ID),
 			Version: aws.String(slotTypeVersion),
 		})
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 			return fmt.Errorf("error slot type %q version %s not found", rs.Primary.ID, slotTypeVersion)
 		}
 		if err != nil {
@@ -324,7 +325,7 @@ func testAccCheckAwsLexSlotTypeNotExists(slotTypeName, slotTypeVersion string) r
 			Name:    aws.String(slotTypeName),
 			Version: aws.String(slotTypeVersion),
 		})
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 			return nil
 		}
 		if err != nil {
@@ -333,6 +334,34 @@ func testAccCheckAwsLexSlotTypeNotExists(slotTypeName, slotTypeVersion string) r
 
 		return fmt.Errorf("error slot type %s version %s exists", slotTypeName, slotTypeVersion)
 	}
+}
+
+func testAccCheckAwsLexSlotTypeDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_lex_slot_type" {
+			continue
+		}
+
+		output, err := conn.GetSlotTypeVersions(&lexmodelbuildingservice.GetSlotTypeVersionsInput{
+			Name: aws.String(rs.Primary.ID),
+		})
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+
+		if output == nil || len(output.SlotTypes) == 0 {
+			return nil
+		}
+
+		return fmt.Errorf("Lex slot type %q still exists", rs.Primary.ID)
+	}
+
+	return nil
 }
 
 func testAccAwsLexSlotTypeConfig_basic(rName string) string {
