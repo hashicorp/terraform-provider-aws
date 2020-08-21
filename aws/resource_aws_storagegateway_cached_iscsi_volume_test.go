@@ -399,43 +399,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 }
 
 func testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName string) string {
-	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = aws_instance.test.availability_zone
-  size              = 10
-  type              = "gp2"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_volume_attachment" "test" {
-  device_name  = "/dev/xvdc"
-  force_detach = true
-  instance_id  = aws_instance.test.id
-  volume_id    = aws_ebs_volume.test.id
-}
-
-data "aws_storagegateway_local_disk" "test" {
-  disk_path   = aws_volume_attachment.test.device_name
-  gateway_arn = aws_storagegateway_gateway.test.arn
-}
-
-resource "aws_storagegateway_cache" "test" {
-  # ACCEPTANCE TESTING WORKAROUND:
-  # Data sources are not refreshed before plan after apply in TestStep
-  # Step 0 error: After applying this step, the plan was not empty:
-  #   disk_id:     "0b68f77a-709b-4c79-ad9d-d7728014b291" => "/dev/xvdc" (forces new resource)
-  # We expect this data source value to change due to how Storage Gateway works.
-  lifecycle {
-    ignore_changes = ["disk_id"]
-  }
-
-  disk_id     = data.aws_storagegateway_local_disk.test.id
-  gateway_arn = aws_storagegateway_gateway.test.arn
-}
-
+	return testAccAWSStorageGatewayCachedIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
  resource "aws_kms_key" "test" {
      description = "Terraform acc test %[1]s"
      policy = <<POLICY
@@ -455,7 +419,7 @@ resource "aws_storagegateway_cache" "test" {
    ]
  }
  POLICY
- }
+}
 
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
   gateway_arn          = aws_storagegateway_cache.test.gateway_arn
