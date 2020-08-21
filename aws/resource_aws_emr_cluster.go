@@ -504,35 +504,6 @@ func resourceAwsEMRCluster() *schema.Resource {
 	}
 }
 
-func ebsConfigurationSchema() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"iops": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"size": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsEmrEbsVolumeType(),
-			},
-			"volumes_per_instance": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  1,
-			},
-		},
-	}
-}
-
 func InstanceFleetConfigSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -550,14 +521,132 @@ func InstanceFleetConfigSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				// ForceNew: true,
-				Elem: instanceTypeConfigSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bid_price": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"bid_price_as_percentage_of_on_demand_price": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							ForceNew: true,
+						},
+						"configurations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"classification": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"configurations": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"classification": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"properties": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     schema.TypeString,
+												},
+											},
+										},
+									},
+									"properties": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     schema.TypeString,
+									},
+								},
+							},
+						},
+						"ebs_config": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"iops": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"size": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validateAwsEmrEbsVolumeType(),
+									},
+									"volumes_per_instance": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+										Default:  1,
+									},
+								},
+							},
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"weighted_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+							Default:  1,
+						},
+					},
+				},
 			},
 			"launch_specifications": {
 				Type:     schema.TypeList,
 				Optional: true,
 				// ForceNew: true,
 				MaxItems: 1,
-				Elem:     launchSpecificationsSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"spot_specification": {
+							Type:     schema.TypeList,
+							Required: true,
+							ForceNew: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"block_duration_minutes": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+										Default:  0,
+									},
+									"timeout_action": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningTimeoutAction_Values(), false),
+									},
+									"timeout_duration_minutes": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
