@@ -58,6 +58,7 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+				RequiredWith: []string{"kms_encrypted"},
 			},
 			// Poor API naming: this accepts the IP address of the network interface
 			"network_interface_id": {
