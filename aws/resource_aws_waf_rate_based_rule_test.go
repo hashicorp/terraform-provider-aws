@@ -392,7 +392,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -419,7 +419,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -460,7 +460,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_byte_match_set.set.id}"
+    data_id = aws_waf_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }
@@ -488,7 +488,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   tags = {
-  	%q = %q
+    %q = %q
   }
 }
 `, name, name, tag1Key, tag1Value)
@@ -503,8 +503,8 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   tags = {
-  	%q = %q
-  	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)

@@ -292,7 +292,7 @@ data "aws_workspaces_bundle" "test" {
 }
 
 resource "aws_workspaces_directory" "test" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 }
 `)
 }
@@ -300,8 +300,8 @@ resource "aws_workspaces_directory" "test" {
 func testAccWorkspacesWorkspaceConfig(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
@@ -313,8 +313,8 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_TagsA(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id  = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
@@ -331,8 +331,8 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_TagsB(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
@@ -349,8 +349,8 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_TagsC(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
@@ -366,16 +366,16 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
-  
+
   workspace_properties {
     # NOTE: Compute type and volume size update not allowed within 6 hours after creation.
-    running_mode = "AUTO_STOP"
+    running_mode                              = "AUTO_STOP"
     running_mode_auto_stop_timeout_in_minutes = 120
   }
 
@@ -389,18 +389,18 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
-  user_name = "Administrator" 
+  user_name = "Administrator"
 
   workspace_properties {
     # NOTE: Compute type and volume size update not allowed within 6 hours after creation.
     running_mode = "ALWAYS_ON"
   }
-  
+
   tags = {
     TerraformProviderAwsTest = true
   }
@@ -411,8 +411,8 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
@@ -427,13 +427,13 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
-  user_name = "Administrator" 
- 
+  user_name = "Administrator"
+
   workspace_properties {
     root_volume_size_gib = 90
     user_volume_size_gib = 50
@@ -449,13 +449,13 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
 resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
-  user_name = "Administrator" 
- 
+  user_name = "Administrator"
+
   workspace_properties {
     root_volume_size_gib = 80
     user_volume_size_gib = 60

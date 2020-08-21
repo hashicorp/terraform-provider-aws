@@ -215,7 +215,7 @@ resource "aws_workspaces_ip_group" "test" {
 func testAccAwsWorkspacesIpGroupConfigTags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
+  name = %[1]q
 
   rules {
     source = "10.0.0.0/16"
@@ -236,7 +236,7 @@ resource "aws_workspaces_ip_group" "test" {
 func testAccAwsWorkspacesIpGroupConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
+  name = %[1]q
 
   rules {
     source = "10.0.0.0/16"

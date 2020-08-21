@@ -2235,6 +2235,7 @@ resource "aws_wafv2_rule_group" "test" {
             country_codes = ["US"]
           }
         }
+
         statement {
           geo_match_statement {
             country_codes = ["NL"]
@@ -2283,6 +2284,7 @@ resource "aws_wafv2_rule_group" "test" {
                 country_codes = ["US"]
               }
             }
+
             statement {
               geo_match_statement {
                 country_codes = ["NL"]
@@ -2335,6 +2337,7 @@ resource "aws_wafv2_rule_group" "test" {
             }
           }
         }
+
         statement {
           and_statement {
             statement {
@@ -2342,6 +2345,7 @@ resource "aws_wafv2_rule_group" "test" {
                 country_codes = ["US"]
               }
             }
+
             statement {
               geo_match_statement {
                 country_codes = ["NL"]
@@ -2642,7 +2646,6 @@ resource "aws_wafv2_rule_group" "test" {
 
     statement {
       xss_match_statement {
-
         field_to_match {
           body {}
         }

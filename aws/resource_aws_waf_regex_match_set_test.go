@@ -365,7 +365,7 @@ resource "aws_waf_regex_match_set" "test" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
+    regex_pattern_set_id = aws_waf_regex_pattern_set.test.id
     text_transformation  = "NONE"
   }
 }
@@ -388,7 +388,7 @@ resource "aws_waf_regex_match_set" "test" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
+    regex_pattern_set_id = aws_waf_regex_pattern_set.test.id
     text_transformation  = "COMPRESS_WHITE_SPACE"
   }
 }
