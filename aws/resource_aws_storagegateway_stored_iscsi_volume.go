@@ -143,7 +143,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeCreate(d *schema.ResourceData, me
 	log.Printf("[DEBUG] Creating Storage Gateway Stored iSCSI volume: %s", input)
 	output, err := conn.CreateStorediSCSIVolume(input)
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway Stored iSCSI volume: %s", err)
+		return fmt.Errorf("error creating Storage Gateway Stored iSCSI volume: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.VolumeARN))
@@ -157,7 +157,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeUpdate(d *schema.ResourceData, me
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -180,7 +180,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Storage Gateway Stored iSCSI volume %q: %s", d.Id(), err)
+		return fmt.Errorf("error reading Storage Gateway Stored iSCSI volume %q: %w", d.Id(), err)
 	}
 
 	if output == nil || len(output.StorediSCSIVolumes) == 0 || output.StorediSCSIVolumes[0] == nil || aws.StringValue(output.StorediSCSIVolumes[0].VolumeARN) != d.Id() {
@@ -211,10 +211,10 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 
 	tags, err := keyvaluetags.StoragegatewayListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
 	}
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	if volume.VolumeiSCSIAttributes != nil {
@@ -228,7 +228,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 
 		gatewayARN, targetName, err := parseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(targetARN)
 		if err != nil {
-			return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %s", targetARN, err)
+			return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %w", targetARN, err)
 		}
 		d.Set("gateway_arn", gatewayARN)
 		d.Set("target_name", targetName)
@@ -267,7 +267,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, me
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Storage Gateway Stored iSCSI volume %q: %s", d.Id(), err)
+		return fmt.Errorf("error deleting Storage Gateway Stored iSCSI volume %q: %w", d.Id(), err)
 	}
 
 	return nil
