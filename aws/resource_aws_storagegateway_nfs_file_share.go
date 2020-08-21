@@ -295,7 +295,8 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 	}
 
 	if d.HasChanges("client_list", "default_storage_class", "guess_mime_type_enabled", "kms_encrypted",
-		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn") {
+		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn",
+		"cache_attributes") {
 
 		input := &storagegateway.UpdateNFSFileShareInput{
 			ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
