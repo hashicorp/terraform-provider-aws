@@ -16,11 +16,11 @@ Manages an AWS Storage Gateway stored iSCSI volume.
 
 ```hcl
 resource "aws_storagegateway_stored_iscsi_volume" "example" {
-  gateway_arn            = "${aws_storagegateway_cache.example.gateway_arn}"
-  network_interface_id   = "${aws_instance.example.private_ip}"
+  gateway_arn            = aws_storagegateway_cache.example.gateway_arn
+  network_interface_id   = aws_instance.example.private_ip
   target_name            = "example"
   preserve_existing_data = false
-  disk_id                = "${data.aws_storagegateway_local_disk.test.id}"
+  disk_id                = data.aws_storagegateway_local_disk.test.id
 }
 ```
 
@@ -28,12 +28,12 @@ resource "aws_storagegateway_stored_iscsi_volume" "example" {
 
 ```hcl
 resource "aws_storagegateway_stored_iscsi_volume" "example" {
-  gateway_arn            = "${aws_storagegateway_cache.example.gateway_arn}"
-  network_interface_id   = "${aws_instance.example.private_ip}"
-  snapshot_id            = "${aws_ebs_snapshot.example.id}"
+  gateway_arn            = aws_storagegateway_cache.example.gateway_arn
+  network_interface_id   = aws_instance.example.private_ip
+  snapshot_id            = aws_ebs_snapshot.example.id
   target_name            = "example"
   preserve_existing_data = false
-  disk_id                = "${data.aws_storagegateway_local_disk.test.id}"
+  disk_id                = data.aws_storagegateway_local_disk.test.id
 }
 ```
 
