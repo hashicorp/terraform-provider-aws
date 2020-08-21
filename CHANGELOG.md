@@ -1,3 +1,9 @@
+## 3.4.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
+
 ## 3.3.0 (August 20, 2020)
 
 ENHANCEMENTS
