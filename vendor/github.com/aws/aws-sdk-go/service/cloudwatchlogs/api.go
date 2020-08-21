@@ -10023,6 +10023,14 @@ const (
 	DistributionByLogStream = "ByLogStream"
 )
 
+// Distribution_Values returns all elements of the Distribution enum
+func Distribution_Values() []string {
+	return []string{
+		DistributionRandom,
+		DistributionByLogStream,
+	}
+}
+
 const (
 	// ExportTaskStatusCodeCancelled is a ExportTaskStatusCode enum value
 	ExportTaskStatusCodeCancelled = "CANCELLED"
@@ -10043,6 +10051,18 @@ const (
 	ExportTaskStatusCodeRunning = "RUNNING"
 )
 
+// ExportTaskStatusCode_Values returns all elements of the ExportTaskStatusCode enum
+func ExportTaskStatusCode_Values() []string {
+	return []string{
+		ExportTaskStatusCodeCancelled,
+		ExportTaskStatusCodeCompleted,
+		ExportTaskStatusCodeFailed,
+		ExportTaskStatusCodePending,
+		ExportTaskStatusCodePendingCancel,
+		ExportTaskStatusCodeRunning,
+	}
+}
+
 const (
 	// OrderByLogStreamName is a OrderBy enum value
 	OrderByLogStreamName = "LogStreamName"
@@ -10050,6 +10070,14 @@ const (
 	// OrderByLastEventTime is a OrderBy enum value
 	OrderByLastEventTime = "LastEventTime"
 )
+
+// OrderBy_Values returns all elements of the OrderBy enum
+func OrderBy_Values() []string {
+	return []string{
+		OrderByLogStreamName,
+		OrderByLastEventTime,
+	}
+}
 
 const (
 	// QueryStatusScheduled is a QueryStatus enum value
@@ -10067,3 +10095,14 @@ const (
 	// QueryStatusCancelled is a QueryStatus enum value
 	QueryStatusCancelled = "Cancelled"
 )
+
+// QueryStatus_Values returns all elements of the QueryStatus enum
+func QueryStatus_Values() []string {
+	return []string{
+		QueryStatusScheduled,
+		QueryStatusRunning,
+		QueryStatusComplete,
+		QueryStatusFailed,
+		QueryStatusCancelled,
+	}
+}

@@ -5,15 +5,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"regexp"
+	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,6 +29,7 @@ func TestAccAWSCustomerGateway_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGateway(resourceName, &gateway),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -47,7 +50,7 @@ func TestAccAWSCustomerGateway_basic(t *testing.T) {
 
 func TestAccAWSCustomerGateway_tags(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,7 +92,7 @@ func TestAccAWSCustomerGateway_tags(t *testing.T) {
 
 func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -118,7 +121,7 @@ func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 }
 
 func TestAccAWSCustomerGateway_disappears(t *testing.T) {
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	var gateway ec2.CustomerGateway
 	resourceName := "aws_customer_gateway.test"
 
@@ -134,6 +137,35 @@ func TestAccAWSCustomerGateway_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCustomerGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCustomerGateway_4ByteAsn(t *testing.T) {
+	var gateway ec2.CustomerGateway
+	rBgpAsn := strconv.FormatInt(int64(acctest.RandIntRange(64512, 65534))*10000, 10)
+	resourceName := "aws_customer_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckCustomerGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomerGatewayConfig4ByteAsn(rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerGateway(resourceName, &gateway),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`customer-gateway/cgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -274,6 +306,16 @@ func testAccCustomerGatewayConfigForceReplace(rBgpAsn int) string {
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %d
   ip_address = "172.10.10.1"
+  type       = "ipsec.1"
+}
+`, rBgpAsn)
+}
+
+func testAccCustomerGatewayConfig4ByteAsn(rBgpAsn string) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[1]q
+  ip_address = "172.0.0.1"
   type       = "ipsec.1"
 }
 `, rBgpAsn)
