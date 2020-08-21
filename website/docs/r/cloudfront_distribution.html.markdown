@@ -394,7 +394,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 The arguments for `default_cache_behavior` are the same as for
 [`ordered_cache_behavior`](#cache-behavior-arguments), except for the `path_pattern`
-argument is not required.
+argument should not be specified.
 
 #### Logging Config Arguments
 
