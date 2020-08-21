@@ -169,7 +169,7 @@ provider "aws" {
 }
 resource "aws_emr_cluster" "tf-test-cluster" {
     name          = "emr-test-%d"
-    release_label = "emr-5.10.0"
+    release_label = "emr-5.30.1"
     applications  = ["Spark"]
     ec2_attributes {
         subnet_id                         = "${aws_subnet.main.id}"
