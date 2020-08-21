@@ -479,7 +479,7 @@ func testAccAWSWafRegionalIPSetConfig_IpSetDescriptors(name, ipSetDescriptors st
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
-%s
+  %s
 }
 `, name, ipSetDescriptors)
 }
@@ -487,6 +487,7 @@ resource "aws_wafregional_ipset" "ipset" {
 func testAccAWSWafRegionalIPSetConfig_noDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-   name = "%s"
- }`, name)
+  name = "%s"
+}
+`, name)
 }

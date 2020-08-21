@@ -533,7 +533,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -559,7 +559,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -589,7 +589,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -620,7 +620,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -661,7 +661,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_byte_match_set.set.id}"
+    data_id = aws_wafregional_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }
