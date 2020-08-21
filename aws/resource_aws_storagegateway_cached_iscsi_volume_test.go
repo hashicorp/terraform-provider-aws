@@ -270,7 +270,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewayCachedIscsiVolumeConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccCheckAWSStorageGatewayCachedIscsiVolumeDisappears(&storedIscsiVolume),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayCachedIscsiVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -304,20 +304,6 @@ func testAccCheckAWSStorageGatewayCachedIscsiVolumeExists(resourceName string, c
 		*cachedIscsiVolume = *output.CachediSCSIVolumes[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSStorageGatewayCachedIscsiVolumeDisappears(storedIscsiVolume *storagegateway.CachediSCSIVolume) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
-
-		input := &storagegateway.DeleteVolumeInput{
-			VolumeARN: storedIscsiVolume.VolumeARN,
-		}
-
-		_, err := conn.DeleteVolume(input)
-
-		return err
 	}
 }
 
@@ -415,7 +401,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 func testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName string) string {
 	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${aws_instance.test.availability_zone}"
+  availability_zone = aws_instance.test.availability_zone
   size              = 10
   type              = "gp2"
 
@@ -427,13 +413,13 @@ resource "aws_ebs_volume" "test" {
 resource "aws_volume_attachment" "test" {
   device_name  = "/dev/xvdc"
   force_detach = true
-  instance_id  = "${aws_instance.test.id}"
-  volume_id    = "${aws_ebs_volume.test.id}"
+  instance_id  = aws_instance.test.id
+  volume_id    = aws_ebs_volume.test.id
 }
 
 data "aws_storagegateway_local_disk" "test" {
-  disk_path   = "${aws_volume_attachment.test.device_name}"
-  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+  disk_path   = aws_volume_attachment.test.device_name
+  gateway_arn = aws_storagegateway_gateway.test.arn
 }
 
 resource "aws_storagegateway_cache" "test" {
@@ -446,8 +432,8 @@ resource "aws_storagegateway_cache" "test" {
     ignore_changes = ["disk_id"]
   }
 
-  disk_id     = "${data.aws_storagegateway_local_disk.test.id}"
-  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+  disk_id     = data.aws_storagegateway_local_disk.test.id
+  gateway_arn = aws_storagegateway_gateway.test.arn
 }
 
  resource "aws_kms_key" "test" {
@@ -472,12 +458,12 @@ resource "aws_storagegateway_cache" "test" {
  }
 
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
-  gateway_arn          = "${aws_storagegateway_cache.test.gateway_arn}"
-  network_interface_id = "${aws_instance.test.private_ip}"
+  gateway_arn          = aws_storagegateway_cache.test.gateway_arn
+  network_interface_id = aws_instance.test.private_ip
   target_name          = %[1]q
   volume_size_in_bytes = 5368709120
   kms_encrypted        = true
-  kms_key              = "${aws_kms_key.test.arn}"
+  kms_key              = aws_kms_key.test.arn
 }
 `, rName)
 }
