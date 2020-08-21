@@ -14,8 +14,12 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 
 | Check | Description |
 |---|---|
-| [AWSAT001](passes/AWSAT001/README.md) | check for `resource.TestMatchResourceAttr()` calls against ARN attributes |
-| [AWSAT002](passes/AWSAT002/README.md) | check for hardcoded AMI IDs |
+| [AWSAT001](passes/AWSAT001) | check for `resource.TestMatchResourceAttr()` calls against ARN attributes |
+| [AWSAT002](passes/AWSAT002) | check for hardcoded AMI IDs |
+| [AWSAT003](passes/AWSAT003) | check for hardcoded regions |
+| [AWSAT004](passes/AWSAT004) | check for TestCheckResourceAttr() calls with hardcoded TypeSet state hashes |
+| [AWSAT005](passes/AWSAT005) | check for hardcoded AWS partitions in ARNs |
+| [AWSAT006](passes/AWSAT006) | check for hardcoded AWS partition DNS suffixes |
 
 ### AWS Resource Checks
 
@@ -23,6 +27,12 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 |---|---|
 | [AWSR001](passes/AWSR001/README.md) | check for `fmt.Sprintf()` calls using `.amazonaws.com` domain suffix |
 | [AWSR002](passes/AWSR002/README.md) | check for `d.Set()` of `tags` attribute that should include `IgnoreConfig()` |
+
+### AWS Validation Checks
+
+| Check | Description |
+|---|---|
+| [AWSV001](passes/AWSV001) | check for `validation.StringInSlice()` calls using `[]string` parameter |
 
 ## Development and Testing
 

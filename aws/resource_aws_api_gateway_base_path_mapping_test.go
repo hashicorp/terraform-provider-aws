@@ -5,11 +5,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -121,6 +120,32 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
+	var conf apigateway.BasePathMapping
+
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	resourceName := "aws_api_gateway_base_path_mapping.test"
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayBasePathMapping(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathMapping) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -175,7 +200,7 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 			_, err = conn.GetBasePathMapping(req)
 
 			if err != nil {
-				if err, ok := err.(awserr.Error); ok && err.Code() == "NotFoundException" {
+				if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 					return nil
 				}
 				return err
@@ -237,7 +262,7 @@ resource "aws_api_gateway_integration" "test" {
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name  = "test"
-  depends_on  = ["aws_api_gateway_integration.test"]
+  depends_on  = [aws_api_gateway_integration.test]
 }
 `, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

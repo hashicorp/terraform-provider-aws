@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
@@ -110,48 +110,48 @@ resource "aws_vpc" "acctest" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "${var.prefix}"
+    Name = var.prefix
   }
 }
 
 resource "aws_internet_gateway" "acctest" {
-  vpc_id = "${aws_vpc.acctest.id}"
+  vpc_id = aws_vpc.acctest.id
 }
 
 resource "aws_route_table" "acctest" {
-  vpc_id = "${aws_vpc.acctest.id}"
+  vpc_id = aws_vpc.acctest.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.acctest.id}"
+    gateway_id = aws_internet_gateway.acctest.id
   }
 }
 
 resource "aws_subnet" "acctest" {
   count             = 2
   cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id            = "${aws_vpc.acctest.id}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.acctest.id
 
   tags = {
-    Name = "${var.prefix}"
+    Name = var.prefix
   }
 }
 
 resource "aws_route_table_association" "acctest" {
   count          = 2
-  subnet_id      = "${aws_subnet.acctest.*.id[count.index]}"
-  route_table_id = "${aws_route_table.acctest.id}"
+  subnet_id      = aws_subnet.acctest.*.id[count.index]
+  route_table_id = aws_route_table.acctest.id
 }
 
 resource "aws_security_group" "acctest" {
   count  = 2
   name   = "${var.prefix}-${count.index}"
-  vpc_id = "${aws_vpc.acctest.id}"
+  vpc_id = aws_vpc.acctest.id
 }
 
 resource "aws_mq_configuration" "acctest" {
-  name           = "${var.prefix}"
+  name           = var.prefix
   engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
 
@@ -168,8 +168,8 @@ resource "aws_mq_broker" "acctest" {
   broker_name                = "%s"
 
   configuration {
-    id       = "${aws_mq_configuration.acctest.id}"
-    revision = "${aws_mq_configuration.acctest.latest_revision}"
+    id       = aws_mq_configuration.acctest.id
+    revision = aws_mq_configuration.acctest.latest_revision
   }
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
@@ -184,8 +184,8 @@ resource "aws_mq_broker" "acctest" {
   }
 
   publicly_accessible = true
-  security_groups     = ["${aws_security_group.acctest.0.id}", "${aws_security_group.acctest.1.id}"]
-  subnet_ids          = ["${aws_subnet.acctest.0.id}", "${aws_subnet.acctest.1.id}"]
+  security_groups     = [aws_security_group.acctest.0.id, aws_security_group.acctest.1.id]
+  subnet_ids          = [aws_subnet.acctest.0.id, aws_subnet.acctest.1.id]
 
   user {
     username = "Ender"
@@ -199,22 +199,23 @@ resource "aws_mq_broker" "acctest" {
     groups         = ["dragon", "salamander", "leopard"]
   }
 
-  depends_on = ["aws_internet_gateway.acctest"]
+  depends_on = [aws_internet_gateway.acctest]
 }
 `, prefix, brokerName)
 }
 
 func testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix string) string {
-	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + fmt.Sprintf(`
+	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + `
 data "aws_mq_broker" "by_id" {
-  broker_id = "${aws_mq_broker.acctest.id}"
+  broker_id = aws_mq_broker.acctest.id
 }
-`)
+`
 }
 
 func testAccDataSourceAWSMqBrokerConfig_byName(brokerName, prefix string) string {
-	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + fmt.Sprintf(`
+	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + `
 data "aws_mq_broker" "by_name" {
-  broker_name = "${aws_mq_broker.acctest.broker_name}"
-}`)
+  broker_name = aws_mq_broker.acctest.broker_name
+}
+`
 }

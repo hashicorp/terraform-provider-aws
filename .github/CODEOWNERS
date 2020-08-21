@@ -1,5 +1,6 @@
 # Default owner for all pull requests
 *    @terraform-providers/aws-provider
+
 # Service specific owners
 /aws/*_aws_fsx_*.go     @drfaust92
 /website/**/fsx*        @drfaust92
@@ -15,3 +16,18 @@
 
 /aws/*_aws_glue_*.go     @drfaust92
 /website/**/glue*        @drfaust92
+
+/aws/*apigatewayv2*    @ewbankkit
+/website/**/apigatewayv2*    @ewbankkit
+
+/aws/*appmesh*    @ewbankkit
+/website/**/appmesh*    @ewbankkit
+
+/aws/*backup*    @ewbankkit
+/website/**/backup*    @ewbankkit
+
+/aws/*globalaccelerator*    @ewbankkit
+/website/**/globalaccelerator*    @ewbankkit
+
+/aws/*route53_resolver*    @ewbankkit
+/website/**/route53_resolver*    @ewbankkit

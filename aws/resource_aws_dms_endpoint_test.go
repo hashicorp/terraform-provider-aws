@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsDmsEndpoint_Basic(t *testing.T) {
+func TestAccAwsDmsEndpoint_basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-basic"
 
@@ -564,7 +564,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id         = "tf-test-dms-endpoint-%[1]s"
   endpoint_type       = "target"
   engine_name         = "dynamodb"
-  service_access_role = "${aws_iam_role.iam_role.arn}"
+  service_access_role = aws_iam_role.iam_role.arn
   ssl_mode            = "none"
 
   tags = {
@@ -573,7 +573,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
     Remove = "to-remove"
   }
 
-  depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
+  depends_on = [aws_iam_role_policy.dms_dynamodb_access]
 }
 
 resource "aws_iam_role" "iam_role" {
@@ -597,7 +597,7 @@ EOF
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
   name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+  role = aws_iam_role.iam_role.name
 
   policy = <<EOF
 {
@@ -628,7 +628,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id         = "tf-test-dms-endpoint-%[1]s"
   endpoint_type       = "target"
   engine_name         = "dynamodb"
-  service_access_role = "${aws_iam_role.iam_role.arn}"
+  service_access_role = aws_iam_role.iam_role.arn
   ssl_mode            = "none"
 
   tags = {
@@ -659,7 +659,7 @@ EOF
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
   name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+  role = aws_iam_role.iam_role.name
 
   policy = <<EOF
 {
@@ -700,11 +700,11 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   }
 
   s3_settings {
-    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+    service_access_role_arn = aws_iam_role.iam_role.arn
     bucket_name             = "bucket_name"
   }
 
-  depends_on = ["aws_iam_role_policy.dms_s3_access"]
+  depends_on = [aws_iam_role_policy.dms_s3_access]
 }
 
 resource "aws_iam_role" "iam_role" {
@@ -728,7 +728,7 @@ EOF
 
 resource "aws_iam_role_policy" "dms_s3_access" {
   name = "tf-test-iam-s3-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+  role = aws_iam_role.iam_role.name
 
   policy = <<EOF
 {
@@ -774,7 +774,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   }
 
   s3_settings {
-    service_access_role_arn   = "${aws_iam_role.iam_role.arn}"
+    service_access_role_arn   = aws_iam_role.iam_role.arn
     external_table_definition = "new-external_table_definition"
     csv_row_delimiter         = "\\r"
     csv_delimiter             = "."
@@ -805,7 +805,7 @@ EOF
 
 resource "aws_iam_role_policy" "dms_s3_access" {
   name = "tf-test-iam-s3-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+  role = aws_iam_role.iam_role.name
 
   policy = <<EOF
 {
@@ -978,11 +978,11 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   engine_name   = "kinesis"
 
   kinesis_settings {
-    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-    stream_arn              = "${aws_kinesis_stream.stream1.arn}"
+    service_access_role_arn = aws_iam_role.iam_role.arn
+    stream_arn              = aws_kinesis_stream.stream1.arn
   }
 
-  depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
+  depends_on = [aws_iam_role_policy.dms_kinesis_access]
 }
 
 resource "aws_kinesis_stream" "stream1" {
@@ -1016,21 +1016,21 @@ EOF
 
 resource "aws_iam_role_policy" "dms_kinesis_access" {
   name_prefix = "tf-test-iam-kinesis-role-policy"
-  role        = "${aws_iam_role.iam_role.name}"
-  policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
+  role        = aws_iam_role.iam_role.name
+  policy      = data.aws_iam_policy_document.dms_kinesis_access.json
 }
 
 data "aws_iam_policy_document" "dms_kinesis_access" {
   statement {
-	actions = [
-		"kinesis:DescribeStream",
-		"kinesis:PutRecord",
-		"kinesis:PutRecords",
-	]
-	resources = [
-		"${aws_kinesis_stream.stream1.arn}",
-		"${aws_kinesis_stream.stream2.arn}",
-	]
+    actions = [
+      "kinesis:DescribeStream",
+      "kinesis:PutRecord",
+      "kinesis:PutRecords",
+    ]
+    resources = [
+      aws_kinesis_stream.stream1.arn,
+      aws_kinesis_stream.stream2.arn,
+    ]
   }
 }
 `, randId)
@@ -1039,16 +1039,16 @@ data "aws_iam_policy_document" "dms_kinesis_access" {
 func dmsEndpointKinesisConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id = "tf-test-dms-endpoint-%[1]s"
+  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
   endpoint_type = "target"
-  engine_name = "kinesis"
+  engine_name   = "kinesis"
 
   kinesis_settings {
-    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-    stream_arn              = "${aws_kinesis_stream.stream2.arn}"
+    service_access_role_arn = aws_iam_role.iam_role.arn
+    stream_arn              = aws_kinesis_stream.stream2.arn
   }
 
-  depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
+  depends_on = [aws_iam_role_policy.dms_kinesis_access]
 }
 
 resource "aws_kinesis_stream" "stream1" {
@@ -1082,21 +1082,21 @@ EOF
 
 resource "aws_iam_role_policy" "dms_kinesis_access" {
   name_prefix = "tf-test-iam-kinesis-role-policy"
-  role        = "${aws_iam_role.iam_role.name}"
-  policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
+  role        = aws_iam_role.iam_role.name
+  policy      = data.aws_iam_policy_document.dms_kinesis_access.json
 }
 
 data "aws_iam_policy_document" "dms_kinesis_access" {
   statement {
-	actions = [
-		"kinesis:DescribeStream",
-		"kinesis:PutRecord",
-		"kinesis:PutRecords",
-	]
-	resources = [
-		"${aws_kinesis_stream.stream1.arn}",
-		"${aws_kinesis_stream.stream2.arn}",
-	]
+    actions = [
+      "kinesis:DescribeStream",
+      "kinesis:PutRecord",
+      "kinesis:PutRecords",
+    ]
+    resources = [
+      aws_kinesis_stream.stream1.arn,
+      aws_kinesis_stream.stream2.arn,
+    ]
   }
 }
 `, randId)
@@ -1119,7 +1119,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tftest"
   ssl_mode                    = "none"
   extra_connection_attributes = ""
-  kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
+  kms_key_arn                 = data.aws_kms_alias.dms.target_key_arn
 
   tags = {
     Name   = "tf-test-dms-endpoint-%[1]s"
@@ -1156,7 +1156,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "require"
   extra_connection_attributes = "key=value;"
-  kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
+  kms_key_arn                 = data.aws_kms_alias.dms.target_key_arn
 
   tags = {
     Name   = "tf-test-dms-endpoint-%[1]s"

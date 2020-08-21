@@ -1,11 +1,10 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSOutpostsOutpostDataSource_Id(t *testing.T) {
@@ -58,17 +57,17 @@ func TestAccAWSOutpostsOutpostDataSource_Name(t *testing.T) {
 }
 
 func testAccAWSOutpostsOutpostDataSourceConfigId() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {
   id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
-`)
+`
 }
 
 func testAccAWSOutpostsOutpostDataSourceConfigName() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "source" {
@@ -78,5 +77,5 @@ data "aws_outposts_outpost" "source" {
 data "aws_outposts_outpost" "test" {
   name = data.aws_outposts_outpost.source.name
 }
-`)
+`
 }

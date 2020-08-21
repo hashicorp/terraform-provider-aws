@@ -40,7 +40,7 @@ permissions for the CMK whenever the encrypted data is requested.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) specifying the log group.
+* `arn` - The Amazon Resource Name (ARN) specifying the log group. Any `:*` suffix added by the API, denoting all CloudWatch Log Streams under the CloudWatch Log Group, is removed for greater compatibility with other AWS services that do not accept the suffix.
 
 
 ## Import

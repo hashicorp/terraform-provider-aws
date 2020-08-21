@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -250,12 +251,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			},
 
 			"availability_zones": {
-				Type:             schema.TypeSet,
-				Optional:         true,
-				Computed:         true,
-				Elem:             &schema.Schema{Type: schema.TypeString},
-				Set:              schema.HashString,
-				DiffSuppressFunc: suppressAutoscalingGroupAvailabilityZoneDiffs,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_zone_identifier"},
 			},
 
 			"placement_group": {
@@ -263,22 +263,20 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Optional: true,
 			},
 
-			// DEPRECATED: Computed: true should be removed in a major version release
-			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"load_balancers": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
 
 			"vpc_zone_identifier": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"availability_zones"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Set:           schema.HashString,
 			},
 
 			"termination_policies": {
@@ -337,12 +335,9 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Default:  false,
 			},
 
-			// DEPRECATED: Computed: true should be removed in a major version release
-			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -445,10 +440,10 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("launch_template.0.id", func(diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.name")
 			}),
-			customdiff.ComputedIf("launch_template.0.name", func(diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.id")
 			}),
 		),
