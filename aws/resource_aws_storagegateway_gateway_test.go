@@ -882,7 +882,7 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayConfigSMBSecurityStrategy(rName, strategy string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address    = "${aws_instance.test.public_ip}"
+  gateway_ip_address    = aws_instance.test.public_ip
   gateway_name          = %q
   gateway_timezone      = "GMT"
   gateway_type          = "FILE_S3"
