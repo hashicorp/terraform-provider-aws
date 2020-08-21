@@ -177,7 +177,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
-					testAccCheckAWSStorageGatewayStoredIscsiVolumeDisappears(&storedIscsiVolume),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,20 +211,6 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName string, s
 		*storedIscsiVolume = *output.StorediSCSIVolumes[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSStorageGatewayStoredIscsiVolumeDisappears(storedIscsiVolume *storagegateway.StorediSCSIVolume) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
-
-		input := &storagegateway.DeleteVolumeInput{
-			VolumeARN: storedIscsiVolume.VolumeARN,
-		}
-
-		_, err := conn.DeleteVolume(input)
-
-		return err
 	}
 }
 
