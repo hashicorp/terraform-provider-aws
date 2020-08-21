@@ -759,7 +759,7 @@ resource "aws_cloudtrail" "test" {
   name           = "tf-acc-test-%d"
   s3_bucket_name = aws_s3_bucket.test.id
 
-  cloud_watch_logs_group_arn = aws_cloudwatch_log_group.test.arn
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
 }
 
@@ -834,7 +834,7 @@ resource "aws_iam_role_policy" "test" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "${aws_cloudwatch_log_group.test.arn}"
+      "Resource": "${aws_cloudwatch_log_group.test.arn}:*"
     }
   ]
 }
@@ -849,7 +849,7 @@ resource "aws_cloudtrail" "test" {
   name           = "tf-acc-test-%d"
   s3_bucket_name = aws_s3_bucket.test.id
 
-  cloud_watch_logs_group_arn = aws_cloudwatch_log_group.second.arn
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.second.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
 }
 
@@ -928,7 +928,7 @@ resource "aws_iam_role_policy" "test" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "${aws_cloudwatch_log_group.second.arn}"
+      "Resource": "${aws_cloudwatch_log_group.second.arn}:*"
     }
   ]
 }
