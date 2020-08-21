@@ -663,6 +663,14 @@ func InstanceFleetConfigSchema() *schema.Resource {
 				Optional: true,
 				Default:  0,
 			},
+			"provisioned_on_demand_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"provisioned_spot_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -1989,7 +1997,7 @@ func fetchAllEMRInstanceFleets(conn *emr.EMR, clusterID string) ([]*emr.Instance
 func findInstanceFleet(instanceFleets []*emr.InstanceFleet, instanceRoleType string) *emr.InstanceFleet {
 	for _, instanceFleet := range instanceFleets {
 		if instanceFleet.InstanceFleetType != nil {
-			if *instanceFleet.InstanceFleetType == instanceRoleType {
+			if aws.StringValue(instanceFleet.InstanceFleetType) == instanceRoleType {
 				return instanceFleet
 			}
 		}
@@ -2000,25 +2008,27 @@ func findInstanceFleet(instanceFleets []*emr.InstanceFleet, instanceRoleType str
 func flatteninstanceTypeConfig(itc *emr.InstanceTypeSpecification) map[string]interface{} {
 	attrs := map[string]interface{}{}
 	if itc.BidPrice != nil {
-		attrs["bid_price"] = *itc.BidPrice
+		attrs["bid_price"] = aws.StringValue(itc.BidPrice)
 	}
 	if itc.BidPriceAsPercentageOfOnDemandPrice != nil {
-		attrs["bid_price_as_percentage_of_on_demand_price"] = *itc.BidPriceAsPercentageOfOnDemandPrice
+		attrs["bid_price_as_percentage_of_on_demand_price"] = aws.Float64Value(itc.BidPriceAsPercentageOfOnDemandPrice)
 	}
 	attrs["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
-	attrs["instance_type"] = *itc.InstanceType
-	attrs["weighted_capacity"] = *itc.WeightedCapacity
+	attrs["instance_type"] = aws.StringValue(itc.InstanceType)
+	attrs["weighted_capacity"] = aws.Int64Value(itc.WeightedCapacity)
 	return attrs
 }
 
 func flattenInstanceFleet(ig *emr.InstanceFleet) map[string]interface{} {
 	attrs := map[string]interface{}{}
 
-	attrs["id"] = *ig.Id
-	attrs["name"] = *ig.Name
-	attrs["instance_fleet_type"] = *ig.InstanceFleetType
-	attrs["target_on_demand_capacity"] = *ig.TargetOnDemandCapacity
-	attrs["target_spot_capacity"] = *ig.TargetSpotCapacity
+	attrs["id"] = aws.StringValue(ig.Id)
+	attrs["name"] = aws.StringValue(ig.Name)
+	attrs["instance_fleet_type"] = aws.StringValue(ig.InstanceFleetType)
+	attrs["target_on_demand_capacity"] = aws.Int64Value(ig.TargetOnDemandCapacity)
+	attrs["target_spot_capacity"] = aws.Int64Value(ig.TargetSpotCapacity)
+	attrs["provisioned_on_demand_capacity"] = aws.Int64Value(ig.ProvisionedOnDemandCapacity)
+	attrs["provisioned_spot_capacity"] = aws.Int64Value(ig.ProvisionedSpotCapacity)
 	instanceTypeConfigs := []interface{}{}
 	for _, itc := range ig.InstanceTypeSpecifications {
 		flattenTypeConfig := flatteninstanceTypeConfig(itc)
@@ -2029,10 +2039,10 @@ func flattenInstanceFleet(ig *emr.InstanceFleet) map[string]interface{} {
 	if ig.LaunchSpecifications != nil {
 		spotProvisioningSpecification := make(map[string]interface{})
 		if ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes != nil {
-			spotProvisioningSpecification["block_duration_minutes"] = *ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes
+			spotProvisioningSpecification["block_duration_minutes"] = aws.Int64Value(ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes)
 		}
-		spotProvisioningSpecification["timeout_action"] = *ig.LaunchSpecifications.SpotSpecification.TimeoutAction
-		spotProvisioningSpecification["timeout_duration_minutes"] = *ig.LaunchSpecifications.SpotSpecification.TimeoutDurationMinutes
+		spotProvisioningSpecification["timeout_action"] = aws.StringValue(ig.LaunchSpecifications.SpotSpecification.TimeoutAction)
+		spotProvisioningSpecification["timeout_duration_minutes"] = aws.Int64Value(ig.LaunchSpecifications.SpotSpecification.TimeoutDurationMinutes)
 
 		launchSpecifications := make([]interface{}, 0)
 		launchSpecification := make(map[string]interface{})
