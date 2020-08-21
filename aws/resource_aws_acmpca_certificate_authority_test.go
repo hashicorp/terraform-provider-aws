@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,7 +24,7 @@ func init() {
 func testSweepAcmpcaCertificateAuthorities(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).acmpcaconn
 
@@ -33,31 +34,52 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 			log.Printf("[WARN] Skipping ACMPCA Certificate Authorities sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving ACMPCA Certificate Authorities: %s", err)
+		return fmt.Errorf("Error retrieving ACMPCA Certificate Authorities: %w", err)
 	}
 	if len(certificateAuthorities) == 0 {
 		log.Print("[DEBUG] No ACMPCA Certificate Authorities to sweep")
 		return nil
 	}
 
+	var sweeperErrs *multierror.Error
+
 	for _, certificateAuthority := range certificateAuthorities {
 		arn := aws.StringValue(certificateAuthority.Arn)
-		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
-		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn:     aws.String(arn),
-			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
-		}
 
-		_, err := conn.DeleteCertificateAuthority(input)
-		if err != nil {
+		if aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusActive {
+			log.Printf("[INFO] Disabling ACMPCA Certificate Authority: %s", arn)
+			_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
+				CertificateAuthorityArn: aws.String(arn),
+				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+			})
 			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
-			log.Printf("[ERROR] Failed to delete ACMPCA Certificate Authority (%s): %s", arn, err)
+			if err != nil {
+				sweeperErr := fmt.Errorf("error disabling ACMPCA Certificate Authority (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
+		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
+			CertificateAuthorityArn:     aws.String(arn),
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
+		})
+		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			continue
+		}
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting ACMPCA Certificate Authority (%s): %w", arn, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
 		}
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
@@ -104,12 +126,9 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
+func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-
-	// error updating ACMPCA Certificate Authority: InvalidStateException: The certificate authority must be in the Active or DISABLED state to be updated
-	TestAccSkip(t, "We need to fully sign the certificate authority CSR from another CA in order to test this functionality, which requires another resource")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -117,19 +136,52 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(true),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Required,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAcmpcaCertificateAuthority(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
+	var certificateAuthority acmpca.CertificateAuthority
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_acmpca_certificate_authority.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
+					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusPendingCertificate),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&certificateAuthority),
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(false),
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusActive),
+				),
+			},
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, acmpca.CertificateAuthorityTypeRoot, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusDisabled),
 				),
 			},
 			{
@@ -410,34 +462,6 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_Type_Root(t *testing.T) {
-	var certificateAuthority acmpca.CertificateAuthority
-	resourceName := "aws_acmpca_certificate_authority.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsAcmpcaCertificateAuthorityConfigType(acmpca.CertificateAuthorityTypeRoot),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"permanent_deletion_time_in_days",
-				},
-			},
-		},
-	})
-}
-
 func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
 
@@ -496,6 +520,63 @@ func testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName string, certif
 	}
 }
 
+func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+
+		arn := aws.StringValue(certificateAuthority.Arn)
+
+		getCsrResp, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
+			CertificateAuthorityArn: aws.String(arn),
+		})
+		if err != nil {
+			return fmt.Errorf("error getting ACMPCA Certificate Authority (%s) CSR: %s", arn, err)
+		}
+
+		issueCertResp, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			Csr:                     []byte(aws.StringValue(getCsrResp.Csr)),
+			IdempotencyToken:        aws.String(resource.UniqueId()),
+			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
+			TemplateArn:             aws.String("arn:aws:acm-pca:::template/RootCACertificate/V1"),
+			Validity: &acmpca.Validity{
+				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
+				Value: aws.Int64(10),
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("error issuing ACMPCA Certificate Authority (%s) Root CA certificate from CSR: %s", arn, err)
+		}
+
+		// Wait for certificate status to become ISSUED.
+		err = conn.WaitUntilCertificateIssued(&acmpca.GetCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			CertificateArn:          issueCertResp.CertificateArn,
+		})
+		if err != nil {
+			return fmt.Errorf("error waiting for ACMPCA Certificate Authority (%s) Root CA certificate to become ISSUED: %s", arn, err)
+		}
+
+		getCertResp, err := conn.GetCertificate(&acmpca.GetCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			CertificateArn:          issueCertResp.CertificateArn,
+		})
+		if err != nil {
+			return fmt.Errorf("error getting ACMPCA Certificate Authority (%s) issued Root CA certificate: %s", arn, err)
+		}
+
+		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
+			Certificate:             []byte(aws.StringValue(getCertResp.Certificate)),
+		})
+		if err != nil {
+			return fmt.Errorf("error importing ACMPCA Certificate Authority (%s) Root CA certificate: %s", arn, err)
+		}
+
+		return err
+	}
+}
+
 func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
 	certificateAuthorities := []*acmpca.CertificateAuthority{}
 	input := &acmpca.ListCertificateAuthoritiesInput{}
@@ -515,22 +596,23 @@ func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.Certificat
 	return certificateAuthorities, nil
 }
 
-func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(enabled bool) string {
+func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(rName, certificateAuthorityType string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = %[1]t
   permanent_deletion_time_in_days = 7
+  type                            = %[2]q
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = "%[3]s.com"
     }
   }
 }
-`, enabled)
+`, enabled, certificateAuthorityType, rName)
 }
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Required = `
@@ -722,21 +804,3 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 `
-
-func testAccAwsAcmpcaCertificateAuthorityConfigType(certificateAuthorityType string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  type                            = %[1]q
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = "terraformtesting.com"
-    }
-  }
-}
-`, certificateAuthorityType)
-}
