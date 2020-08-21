@@ -141,8 +141,7 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsAcmpcaCertificateAuthority(), resourceName),
 				),
-				// As the CA enters DELETED state and does not disappear, we do get an empty plan.
-				// ExpectNonEmptyPlan: true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
