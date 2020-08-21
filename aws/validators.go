@@ -1854,21 +1854,6 @@ func validateWafPredicatesType() schema.SchemaValidateFunc {
 	}, false)
 }
 
-func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if len(value) > 1000 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1000 characters", k))
-	}
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			`Only alphanumeric & accented characters allowed in %q: %q (Must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
-			k, value))
-	}
-	return
-}
-
 func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
 	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
 	value := v.(string)
