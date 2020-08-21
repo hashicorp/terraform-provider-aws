@@ -51,7 +51,7 @@ func testSweepCognitoUserPools(region string) error {
 				UserPoolId: userPool.Id,
 			})
 			if err != nil {
-				log.Printf("[ERROR] Failed deleting Cognito User Pool (%s): %w", name, err)
+				log.Printf("[ERROR] Failed deleting Cognito User Pool (%s): %s", name, err)
 			}
 		}
 		return !isLast
