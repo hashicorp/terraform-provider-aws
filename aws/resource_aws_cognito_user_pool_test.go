@@ -1607,7 +1607,7 @@ resource "aws_cognito_user_pool" "test" {
     email_sending_account  = %[5]q
   }
 }
-`, name, email, arn, from, account)
+`, rName, email, arn, from, account)
 }
 
 func testAccAWSCognitoUserPoolConfig_withAliasAttributes(rName string) string {
