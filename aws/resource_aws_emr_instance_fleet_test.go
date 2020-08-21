@@ -204,8 +204,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
                     weighted_capacity = 1
                 }
             ]
-            launch_specifications {
-                spot_specification {
+            launch_specifications = {
+                spot_specification = {
                     block_duration_minutes   = 60
                     timeout_action           = "SWITCH_TO_ON_DEMAND"
                     timeout_duration_minutes = 10
