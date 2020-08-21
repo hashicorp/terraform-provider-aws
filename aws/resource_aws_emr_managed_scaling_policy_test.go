@@ -13,8 +13,7 @@ import (
 
 func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
-	rInt := acctest.RandInt()
-
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -22,7 +21,7 @@ func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrManagedScalingPolicy_basic(rInt),
+				Config: testAccAWSEmrManagedScalingPolicy_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
 				),
@@ -36,7 +35,7 @@ func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSEmrManagedScalingPolicy_basic(r int) string {
+func testAccAWSEmrManagedScalingPolicy_basic(r string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # Many instance types are not available in this availability zone
