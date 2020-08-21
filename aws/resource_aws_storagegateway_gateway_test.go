@@ -23,7 +23,7 @@ func init() {
 func testSweepStorageGatewayGateways(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).storagegatewayconn
 
@@ -57,7 +57,7 @@ func testSweepStorageGatewayGateways(region string) error {
 			log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Storage Gateway Gateways: %s", err)
+		return fmt.Errorf("Error retrieving Storage Gateway Gateways: %w", err)
 	}
 	return nil
 }
@@ -84,6 +84,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
+					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
 			},
@@ -430,6 +431,62 @@ func TestAccAWSStorageGatewayGateway_SmbGuestPassword(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address", "smb_guest_password"},
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBSecurityStrategy(rName, "ClientSpecified"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", "ClientSpecified"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBSecurityStrategy(rName, "MandatorySigning"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", "MandatorySigning"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayGateway(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -842,6 +899,18 @@ resource "aws_storagegateway_gateway" "test" {
   smb_guest_password = %q
 }
 `, rName, smbGuestPassword)
+}
+
+func testAccAWSStorageGatewayGatewayConfigSMBSecurityStrategy(rName, strategy string) string {
+	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address    = aws_instance.test.public_ip
+  gateway_name          = %q
+  gateway_timezone      = "GMT"
+  gateway_type          = "FILE_S3"
+  smb_security_strategy = %q
+}
+`, rName, strategy)
 }
 
 func testAccAWSStorageGatewayGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {
