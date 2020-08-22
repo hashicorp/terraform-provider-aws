@@ -27,7 +27,7 @@ func resourceAwsServiceDiscoveryHttpNamespace() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateServiceDiscoveryHttpNamespaceName,
+				ValidateFunc: validateServiceDiscoveryNamespaceName,
 			},
 			"description": {
 				Type:     schema.TypeString,
