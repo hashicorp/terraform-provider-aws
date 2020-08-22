@@ -44,6 +44,10 @@ resource "aws_emr_managed_scaling_policy" "samplepolicy" {
 The following arguments are supported:
 
 * `cluster_id` - (Required) The id of the EMR cluster
+* `compute_limits` - (Required) Configuration block with compute limit settings. Described below.
+
+### compute_limits
+
 * `unit_type` - (Required) The unit type used for specifying a managed scaling policy. Valid Values: `InstanceFleetUnits` | `Instances` | `VCPU`
 * `minimum_capacity_units` - (Required) The lower boundary of EC2 units. It is measured through VCPU cores or instances for instance groups and measured through units for instance fleets. Managed scaling activities are not allowed beyond this boundary. The limit only applies to the core and task nodes. The master node cannot be scaled after initial configuration.
 * `maximum_capacity_units` - (Required) The upper boundary of EC2 units. It is measured through VCPU cores or instances for instance groups and measured through units for instance fleets. Managed scaling activities are not allowed beyond this boundary. The limit only applies to the core and task nodes. The master node cannot be scaled after initial configuration.

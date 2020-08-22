@@ -69,11 +69,15 @@ func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta inter
 	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
 		cl := l[0].(map[string]interface{})
 		computeLimits := &emr.ComputeLimits{
-			UnitType:                     aws.String(cl["unit_type"].(string)),
-			MinimumCapacityUnits:         aws.Int64(int64(cl["minimum_capacity_units"].(int))),
-			MaximumCapacityUnits:         aws.Int64(int64(cl["maximum_capacity_units"].(int))),
-			MaximumCoreCapacityUnits:     aws.Int64(int64(cl["maximum_core_capacity_units"].(int))),
-			MaximumOnDemandCapacityUnits: aws.Int64(int64(cl["maximum_ondemand_capacity_units"].(int))),
+			UnitType:             aws.String(cl["unit_type"].(string)),
+			MinimumCapacityUnits: aws.Int64(int64(cl["minimum_capacity_units"].(int))),
+			MaximumCapacityUnits: aws.Int64(int64(cl["maximum_capacity_units"].(int))),
+		}
+		if v, ok := cl["maximum_core_capacity_units"].(int); ok && v > 0 {
+			computeLimits.MaximumCoreCapacityUnits = aws.Int64(int64(v))
+		}
+		if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
+			computeLimits.MaximumOnDemandCapacityUnits = aws.Int64(int64(v))
 		}
 		managedScalingPolicy := &emr.ManagedScalingPolicy{
 			ComputeLimits: computeLimits,

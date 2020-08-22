@@ -35,8 +35,171 @@ func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(t *testing.T) {
+	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
+
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnits(t *testing.T) {
+	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
+
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnits(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
+	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrManagedScalingPolicy_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEMRManagedScalingPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAWSEmrManagedScalingPolicy_basic(r string) string {
-	return fmt.Sprintf(`
+	return fmt.Sprintf(testAccAWSEmrManagedScalingPolicyBase+`
+resource "aws_emr_managed_scaling_policy" "testpolicy" {
+  cluster_id = aws_emr_cluster.test.id
+  compute_limits {
+    unit_type                       = "Instances"
+    minimum_capacity_units          = 1
+    maximum_capacity_units          = 2
+  }
+}
+`, r)
+}
+
+func testAccAWSEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(r string, maximumCoreCapacityUnits int) string {
+	return fmt.Sprintf(testAccAWSEmrManagedScalingPolicyBase+`
+resource "aws_emr_managed_scaling_policy" "testpolicy" {
+  cluster_id = aws_emr_cluster.test.id
+  compute_limits {
+    unit_type                       = "Instances"
+    minimum_capacity_units          = 1
+    maximum_capacity_units          = 2
+    maximum_core_capacity_units = %[2]d
+  }
+}
+`, r, maximumCoreCapacityUnits)
+}
+
+func testAccAWSEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnits(r string, maximumOndemandCapacityUnits int) string {
+	return fmt.Sprintf(testAccAWSEmrManagedScalingPolicyBase+`
+resource "aws_emr_managed_scaling_policy" "testpolicy" {
+  cluster_id = aws_emr_cluster.test.id
+  compute_limits {
+    unit_type                       = "Instances"
+    minimum_capacity_units          = 1
+    maximum_capacity_units          = 2
+    maximum_ondemand_capacity_units = %[2]d
+  }
+}
+`, r, maximumOndemandCapacityUnits)
+}
+
+func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).emrconn
+		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
+			ClusterId: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return err
+		}
+
+		if resp.ManagedScalingPolicy == nil {
+			return fmt.Errorf("EMR Managed Scaling Policy is empty which shouldn't happen")
+		}
+		return nil
+	}
+}
+
+func testAccCheckAWSEmrManagedScalingPolicyDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_emr_managed_scaling_policy" {
+			continue
+		}
+
+		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
+			ClusterId: aws.String(rs.Primary.ID),
+		})
+
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if resp != nil {
+			return fmt.Errorf("Error: EMR Managed Scaling Policy still exists")
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
+const testAccAWSEmrManagedScalingPolicyBase = `
 data "aws_availability_zones" "available" {
   # Many instance types are not available in this availability zone
   exclude_zone_ids = ["usw2-az4"]
@@ -275,23 +438,6 @@ resource "aws_iam_policy" "emr_instance_profile" {
 EOT
 }
 
-resource "aws_s3_bucket" "tester" {
-  bucket = "%[1]s"
-  acl    = "public-read"
-}
-
-resource "aws_s3_bucket_object" "testobject" {
-  bucket  = aws_s3_bucket.tester.bucket
-  key     = "testscript.sh"
-  content = <<EOF
-#!/bin/bash
-echo $@
-EOF
-
-
-  acl = "public-read"
-}
-
 resource "aws_emr_cluster" "test" {
   name                 = "%[1]s"
   release_label        = "emr-5.30.1"
@@ -321,94 +467,5 @@ resource "aws_emr_cluster" "test" {
     instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
   }
 
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
-  bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
-    name = "test"
-
-    args = ["1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-    ]
-  }
 }
-
-resource "aws_emr_managed_scaling_policy" "testpolicy" {
-  cluster_id = aws_emr_cluster.test.id
-  compute_limits {
-    unit_type                       = "Instances"
-    minimum_capacity_units          = 1
-    maximum_capacity_units          = 2
-    maximum_ondemand_capacity_units = 2
-    maximum_core_capacity_units     = 2
-  }
-}
-`, r)
-}
-
-func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).emrconn
-		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
-			ClusterId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			return err
-		}
-
-		if resp.ManagedScalingPolicy == nil {
-			return fmt.Errorf("EMR Managed Scaling Policy is empty which shouldn't happen")
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSEmrManagedScalingPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emr_managed_scaling_policy" {
-			continue
-		}
-
-		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
-			ClusterId: aws.String(rs.Primary.ID),
-		})
-
-		if isAWSErr(err, "InvalidRequestException", "does not exist") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil {
-			return fmt.Errorf("Error: EMR Managed Scaling Policy still exists")
-		}
-
-		return nil
-	}
-
-	return nil
-}
+`
