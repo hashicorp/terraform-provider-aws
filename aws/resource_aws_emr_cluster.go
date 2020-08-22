@@ -2080,3 +2080,94 @@ func expandEbsConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 	ebsConfig.EbsBlockDeviceConfigs = ebsConfigs
 	return ebsConfig
 }
+
+func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.InstanceTypeConfig {
+	configsOut := []*emr.InstanceTypeConfig{}
+
+	for _, raw := range instanceTypeConfigs {
+		configAttributes := raw.(map[string]interface{})
+
+		config := &emr.InstanceTypeConfig{
+			InstanceType: aws.String(configAttributes["instance_type"].(string)),
+		}
+
+		if bidPrice, ok := configAttributes["bid_price"]; ok {
+			if bidPrice != "" {
+				config.BidPrice = aws.String(bidPrice.(string))
+			}
+		}
+
+		if v, ok := configAttributes["bid_price_as_percentage_of_on_demand_price"].(float64); ok && v != 0 {
+			config.BidPriceAsPercentageOfOnDemandPrice = aws.Float64(v)
+		}
+
+		if v, ok := configAttributes["weighted_capacity"].(int); ok {
+			config.WeightedCapacity = aws.Int64(int64(v))
+		}
+
+		if v, ok := configAttributes["configurations"].(*schema.Set); ok && v.Len() > 0 {
+			config.Configurations = expandConfigurations(v.List())
+		}
+
+		if v, ok := configAttributes["ebs_config"].(*schema.Set); ok && v.Len() == 1 {
+			config.EbsConfiguration = expandEbsConfiguration(v.List())
+		}
+
+		configsOut = append(configsOut, config)
+	}
+
+	return configsOut
+}
+
+func expandLaunchSpecification(launchSpecification interface{}) *emr.InstanceFleetProvisioningSpecifications {
+	configAttributes := launchSpecification.(map[string]interface{})
+
+	return &emr.InstanceFleetProvisioningSpecifications{
+		SpotSpecification: expandSpotSpecification(configAttributes["spot_specification"].(*schema.Set).List()[0]),
+	}
+}
+
+func expandSpotSpecification(spotSpecification interface{}) *emr.SpotProvisioningSpecification {
+	configAttributes := spotSpecification.(map[string]interface{})
+
+	spotProvisioning := &emr.SpotProvisioningSpecification{
+		TimeoutAction:          aws.String(configAttributes["timeout_action"].(string)),
+		TimeoutDurationMinutes: aws.Int64(int64(configAttributes["timeout_duration_minutes"].(int))),
+	}
+
+	if v, ok := configAttributes["block_duration_minutes"]; ok && v != 0 {
+		spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+	}
+
+	return spotProvisioning
+}
+
+func expandConfigurations(configurations []interface{}) []*emr.Configuration {
+	configsOut := []*emr.Configuration{}
+
+	for _, raw := range configurations {
+		configAttributes := raw.(map[string]interface{})
+
+		config := &emr.Configuration{}
+
+		if v, ok := configAttributes["classification"].(string); ok {
+			config.Classification = aws.String(v)
+		}
+
+		if rawConfig, ok := configAttributes["configurations"]; ok {
+			config.Configurations = expandConfigurations(rawConfig.([]interface{}))
+		}
+
+		if v, ok := configAttributes["properties"]; ok {
+			properties := make(map[string]string)
+			for k, v := range v.(map[string]interface{}) {
+				properties[k] = v.(string)
+			}
+			config.Properties = aws.StringMap(properties)
+		}
+
+		configsOut = append(configsOut, config)
+	}
+
+	return configsOut
+}
