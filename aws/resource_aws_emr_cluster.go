@@ -553,29 +553,35 @@ func InstanceFleetConfigSchema() *schema.Resource {
 						"ebs_config": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"iops": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"size": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ForceNew: true,
 									},
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validateAwsEmrEbsVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 										Default:  1,
 									},
 								},
 							},
+							Set: resourceAwsEMRClusterEBSConfigHash,
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -2064,19 +2070,17 @@ func expandEbsConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 	ebsConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
 	for _, ebsConfiguration := range ebsConfigurations {
 		cfg := ebsConfiguration.(map[string]interface{})
-		ebs := &emr.EbsBlockDeviceConfig{}
-		volumeSpec := &emr.VolumeSpecification{
-			SizeInGB:   aws.Int64(int64(cfg["size"].(int))),
-			VolumeType: aws.String(cfg["type"].(string)),
+		ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
+			VolumesPerInstance: aws.Int64(int64(cfg["volumes_per_instance"].(int))),
+			VolumeSpecification: &emr.VolumeSpecification{
+				SizeInGB:   aws.Int64(int64(cfg["size"].(int))),
+				VolumeType: aws.String(cfg["type"].(string)),
+			},
 		}
 		if v, ok := cfg["iops"].(int); ok && v != 0 {
-			volumeSpec.Iops = aws.Int64(int64(v))
+			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 		}
-		if v, ok := cfg["volumes_per_instance"].(int); ok && v != 0 {
-			ebs.VolumesPerInstance = aws.Int64(int64(v))
-		}
-		ebs.VolumeSpecification = volumeSpec
-		ebsConfigs = append(ebsConfigs, ebs)
+		ebsConfigs = append(ebsConfigs, ebsBlockDeviceConfig)
 	}
 	ebsConfig.EbsBlockDeviceConfigs = ebsConfigs
 	return ebsConfig
