@@ -88,6 +88,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_GuestAccess(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 				),
 			},
 			{
@@ -537,6 +538,49 @@ func TestAccAWSStorageGatewaySmbFileShare_audit(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewaySmbFileShare_cacheAttributes(t *testing.T) {
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_smb_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareCacheAttributesConfig(rName, 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareCacheAttributesConfig(rName, 500),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "500"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareCacheAttributesConfig(rName, 300),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewaySmbFileShareDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
 
@@ -932,9 +976,9 @@ func testAccAWSStorageGatewaySmbFileShareSMBACLConfig(rName string, enabled bool
 	return testAccAWSStorageGateway_SmbFileShare_ActiveDirectoryBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   authentication  = "ActiveDirectory"
-  gateway_arn     = "${aws_storagegateway_gateway.test.arn}"
-  location_arn    = "${aws_s3_bucket.test.arn}"
-  role_arn        = "${aws_iam_role.test.arn}"
+  gateway_arn     = aws_storagegateway_gateway.test.arn
+  location_arn    = aws_s3_bucket.test.arn
+  role_arn        = aws_iam_role.test.arn
   smb_acl_enabled = %[1]t
 }
 `, enabled)
@@ -949,10 +993,10 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication        = "GuestAccess"
-  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
-  location_arn          = "${aws_s3_bucket.test.arn}"
-  role_arn              = "${aws_iam_role.test.arn}"
-  audit_destination_arn = "${aws_cloudwatch_log_group.test.arn}"
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+  audit_destination_arn = aws_cloudwatch_log_group.test.arn
 }
 `, rName)
 }
@@ -976,4 +1020,20 @@ resource "aws_storagegateway_smb_file_share" "test" {
   audit_destination_arn = "${aws_cloudwatch_log_group.test2.arn}"
 }
 `, rName)
+}
+
+func testAccAWSStorageGatewaySmbFileShareCacheAttributesConfig(rName string, timeout int) string {
+	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication        = "GuestAccess"
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+
+  cache_attributes {
+    cache_stale_timeout_in_seconds = %[1]d
+  }
+}
+`, timeout)
 }

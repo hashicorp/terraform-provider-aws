@@ -102,6 +102,20 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Default:      storagegateway.ObjectACLPrivate,
 				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
 			},
+			"cache_attributes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cache_stale_timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(300, 2592000),
+						},
+					},
+				},
+			},
 			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -168,6 +182,10 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		input.SMBACLEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("cache_attributes"); ok {
+		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
 	output, err := conn.CreateSMBFileShare(input)
 	if err != nil {
@@ -231,6 +249,10 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting invalid_user_list: %s", err)
 	}
 
+	if err := d.Set("cache_attributes", flattenStorageGatewayNfsFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
+		return fmt.Errorf("error setting cache_attributes: %w", err)
+	}
+
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
@@ -265,7 +287,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 	if d.HasChanges("default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
 		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
-		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled") {
+		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes") {
 		input := &storagegateway.UpdateSMBFileShareInput{
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
@@ -285,6 +307,10 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("audit_destination_arn"); ok && v.(string) != "" {
 			input.AuditDestinationARN = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("cache_attributes"); ok {
+			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
