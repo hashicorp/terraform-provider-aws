@@ -145,6 +145,12 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"case_sensitivity": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      storagegateway.CaseSensitivityClientSpecified,
+				ValidateFunc: validation.StringInSlice(storagegateway.CaseSensitivity_Values(), false),
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -166,6 +172,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
+		CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
 		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
@@ -244,6 +251,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("fileshare_id", fileshare.FileShareId)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
+	d.Set("case_sensitivity", fileshare.CaseSensitivity)
 
 	if err := d.Set("invalid_user_list", flattenStringSet(fileshare.InvalidUserList)); err != nil {
 		return fmt.Errorf("error setting invalid_user_list: %w", err)
@@ -287,7 +295,8 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 	if d.HasChanges("default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
 		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
-		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes") {
+		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes",
+		"case_sensitivity") {
 		input := &storagegateway.UpdateSMBFileShareInput{
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
@@ -299,6 +308,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 			ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
 			SMBACLEnabled:        aws.Bool(d.Get("smb_acl_enabled").(bool)),
+			CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
 		}
 
 		if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {

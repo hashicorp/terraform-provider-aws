@@ -89,6 +89,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_GuestAccess(t *testing.
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "ClientSpecified"),
 				),
 			},
 			{
@@ -581,6 +582,46 @@ func TestAccAWSStorageGatewaySmbFileShare_cacheAttributes(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewaySmbFileShare_caseSensitivity(t *testing.T) {
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_smb_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareCaseSensitivityConfig(rName, "CaseSensitive"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "CaseSensitive"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareCaseSensitivityConfig(rName, "ClientSpecified"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "ClientSpecified"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareCaseSensitivityConfig(rName, "CaseSensitive"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "CaseSensitive"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewaySmbFileShare_disappears(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1048,14 +1089,27 @@ func testAccAWSStorageGatewaySmbFileShareCacheAttributesConfig(rName string, tim
 	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
-  authentication        = "GuestAccess"
-  gateway_arn           = aws_storagegateway_gateway.test.arn
-  location_arn          = aws_s3_bucket.test.arn
-  role_arn              = aws_iam_role.test.arn
+  authentication = "GuestAccess"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
 
   cache_attributes {
     cache_stale_timeout_in_seconds = %[1]d
   }
 }
 `, timeout)
+}
+
+func testAccAWSStorageGatewaySmbFileShareCaseSensitivityConfig(rName, option string) string {
+	return testAccAWSStorageGateway_SmbFileShare_GuestAccessBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication   = "GuestAccess"
+  gateway_arn      = aws_storagegateway_gateway.test.arn
+  location_arn     = aws_s3_bucket.test.arn
+  role_arn         = aws_iam_role.test.arn
+  case_sensitivity = %[1]q
+}
+`, option)
 }
