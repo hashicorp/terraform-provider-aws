@@ -264,7 +264,7 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_router" "test" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     listener {
@@ -286,7 +286,7 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_router" "test" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     listener {
@@ -308,7 +308,7 @@ resource "aws_appmesh_mesh" "test" {
 
 resource "aws_appmesh_virtual_router" "test" {
   name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+  mesh_name = aws_appmesh_mesh.test.id
 
   spec {
     listener {
@@ -320,8 +320,8 @@ resource "aws_appmesh_virtual_router" "test" {
   }
 
   tags = {
-	%[3]s = %[4]q
-	%[5]s = %[6]q
+    %[3]s = %[4]q
+    %[5]s = %[6]q
   }
 }
 `, meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2)
