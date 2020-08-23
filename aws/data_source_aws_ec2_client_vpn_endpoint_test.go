@@ -56,14 +56,14 @@ resource "aws_acm_certificate" "test" {
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-clientvpn-example"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
   dns_servers            = ["8.8.8.8", "8.8.1.1"]
   split_tunnel           = true
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -72,7 +72,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 data "aws_ec2_client_vpn_endpoint" "test" {
-  id = "${aws_ec2_client_vpn_endpoint.test.id}"
+  id = aws_ec2_client_vpn_endpoint.test.id
 }
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
