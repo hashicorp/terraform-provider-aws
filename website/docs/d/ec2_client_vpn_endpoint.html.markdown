@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_ec2_client_vpn_endpoint
 
-Get information on an EC2 Transit Gateway.
+Get information on an EC2 Client VPN Endpoint.
 
 ## Example Usage
 
