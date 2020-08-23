@@ -141,7 +141,7 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_catalog_table" "test" {
   name          = %[1]q
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
 
   storage_descriptor {
     bucket_columns            = ["bucket_column_1"]
@@ -211,9 +211,9 @@ func testAccGluePartitionConfig(rName string, parValue string) string {
 	return testAccGluePartitionConfigBase(rName) +
 		fmt.Sprintf(`
 resource "aws_glue_partition" "test" {
-  database_name = "${aws_glue_catalog_database.test.name}"
-  table_name    = "${aws_glue_catalog_table.test.name}"
-  partition_values        =  ["%[1]s"]
+  database_name    = aws_glue_catalog_database.test.name
+  table_name       = aws_glue_catalog_table.test.name
+  partition_values =  ["%[1]s"]
 }
 `, parValue)
 }
