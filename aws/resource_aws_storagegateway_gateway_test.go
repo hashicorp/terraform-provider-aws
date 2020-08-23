@@ -574,6 +574,50 @@ func TestAccAWSStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_bandwidthAll(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayBandwidthConfigAll(rName, 102400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", "102400"),
+					resource.TestCheckResourceAttr(resourceName, "average_download_rate_limit_in_bits_per_sec", "102400"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayBandwidthConfigAll(rName, 2*102400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", "204800"),
+					resource.TestCheckResourceAttr(resourceName, "average_download_rate_limit_in_bits_per_sec", "204800"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", "0"),
+					resource.TestCheckResourceAttr(resourceName, "average_download_rate_limit_in_bits_per_sec", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSStorageGatewayGatewayDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
 
@@ -1046,6 +1090,19 @@ resource "aws_storagegateway_gateway" "test" {
  gateway_timezone                            = "GMT"
  gateway_type                                = "CACHED"
  average_download_rate_limit_in_bits_per_sec = %[2]d
+}
+`, rName, rate)
+}
+
+func testAccAWSStorageGatewayGatewayBandwidthConfigAll(rName string, rate int) string {
+	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address                          = aws_instance.test.public_ip
+  gateway_name                                = %[1]q
+  gateway_timezone                            = "GMT"
+  gateway_type                                = "CACHED"
+  average_upload_rate_limit_in_bits_per_sec   = %[2]d
+  average_download_rate_limit_in_bits_per_sec = %[2]d
 }
 `, rName, rate)
 }

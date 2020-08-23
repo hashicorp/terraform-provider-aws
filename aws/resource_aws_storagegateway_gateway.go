@@ -539,22 +539,33 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 	if d.HasChanges("average_download_rate_limit_in_bits_per_sec",
 		"average_upload_rate_limit_in_bits_per_sec") {
 
-		oUp, nUp := d.GetChange("average_upload_rate_limit_in_bits_per_sec")
-		oDown, nDown := d.GetChange("average_download_rate_limit_in_bits_per_sec")
-
+		deleteInput := &storagegateway.DeleteBandwidthRateLimitInput{
+			GatewayARN: aws.String(d.Id()),
+		}
 		updateInput := &storagegateway.UpdateBandwidthRateLimitInput{
 			GatewayARN: aws.String(d.Id()),
 		}
+		needsDelete := false
 		needsUpdate := false
 
 		if v, ok := d.GetOk("average_download_rate_limit_in_bits_per_sec"); ok {
 			updateInput.AverageDownloadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
 			needsUpdate = true
+		} else if d.HasChange("average_download_rate_limit_in_bits_per_sec") {
+			deleteInput.BandwidthType = aws.String("DOWNLOAD")
+			needsDelete = true
 		}
 
 		if v, ok := d.GetOk("average_upload_rate_limit_in_bits_per_sec"); ok {
 			updateInput.AverageUploadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
 			needsUpdate = true
+		} else if d.HasChange("average_upload_rate_limit_in_bits_per_sec") {
+			if needsDelete {
+				deleteInput.BandwidthType = aws.String("ALL")
+			} else {
+				deleteInput.BandwidthType = aws.String("UPLOAD")
+				needsDelete = true
+			}
 		}
 
 		if needsUpdate {
@@ -563,29 +574,6 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 			if err != nil {
 				return fmt.Errorf("error updating Bandwidth Rate Limit: %w", err)
 			}
-		}
-
-		deleteInput := &storagegateway.DeleteBandwidthRateLimitInput{
-			GatewayARN: aws.String(d.Id()),
-		}
-
-		needsDelete := false
-		removeDown := oDown != 0 && nDown == 0
-		removeUp := oUp != 0 && nUp == 0
-
-		if removeDown && removeUp {
-			deleteInput.BandwidthType = aws.String("ALL")
-			needsDelete = true
-		}
-
-		if removeDown && !removeUp {
-			deleteInput.BandwidthType = aws.String("DOWNLOAD")
-			needsDelete = true
-		}
-
-		if removeUp && !removeDown {
-			deleteInput.BandwidthType = aws.String("UPLOAD")
-			needsDelete = true
 		}
 
 		if needsDelete {
