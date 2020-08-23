@@ -186,7 +186,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
+	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %#v", input)
 	output, err := conn.CreateSMBFileShare(input)
 	if err != nil {
 		return fmt.Errorf("error creating Storage Gateway SMB File Share: %w", err)
@@ -218,7 +218,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		FileShareARNList: []*string{aws.String(d.Id())},
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway SMB File Share: %s", input)
+	log.Printf("[DEBUG] Reading Storage Gateway SMB File Share: %#v", input)
 	output, err := conn.DescribeSMBFileShares(input)
 	if err != nil {
 		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
@@ -313,7 +313,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
+		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %#v", input)
 		_, err := conn.UpdateSMBFileShare(input)
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway SMB File Share: %w", err)
@@ -343,7 +343,7 @@ func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta in
 		FileShareARN: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", input)
+	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %#v", input)
 	_, err := conn.DeleteFileShare(input)
 	if err != nil {
 		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
@@ -378,7 +378,7 @@ func storageGatewaySmbFileShareRefreshFunc(fileShareArn string, conn *storagegat
 			FileShareARNList: []*string{aws.String(fileShareArn)},
 		}
 
-		log.Printf("[DEBUG] Reading Storage Gateway SMB File Share: %s", input)
+		log.Printf("[DEBUG] Reading Storage Gateway SMB File Share: %#v", input)
 		output, err := conn.DescribeSMBFileShares(input)
 		if err != nil {
 			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
