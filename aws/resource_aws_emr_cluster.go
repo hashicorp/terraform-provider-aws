@@ -526,12 +526,11 @@ func InstanceFleetConfigSchema() *schema.Resource {
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 						"bid_price_as_percentage_of_on_demand_price": {
 							Type:     schema.TypeFloat,
 							Optional: true,
-							ForceNew: true,
+							Default:  100,
 						},
 						"configurations": {
 							Type:     schema.TypeSet,
@@ -542,23 +541,6 @@ func InstanceFleetConfigSchema() *schema.Resource {
 									"classification": {
 										Type:     schema.TypeString,
 										Optional: true,
-									},
-									"configurations": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"classification": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"properties": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     schema.TypeString,
-												},
-											},
-										},
 									},
 									"properties": {
 										Type:     schema.TypeMap,
@@ -577,23 +559,19 @@ func InstanceFleetConfigSchema() *schema.Resource {
 									"iops": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										ForceNew: true,
 									},
 									"size": {
 										Type:     schema.TypeInt,
 										Required: true,
-										ForceNew: true,
 									},
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ForceNew:     true,
 										ValidateFunc: validateAwsEmrEbsVolumeType(),
 									},
 									"volumes_per_instance": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										ForceNew: true,
 										Default:  1,
 									},
 								},
@@ -607,11 +585,11 @@ func InstanceFleetConfigSchema() *schema.Resource {
 						"weighted_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
 							Default:  1,
 						},
 					},
 				},
+				Set: resourceAwsEMRInstanceTypeConfigHash,
 			},
 			"launch_specifications": {
 				Type:     schema.TypeList,
@@ -1024,12 +1002,12 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceRoleTypeMaster)
 
 		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
-		if err := d.Set("core_instance_fleet", []interface{}{flattenedCoreInstanceFleet}); err != nil {
+		if err := d.Set("core_instance_fleet", flattenedCoreInstanceFleet); err != nil {
 			return fmt.Errorf("error setting core_instance_fleet: %s", err)
 		}
 
 		flattenedMasterInstanceFleet := flattenInstanceFleet(masterFleet)
-		if err := d.Set("master_instance_fleet", []interface{}{flattenedMasterInstanceFleet}); err != nil {
+		if err := d.Set("master_instance_fleet", flattenedMasterInstanceFleet); err != nil {
 			return fmt.Errorf("error setting master_instance_fleet: %s", err)
 		}
 	}
@@ -1972,8 +1950,8 @@ func readInstanceFleetConfig(data map[string]interface{}) *emr.InstanceFleetConf
 		config.InstanceTypeConfigs = expandInstanceTypeConfigs(v.List())
 	}
 
-	if v, ok := data["launch_specifications"].(*schema.Set); ok && v.Len() == 1 {
-		config.LaunchSpecifications = expandLaunchSpecification(v.List()[0])
+	if v, ok := data["launch_specifications"].([]interface{}); ok && len(v) == 1 {
+		config.LaunchSpecifications = expandLaunchSpecification(v[0].(map[string]interface{}))
 	}
 
 	return config
@@ -2005,54 +1983,77 @@ func findInstanceFleet(instanceFleets []*emr.InstanceFleet, instanceRoleType str
 	return nil
 }
 
-func flatteninstanceTypeConfig(itc *emr.InstanceTypeSpecification) map[string]interface{} {
-	attrs := map[string]interface{}{}
-	if itc.BidPrice != nil {
-		attrs["bid_price"] = aws.StringValue(itc.BidPrice)
+func flattenInstanceFleet(instanceFleet *emr.InstanceFleet) []interface{} {
+	if instanceFleet == nil {
+		return []interface{}{}
 	}
-	if itc.BidPriceAsPercentageOfOnDemandPrice != nil {
-		attrs["bid_price_as_percentage_of_on_demand_price"] = aws.Float64Value(itc.BidPriceAsPercentageOfOnDemandPrice)
+
+	m := map[string]interface{}{
+		"id":                             aws.StringValue(instanceFleet.Id),
+		"name":                           aws.StringValue(instanceFleet.Name),
+		"instance_fleet_type":            aws.StringValue(instanceFleet.InstanceFleetType),
+		"target_on_demand_capacity":      aws.Int64Value(instanceFleet.TargetOnDemandCapacity),
+		"target_spot_capacity":           aws.Int64Value(instanceFleet.TargetSpotCapacity),
+		"provisioned_on_demand_capacity": aws.Int64Value(instanceFleet.ProvisionedOnDemandCapacity),
+		"provisioned_spot_capacity":      aws.Int64Value(instanceFleet.ProvisionedSpotCapacity),
+		"instance_type_configs":          flatteninstanceTypeConfigs(instanceFleet.InstanceTypeSpecifications),
+		"launch_specifications":          flattenLaunchSpecifications(instanceFleet.LaunchSpecifications),
 	}
-	attrs["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
-	attrs["instance_type"] = aws.StringValue(itc.InstanceType)
-	attrs["weighted_capacity"] = aws.Int64Value(itc.WeightedCapacity)
-	return attrs
+
+	return []interface{}{m}
+
 }
 
-func flattenInstanceFleet(ig *emr.InstanceFleet) map[string]interface{} {
-	attrs := map[string]interface{}{}
+func flatteninstanceTypeConfigs(instanceTypeSpecifications []*emr.InstanceTypeSpecification) *schema.Set {
+	instanceTypeConfigs := make([]interface{}, 0)
 
-	attrs["id"] = aws.StringValue(ig.Id)
-	attrs["name"] = aws.StringValue(ig.Name)
-	attrs["instance_fleet_type"] = aws.StringValue(ig.InstanceFleetType)
-	attrs["target_on_demand_capacity"] = aws.Int64Value(ig.TargetOnDemandCapacity)
-	attrs["target_spot_capacity"] = aws.Int64Value(ig.TargetSpotCapacity)
-	attrs["provisioned_on_demand_capacity"] = aws.Int64Value(ig.ProvisionedOnDemandCapacity)
-	attrs["provisioned_spot_capacity"] = aws.Int64Value(ig.ProvisionedSpotCapacity)
-	instanceTypeConfigs := []interface{}{}
-	for _, itc := range ig.InstanceTypeSpecifications {
-		flattenTypeConfig := flatteninstanceTypeConfig(itc)
+	for _, itc := range instanceTypeSpecifications {
+		flattenTypeConfig := make(map[string]interface{})
+
+		if itc.BidPrice != nil {
+			flattenTypeConfig["bid_price"] = aws.StringValue(itc.BidPrice)
+		}
+
+		if itc.BidPriceAsPercentageOfOnDemandPrice != nil {
+			flattenTypeConfig["bid_price_as_percentage_of_on_demand_price"] = aws.Float64Value(itc.BidPriceAsPercentageOfOnDemandPrice)
+		}
+
+		flattenTypeConfig["instance_type"] = aws.StringValue(itc.InstanceType)
+		flattenTypeConfig["weighted_capacity"] = int(aws.Int64Value(itc.WeightedCapacity))
+
+		flattenTypeConfig["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
+
 		instanceTypeConfigs = append(instanceTypeConfigs, flattenTypeConfig)
 	}
-	attrs["instance_type_configs"] = instanceTypeConfigs
 
-	if ig.LaunchSpecifications != nil {
-		spotProvisioningSpecification := make(map[string]interface{})
-		if ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes != nil {
-			spotProvisioningSpecification["block_duration_minutes"] = aws.Int64Value(ig.LaunchSpecifications.SpotSpecification.BlockDurationMinutes)
-		}
-		spotProvisioningSpecification["timeout_action"] = aws.StringValue(ig.LaunchSpecifications.SpotSpecification.TimeoutAction)
-		spotProvisioningSpecification["timeout_duration_minutes"] = aws.Int64Value(ig.LaunchSpecifications.SpotSpecification.TimeoutDurationMinutes)
+	return schema.NewSet(resourceAwsEMRInstanceTypeConfigHash, instanceTypeConfigs)
+}
 
-		launchSpecifications := make([]interface{}, 0)
-		launchSpecification := make(map[string]interface{})
-		spotSpecifications := make([]interface{}, 0)
-		spotSpecifications = append(spotSpecifications, spotProvisioningSpecification)
-		launchSpecification["spot_specification"] = spotSpecifications
-		launchSpecifications = append(launchSpecifications, launchSpecification)
-		attrs["launch_specifications"] = launchSpecifications
+func flattenLaunchSpecifications(launchSpecifications *emr.InstanceFleetProvisioningSpecifications) []interface{} {
+	if launchSpecifications == nil {
+		return []interface{}{}
 	}
-	return attrs
+
+	m := map[string]interface{}{
+		// launchSpecifications.OnDemandSpecification
+		"spot_specification": flattenSpotSpecification(launchSpecifications.SpotSpecification),
+	}
+	return []interface{}{m}
+}
+
+func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecification) []interface{} {
+	if spotSpecification == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"timeout_action":           aws.StringValue(spotSpecification.TimeoutAction),
+		"timeout_duration_minutes": aws.Int64Value(spotSpecification.TimeoutDurationMinutes),
+	}
+	if spotSpecification.BlockDurationMinutes != nil {
+		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
+	}
+
+	return []interface{}{m}
 }
 
 func expandEbsConfiguration(ebsConfigurations []interface{}) *emr.EbsConfiguration {
@@ -2116,11 +2117,11 @@ func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.Instanc
 	return configsOut
 }
 
-func expandLaunchSpecification(launchSpecification interface{}) *emr.InstanceFleetProvisioningSpecifications {
-	configAttributes := launchSpecification.(map[string]interface{})
+func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.InstanceFleetProvisioningSpecifications {
+	spotSpecification := launchSpecification["spot_specification"].([]interface{})
 
 	return &emr.InstanceFleetProvisioningSpecifications{
-		SpotSpecification: expandSpotSpecification(configAttributes["spot_specification"].(*schema.Set).List()[0]),
+		SpotSpecification: expandSpotSpecification(spotSpecification[0]),
 	}
 }
 
@@ -2167,4 +2168,20 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 	}
 
 	return configsOut
+}
+
+func resourceAwsEMRInstanceTypeConfigHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
+	if v, ok := m["bid_price"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["weighted_capacity"]; ok && v.(int) > 0 {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["bid_price_as_percentage_of_on_demand_price"]; ok && v.(float64) != 0 {
+		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))
+	}
+	return hashcode.String(buf.String())
 }
