@@ -86,7 +86,7 @@ func RouteByIpv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 	}
 
 	for _, route := range routeTable.Routes {
-		if aws.StringValue(route.DestinationCidrBlock) == destinationCidr {
+		if tfnet.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destinationCidr) {
 			return route, nil
 		}
 	}
