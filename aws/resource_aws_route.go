@@ -250,7 +250,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	route, err := routeFinder(conn, routeTableID, destination)
 
-	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeInvalidRouteTableIDNotFound, "") {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableID)
 		d.SetId("")
 		return nil
@@ -366,7 +366,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeRouteNotFound, "") {
+		if isAWSErr(err, tfec2.ErrCodeInvalidRouteNotFound, "") {
 			return nil
 		}
 
@@ -387,7 +387,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteRoute(input)
 	}
 
-	if isAWSErr(err, tfec2.ErrCodeRouteNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeInvalidRouteNotFound, "") {
 		return nil
 	}
 
@@ -498,7 +498,7 @@ func createRoute(conn *ec2.EC2, input *ec2.CreateRouteInput, timeout time.Durati
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeTransitGatewayNotFound, "") {
+		if isAWSErr(err, tfec2.ErrCodeInvalidTransitGatewayIDNotFound, "") {
 			return resource.RetryableError(err)
 		}
 
