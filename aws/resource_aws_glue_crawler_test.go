@@ -578,7 +578,7 @@ func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_recreates(t *testing.T) {
+func TestAccAWSGlueCrawler_disappears(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -592,23 +592,9 @@ func TestAccAWSGlueCrawler_recreates(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCrawler(), resourceName),
 				),
-			},
-			{
-				// Simulate deleting the crawler outside Terraform
-				PreConfig: func() {
-					conn := testAccProvider.Meta().(*AWSClient).glueconn
-					input := &glue.DeleteCrawlerInput{
-						Name: aws.String(rName),
-					}
-					_, err := conn.DeleteCrawler(input)
-					if err != nil {
-						t.Fatalf("error deleting Glue Crawler: %s", err)
-					}
-				},
-				Config:             testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
 			},
 		},
 	})
@@ -835,7 +821,7 @@ func TestAccAWSGlueCrawler_Schedule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlueCrawlerBasicConfig(rName),
+				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
@@ -1678,26 +1664,6 @@ resource "aws_glue_crawler" "test" {
   }
 }
 EOF
-}
-`, rName)
-}
-
-func testAccGlueCrawlerBasicConfig(rName string) string {
-	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
-}
-
-resource "aws_glue_crawler" "test" {
-  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
-
-  database_name = aws_glue_catalog_database.test.name
-  name          = %[1]q
-  role          = aws_iam_role.test.name
-
-  s3_target {
-    path = "s3://bucket-name"
-  }
 }
 `, rName)
 }
