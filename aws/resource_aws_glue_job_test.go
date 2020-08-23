@@ -75,6 +75,7 @@ func TestAccAWSGlueJob_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -153,6 +154,44 @@ func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.--job-bookmark-option", "job-bookmark-enable"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.--job-language", "scala"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobnonOverridableArgumentsConfig(rName, "job-bookmark-disable", "python"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-bookmark-option", "job-bookmark-disable"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-language", "python"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobnonOverridableArgumentsConfig(rName, "job-bookmark-enable", "scala"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-bookmark-option", "job-bookmark-enable"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-language", "scala"),
 				),
 			},
 			{
@@ -724,6 +763,29 @@ resource "aws_glue_job" "test" {
   }
 
   default_arguments = {
+    "--job-bookmark-option" = "%s"
+    "--job-language"        = "%s"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
+}
+
+func testAccAWSGlueJobnonOverridableArgumentsConfig(rName, jobBookmarkOption, jobLanguage string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  non_overridable_arguments = {
     "--job-bookmark-option" = "%s"
     "--job-language"        = "%s"
   }
