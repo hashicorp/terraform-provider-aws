@@ -189,7 +189,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
 	output, err := conn.CreateSMBFileShare(input)
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway SMB File Share: %s", err)
+		return fmt.Errorf("error creating Storage Gateway SMB File Share: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.FileShareARN))
@@ -204,7 +204,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway SMB File Share creation: %s", err)
+		return fmt.Errorf("error waiting for Storage Gateway SMB File Share creation: %w", err)
 	}
 
 	return resourceAwsStorageGatewaySmbFileShareRead(d, meta)
@@ -226,7 +226,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Storage Gateway SMB File Share: %s", err)
+		return fmt.Errorf("error reading Storage Gateway SMB File Share: %w", err)
 	}
 
 	if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
@@ -246,7 +246,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 
 	if err := d.Set("invalid_user_list", flattenStringSet(fileshare.InvalidUserList)); err != nil {
-		return fmt.Errorf("error setting invalid_user_list: %s", err)
+		return fmt.Errorf("error setting invalid_user_list: %w", err)
 	}
 
 	if err := d.Set("cache_attributes", flattenStorageGatewayNfsFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
@@ -265,11 +265,11 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
 
 	if err := d.Set("valid_user_list", flattenStringSet(fileshare.ValidUserList)); err != nil {
-		return fmt.Errorf("error setting valid_user_list: %s", err)
+		return fmt.Errorf("error setting valid_user_list: %w", err)
 	}
 
 	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -281,7 +281,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -316,7 +316,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
 		_, err := conn.UpdateSMBFileShare(input)
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway SMB File Share: %s", err)
+			return fmt.Errorf("error updating Storage Gateway SMB File Share: %w", err)
 		}
 
 		stateConf := &resource.StateChangeConf{
@@ -329,7 +329,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway SMB File Share update: %s", err)
+			return fmt.Errorf("error waiting for Storage Gateway SMB File Share update: %w", err)
 		}
 	}
 
@@ -349,7 +349,7 @@ func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta in
 		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Storage Gateway SMB File Share: %s", err)
+		return fmt.Errorf("error deleting Storage Gateway SMB File Share: %w", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -366,7 +366,7 @@ func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta in
 		if isResourceNotFoundError(err) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Storage Gateway SMB File Share deletion: %s", err)
+		return fmt.Errorf("error waiting for Storage Gateway SMB File Share deletion: %w", err)
 	}
 
 	return nil
@@ -384,7 +384,7 @@ func storageGatewaySmbFileShareRefreshFunc(fileShareArn string, conn *storagegat
 			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
 				return nil, "MISSING", nil
 			}
-			return nil, "ERROR", fmt.Errorf("error reading Storage Gateway SMB File Share: %s", err)
+			return nil, "ERROR", fmt.Errorf("error reading Storage Gateway SMB File Share: %w", err)
 		}
 
 		if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
