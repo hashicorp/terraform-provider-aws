@@ -55,13 +55,9 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"owner_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					glue.PrincipalTypeGroup,
-					glue.PrincipalTypeRole,
-					glue.PrincipalTypeUser,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(glue.PrincipalType_Values(), false),
 			},
 			"resource_uris": {
 				Type:     schema.TypeSet,
@@ -70,13 +66,9 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								glue.ResourceTypeArchive,
-								glue.ResourceTypeFile,
-								glue.ResourceTypeJar,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(glue.ResourceType_Values(), false),
 						},
 						"uri": {
 							Type:         schema.TypeString,
@@ -108,7 +100,7 @@ func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta inter
 
 	_, err := conn.CreateUserDefinedFunction(input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue User Defined Function: %s", err)
+		return fmt.Errorf("error creating Glue User Defined Function: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, funcName))
@@ -163,7 +155,7 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 			return nil
 		}
 
-		return fmt.Errorf("error reading Glue User Defined Function: %s", err.Error())
+		return fmt.Errorf("error reading Glue User Defined Function: %w", err)
 	}
 
 	udf := out.UserDefinedFunction
@@ -207,7 +199,7 @@ func resourceAwsGlueUserDefinedFunctionDelete(d *schema.ResourceData, meta inter
 		FunctionName: aws.String(funcName),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Glue User Defined Function: %s", err.Error())
+		return fmt.Errorf("error deleting Glue User Defined Function: %w", err)
 	}
 	return nil
 }
