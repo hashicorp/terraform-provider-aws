@@ -56,6 +56,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 					"S3_ONEZONE_IA",
 					"S3_STANDARD_IA",
 					"S3_STANDARD",
+					"S3_INTELLIGENT_TIERING",
 				}, false),
 			},
 			"fileshare_id": {
@@ -87,6 +88,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
+				RequiredWith: []string{"kms_encrypted"},
 			},
 			"location_arn": {
 				Type:         schema.TypeString,
@@ -95,18 +97,10 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"object_acl": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  storagegateway.ObjectACLPrivate,
-				ValidateFunc: validation.StringInSlice([]string{
-					storagegateway.ObjectACLAuthenticatedRead,
-					storagegateway.ObjectACLAwsExecRead,
-					storagegateway.ObjectACLBucketOwnerFullControl,
-					storagegateway.ObjectACLBucketOwnerRead,
-					storagegateway.ObjectACLPrivate,
-					storagegateway.ObjectACLPublicRead,
-					storagegateway.ObjectACLPublicReadWrite,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      storagegateway.ObjectACLPrivate,
+				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
 			},
 			"path": {
 				Type:     schema.TypeString,
