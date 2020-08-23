@@ -19,8 +19,8 @@ resource "aws_glue_catalog_database" "example" {
 
 resource "aws_glue_user_defined_function" "example" {
   name          = "my_func"
-  catalog_id    = "${aws_glue_catalog_database.example.catalog_id}"
-  database_name = "${aws_glue_catalog_database.example.name}"
+  catalog_id    = aws_glue_catalog_database.example.catalog_id
+  database_name = aws_glue_catalog_database.example.name
   class_name    = "class"
   owner_name    = "owner"
   owner_type    = "GROUP"

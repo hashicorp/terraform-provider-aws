@@ -196,8 +196,8 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_user_defined_function" "test" {
   name          = %[1]q
-  catalog_id    = "${aws_glue_catalog_database.test.catalog_id}"
-  database_name = "${aws_glue_catalog_database.test.name}"
+  catalog_id    = aws_glue_catalog_database.test.catalog_id
+  database_name = aws_glue_catalog_database.test.name
   class_name    = %[2]q
   owner_name    = %[2]q
   owner_type    = "GROUP"
@@ -213,8 +213,8 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_user_defined_function" "test" {
   name          = %[1]q
-  catalog_id    = "${aws_glue_catalog_database.test.catalog_id}"
-  database_name = "${aws_glue_catalog_database.test.name}"
+  catalog_id    = aws_glue_catalog_database.test.catalog_id
+  database_name = aws_glue_catalog_database.test.name
   class_name    = %[1]q
   owner_name    = %[1]q
   owner_type    = "GROUP"
@@ -235,8 +235,8 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_user_defined_function" "test" {
   name          = %[1]q
-  catalog_id    = "${aws_glue_catalog_database.test.catalog_id}"
-  database_name = "${aws_glue_catalog_database.test.name}"
+  catalog_id    = aws_glue_catalog_database.test.catalog_id
+  database_name = aws_glue_catalog_database.test.name
   class_name    = %[1]q
   owner_name    = %[1]q
   owner_type    = "GROUP"
