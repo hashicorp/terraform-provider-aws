@@ -834,6 +834,13 @@ func TestAccAWSGlueCrawler_Schedule(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccGlueCrawlerBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+				),
+			},
 		},
 	})
 }
@@ -1671,6 +1678,26 @@ resource "aws_glue_crawler" "test" {
   }
 }
 EOF
+}
+`, rName)
+}
+
+func testAccGlueCrawlerBasicConfig(rName string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
 }
 `, rName)
 }
