@@ -46,9 +46,7 @@ func resourceAwsGluePartition() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"storage_descriptor": {
 				Type:     schema.TypeList,
@@ -222,7 +220,7 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Creating Glue Partition: %#v", input)
 	_, err := conn.CreatePartition(input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Partition: %s", err)
+		return fmt.Errorf("error creating Glue Partition: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyAwsGluePartition(values)))
@@ -255,7 +253,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 			return nil
 		}
 
-		return fmt.Errorf("error reading Glue Partition: %s", err)
+		return fmt.Errorf("error reading Glue Partition: %w", err)
 	}
 
 	partition := out.Partition
@@ -278,11 +276,11 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := d.Set("storage_descriptor", flattenGlueStorageDescriptor(partition.StorageDescriptor)); err != nil {
-		return fmt.Errorf("error setting storage_descriptor: %s", err)
+		return fmt.Errorf("error setting storage_descriptor: %w", err)
 	}
 
 	if err := d.Set("parameters", aws.StringValueMap(partition.Parameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %s", err)
+		return fmt.Errorf("error setting parameters: %w", err)
 	}
 
 	return nil
@@ -306,7 +304,7 @@ func resourceAwsGluePartitionUpdate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Updating Glue Partition: %#v", input)
 	if _, err := conn.UpdatePartition(input); err != nil {
-		return fmt.Errorf("error updating Glue Partition: %s", err)
+		return fmt.Errorf("error updating Glue Partition: %w", err)
 	}
 
 	return resourceAwsGluePartitionRead(d, meta)
@@ -328,7 +326,7 @@ func resourceAwsGluePartitionDelete(d *schema.ResourceData, meta interface{}) er
 		PartitionValues: aws.StringSlice(values),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting Glue Partition: %s", err.Error())
+		return fmt.Errorf("Error deleting Glue Partition: %w", err)
 	}
 	return nil
 }
