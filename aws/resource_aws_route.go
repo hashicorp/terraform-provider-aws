@@ -242,7 +242,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	route, err := routeFinder(conn, routeTableID, destination)
 
-	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
+	if isAWSErr(err, tfec2.InvalidRouteTableIDNotFound, "") {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableID)
 		d.SetId("")
 		return nil
@@ -355,16 +355,16 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeRouteNotFound, "") {
+		if isAWSErr(err, tfec2.InvalidRouteNotFound, "") {
 			return nil
 		}
 
 		// Local routes (which may have been imported) cannot be deleted. Remove from state.
-		if isAWSErr(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
+		if isAWSErr(err, tfec2.InvalidParameterValue, "cannot remove local route") {
 			return nil
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
+		if isAWSErr(err, tfec2.InvalidParameterException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -376,7 +376,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteRoute(input)
 	}
 
-	if isAWSErr(err, tfec2.ErrCodeRouteNotFound, "") {
+	if isAWSErr(err, tfec2.InvalidRouteNotFound, "") {
 		return nil
 	}
 
@@ -483,11 +483,11 @@ func createRoute(conn *ec2.EC2, input *ec2.CreateRouteInput, timeout time.Durati
 	err := resource.Retry(timeout, func() *resource.RetryError {
 		_, err := conn.CreateRoute(input)
 
-		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
+		if isAWSErr(err, tfec2.InvalidParameterException, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeTransitGatewayNotFound, "") {
+		if isAWSErr(err, tfec2.InvalidTransitGatewayIDNotFound, "") {
 			return resource.RetryableError(err)
 		}
 

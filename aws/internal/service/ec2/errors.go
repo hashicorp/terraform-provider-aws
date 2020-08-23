@@ -17,6 +17,13 @@ func ErrCodeEquals(err error, code string) bool {
 	return false
 }
 
+// Common.
+const (
+	InvalidParameterException = "InvalidParameterException"
+	InvalidParameterValue     = "InvalidParameterValue"
+)
+
+// Client VPN.
 const (
 	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
@@ -24,15 +31,19 @@ const (
 	ErrCodeClientVpnRouteNotFound             = "InvalidClientVpnRouteNotFound"
 )
 
+// Security Group.
 const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
 
+// Route and Route Table.
 const (
-	ErrCodeInvalidParameterException = "InvalidParameterException"
-	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
-	ErrCodeRouteNotFound             = "InvalidRoute.NotFound"
-	ErrCodeRouteTableNotFound        = "InvalidRouteTableID.NotFound"
-	ErrCodeTransitGatewayNotFound    = "InvalidTransitGatewayID.NotFound"
+	InvalidRouteNotFound        = "InvalidRoute.NotFound"
+	InvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+// Transit Gateway.
+const (
+	InvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
 )
