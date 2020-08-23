@@ -635,6 +635,29 @@ func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_disappears(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueJob(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueJobExists(resourceName string, job *glue.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
