@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -136,15 +136,15 @@ func dataSourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.DescribeClientVpnEndpoints(input)
 	if err != nil {
-		return fmt.Errorf("Error getting Client Vpn Endpoint: %v", err)
+		return fmt.Errorf("error getting Client Vpn Endpoint: %v", err)
 	}
 
 	if resp == nil || len(resp.ClientVpnEndpoints) == 0 {
-		return errors.New("Error reading EC2 Client Vpn Endpoint: no results found")
+		return errors.New("error reading EC2 Client Vpn Endpoint: no results found")
 	}
 
 	if len(resp.ClientVpnEndpoints) > 1 {
-		return errors.New("Error reading EC2 Client Vpn Endpoint: multiple results found, try adjusting search criteria")
+		return errors.New("error reading EC2 Client Vpn Endpoint: multiple results found, try adjusting search criteria")
 	}
 
 	endpoint := resp.ClientVpnEndpoints[0]
