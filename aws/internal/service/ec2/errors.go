@@ -1,5 +1,12 @@
 package ec2
 
+// Common.
+const (
+	ErrCodeInvalidParameterException = "InvalidParameterException"
+	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
+)
+
+// Client VPN.
 const (
 	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
@@ -7,24 +14,30 @@ const (
 	ErrCodeClientVpnRouteNotFound             = "InvalidClientVpnRouteNotFound"
 )
 
+// Security Group.
 const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
 
+// Route and Route Table.
+const (
+	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
+	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+// Transit Gateway.
+const (
+	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
+)
+
+// VPC Peering Connection.
 const (
 	ErrCodeInvalidVpcPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
 )
 
+// VPN Gateway.
 const (
 	InvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
 	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
-)
-
-const (
-	ErrCodeInvalidParameterException = "InvalidParameterException"
-	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
-	ErrCodeRouteNotFound             = "InvalidRoute.NotFound"
-	ErrCodeRouteTableNotFound        = "InvalidRouteTableID.NotFound"
-	ErrCodeTransitGatewayNotFound    = "InvalidTransitGatewayID.NotFound"
 )
