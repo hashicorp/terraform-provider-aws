@@ -601,6 +601,7 @@ func Provider() *schema.Provider {
 			"aws_elb_attachment":                                      resourceAwsElbAttachment(),
 			"aws_emr_cluster":                                         resourceAwsEMRCluster(),
 			"aws_emr_instance_group":                                  resourceAwsEMRInstanceGroup(),
+			"aws_emr_instance_fleet":                                  resourceAwsEMRInstanceFleet(),
 			"aws_emr_security_configuration":                          resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                            resourceAwsFlowLog(),
 			"aws_fsx_lustre_file_system":                              resourceAwsFsxLustreFileSystem(),
