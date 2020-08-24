@@ -185,11 +185,7 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-		nonOverArgs := make(map[string]string)
-		for k, v := range kv.(map[string]interface{}) {
-			nonOverArgs[k] = v.(string)
-		}
-		input.NonOverridableArguments = aws.StringMap(nonOverArgs)
+		input.NonOverridableArguments = stringMapToPointers(kv)
 	}
 
 	if v, ok := d.GetOk("description"); ok {
