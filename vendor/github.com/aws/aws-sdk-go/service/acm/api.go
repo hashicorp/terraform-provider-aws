@@ -4313,6 +4313,9 @@ const (
 	// FailureReasonPcaAccessDenied is a FailureReason enum value
 	FailureReasonPcaAccessDenied = "PCA_ACCESS_DENIED"
 
+	// FailureReasonSlrNotFound is a FailureReason enum value
+	FailureReasonSlrNotFound = "SLR_NOT_FOUND"
+
 	// FailureReasonOther is a FailureReason enum value
 	FailureReasonOther = "OTHER"
 )
@@ -4335,6 +4338,7 @@ func FailureReason_Values() []string {
 		FailureReasonPcaInvalidArgs,
 		FailureReasonPcaInvalidDuration,
 		FailureReasonPcaAccessDenied,
+		FailureReasonSlrNotFound,
 		FailureReasonOther,
 	}
 }

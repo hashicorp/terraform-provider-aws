@@ -14851,21 +14851,21 @@ func (s *AliasExistsException) RequestID() string {
 type AnalyticsConfigurationType struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of an Amazon Pinpoint project. You can use
+	// the Amazon Pinpoint project for Pinpoint integration with the chosen User
+	// Pool Client. Amazon Cognito publishes events to the pinpoint project declared
+	// by the app ARN.
+	ApplicationArn *string `min:"20" type:"string"`
+
 	// The application ID for an Amazon Pinpoint application.
-	//
-	// ApplicationId is a required field
-	ApplicationId *string `type:"string" required:"true"`
+	ApplicationId *string `type:"string"`
 
 	// The external ID.
-	//
-	// ExternalId is a required field
-	ExternalId *string `type:"string" required:"true"`
+	ExternalId *string `type:"string"`
 
 	// The ARN of an IAM role that authorizes Amazon Cognito to publish events to
 	// Amazon Pinpoint analytics.
-	//
-	// RoleArn is a required field
-	RoleArn *string `min:"20" type:"string" required:"true"`
+	RoleArn *string `min:"20" type:"string"`
 
 	// If UserDataShared is true, Amazon Cognito will include user data in the events
 	// it publishes to Amazon Pinpoint analytics.
@@ -14885,14 +14885,8 @@ func (s AnalyticsConfigurationType) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *AnalyticsConfigurationType) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AnalyticsConfigurationType"}
-	if s.ApplicationId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
-	}
-	if s.ExternalId == nil {
-		invalidParams.Add(request.NewErrParamRequired("ExternalId"))
-	}
-	if s.RoleArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	if s.ApplicationArn != nil && len(*s.ApplicationArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationArn", 20))
 	}
 	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
@@ -14902,6 +14896,12 @@ func (s *AnalyticsConfigurationType) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetApplicationArn sets the ApplicationArn field's value.
+func (s *AnalyticsConfigurationType) SetApplicationArn(v string) *AnalyticsConfigurationType {
+	s.ApplicationArn = &v
+	return s
 }
 
 // SetApplicationId sets the ApplicationId field's value.
