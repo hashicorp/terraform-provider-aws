@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -109,8 +110,11 @@ func ec2DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, d
 		if route == nil {
 			continue
 		}
-
-		if aws.StringValue(route.DestinationCidrBlock) == destination {
+		if cidrBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destination) {
+			// normalize IPv6 to RFC1924 compressed
+			_, ipnet, _ := net.ParseCIDR(aws.StringValue(route.DestinationCidrBlock))
+			cidrString := ipnet.String()
+			route.DestinationCidrBlock = &cidrString
 			return route, nil
 		}
 	}
