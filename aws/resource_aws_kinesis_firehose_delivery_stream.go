@@ -83,15 +83,10 @@ func s3ConfigurationSchema() *schema.Schema {
 				},
 
 				"compression_format": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  firehose.CompressionFormatUncompressed,
-					ValidateFunc: validation.StringInSlice([]string{
-						firehose.CompressionFormatUncompressed,
-						firehose.CompressionFormatGzip,
-						firehose.CompressionFormatSnappy,
-						firehose.CompressionFormatZip,
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      firehose.CompressionFormatUncompressed,
+					ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
 				},
 
 				"kms_key_arn": {
@@ -140,15 +135,9 @@ func processingConfigurationSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"parameter_name": {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												firehose.ProcessorParameterNameLambdaArn,
-												firehose.ProcessorParameterNameNumberOfRetries,
-												firehose.ProcessorParameterNameRoleArn,
-												firehose.ProcessorParameterNameBufferSizeInMbs,
-												firehose.ProcessorParameterNameBufferIntervalInSeconds,
-											}, false),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(firehose.ProcessorParameterName_Values(), false),
 										},
 										"parameter_value": {
 											Type:         schema.TypeString,
@@ -159,11 +148,9 @@ func processingConfigurationSchema() *schema.Schema {
 								},
 							},
 							"type": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									firehose.ProcessorTypeLambda,
-								}, false),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(firehose.ProcessorType_Values(), false),
 							},
 						},
 					},
@@ -813,15 +800,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"compression_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  firehose.CompressionFormatUncompressed,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.CompressionFormatUncompressed,
-								firehose.CompressionFormatGzip,
-								firehose.CompressionFormatSnappy,
-								firehose.CompressionFormatZip,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      firehose.CompressionFormatUncompressed,
+							ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
 						},
 
 						"data_format_conversion_configuration": {
@@ -931,14 +913,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Default:  0.05,
 																		},
 																		"compression": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Default:  firehose.OrcCompressionSnappy,
-																			ValidateFunc: validation.StringInSlice([]string{
-																				firehose.OrcCompressionNone,
-																				firehose.OrcCompressionSnappy,
-																				firehose.OrcCompressionZlib,
-																			}, false),
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Default:      firehose.OrcCompressionSnappy,
+																			ValidateFunc: validation.StringInSlice(firehose.OrcCompression_Values(), false),
 																		},
 																		"dictionary_key_threshold": {
 																			Type:     schema.TypeFloat,
@@ -951,13 +929,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			Default:  false,
 																		},
 																		"format_version": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Default:  firehose.OrcFormatVersionV012,
-																			ValidateFunc: validation.StringInSlice([]string{
-																				firehose.OrcFormatVersionV011,
-																				firehose.OrcFormatVersionV012,
-																			}, false),
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Default:      firehose.OrcFormatVersionV012,
+																			ValidateFunc: validation.StringInSlice(firehose.OrcFormatVersion_Values(), false),
 																		},
 																		"padding_tolerance": {
 																			Type:     schema.TypeFloat,
@@ -997,14 +972,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			ValidateFunc: validation.IntAtLeast(67108864),
 																		},
 																		"compression": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Default:  firehose.ParquetCompressionSnappy,
-																			ValidateFunc: validation.StringInSlice([]string{
-																				firehose.ParquetCompressionGzip,
-																				firehose.ParquetCompressionSnappy,
-																				firehose.ParquetCompressionUncompressed,
-																			}, false),
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Default:      firehose.ParquetCompressionSnappy,
+																			ValidateFunc: validation.StringInSlice(firehose.ParquetCompression_Values(), false),
 																		},
 																		"enable_dictionary_compression": {
 																			Type:     schema.TypeBool,
@@ -1025,13 +996,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 																			ValidateFunc: validation.IntAtLeast(65536),
 																		},
 																		"writer_version": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Default:  firehose.ParquetWriterVersionV1,
-																			ValidateFunc: validation.StringInSlice([]string{
-																				firehose.ParquetWriterVersionV1,
-																				firehose.ParquetWriterVersionV2,
-																			}, false),
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Default:      firehose.ParquetWriterVersionV1,
+																			ValidateFunc: validation.StringInSlice(firehose.ParquetWriterVersion_Values(), false),
 																		},
 																	},
 																},
@@ -1106,13 +1074,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"s3_backup_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  firehose.S3BackupModeDisabled,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.S3BackupModeDisabled,
-								firehose.S3BackupModeEnabled,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      firehose.S3BackupModeDisabled,
+							ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
 						},
 
 						"s3_backup_configuration": s3ConfigurationSchema(),
@@ -1155,13 +1120,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"s3_backup_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  firehose.S3BackupModeDisabled,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.S3BackupModeDisabled,
-								firehose.S3BackupModeEnabled,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      firehose.S3BackupModeDisabled,
+							ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
 						},
 
 						"s3_backup_configuration": s3ConfigurationSchema(),
@@ -1170,7 +1132,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      3600,
-							ValidateFunc: validation.StringLenBetween(0, 7200),
+							ValidateFunc: validation.IntBetween(0, 7200),
 						},
 
 						"copy_options": {
@@ -1226,16 +1188,10 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"index_rotation_period": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  firehose.ElasticsearchIndexRotationPeriodOneDay,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.ElasticsearchIndexRotationPeriodNoRotation,
-								firehose.ElasticsearchIndexRotationPeriodOneHour,
-								firehose.ElasticsearchIndexRotationPeriodOneDay,
-								firehose.ElasticsearchIndexRotationPeriodOneWeek,
-								firehose.ElasticsearchIndexRotationPeriodOneMonth,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      firehose.ElasticsearchIndexRotationPeriodOneDay,
+							ValidateFunc: validation.StringInSlice(firehose.ElasticsearchIndexRotationPeriod_Values(), false),
 						},
 
 						"retry_duration": {
@@ -1252,14 +1208,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"s3_backup_mode": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Default:  firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
-								firehose.ElasticsearchS3BackupModeAllDocuments,
-							}, false),
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							Default:      firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
+							ValidateFunc: validation.StringInSlice(firehose.ElasticsearchS3BackupMode_Values(), false),
 						},
 
 						"type_name": {
