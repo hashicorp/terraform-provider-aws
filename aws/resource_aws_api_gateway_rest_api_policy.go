@@ -59,7 +59,7 @@ func resourceAwsApiGatewayRestApiPolicyPut(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting API Gateway REST API Policy %w", err)
 	}
 
 	log.Printf("[DEBUG] API Gateway REST API Policy Set: %s", restApiId)
@@ -83,16 +83,16 @@ func resourceAwsApiGatewayRestApiPolicyRead(d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway REST API Policy (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading API Gateway REST API Policy (%s): %w", d.Id(), err)
 	}
 
 	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
 	if err != nil {
-		fmt.Printf("error normalizing policy JSON: %s\n", err)
+		fmt.Errorf("error normalizing API Gateway REST API policy JSON: %w", err)
 	}
 	policy, err := strconv.Unquote(normalizedPolicy)
 	if err != nil {
-		return fmt.Errorf("error unescaping policy: %s", err)
+		return fmt.Errorf("error unescaping API Gateway REST API policy: %w", err)
 	}
 	d.Set("policy", policy)
 	d.Set("rest_api_id", api.Id)
@@ -120,7 +120,7 @@ func resourceAwsApiGatewayRestApiPolicyDelete(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting API Gateway REST API policy: %w", err)
 	}
 
 	log.Printf("[DEBUG] API Gateway REST API Policy Deleted: %s", restApiId)
