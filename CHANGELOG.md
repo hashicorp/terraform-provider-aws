@@ -14,6 +14,7 @@ BUG FIXES
 * resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
 * resource/aws_globalaccelerator_accelerator: Increase creation timeout to 10 minutes [GH-14486]
 * resource/aws_globalaccelerator_endpoint_group: Prevent differences with `health_check_path` defaults [GH-14486]
+* resource/aws_glue_crawler: Properly update `schedule` value [GH-14792]
 
 ## 3.3.0 (August 20, 2020)
 
