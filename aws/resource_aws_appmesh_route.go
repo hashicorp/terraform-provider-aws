@@ -185,19 +185,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 												},
 
 												"method": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														appmesh.HttpMethodConnect,
-														appmesh.HttpMethodDelete,
-														appmesh.HttpMethodGet,
-														appmesh.HttpMethodHead,
-														appmesh.HttpMethodOptions,
-														appmesh.HttpMethodPatch,
-														appmesh.HttpMethodPost,
-														appmesh.HttpMethodPut,
-														appmesh.HttpMethodTrace,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
 												},
 
 												"prefix": {
@@ -207,12 +197,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 												},
 
 												"scheme": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														appmesh.HttpSchemeHttp,
-														appmesh.HttpSchemeHttps,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appmesh.HttpScheme_Values(), false),
 												},
 											},
 										},
@@ -246,12 +233,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 															},
 
 															"value": {
