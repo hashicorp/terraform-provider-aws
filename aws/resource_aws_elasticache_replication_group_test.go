@@ -1037,7 +1037,7 @@ resource "aws_elasticache_replication_group" "test" {
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
-  availability_zones            = [data.aws_availability_zones.available.names[0]}
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
