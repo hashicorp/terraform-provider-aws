@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -24,10 +25,10 @@ func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfigWithPolicy(rName),
+				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"execute-api:Invoke".+`)),
 				),
 			},
 			{
@@ -36,11 +37,10 @@ func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfigUpdatePolicy(rName),
+				Config: testAccAWSAPIGatewayRestApiPolicyConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-				),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
 			},
 		},
 	})
@@ -57,7 +57,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfigWithPolicy(rName),
+				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApiPolicy(), resourceName),
@@ -79,7 +79,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfigWithPolicy(rName),
+				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), "aws_api_gateway_rest_api.test"),
@@ -156,7 +156,35 @@ func testAccCheckAWSAPIGatewayRestApiPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayRestApiPolicyConfigWithPolicy(rName string) string {
+func testAccAWSAPIGatewayRestApiPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_rest_api_policy" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+   "Statement": [
+       {
+           "Effect": "Deny",
+           "Principal": {
+               "AWS": "*"
+           },
+           "Action": "execute-api:Invoke",
+           "Resource": "${aws_api_gateway_rest_api.test.arn}"
+       }
+   ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayRestApiPolicyConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -183,34 +211,6 @@ resource "aws_api_gateway_rest_api_policy" "test" {
       }
     }
   ]
-}
-EOF
-}
-`, rName)
-}
-
-func testAccAWSAPIGatewayRestApiPolicyConfigUpdatePolicy(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = %[1]q
-}
-
-resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-   "Statement": [
-       {
-           "Effect": "Deny",
-           "Principal": {
-               "AWS": "*"
-           },
-           "Action": "execute-api:Invoke",
-           "Resource": "${aws_api_gateway_rest_api.test.arn}"
-       }
-   ]
 }
 EOF
 }
