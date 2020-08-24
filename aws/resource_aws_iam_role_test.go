@@ -724,7 +724,7 @@ func testAccAWSIAMRoleConfigWithDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
-  description = "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"
+  description = "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"
   path        = "/"
 
   assume_role_policy = <<EOF
