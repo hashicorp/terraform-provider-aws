@@ -604,6 +604,21 @@ func InstanceFleetConfigSchema() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"on_demand_specification": {
+							Type:     schema.TypeList,
+							Required: true,
+							ForceNew: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"allocation_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(emr.OnDemandProvisioningAllocationStrategy_Values(), false),
+									},
+								},
+							},
+						},
 						"spot_specification": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -611,6 +626,11 @@ func InstanceFleetConfigSchema() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"allocation_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningAllocationStrategy_Values(), false),
+									},
 									"block_duration_minutes": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -2041,8 +2061,18 @@ func flattenLaunchSpecifications(launchSpecifications *emr.InstanceFleetProvisio
 	}
 
 	m := map[string]interface{}{
-		// launchSpecifications.OnDemandSpecification
-		"spot_specification": flattenSpotSpecification(launchSpecifications.SpotSpecification),
+		"on_demand_specification": flattenOnDemandSpecification(launchSpecifications.OnDemandSpecification),
+		"spot_specification":      flattenSpotSpecification(launchSpecifications.SpotSpecification),
+	}
+	return []interface{}{m}
+}
+
+func flattenOnDemandSpecification(onDemandSpecification *emr.OnDemandProvisioningSpecification) []interface{} {
+	if onDemandSpecification == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"allocation_strategy": aws.StringValue(onDemandSpecification.AllocationStrategy),
 	}
 	return []interface{}{m}
 }
@@ -2057,6 +2087,9 @@ func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecificati
 	}
 	if spotSpecification.BlockDurationMinutes != nil {
 		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
+	}
+	if spotSpecification.AllocationStrategy != nil {
+		m["allocation_strategy"] = aws.StringValue(spotSpecification.AllocationStrategy)
 	}
 
 	return []interface{}{m}
@@ -2122,26 +2155,35 @@ func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.Instanc
 }
 
 func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.InstanceFleetProvisioningSpecifications {
+	onDemandSpecification := launchSpecification["on_demand_specification"].([]interface{})
 	spotSpecification := launchSpecification["spot_specification"].([]interface{})
 
-	return &emr.InstanceFleetProvisioningSpecifications{
-		SpotSpecification: expandSpotSpecification(spotSpecification[0]),
-	}
-}
+	fleetSpecification := &emr.InstanceFleetProvisioningSpecifications{}
 
-func expandSpotSpecification(spotSpecification interface{}) *emr.SpotProvisioningSpecification {
-	configAttributes := spotSpecification.(map[string]interface{})
-
-	spotProvisioning := &emr.SpotProvisioningSpecification{
-		TimeoutAction:          aws.String(configAttributes["timeout_action"].(string)),
-		TimeoutDurationMinutes: aws.Int64(int64(configAttributes["timeout_duration_minutes"].(int))),
+	if len(onDemandSpecification) > 0 {
+		fleetSpecification.OnDemandSpecification = &emr.OnDemandProvisioningSpecification{
+			AllocationStrategy: aws.String(onDemandSpecification[0].(map[string]interface{})["allocation_strategy"].(string)),
+		}
 	}
 
-	if v, ok := configAttributes["block_duration_minutes"]; ok && v != 0 {
-		spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+	if len(spotSpecification) > 0 {
+		configAttributes := spotSpecification[0].(map[string]interface{})
+		spotProvisioning := &emr.SpotProvisioningSpecification{
+			TimeoutAction:          aws.String(configAttributes["timeout_action"].(string)),
+			TimeoutDurationMinutes: aws.Int64(int64(configAttributes["timeout_duration_minutes"].(int))),
+		}
+		if v, ok := configAttributes["block_duration_minutes"]; ok && v != 0 {
+			spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+		}
+		if v, ok := configAttributes["allocation_strategy"]; ok {
+
+			spotProvisioning.AllocationStrategy = aws.String(v.(string))
+		}
+
+		fleetSpecification.SpotSpecification = spotProvisioning
 	}
 
-	return spotProvisioning
+	return fleetSpecification
 }
 
 func expandConfigurations(configurations []interface{}) []*emr.Configuration {
