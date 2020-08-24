@@ -2811,17 +2811,19 @@ var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpoint = testAccKi
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
 
-  name = "terraform-kinesis-firehose-es-%d"
+  name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   elasticsearch_configuration {
     cluster_endpoint = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
-    role_arn = "${aws_iam_role.firehose.arn}"
-    index_name = "test"
-    type_name = "test"
+    role_arn         = aws_iam_role.firehose.arn
+    index_name       = "test"
+    type_name        = "test"
   }
 }`
 
@@ -2829,24 +2831,29 @@ var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpointUpdate = tes
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
 
-  name = "terraform-kinesis-firehose-es-%d"
+  name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   elasticsearch_configuration {
-    cluster_endpoint = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
-    role_arn = "${aws_iam_role.firehose.arn}"
-    index_name = "test"
-    type_name = "test"
+    cluster_endpoint   = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
+    role_arn           = "${aws_iam_role.firehose.arn}"
+    index_name         = "test"
+    type_name          = "test"
     buffering_interval = 500
+
     processing_configuration {
       enabled = false
+
       processors {
         type = "Lambda"
+
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
       }
