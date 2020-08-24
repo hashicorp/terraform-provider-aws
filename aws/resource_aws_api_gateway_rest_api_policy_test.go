@@ -82,7 +82,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestApiPolicyConfigWithPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), "aws_api_gateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -163,7 +163,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 
   policy = <<EOF
 {
@@ -196,7 +196,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 
   policy = <<EOF
 {
