@@ -68,6 +68,28 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
+	var v apigateway.RestApi
+	resourceName := "aws_api_gateway_rest_api_policy.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestApiPolicyConfigWithPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.RestApi) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -91,11 +113,11 @@ func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.Rest
 
 		normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(describe.Policy) + `"`)
 		if err != nil {
-			fmt.Printf("error normalizing policy JSON: %s\n", err)
+			return fmt.Errorf("error normalizing API Gateway REST API policy JSON: %w", err)
 		}
 		policy, err := strconv.Unquote(normalizedPolicy)
 		if err != nil {
-			return fmt.Errorf("error unescaping policy: %s", err)
+			return fmt.Errorf("error unescaping API Gateway REST API policy: %w", err)
 		}
 
 		if aws.StringValue(describe.Id) != rs.Primary.ID &&

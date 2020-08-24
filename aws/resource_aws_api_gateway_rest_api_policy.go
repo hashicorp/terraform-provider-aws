@@ -88,7 +88,7 @@ func resourceAwsApiGatewayRestApiPolicyRead(d *schema.ResourceData, meta interfa
 
 	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
 	if err != nil {
-		fmt.Errorf("error normalizing API Gateway REST API policy JSON: %w", err)
+		return fmt.Errorf("error normalizing API Gateway REST API policy JSON: %w", err)
 	}
 	policy, err := strconv.Unquote(normalizedPolicy)
 	if err != nil {
