@@ -131,18 +131,13 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													Computed:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 
 												"protocol": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														appmesh.PortProtocolHttp,
-														appmesh.PortProtocolTcp,
-														appmesh.PortProtocolGrpc,
-														appmesh.PortProtocolHttp2,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
 												},
 
 												"timeout_millis": {
@@ -170,18 +165,13 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 
 												"protocol": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														appmesh.PortProtocolHttp,
-														appmesh.PortProtocolTcp,
-														appmesh.PortProtocolGrpc,
-														appmesh.PortProtocolHttp2,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
 												},
 											},
 										},
