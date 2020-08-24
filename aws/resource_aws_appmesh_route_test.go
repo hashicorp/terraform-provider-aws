@@ -996,11 +996,11 @@ resource "aws_appmesh_virtual_node" "bar" {
 }
 
 func testAccAwsAppmeshRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     grpc_route {
@@ -1030,22 +1030,22 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_grpcRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     grpc_route {
@@ -1095,27 +1095,27 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 90
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 10
         }
       }
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     grpc_route {
@@ -1165,27 +1165,27 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 99
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 0
         }
       }
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http2_route {
@@ -1214,22 +1214,22 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_http2RouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "http2", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
-  mesh_name           = "${aws_appmesh_mesh.test.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+  mesh_name           = aws_appmesh_mesh.test.id
+  virtual_router_name = aws_appmesh_virtual_router.test.name
 
   spec {
     http2_route {
@@ -1276,14 +1276,14 @@ resource "aws_appmesh_route" "test" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
         }
       }
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
