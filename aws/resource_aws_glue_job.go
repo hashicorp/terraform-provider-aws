@@ -177,15 +177,11 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if kv, ok := d.GetOk("default_arguments"); ok {
-		defaultArgumentsMap := make(map[string]string)
-		for k, v := range kv.(map[string]interface{}) {
-			defaultArgumentsMap[k] = v.(string)
-		}
-		input.DefaultArguments = aws.StringMap(defaultArgumentsMap)
+		input.DefaultArguments = stringMapToPointers(kv.(map[string]interface{}))
 	}
 
 	if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-		input.NonOverridableArguments = stringMapToPointers(kv)
+		input.NonOverridableArguments = stringMapToPointers(kv.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -339,15 +335,11 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if kv, ok := d.GetOk("default_arguments"); ok {
-			defaultArgumentsMap := make(map[string]string)
-			for k, v := range kv.(map[string]interface{}) {
-				defaultArgumentsMap[k] = v.(string)
-			}
-			jobUpdate.DefaultArguments = aws.StringMap(defaultArgumentsMap)
+			jobUpdate.DefaultArguments = stringMapToPointers(kv.(map[string]interface{}))
 		}
 
 		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-			jobUpdate.NonOverridableArguments = stringMapToPointers(kv)
+			jobUpdate.NonOverridableArguments = stringMapToPointers(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("description"); ok {
