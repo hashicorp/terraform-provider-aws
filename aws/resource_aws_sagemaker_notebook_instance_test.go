@@ -591,7 +591,7 @@ func testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName string, ro
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
 	name = %[1]q
-	role_arn = "${aws_iam_role.foo.arn}"
+	role_arn = aws_iam_role.foo.arn
 	instance_type = "ml.t2.medium"
 	root_access = %[2]q
 }
@@ -599,7 +599,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 resource "aws_iam_role" "foo" {
 	name = %[1]q
 	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+	assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {

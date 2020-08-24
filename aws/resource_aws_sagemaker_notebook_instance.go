@@ -79,10 +79,8 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Default:  sagemaker.RootAccessEnabled,
-				ValidateFunc: validation.StringInSlice([]string{
-					sagemaker.RootAccessDisabled,
-					sagemaker.RootAccessEnabled,
-				}, false),
+				ValidateFunc: validation.StringInSlice(
+					sagemaker.RootAccess_Values(), false),
 			},
 
 			"direct_internet_access": {
