@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_db_proxy
 
-Provides an RDS DB proxy resource.
+Provides an RDS DB proxy resource. For additional information, see the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html).
 
 ## Example Usage
 
@@ -42,7 +42,7 @@ resource "aws_db_proxy" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The identifier for the proxy. This name must be unique for all proxies owned by your AWS account in the specified AWS Region. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
-* `auth` - (Required) The authorization mechanism that the proxy uses.
+* `auth` - (Required) Configuration block(s) with authorization mechanisms to connect to the associated instances or clusters. Described below.
 * `debug_logging` - (Optional) Whether the proxy includes detailed information about SQL statements in its logs. This information helps you to debug issues involving SQL behavior or the performance and scalability of the proxy connections. The debug information includes the text of SQL statements that you submit through the proxy. Thus, only enable this setting when needed for debugging, and only when you have security measures in place to safeguard any sensitive information that appears in the logs.
 * `engine_family` - (Required, Forces new resource) The kinds of databases that the proxy can connect to. This value determines which database network protocol the proxy recognizes when it interprets network traffic to and from the database. Currently, this value is always `MYSQL`. The engine family applies to both RDS MySQL and Aurora MySQL.
 * `idle_client_timeout` - (Optional) The number of seconds that a connection to the proxy can be inactive before the proxy disconnects it. You can set this value higher or lower than the connection timeout limit for the associated database.
