@@ -16,7 +16,7 @@ Provides a WAF Web ACL Resource
 resource "aws_waf_ipset" "ipset" {
   name = "tfIPSet"
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }

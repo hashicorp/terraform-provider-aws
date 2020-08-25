@@ -34,7 +34,7 @@ func resourceAwsWafIPSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_set_descriptors": {
+			"ip_set_descriptor": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -76,7 +76,7 @@ func resourceAwsWafIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	resp := out.(*waf.CreateIPSetOutput)
 	d.SetId(*resp.IPSet.IPSetId)
 
-	if v, ok := d.GetOk("ip_set_descriptors"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("ip_set_descriptor"); ok && v.(*schema.Set).Len() > 0 {
 
 		err := updateWafIpSetDescriptors(d.Id(), nil, v.(*schema.Set).List(), conn)
 		if err != nil {
@@ -115,7 +115,7 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 		descriptors = append(descriptors, d)
 	}
 
-	d.Set("ip_set_descriptors", descriptors)
+	d.Set("ip_set_descriptor", descriptors)
 
 	d.Set("name", resp.IPSet.Name)
 
@@ -133,8 +133,8 @@ func resourceAwsWafIPSetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsWafIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	if d.HasChange("ip_set_descriptors") {
-		o, n := d.GetChange("ip_set_descriptors")
+	if d.HasChange("ip_set_descriptor") {
+		o, n := d.GetChange("ip_set_descriptor")
 		oldD, newD := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateWafIpSetDescriptors(d.Id(), oldD, newD, conn)
@@ -149,7 +149,7 @@ func resourceAwsWafIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsWafIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()
+	oldDescriptors := d.Get("ip_set_descriptor").(*schema.Set).List()
 
 	if len(oldDescriptors) > 0 {
 		err := updateWafIpSetDescriptors(d.Id(), oldDescriptors, nil, conn)

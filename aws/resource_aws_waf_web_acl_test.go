@@ -509,7 +509,7 @@ func testAccAWSWafWebAclConfig_Rules_Single_Rule(rName string) string {
 resource "aws_waf_ipset" "test" {
   name = %q
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -579,7 +579,7 @@ func testAccAWSWafWebAclConfig_Rules_Multiple(rName string) string {
 resource "aws_waf_ipset" "test" {
   name = %q
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }

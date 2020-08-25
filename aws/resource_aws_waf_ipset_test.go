@@ -31,7 +31,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
@@ -85,7 +85,7 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
@@ -101,7 +101,7 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", uName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
@@ -126,8 +126,8 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
@@ -143,8 +143,8 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						"type":  "IPV4",
 						"value": "192.0.8.0/24",
 					}),
@@ -169,7 +169,7 @@ func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "0"),
 				),
 			},
 			{
@@ -202,7 +202,7 @@ func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 	ipSetDescriptors := make([]string, 0, 2048)
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incrementIP(ip) {
-		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptors {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
+		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptor {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -214,7 +214,7 @@ func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 				Config: testAccAWSWafIPSetConfig_IpSetDescriptors(rName, strings.Join(ipSetDescriptors, "\n")),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafIPSetExists(resourceName, &ipset),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "2048"),
 				),
 			},
 			{
@@ -461,7 +461,7 @@ func testAccAWSWafIPSetConfig(name string) string {
 resource "aws_waf_ipset" "test" {
   name = %[1]q
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -474,7 +474,7 @@ func testAccAWSWafIPSetConfigChangeName(name string) string {
 resource "aws_waf_ipset" "test" {
   name = %[1]q
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -487,7 +487,7 @@ func testAccAWSWafIPSetConfigChangeIPSetDescriptors(name string) string {
 resource "aws_waf_ipset" "test" {
   name = %[1]q
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.8.0/24"
   }
@@ -518,7 +518,7 @@ func testAccAWSWafIPSetIPV6Config(name string) string {
 resource "aws_waf_ipset" "test" {
   name = %[1]q
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV6"
     value = "1234:5678:9abc:6811:0000:0000:0000:0000/64"
   }

@@ -432,7 +432,7 @@ func testAccAWSWafRuleConfig(name string) string {
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -457,7 +457,7 @@ func testAccAWSWafRuleConfigChangeName(name string) string {
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -482,7 +482,7 @@ func testAccAWSWafRuleConfig_changePredicates(name string) string {
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -554,7 +554,7 @@ func testAccAWSWafRuleConfigTags1(rName, tag1Key, tag1Value string) string {
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
@@ -583,7 +583,7 @@ func testAccAWSWafRuleConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value 
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
 
-  ip_set_descriptors {
+  ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
   }
