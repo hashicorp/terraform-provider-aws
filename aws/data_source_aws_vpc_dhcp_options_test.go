@@ -46,7 +46,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 
 func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_vpc_dhcp_options.test"
+	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{

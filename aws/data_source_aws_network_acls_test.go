@@ -97,7 +97,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "testacc-acl-%s"
+    Name = "testacc-acl-%[1]s"
   }
 }
 
@@ -107,10 +107,10 @@ resource "aws_network_acl" "acl" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "testacc-acl-%s"
+    Name = "testacc-acl-%[1]s"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccDataSourceAwsNetworkAclsConfig_basic(rName string) string {
