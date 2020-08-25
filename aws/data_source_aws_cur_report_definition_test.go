@@ -87,13 +87,13 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURBillingACLPolicy",
       "Effect": "Allow",
       "Principal": {
-        "AWS": data.aws_billing_service_account.test.arn
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": [
         "s3:GetBucketAcl",
         "s3:GetBucketPolicy"
       ],
-      "Resource": aws_s3_bucket.test.arn
+      "Resource": "${aws_s3_bucket.test.arn}"
     },
     {
       "Sid": "AllowCURPutObject",
