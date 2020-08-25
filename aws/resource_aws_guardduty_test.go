@@ -37,7 +37,8 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			"basic": TestAccAwsGuardDutyPublishingDestination_basic,
+			"basic":      testAccAwsGuardDutyPublishingDestination_basic,
+			"disappears": testAccAwsGuardDutyPublishingDestination_disappears,
 		},
 	}
 

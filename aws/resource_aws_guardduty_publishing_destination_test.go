@@ -78,7 +78,7 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
+func testAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
 	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 	detectorResourceName := "aws_guardduty_detector.test_gd"
@@ -108,11 +108,11 @@ func TestAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
+func testAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
 	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,

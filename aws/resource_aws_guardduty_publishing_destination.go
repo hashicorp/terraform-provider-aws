@@ -30,12 +30,10 @@ func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 				ForceNew: true,
 			},
 			"destination_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  guardduty.DestinationTypeS3,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.DestinationTypeS3,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      guardduty.DestinationTypeS3,
+				ValidateFunc: validation.StringInSlice(guardduty.DestinationType_Values(), false),
 			},
 			"destination_arn": {
 				Type:         schema.TypeString,
@@ -70,14 +68,14 @@ func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, met
 		return fmt.Errorf("Creating GuardDuty publishing destination failed: %w", err)
 	}
 
-	_, err = waiter.PublishingDestinationCreated(conn, *output.DestinationId, detectorID)
+	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
+
+	_, err = waiter.PublishingDestinationCreated(conn, aws.StringValue(output.DestinationId), detectorID)
 
 	if err != nil {
 		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %w",
 			guardduty.PublishingStatusPublishing, err)
 	}
-
-	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
 
 	return resourceAwsGuardDutyPublishingDestinationRead(d, meta)
 }
