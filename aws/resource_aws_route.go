@@ -145,12 +145,12 @@ func resourceAwsRoute() *schema.Resource {
 func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttr, targetAttr, err := routeDestinationAndTargetAttributes(d)
+	destinationAttributeKey, targetAttributeKey, err := getRouteDestinationAndTargetAttributeKeysFromResourceData(d)
 	if err != nil {
 		return err
 	}
 
-	destination := d.Get(destinationAttr).(string)
+	destination := d.Get(destinationAttributeKey).(string)
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.CreateRouteInput{
 		RouteTableId: aws.String(routeTableID),
@@ -158,7 +158,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var routeFinder finder.RouteFinder
 
-	switch destinationAttr {
+	switch destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = aws.String(destination)
 		routeFinder = finder.RouteByIpv4Destination
@@ -166,11 +166,11 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DestinationIpv6CidrBlock = aws.String(destination)
 		routeFinder = finder.RouteByIpv6Destination
 	default:
-		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
+		return fmt.Errorf("unexpected destination attribute: %q", destinationAttributeKey)
 	}
 
-	target := aws.String(d.Get(targetAttr).(string))
-	switch targetAttr {
+	target := aws.String(d.Get(targetAttributeKey).(string))
+	switch targetAttributeKey {
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -188,7 +188,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	case "vpc_peering_connection_id":
 		input.VpcPeeringConnectionId = target
 	default:
-		return fmt.Errorf("unexpected target attribute: `%s`", targetAttr)
+		return fmt.Errorf("unexpected target attribute: %q", targetAttributeKey)
 	}
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
@@ -232,21 +232,24 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttr := routeDestinationAttr(d)
-
-	destination := d.Get(destinationAttr).(string)
-	routeTableID := d.Get("route_table_id").(string)
+	destinationAttributeKey := getRouteDestinationAttributeKeyFromResourceData(d)
+	if destinationAttributeKey == "" {
+		return fmt.Errorf("missing route destination attribute")
+	}
 
 	var routeFinder finder.RouteFinder
 
-	switch destinationAttr {
+	switch destinationAttributeKey {
 	case "destination_cidr_block":
 		routeFinder = finder.RouteByIpv4Destination
 	case "destination_ipv6_cidr_block":
 		routeFinder = finder.RouteByIpv6Destination
 	default:
-		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
+		return fmt.Errorf("unexpected route destination attribute: %q", destinationAttributeKey)
 	}
+
+	destination := d.Get(destinationAttributeKey).(string)
+	routeTableID := d.Get("route_table_id").(string)
 
 	route, err := routeFinder(conn, routeTableID, destination)
 
@@ -287,28 +290,28 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttr, targetAttr, err := routeDestinationAndTargetAttributes(d)
+	destinationAttributeKey, targetAttributeKey, err := getRouteDestinationAndTargetAttributeKeysFromResourceData(d)
 	if err != nil {
 		return err
 	}
 
-	destination := d.Get(destinationAttr).(string)
+	destination := d.Get(destinationAttributeKey).(string)
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.ReplaceRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	switch destinationAttr {
+	switch destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = aws.String(destination)
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = aws.String(destination)
 	default:
-		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
+		return fmt.Errorf("unexpected destination attribute: %q", destinationAttributeKey)
 	}
 
-	target := aws.String(d.Get(targetAttr).(string))
-	switch targetAttr {
+	target := aws.String(d.Get(targetAttributeKey).(string))
+	switch targetAttributeKey {
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -326,7 +329,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	case "vpc_peering_connection_id":
 		input.VpcPeeringConnectionId = target
 	default:
-		return fmt.Errorf("unexpected target attribute: `%s`", targetAttr)
+		return fmt.Errorf("unexpected target attribute: %q", targetAttributeKey)
 	}
 
 	log.Printf("[DEBUG] Updating Route: %s", input)
@@ -342,21 +345,24 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttr := routeDestinationAttr(d)
+	destinationAttributeKey := getRouteDestinationAttributeKeyFromResourceData(d)
+	if destinationAttributeKey == "" {
+		return fmt.Errorf("missing route destination attribute")
+	}
 
-	destination := d.Get(destinationAttr).(string)
+	destination := d.Get(destinationAttributeKey).(string)
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.DeleteRouteInput{
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	switch destinationAttr {
+	switch destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = aws.String(destination)
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = aws.String(destination)
 	default:
-		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
+		return fmt.Errorf("unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
@@ -398,56 +404,35 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// routeDestinationAttr return the route's destination attribute name.
-// No validation is done.
-func routeDestinationAttr(d *schema.ResourceData) string {
-	destinationAttrs := []string{"destination_cidr_block", "destination_ipv6_cidr_block"}
-
-	for _, attr := range destinationAttrs {
-		if v := d.Get(attr).(string); v != "" {
-			return attr
-		}
-	}
-
-	return ""
+// Map of attribute key to whether or not the attribute supports IPv4 and IPv6 destinations.
+type routeAttributes map[string]struct {
+	ipv4Destination bool
+	ipv6Destination bool
 }
 
-// routeDestinationAndTargetAttributes return the route's destination and target attribute names.
-// It also validates the resource, returning any validation error.
-func routeDestinationAndTargetAttributes(d *schema.ResourceData) (string, string, error) {
-	destinationAttrs := map[string]struct {
+// Returns the attribute map's keys.
+func (m routeAttributes) keys() []string {
+	keys := []string{}
+
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+var (
+	routeDestinationAttributes = routeAttributes(map[string]struct {
 		ipv4Destination bool
 		ipv6Destination bool
 	}{
 		"destination_cidr_block":      {true, false},
 		"destination_ipv6_cidr_block": {false, true},
-	}
+	})
 
-	destinationAttr := ""
-	ipv4Destination := false
-	ipv6Destination := false
-	for attr, kind := range destinationAttrs {
-		if v := d.Get(attr).(string); v != "" {
-			if destinationAttr != "" {
-				return "", "", fmt.Errorf("`%s` conflicts with `%s`", attr, destinationAttr)
-			}
+	routeDestinationAttributeKeys = routeDestinationAttributes.keys()
 
-			destinationAttr = attr
-			ipv4Destination = kind.ipv4Destination
-			ipv6Destination = kind.ipv6Destination
-		}
-	}
-
-	if destinationAttr == "" {
-		keys := []string{}
-		for k := range destinationAttrs {
-			keys = append(keys, k)
-		}
-
-		return "", "", fmt.Errorf("one of `%s` must be specified", strings.Join(keys, "`, `"))
-	}
-
-	targetAttrs := map[string]struct {
+	routeTargetAttributes = routeAttributes(map[string]struct {
 		ipv4Destination bool
 		ipv6Destination bool
 	}{
@@ -458,33 +443,67 @@ func routeDestinationAndTargetAttributes(d *schema.ResourceData) (string, string
 		"network_interface_id":      {true, true},
 		"transit_gateway_id":        {true, false},
 		"vpc_peering_connection_id": {true, true},
+	})
+
+	routeTargetAttributeKeys = routeTargetAttributes.keys()
+
+	routeDestinationAndTargetAttributeKeys = append(append([]string{}, routeDestinationAttributeKeys...), routeTargetAttributeKeys...)
+)
+
+// getRouteDestinationAttributeKeyFromResourceData return the route's destination attribute key.
+// No validation is done.
+func getRouteDestinationAttributeKeyFromResourceData(d *schema.ResourceData) string {
+	for _, k := range routeDestinationAttributeKeys {
+		if v := d.Get(k).(string); v != "" {
+			return k
+		}
 	}
 
-	targetAttr := ""
-	for attr, allowed := range targetAttrs {
-		if v := d.Get(attr).(string); v != "" && d.HasChange(attr) {
-			if targetAttr != "" {
-				return "", "", fmt.Errorf("`%s` conflicts with `%s`", attr, targetAttr)
+	return ""
+}
+
+// getRouteDestinationAndTargetAttributeKeysFromResourceData return the route's destination and target attribute keys.
+// It also validates the resource, returning any validation error.
+func getRouteDestinationAndTargetAttributeKeysFromResourceData(d *schema.ResourceData) (string, string, error) {
+	destinationAttributeKey := ""
+	ipv4Destination := false
+	ipv6Destination := false
+	for key, kind := range routeDestinationAttributes {
+		if v := d.Get(key).(string); v != "" {
+			if destinationAttributeKey != "" {
+				return "", "", fmt.Errorf("%q conflicts with %q", key, destinationAttributeKey)
+			}
+
+			destinationAttributeKey = key
+			ipv4Destination = kind.ipv4Destination
+			ipv6Destination = kind.ipv6Destination
+		}
+	}
+
+	if destinationAttributeKey == "" {
+		return "", "", fmt.Errorf("one of %q must be specified", strings.Join(routeDestinationAttributeKeys, "\", \""))
+	}
+
+	targetAttributeKey := ""
+	for key, allowed := range routeTargetAttributes {
+		if v := d.Get(key).(string); v != "" && d.HasChange(key) {
+			if targetAttributeKey != "" {
+				return "", "", fmt.Errorf("%q conflicts with %q", key, targetAttributeKey)
 			}
 
 			if (ipv4Destination && !allowed.ipv4Destination) || (ipv6Destination && !allowed.ipv6Destination) {
-				return "", "", fmt.Errorf("`%s` not allowed for `%s` target", destinationAttr, attr)
+				return "", "", fmt.Errorf("%q not allowed for %q target", destinationAttributeKey, key)
 			}
 
-			targetAttr = attr
+			targetAttributeKey = key
 		}
 	}
 
-	if targetAttr == "" {
-		keys := []string{}
-		for k := range targetAttrs {
-			keys = append(keys, k)
-		}
-
-		return "", "", fmt.Errorf("one of `%s` must be specified", strings.Join(keys, "`, `"))
+	if targetAttributeKey == "" {
+		return "", "", fmt.Errorf("one of %s must be specified", strings.Join(routeTargetAttributeKeys, "\", \""))
 	}
 
-	return destinationAttr, targetAttr, nil
+	return destinationAttributeKey, targetAttributeKey, nil
 }
 
 // createRoute attempts to create a route.
