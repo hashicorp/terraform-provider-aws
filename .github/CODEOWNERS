@@ -31,3 +31,6 @@
 
 /aws/*_aws_sagemaker_*.go     @DrFaust92 @terraform-providers/aws-provider
 /website/**/sagemaker*        @DrFaust92 @terraform-providers/aws-provider
+
+/aws/*_aws_workspaces_*.go     @Tensho @terraform-providers/aws-provider
+/website/**/workspaces*        @Tensho @terraform-providers/aws-provider
