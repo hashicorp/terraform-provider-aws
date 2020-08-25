@@ -239,7 +239,7 @@ func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecent(domain string, 
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
   domain      = "%s"
-  most_recent = %v
+  most_recent = %t
 }
 `, domain, mostRecent)
 }
@@ -249,7 +249,7 @@ func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain
 data "aws_acm_certificate" "test" {
   domain      = "%s"
   statuses    = ["%s"]
-  most_recent = %v
+  most_recent = %t
 }
 `, domain, status, mostRecent)
 }
@@ -259,7 +259,7 @@ func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndTypes(domain,
 data "aws_acm_certificate" "test" {
   domain      = "%s"
   types       = ["%s"]
-  most_recent = %v
+  most_recent = %t
 }
 `, domain, certType, mostRecent)
 }

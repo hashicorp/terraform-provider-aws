@@ -1535,10 +1535,10 @@ func testAccProviderConfigAssumeRolePolicy(policy string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-	assume_role {
-		role_arn = %q
-		policy   = %q
-	}
+  assume_role {
+    role_arn = %q
+    policy   = %q
+  }
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }

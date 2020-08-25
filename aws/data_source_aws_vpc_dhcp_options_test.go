@@ -121,16 +121,16 @@ resource "aws_vpc_dhcp_options" "incorrect" {
 }
 
 resource "aws_vpc_dhcp_options" "test" {
-  count = %d
+  count = %[2]d
 
-  domain_name          = "tf-acc-test-%d.example.com"
+  domain_name          = "tf-acc-test-%[1]d.example.com"
   domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
   netbios_name_servers = ["127.0.0.1"]
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
   tags = {
-    Name = "tf-acc-test-%d"
+    Name = "tf-acc-test-%[1]d"
   }
 }
 
@@ -142,8 +142,8 @@ data "aws_vpc_dhcp_options" "test" {
 
   filter {
     name   = "value"
-    values = [aws_vpc_dhcp_options.test.0.domain_name]
+    values = [aws_vpc_dhcp_options.test[0].domain_name]
   }
 }
-`, count, rInt, rInt)
+`, rInt, count)
 }
