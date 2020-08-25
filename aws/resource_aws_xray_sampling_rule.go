@@ -183,35 +183,39 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	samplingRuleUpdate := &xray.SamplingRuleUpdate{
-		RuleName:      aws.String(d.Id()),
-		Priority:      aws.Int64(int64(d.Get("priority").(int))),
-		FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
-		ReservoirSize: aws.Int64(int64(d.Get("reservoir_size").(int))),
-		ServiceName:   aws.String(d.Get("service_name").(string)),
-		ServiceType:   aws.String(d.Get("service_type").(string)),
-		Host:          aws.String(d.Get("host").(string)),
-		HTTPMethod:    aws.String(d.Get("http_method").(string)),
-		URLPath:       aws.String(d.Get("url_path").(string)),
-	}
-
-	if d.HasChange("attributes") {
-		attributes := map[string]*string{}
-		if v, ok := d.GetOk("attributes"); ok {
-			if m, ok := v.(map[string]interface{}); ok {
-				attributes = stringMapToPointers(m)
-			}
+	if d.HasChanges("priority", "fixed_rate", "reservoir_size", "service_name", "service_type",
+		"host", "http_method", "url_path", "resource_arn") {
+		samplingRuleUpdate := &xray.SamplingRuleUpdate{
+			RuleName:      aws.String(d.Id()),
+			Priority:      aws.Int64(int64(d.Get("priority").(int))),
+			FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
+			ReservoirSize: aws.Int64(int64(d.Get("reservoir_size").(int))),
+			ServiceName:   aws.String(d.Get("service_name").(string)),
+			ServiceType:   aws.String(d.Get("service_type").(string)),
+			Host:          aws.String(d.Get("host").(string)),
+			HTTPMethod:    aws.String(d.Get("http_method").(string)),
+			URLPath:       aws.String(d.Get("url_path").(string)),
+			ResourceARN:   aws.String(d.Get("resource_arn").(string)),
 		}
-		samplingRuleUpdate.Attributes = attributes
-	}
 
-	params := &xray.UpdateSamplingRuleInput{
-		SamplingRuleUpdate: samplingRuleUpdate,
-	}
+		if d.HasChange("attributes") {
+			attributes := map[string]*string{}
+			if v, ok := d.GetOk("attributes"); ok {
+				if m, ok := v.(map[string]interface{}); ok {
+					attributes = stringMapToPointers(m)
+				}
+			}
+			samplingRuleUpdate.Attributes = attributes
+		}
 
-	_, err := conn.UpdateSamplingRule(params)
-	if err != nil {
-		return fmt.Errorf("error updating XRay Sampling Rule (%s): %w", d.Id(), err)
+		params := &xray.UpdateSamplingRuleInput{
+			SamplingRuleUpdate: samplingRuleUpdate,
+		}
+
+		_, err := conn.UpdateSamplingRule(params)
+		if err != nil {
+			return fmt.Errorf("error updating XRay Sampling Rule (%s): %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsXraySamplingRuleRead(d, meta)
