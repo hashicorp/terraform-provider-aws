@@ -735,6 +735,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "workspaces":
 		return "ResourceId"
+	case "xray":
+		return "ResourceARN"
 	default:
 		return "ResourceArn"
 	}
