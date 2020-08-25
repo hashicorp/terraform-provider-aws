@@ -169,6 +169,49 @@ func TestAccAWSGlueCrawler_DynamodbTarget_scanAll(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_DynamodbTarget_scanRate(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_DynamodbTargetScanRate(rName, "table1", 0.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfig_DynamodbTargetScanRate(rName, "table1", 1.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfig_DynamodbTargetScanRate(rName, "table1", 0.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1291,7 +1334,28 @@ resource "aws_glue_crawler" "test" {
     scan_all = %[3]t
   }
 }
-`, rName, path)
+`, rName, path, scanAll)
+}
+
+func testAccGlueCrawlerConfig_DynamodbTargetScanRate(rName, path string, scanRate float64) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  dynamodb_target {
+    path     = %[2]q
+    scan_all = %[3]f
+  }
+}
+`, rName, path, scanRate)
 }
 
 func testAccGlueCrawlerConfig_JdbcTarget(rName, path string) string {
