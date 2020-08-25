@@ -1,5 +1,9 @@
 ## 3.4.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_emr_managed_scaling_policy` [GH-13965]
+
 ENHANCEMENTS
 * resource/aws_globalaccelerator_endpoint_group: Add `client_ip_preservation_enabled` argument to the `endpoint_configuration` configuration block [GH-14486]
 * resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
