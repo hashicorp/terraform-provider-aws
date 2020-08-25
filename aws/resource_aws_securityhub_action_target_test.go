@@ -9,28 +9,109 @@ import (
 )
 
 func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
+	resourceName := "aws_securityhub_action_target.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
+		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubActionTargetConfig,
+				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubAccountExists("aws_securityhub_account.example"),
-					testAccCheckAwsSecurityHubActionTargetExists("aws_securityhub_action_target.example"),
+					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a test custom action"),
+					resource.TestCheckResourceAttr(resourceName, "identifier", "testaction"),
+					resource.TestCheckResourceAttr(resourceName, "name", "Test action"),
 				),
 			},
 			{
-				ResourceName:      "aws_securityhub_action_target.example",
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
+	resourceName := "aws_securityhub_action_target.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubActionTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAwsSecurityHubActionTarget_Description(t *testing.T) {
+	resourceName := "aws_securityhub_action_target.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecurityHubActionTargetConfigDescription("description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				// Check Destroy - but only target the specific resource (otherwise Security Hub
-				// will be disabled and the destroy check will fail)
-				Config: testAccAwsSecurityHubActionTargetConfig_empty,
-				Check:  testAccCheckAwsSecurityHubActionTargetDestroy,
+				Config: testAccAwsSecurityHubActionTargetConfigDescription("description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsSecurityHubActionTarget_Name(t *testing.T) {
+	resourceName := "aws_securityhub_action_target.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecurityHubActionTargetConfigName("name1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsSecurityHubActionTargetConfigName("name2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
+				),
 			},
 		},
 	})
@@ -77,7 +158,7 @@ func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if action == nil {
+		if action != nil {
 			return fmt.Errorf("Security Hub custom action %s still exists", rs.Primary.ID)
 		}
 	}
@@ -85,19 +166,41 @@ func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAwsSecurityHubActionTargetConfig_empty = `
-resource "aws_securityhub_account" "example" {}
-`
+func testAccAwsSecurityHubActionTargetConfigDescription(description string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
 
-const testAccAwsSecurityHubActionTargetConfig = `
-resource "aws_securityhub_account" "example" {}
-
-data "aws_region" "current" {}
-
-resource "aws_securityhub_action_target" "example" {
-  depends_on  = ["aws_securityhub_account.example"]
-  name        = "Test action"
+resource "aws_securityhub_action_target" "test" {
+  depends_on  = [aws_securityhub_account.test]
+  description = %[1]q
   identifier  = "testaction"
-  description = "This is a test custom action"
+  name        = "Test action"
 }
-`
+`, description)
+}
+
+func testAccAwsSecurityHubActionTargetConfigIdentifier(identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
+resource "aws_securityhub_action_target" "test" {
+  depends_on  = [aws_securityhub_account.test]
+  description = "This is a test custom action"
+  identifier  = %[1]q
+  name        = "Test action"
+}
+`, identifier)
+}
+
+func testAccAwsSecurityHubActionTargetConfigName(name string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
+resource "aws_securityhub_action_target" "test" {
+  depends_on  = [aws_securityhub_account.test]
+  description = "This is a test custom action"
+  identifier  = "testaction"
+  name        = %[1]q
+}
+`, name)
+}

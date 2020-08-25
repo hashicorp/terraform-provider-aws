@@ -2,16 +2,17 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"regexp"
-	"strings"
 )
 
-func ResourceAwsSecurityHubActionTarget() *schema.Resource {
+func resourceAwsSecurityHubActionTarget() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSecurityHubActionTargetCreate,
 		Read:   resourceAwsSecurityHubActionTargetRead,
@@ -22,6 +23,14 @@ func ResourceAwsSecurityHubActionTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"identifier": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -37,14 +46,6 @@ func ResourceAwsSecurityHubActionTarget() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
 				),
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"action_target_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -68,7 +69,7 @@ func resourceAwsSecurityHubActionTargetCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error creating Security Hub custom action target %s: %s", identifier, err)
 	}
 
-	d.SetId(*resp.ActionTargetArn)
+	d.SetId(aws.StringValue(resp.ActionTargetArn))
 
 	return resourceAwsSecurityHubActionTargetRead(d, meta)
 }
@@ -108,7 +109,7 @@ func resourceAwsSecurityHubActionTargetRead(d *schema.ResourceData, meta interfa
 
 	d.Set("identifier", actionTargetIdentifier)
 	d.Set("description", actionTarget.Description)
-	d.Set("action_target_arn", actionTarget.ActionTargetArn)
+	d.Set("arn", actionTarget.ActionTargetArn)
 	d.Set("name", actionTarget.Name)
 
 	return nil
@@ -155,7 +156,7 @@ func resourceAwsSecurityHubActionTargetDelete(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Deleting Security Hub custom action target %s", d.Id())
 
 	_, err := conn.DeleteActionTarget(&securityhub.DeleteActionTargetInput{
-		ActionTargetArn: aws.String(d.Get("action_target_arn").(string)),
+		ActionTargetArn: aws.String(d.Id()),
 	})
 
 	if err != nil {

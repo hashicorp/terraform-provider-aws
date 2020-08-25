@@ -13,8 +13,11 @@ func TestAccAWSSecurityHub_serial(t *testing.T) {
 			"basic":  testAccAWSSecurityHubMember_basic,
 			"invite": testAccAWSSecurityHubMember_invite,
 		},
-		"CustomAction": {
-			"basic": testAccAwsSecurityHubActionTarget_basic,
+		"ActionTarget": {
+			"basic":       testAccAwsSecurityHubActionTarget_basic,
+			"disappears":  testAccAwsSecurityHubActionTarget_disappears,
+			"Description": testAccAwsSecurityHubActionTarget_Description,
+			"Name":        testAccAwsSecurityHubActionTarget_Name,
 		},
 		"ProductSubscription": {
 			"basic": testAccAWSSecurityHubProductSubscription_basic,

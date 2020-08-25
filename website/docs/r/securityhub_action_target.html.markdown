@@ -15,10 +15,8 @@ Creates Security Hub custom action.
 ```hcl
 resource "aws_securityhub_account" "example" {}
 
-data "aws_region" "current" {}
-
 resource "aws_securityhub_action_target" "example" {
-  depends_on  = ["aws_securityhub_account.example"]
+  depends_on  = [aws_securityhub_account.example]
   name        = "Send notification to chat"
   identifier  = "SendToChat"
   description = "This is custom action sends selected findings to chat"
@@ -37,7 +35,7 @@ The following arguments are supported:
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `action_target_arn` - The action target ARN of the Security Hub custom action.
+* `arn` - Amazon Resource Name (ARN) of the Security Hub custom action target.
 
 ## Import
 
