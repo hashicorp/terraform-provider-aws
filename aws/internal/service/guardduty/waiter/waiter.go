@@ -69,11 +69,10 @@ func AdminAccountNotFound(conn *guardduty.GuardDuty, adminAccountID string) (*gu
 // PublishingDestinationCreated waits for GuardDuty to return Publishing
 func PublishingDestinationCreated(conn *guardduty.GuardDuty, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{guardduty.PublishingStatusPendingVerification},
-		Target:     []string{guardduty.PublishingStatusPublishing},
-		Refresh:    guardDutyPublishingDestinationRefreshStatusFunc(conn, destinationID, detectorID),
-		Timeout:    PublishingDestinationCreatedTimeout,
-		MinTimeout: PublishingDestinationCreatedMinTimeout,
+		Pending: []string{guardduty.PublishingStatusPendingVerification},
+		Target:  []string{guardduty.PublishingStatusPublishing},
+		Refresh: guardDutyPublishingDestinationRefreshStatusFunc(conn, destinationID, detectorID),
+		Timeout: PublishingDestinationCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

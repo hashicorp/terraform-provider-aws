@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
 )
 
@@ -111,7 +111,6 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 	d.Set("destination_type", gdo.DestinationType)
 	d.Set("kms_key_arn", gdo.DestinationProperties.KmsKeyArn)
 	d.Set("destination_arn", gdo.DestinationProperties.DestinationArn)
-	d.Set("status", gdo.Status)
 	return nil
 }
 
