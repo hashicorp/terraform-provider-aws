@@ -605,6 +605,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/partition*",
       "website/**/region*"
     ]
+    "dependencies" = [
+      ".github/dependabot.yml",
+      "renovate.json",
+    ]
     "documentation" = [
       "docs/**/*",
       "*.md",
