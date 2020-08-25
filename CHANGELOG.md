@@ -5,6 +5,7 @@ ENHANCEMENTS
 * resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
 * resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument [GH-13563]
 * resource/aws_storagegateway_gateway: Add plan-time validation for `gateway_ip_address` argument [GH-13563]
+* resource/aws_storagegateway_gateway: Add `average_download_rate_limit_in_bits_per_sec` and `average_upload_rate_limit_in_bits_per_sec` arguments [GH-13568]
 * resource/aws_storagegateway_nfs_file_share: Add `cache_attributes` configuration block [GH-14759]
 * resource/aws_storagegateway_nfs_file_share: Support `S3_INTELLIGENT_TIERING` value in `default_storage_class` argument plan-time validation [GH-14759]
 * resource/aws_storagegateway_smb_file_share: Add `cache_attributes` configuration block and `case_sensitivity` argument [GH-14790]
