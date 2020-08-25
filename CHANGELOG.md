@@ -4,6 +4,7 @@ FEATURES
 
 * **New Resource:** `aws_emr_managed_scaling_policy` [GH-13965]
 * **New Resource:** `aws_guardduty_publishing_destination` [GH-13894]
+* **New Resource:** `aws_securityhub_action_target` [GH-10493]
 
 ENHANCEMENTS
 * resource/aws_globalaccelerator_endpoint_group: Add `client_ip_preservation_enabled` argument to the `endpoint_configuration` configuration block [GH-14486]
