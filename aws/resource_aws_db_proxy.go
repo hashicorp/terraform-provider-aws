@@ -46,9 +46,9 @@ func resourceAwsDbProxy() *schema.Resource {
 				Optional: true,
 			},
 			"engine_family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(rds.EngineFamily_Values(), false),
 			},
 			"idle_client_timeout": {
@@ -84,8 +84,8 @@ func resourceAwsDbProxy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_scheme": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
 						},
 						"description": {
@@ -93,8 +93,8 @@ func resourceAwsDbProxy() *schema.Resource {
 							Optional: true,
 						},
 						"iam_auth": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(rds.IAMAuthMode_Values(), false),
 						},
 						"secret_arn": {
@@ -275,7 +275,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 		if proxy == nil {
 			continue
 		}
-		
+
 		if aws.StringValue(proxy.DBProxyName) == d.Id() {
 			dbProxy = proxy
 			break
@@ -323,7 +323,7 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		"require_tls",
 		"role_arn",
 		"vpc_security_group_ids") {
-		
+
 		oName, nName := d.GetChange("name")
 
 		params := rds.ModifyDBProxyInput{

@@ -96,7 +96,7 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "require_tls", "false"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", "id"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id"),				),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id")),
 			},
 			{
 				ResourceName:      resourceName,
