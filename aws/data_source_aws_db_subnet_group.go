@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsDbSubnetGroup() *schema.Resource {
@@ -56,9 +56,6 @@ func dataSourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.DescribeDBSubnetGroups(opts)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBSubnetGroupNotFoundFault, "") {
-			return fmt.Errorf("DB SubnetGroup (%s) not found", name)
-		}
 		return fmt.Errorf("error reading DB SubnetGroup (%s): %w", name, err)
 	}
 

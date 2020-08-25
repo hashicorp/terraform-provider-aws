@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -26,6 +26,10 @@ func resourceAwsEcsService() *schema.Resource {
 		Delete: resourceAwsEcsServiceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsServiceImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -244,33 +248,6 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
-						},
-					},
-				},
-			},
-			"placement_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 5,
-				Removed:  "Use `ordered_placement_strategy` configuration block(s) instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ecs.PlacementStrategyTypeBinpack,
-								ecs.PlacementStrategyTypeRandom,
-								ecs.PlacementStrategyTypeSpread,
-							}, false),
-						},
-						"field": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.EqualFold(old, new)
-							},
 						},
 					},
 				},
@@ -1114,7 +1091,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
 	// Wait until the ECS service is drained
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete ECS service %s", input)
 		_, err := conn.DeleteService(&input)
 		if err != nil {

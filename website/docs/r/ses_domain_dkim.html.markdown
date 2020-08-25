@@ -37,7 +37,7 @@ resource "aws_ses_domain_identity" "example" {
 }
 
 resource "aws_ses_domain_dkim" "example" {
-  domain = "${aws_ses_domain_identity.example.domain}"
+  domain = aws_ses_domain_identity.example.domain
 }
 
 resource "aws_route53_record" "example_amazonses_dkim_record" {

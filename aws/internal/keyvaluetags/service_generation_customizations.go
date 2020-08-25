@@ -112,6 +112,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 )
 
 // ServiceClientType determines the service client Go type.
@@ -333,6 +334,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(worklink.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
+	case "xray":
+		funcType = reflect.TypeOf(xray.New)
 	default:
 		panic(fmt.Sprintf("unrecognized ServiceClientType: %s", serviceName))
 	}
@@ -732,6 +735,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "workspaces":
 		return "ResourceId"
+	case "xray":
+		return "ResourceARN"
 	default:
 		return "ResourceArn"
 	}
