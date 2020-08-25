@@ -7,6 +7,7 @@ on:
       - 'release/**'
   pull_request:
     paths:
+      - awsproviderlint/** # go/analysis/analysistest requires vendoring
       - go.mod
       - go.sum
       - vendor/**

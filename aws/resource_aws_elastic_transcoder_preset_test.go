@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
@@ -53,6 +53,33 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 					testAccCheckElasticTranscoderPresetDisappears(&preset),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14087
+func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsElasticTranscoderPresetConfigAudioCodecOptionsEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"audio_codec_options.#"}, // Due to incorrect schema (should be nested under audio)
 			},
 		},
 	})
@@ -240,6 +267,25 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
+func testAccAwsElasticTranscoderPresetConfigAudioCodecOptionsEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
+  container = "mp4"
+  name      = %[1]q
+
+  audio {
+    audio_packing_mode = "SingleTrack"
+    bit_rate           = 320
+    channels           = 2
+    codec              = "mp3"
+    sample_rate        = 44100
+  }
+
+  audio_codec_options {}
+}
+`, rName)
+}
+
 func testAccAwsElasticTranscoderPresetConfigDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
@@ -377,8 +423,8 @@ resource "aws_elastictranscoder_preset" "test" {
 func testAccAwsElasticTranscoderPresetConfigVideoFrameRate(rName string, frameRate string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
-  container   = "mp4"
-  name        = %[1]q
+  container = "mp4"
+  name      = %[1]q
 
   thumbnails {
     format         = "png"

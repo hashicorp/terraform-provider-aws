@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -976,7 +976,7 @@ func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validateCloudFormationTemplate(v interface{}, k string) (ws []string, errors []error) {
+func validateStringIsJsonOrYaml(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJsonString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
@@ -2354,27 +2354,6 @@ func validateCloudFrontPublicKeyNamePrefix(v interface{}, k string) (ws []string
 	return
 }
 
-func validateServiceDiscoveryHttpNamespaceName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
-	}
-	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
-	}
-	if !regexp.MustCompile(`[a-zA-Z]$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"last character of %q must be a letter", k))
-	}
-	if len(value) > 1024 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 1024 characters", k))
-	}
-	return
-}
-
 func validateLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 32 {
@@ -2478,3 +2457,8 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 
 	return
 }
+
+var validateServiceDiscoveryNamespaceName = validation.All(
+	validation.StringLenBetween(1, 1024),
+	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z._-]+$`), ""),
+)

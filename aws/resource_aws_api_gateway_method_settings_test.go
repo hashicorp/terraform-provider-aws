@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayMethodSettings_basic(t *testing.T) {
@@ -86,6 +86,14 @@ func TestAccAWSAPIGatewayMethodSettings_Settings_CacheTtlInSeconds(t *testing.T)
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsCacheTtlInSeconds(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodSettingsExists(resourceName, &stage1),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "0"),
+				),
+			},
 			{
 				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsCacheTtlInSeconds(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
@@ -553,6 +561,28 @@ func testAccCheckAWSAPIGatewayMethodSettings_loggingLevel(conf *apigateway.Stage
 	}
 }
 
+func TestAccAWSAPIGatewayMethodSettings_disappears(t *testing.T) {
+	var stage apigateway.Stage
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_method_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayMethodSettingsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayMethodSettingsConfigSettingsLoggingLevel(rName, "INFO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodSettingsExists(resourceName, &stage),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayMethodSettings(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayMethodSettingsExists(n string, res *apigateway.Stage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -669,7 +699,7 @@ EOF
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on  = ["aws_api_gateway_integration.test"]
+  depends_on  = [aws_api_gateway_integration.test]
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name  = "dev"
 }

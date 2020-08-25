@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -439,12 +439,12 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -464,12 +464,12 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -508,7 +508,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_byte_match_set.set.id}"
+    data_id = aws_waf_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }
@@ -541,7 +541,7 @@ resource "aws_waf_rule" "wafrule" {
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_geo_match_set.geo_match_set.id}"
+    data_id = aws_waf_geo_match_set.geo_match_set.id
     negated = true
     type    = "GeoMatch"
   }
@@ -561,18 +561,18 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
 
   tags = {
-  	%q = %q
+    %q = %q
   }
 }
 `, rName, rName, rName, tag1Key, tag1Value)
@@ -590,19 +590,19 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
 
   tags = {
-  	%q = %q
-  	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, rName, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)

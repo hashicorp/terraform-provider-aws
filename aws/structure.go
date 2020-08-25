@@ -45,10 +45,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/mitchellh/copystructure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"gopkg.in/yaml.v2"
 )
 
@@ -2267,7 +2267,7 @@ func checkYamlString(yamlString interface{}) (string, error) {
 	return s, err
 }
 
-func normalizeCloudFormationTemplate(templateString interface{}) (string, error) {
+func normalizeJsonOrYamlString(templateString interface{}) (string, error) {
 	if looksLikeJsonString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}
@@ -2474,8 +2474,6 @@ func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *
 		}
 	}
 
-	configs.UnusedAccountValidityDays = aws.Int64(int64(config["unused_account_validity_days"].(int)))
-
 	return configs
 }
 
@@ -2509,8 +2507,6 @@ func flattenCognitoUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.Admi
 			config["invite_message_template"] = []map[string]interface{}{subconfig}
 		}
 	}
-
-	config["unused_account_validity_days"] = *s.UnusedAccountValidityDays
 
 	return []map[string]interface{}{config}
 }

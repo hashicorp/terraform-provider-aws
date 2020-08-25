@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSELBAttachment_basic(t *testing.T) {
@@ -153,8 +153,8 @@ resource "aws_instance" "foo1" {
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo1.id}"
+  elb      = aws_elb.bar.id
+  instance = aws_instance.foo1.id
 }
 `)
 }
@@ -197,13 +197,13 @@ resource "aws_instance" "foo2" {
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo1.id}"
+  elb      = aws_elb.bar.id
+  instance = aws_instance.foo1.id
 }
 
 resource "aws_elb_attachment" "foo2" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo2.id}"
+  elb      = aws_elb.bar.id
+  instance = aws_instance.foo2.id
 }
 `)
 }
@@ -246,13 +246,13 @@ resource "aws_instance" "foo2" {
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo2.id}"
+  elb      = aws_elb.bar.id
+  instance = aws_instance.foo2.id
 }
 
 resource "aws_elb_attachment" "foo2" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo1.id}"
+  elb      = aws_elb.bar.id
+  instance = aws_instance.foo1.id
 }
 `)
 }

@@ -1,5 +1,7 @@
 # Frequently Asked Questions
 
+<!-- markdownlint-disable MD026 -->
+
 ### Who are the maintainers?
 
 The HashiCorp Terraform AWS provider team is :
@@ -72,3 +74,5 @@ Check out the [Contributing Guide](CONTRIBUTING.md) for additional information.
 ### How can I become a maintainer?
 
 This is an area under active research. Stay tuned!
+
+<!-- markdownlint-enable MD026 -->

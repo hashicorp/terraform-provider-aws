@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
@@ -217,7 +217,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 }
 
 func testAccRedshiftSubnetGroupConfig(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -228,8 +228,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-test"
@@ -238,8 +238,8 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-test2"
@@ -249,13 +249,13 @@ resource "aws_subnet" "test2" {
 resource "aws_redshift_subnet_group" "test" {
   name        = "test-%d"
   description = "test description"
-  subnet_ids  = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
+  subnet_ids  = [aws_subnet.test.id, aws_subnet.test2.id]
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -266,8 +266,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-upd-description-test"
@@ -276,8 +276,8 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-upd-description-test2"
@@ -287,13 +287,13 @@ resource "aws_subnet" "test2" {
 resource "aws_redshift_subnet_group" "test" {
   name        = "test-%d"
   description = "test description updated"
-  subnet_ids  = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
+  subnet_ids  = [aws_subnet.test.id, aws_subnet.test2.id]
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -304,8 +304,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-with-tags-test"
@@ -314,8 +314,8 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-with-tags-test2"
@@ -324,17 +324,17 @@ resource "aws_subnet" "test2" {
 
 resource "aws_redshift_subnet_group" "test" {
   name       = "test-%d"
-  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
+  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
 
   tags = {
     Name = "tf-redshift-subnetgroup"
   }
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -345,8 +345,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-with-tags-test"
@@ -355,8 +355,8 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-with-tags-test2"
@@ -365,19 +365,19 @@ resource "aws_subnet" "test2" {
 
 resource "aws_redshift_subnet_group" "test" {
   name       = "test-%d"
-  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}"]
+  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
 
   tags = {
     Name        = "tf-redshift-subnetgroup"
     environment = "production"
-    test         = "test2"
+    test        = "test2"
   }
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -388,8 +388,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-test"
@@ -398,8 +398,8 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-test2"
@@ -408,8 +408,8 @@ resource "aws_subnet" "test2" {
 
 resource "aws_subnet" "testtest2" {
   cidr_block        = "10.1.3.0/24"
-  availability_zone = "us-west-2c"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[2]
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-testtest2"
@@ -418,7 +418,7 @@ resource "aws_subnet" "testtest2" {
 
 resource "aws_redshift_subnet_group" "test" {
   name       = "test-%d"
-  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.test2.id}", "${aws_subnet.testtest2.id}"]
+  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id, aws_subnet.testtest2.id]
 }
-`, rInt)
+`, rInt))
 }

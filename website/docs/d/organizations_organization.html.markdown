@@ -15,7 +15,6 @@ Get information about the organization that the user's account belongs to
 ### List all account IDs for the organization
 
 ```hcl
-# Terraform 0.12 syntax
 data "aws_organizations_organization" "example" {}
 
 output "account_ids" {
@@ -33,9 +32,9 @@ resource "aws_sns_topic" "sns_topic" {
 }
 
 resource "aws_sns_topic_policy" "sns_topic_policy" {
-  arn = "${aws_sns_topic.sns_topic.arn}"
+  arn = aws_sns_topic.sns_topic.arn
 
-  policy = "${data.aws_iam_policy_document.sns_topic_policy.json}"
+  policy = data.aws_iam_policy_document.sns_topic_policy.json
 }
 
 data "aws_iam_policy_document" "sns_topic_policy" {
@@ -52,7 +51,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
       variable = "aws:PrincipalOrgID"
 
       values = [
-        "${data.aws_organizations_organization.example.id}",
+        data.aws_organizations_organization.example.id,
       ]
     }
 
@@ -62,7 +61,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     }
 
     resources = [
-      "${aws_sns_topic.sns_topic.arn}",
+      aws_sns_topic.sns_topic.arn,
     ]
   }
 }

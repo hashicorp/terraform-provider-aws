@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
@@ -97,15 +97,15 @@ func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
 	return oldUrl.String() == newUrl.String()
 }
 
-func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.ResourceData) bool {
-	normalizedOld, err := normalizeCloudFormationTemplate(old)
+func suppressEquivalentJsonOrYamlDiffs(k, old, new string, d *schema.ResourceData) bool {
+	normalizedOld, err := normalizeJsonOrYamlString(old)
 
 	if err != nil {
 		log.Printf("[WARN] Unable to normalize Terraform state CloudFormation template body: %s", err)
 		return false
 	}
 
-	normalizedNew, err := normalizeCloudFormationTemplate(new)
+	normalizedNew, err := normalizeJsonOrYamlString(new)
 
 	if err != nil {
 		log.Printf("[WARN] Unable to normalize Terraform configuration CloudFormation template body: %s", err)
@@ -113,14 +113,6 @@ func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.Resou
 	}
 
 	return normalizedOld == normalizedNew
-}
-
-func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
-	// "." is different from "".
-	if old == "." || new == "." {
-		return old == new
-	}
-	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
 
 // suppressEqualCIDRBlockDiffs provides custom difference suppression for CIDR blocks

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
@@ -258,7 +258,7 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
-  
+
   filter {
     name   = "root-device-type"
     values = ["ebs"]
@@ -395,19 +395,20 @@ resource "aws_lambda_alias" "test" {
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
-		"Version": "2012-10-17",
-		"Statement": [
-			{
-				"Action": "sts:AssumeRole",
-				"Principal": {
-					"Service": "lambda.${data.aws_partition.current.dns_suffix}"
-				},
-				"Effect": "Allow",
-				"Sid": ""
-			}
-		]
-	}
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
 	EOF
+
 }
 
 resource "aws_lb_target_group_attachment" "test" {

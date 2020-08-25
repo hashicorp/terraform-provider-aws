@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
@@ -110,7 +110,7 @@ resource "aws_vpc_dhcp_options" "test" {
 }
 
 data "aws_vpc_dhcp_options" "test" {
-  dhcp_options_id = "${aws_vpc_dhcp_options.test.id}"
+  dhcp_options_id = aws_vpc_dhcp_options.test.id
 }
 `
 
@@ -142,7 +142,7 @@ data "aws_vpc_dhcp_options" "test" {
 
   filter {
     name   = "value"
-    values = ["${aws_vpc_dhcp_options.test.0.domain_name}"]
+    values = [aws_vpc_dhcp_options.test.0.domain_name]
   }
 }
 `, count, rInt, rInt)
