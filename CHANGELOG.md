@@ -14,6 +14,7 @@ ENHANCEMENTS
 * resource/aws_storagegateway_nfs_file_share: Support `S3_INTELLIGENT_TIERING` value in `default_storage_class` argument plan-time validation [GH-14759]
 * resource/aws_storagegateway_smb_file_share: Add `cache_attributes` configuration block and `case_sensitivity` argument [GH-14790]
 * resource/aws_storagegateway_smb_file_share: Support `S3_INTELLIGENT_TIERING` value in `default_storage_class` argument plan-time validation [GH-14790]
+* resource/aws_xray_sampling_rule: Add `tags` argument [GH-14831]
 
 BUG FIXES
 
