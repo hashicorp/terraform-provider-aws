@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -90,13 +90,13 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 						"iam_auth":    "DISABLED",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`fill me in`)),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "require_tls", "false"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", "id"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id")),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id"),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`fill me in`))),
 			},
 			{
 				ResourceName:      resourceName,
