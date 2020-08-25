@@ -470,7 +470,7 @@ func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
 	}
 
 	if destinationAttributeKey == "" {
-		return "", "", fmt.Errorf("one of %q must be specified", strings.Join(routeDestinationAttributeKeys, "\", \""))
+		return "", "", fmt.Errorf("one of \"%v\" must be specified", strings.Join(routeDestinationAttributeKeys, "\", \""))
 	}
 
 	targetAttributeKey := ""
@@ -490,7 +490,7 @@ func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
 	}
 
 	if targetAttributeKey == "" {
-		return "", "", fmt.Errorf("one of %s must be specified", strings.Join(routeTargetAttributeKeys, "\", \""))
+		return "", "", fmt.Errorf("one of \"%v\" must be specified", strings.Join(routeTargetAttributeKeys, "\", \""))
 	}
 
 	return destinationAttributeKey, targetAttributeKey, nil
