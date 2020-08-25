@@ -75,19 +75,16 @@ func resourceAwsRoute() *schema.Resource {
 			"gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"egress_only_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"nat_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"local_gateway_id": {
