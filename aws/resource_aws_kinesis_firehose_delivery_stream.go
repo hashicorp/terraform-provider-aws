@@ -206,8 +206,8 @@ func flattenVpcConfiguration(description *firehose.VpcConfigurationDescription) 
 
 	m := map[string]interface{}{
 		"vpc_id":             aws.StringValue(description.VpcId),
-		"subnet_ids":         flattenStringList(description.SubnetIds),
-		"security_group_ids": flattenStringList(description.SecurityGroupIds),
+		"subnet_ids":         flattenStringSet(description.SubnetIds),
+		"security_group_ids": flattenStringSet(description.SecurityGroupIds),
 		"role_arn":           aws.StringValue(description.RoleARN),
 	}
 
