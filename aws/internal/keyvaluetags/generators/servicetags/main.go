@@ -96,6 +96,7 @@ var sliceServiceNames = []string{
 	"wafregional",
 	"wafv2",
 	"workspaces",
+	"xray",
 }
 
 var mapServiceNames = []string{
