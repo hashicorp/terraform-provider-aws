@@ -685,7 +685,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       "Action": [
         "sts:AssumeRole"
       ],
-      "Resource": aws_iam_role.codepipeline_action_role.arn
+      "Resource": "${aws_iam_role.codepipeline_action_role.arn}"
     }
   ]
 }
