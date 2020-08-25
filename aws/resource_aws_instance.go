@@ -1343,8 +1343,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 				stateConf := &resource.StateChangeConf{
 					Pending:    []string{ec2.InstanceMetadataOptionsStatePending},
-					Target:     []string{ec2.InstanceMetadataOptionsStateApplied, ec2.InstanceStateNameRunning},
-					Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
+					Target:     []string{ec2.InstanceMetadataOptionsStateApplied},
+					Refresh:    MetadataOptionsRefreshFunc(conn, d.Id()),
 					Timeout:    d.Timeout(schema.TimeoutUpdate),
 					Delay:      10 * time.Second,
 					MinTimeout: 3 * time.Second,
@@ -1433,16 +1433,6 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						},
 					},
 				})
-
-				stateConf := &resource.StateChangeConf{
-					Pending:    []string{ec2.InstanceStateNamePending},
-					Target:     []string{ec2.InstanceStateNameRunning},
-					Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
-					Timeout:    d.Timeout(schema.TimeoutUpdate),
-					Delay:      10 * time.Second,
-					MinTimeout: 3 * time.Second,
-				}
-				_, err = stateConf.WaitForState()
 				if err != nil {
 					return fmt.Errorf("error modifying delete on termination attribute for EC2 instance %q block device %q: %w", d.Id(), deviceName, err)
 				}
@@ -1494,6 +1484,30 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 					stringifyStateReason(instance.StateReason))
 			}
 		}
+
+		return instance, state, nil
+	}
+}
+
+// MetadataOptionsRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// changes in an EC2 instance's metadata options.
+func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		if err != nil {
+			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+				log.Printf("Error on InstanceStateRefresh: %s", err)
+				return nil, "", err
+			}
+		}
+
+		if instance == nil || instance.MetadataOptions == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		state := aws.StringValue(instance.MetadataOptions.State)
 
 		return instance, state, nil
 	}
