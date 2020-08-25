@@ -51,7 +51,7 @@ The following arguments are supported:
 
 The following argument is only available to "SimpleScaling" and "StepScaling" type policies:
 
-* `min_adjustment_magnitude` - (Optional) Minimum number of instances to scale when `adjustment_type` is set to "PercentChangeInCapacity".
+* `min_adjustment_magnitude` - (Optional) Minimum value to scale by when `adjustment_type` is set to `PercentChangeInCapacity`.
 
 The following arguments are only available to "SimpleScaling" type policies:
 
