@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
@@ -44,7 +44,7 @@ func testAccDataSourceAwsWorkspacesImageConfig(imageID string) string {
 	return fmt.Sprintf(`
 # TODO: Create aws_workspaces_image resource when API will be provided
 
-data "aws_workspaces_image" "test" {
+data aws_workspaces_image test {
   image_id = %q
 }
 `, imageID)
