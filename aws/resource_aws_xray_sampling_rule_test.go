@@ -13,8 +13,7 @@ import (
 func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	var samplingRule xray.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rString := acctest.RandString(8)
-	ruleName := fmt.Sprintf("tf_acc_sampling_rule_%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
@@ -22,10 +21,10 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfig_basic(ruleName),
+				Config: testAccAWSXraySamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", "10"),
@@ -37,6 +36,7 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_name", "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
