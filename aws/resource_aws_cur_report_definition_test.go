@@ -346,7 +346,7 @@ resource "aws_cur_report_definition" "test" {
   format                     = "%[4]s"
   compression                = "%[5]s"
   additional_schema_elements = ["RESOURCES"]
-  s3_bucket                  = "aws_s3_bucket.test.id
+  s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = "%[3]s"
   s3_region                  = aws_s3_bucket.test.region
 	%[6]s
