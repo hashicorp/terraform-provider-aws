@@ -459,14 +459,17 @@ func getRouteDestinationAttributeKeyFromResourceData(d *schema.ResourceData) str
 	return ""
 }
 
-// getRouteDestinationAndTargetAttributeKeysFromResourceData return the route's destination and target attribute keys.
+// getRouteDestinationAndTargetAttributeKeysFromMap return the route's destination and target attribute keys.
 // It also validates the resource, returning any validation error.
-func getRouteDestinationAndTargetAttributeKeysFromResourceData(d *schema.ResourceData) (string, string, error) {
+func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
+	v         interface{}
+	hasChange bool
+}) (string, string, error) {
 	destinationAttributeKey := ""
 	ipv4Destination := false
 	ipv6Destination := false
 	for key, kind := range routeDestinationAttributes {
-		if v := d.Get(key).(string); v != "" {
+		if s, ok := m[key]; ok && s.v.(string) != "" {
 			if destinationAttributeKey != "" {
 				return "", "", fmt.Errorf("%q conflicts with %q", key, destinationAttributeKey)
 			}
@@ -483,7 +486,8 @@ func getRouteDestinationAndTargetAttributeKeysFromResourceData(d *schema.Resourc
 
 	targetAttributeKey := ""
 	for key, allowed := range routeTargetAttributes {
-		if v := d.Get(key).(string); v != "" && d.HasChange(key) {
+		// The HasChange check is necessary to handle Computed attributes that will be cleared once they are read back after update.
+		if s, ok := m[key]; ok && s.v.(string) != "" && s.hasChange {
 			if targetAttributeKey != "" {
 				return "", "", fmt.Errorf("%q conflicts with %q", key, targetAttributeKey)
 			}
@@ -501,6 +505,24 @@ func getRouteDestinationAndTargetAttributeKeysFromResourceData(d *schema.Resourc
 	}
 
 	return destinationAttributeKey, targetAttributeKey, nil
+}
+
+// getRouteDestinationAndTargetAttributeKeysFromResourceData return the route's destination and target attribute keys.
+// It also validates the resource, returning any validation error.
+func getRouteDestinationAndTargetAttributeKeysFromResourceData(d *schema.ResourceData) (string, string, error) {
+	m := map[string]struct {
+		v         interface{}
+		hasChange bool
+	}{}
+
+	for _, key := range routeDestinationAndTargetAttributeKeys {
+		m[key] = struct {
+			v         interface{}
+			hasChange bool
+		}{d.Get(key), d.HasChange(key)}
+	}
+
+	return getRouteDestinationAndTargetAttributeKeysFromMap(m)
 }
 
 // createRoute attempts to create a route.
