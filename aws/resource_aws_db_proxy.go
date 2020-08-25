@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -49,10 +49,7 @@ func resourceAwsDbProxy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					rds.EngineFamilyMysql,
-					rds.EngineFamilyPostgresql,
-				}, false),
+				ValidateFunc: validation.StringInSlice(rds.EngineFamily_Values(), false),
 			},
 			"idle_client_timeout": {
 				Type:     schema.TypeInt,
@@ -84,15 +81,12 @@ func resourceAwsDbProxy() *schema.Resource {
 			"auth": {
 				Type:     schema.TypeSet,
 				Required: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_scheme": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								rds.AuthSchemeSecrets,
-							}, false),
+							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -101,10 +95,7 @@ func resourceAwsDbProxy() *schema.Resource {
 						"iam_auth": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								rds.IAMAuthModeDisabled,
-								rds.IAMAuthModeRequired,
-							}, false),
+							ValidateFunc: validation.StringInSlice(rds.IAMAuthMode_Values(), false),
 						},
 						"secret_arn": {
 							Type:         schema.TypeString,
@@ -119,7 +110,10 @@ func resourceAwsDbProxy() *schema.Resource {
 				},
 				Set: resourceAwsDbProxyAuthHash,
 			},
-
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -132,9 +126,7 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	params := rds.CreateDBProxyInput{
 		Auth:         expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(d.Get("name").(string)),
-		DebugLogging: aws.Bool(d.Get("debug_logging").(bool)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
-		RequireTLS:   aws.Bool(d.Get("require_tls").(bool)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Tags:         tags,
 		VpcSubnetIds: expandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
@@ -163,7 +155,6 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(resp.DBProxy.DBProxyName))
-	d.Set("arn", resp.DBProxy.DBProxyArn)
 	log.Printf("[INFO] DB Proxy ID: %s", d.Id())
 
 	stateChangeConf := &resource.StateChangeConf{
@@ -276,17 +267,27 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("Error reading RDS DB Proxy (%s): %w", d.Id(), err)
 	}
 
-	if len(resp.DBProxies) != 1 ||
-		*resp.DBProxies[0].DBProxyName != d.Id() {
-		return fmt.Errorf("Unable to find DB Proxy: %#v", resp.DBProxies)
+	var dbProxy *rds.DBProxy
+	for _, proxy := range resp.DBProxies {
+		if proxy == nil {
+			continue
+		}
+		
+		if aws.StringValue(proxy.DBProxyName) == d.Id() {
+			dbProxy = proxy
+			break
+		}
+	}
+	if dbProxy == nil {
+		log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	dbProxy := resp.DBProxies[0]
-
-	d.Set("arn", aws.StringValue(dbProxy.DBProxyArn))
+	d.Set("arn", dbProxy.DBProxyArn)
 	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
 	d.Set("name", dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
@@ -296,16 +297,13 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("role_arn", dbProxy.RoleArn)
 	d.Set("vpc_subnet_ids", flattenStringSet(dbProxy.VpcSubnetIds))
 	d.Set("security_group_ids", flattenStringSet(dbProxy.VpcSecurityGroupIds))
+	d.Set("endpoint", dbProxy.Endpoint)
 
 	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("Error listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
 	}
-
-	// if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-	// 	return fmt.Errorf("error setting tags: %s", err)
-	// }
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
@@ -317,41 +315,51 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	oName, nName := d.GetChange("name")
+	if d.HasChanges(
+		"auth",
+		"debug_logging",
+		"idle_client_timeout",
+		"name",
+		"require_tls",
+		"role_arn",
+		"vpc_security_group_ids") {
+		
+		oName, nName := d.GetChange("name")
 
-	params := rds.ModifyDBProxyInput{
-		Auth:           expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
-		DBProxyName:    aws.String(oName.(string)),
-		NewDBProxyName: aws.String(nName.(string)),
-		DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
-		RequireTLS:     aws.Bool(d.Get("require_tls").(bool)),
-		RoleArn:        aws.String(d.Get("role_arn").(string)),
-	}
+		params := rds.ModifyDBProxyInput{
+			Auth:           expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
+			DBProxyName:    aws.String(oName.(string)),
+			NewDBProxyName: aws.String(nName.(string)),
+			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
+			RequireTLS:     aws.Bool(d.Get("require_tls").(bool)),
+			RoleArn:        aws.String(d.Get("role_arn").(string)),
+		}
 
-	if v, ok := d.GetOk("idle_client_timeout"); ok {
-		params.IdleClientTimeout = aws.Int64(int64(v.(int)))
-	}
+		if v, ok := d.GetOk("idle_client_timeout"); ok {
+			params.IdleClientTimeout = aws.Int64(int64(v.(int)))
+		}
 
-	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.SecurityGroups = expandStringSet(v)
-	}
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			params.SecurityGroups = expandStringSet(v)
+		}
 
-	log.Printf("[DEBUG] Update DB Proxy: %#v", params)
-	_, err := conn.ModifyDBProxy(&params)
-	if err != nil {
-		return fmt.Errorf("Error updating DB Proxy: %s", err)
-	}
+		log.Printf("[DEBUG] Update DB Proxy: %#v", params)
+		_, err := conn.ModifyDBProxy(&params)
+		if err != nil {
+			return fmt.Errorf("Error updating DB Proxy: %s", err)
+		}
 
-	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{rds.DBProxyStatusModifying},
-		Target:  []string{rds.DBProxyStatusAvailable},
-		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+		stateChangeConf := &resource.StateChangeConf{
+			Pending: []string{rds.DBProxyStatusModifying},
+			Target:  []string{rds.DBProxyStatusAvailable},
+			Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
 
-	_, err = stateChangeConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for DB Proxy update: %s", err)
+		_, err = stateChangeConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("Error waiting for DB Proxy update: %s", err)
+		}
 	}
 
 	if d.HasChange("tags") {

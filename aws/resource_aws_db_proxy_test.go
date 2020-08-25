@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -83,12 +83,46 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "engine_family", "MYSQL"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db-proxy:.+`)),
-				),
+					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
+						"auth_scheme": "SECRETS",
+						"description": "test",
+						"iam_auth":    "DISABLED",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`fill me in`)),
+					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", "id"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id"),				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDBProxy_disappears(t *testing.T) {
+	var v rds.DBProxy
+	resourceName := "aws_db_proxy.test"
+	name := fmt.Sprintf("tf-acc-db-proxy-%d", acctest.RandInt())
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBProxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBProxyConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBProxyExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -115,12 +149,7 @@ func testAccCheckAWSDBProxyDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != rds.ErrCodeDBProxyNotFoundFault {
+		if !isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			return err
 		}
 	}
@@ -187,14 +216,14 @@ resource "aws_db_proxy" "test" {
   }
 
   tags = {
-    Name = "%s"
+    Name = "%[1]s"
   }
 }
 
 # Secrets Manager setup
 
 resource "aws_secretsmanager_secret" "test" {
-  name                    = "%s"
+  name                    = "%[1]s"
   recovery_window_in_days = 0
 }
 
@@ -206,7 +235,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 # IAM setup
 
 resource "aws_iam_role" "test" {
-  name               = "%s"
+  name               = "%[1]s"
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
@@ -256,7 +285,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "%s"
+    Name = "%[1]s"
   }
 }
 
@@ -267,8 +296,8 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%s-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
-`, n, n, n, n, n, n)
+`, n)
 }
