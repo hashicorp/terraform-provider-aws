@@ -1738,7 +1738,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type            = "m1.small"
+    instance_type            = data.aws_ec2_instance_type_offering.available.instance_type
     ami                      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name                 = aws_key_pair.test.key_name
     iam_instance_profile_arn = aws_iam_instance_profile.test-iam-instance-profile1.arn

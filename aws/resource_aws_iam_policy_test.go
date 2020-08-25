@@ -98,7 +98,19 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
-
+	expectedPolicyText := `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+`
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -112,7 +124,7 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "policy", `{"Version":"2012-10-17","Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}]}`),
+					resource.TestCheckResourceAttr(resourceName, "policy", expectedPolicyText),
 				),
 			},
 			{
