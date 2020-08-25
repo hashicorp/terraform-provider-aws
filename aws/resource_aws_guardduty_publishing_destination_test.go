@@ -160,7 +160,7 @@ data "aws_iam_policy_document" "bucket_pol" {
     ]
 
     resources = [
-      "${aws_s3_bucket.gd_bucket.arn}"
+      aws_s3_bucket.gd_bucket.arn
     ]
 
     principals {
