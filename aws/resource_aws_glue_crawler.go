@@ -135,7 +135,6 @@ func resourceAwsGlueCrawler() *schema.Resource {
 						"scan_rate": {
 							Type:         schema.TypeFloat,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.FloatBetween(0.1, 1.5),
 						},
 					},
@@ -388,7 +387,7 @@ func expandGlueDynamoDBTarget(cfg map[string]interface{}) *glue.DynamoDBTarget {
 		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
 	}
 
-	if v, ok := cfg["scan_rate"].(float64); ok {
+	if v, ok := cfg["scan_rate"].(float64); ok && v != 0 {
 		target.ScanRate = aws.Float64(v)
 	}
 
