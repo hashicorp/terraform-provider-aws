@@ -1512,7 +1512,7 @@ func (c *SSM) DeleteInventoryRequest(input *DeleteInventoryInput) (req *request.
 
 // DeleteInventory API operation for Amazon Simple Systems Manager (SSM).
 //
-// Delete a custom inventory type, or the data associated with a custom Inventory
+// Delete a custom inventory type or the data associated with a custom Inventory
 // type. Deleting a custom inventory type is also referred to as deleting a
 // custom inventory schema.
 //
@@ -6942,8 +6942,14 @@ func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *reques
 // of the calendar at a specific time, and returns the next time that the Change
 // Calendar state will transition. If you do not specify a time, GetCalendarState
 // assumes the current time. Change Calendar entries have two possible states:
-// OPEN or CLOSED. For more information about Systems Manager Change Calendar,
-// see AWS Systems Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
+// OPEN or CLOSED.
+//
+// If you specify more than one calendar in a request, the command returns the
+// status of OPEN only if all calendars in the request are open. If one or more
+// calendars in the request are closed, the status returned is CLOSED.
+//
+// For more information about Systems Manager Change Calendar, see AWS Systems
+// Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -20140,7 +20146,7 @@ type DeleteInventoryInput struct {
 	_ struct{} `type:"structure"`
 
 	// User-provided idempotency token.
-	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
+	ClientToken *string `type:"string" idempotencyToken:"true"`
 
 	// Use this option to view a summary of the deletion request without deleting
 	// any data or the data type. This option is useful when you only want to understand
@@ -20164,7 +20170,7 @@ type DeleteInventoryInput struct {
 	SchemaDeleteOption *string `type:"string" enum:"InventorySchemaDeleteOption"`
 
 	// The name of the custom inventory type for which you want to delete either
-	// all previously collected data, or the inventory type itself.
+	// all previously collected data or the inventory type itself.
 	//
 	// TypeName is a required field
 	TypeName *string `min:"1" type:"string" required:"true"`
@@ -20183,9 +20189,6 @@ func (s DeleteInventoryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DeleteInventoryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteInventoryInput"}
-	if s.ClientToken != nil && len(*s.ClientToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("ClientToken", 1))
-	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
 	}
@@ -36712,7 +36715,7 @@ type OpsAggregator struct {
 	Aggregators []*OpsAggregator `min:"1" type:"list"`
 
 	// The name of an OpsItem attribute on which to limit the count of OpsItems.
-	AttributeName *string `type:"string"`
+	AttributeName *string `min:"1" type:"string"`
 
 	// The aggregator filters.
 	Filters []*OpsFilter `min:"1" type:"list"`
@@ -36742,6 +36745,9 @@ func (s *OpsAggregator) Validate() error {
 	}
 	if s.Aggregators != nil && len(s.Aggregators) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
+	}
+	if s.AttributeName != nil && len(*s.AttributeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AttributeName", 1))
 	}
 	if s.Filters != nil && len(s.Filters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
@@ -39987,6 +39993,9 @@ type PutParameterInput struct {
 
 	// The parameter value that you want to add to the system. Standard parameters
 	// have a value limit of 4 KB. Advanced parameters have a value limit of 8 KB.
+	//
+	// Parameters can't be referenced or nested in the values of other parameters.
+	// You can't include {{}} or {{ssm:parameter-name}} in a parameter value.
 	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`

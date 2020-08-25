@@ -296,6 +296,95 @@ func (c *Kafka) DeleteClusterWithContext(ctx aws.Context, input *DeleteClusterIn
 	return out, req.Send()
 }
 
+const opDeleteConfiguration = "DeleteConfiguration"
+
+// DeleteConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteConfiguration for more information on using the DeleteConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteConfigurationRequest method.
+//    req, resp := client.DeleteConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DeleteConfiguration
+func (c *Kafka) DeleteConfigurationRequest(input *DeleteConfigurationInput) (req *request.Request, output *DeleteConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteConfiguration,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/configurations/{arn}",
+	}
+
+	if input == nil {
+		input = &DeleteConfigurationInput{}
+	}
+
+	output = &DeleteConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteConfiguration API operation for Managed Streaming for Kafka.
+//
+// Deletes the specified MSK configuration. The configuration must be in the
+// ACTIVE or DELETE_FAILED state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation DeleteConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DeleteConfiguration
+func (c *Kafka) DeleteConfiguration(input *DeleteConfigurationInput) (*DeleteConfigurationOutput, error) {
+	req, out := c.DeleteConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteConfigurationWithContext is the same as DeleteConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) DeleteConfigurationWithContext(ctx aws.Context, input *DeleteConfigurationInput, opts ...request.Option) (*DeleteConfigurationOutput, error) {
+	req, out := c.DeleteConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeCluster = "DescribeCluster"
 
 // DescribeClusterRequest generates a "aws/request.Request" representing the
@@ -2471,6 +2560,98 @@ func (c *Kafka) UpdateClusterKafkaVersionWithContext(ctx aws.Context, input *Upd
 	return out, req.Send()
 }
 
+const opUpdateConfiguration = "UpdateConfiguration"
+
+// UpdateConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConfiguration for more information on using the UpdateConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConfigurationRequest method.
+//    req, resp := client.UpdateConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateConfiguration
+func (c *Kafka) UpdateConfigurationRequest(input *UpdateConfigurationInput) (req *request.Request, output *UpdateConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConfiguration,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/configurations/{arn}",
+	}
+
+	if input == nil {
+		input = &UpdateConfigurationInput{}
+	}
+
+	output = &UpdateConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateConfiguration API operation for Managed Streaming for Kafka.
+//
+// Updates an existing MSK configuration. The configuration must be in the Active
+// state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateConfiguration
+func (c *Kafka) UpdateConfiguration(input *UpdateConfigurationInput) (*UpdateConfigurationOutput, error) {
+	req, out := c.UpdateConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConfigurationWithContext is the same as UpdateConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateConfigurationWithContext(ctx aws.Context, input *UpdateConfigurationInput, opts ...request.Option) (*UpdateConfigurationOutput, error) {
+	req, out := c.UpdateConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateMonitoring = "UpdateMonitoring"
 
 // UpdateMonitoringRequest generates a "aws/request.Request" representing the
@@ -3432,6 +3613,11 @@ type Configuration struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// The state of a configuration.
+	//
+	// State is a required field
+	State *string `locationName:"state" type:"string" required:"true" enum:"ConfigurationState"`
 }
 
 // String returns the string representation
@@ -3477,6 +3663,12 @@ func (s *Configuration) SetLatestRevision(v *ConfigurationRevision) *Configurati
 // SetName sets the Name field's value.
 func (s *Configuration) SetName(v string) *Configuration {
 	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *Configuration) SetState(v string) *Configuration {
+	s.State = &v
 	return s
 }
 
@@ -3946,6 +4138,10 @@ type CreateConfigurationOutput struct {
 	// The name of the configuration. Configuration names are strings that match
 	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
+
+	// The state of the configuration. The possible states are ACTIVE, DELETING
+	// and DELETE_FAILED.
+	State *string `locationName:"state" type:"string" enum:"ConfigurationState"`
 }
 
 // String returns the string representation
@@ -3979,6 +4175,12 @@ func (s *CreateConfigurationOutput) SetLatestRevision(v *ConfigurationRevision) 
 // SetName sets the Name field's value.
 func (s *CreateConfigurationOutput) SetName(v string) *CreateConfigurationOutput {
 	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *CreateConfigurationOutput) SetState(v string) *CreateConfigurationOutput {
+	s.State = &v
 	return s
 }
 
@@ -4058,6 +4260,82 @@ func (s *DeleteClusterOutput) SetClusterArn(v string) *DeleteClusterOutput {
 
 // SetState sets the State field's value.
 func (s *DeleteClusterOutput) SetState(v string) *DeleteClusterOutput {
+	s.State = &v
+	return s
+}
+
+// Request body for DeleteConfiguration.
+type DeleteConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteConfigurationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteConfigurationInput) SetArn(v string) *DeleteConfigurationInput {
+	s.Arn = &v
+	return s
+}
+
+// Response body for DeleteConfiguration.
+type DeleteConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The state of the configuration. The possible states are ACTIVE, DELETING
+	// and DELETE_FAILED.
+	State *string `locationName:"state" type:"string" enum:"ConfigurationState"`
+}
+
+// String returns the string representation
+func (s DeleteConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteConfigurationOutput) SetArn(v string) *DeleteConfigurationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DeleteConfigurationOutput) SetState(v string) *DeleteConfigurationOutput {
 	s.State = &v
 	return s
 }
@@ -4249,6 +4527,10 @@ type DescribeConfigurationOutput struct {
 	// The name of the configuration. Configuration names are strings that match
 	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
+
+	// The state of the configuration. The possible states are ACTIVE, DELETING
+	// and DELETE_FAILED.
+	State *string `locationName:"state" type:"string" enum:"ConfigurationState"`
 }
 
 // String returns the string representation
@@ -4294,6 +4576,12 @@ func (s *DescribeConfigurationOutput) SetLatestRevision(v *ConfigurationRevision
 // SetName sets the Name field's value.
 func (s *DescribeConfigurationOutput) SetName(v string) *DescribeConfigurationOutput {
 	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeConfigurationOutput) SetState(v string) *DescribeConfigurationOutput {
+	s.State = &v
 	return s
 }
 
@@ -7015,6 +7303,104 @@ func (s *UpdateClusterKafkaVersionOutput) SetClusterOperationArn(v string) *Upda
 	return s
 }
 
+// Request body for UpdateConfiguration.
+type UpdateConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+
+	// The description of the configuration.
+	Description *string `locationName:"description" type:"string"`
+
+	// ServerProperties is automatically base64 encoded/decoded by the SDK.
+	//
+	// ServerProperties is a required field
+	ServerProperties []byte `locationName:"serverProperties" type:"blob" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConfigurationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+	if s.ServerProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServerProperties"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateConfigurationInput) SetArn(v string) *UpdateConfigurationInput {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateConfigurationInput) SetDescription(v string) *UpdateConfigurationInput {
+	s.Description = &v
+	return s
+}
+
+// SetServerProperties sets the ServerProperties field's value.
+func (s *UpdateConfigurationInput) SetServerProperties(v []byte) *UpdateConfigurationInput {
+	s.ServerProperties = v
+	return s
+}
+
+// Response body for UpdateConfiguration.
+type UpdateConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Latest revision of the configuration.
+	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateConfigurationOutput) SetArn(v string) *UpdateConfigurationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetLatestRevision sets the LatestRevision field's value.
+func (s *UpdateConfigurationOutput) SetLatestRevision(v *ConfigurationRevision) *UpdateConfigurationOutput {
+	s.LatestRevision = v
+	return s
+}
+
 // Request body for UpdateMonitoring.
 type UpdateMonitoringInput struct {
 	_ struct{} `type:"structure"`
@@ -7264,6 +7650,27 @@ func ClusterState_Values() []string {
 		ClusterStateUpdating,
 		ClusterStateDeleting,
 		ClusterStateFailed,
+	}
+}
+
+// The state of a configuration.
+const (
+	// ConfigurationStateActive is a ConfigurationState enum value
+	ConfigurationStateActive = "ACTIVE"
+
+	// ConfigurationStateDeleting is a ConfigurationState enum value
+	ConfigurationStateDeleting = "DELETING"
+
+	// ConfigurationStateDeleteFailed is a ConfigurationState enum value
+	ConfigurationStateDeleteFailed = "DELETE_FAILED"
+)
+
+// ConfigurationState_Values returns all elements of the ConfigurationState enum
+func ConfigurationState_Values() []string {
+	return []string{
+		ConfigurationStateActive,
+		ConfigurationStateDeleting,
+		ConfigurationStateDeleteFailed,
 	}
 }
 

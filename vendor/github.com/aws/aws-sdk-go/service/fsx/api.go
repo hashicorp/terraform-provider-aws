@@ -167,7 +167,7 @@ func (c *FSx) CreateBackupRequest(input *CreateBackupInput) (req *request.Reques
 //
 //    * a Persistent deployment type
 //
-//    * is not linked to an Amazon S3 data respository.
+//    * is not linked to a data respository.
 //
 // For more information about backing up Amazon FSx for Lustre file systems,
 // see Working with FSx for Lustre backups (https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-backups-fsx.html).
@@ -2026,12 +2026,22 @@ type Backup struct {
 	// FileSystem is a required field
 	FileSystem *FileSystem `type:"structure" required:"true"`
 
-	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt this
-	// backup of the Amazon FSx for Windows file system's data at rest. Amazon FSx
-	// for Lustre does not support KMS encryption.
+	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the
+	// backup of the Amazon FSx file system's data at rest.
 	KmsKeyId *string `min:"1" type:"string"`
 
 	// The lifecycle status of the backup.
+	//
+	//    * AVAILABLE - The backup is fully available.
+	//
+	//    * CREATING - FSx is creating the backup.
+	//
+	//    * TRANSFERRING - For Lustre file systems only; FSx is transferring the
+	//    backup to S3.
+	//
+	//    * DELETED - The backup was deleted is no longer available.
+	//
+	//    * FAILED - Amazon FSx could not complete the backup.
 	//
 	// Lifecycle is a required field
 	Lifecycle *string `type:"string" required:"true" enum:"BackupLifecycle"`
@@ -2564,9 +2574,9 @@ func (s *CompletionReport) SetScope(v string) *CompletionReport {
 type CreateBackupInput struct {
 	_ struct{} `type:"structure"`
 
-	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
-	// creation. This string is automatically filled on your behalf when you use
-	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
+	// ensure idempotent creation. This string is automatically filled on your behalf
+	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The ID of the file system to back up.
@@ -2574,10 +2584,10 @@ type CreateBackupInput struct {
 	// FileSystemId is a required field
 	FileSystemId *string `min:"11" type:"string" required:"true"`
 
-	// The tags to apply to the backup at backup creation. The key value of the
-	// Name tag appears in the console as the backup name. If you have set CopyTagsToBackups
-	// to true, and you specify one or more tags using the CreateBackup action,
-	// no existing tags on the file system are copied from the file system to the
+	// (Optional) The tags to apply to the backup at backup creation. The key value
+	// of the Name tag appears in the console as the backup name. If you have set
+	// CopyTagsToBackups to true, and you specify one or more tags using the CreateBackup
+	// action, no existing file system tags are copied from the file system to the
 	// backup.
 	Tags []*Tag `min:"1" type:"list"`
 }
@@ -3041,11 +3051,15 @@ type CreateFileSystemInput struct {
 	//
 	// For Lustre file systems:
 	//
-	//    * For SCRATCH_2 and PERSISTENT_1 deployment types, valid values are 1.2,
-	//    2.4, and increments of 2.4 TiB.
+	//    * For SCRATCH_2 and PERSISTENT_1 SSD deployment types, valid values are
+	//    1200 GiB, 2400 GiB, and increments of 2400 GiB.
 	//
-	//    * For SCRATCH_1 deployment type, valid values are 1.2, 2.4, and increments
-	//    of 3.6 TiB.
+	//    * For PERSISTENT HDD file systems, valid values are increments of 6000
+	//    GiB for 12 MB/s/TiB file systems and increments of 1800 GiB for 40 MB/s/TiB
+	//    file systems.
+	//
+	//    * For SCRATCH_1 deployment type, valid values are 1200 GiB, 2400 GiB,
+	//    and increments of 3600 GiB.
 	//
 	// For Windows file systems:
 	//
@@ -3056,17 +3070,19 @@ type CreateFileSystemInput struct {
 	// StorageCapacity is a required field
 	StorageCapacity *int64 `type:"integer" required:"true"`
 
-	// Sets the storage type for the Amazon FSx for Windows file system you're creating.
-	// Valid values are SSD and HDD.
+	// Sets the storage type for the file system you're creating. Valid values are
+	// SSD and HDD.
 	//
 	//    * Set to SSD to use solid state drive storage. SSD is supported on all
-	//    Windows deployment types.
+	//    Windows and Lustre deployment types.
 	//
 	//    * Set to HDD to use hard disk drive storage. HDD is supported on SINGLE_AZ_2
-	//    and MULTI_AZ_1 Windows file system deployment types.
+	//    and MULTI_AZ_1 Windows file system deployment types, and on PERSISTENT
+	//    Lustre file system deployment types.
 	//
 	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-costs.html#storage-type-options)
-	// in the Amazon FSx for Windows User Guide.
+	// in the Amazon FSx for Windows User Guide and Multiple Storage Options (https://docs.aws.amazon.com/fsx/latest/LustreGuide/what-is.html#storage-options)
+	// in the Amazon FSx for Lustre User Guide.
 	StorageType *string `type:"string" enum:"StorageType"`
 
 	// Specifies the IDs of the subnets that the file system will be accessible
@@ -3212,26 +3228,24 @@ func (s *CreateFileSystemInput) SetWindowsConfiguration(v *CreateFileSystemWindo
 type CreateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) Use this property to configure the AutoImport feature on the file
-	// system's linked Amazon S3 data repository. You use AutoImport to update the
-	// contents of your FSx for Lustre file system automatically with changes that
-	// occur in the linked S3 data repository. AutoImportPolicy can have the following
-	// values:
+	// (Optional) When you create your file system, your existing S3 objects appear
+	// as file and directory listings. Use this property to choose how Amazon FSx
+	// keeps your file and directory listings up to date as you add or modify objects
+	// in your linked S3 bucket. AutoImportPolicy can have the following values:
 	//
-	//    * NONE - (Default) AutoImport is off. Changes in the linked data repository
-	//    are not reflected on the FSx file system.
+	//    * NONE - (Default) AutoImport is off. Amazon FSx only updates file and
+	//    directory listings from the linked S3 bucket when the file system is created.
+	//    FSx does not update file and directory listings for any new or changed
+	//    objects after choosing this option.
 	//
-	//    * NEW - AutoImport is on. New files in the linked data repository that
-	//    do not currently exist in the FSx file system are automatically imported.
-	//    Updates to existing FSx files are not imported to the FSx file system.
-	//    Files deleted from the linked data repository are not deleted from the
-	//    FSx file system.
+	//    * NEW - AutoImport is on. Amazon FSx automatically imports directory listings
+	//    of any new objects added to the linked S3 bucket that do not currently
+	//    exist in the FSx file system.
 	//
-	//    * NEW_CHANGED - AutoImport is on. New files in the linked S3 data repository
-	//    that do not currently exist in the FSx file system are automatically imported.
-	//    Changes to existing FSx files in the linked repository are also automatically
-	//    imported to the FSx file system. Files deleted from the linked data repository
-	//    are not deleted from the FSx file system.
+	//    * NEW_CHANGED - AutoImport is on. Amazon FSx automatically imports file
+	//    and directory listings of any new objects added to the S3 bucket and any
+	//    existing objects that are changed in the S3 bucket after you choose this
+	//    option.
 	//
 	// For more information, see Automatically import updates from your S3 bucket
 	// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/autoimport-data-repo.html).
@@ -3242,13 +3256,14 @@ type CreateFileSystemLustreConfiguration struct {
 	// The default is 0.
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
-	// A boolean flag indicating whether tags for the file system should be copied
-	// to backups. This value defaults to false. If it's set to true, all tags for
-	// the file system are copied to all automatic and user-initiated backups where
-	// the user doesn't specify tags. If this value is true, and you specify one
-	// or more tags, only the specified tags are copied to backups. If you specify
-	// one or more tags when creating a user-initiated backup, no tags are copied
-	// from the file system, regardless of this value.
+	// (Optional) Not available to use with file systems that are linked to a data
+	// repository. A boolean flag indicating whether tags for the file system should
+	// be copied to backups. The default value is false. If it's set to true, all
+	// file system tags are copied to all automatic and user-initiated backups when
+	// the user doesn't specify any backup-specific tags. If this value is true,
+	// and you specify one or more backup tags, only the specified tags are copied
+	// to backups. If you specify one or more tags when creating a user-initiated
+	// backup, no tags are copied from the file system, regardless of this value.
 	//
 	// For more information, see Working with backups (https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-backups-fsx.html).
 	CopyTagsToBackups *bool `type:"boolean"`
@@ -3322,16 +3337,16 @@ type CreateFileSystemLustreConfiguration struct {
 	// and write throughput for each 1 tebibyte of storage, in MB/s/TiB. File system
 	// throughput capacity is calculated by multiplying ﬁle system storage capacity
 	// (TiB) by the PerUnitStorageThroughput (MB/s/TiB). For a 2.4 TiB ﬁle system,
-	// provisioning 50 MB/s/TiB of PerUnitStorageThroughput yields 117 MB/s of ﬁle
+	// provisioning 50 MB/s/TiB of PerUnitStorageThroughput yields 120 MB/s of ﬁle
 	// system throughput. You pay for the amount of throughput that you provision.
 	//
 	// Valid values for SSD storage: 50, 100, 200. Valid values for HDD storage:
 	// 12, 40.
 	PerUnitStorageThroughput *int64 `min:"12" type:"integer"`
 
-	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
-	// in the UTC time zone, where d is the weekday number, from 1 through 7, beginning
-	// with Monday and ending with Sunday.
+	// (Optional) The preferred start time to perform weekly maintenance, formatted
+	// d:HH:MM in the UTC time zone, where d is the weekday number, from 1 through
+	// 7, beginning with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -3635,24 +3650,23 @@ type DataRepositoryConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Describes the file system's linked S3 data repository's AutoImportPolicy.
-	// The AutoImportPolicy configures how your FSx for Lustre file system automatically
-	// updates its contents with changes that occur in the linked S3 data repository.
+	// The AutoImportPolicy configures how Amazon FSx keeps your file and directory
+	// listings up to date as you add or modify objects in your linked S3 bucket.
 	// AutoImportPolicy can have the following values:
 	//
-	//    * NONE - (Default) AutoImport is off. Changes in the linked data repository
-	//    are not reflected on the FSx file system.
+	//    * NONE - (Default) AutoImport is off. Amazon FSx only updates file and
+	//    directory listings from the linked S3 bucket when the file system is created.
+	//    FSx does not update file and directory listings for any new or changed
+	//    objects after choosing this option.
 	//
-	//    * NEW - AutoImport is on. New files in the linked data repository that
-	//    do not currently exist in the FSx file system are automatically imported.
-	//    Updates to existing FSx files are not imported to the FSx file system.
-	//    Files deleted from the linked data repository are not deleted from the
-	//    FSx file system.
+	//    * NEW - AutoImport is on. Amazon FSx automatically imports directory listings
+	//    of any new objects added to the linked S3 bucket that do not currently
+	//    exist in the FSx file system.
 	//
-	//    * NEW_CHANGED - AutoImport is on. New files in the linked S3 data repository
-	//    that do not currently exist in the FSx file system are automatically imported.
-	//    Changes to existing FSx files in the linked repository are also automatically
-	//    imported to the FSx file system. Files deleted from the linked data repository
-	//    are not deleted from the FSx file system.
+	//    * NEW_CHANGED - AutoImport is on. Amazon FSx automatically imports file
+	//    and directory listings of any new objects added to the S3 bucket and any
+	//    existing objects that are changed in the S3 bucket after you choose this
+	//    option.
 	//
 	// For more information, see Automatically import updates from your S3 bucket
 	// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/autoimport-data-repo.html).
@@ -6908,26 +6922,24 @@ func (s *UpdateFileSystemInput) SetWindowsConfiguration(v *UpdateFileSystemWindo
 type UpdateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) Use this property to configure the AutoImport feature on the file
-	// system's linked Amazon S3 data repository. You use AutoImport to update the
-	// contents of your FSx for Lustre file system automatically with changes that
-	// occur in the linked S3 data repository. AutoImportPolicy can have the following
-	// values:
+	// (Optional) When you create your file system, your existing S3 objects appear
+	// as file and directory listings. Use this property to choose how Amazon FSx
+	// keeps your file and directory listing up to date as you add or modify objects
+	// in your linked S3 bucket. AutoImportPolicy can have the following values:
 	//
-	//    * NONE - (Default) AutoImport is off. Changes in the linked data repository
-	//    are not reflected on the FSx file system.
+	//    * NONE - (Default) AutoImport is off. Amazon FSx only updates file and
+	//    directory listings from the linked S3 bucket when the file system is created.
+	//    FSx does not update the file and directory listing for any new or changed
+	//    objects after choosing this option.
 	//
-	//    * NEW - AutoImport is on. New files in the linked data repository that
-	//    do not currently exist in the FSx file system are automatically imported.
-	//    Updates to existing FSx files are not imported to the FSx file system.
-	//    Files deleted from the linked data repository are not deleted from the
-	//    FSx file system.
+	//    * NEW - AutoImport is on. Amazon FSx automatically imports directory listings
+	//    of any new objects added to the linked S3 bucket that do not currently
+	//    exist in the FSx file system.
 	//
-	//    * NEW_CHANGED - AutoImport is on. New files in the linked S3 data repository
-	//    that do not currently exist in the FSx file system are automatically imported.
-	//    Changes to existing FSx files in the linked repository are also automatically
-	//    imported to the FSx file system. Files deleted from the linked data repository
-	//    are not deleted from the FSx file system.
+	//    * NEW_CHANGED - AutoImport is on. Amazon FSx automatically imports file
+	//    and directory listings of any new objects added to the S3 bucket and any
+	//    existing objects that are changed in the S3 bucket after you choose this
+	//    option.
 	//
 	// For more information, see Automatically import updates from your S3 bucket
 	// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/autoimport-data-repo.html).
@@ -6943,9 +6955,9 @@ type UpdateFileSystemLustreConfiguration struct {
 	// 05:00 specifies 5 AM daily.
 	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
 
-	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
-	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
-	// with Monday and ending with Sunday.
+	// (Optional) The preferred start time to perform weekly maintenance, formatted
+	// d:HH:MM in the UTC time zone. d is the weekday number, from 1 through 7,
+	// beginning with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -7372,6 +7384,17 @@ func AutoImportPolicyType_Values() []string {
 }
 
 // The lifecycle status of the backup.
+//
+//    * AVAILABLE - The backup is fully available.
+//
+//    * CREATING - FSx is creating the new user-intiated backup
+//
+//    * TRANSFERRING - For user-initiated backups on Lustre file systems only;
+//    FSx is backing up the file system.
+//
+//    * DELETED - The backup was deleted is no longer available.
+//
+//    * FAILED - Amazon FSx could not complete the backup.
 const (
 	// BackupLifecycleAvailable is a BackupLifecycle enum value
 	BackupLifecycleAvailable = "AVAILABLE"

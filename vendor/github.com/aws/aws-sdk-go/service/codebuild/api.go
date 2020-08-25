@@ -4808,7 +4808,7 @@ type Build struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// When the build process ended, expressed in Unix time format.
@@ -5256,7 +5256,7 @@ type BuildBatch struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// The date and time that the batch build ended.
@@ -6335,7 +6335,7 @@ type CreateProjectInput struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for the build project.
@@ -9680,7 +9680,7 @@ type Project struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for this build project.
@@ -9966,13 +9966,13 @@ type ProjectArtifacts struct {
 	// For example:
 	//
 	//    * If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
-	//    name is set to MyArtifact.zip, then the output artifact is stored in MyArtifacts/build-ID/MyArtifact.zip.
+	//    name is set to MyArtifact.zip, then the output artifact is stored in MyArtifacts/<build-ID>/MyArtifact.zip.
 	//
 	//    * If path is empty, namespaceType is set to NONE, and name is set to "/",
 	//    the output artifact is stored in the root of the output bucket.
 	//
 	//    * If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
-	//    name is set to "/", the output artifact is stored in MyArtifacts/build-ID .
+	//    name is set to "/", the output artifact is stored in MyArtifacts/<build-ID>.
 	Name *string `locationName:"name" type:"string"`
 
 	// Along with path and name, the pattern that AWS CodeBuild uses to determine
@@ -9990,7 +9990,7 @@ type ProjectArtifacts struct {
 	//    the build ID. This is the default if namespaceType is not specified.
 	//
 	// For example, if path is set to MyArtifacts, namespaceType is set to BUILD_ID,
-	// and name is set to MyArtifact.zip, the output artifact is stored in MyArtifacts/build-ID/MyArtifact.zip.
+	// and name is set to MyArtifact.zip, the output artifact is stored in MyArtifacts/<build-ID>/MyArtifact.zip.
 	NamespaceType *string `locationName:"namespaceType" type:"string" enum:"ArtifactNamespace"`
 
 	// If this flag is set, a name specified in the buildspec file overrides the
@@ -10661,13 +10661,12 @@ type ProjectSource struct {
 	//
 	//    * For source code in an AWS CodeCommit repository, the HTTPS clone URL
 	//    to the repository that contains the source code and the buildspec file
-	//    (for example, https://git-codecommit.region-ID.amazonaws.com/v1/repos/repo-name
-	//    ).
+	//    (for example, https://git-codecommit.<region-ID>.amazonaws.com/v1/repos/<repo-name>).
 	//
 	//    * For source code in an Amazon Simple Storage Service (Amazon S3) input
 	//    bucket, one of the following. The path to the ZIP file that contains the
-	//    source code (for example, bucket-name/path/to/object-name.zip). The path
-	//    to the folder that contains the source code (for example, bucket-name/path/to/source-code/folder/).
+	//    source code (for example, <bucket-name>/<path>/<object-name>.zip). The
+	//    path to the folder that contains the source code (for example, <bucket-name>/<path-to-source-code>/<folder>/).
 	//
 	//    * For source code in a GitHub repository, the HTTPS clone URL to the repository
 	//    that contains the source and the buildspec file. You must connect your
@@ -11955,7 +11954,7 @@ type StartBuildBatchInput struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKeyOverride *string `locationName:"encryptionKeyOverride" min:"1" type:"string"`
 
 	// A container type for this batch build that overrides the one specified in
@@ -12471,7 +12470,7 @@ type StartBuildInput struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKeyOverride *string `locationName:"encryptionKeyOverride" min:"1" type:"string"`
 
 	// A container type for this build that overrides the one specified in the build
@@ -13308,7 +13307,7 @@ type UpdateProjectInput struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name ).
+	// the CMK's alias (using the format alias/<alias-name>).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information to be changed about the build environment for the build project.
