@@ -237,14 +237,14 @@ resource "aws_elasticsearch_domain" "test_cluster" {
   }
 
   vpc_options {
-    security_group_ids = ["${aws_security_group.first.id}"]
-    subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+    security_group_ids = [aws_security_group.first.id]
+    subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
   }
 }
 
 resource "aws_iam_role_policy" "firehose-elasticsearch" {
   name   = "elasticsearch"
-  role   = "${aws_iam_role.firehose.id}"
+  role   = aws_iam_role.firehose.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -258,47 +258,47 @@ resource "aws_iam_role_policy" "firehose-elasticsearch" {
         "${aws_elasticsearch_domain.test_cluster.arn}",
         "${aws_elasticsearch_domain.test_cluster.arn}/*"
       ]
-	},
-	{
-	  "Effect": "Allow",
-	  "Action": [
-         "ec2:DescribeVpcs",
-         "ec2:DescribeVpcAttribute",
-         "ec2:DescribeSubnets",
-         "ec2:DescribeSecurityGroups",
-         "ec2:DescribeNetworkInterfaces",
-         "ec2:CreateNetworkInterface",
-         "ec2:CreateNetworkInterfacePermission",
-         "ec2:DeleteNetworkInterface"
-	  ],
-	  "Resource": [
-	    "*"
-	  ]
-	}
+        },
+        {
+          "Effect": "Allow",
+          "Action": [
+            "ec2:DescribeVpcs",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateNetworkInterfacePermission",
+            "ec2:DeleteNetworkInterface"
+          ],
+          "Resource": [
+            "*"
+          ]
+        }
   ]
 }
 EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es"
   destination = "elasticsearch"
   s3_configuration {
-    role_arn   = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
   elasticsearch_configuration {
-    domain_arn = "${aws_elasticsearch_domain.test_cluster.arn}"
-    role_arn   = "${aws_iam_role.firehose.arn}"
+    domain_arn = aws_elasticsearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
     type_name  = "test"
 
     vpc_config {
-      subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
-      security_group_ids = ["${aws_security_group.first.id}"]
-      role_arn           = "${aws_iam_role.firehose.arn}"
+      subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+      security_group_ids = [aws_security_group.first.id]
+      role_arn           = aws_iam_role.firehose.arn
     }
   }
 }
