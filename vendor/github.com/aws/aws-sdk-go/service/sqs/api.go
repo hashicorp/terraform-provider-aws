@@ -5176,10 +5176,31 @@ const (
 	MessageSystemAttributeNameAwstraceHeader = "AWSTraceHeader"
 )
 
+// MessageSystemAttributeName_Values returns all elements of the MessageSystemAttributeName enum
+func MessageSystemAttributeName_Values() []string {
+	return []string{
+		MessageSystemAttributeNameSenderId,
+		MessageSystemAttributeNameSentTimestamp,
+		MessageSystemAttributeNameApproximateReceiveCount,
+		MessageSystemAttributeNameApproximateFirstReceiveTimestamp,
+		MessageSystemAttributeNameSequenceNumber,
+		MessageSystemAttributeNameMessageDeduplicationId,
+		MessageSystemAttributeNameMessageGroupId,
+		MessageSystemAttributeNameAwstraceHeader,
+	}
+}
+
 const (
 	// MessageSystemAttributeNameForSendsAwstraceHeader is a MessageSystemAttributeNameForSends enum value
 	MessageSystemAttributeNameForSendsAwstraceHeader = "AWSTraceHeader"
 )
+
+// MessageSystemAttributeNameForSends_Values returns all elements of the MessageSystemAttributeNameForSends enum
+func MessageSystemAttributeNameForSends_Values() []string {
+	return []string{
+		MessageSystemAttributeNameForSendsAwstraceHeader,
+	}
+}
 
 const (
 	// QueueAttributeNameAll is a QueueAttributeName enum value
@@ -5236,3 +5257,27 @@ const (
 	// QueueAttributeNameKmsDataKeyReusePeriodSeconds is a QueueAttributeName enum value
 	QueueAttributeNameKmsDataKeyReusePeriodSeconds = "KmsDataKeyReusePeriodSeconds"
 )
+
+// QueueAttributeName_Values returns all elements of the QueueAttributeName enum
+func QueueAttributeName_Values() []string {
+	return []string{
+		QueueAttributeNameAll,
+		QueueAttributeNamePolicy,
+		QueueAttributeNameVisibilityTimeout,
+		QueueAttributeNameMaximumMessageSize,
+		QueueAttributeNameMessageRetentionPeriod,
+		QueueAttributeNameApproximateNumberOfMessages,
+		QueueAttributeNameApproximateNumberOfMessagesNotVisible,
+		QueueAttributeNameCreatedTimestamp,
+		QueueAttributeNameLastModifiedTimestamp,
+		QueueAttributeNameQueueArn,
+		QueueAttributeNameApproximateNumberOfMessagesDelayed,
+		QueueAttributeNameDelaySeconds,
+		QueueAttributeNameReceiveMessageWaitTimeSeconds,
+		QueueAttributeNameRedrivePolicy,
+		QueueAttributeNameFifoQueue,
+		QueueAttributeNameContentBasedDeduplication,
+		QueueAttributeNameKmsMasterKeyId,
+		QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+	}
+}

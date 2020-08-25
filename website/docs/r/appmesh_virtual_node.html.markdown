@@ -187,7 +187,7 @@ The `spec` object supports the following:
 
 The `backend` object supports the following:
 
-* `virtual_service` - (Optional) Specifies a virtual service to use as a backend for a virtual node.
+* `virtual_service` - (Required) Specifies a virtual service to use as a backend for a virtual node.
 
 The `virtual_service` object supports the following:
 

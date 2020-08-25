@@ -36,7 +36,7 @@ Identity Provider Configuration Usage:
 
 ```hcl
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet"
 
   identity_provider {
     type          = "SAML"

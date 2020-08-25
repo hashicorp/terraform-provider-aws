@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsEbsVolumes_basic(t *testing.T) {
@@ -37,7 +37,6 @@ func testAccDataSourceAwsEbsVolumeIDsConfigWithDataSource(rInt int) string {
 %s
 
 data "aws_ebs_volumes" "subject_under_test" {
-
   tags = {
     TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
   }
@@ -46,17 +45,13 @@ data "aws_ebs_volumes" "subject_under_test" {
 }
 
 func testAccDataSourceAwsEbsVolumeIDsConfig(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "azs" {
-  state = "available"
-}
 
 resource "aws_ebs_volume" "volume" {
   count = 2
 
-  availability_zone = data.aws_availability_zones.azs.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {

@@ -101,6 +101,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 )
 
 // AccessanalyzerListTags lists accessanalyzer service tags.
@@ -1757,4 +1758,21 @@ func WorkspacesListTags(conn *workspaces.WorkSpaces, identifier string) (KeyValu
 	}
 
 	return WorkspacesKeyValueTags(output.TagList), nil
+}
+
+// XrayListTags lists xray service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func XrayListTags(conn *xray.XRay, identifier string) (KeyValueTags, error) {
+	input := &xray.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return XrayKeyValueTags(output.Tags), nil
 }

@@ -38,29 +38,29 @@ The following arguments are supported:
 
 The `redacted_fields` block supports the following arguments:
 
-* `all_query_arguments` - (Optional) Inspect all query arguments.
-* `body` - (Optional) Inspect the request body, which immediately follows the request headers.
-* `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
-* `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
-* `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
-* `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
-* `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
+* `all_query_arguments` - (Optional) Redact all query arguments.
+* `body` - (Optional) Redact the request body, which immediately follows the request headers.
+* `method` - (Optional) Redact the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
+* `query_string` - (Optional) Redact the query string. This is the part of a URL that appears after a `?` character, if any.
+* `single_header` - (Optional) Redact a single header. See [Single Header](#single-header) below for details.
+* `single_query_argument` - (Optional) Redact a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `uri_path` - (Optional) Redact the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Single Header
 
-Inspect a single header. Provide the name of the header to inspect, for example, `User-Agent` or `Referer` (provided as lowercase strings).
+Redact a single header. Provide the name of the header to redact, for example, `User-Agent` or `Referer` (provided as lowercase strings).
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Optional) The name of the query header to redact. This setting must be provided as lower case characters.
 
 ### Single Query Argument
 
-Inspect a single query argument. Provide the name of the query argument to inspect, such as `UserName` or `SalesRegion` (provided as lowercase strings).
+Redact a single query argument. Provide the name of the query argument to redact, such as `UserName` or `SalesRegion` (provided as lowercase strings).
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Optional) The name of the query header to redact. This setting must be provided as lower case characters.
 
 ## Attributes Reference
 

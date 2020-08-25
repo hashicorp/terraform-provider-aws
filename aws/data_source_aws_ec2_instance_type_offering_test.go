@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSEc2InstanceTypeOfferingDataSource_Filter(t *testing.T) {
@@ -96,16 +96,7 @@ data "aws_ec2_instance_type_offering" "test" {
 }
 
 func testAccAWSEc2InstanceTypeOfferingDataSourceConfigLocationType() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + `
 # Rather than hardcode an instance type in the testing,
 # use the first result from all available offerings.
 data "aws_ec2_instance_type_offerings" "test" {

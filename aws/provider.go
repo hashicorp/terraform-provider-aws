@@ -3,15 +3,14 @@ package aws
 import (
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/mutexkv"
 )
 
-// Provider returns a terraform.ResourceProvider.
-func Provider() terraform.ResourceProvider {
+// Provider returns a *schema.Provider.
+func Provider() *schema.Provider {
 	// TODO: Move the validation to this, requires conditional schemas
 	// TODO: Move the configuration to this, requires validation
 
@@ -603,6 +602,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elb_attachment":                                      resourceAwsElbAttachment(),
 			"aws_emr_cluster":                                         resourceAwsEMRCluster(),
 			"aws_emr_instance_group":                                  resourceAwsEMRInstanceGroup(),
+			"aws_emr_managed_scaling_policy":                          resourceAwsEMRManagedScalingPolicy(),
 			"aws_emr_security_configuration":                          resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                            resourceAwsFlowLog(),
 			"aws_fsx_lustre_file_system":                              resourceAwsFsxLustreFileSystem(),
@@ -627,6 +627,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
 			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
+			"aws_guardduty_publishing_destination":                    resourceAwsGuardDutyPublishingDestination(),
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
 			"aws_guardduty_ipset":                                     resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                                    resourceAwsGuardDutyMember(),
@@ -772,6 +773,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route53_query_log":                                   resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                                      resourceAwsRoute53Record(),
 			"aws_route53_zone_association":                            resourceAwsRoute53ZoneAssociation(),
+			"aws_route53_vpc_association_authorization":               resourceAwsRoute53VPCAssociationAuthorization(),
 			"aws_route53_zone":                                        resourceAwsRoute53Zone(),
 			"aws_route53_health_check":                                resourceAwsRoute53HealthCheck(),
 			"aws_route53_resolver_endpoint":                           resourceAwsRoute53ResolverEndpoint(),

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsS3Bucket() *schema.Resource {
@@ -95,7 +95,11 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 func bucketLocation(client *AWSClient, d *schema.ResourceData, bucket string) error {
 	region, err := s3manager.GetBucketRegionWithClient(context.Background(), client.s3conn, bucket, func(r *request.Request) {
-		r.Config.S3ForcePathStyle = aws.Bool(false)
+		// By default, GetBucketRegion forces virtual host addressing, which
+		// is not compatible with many non-AWS implementations. Instead, pass
+		// the provider s3_force_path_style configuration, which defaults to
+		// false, but allows override.
+		r.Config.S3ForcePathStyle = client.s3conn.Config.S3ForcePathStyle
 	})
 	if err != nil {
 		return err

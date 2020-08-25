@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -190,7 +190,8 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Create the Network Acl
 	createOpts := &ec2.CreateNetworkAclInput{
-		VpcId: aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeNetworkAcl),
 	}
 
 	log.Printf("[DEBUG] Network Acl create config: %#v", createOpts)
@@ -202,12 +203,6 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 	// Get the ID and store it
 	networkAcl := resp.NetworkAcl
 	d.SetId(aws.StringValue(networkAcl.NetworkAclId))
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	// Update rules and subnet association once acl is created
 	return resourceAwsNetworkAclUpdate(d, meta)

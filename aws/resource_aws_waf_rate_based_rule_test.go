@@ -5,15 +5,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
@@ -385,14 +385,14 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
   rate_key    = "IP"
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -412,14 +412,14 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
   rate_key    = "IP"
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -460,7 +460,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_byte_match_set.set.id}"
+    data_id = aws_waf_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }
@@ -488,7 +488,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   tags = {
-  	%q = %q
+    %q = %q
   }
 }
 `, name, name, tag1Key, tag1Value)
@@ -503,8 +503,8 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   tags = {
-  	%q = %q
-  	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
@@ -103,10 +103,10 @@ resource "aws_ebs_snapshot" "b" {
   volume_id   = aws_ebs_volume.test.*.id[1]
   description = %q
 
-  // We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than
-  // 'aws_ebs_snapshot.b.creation_date'/ so that we can ensure that the
-  // snapshots are being sorted correctly.
-  depends_on = ["aws_ebs_snapshot.a"]
+  # We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than
+  # 'aws_ebs_snapshot.b.creation_date'/ so that we can ensure that the
+  # snapshots are being sorted correctly.
+  depends_on = [aws_ebs_snapshot.a]
 }
 `, rName, rName)
 }

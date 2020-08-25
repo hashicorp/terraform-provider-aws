@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -353,11 +353,11 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_default_route_table" "foo" {
-  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+  default_route_table_id = aws_vpc.foo.default_route_table_id
 
   route {
     cidr_block = "10.0.1.0/32"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -366,7 +366,7 @@ resource "aws_default_route_table" "foo" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "tf-default-route-table-test"
@@ -384,7 +384,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_default_route_table" "foo" {
-  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+  default_route_table_id = aws_vpc.foo.default_route_table_id
 
   tags = {
     Name = "tf-default-route-table-test"
@@ -392,7 +392,7 @@ resource "aws_default_route_table" "foo" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "tf-default-route-table-test"
@@ -410,7 +410,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_default_route_table" "foo" {
-  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+  default_route_table_id = aws_vpc.foo.default_route_table_id
 
   route = []
 
@@ -420,7 +420,7 @@ resource "aws_default_route_table" "foo" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "tf-default-route-table-test"
@@ -438,11 +438,11 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_default_route_table" "foo" {
-  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+  default_route_table_id = aws_vpc.foo.default_route_table_id
 
   route {
     cidr_block = "10.0.1.0/32"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -451,7 +451,7 @@ resource "aws_default_route_table" "foo" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "main-igw"
@@ -460,11 +460,11 @@ resource "aws_internet_gateway" "gw" {
 
 # Thing to help testing changes
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   route {
     cidr_block = "10.0.1.0/24"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -484,11 +484,11 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_default_route_table" "foo" {
-  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+  default_route_table_id = aws_vpc.foo.default_route_table_id
 
   route {
     cidr_block = "10.0.1.0/32"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -497,7 +497,7 @@ resource "aws_default_route_table" "foo" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "main-igw"
@@ -506,11 +506,11 @@ resource "aws_internet_gateway" "gw" {
 
 # Thing to help testing changes
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   route {
     cidr_block = "10.0.1.0/24"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -519,8 +519,8 @@ resource "aws_route_table" "r" {
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.foo.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.foo.id
+  route_table_id = aws_route_table.r.id
 }
 `
 
@@ -536,7 +536,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
@@ -550,9 +550,9 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
@@ -560,11 +560,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 resource "aws_default_route_table" "test" {
-  default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
     cidr_block         = "0.0.0.0/0"
-    transit_gateway_id = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
+    transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
   }
 }
 `
@@ -582,7 +582,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-default-route-table-vpc-endpoint"
@@ -590,9 +590,9 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_vpc_endpoint" "s3" {
-    vpc_id          = "${aws_vpc.test.id}"
+    vpc_id          = aws_vpc.test.id
     service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-    route_table_ids = ["${aws_vpc.test.default_route_table_id}"]
+    route_table_ids = [aws_vpc.test.default_route_table_id]
 
   tags = {
     Name = "terraform-testacc-default-route-table-vpc-endpoint"
@@ -600,7 +600,7 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 resource "aws_default_route_table" "foo" {
-  default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   tags = {
         Name = "test"
@@ -608,7 +608,7 @@ resource "aws_default_route_table" "foo" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.igw.id}"
+    gateway_id = aws_internet_gateway.igw.id
   }
 }
 `
@@ -667,7 +667,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -675,13 +675,12 @@ resource "aws_egress_only_internet_gateway" "test" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-
 
 locals {
   ipv6             = %[2]t
@@ -690,12 +689,12 @@ locals {
 }
 
 resource "aws_default_route_table" "test" {
-  default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-    cidr_block      = "${local.ipv6 ? "" : local.destination}"
-    ipv6_cidr_block = "${local.ipv6 ? local.destination_ipv6 : ""}"
-    gateway_id      = "${aws_internet_gateway.test.id}"
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+    gateway_id      = aws_internet_gateway.test.id
   }
 
   tags = {

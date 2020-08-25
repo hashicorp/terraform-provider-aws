@@ -56,8 +56,14 @@ The below snippet demonstrates use with the `s3_origin_config` structure for the
 [`aws_cloudfront_distribution`][3] resource:
 
 ```hcl
-s3_origin_config {
-  origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  origin {
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.example.cloudfront_access_identity_path
+    }
+  }
 }
 ```
 

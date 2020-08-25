@@ -22,7 +22,7 @@ data "aws_cloudformation_export" "subnet_id" {
 
 resource "aws_instance" "web" {
   ami           = "ami-abb07bcb"
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
   subnet_id     = data.aws_cloudformation_export.subnet_id.value
 }
 ```

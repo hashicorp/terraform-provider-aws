@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -66,7 +66,7 @@ resource "aws_route53_resolver_rule" "forward" {
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = "${aws_route53_resolver_endpoint.bar.id}"
+  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
 
   target_ip {
     ip = "192.0.2.7"
@@ -80,15 +80,15 @@ resource "aws_route53_resolver_rule" "recursive" {
 }
 
 data "aws_route53_resolver_rules" "by_resolver_endpoint_id" {
-  owner_id             = "${aws_route53_resolver_rule.forward.owner_id}"
-  resolver_endpoint_id = "${aws_route53_resolver_rule.forward.resolver_endpoint_id}"
+  owner_id             = aws_route53_resolver_rule.forward.owner_id
+  resolver_endpoint_id = aws_route53_resolver_rule.forward.resolver_endpoint_id
 }
 
 data "aws_route53_resolver_rules" "by_resolver_endpoint_id_rule_type_share_status" {
-  owner_id             = "${aws_route53_resolver_rule.recursive.owner_id}"
-  resolver_endpoint_id = "${aws_route53_resolver_rule.recursive.resolver_endpoint_id}"
-  rule_type            = "${aws_route53_resolver_rule.recursive.rule_type}"
-  share_status         = "${aws_route53_resolver_rule.recursive.share_status}"
+  owner_id             = aws_route53_resolver_rule.recursive.owner_id
+  resolver_endpoint_id = aws_route53_resolver_rule.recursive.resolver_endpoint_id
+  rule_type            = aws_route53_resolver_rule.recursive.rule_type
+  share_status         = aws_route53_resolver_rule.recursive.share_status
 }
 
 data "aws_route53_resolver_rules" "by_invalid_owner_id" {

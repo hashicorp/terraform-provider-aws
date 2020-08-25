@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_route53_zone_association
 
-Manages a Route53 Hosted Zone VPC association. VPC associations can only be made on private zones.
+Manages a Route53 Hosted Zone VPC association. VPC associations can only be made on private zones. See the [`aws_route53_vpc_association_authorization` resource](route53_vpc_association_authorization.html) for setting up cross-account associations.
 
 ~> **NOTE:** Unless explicit association ordering is required (e.g. a separate cross-account association authorization), usage of this resource is not recommended. Use the `vpc` configuration blocks available within the [`aws_route53_zone` resource](/docs/providers/aws/r/route53_zone.html) instead.
 
@@ -65,9 +65,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The calculated unique identifier for the association.
-* `zone_id` - The ID of the hosted zone for the association.
-* `vpc_id` - The ID of the VPC for the association.
-* `vpc_region` - The region in which the VPC identified by `vpc_id` was created.
+* `owning_account` - The account ID of the account that created the hosted zone.
 
 ## Import
 
@@ -75,4 +73,10 @@ Route 53 Hosted Zone Associations can be imported via the Hosted Zone ID and VPC
 
 ```
 $ terraform import aws_route53_zone_association.example Z123456ABCDEFG:vpc-12345678
+```
+
+If the VPC is in a different region than the Terraform AWS Provider region configuration, the VPC Region can be added to the end. e.g.
+
+```
+$ terraform import aws_route53_zone_association.example Z123456ABCDEFG:vpc-12345678:us-east-2
 ```
