@@ -3,6 +3,7 @@ package waiter
 import (
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -14,12 +15,19 @@ const (
 	// Maximum amount of time to wait for an AdminAccount to return NotFound
 	AdminAccountNotFoundTimeout = 5 * time.Minute
 
+	// Maximum amount of time to wait for a PublishingDestination to return Publishing
+	PublishingDestinationCreatedTimeout    = 5 * time.Minute
+	PublishingDestinationCreatedMinTimeout = 3 * time.Second
+
 	// Maximum amount of time to wait for membership to propagate
 	// When removing Organization Admin Accounts, there is eventual
 	// consistency even after the account is no longer listed.
 	// Reference error message:
 	// BadRequestException: The request is rejected because the current account cannot delete detector while it has invited or associated members.
 	MembershipPropagationTimeout = 2 * time.Minute
+
+	// Constants not currently provided by the AWS Go SDK
+	guardDutyPublishingStatusFailed = "FAILED"
 )
 
 // AdminAccountEnabled waits for an AdminAccount to return Enabled
@@ -56,4 +64,36 @@ func AdminAccountNotFound(conn *guardduty.GuardDuty, adminAccountID string) (*gu
 	}
 
 	return nil, err
+}
+
+// PublishingDestinationCreated waits for GuardDuty to return Publishing
+func PublishingDestinationCreated(conn *guardduty.GuardDuty, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{guardduty.PublishingStatusPendingVerification},
+		Target:  []string{guardduty.PublishingStatusPublishing},
+		Refresh: guardDutyPublishingDestinationRefreshStatusFunc(conn, destinationID, detectorID),
+		Timeout: PublishingDestinationCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*guardduty.CreatePublishingDestinationOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func guardDutyPublishingDestinationRefreshStatusFunc(conn *guardduty.GuardDuty, destinationID, detectorID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &guardduty.DescribePublishingDestinationInput{
+			DetectorId:    aws.String(detectorID),
+			DestinationId: aws.String(destinationID),
+		}
+		resp, err := conn.DescribePublishingDestination(input)
+		if err != nil {
+			return nil, guardDutyPublishingStatusFailed, err
+		}
+		return resp, aws.StringValue(resp.Status), nil
+	}
 }

@@ -36,6 +36,9 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
 		},
+		"PublishingDestination": {
+			"basic": TestAccAwsGuardDutyPublishingDestination_basic,
+		},
 	}
 
 	for group, m := range testCases {
