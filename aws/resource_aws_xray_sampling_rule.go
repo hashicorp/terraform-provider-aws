@@ -183,7 +183,7 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChanges("priority", "fixed_rate", "reservoir_size", "service_name", "service_type",
+	if d.HasChanges("attributes", "priority", "fixed_rate", "reservoir_size", "service_name", "service_type",
 		"host", "http_method", "url_path", "resource_arn") {
 		samplingRuleUpdate := &xray.SamplingRuleUpdate{
 			RuleName:      aws.String(d.Id()),
