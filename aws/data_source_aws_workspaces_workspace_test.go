@@ -90,9 +90,9 @@ func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName string) stri
 	return composeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
-resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+resource aws_workspaces_workspace test {
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "AWS_WorkSpaces" user is always present in a bare directory.
@@ -108,8 +108,8 @@ resource "aws_workspaces_workspace" "test" {
   }
 }
 
-data "aws_workspaces_workspace" "test" {
-  workspace_id = "${aws_workspaces_workspace.test.id}"
+data aws_workspaces_workspace test {
+  workspace_id = aws_workspaces_workspace.test.id
 }
 `))
 }
@@ -118,9 +118,9 @@ func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName str
 	return composeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		fmt.Sprintf(`
-resource "aws_workspaces_workspace" "test" {
-  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
-  directory_id = "${aws_workspaces_directory.test.id}"
+resource aws_workspaces_workspace test {
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator" user is always present in a bare directory.
@@ -136,18 +136,18 @@ resource "aws_workspaces_workspace" "test" {
   }
 }
 
-data "aws_workspaces_workspace" "test" {
-  directory_id = "${aws_workspaces_directory.test.id}"
+data aws_workspaces_workspace test {
+  directory_id = aws_workspaces_directory.test.id
   user_name    = "Administrator"
 
-  depends_on = ["aws_workspaces_workspace.test"]
+  depends_on = [aws_workspaces_workspace.test]
 }
 `))
 }
 
 func testAccDataSourceAwsWorkspacesWorkspaceConfig_workspaceIDAndDirectoryIDConflict() string {
 	return fmt.Sprintf(`
-data "aws_workspaces_workspace" "test" {
+data aws_workspaces_workspace test {
   workspace_id = "ws-cj5xcxsz5"
   directory_id = "d-9967252f57"
   user_name    = "Administrator"

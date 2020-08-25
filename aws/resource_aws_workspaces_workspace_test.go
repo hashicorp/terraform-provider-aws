@@ -374,11 +374,11 @@ func testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		`
-data "aws_workspaces_bundle" "test" {
+data aws_workspaces_bundle test {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
-resource "aws_workspaces_directory" "test" {
+resource aws_workspaces_directory test {
   directory_id = aws_directory_service_directory.main.id
 }
 `)
@@ -386,7 +386,7 @@ resource "aws_workspaces_directory" "test" {
 
 func testAccWorkspacesWorkspaceConfig(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -399,7 +399,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_TagsA(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -417,7 +417,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_TagsB(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -435,7 +435,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_TagsC(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -452,7 +452,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -475,7 +475,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -497,7 +497,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -513,7 +513,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
@@ -535,7 +535,7 @@ resource "aws_workspaces_workspace" "test" {
 
 func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName string) string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
-resource "aws_workspaces_workspace" "test" {
+resource aws_workspaces_workspace test {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
 
