@@ -197,7 +197,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget_scanRate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "1.5"),
 				),
 			},
 			{
@@ -1351,8 +1351,8 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   dynamodb_target {
-    path     = %[2]q
-    scan_all = %[3]f
+    path      = %[2]q
+    scan_rate = %[3]g
   }
 }
 `, rName, path, scanRate)
