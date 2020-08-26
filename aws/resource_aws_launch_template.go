@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -430,8 +431,14 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							ValidateFunc:     validateTypeStringNullableBoolean,
 						},
 						"delete_on_termination": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							// Use TypeString to allow an "unspecified" value,
+							// since TypeBool only has true/false with false default.
+							// The conversion from bare true/false values in
+							// configurations to TypeString value is currently safe.
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+							ValidateFunc:     validateTypeStringNullableBoolean,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -560,6 +567,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.ResourceTypeInstance,
 								ec2.ResourceTypeVolume,
+								ec2.ResourceTypeSpotInstancesRequest,
+								ec2.ResourceTypeElasticGpu,
 							}, false),
 						},
 						"tags": tagsSchema(),
@@ -591,7 +600,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 		// Enable downstream updates for resources referencing schema attributes
 		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("default_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
 					case "name", "name_prefix", "description":
@@ -602,7 +611,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				}
 				return false
 			}),
-			customdiff.ComputedIf("latest_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
 					case "name", "name_prefix", "description", "default_version", "update_default_version":
@@ -1119,17 +1128,20 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
-			"delete_on_termination": aws.BoolValue(v.DeleteOnTermination),
-			"description":           aws.StringValue(v.Description),
-			"device_index":          aws.Int64Value(v.DeviceIndex),
-			"ipv4_address_count":    aws.Int64Value(v.SecondaryPrivateIpAddressCount),
-			"ipv6_address_count":    aws.Int64Value(v.Ipv6AddressCount),
-			"network_interface_id":  aws.StringValue(v.NetworkInterfaceId),
-			"private_ip_address":    aws.StringValue(v.PrivateIpAddress),
-			"subnet_id":             aws.StringValue(v.SubnetId),
+			"description":          aws.StringValue(v.Description),
+			"device_index":         aws.Int64Value(v.DeviceIndex),
+			"ipv4_address_count":   aws.Int64Value(v.SecondaryPrivateIpAddressCount),
+			"ipv6_address_count":   aws.Int64Value(v.Ipv6AddressCount),
+			"network_interface_id": aws.StringValue(v.NetworkInterfaceId),
+			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
+			"subnet_id":            aws.StringValue(v.SubnetId),
 		}
 		if v.AssociatePublicIpAddress != nil {
 			networkInterface["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociatePublicIpAddress))
+		}
+
+		if v.DeleteOnTermination != nil {
+			networkInterface["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.DeleteOnTermination))
 		}
 
 		if len(v.Ipv6Addresses) > 0 {
@@ -1507,8 +1519,12 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 	var privateIpAddress string
 	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
-	if v, ok := ni["delete_on_termination"]; ok {
-		networkInterface.DeleteOnTermination = aws.Bool(v.(bool))
+	if v, ok := ni["delete_on_termination"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %w", v.(string), err)
+		}
+		networkInterface.DeleteOnTermination = aws.Bool(vBool)
 	}
 
 	if v, ok := ni["description"].(string); ok && v != "" {

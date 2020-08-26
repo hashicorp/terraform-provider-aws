@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -82,7 +82,9 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_step", &policy),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "policy_type", "StepScaling"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "20"),
-					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "step_adjustment.997979330.scaling_adjustment", "10"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_autoscaling_policy.foobar_step", "step_adjustment.*", map[string]string{
+						"scaling_adjustment": "10",
+					}),
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_target_tracking", &policy),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "target_tracking_configuration.#", "1"),

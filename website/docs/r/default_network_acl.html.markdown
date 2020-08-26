@@ -103,7 +103,7 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.mainvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.mainvpc.default_network_acl_id
 
   # no rules defined, deny all traffic in this ACL
 }
@@ -163,8 +163,12 @@ the `aws_default_network_acl` entry.
 As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
 
 ```hcl
-lifecycle {
-  ignore_changes = [subnet_ids]
+resource "aws_default_network_acl" "default" {
+  # ... other configuration ...
+
+  lifecycle {
+    ignore_changes = [subnet_ids]
+  }
 }
 ```
 

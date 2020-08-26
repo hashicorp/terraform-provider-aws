@@ -324,11 +324,11 @@ The `hibernation_options` block supports the following:
 
 ### Tag Specifications
 
-The tags to apply to the resources during launch. You can tag instances and volumes. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
+The tags to apply to the resources during launch. You can tag instances, volumes, elastic GPUs and spot instance requests. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag. Valid values are `instance` and `volume`.
+* `resource_type` - The type of resource to tag. Valid values are `instance`, `volume`, `elastic-gpu` and `spot-instances-request`.
 * `tags` - A map of tags to assign to the resource.
 
 

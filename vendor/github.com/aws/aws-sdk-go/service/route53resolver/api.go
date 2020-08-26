@@ -5880,6 +5880,22 @@ const (
 	IpAddressStatusDeleteFailedFasExpired = "DELETE_FAILED_FAS_EXPIRED"
 )
 
+// IpAddressStatus_Values returns all elements of the IpAddressStatus enum
+func IpAddressStatus_Values() []string {
+	return []string{
+		IpAddressStatusCreating,
+		IpAddressStatusFailedCreation,
+		IpAddressStatusAttaching,
+		IpAddressStatusAttached,
+		IpAddressStatusRemapDetaching,
+		IpAddressStatusRemapAttaching,
+		IpAddressStatusDetaching,
+		IpAddressStatusFailedResourceGone,
+		IpAddressStatusDeleting,
+		IpAddressStatusDeleteFailedFasExpired,
+	}
+}
+
 const (
 	// ResolverEndpointDirectionInbound is a ResolverEndpointDirection enum value
 	ResolverEndpointDirectionInbound = "INBOUND"
@@ -5887,6 +5903,14 @@ const (
 	// ResolverEndpointDirectionOutbound is a ResolverEndpointDirection enum value
 	ResolverEndpointDirectionOutbound = "OUTBOUND"
 )
+
+// ResolverEndpointDirection_Values returns all elements of the ResolverEndpointDirection enum
+func ResolverEndpointDirection_Values() []string {
+	return []string{
+		ResolverEndpointDirectionInbound,
+		ResolverEndpointDirectionOutbound,
+	}
+}
 
 const (
 	// ResolverEndpointStatusCreating is a ResolverEndpointStatus enum value
@@ -5908,6 +5932,18 @@ const (
 	ResolverEndpointStatusDeleting = "DELETING"
 )
 
+// ResolverEndpointStatus_Values returns all elements of the ResolverEndpointStatus enum
+func ResolverEndpointStatus_Values() []string {
+	return []string{
+		ResolverEndpointStatusCreating,
+		ResolverEndpointStatusOperational,
+		ResolverEndpointStatusUpdating,
+		ResolverEndpointStatusAutoRecovering,
+		ResolverEndpointStatusActionNeeded,
+		ResolverEndpointStatusDeleting,
+	}
+}
+
 const (
 	// ResolverRuleAssociationStatusCreating is a ResolverRuleAssociationStatus enum value
 	ResolverRuleAssociationStatusCreating = "CREATING"
@@ -5925,6 +5961,17 @@ const (
 	ResolverRuleAssociationStatusOverridden = "OVERRIDDEN"
 )
 
+// ResolverRuleAssociationStatus_Values returns all elements of the ResolverRuleAssociationStatus enum
+func ResolverRuleAssociationStatus_Values() []string {
+	return []string{
+		ResolverRuleAssociationStatusCreating,
+		ResolverRuleAssociationStatusComplete,
+		ResolverRuleAssociationStatusDeleting,
+		ResolverRuleAssociationStatusFailed,
+		ResolverRuleAssociationStatusOverridden,
+	}
+}
+
 const (
 	// ResolverRuleStatusComplete is a ResolverRuleStatus enum value
 	ResolverRuleStatusComplete = "COMPLETE"
@@ -5939,6 +5986,16 @@ const (
 	ResolverRuleStatusFailed = "FAILED"
 )
 
+// ResolverRuleStatus_Values returns all elements of the ResolverRuleStatus enum
+func ResolverRuleStatus_Values() []string {
+	return []string{
+		ResolverRuleStatusComplete,
+		ResolverRuleStatusDeleting,
+		ResolverRuleStatusUpdating,
+		ResolverRuleStatusFailed,
+	}
+}
+
 const (
 	// RuleTypeOptionForward is a RuleTypeOption enum value
 	RuleTypeOptionForward = "FORWARD"
@@ -5950,6 +6007,15 @@ const (
 	RuleTypeOptionRecursive = "RECURSIVE"
 )
 
+// RuleTypeOption_Values returns all elements of the RuleTypeOption enum
+func RuleTypeOption_Values() []string {
+	return []string{
+		RuleTypeOptionForward,
+		RuleTypeOptionSystem,
+		RuleTypeOptionRecursive,
+	}
+}
+
 const (
 	// ShareStatusNotShared is a ShareStatus enum value
 	ShareStatusNotShared = "NOT_SHARED"
@@ -5960,3 +6026,12 @@ const (
 	// ShareStatusSharedByMe is a ShareStatus enum value
 	ShareStatusSharedByMe = "SHARED_BY_ME"
 )
+
+// ShareStatus_Values returns all elements of the ShareStatus enum
+func ShareStatus_Values() []string {
+	return []string{
+		ShareStatusNotShared,
+		ShareStatusSharedWithMe,
+		ShareStatusSharedByMe,
+	}
+}
