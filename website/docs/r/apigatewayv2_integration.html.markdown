@@ -46,6 +46,23 @@ resource "aws_apigatewayv2_integration" "example" {
 }
 ```
 
+### AWS Service Integration
+
+```hcl
+resource "aws_apigatewayv2_integration" "example" {
+  api_id              = aws_apigatewayv2_api.example.id
+  credentials_arn     = aws_iam_role.example.arn
+  description         = "SQS example"
+  integration_type    = "AWS_PROXY"
+  integration_subtype = "SQS-SendMessage"
+
+  request_parameters = {
+    "QueueUrl"    = "$request.header.queueUrl"
+    "MessageBody" = "$request.body.message"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -59,6 +76,7 @@ Valid values: `AWS`, `AWS_PROXY`, `HTTP`, `HTTP_PROXY`, `MOCK`.
 * `credentials_arn` - (Optional) The credentials required for the integration, if any.
 * `description` - (Optional) The description of the integration.
 * `integration_method` - (Optional) The integration's HTTP method. Must be specified if `integration_type` is not `MOCK`.
+* `integration_subtype` - (Optional) Specifies the AWS service action to invoke. Supported only for HTTP APIs when `integration_type` is `AWS_PROXY`. See the [AWS service integration reference](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html) documentation for supported values.
 * `integration_uri` - (Optional) The URI of the Lambda function for a Lambda proxy integration, when `integration_type` is `AWS_PROXY`.
 For an `HTTP` integration, specify a fully-qualified URL. For an HTTP API private integration, specify the ARN of an Application Load Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
 * `passthrough_behavior` - (Optional) The pass-through behavior for incoming requests based on the Content-Type header in the request, and the available mapping templates specified as the `request_templates` attribute.
