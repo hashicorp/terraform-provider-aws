@@ -111,7 +111,7 @@ func ec2DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, d
 		}
 		if cidrBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destination) {
 			cidrString := canonicalCidrBlock(aws.StringValue(route.DestinationCidrBlock))
-			route.DestinationCidrBlock = &cidrString
+			route.DestinationCidrBlock = aws.String(cidrString)
 			return route, nil
 		}
 	}
