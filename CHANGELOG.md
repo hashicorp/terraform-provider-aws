@@ -22,6 +22,7 @@ BUG FIXES
 
 * resource/aws_acmpca_certificate_authority: Ensure `DELETED` status triggers state removal [GH-13684]
 * resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
+* resource/aws_cloudfront_distribution: Preview panics during resource import with empty `forwarded_values.query_string` [GH-14844]
 * resource/aws_globalaccelerator_accelerator: Increase creation timeout to 10 minutes [GH-14486]
 * resource/aws_globalaccelerator_endpoint_group: Prevent differences with `health_check_path` defaults [GH-14486]
 * resource/aws_glue_crawler: Properly update `schedule` value [GH-14792]
