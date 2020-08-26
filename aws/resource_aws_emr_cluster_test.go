@@ -1296,6 +1296,37 @@ func TestAccAWSEMRCluster_step_concurrency_level(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_ebs_config(t *testing.T) {
+	var cluster emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrEbsConfig(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 	var cluster emr.Cluster
 
@@ -3396,4 +3427,45 @@ EOF
   acl = "public-read"
 }
 `, r)
+}
+
+func testAccAWSEmrEbsConfig(rName string, volumesPerInstance int) string {
+	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = "%[1]s"
+  release_label                     = "emr-5.28.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+    ebs_config {
+      size                 = 32
+      type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "m4.large"
+    ebs_config {
+      size                 = 32
+      type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, volumesPerInstance),
+	)
 }

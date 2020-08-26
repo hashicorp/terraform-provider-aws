@@ -1424,8 +1424,7 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 		if ebs.VolumeSpecification.VolumeType != nil {
 			ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
 		}
-		ebsAttrs["volumes_per_instance"] = 1
-
+		ebsAttrs["volumes_per_instance"] = len(ebsBlockDevices)
 		ebsConfig = append(ebsConfig, ebsAttrs)
 	}
 
