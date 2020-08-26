@@ -1363,7 +1363,7 @@ func TestAccAWSEMRCluster_instance_fleet(t *testing.T) {
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrDestroy,
@@ -1374,6 +1374,27 @@ func TestAccAWSEMRCluster_instance_fleet(t *testing.T) {
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_instance_fleet_master_only(t *testing.T) {
+	var cluster emr.Cluster
+
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigInstanceFleetsMasterOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 				),
 			},
 		},
@@ -3526,7 +3547,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   log_uri              = "s3n://terraform/testlog/"
 
   master_instance_fleet    {
-    instance_fleet_type = "MASTER"
     instance_type_configs        {
           instance_type = "m3.xlarge"
         }
@@ -3534,7 +3554,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       target_on_demand_capacity = 1
     }
   core_instance_fleet {
-    instance_fleet_type = "CORE"
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 80
       ebs_config {
@@ -3576,6 +3595,71 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     target_on_demand_capacity = 0
     target_spot_capacity      = 2
   }
+  service_role = aws_iam_role.emr_service.arn
+  depends_on   = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+}
+`, r),
+	)
+}
+
+func testAccAWSEmrClusterConfigInstanceFleetsMasterOnly(r string) string {
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
+resource "aws_iam_role_policy_attachment" "emr_service_spot" {
+  role       = aws_iam_role.emr_service.id
+  policy_arn = aws_iam_policy.emr_service_spot.arn
+}
+
+resource "aws_iam_policy" "emr_service_spot" {
+  name = "%[1]s_emr_spot"
+
+  policy = <<EOT
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "arn:aws:iam::*:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot*",
+        "Action": [
+            "iam:CreateServiceLinkedRole"
+        ]
+    }]
+}
+EOT
+}
+
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name                 = "%[1]s"
+  release_label        = "emr-5.30.1"
+  applications         = ["Hadoop", "Hive"]
+  log_uri              = "s3n://terraform/testlog/"
+
+  master_instance_fleet    {
+    instance_type_configs        {
+          instance_type = "m3.xlarge"
+        }
+    
+      target_on_demand_capacity = 1
+    }
   service_role = aws_iam_role.emr_service.arn
   depends_on   = [
     aws_route_table_association.test,

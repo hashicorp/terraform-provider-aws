@@ -511,25 +511,21 @@ func InstanceFleetConfigSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_fleet_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(emr.InstanceFleetType_Values(), false),
-			},
 			"instance_type_configs": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				// ForceNew: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"bid_price_as_percentage_of_on_demand_price": {
 							Type:     schema.TypeFloat,
 							Optional: true,
+							ForceNew: true,
 							Default:  100,
 						},
 						"configurations": {
@@ -541,10 +537,12 @@ func InstanceFleetConfigSchema() *schema.Resource {
 									"classification": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"properties": {
 										Type:     schema.TypeMap,
 										Optional: true,
+										ForceNew: true,
 										Elem:     schema.TypeString,
 									},
 								},
@@ -591,6 +589,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 						"weighted_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 							Default:  1,
 						},
 					},
@@ -600,7 +599,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 			"launch_specifications": {
 				Type:     schema.TypeList,
 				Optional: true,
-				// ForceNew: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -628,6 +627,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"allocation_strategy": {
 										Type:         schema.TypeString,
+										ForceNew:     true,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningAllocationStrategy_Values(), false),
 									},
@@ -640,10 +640,12 @@ func InstanceFleetConfigSchema() *schema.Resource {
 									"timeout_action": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningTimeoutAction_Values(), false),
 									},
 									"timeout_duration_minutes": {
 										Type:     schema.TypeInt,
+										ForceNew: true,
 										Required: true,
 									},
 								},
@@ -660,11 +662,13 @@ func InstanceFleetConfigSchema() *schema.Resource {
 			"target_on_demand_capacity": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 				Default:  0,
 			},
 			"target_spot_capacity": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 				Default:  0,
 			},
 			"provisioned_on_demand_capacity": {
@@ -757,12 +761,12 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if l := d.Get("master_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}))
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceGroupTypeMaster)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
 	}
 
 	if l := d.Get("core_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}))
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceGroupTypeCore)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
 	}
 
@@ -1024,8 +1028,8 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err == nil { // find instance fleets
 
-		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceRoleTypeCore)
-		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceRoleTypeMaster)
+		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeCore)
+		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeMaster)
 
 		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
 		if err := d.Set("core_instance_fleet", flattenedCoreInstanceFleet); err != nil {
@@ -1966,10 +1970,10 @@ func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.Instance
 	return groups, err
 }
 
-func readInstanceFleetConfig(data map[string]interface{}) *emr.InstanceFleetConfig {
+func readInstanceFleetConfig(data map[string]interface{}, instanceGroupType string) *emr.InstanceFleetConfig {
 
 	config := &emr.InstanceFleetConfig{
-		InstanceFleetType:      aws.String(data["instance_fleet_type"].(string)),
+		InstanceFleetType:      &instanceGroupType,
 		Name:                   aws.String(data["name"].(string)),
 		TargetOnDemandCapacity: aws.Int64(int64(data["target_on_demand_capacity"].(int))),
 		TargetSpotCapacity:     aws.Int64(int64(data["target_spot_capacity"].(int))),
@@ -2020,7 +2024,6 @@ func flattenInstanceFleet(instanceFleet *emr.InstanceFleet) []interface{} {
 	m := map[string]interface{}{
 		"id":                             aws.StringValue(instanceFleet.Id),
 		"name":                           aws.StringValue(instanceFleet.Name),
-		"instance_fleet_type":            aws.StringValue(instanceFleet.InstanceFleetType),
 		"target_on_demand_capacity":      aws.Int64Value(instanceFleet.TargetOnDemandCapacity),
 		"target_spot_capacity":           aws.Int64Value(instanceFleet.TargetSpotCapacity),
 		"provisioned_on_demand_capacity": aws.Int64Value(instanceFleet.ProvisionedOnDemandCapacity),
