@@ -116,7 +116,12 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	input.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).GuarddutyTags()
+	if v, ok := d.GetOk("tags"); ok {
+		tags := v.(map[string]interface{})
+		if len(tags) > 0 {
+			input.Tags = keyvaluetags.New(tags).GuarddutyTags()
+		}
+	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
 	output, err := conn.CreateFilter(&input)

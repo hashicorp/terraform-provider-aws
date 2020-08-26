@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
@@ -26,9 +27,42 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "finding_criteria"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "4"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field":     "region",
+						"values.#":  "1",
+						"values.0":  "eu-west-1",
+						"condition": "equals",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field":     "service.additionalInfo.threatListName",
+						"values.#":  "2",
+						"values.0":  "some-threat",
+						"values.1":  "another-threat",
+						"condition": "not_equals",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field":     "updatedAt",
+						"values.#":  "1",
+						"values.0":  "1570744740000",
+						"condition": "less_than",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field":     "updatedAt",
+						"values.#":  "1",
+						"values.0":  "1570744240000",
+						"condition": "greater_than",
+					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccGuardDutyFilterConfigNoop_full(),
@@ -37,30 +71,10 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a NOOP"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "finding_criteria"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 				),
-			},
-		},
-	})
-}
-
-func testAccAwsGuardDutyFilter_import(t *testing.T) {
-	resourceName := "aws_guardduty_filter.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGuardDutyFilterConfig_full(),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -155,6 +169,7 @@ resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
 	name        = "test-filter"
 	action      = "NOOP"
+	description = "This is a NOOP"
 	rank        = 1
 
   finding_criteria {
