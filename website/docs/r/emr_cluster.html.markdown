@@ -464,7 +464,6 @@ Attributes for Hadoop job step configuration
 
 Supported nested arguments for the `master_instance_fleet` configuration block:
 
-* `instance_fleet_type` - (Required) has to be `MASTER`.
 * `instance_type_configs` - (Optional) Configuration block for instance fleet
 * `launch_specifications` - (Optional) Configuration block for launch specification
 * `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.
@@ -475,7 +474,6 @@ Supported nested arguments for the `master_instance_fleet` configuration block:
 
 Supported nested arguments for the `core_instance_fleet` configuration block:
 
-* `instance_fleet_type` - (Required) has to be `CORE`.
 * `instance_type_configs` - (Optional) Configuration block for instance fleet
 * `launch_specifications` - (Optional) Configuration block for launch specification
 * `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.
@@ -490,6 +488,14 @@ Supported nested arguments for the `core_instance_fleet` configuration block:
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
 * `instance_type` - (Required) An EC2 instance type, such as m4.xlarge.
 * `weighted_capacity` - (Optional) The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `aws_emr_instance_fleet`.
+
+
+## configurations Configuration Block
+A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. See [Configuring Applications](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-configure-apps.html).
+
+* `classification` - The classification within a configuration.
+
+* `properties` - A set of properties specified within a configuration classification
 
 ## Attributes Reference
 
