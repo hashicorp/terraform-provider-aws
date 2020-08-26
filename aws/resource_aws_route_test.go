@@ -79,7 +79,7 @@ func TestGetRouteDestinationAndTargetAttributeKeysFromMap(t *testing.T) {
 				"destination_cidr_block": {"0.0.0.0/0", true},
 				"egress_only_gateway_id": {"eoigw-0000000000000000", true},
 			},
-			expectedErr: regexp.MustCompile(`"destination_cidr_block" not allowed for "egress_only_gateway_id" target`),
+			expectedErr: regexp.MustCompile(`"destination_cidr_block" not supported for "egress_only_gateway_id" target`),
 		},
 		{
 			m: map[string]struct {
@@ -89,7 +89,7 @@ func TestGetRouteDestinationAndTargetAttributeKeysFromMap(t *testing.T) {
 				"destination_ipv6_cidr_block": {"::/0", true},
 				"nat_gateway_id":              {"ngw-0000000000000000", true},
 			},
-			expectedErr: regexp.MustCompile(`"destination_ipv6_cidr_block" not allowed for "nat_gateway_id" target`),
+			expectedErr: regexp.MustCompile(`"destination_ipv6_cidr_block" not supported for "nat_gateway_id" target`),
 		},
 	}
 
