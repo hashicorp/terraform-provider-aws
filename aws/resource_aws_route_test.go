@@ -13,88 +13,64 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
-func TestGetRouteDestinationAndTargetAttributeKeysFromMap(t *testing.T) {
+func TestGetRouteDestinationAndTargetAttributeKeys(t *testing.T) {
 	testCases := []struct {
-		m map[string]struct {
-			v         interface{}
-			hasChange bool
-		}
+		m              map[string]interface{}
 		destinationKey string
 		targetKey      string
 		expectedErr    *regexp.Regexp
 	}{
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{},
+			m:           map[string]interface{}{},
 			expectedErr: regexp.MustCompile(`one of .*"destination_cidr_block".* must be specified`),
 		},
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{
-				"destination_cidr_block": {"0.0.0.0/0", true},
+			m: map[string]interface{}{
+				"destination_cidr_block": "0.0.0.0/0",
 			},
 			expectedErr: regexp.MustCompile(`one of .*"transit_gateway_id".* must be specified`),
 		},
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{
-				"destination_cidr_block":      {"0.0.0.0/0", true},
-				"destination_ipv6_cidr_block": {"::/0", true},
+			m: map[string]interface{}{
+				"destination_cidr_block":      "0.0.0.0/0",
+				"destination_ipv6_cidr_block": "::/0",
 			},
-			expectedErr: regexp.MustCompile(`"destination_ipv6_cidr_block" conflicts with "destination_cidr_block"`),
+			expectedErr: regexp.MustCompile(`("destination_ipv6_cidr_block" conflicts with "destination_cidr_block")|("destination_cidr_block" conflicts with "destination_ipv6_cidr_block")`),
 		},
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{
-				"destination_cidr_block": {"0.0.0.0/0", true},
-				"transit_gateway_id":     {"tgw-0000000000000000", true},
+			m: map[string]interface{}{
+				"destination_cidr_block": "0.0.0.0/0",
+				"transit_gateway_id":     "tgw-0000000000000000",
 			},
 			destinationKey: "destination_cidr_block",
 			targetKey:      "transit_gateway_id",
 		},
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{
-				"destination_cidr_block": {"0.0.0.0/0", true},
-				"transit_gateway_id":     {"tgw-0000000000000000", true},
-				"gateway_id":             {"vgw-0000000000000000", true},
+			m: map[string]interface{}{
+				"destination_cidr_block": "0.0.0.0/0",
+				"transit_gateway_id":     "tgw-0000000000000000",
+				"gateway_id":             "vgw-0000000000000000",
 			},
-			expectedErr: regexp.MustCompile(`"transit_gateway_id" conflicts with "gateway_id"`),
+			expectedErr: regexp.MustCompile(`("gateway_id" conflicts with "transit_gateway_id")|("transit_gateway_id" conflicts with "gateway_id")`),
 		},
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{
-				"destination_cidr_block": {"0.0.0.0/0", true},
-				"egress_only_gateway_id": {"eoigw-0000000000000000", true},
+			m: map[string]interface{}{
+				"destination_cidr_block": "0.0.0.0/0",
+				"egress_only_gateway_id": "eoigw-0000000000000000",
 			},
 			expectedErr: regexp.MustCompile(`"destination_cidr_block" not supported for "egress_only_gateway_id" target`),
 		},
 		{
-			m: map[string]struct {
-				v         interface{}
-				hasChange bool
-			}{
-				"destination_ipv6_cidr_block": {"::/0", true},
-				"nat_gateway_id":              {"ngw-0000000000000000", true},
+			m: map[string]interface{}{
+				"destination_ipv6_cidr_block": "::/0",
+				"nat_gateway_id":              "ngw-0000000000000000",
 			},
 			expectedErr: regexp.MustCompile(`"destination_ipv6_cidr_block" not supported for "nat_gateway_id" target`),
 		},
 	}
 
 	for i, tc := range testCases {
-		destinationKey, targetKey, err := getRouteDestinationAndTargetAttributeKeysFromMap(tc.m)
+		destinationKey, targetKey, err := getRouteDestinationAndTargetAttributeKeys(routeAttributeMap(tc.m))
 
 		if err != nil && tc.expectedErr == nil {
 			t.Fatalf("expected test case %d to produce no error, got: %s", i, err)
