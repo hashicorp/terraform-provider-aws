@@ -23,6 +23,7 @@ resource "aws_xray_group" "example" {
 
 * `group_name` - (Required) The name of the group.
 * `filter_expression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

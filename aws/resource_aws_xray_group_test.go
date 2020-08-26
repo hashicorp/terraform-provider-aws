@@ -49,6 +49,49 @@ func TestAccAWSXrayGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSXrayGroup_tags(t *testing.T) {
+	var Group xray.Group
+	resourceName := "aws_xray_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSXrayGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSXrayGroupBasicConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSXrayGroupBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSXrayGroupBasicConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
+			},
+		},
+	})
+}
+
 func TestAccAWSXrayGroup_disappears(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
@@ -136,4 +179,31 @@ resource "aws_xray_group" "test" {
   filter_expression = %[2]q
 }
 `, rName, expression)
+}
+
+func testAccAWSXrayGroupBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSXrayGroupBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
