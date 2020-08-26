@@ -142,7 +142,7 @@ func resourceAwsRoute() *schema.Resource {
 func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttributeKey, targetAttributeKey, err := getRouteDestinationAndTargetAttributeKeysFromResourceData(d)
+	destinationAttributeKey, targetAttributeKey, err := getRouteDestinationAndTargetAttributeKeys(d)
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttributeKey := getRouteDestinationAttributeKeyFromResourceData(d)
+	destinationAttributeKey := getRouteDestinationAttributeKey(d)
 	if destinationAttributeKey == "" {
 		return fmt.Errorf("missing route destination attribute")
 	}
@@ -287,7 +287,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttributeKey, targetAttributeKey, err := getRouteDestinationAndTargetAttributeKeysFromResourceData(d)
+	destinationAttributeKey, targetAttributeKey, err := getRouteDestinationAndTargetAttributeKeys(d)
 	if err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	destinationAttributeKey := getRouteDestinationAttributeKeyFromResourceData(d)
+	destinationAttributeKey := getRouteDestinationAttributeKey(d)
 	if destinationAttributeKey == "" {
 		return fmt.Errorf("missing route destination attribute")
 	}
@@ -443,15 +443,30 @@ var (
 	})
 
 	routeTargetAttributeKeys = routeTargetAttributes.keys()
-
-	routeDestinationAndTargetAttributeKeys = append(append([]string{}, routeDestinationAttributeKeys...), routeTargetAttributeKeys...)
 )
 
-// getRouteDestinationAttributeKeyFromResourceData return the route's destination attribute key.
+// Read attributes and detect changes.
+type routeAttributeReader interface {
+	Get(string) interface{}
+	HasChange(string) bool
+}
+
+type routeAttributeMap map[string]interface{}
+
+func (m routeAttributeMap) Get(key string) interface{} {
+	return m[key]
+}
+
+func (m routeAttributeMap) HasChange(key string) bool {
+	// When reading from a map of attributes that attribute will always have changed.
+	return true
+}
+
+// getRouteDestinationAttributeKey return the route's destination attribute key.
 // No validation is done.
-func getRouteDestinationAttributeKeyFromResourceData(d *schema.ResourceData) string {
+func getRouteDestinationAttributeKey(r routeAttributeReader) string {
 	for _, k := range routeDestinationAttributeKeys {
-		if v := d.Get(k).(string); v != "" {
+		if v, ok := r.Get(k).(string); ok && v != "" {
 			return k
 		}
 	}
@@ -459,17 +474,14 @@ func getRouteDestinationAttributeKeyFromResourceData(d *schema.ResourceData) str
 	return ""
 }
 
-// getRouteDestinationAndTargetAttributeKeysFromMap return the route's destination and target attribute keys.
+// getRouteDestinationAndTargetAttributeKeys return the route's destination and target attribute keys.
 // It also validates the resource, returning any validation error.
-func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
-	v         interface{}
-	hasChange bool
-}) (string, string, error) {
+func getRouteDestinationAndTargetAttributeKeys(r routeAttributeReader) (string, string, error) {
 	destinationAttributeKey := ""
 	ipv4 := false
 	ipv6 := false
 	for key, ipVersion := range routeDestinationAttributes {
-		if s, ok := m[key]; ok && s.v.(string) != "" {
+		if v, ok := r.Get(key).(string); ok && v != "" {
 			if destinationAttributeKey != "" {
 				return "", "", fmt.Errorf("%q conflicts with %q", key, destinationAttributeKey)
 			}
@@ -487,7 +499,7 @@ func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
 	targetAttributeKey := ""
 	for key, ipVersion := range routeTargetAttributes {
 		// The HasChange check is necessary to handle Computed attributes that will be cleared once they are read back after update.
-		if s, ok := m[key]; ok && s.v.(string) != "" && s.hasChange {
+		if v, ok := r.Get(key).(string); ok && v != "" && r.HasChange(key) {
 			if targetAttributeKey != "" {
 				return "", "", fmt.Errorf("%q conflicts with %q", key, targetAttributeKey)
 			}
@@ -505,24 +517,6 @@ func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
 	}
 
 	return destinationAttributeKey, targetAttributeKey, nil
-}
-
-// getRouteDestinationAndTargetAttributeKeysFromResourceData return the route's destination and target attribute keys.
-// It also validates the resource, returning any validation error.
-func getRouteDestinationAndTargetAttributeKeysFromResourceData(d *schema.ResourceData) (string, string, error) {
-	m := map[string]struct {
-		v         interface{}
-		hasChange bool
-	}{}
-
-	for _, key := range routeDestinationAndTargetAttributeKeys {
-		m[key] = struct {
-			v         interface{}
-			hasChange bool
-		}{d.Get(key), d.HasChange(key)}
-	}
-
-	return getRouteDestinationAndTargetAttributeKeysFromMap(m)
 }
 
 // createRoute attempts to create a route.
