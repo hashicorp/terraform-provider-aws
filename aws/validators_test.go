@@ -544,6 +544,22 @@ func Test_cidrBlocksEqual(t *testing.T) {
 		}
 	}
 }
+func Test_canonicalCidrBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr     string
+		expected string
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24"},
+		{"::/0", "::/0"},
+		{"::0/0", "::/0"},
+		{"", ""},
+	} {
+		got := canonicalCidrBlock(ts.cidr)
+		if ts.expected != got {
+			t.Fatalf("canonicalCidrBlock(%q) should be: %q, got: %q", ts.cidr, ts.expected, got)
+		}
+	}
+}
 
 func TestValidateLogMetricFilterName(t *testing.T) {
 	validNames := []string{
