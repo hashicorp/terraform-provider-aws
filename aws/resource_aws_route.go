@@ -391,13 +391,13 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // Map of attribute key to whether or not the attribute supports IPv4 and IPv6 destinations.
-type routeAttributes map[string]struct {
-	ipv4Destination bool
-	ipv6Destination bool
+type routeAttributeIPVersionSupport map[string]struct {
+	ipv4 bool
+	ipv6 bool
 }
 
 // Returns the attribute map's keys.
-func (m routeAttributes) keys() []string {
+func (m routeAttributeIPVersionSupport) keys() []string {
 	keys := []string{}
 
 	for k := range m {
@@ -408,9 +408,9 @@ func (m routeAttributes) keys() []string {
 }
 
 var (
-	routeDestinationAttributes = routeAttributes(map[string]struct {
-		ipv4Destination bool
-		ipv6Destination bool
+	routeDestinationAttributes = routeAttributeIPVersionSupport(map[string]struct {
+		ipv4 bool
+		ipv6 bool
 	}{
 		"destination_cidr_block":      {true, false},
 		"destination_ipv6_cidr_block": {false, true},
@@ -418,9 +418,9 @@ var (
 
 	routeDestinationAttributeKeys = routeDestinationAttributes.keys()
 
-	routeTargetAttributes = routeAttributes(map[string]struct {
-		ipv4Destination bool
-		ipv6Destination bool
+	routeTargetAttributes = routeAttributeIPVersionSupport(map[string]struct {
+		ipv4 bool
+		ipv6 bool
 	}{
 		"egress_only_gateway_id":    {false, true},
 		"gateway_id":                {true, true},
@@ -455,17 +455,17 @@ func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
 	hasChange bool
 }) (string, string, error) {
 	destinationAttributeKey := ""
-	ipv4Destination := false
-	ipv6Destination := false
-	for key, kind := range routeDestinationAttributes {
+	ipv4 := false
+	ipv6 := false
+	for key, ipVersion := range routeDestinationAttributes {
 		if s, ok := m[key]; ok && s.v.(string) != "" {
 			if destinationAttributeKey != "" {
 				return "", "", fmt.Errorf("%q conflicts with %q", key, destinationAttributeKey)
 			}
 
 			destinationAttributeKey = key
-			ipv4Destination = kind.ipv4Destination
-			ipv6Destination = kind.ipv6Destination
+			ipv4 = ipVersion.ipv4
+			ipv6 = ipVersion.ipv6
 		}
 	}
 
@@ -474,15 +474,15 @@ func getRouteDestinationAndTargetAttributeKeysFromMap(m map[string]struct {
 	}
 
 	targetAttributeKey := ""
-	for key, allowed := range routeTargetAttributes {
+	for key, ipVersion := range routeTargetAttributes {
 		// The HasChange check is necessary to handle Computed attributes that will be cleared once they are read back after update.
 		if s, ok := m[key]; ok && s.v.(string) != "" && s.hasChange {
 			if targetAttributeKey != "" {
 				return "", "", fmt.Errorf("%q conflicts with %q", key, targetAttributeKey)
 			}
 
-			if (ipv4Destination && !allowed.ipv4Destination) || (ipv6Destination && !allowed.ipv6Destination) {
-				return "", "", fmt.Errorf("%q not allowed for %q target", destinationAttributeKey, key)
+			if (ipv4 && !ipVersion.ipv4) || (ipv6 && !ipVersion.ipv6) {
+				return "", "", fmt.Errorf("%q not supported for %q target", destinationAttributeKey, key)
 			}
 
 			targetAttributeKey = key
