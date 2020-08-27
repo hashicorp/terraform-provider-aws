@@ -25,9 +25,9 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "1"),
 				),
 			},
 		},
@@ -46,18 +46,18 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "1"),
 				),
 			},
 			{
 				Config: testAccAWSEmrInstanceFleetConfigZeroCount(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_fleet_type", "TASK"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "0"),
 				),
 			},
 		},
@@ -76,9 +76,9 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 				Config: testAccAWSEmrInstanceFleetConfigEbsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "1"),
 				),
 			},
 		},
@@ -97,9 +97,9 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 				Config: testAccAWSEmrInstanceFleetConfigFull(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "2"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "2"),
 				),
 			},
 		},
@@ -383,17 +383,12 @@ resource "aws_emr_cluster" "test" {
   applications         = ["Hadoop", "Hive"]
   log_uri              = "s3n://terraform/testlog/"
   master_instance_fleet    {
-    instance_fleet_type = "MASTER"
     instance_type_configs        {
           instance_type = "m3.xlarge"
         }
-    
       target_on_demand_capacity = 1
     }
-
-
   core_instance_fleet {
-    instance_fleet_type = "CORE"
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 100
       ebs_config {
@@ -433,126 +428,122 @@ resource "aws_emr_cluster" "test" {
 func testAccAWSEmrInstanceFleetConfig(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-        cluster_id            = "${aws_emr_cluster.test.id}"
-        instance_fleet {
-            instance_fleet_type   = "TASK"
-            instance_type_configs = [
-                {
-                    instance_type = "m3.xlarge"
-                }
-            ]
-            launch_specifications {
-                spot_specification {
-                    timeout_action           = "TERMINATE_CLUSTER"
-                    timeout_duration_minutes = 10
-                }
-            }
-            name                      = "emr_instance_fleet_%[1]s"
-            target_on_demand_capacity = 0
-            target_spot_capacity      = 1
+      cluster_id            = "${aws_emr_cluster.test.id}"
+      instance_fleet_type   = "TASK"
+      instance_fleet {
+        instance_type_configs        {
+          instance_type = "m3.xlarge"
+          weighted_capacity = 1
         }
+        launch_specifications {
+          spot_specification {
+            block_duration_minutes   = 0
+            timeout_action           = "SWITCH_TO_ON_DEMAND"
+            timeout_duration_minutes = 10
+          }
+        }
+        name                      = "emr_instance_fleet_%[1]s"
+        target_on_demand_capacity = 0
+        target_spot_capacity      = 1
+      }
     }
-    `, r)
+`, r)
 }
 
 func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-        cluster_id            = "${aws_emr_cluster.test.id}"
-        instance_fleet {
-            instance_fleet_type   = "TASK"
-            instance_type_configs = [
-                {
-                    instance_type = "m3.xlarge"
-                }
-            ]
-            launch_specifications {
-                spot_specification {
-                    timeout_action           = "TERMINATE_CLUSTER"
-                    timeout_duration_minutes = 10
-                }
-            }
-            name                      = "emr_instance_fleet_%[1]s"
-            target_on_demand_capacity = 0
-            target_spot_capacity      = 0
+      cluster_id            = "${aws_emr_cluster.test.id}"
+      instance_fleet_type   = "TASK"
+      instance_fleet {
+        instance_type_configs        {
+          instance_type = "m3.xlarge"
+          weighted_capacity = 1
         }
+        launch_specifications {
+          spot_specification {
+            block_duration_minutes   = 0
+            timeout_action           = "SWITCH_TO_ON_DEMAND"
+            timeout_duration_minutes = 10
+          }
+        }
+        name                      = "emr_instance_fleet_%[1]s"
+        target_on_demand_capacity = 0
+        target_spot_capacity      = 0
+      }
     }
-    `, r)
+`, r)
 }
 
 func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-        cluster_id            = "${aws_emr_cluster.test.id}"
-        instance_fleet {
-            instance_fleet_type   = "TASK"
-            instance_type_configs = [
-                {
-                    ebs_optimized = true
-                    ebs_config = [
-                        {
-                            size = 10
-                            type = "gp2"
-                            volumes_per_instance = 1
-                        }
-                    ]
-                    instance_type = "m3.xlarge"
-                }
-            ]
-            launch_specifications {
-                spot_specification {
-                    timeout_action           = "TERMINATE_CLUSTER"
-                    timeout_duration_minutes = 10
-                }
-            }
-            name                      = "emr_instance_fleet_%[1]s"
-            target_on_demand_capacity = 0
-            target_spot_capacity      = 1
+      cluster_id            = "${aws_emr_cluster.test.id}"
+      instance_fleet_type   = "TASK"
+      instance_fleet {
+        instance_type_configs {
+          bid_price_as_percentage_of_on_demand_price = 100
+          ebs_config {
+            size                 = 10
+            type                 = "gp2"
+            volumes_per_instance = 1
+          }
+          instance_type     = "m4.xlarge"
+          weighted_capacity = 1
         }
+        launch_specifications {
+          spot_specification {
+            block_duration_minutes   = 0
+            timeout_action           = "SWITCH_TO_ON_DEMAND"
+            timeout_duration_minutes = 10
+          }
+        }
+        name                      = "emr_instance_fleet_%[1]s"
+        target_on_demand_capacity = 0
+        target_spot_capacity      = 1
+      }
     }
-    `, r)
+`, r)
 }
 
 func testAccAWSEmrInstanceFleetConfigFull(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-        cluster_id            = "${aws_emr_cluster.test.id}"
-        instance_fleet {
-            instance_fleet_type   = "TASK"
-            instance_type_configs = [
-                {
-                    bid_price_as_percentage_of_on_demand_price = 100
-                    configurations = [
-                        {
-                            classification = "core-site"
-                            properties {
-                                "hadoop.security.groups.cache.secs" = "250"
-                            }
-                        }
-                    ]
-                    ebs_optimized = true
-                    ebs_config = [
-                        {
-                            size = 10
-                            type = "gp2"
-                            volumes_per_instance = 1
-                        }
-                    ]
-                    instance_type     = "m3.xlarge"
-                    weighted_capacity = 8
-                }
-            ]
-            launch_specifications {
-                spot_specification {
-                    block_duration_minutes   = 60
-                    timeout_action           = "TERMINATE_CLUSTER"
-                    timeout_duration_minutes = 10
-                }
-            }
-            name                      = "emr_instance_fleet_%[1]s"
-            target_on_demand_capacity = 1
-            target_spot_capacity      = 1
+      cluster_id            = "${aws_emr_cluster.test.id}"
+      instance_fleet_type   = "TASK"
+      instance_fleet {
+        instance_type_configs {
+          bid_price_as_percentage_of_on_demand_price = 100
+          ebs_config {
+            size                 = 10
+            type                 = "gp2"
+            volumes_per_instance = 1
+          }
+          instance_type     = "m4.xlarge"
+          weighted_capacity = 1
         }
+        instance_type_configs {
+          bid_price_as_percentage_of_on_demand_price = 80
+          ebs_config {
+            size                 = 10
+            type                 = "gp2"
+            volumes_per_instance = 1
+          }
+          instance_type     = "m4.2xlarge"
+          weighted_capacity = 2
+        }
+        launch_specifications {
+          spot_specification {
+            block_duration_minutes   = 0
+            timeout_action           = "SWITCH_TO_ON_DEMAND"
+            timeout_duration_minutes = 10
+          }
+        }
+
+        name                      = "emr_instance_fleet_%[1]s"
+        target_on_demand_capacity = 2
+        target_spot_capacity      = 2
+      }
     }
-    `, r)
+`, r)
 }
