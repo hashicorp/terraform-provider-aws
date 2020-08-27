@@ -121,7 +121,7 @@ Certain resource arguments, like `gateway_ip_address` do not have a Storage Gate
 resource "aws_storagegateway_gateway" "example" {
   # ... other configuration ...
 
-  gateway_ip_address   = aws_instance.sgw.private_ip
+  gateway_ip_address = aws_instance.sgw.private_ip
   # There is no Storage Gateway API for reading gateway_ip_address
   lifecycle {
     ignore_changes = ["gateway_ip_address"]
