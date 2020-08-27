@@ -11,6 +11,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_apigatewayv2_integration: Add `integration_subtype` argument (Support AWS service integrations for HTTP APIs) [GH-14860]
+* resource/aws_elasticache_replication_group: Add plan-time validation for `notification_topic_arn` and `snapshot_arns` arguments [GH-12974]
 * resource/aws_globalaccelerator_endpoint_group: Add `client_ip_preservation_enabled` argument to the `endpoint_configuration` configuration block [GH-14486]
 * resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
 * resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument [GH-13563]
@@ -27,6 +28,7 @@ BUG FIXES
 * resource/aws_acmpca_certificate_authority: Ensure `DELETED` status triggers state removal [GH-13684]
 * resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
 * resource/aws_cloudfront_distribution: Preview panics during resource import with empty `forwarded_values.query_string` [GH-14844]
+* resource/aws_elasticache_replication_group: Ensure `tags` are stored in Terraform state and properly updated [GH-12974]
 * resource/aws_globalaccelerator_accelerator: Increase creation timeout to 10 minutes [GH-14486]
 * resource/aws_globalaccelerator_endpoint_group: Prevent differences with `health_check_path` defaults [GH-14486]
 * resource/aws_glue_crawler: Properly update `schedule` value [GH-14792]
