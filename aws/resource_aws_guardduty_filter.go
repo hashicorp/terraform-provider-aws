@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -49,7 +50,8 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"criterion": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							MinItems: 1,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"field": {
@@ -160,7 +162,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	filter, err := conn.GetFilter(&input)
 
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected since no such resource found.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -230,6 +232,9 @@ func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Delete GuardDuty Filter: %s", input)
 
 	_, err := conn.DeleteFilter(&input)
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected since no such resource found.") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error deleting GuardDuty Filter %s: %w", d.Id(), err)
 	}

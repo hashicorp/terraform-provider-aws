@@ -14,7 +14,9 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"datasource_id":    testAccAWSGuarddutyDetectorDataSource_Id,
 		},
 		"Filter": {
-			"basic": testAccAwsGuardDutyFilter_basic,
+			"basic":      testAccAwsGuardDutyFilter_basic,
+			"update":     testAccAwsGuardDutyFilter_update,
+			"disappears": testAccAwsGuardDutyFilter_disappears,
 		},
 		"InviteAccepter": {
 			"basic": testAccAwsGuardDutyInviteAccepter_basic,

@@ -80,6 +80,67 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsGuardDutyFilter_update(t *testing.T) {
+	resourceName := "aws_guardduty_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyFilterConfig_full(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "4"),
+				),
+			},
+			{
+				Config: testAccGuardDutyFilterConfig_update(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field":     "region",
+						"values.#":  "1",
+						"values.0":  "us-west-2",
+						"condition": "equals",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field":     "service.additionalInfo.threatListName",
+						"values.#":  "2",
+						"values.0":  "some-threat",
+						"values.1":  "yet-another-threat",
+						"condition": "not_equals",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
+	resourceName := "aws_guardduty_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyFilterConfig_full(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyFilter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
 
@@ -195,6 +256,34 @@ resource "aws_guardduty_filter" "test" {
       field     = "updatedAt"
       values    = ["1570744240000"]
       condition = "greater_than"
+    }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}`
+}
+
+func testAccGuardDutyFilterConfig_update() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = "${aws_guardduty_detector.test.id}"
+	name        = "test-filter"
+	action      = "ARCHIVE"
+	rank        = 1
+
+  finding_criteria {
+    criterion {
+      field     = "region"
+      values    = ["us-west-2"]
+      condition = "equals"
+    }
+
+    criterion {
+      field     = "service.additionalInfo.threatListName"
+      values    = ["some-threat", "yet-another-threat"]
+      condition = "not_equals"
     }
   }
 }
