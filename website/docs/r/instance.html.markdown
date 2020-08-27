@@ -87,6 +87,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.  Boolean value.
 * `private_ip` - (Optional) Private IP address to associate with the
      instance in a VPC.
+* `secondary_private_ips` - (Optional) A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e. referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when
   the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
@@ -125,7 +126,7 @@ to understand the implications of using these attributes.
 
 The `root_block_device` mapping supports the following:
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"sc1"`, or `"st1"`. (Default: `"standard"`).
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"sc1"`, or `"st1"`. (Default: `"gp2"`).
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).

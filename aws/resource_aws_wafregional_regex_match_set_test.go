@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -78,7 +78,7 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
-func TestAccAWSWafRegionalRegexMatchSet(t *testing.T) {
+func TestAccAWSWafRegionalRegexMatchSet_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":          testAccAWSWafRegionalRegexMatchSet_basic,
 		"changePatterns": testAccAWSWafRegionalRegexMatchSet_changePatterns,
@@ -351,7 +351,7 @@ resource "aws_wafregional_regex_match_set" "test" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_wafregional_regex_pattern_set.test.id}"
+    regex_pattern_set_id = aws_wafregional_regex_pattern_set.test.id
     text_transformation  = "NONE"
   }
 }
@@ -374,7 +374,7 @@ resource "aws_wafregional_regex_match_set" "test" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_wafregional_regex_pattern_set.test.id}"
+    regex_pattern_set_id = aws_wafregional_regex_pattern_set.test.id
     text_transformation  = "COMPRESS_WHITE_SPACE"
   }
 }

@@ -29,7 +29,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     ami                      = "ami-1234"
     spot_price               = "2.793"
     placement_tenancy        = "dedicated"
-    iam_instance_profile_arn = "${aws_iam_instance_profile.example.arn}"
+    iam_instance_profile_arn = aws_iam_instance_profile.example.arn
   }
 
   launch_specification {
@@ -37,7 +37,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     ami                      = "ami-5678"
     key_name                 = "my-key"
     spot_price               = "1.117"
-    iam_instance_profile_arn = "${aws_iam_instance_profile.example.arn}"
+    iam_instance_profile_arn = aws_iam_instance_profile.example.arn
     availability_zone        = "us-west-1a"
     subnet_id                = "subnet-1234"
     weighted_capacity        = 35
@@ -62,7 +62,6 @@ resource "aws_launch_template" "foo" {
   image_id      = "ami-516b9131"
   instance_type = "m1.small"
   key_name      = "some-key"
-  spot_price    = "0.05"
 }
 
 resource "aws_spot_fleet_request" "foo" {
@@ -73,12 +72,12 @@ resource "aws_spot_fleet_request" "foo" {
 
   launch_template_config {
     launch_template_specification {
-      id      = "${aws_launch_template.foo.id}"
-      version = "${aws_launch_template.foo.latest_version}"
+      id      = aws_launch_template.foo.id
+      version = aws_launch_template.foo.latest_version
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test-attach"]
+  depends_on = [aws_iam_policy_attachment.test-attach]
 }
 ```
 
@@ -115,7 +114,7 @@ resource "aws_spot_fleet_request" "foo" {
 
 ```hcl
 data "aws_subnet_ids" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 }
 
 resource "aws_launch_template" "foo" {
@@ -123,7 +122,6 @@ resource "aws_launch_template" "foo" {
   image_id      = "ami-516b9131"
   instance_type = "m1.small"
   key_name      = "some-key"
-  spot_price    = "0.05"
 }
 
 resource "aws_spot_fleet_request" "foo" {
@@ -134,21 +132,21 @@ resource "aws_spot_fleet_request" "foo" {
 
   launch_template_config {
     launch_template_specification {
-      id      = "${aws_launch_template.foo.id}"
-      version = "${aws_launch_template.foo.latest_version}"
+      id      = aws_launch_template.foo.id
+      version = aws_launch_template.foo.latest_version
     }
     overrides {
-      subnet_id = "${data.aws_subnets.example.ids[0]}"
+      subnet_id = data.aws_subnets.example.ids[0]
     }
     overrides {
-      subnet_id = "${data.aws_subnets.example.ids[1]}"
+      subnet_id = data.aws_subnets.example.ids[1]
     }
     overrides {
-      subnet_id = "${data.aws_subnets.example.ids[2]}"
+      subnet_id = data.aws_subnets.example.ids[2]
     }
   }
 
-  depends_on = ["aws_iam_policy_attachment.test-attach"]
+  depends_on = [aws_iam_policy_attachment.test-attach]
 }
 ```
 

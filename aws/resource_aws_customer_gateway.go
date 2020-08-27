@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -83,9 +83,10 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	createOpts := &ec2.CreateCustomerGatewayInput{
-		BgpAsn:   aws.Int64(i64BgpAsn),
-		PublicIp: aws.String(ipAddress),
-		Type:     aws.String(vpnType),
+		BgpAsn:            aws.Int64(i64BgpAsn),
+		PublicIp:          aws.String(ipAddress),
+		Type:              aws.String(vpnType),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeCustomerGateway),
 	}
 
 	// Create the Customer Gateway.
@@ -115,12 +116,6 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	if stateErr != nil {
 		return fmt.Errorf(
 			"Error waiting for customer gateway (%s) to become ready: %s", cgId, err)
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 Customer Gateway (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	return resourceAwsCustomerGatewayRead(d, meta)

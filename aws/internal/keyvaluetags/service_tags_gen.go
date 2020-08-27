@@ -80,6 +80,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 )
 
 // map[string]*string handling
@@ -2555,6 +2556,33 @@ func (tags KeyValueTags) WorkspacesTags() []*workspaces.Tag {
 
 // WorkspacesKeyValueTags creates KeyValueTags from workspaces service tags.
 func WorkspacesKeyValueTags(tags []*workspaces.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// XrayTags returns xray service tags.
+func (tags KeyValueTags) XrayTags() []*xray.Tag {
+	result := make([]*xray.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &xray.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// XrayKeyValueTags creates KeyValueTags from xray service tags.
+func XrayKeyValueTags(tags []*xray.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

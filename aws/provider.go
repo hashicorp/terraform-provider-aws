@@ -3,15 +3,14 @@ package aws
 import (
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/mutexkv"
 )
 
-// Provider returns a terraform.ResourceProvider.
-func Provider() terraform.ResourceProvider {
+// Provider returns a *schema.Provider.
+func Provider() *schema.Provider {
 	// TODO: Move the validation to this, requires conditional schemas
 	// TODO: Move the configuration to this, requires validation
 
@@ -221,6 +220,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_local_gateway_virtual_interface":        dataSourceAwsEc2LocalGatewayVirtualInterface(),
 			"aws_ec2_local_gateway_virtual_interface_group":  dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup(),
 			"aws_ec2_local_gateway_virtual_interface_groups": dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups(),
+			"aws_ec2_spot_price":                             dataSourceAwsEc2SpotPrice(),
 			"aws_ec2_transit_gateway":                        dataSourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  dataSourceAwsEc2TransitGatewayDxGatewayAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment":     dataSourceAwsEc2TransitGatewayPeeringAttachment(),
@@ -601,6 +601,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elb_attachment":                                      resourceAwsElbAttachment(),
 			"aws_emr_cluster":                                         resourceAwsEMRCluster(),
 			"aws_emr_instance_group":                                  resourceAwsEMRInstanceGroup(),
+			"aws_emr_managed_scaling_policy":                          resourceAwsEMRManagedScalingPolicy(),
 			"aws_emr_security_configuration":                          resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                            resourceAwsFlowLog(),
 			"aws_fsx_lustre_file_system":                              resourceAwsFsxLustreFileSystem(),
@@ -625,6 +626,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
 			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
+			"aws_guardduty_publishing_destination":                    resourceAwsGuardDutyPublishingDestination(),
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
 			"aws_guardduty_ipset":                                     resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                                    resourceAwsGuardDutyMember(),
@@ -770,6 +772,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route53_query_log":                                   resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                                      resourceAwsRoute53Record(),
 			"aws_route53_zone_association":                            resourceAwsRoute53ZoneAssociation(),
+			"aws_route53_vpc_association_authorization":               resourceAwsRoute53VPCAssociationAuthorization(),
 			"aws_route53_zone":                                        resourceAwsRoute53Zone(),
 			"aws_route53_health_check":                                resourceAwsRoute53HealthCheck(),
 			"aws_route53_resolver_endpoint":                           resourceAwsRoute53ResolverEndpoint(),
@@ -816,6 +819,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_default_security_group":                              resourceAwsDefaultSecurityGroup(),
 			"aws_security_group_rule":                                 resourceAwsSecurityGroupRule(),
 			"aws_securityhub_account":                                 resourceAwsSecurityHubAccount(),
+			"aws_securityhub_action_target":                           resourceAwsSecurityHubActionTarget(),
 			"aws_securityhub_member":                                  resourceAwsSecurityHubMember(),
 			"aws_securityhub_product_subscription":                    resourceAwsSecurityHubProductSubscription(),
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
@@ -933,6 +937,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_event_stream":                               resourceAwsPinpointEventStream(),
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
+			"aws_xray_encryption_config":                              resourceAwsXrayEncryptionConfig(),
+			"aws_xray_group":                                          resourceAwsXrayGroup(),
 			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
 			"aws_workspaces_ip_group":                                 resourceAwsWorkspacesIpGroup(),
 
@@ -1095,7 +1101,6 @@ func init() {
 		"iotanalytics",
 		"iotevents",
 		"kafka",
-		"kinesis_analytics",
 		"kinesis",
 		"kinesisanalytics",
 		"kinesisanalyticsv2",
@@ -1126,7 +1131,6 @@ func init() {
 		"pricing",
 		"qldb",
 		"quicksight",
-		"r53",
 		"ram",
 		"rds",
 		"redshift",
@@ -1344,10 +1348,6 @@ func endpointsSchema() *schema.Schema {
 			Description: descriptions["endpoint"],
 		}
 	}
-
-	// Since the endpoints attribute is a TypeSet we cannot use ConflictsWith
-	endpointsAttributes["kinesis_analytics"].Deprecated = "use `endpoints` configuration block `kinesisanalytics` argument instead"
-	endpointsAttributes["r53"].Deprecated = "use `endpoints` configuration block `route53` argument instead"
 
 	return &schema.Schema{
 		Type:     schema.TypeSet,

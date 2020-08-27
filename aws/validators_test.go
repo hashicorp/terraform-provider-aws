@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
@@ -823,7 +824,7 @@ func TestValidateIAMPolicyJsonString(t *testing.T) {
 	}
 }
 
-func TestValidateCloudFormationTemplate(t *testing.T) {
+func TestValidateStringIsJsonOrYaml(t *testing.T) {
 	type testCases struct {
 		Value    string
 		ErrCount int
@@ -841,7 +842,7 @@ func TestValidateCloudFormationTemplate(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validateCloudFormationTemplate(tc.Value, "template")
+		_, errors := validateStringIsJsonOrYaml(tc.Value, "template")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -859,7 +860,7 @@ func TestValidateCloudFormationTemplate(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := validateCloudFormationTemplate(tc.Value, "template")
+		_, errors := validateStringIsJsonOrYaml(tc.Value, "template")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
@@ -2288,29 +2289,6 @@ func TestValidateWafMetricName(t *testing.T) {
 	}
 }
 
-func TestValidateIamRoleDescription(t *testing.T) {
-	validNames := []string{
-		"This 1s a D3scr!pti0n with weird content: @ #^ù£ê®æ ø]ŒîÏî~ÈÙ£÷=,ë",
-		strings.Repeat("W", 1000),
-	}
-	for _, v := range validNames {
-		_, errors := validateIamRoleDescription(v, "description")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid IAM Role Description: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		strings.Repeat("W", 1001), // > 1000
-	}
-	for _, v := range invalidNames {
-		_, errors := validateIamRoleDescription(v, "description")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid IAM Role Description", v)
-		}
-	}
-}
-
 func TestValidateAwsSSMName(t *testing.T) {
 	validNames := []string{
 		".foo-bar_123",
@@ -3142,6 +3120,39 @@ func TestValidateRoute53ResolverName(t *testing.T) {
 		_, errors := validateRoute53ResolverName(tc.Value, "aws_route53_resolver_endpoint")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Route 53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateServiceDiscoveryNamespaceName(t *testing.T) {
+	validNames := []string{
+		"ValidName",
+		"V_-.dN01e",
+		"0",
+		".",
+		"-",
+		"_",
+		strings.Repeat("x", 1024),
+	}
+	for _, v := range validNames {
+		_, errors := validateServiceDiscoveryNamespaceName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid namespace name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"Inval:dName",
+		"Invalid Name",
+		"*",
+		"",
+		// length > 512
+		strings.Repeat("x", 1025),
+	}
+	for _, v := range invalidNames {
+		_, errors := validateServiceDiscoveryNamespaceName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid namespace name", v)
 		}
 	}
 }

@@ -152,7 +152,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -588,14 +588,6 @@ func (c *Config) Client() (interface{}, error) {
 
 	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
 	client.s3connUriCleaningDisabled = s3.New(sess.Copy(s3Config))
-
-	// Handle deprecated endpoint configurations
-	if c.Endpoints["kinesis_analytics"] != "" {
-		client.kinesisanalyticsconn = kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis_analytics"])}))
-	}
-	if c.Endpoints["r53"] != "" {
-		route53Config.Endpoint = aws.String(c.Endpoints["r53"])
-	}
 
 	// Force "global" services to correct regions
 	switch partition {

@@ -1112,6 +1112,23 @@ const (
 	AWSRegionApEast1 = "ap-east-1"
 )
 
+// AWSRegion_Values returns all elements of the AWSRegion enum
+func AWSRegion_Values() []string {
+	return []string{
+		AWSRegionUsEast1,
+		AWSRegionUsWest1,
+		AWSRegionUsWest2,
+		AWSRegionEuCentral1,
+		AWSRegionEuWest1,
+		AWSRegionApSoutheast1,
+		AWSRegionApSoutheast2,
+		AWSRegionApNortheast1,
+		AWSRegionEuNorth1,
+		AWSRegionApNortheast3,
+		AWSRegionApEast1,
+	}
+}
+
 // The types of manifest that you want AWS to create for this report.
 const (
 	// AdditionalArtifactRedshift is a AdditionalArtifact enum value
@@ -1123,6 +1140,15 @@ const (
 	// AdditionalArtifactAthena is a AdditionalArtifact enum value
 	AdditionalArtifactAthena = "ATHENA"
 )
+
+// AdditionalArtifact_Values returns all elements of the AdditionalArtifact enum
+func AdditionalArtifact_Values() []string {
+	return []string{
+		AdditionalArtifactRedshift,
+		AdditionalArtifactQuicksight,
+		AdditionalArtifactAthena,
+	}
+}
 
 // The compression format that AWS uses for the report.
 const (
@@ -1136,6 +1162,15 @@ const (
 	CompressionFormatParquet = "Parquet"
 )
 
+// CompressionFormat_Values returns all elements of the CompressionFormat enum
+func CompressionFormat_Values() []string {
+	return []string{
+		CompressionFormatZip,
+		CompressionFormatGzip,
+		CompressionFormatParquet,
+	}
+}
+
 // The format that AWS saves the report in.
 const (
 	// ReportFormatTextOrcsv is a ReportFormat enum value
@@ -1145,6 +1180,14 @@ const (
 	ReportFormatParquet = "Parquet"
 )
 
+// ReportFormat_Values returns all elements of the ReportFormat enum
+func ReportFormat_Values() []string {
+	return []string{
+		ReportFormatTextOrcsv,
+		ReportFormatParquet,
+	}
+}
+
 const (
 	// ReportVersioningCreateNewReport is a ReportVersioning enum value
 	ReportVersioningCreateNewReport = "CREATE_NEW_REPORT"
@@ -1153,11 +1196,26 @@ const (
 	ReportVersioningOverwriteReport = "OVERWRITE_REPORT"
 )
 
+// ReportVersioning_Values returns all elements of the ReportVersioning enum
+func ReportVersioning_Values() []string {
+	return []string{
+		ReportVersioningCreateNewReport,
+		ReportVersioningOverwriteReport,
+	}
+}
+
 // Whether or not AWS includes resource IDs in the report.
 const (
 	// SchemaElementResources is a SchemaElement enum value
 	SchemaElementResources = "RESOURCES"
 )
+
+// SchemaElement_Values returns all elements of the SchemaElement enum
+func SchemaElement_Values() []string {
+	return []string{
+		SchemaElementResources,
+	}
+}
 
 // The length of time covered by the report.
 const (
@@ -1167,3 +1225,11 @@ const (
 	// TimeUnitDaily is a TimeUnit enum value
 	TimeUnitDaily = "DAILY"
 )
+
+// TimeUnit_Values returns all elements of the TimeUnit enum
+func TimeUnit_Values() []string {
+	return []string{
+		TimeUnitHourly,
+		TimeUnitDaily,
+	}
+}

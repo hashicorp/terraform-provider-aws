@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -148,6 +148,27 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayVpcLink_disappears(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aws_api_gateway_vpc_link.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayVpcLink(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

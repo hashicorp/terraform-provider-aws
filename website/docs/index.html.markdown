@@ -104,6 +104,14 @@ If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task
 
 If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform will use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
 
+### Custom User-Agent Information
+
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS Go SDK versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. e.g.
+
+```sh
+$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
+
 ### EC2 Instance Metadata Service
 
 If you're running Terraform from an EC2 instance with IAM Instance Profile
@@ -171,7 +179,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 * `max_retries` - (Optional) This is the maximum number of times an API
   call is retried, in the case where requests are being throttled or
   experiencing transient failures. The delay between the subsequent API
-  calls increases exponentially.
+  calls increases exponentially. If omitted, default value is `25`.
 
 * `allowed_account_ids` - (Optional) List of allowed AWS
   account IDs to prevent you from mistakenly using an incorrect one (and
