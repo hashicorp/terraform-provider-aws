@@ -63,8 +63,8 @@ In addition to the arguments above, the following attributes are exported:
 
 ## Import
 
-XRay Encryption Config can be imported using any value as there is a single one per region, e.g.
+XRay Encryption Config can be imported using the region name, e.g.
 
 ```
-$ terraform import aws_xray_encryption_config.example example
+$ terraform import aws_xray_encryption_config.example us-west-2
 ```
