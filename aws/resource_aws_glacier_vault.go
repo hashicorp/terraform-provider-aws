@@ -185,11 +185,11 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
 		d.Set("access_policy", "")
 	} else if err != nil {
-		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
 	} else if pol != nil && pol.Policy != nil {
 		policy, err := structure.NormalizeJsonString(aws.StringValue(pol.Policy.Policy))
 		if err != nil {
-			return fmt.Errorf("access policy contains an invalid JSON: %s", err)
+			return fmt.Errorf("access policy contains an invalid JSON: %w", err)
 		}
 		d.Set("access_policy", policy)
 	}
@@ -200,7 +200,7 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 	} else if pol != nil {
 		d.Set("notification", notifications)
 	} else {
-		return err
+		return fmt.Errorf("error setting notification: %w", err)
 	}
 
 	return nil
@@ -242,7 +242,7 @@ func resourceAwsGlacierVaultNotificationUpdate(conn *glacier.Glacier, d *schema.
 			})
 
 			if err != nil {
-				return fmt.Errorf("Error Updating Glacier Vault Notifications: %s", err.Error())
+				return fmt.Errorf("Error Updating Glacier Vault Notifications: %w", err)
 			}
 		}
 	} else {
@@ -251,7 +251,7 @@ func resourceAwsGlacierVaultNotificationUpdate(conn *glacier.Glacier, d *schema.
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error Removing Glacier Vault Notifications: %s", err.Error())
+			return fmt.Errorf("Error Removing Glacier Vault Notifications: %w", err)
 		}
 
 	}
@@ -306,7 +306,7 @@ func getGlacierVaultNotification(conn *glacier.Glacier, vaultName string) ([]map
 
 	response, err := conn.GetVaultNotifications(request)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading Glacier Vault Notifications: %s", err.Error())
+		return nil, fmt.Errorf("Error reading Glacier Vault Notifications: %w", err)
 	}
 
 	notifications := make(map[string]interface{})
