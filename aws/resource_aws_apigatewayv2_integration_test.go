@@ -33,6 +33,7 @@ func TestAccAWSAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.statuscode}"),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "MOCK"),
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -76,6 +77,7 @@ func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
@@ -140,6 +142,7 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.statuscode}"),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -164,6 +167,7 @@ func TestAccAWSAPIGatewayV2Integration_IntegrationTypeHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test HTTP updated"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.statuscode}"),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.org"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_TEMPLATES"),
@@ -212,6 +216,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.body.errorMessage}"),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "AWS"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -256,6 +261,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "AWS_PROXY"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
@@ -300,6 +306,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test VPC Link"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "PUT"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.net"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "NEVER"),
@@ -345,6 +352,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test private integration"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lbListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
@@ -373,6 +381,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Test private integration updated"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lbListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
@@ -382,6 +391,50 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "4999"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.org"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetIntegrationOutput
+	resourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
+					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test SQS send"),
+					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", "SQS-SendMessage"),
+					resource.TestCheckResourceAttr(resourceName, "integration_type", "AWS_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
+					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.QueueUrl", "$request.header.queueUrl"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageBody", "$request.body.message"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
 			{
@@ -773,6 +826,58 @@ resource "aws_apigatewayv2_integration" "test" {
   integration_uri               = "http://www.example.net"
   passthrough_behavior          = "NEVER"
   timeout_milliseconds          = 12345
+}
+`, rName))
+}
+
+func testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "apigateway.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["sqs:*"],
+    "Resource": "*"
+  }]
+}
+EOF
+}
+
+resource "aws_apigatewayv2_integration" "test" {
+  api_id              = aws_apigatewayv2_api.test.id
+  credentials_arn     = aws_iam_role.test.arn
+  description         = "Test SQS send"
+  integration_type    = "AWS_PROXY"
+  integration_subtype = "SQS-SendMessage"
+
+  request_parameters = {
+    "QueueUrl"    = "$request.header.queueUrl"
+    "MessageBody" = "$request.body.message"
+  }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }
