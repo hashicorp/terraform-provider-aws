@@ -13,6 +13,7 @@ import (
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
+	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 	detectorResourceName := "aws_guardduty_detector.test"
 
@@ -24,7 +25,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
@@ -69,7 +70,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfigNoop_full(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
@@ -83,6 +84,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 }
 
 func testAccAwsGuardDutyFilter_update(t *testing.T) {
+	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
 	resource.Test(t, resource.TestCase{
@@ -93,7 +95,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "4"),
 				),
@@ -101,7 +103,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -124,6 +126,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 }
 
 func testAccAwsGuardDutyFilter_tags(t *testing.T) {
+	var v1, v2, v3 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
 	resource.Test(t, resource.TestCase{
@@ -134,7 +137,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_multipleTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
@@ -143,7 +146,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
 				),
@@ -151,7 +154,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -160,6 +163,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 }
 
 func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
+	var v guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
 	resource.Test(t, resource.TestCase{
@@ -170,7 +174,7 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 			{
 				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					testAccCheckAwsGuardDutyFilterExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -211,11 +215,30 @@ func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsGuardDutyFilterExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No GuardDuty filter is set")
+		}
+
+		detectorID, name, err := parseImportedId(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		input := guardduty.GetFilterInput{
+			DetectorId: aws.String(detectorID),
+			FilterName: aws.String(name),
+		}
+		filter, err = conn.GetFilter(&input)
+		if err != nil {
+			return err
 		}
 
 		return nil
