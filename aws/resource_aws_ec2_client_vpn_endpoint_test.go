@@ -470,15 +470,15 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -487,8 +487,8 @@ resource "aws_directory_service_directory" "test" {
   type     = "MicrosoftAD"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.test.id}"
-    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
   }
 }
 `)
@@ -498,12 +498,12 @@ func testAccEc2ClientVpnEndpointConfig(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -521,23 +521,23 @@ resource "aws_cloudwatch_log_group" "lg" {
 
 resource "aws_cloudwatch_log_stream" "ls" {
   name           = "${aws_cloudwatch_log_group.lg.name}-stream"
-  log_group_name = "${aws_cloudwatch_log_group.lg.name}"
+  log_group_name = aws_cloudwatch_log_group.lg.name
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
     enabled               = true
-    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
-    cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
+    cloudwatch_log_group  = aws_cloudwatch_log_group.lg.name
+    cloudwatch_log_stream = aws_cloudwatch_log_stream.ls.name
   }
 }
 `, rName, rName)
@@ -547,14 +547,14 @@ func testAccEc2ClientVpnEndpointConfigWithDNSServers(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   dns_servers = ["8.8.8.8", "8.8.4.4"]
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -569,12 +569,12 @@ func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
 		testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                = "directory-service-authentication"
-    active_directory_id = "${aws_directory_service_directory.test.id}"
+    active_directory_id = aws_directory_service_directory.test.id
   }
 
   connection_log_options {
@@ -588,17 +588,17 @@ func testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rName string)
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                = "directory-service-authentication"
-    active_directory_id = "${aws_directory_service_directory.test.id}"
+    active_directory_id = aws_directory_service_directory.test.id
   }
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -612,17 +612,17 @@ func testAccEc2ClientVpnEndpointConfigWithFederatedAuth(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_iam_saml_provider" "default" {
   name                   = "myprovider-%s"
-  saml_metadata_document = "${file("./test-fixtures/saml-metadata.xml")}"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type              = "federated-authentication"
-    saml_provider_arn = "${aws_iam_saml_provider.default.arn}"
+    saml_provider_arn = aws_iam_saml_provider.default.arn
   }
 
   connection_log_options {
@@ -636,12 +636,12 @@ func testAccEc2ClientVpnEndpointConfig_tags(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -660,12 +660,12 @@ func testAccEc2ClientVpnEndpointConfig_tagsChanged(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
@@ -684,12 +684,12 @@ func testAccEc2ClientVpnEndpointConfigSplitTunnel(rName string, splitTunnel bool
 resource "aws_ec2_client_vpn_endpoint" "test" {
   client_cidr_block      = "10.0.0.0/16"
   description            = %[1]q
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  server_certificate_arn = aws_acm_certificate.test.arn
   split_tunnel           = %[2]t
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
