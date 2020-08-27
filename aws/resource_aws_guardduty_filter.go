@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,6 +26,10 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -137,24 +142,24 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) error {
-	var detectorId, name string
+	var detectorID, name string
 	var err error
 
 	if _, ok := d.GetOk("detector_id"); !ok {
 		// If there is no "detector_id" passed, then it's an import.
-		detectorId, name, err = parseImportedId(d.Id())
+		detectorID, name, err = parseImportedId(d.Id())
 		if err != nil {
 			return err
 		}
 	} else {
-		detectorId = d.Get("detector_id").(string)
+		detectorID = d.Get("detector_id").(string)
 		name = d.Get("name").(string)
 	}
 
 	conn := meta.(*AWSClient).guarddutyconn
 
 	input := guardduty.GetFilterInput{
-		DetectorId: aws.String(detectorId),
+		DetectorId: aws.String(detectorID),
 		FilterName: aws.String(name),
 	}
 
@@ -170,6 +175,15 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading GuardDuty Filter '%s': %w", name, err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "guardduty",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
+	}.String()
+	d.Set("arn", arn)
+
 	err = d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria))
 	if err != nil {
 		return fmt.Errorf("Setting GuardDuty Filter FindingCriteria failed: %w", err)
@@ -178,11 +192,11 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("action", filter.Action)
 	d.Set("description", filter.Description)
 	d.Set("name", filter.Name)
-	d.Set("detector_id", detectorId)
+	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	d.Set("tags", keyvaluetags.GuarddutyKeyValueTags(filter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
-	d.SetId(joinGuardDutyFilterID(detectorId, name))
+	d.SetId(joinGuardDutyFilterID(detectorID, name))
 
 	return nil
 }
@@ -213,6 +227,14 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 	_, err = conn.UpdateFilter(&input)
 	if err != nil {
 		return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.GuarddutyUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating GuardDuty Filter (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	return resourceAwsGuardDutyFilterRead(d, meta)

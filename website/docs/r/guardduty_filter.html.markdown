@@ -64,6 +64,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attribute is exported:
 
+* `arn` - The ARN of the GuardDuty filter.
 * `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.
 
 ## Import

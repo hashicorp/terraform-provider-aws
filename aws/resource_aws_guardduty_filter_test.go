@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,6 +30,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/[a-z0-9]{32}/filter/test-filter$")),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "4"),
@@ -115,6 +117,42 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 						"values.1":  "yet-another-threat",
 						"condition": "not_equals",
 					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsGuardDutyFilter_tags(t *testing.T) {
+	resourceName := "aws_guardduty_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardDutyFilterConfig_multipleTags(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
+				),
+			},
+			{
+				Config: testAccGuardDutyFilterConfig_updateTags(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
+				),
+			},
+			{
+				Config: testAccGuardDutyFilterConfig_full(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -265,6 +303,33 @@ resource "aws_guardduty_detector" "test" {
 }`
 }
 
+func testAccGuardDutyFilterConfig_multipleTags() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = "${aws_guardduty_detector.test.id}"
+	name        = "test-filter"
+	action      = "ARCHIVE"
+	rank        = 1
+
+  finding_criteria {
+    criterion {
+		field     = "region"
+		values    = ["us-west-2"]
+		condition = "equals"
+	  }
+	}
+
+  tags = {
+	  Name= "test-filter"
+	  Key = "Value"
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}`
+}
+
 func testAccGuardDutyFilterConfig_update() string {
 	return `
 resource "aws_guardduty_filter" "test" {
@@ -285,6 +350,32 @@ resource "aws_guardduty_filter" "test" {
       values    = ["some-threat", "yet-another-threat"]
       condition = "not_equals"
     }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}`
+}
+
+func testAccGuardDutyFilterConfig_updateTags() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = "${aws_guardduty_detector.test.id}"
+	name        = "test-filter"
+	action      = "ARCHIVE"
+	rank        = 1
+
+  finding_criteria {
+    criterion {
+		field     = "region"
+		values    = ["us-west-2"]
+		condition = "equals"
+	  }
+	}
+
+  tags = {
+	  Key = "Updated"
   }
 }
 
