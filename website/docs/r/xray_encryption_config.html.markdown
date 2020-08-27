@@ -59,7 +59,7 @@ resource "aws_xray_encryption_config" "example" {
 
 In addition to the arguments above, the following attributes are exported:
 
-* `id` - unique id for the resource.
+* `id` - Region name.
 
 ## Import
 
