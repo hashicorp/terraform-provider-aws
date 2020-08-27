@@ -937,6 +937,7 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_event_stream":                               resourceAwsPinpointEventStream(),
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
+			"aws_xray_group":                                          resourceAwsXrayGroup(),
 			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
 			"aws_workspaces_ip_group":                                 resourceAwsWorkspacesIpGroup(),
 
