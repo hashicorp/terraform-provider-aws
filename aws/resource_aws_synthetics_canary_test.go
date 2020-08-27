@@ -3,9 +3,12 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -161,7 +164,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`vpc-`)),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -176,6 +179,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -184,10 +188,9 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
+					testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(resourceName),
 				),
-			},
-			{
-				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 			},
 		},
 	})
@@ -309,6 +312,57 @@ func testAccCheckAwsSyntheticsCanaryExists(n string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("syntherics Canary %s not found in AWS", name)
 		}
+		return nil
+	}
+}
+
+func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("synthetics Canary not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("synthetics Canary name not set")
+		}
+
+		lambdaConn := testAccProvider.Meta().(*AWSClient).lambdaconn
+
+		layerArn := rs.Primary.Attributes["source_location_arn"]
+		layerArnObj, err := arn.Parse(layerArn)
+		if err != nil {
+			return fmt.Errorf("synthetics Canary Lambda Layer %s incorrect arn format: %w", layerArn, err)
+		}
+
+		layerName := strings.Split(layerArnObj.Resource, ":")
+
+		deleteLayerVersionInput := &lambda.DeleteLayerVersionInput{
+			LayerName:     aws.String(layerName[1]),
+			VersionNumber: aws.Int64(1),
+		}
+
+		_, err = lambdaConn.DeleteLayerVersion(deleteLayerVersionInput)
+		if err != nil {
+			return fmt.Errorf("synthetics Canary Lambda Layer %s could not be deleted: %w", layerArn, err)
+		}
+
+		lambdaArn := rs.Primary.Attributes["engine_arn"]
+		lambdaArnObj, err := arn.Parse(layerArn)
+		if err != nil {
+			return fmt.Errorf("synthetics Canary Lambda %s incorrect arn format: %w", lambdaArn, err)
+		}
+		lambdaArnParts := strings.Split(lambdaArnObj.Resource, ":")
+
+		deleteLambdaInput := &lambda.DeleteFunctionInput{
+			FunctionName: aws.String(lambdaArnParts[1]),
+		}
+
+		_, err = lambdaConn.DeleteFunction(deleteLambdaInput)
+		if err != nil {
+			return fmt.Errorf("synthetics Canary Lambda %s could not be deleted: %w", lambdaArn, err)
+		}
+
 		return nil
 	}
 }
