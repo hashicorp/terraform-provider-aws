@@ -9,6 +9,8 @@ FEATURES
 * **New Resource:** `aws_xray_group` [GH-13597]
 
 ENHANCEMENTS
+
+* resource/aws_apigatewayv2_integration: Add `integration_subtype` argument (Support AWS service integrations for HTTP APIs) [GH-14860]
 * resource/aws_globalaccelerator_endpoint_group: Add `client_ip_preservation_enabled` argument to the `endpoint_configuration` configuration block [GH-14486]
 * resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
 * resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument [GH-13563]
