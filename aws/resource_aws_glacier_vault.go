@@ -57,13 +57,20 @@ func resourceAwsGlacierVault() *schema.Resource {
 			"notification": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"events": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"ArchiveRetrievalCompleted",
+									"InventoryRetrievalCompleted",
+								}, false),
+							},
+							Set: schema.HashString,
 						},
 						"sns_topic": {
 							Type:         schema.TypeString,
@@ -196,7 +203,7 @@ func resourceAwsGlacierVaultRead(d *schema.ResourceData, meta interface{}) error
 
 	notifications, err := getGlacierVaultNotification(conn, d.Id())
 	if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
-		d.Set("notification", "")
+		d.Set("notification", []map[string]interface{}{})
 	} else if pol != nil {
 		d.Set("notification", notifications)
 	} else {
@@ -224,26 +231,18 @@ func resourceAwsGlacierVaultNotificationUpdate(conn *glacier.Glacier, d *schema.
 	if v, ok := d.GetOk("notification"); ok {
 		settings := v.([]interface{})
 
-		if len(settings) > 1 {
-			return fmt.Errorf("Only a single Notification Block is allowed for Glacier Vault")
-		} else if len(settings) == 1 {
-			s := settings[0].(map[string]interface{})
-			var events []*string
-			for _, id := range s["events"].(*schema.Set).List() {
-				events = append(events, aws.String(id.(string)))
-			}
+		s := settings[0].(map[string]interface{})
 
-			_, err := conn.SetVaultNotifications(&glacier.SetVaultNotificationsInput{
-				VaultName: aws.String(d.Id()),
-				VaultNotificationConfig: &glacier.VaultNotificationConfig{
-					SNSTopic: aws.String(s["sns_topic"].(string)),
-					Events:   events,
-				},
-			})
+		_, err := conn.SetVaultNotifications(&glacier.SetVaultNotificationsInput{
+			VaultName: aws.String(d.Id()),
+			VaultNotificationConfig: &glacier.VaultNotificationConfig{
+				SNSTopic: aws.String(s["sns_topic"].(string)),
+				Events:   expandStringSet(s["events"].(*schema.Set)),
+			},
+		})
 
-			if err != nil {
-				return fmt.Errorf("Error Updating Glacier Vault Notifications: %w", err)
-			}
+		if err != nil {
+			return fmt.Errorf("Error Updating Glacier Vault Notifications: %w", err)
 		}
 	} else {
 		_, err := conn.DeleteVaultNotifications(&glacier.DeleteVaultNotificationsInput{
