@@ -29,7 +29,7 @@ BUG FIXES
 * resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
 * resource/aws_cloudfront_distribution: Preview panics during resource import with empty `forwarded_values.query_string` [GH-14844]
 * resource/aws_elasticache_replication_group: Ensure `tags` are stored in Terraform state and properly updated [GH-12974]
-* resource/aws_emr_instance_group: Increase creation and update timeout to 15 minutes [GH-13077]
+* resource/aws_emr_instance_group: Increase creation and update timeout to 30 minutes [GH-13077] / [GH-14106]
 * resource/aws_globalaccelerator_accelerator: Increase creation timeout to 10 minutes [GH-14486]
 * resource/aws_globalaccelerator_endpoint_group: Prevent differences with `health_check_path` defaults [GH-14486]
 * resource/aws_glue_crawler: Properly update `schedule` value [GH-14792]
