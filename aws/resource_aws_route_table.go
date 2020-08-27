@@ -87,6 +87,11 @@ func resourceAwsRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"local_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"transit_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -211,6 +216,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		if r.NatGatewayId != nil {
 			m["nat_gateway_id"] = *r.NatGatewayId
+		}
+		if r.LocalGatewayId != nil {
+			m["local_gateway_id"] = *r.LocalGatewayId
 		}
 		if r.InstanceId != nil {
 			m["instance_id"] = *r.InstanceId
@@ -386,6 +394,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				opts.NatGatewayId = aws.String(s)
 			}
 
+			if s := m["local_gateway_id"].(string); s != "" {
+				opts.LocalGatewayId = aws.String(s)
+			}
+
 			log.Printf("[INFO] Creating route for %s: %#v", d.Id(), opts)
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := conn.CreateRoute(&opts)
@@ -528,6 +540,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["transit_gateway_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["local_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
