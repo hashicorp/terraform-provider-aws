@@ -5,6 +5,7 @@ FEATURES
 * **New Resource:** `aws_emr_managed_scaling_policy` [GH-13965]
 * **New Resource:** `aws_guardduty_publishing_destination` [GH-13894]
 * **New Resource:** `aws_securityhub_action_target` [GH-10493]
+* **New Resource:** `aws_xray_encryption_config` [GH-13600]
 * **New Resource:** `aws_xray_group` [GH-13597]
 
 ENHANCEMENTS
