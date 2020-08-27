@@ -1876,7 +1876,7 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-  name = "terraform-asg-deployment-example"
+  name = "terraform-asg-deployment-1-1"
 
   subnets = [
     aws_subnet.public_a_one.id,
@@ -1936,8 +1936,8 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
- gs = {
-    Name = "tf-acc-elb-subnet-swap-b-on
+  tags = {
+    Name = "tf-acc-elb-subnet-swap-b-one"
   }
 }
 
@@ -1952,7 +1952,7 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-  name = "terraform-asg-deployment-example"
+  name = "terraform-asg-deployment-2-1"
 
   subnets = [
     aws_subnet.public_a_two.id,
