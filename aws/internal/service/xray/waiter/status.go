@@ -12,6 +12,10 @@ func EncryptionConfigStatus(conn *xray.XRay) resource.StateRefreshFunc {
 
 		output, _ := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 
+		if output == nil || output.EncryptionConfig == nil {
+			return output, EncryptionConfigStatusUnknown, nil
+		}
+		
 		return output, aws.StringValue(output.EncryptionConfig.Status), nil
 	}
 }
