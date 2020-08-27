@@ -12,6 +12,8 @@ Version 3.0.0 of the AWS provider for Terraform is a major release and includes 
 
 Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
 
+~> **NOTE:** Version 3.0.0 and later of the AWS Provider can only be automatically installed on Terraform 0.12 and later.
+
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
@@ -25,6 +27,7 @@ Upgrade topics:
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
+- [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 - [Resource: aws_sns_platform_application](#resource-aws_sns_platform_application)
 - [Resource: aws_spot_fleet_request](#resource-aws_spot_fleet_request)
@@ -153,6 +156,12 @@ output "lambda_result" {
   value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
+
+## Resource: aws_acm_certificate
+
+### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
+
+Previously when the `certificate_body`, `certificate_chain`, and `private_key` arguments were stored in state, they were stored as a hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the `private_key` attribute is marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only updates and they all match the hash removal, the apply will occur without submitting API calls.
 
 ## Resource: aws_autoscaling_group
 
@@ -394,11 +403,57 @@ resource "aws_lb_listener_rule" "example" {
 }
 ```
 
+## Resource: aws_msk_cluster
+
+### encryption_info.encryption_in_transit.client_broker Default Updated to Match API
+
+A few weeks after general availability launch and initial release of the `aws_msk_cluster` resource, the MSK API default for client broker encryption switched from `TLS_PLAINTEXT` to `TLS`. The attribute default has now been updated to match the more secure API default, however existing Terraform configurations may show a difference if this setting is not configured.
+
+To continue using the old default when it was previously not configured, add or modify this configuration:
+
+```hcl
+resource "aws_msk_cluster" "example" {
+  # ... other configuration ...
+
+  encryption_info {
+    # ... potentially other configuration ...
+
+    encryption_in_transit {
+      # ... potentially other configuration ...
+
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
+}
+```
+
 ## Resource: aws_s3_bucket
 
 ### Removal of Automatic aws_s3_bucket_policy Import
 
 Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
+
+### region Attribute Is Now Read-Only
+
+The `region` attribute is no longer configurable, but it remains as a read-only attribute. The region of the `aws_s3_bucket` resource is determined by the region of the Terraform AWS Provider, similar to all other resources.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+
+  region = "us-west-2"
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_s3_bucket" "example" {
+  # ... other configuration ...
+}
+```
 
 ## Resource: aws_sns_platform_application
 

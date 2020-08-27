@@ -68,11 +68,10 @@ is especially important for testing AWS GovCloud (US), which requires:
 export AWS_DEFAULT_REGION=us-gov-west-1
 ```
 
-Tests can then be run by specifying the target provider and a regular
-expression defining the tests to run:
+Tests can then be run by specifying a regular expression defining the tests to run:
 
 ```sh
-$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard_update'
+$ make testacc TESTARGS='-run=TestAccAWSCloudWatchDashboard_update'
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard_update -timeout 120m
 === RUN   TestAccAWSCloudWatchDashboard_update
@@ -87,7 +86,7 @@ write the regular expression. For example, to run all tests of the
 testing like this:
 
 ```sh
-$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSCloudWatchDashboard'
+$ make testacc TESTARGS='-run=TestAccAWSCloudWatchDashboard'
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard -timeout 120m
 === RUN   TestAccAWSCloudWatchDashboard_importBasic

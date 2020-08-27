@@ -435,26 +435,6 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_region(t *testing.T) {
-	resourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSS3BucketConfigWithRegion(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region", testAccGetRegion()),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
@@ -3069,17 +3049,6 @@ resource "aws_s3_bucket" "bucket6" {
   }
 }
 `, randInt)
-}
-
-func testAccAWSS3BucketConfigWithRegion(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-  region = data.aws_region.current.name
-}
-`, bucketName)
 }
 
 func testAccAWSS3BucketWebsiteConfig(bucketName string) string {

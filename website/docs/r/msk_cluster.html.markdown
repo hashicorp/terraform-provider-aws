@@ -155,11 +155,6 @@ output "zookeeper_connect_string" {
   value = aws_msk_cluster.example.zookeeper_connect_string
 }
 
-output "bootstrap_brokers" {
-  description = "Plaintext connection host:port pairs"
-  value       = aws_msk_cluster.example.bootstrap_brokers
-}
-
 output "bootstrap_brokers_tls" {
   description = "TLS connection host:port pairs"
   value       = aws_msk_cluster.example.bootstrap_brokers_tls
@@ -210,7 +205,7 @@ The following arguments are supported:
 
 #### encryption_info encryption_in_transit Argument Reference
 
-* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value is `TLS_PLAINTEXT` when `encryption_in_transit` block defined, but `TLS` when `encryption_in_transit` block omitted.
+* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value is `TLS`.
 * `in_cluster` - (Optional) Whether data communication among broker nodes is encrypted. Default value: `true`.
 
 #### open_monitoring Argument Reference
