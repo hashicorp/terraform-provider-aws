@@ -60,7 +60,7 @@ func testSweepConfigConfigurationAggregators(region string) error {
 
 func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix("Tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
