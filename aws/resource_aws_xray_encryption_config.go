@@ -46,7 +46,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 		Type: aws.String(d.Get("type").(string)),
 	}
 
-	if v, ok := d.GetOk("key_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("key_id"); ok {
 		input.KeyId = aws.String(v.(string))
 	}
 
