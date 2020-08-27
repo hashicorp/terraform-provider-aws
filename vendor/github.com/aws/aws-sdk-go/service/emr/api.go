@@ -11987,6 +11987,16 @@ const (
 	ActionOnFailureContinue = "CONTINUE"
 )
 
+// ActionOnFailure_Values returns all elements of the ActionOnFailure enum
+func ActionOnFailure_Values() []string {
+	return []string{
+		ActionOnFailureTerminateJobFlow,
+		ActionOnFailureTerminateCluster,
+		ActionOnFailureCancelAndWait,
+		ActionOnFailureContinue,
+	}
+}
+
 const (
 	// AdjustmentTypeChangeInCapacity is a AdjustmentType enum value
 	AdjustmentTypeChangeInCapacity = "CHANGE_IN_CAPACITY"
@@ -11997,6 +12007,15 @@ const (
 	// AdjustmentTypeExactCapacity is a AdjustmentType enum value
 	AdjustmentTypeExactCapacity = "EXACT_CAPACITY"
 )
+
+// AdjustmentType_Values returns all elements of the AdjustmentType enum
+func AdjustmentType_Values() []string {
+	return []string{
+		AdjustmentTypeChangeInCapacity,
+		AdjustmentTypePercentChangeInCapacity,
+		AdjustmentTypeExactCapacity,
+	}
+}
 
 const (
 	// AutoScalingPolicyStatePending is a AutoScalingPolicyState enum value
@@ -12018,6 +12037,18 @@ const (
 	AutoScalingPolicyStateFailed = "FAILED"
 )
 
+// AutoScalingPolicyState_Values returns all elements of the AutoScalingPolicyState enum
+func AutoScalingPolicyState_Values() []string {
+	return []string{
+		AutoScalingPolicyStatePending,
+		AutoScalingPolicyStateAttaching,
+		AutoScalingPolicyStateAttached,
+		AutoScalingPolicyStateDetaching,
+		AutoScalingPolicyStateDetached,
+		AutoScalingPolicyStateFailed,
+	}
+}
+
 const (
 	// AutoScalingPolicyStateChangeReasonCodeUserRequest is a AutoScalingPolicyStateChangeReasonCode enum value
 	AutoScalingPolicyStateChangeReasonCodeUserRequest = "USER_REQUEST"
@@ -12029,6 +12060,15 @@ const (
 	AutoScalingPolicyStateChangeReasonCodeCleanupFailure = "CLEANUP_FAILURE"
 )
 
+// AutoScalingPolicyStateChangeReasonCode_Values returns all elements of the AutoScalingPolicyStateChangeReasonCode enum
+func AutoScalingPolicyStateChangeReasonCode_Values() []string {
+	return []string{
+		AutoScalingPolicyStateChangeReasonCodeUserRequest,
+		AutoScalingPolicyStateChangeReasonCodeProvisionFailure,
+		AutoScalingPolicyStateChangeReasonCodeCleanupFailure,
+	}
+}
+
 const (
 	// CancelStepsRequestStatusSubmitted is a CancelStepsRequestStatus enum value
 	CancelStepsRequestStatusSubmitted = "SUBMITTED"
@@ -12036,6 +12076,14 @@ const (
 	// CancelStepsRequestStatusFailed is a CancelStepsRequestStatus enum value
 	CancelStepsRequestStatusFailed = "FAILED"
 )
+
+// CancelStepsRequestStatus_Values returns all elements of the CancelStepsRequestStatus enum
+func CancelStepsRequestStatus_Values() []string {
+	return []string{
+		CancelStepsRequestStatusSubmitted,
+		CancelStepsRequestStatusFailed,
+	}
+}
 
 const (
 	// ClusterStateStarting is a ClusterState enum value
@@ -12059,6 +12107,19 @@ const (
 	// ClusterStateTerminatedWithErrors is a ClusterState enum value
 	ClusterStateTerminatedWithErrors = "TERMINATED_WITH_ERRORS"
 )
+
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateStarting,
+		ClusterStateBootstrapping,
+		ClusterStateRunning,
+		ClusterStateWaiting,
+		ClusterStateTerminating,
+		ClusterStateTerminated,
+		ClusterStateTerminatedWithErrors,
+	}
+}
 
 const (
 	// ClusterStateChangeReasonCodeInternalError is a ClusterStateChangeReasonCode enum value
@@ -12086,6 +12147,20 @@ const (
 	ClusterStateChangeReasonCodeAllStepsCompleted = "ALL_STEPS_COMPLETED"
 )
 
+// ClusterStateChangeReasonCode_Values returns all elements of the ClusterStateChangeReasonCode enum
+func ClusterStateChangeReasonCode_Values() []string {
+	return []string{
+		ClusterStateChangeReasonCodeInternalError,
+		ClusterStateChangeReasonCodeValidationError,
+		ClusterStateChangeReasonCodeInstanceFailure,
+		ClusterStateChangeReasonCodeInstanceFleetTimeout,
+		ClusterStateChangeReasonCodeBootstrapFailure,
+		ClusterStateChangeReasonCodeUserRequest,
+		ClusterStateChangeReasonCodeStepFailure,
+		ClusterStateChangeReasonCodeAllStepsCompleted,
+	}
+}
+
 const (
 	// ComparisonOperatorGreaterThanOrEqual is a ComparisonOperator enum value
 	ComparisonOperatorGreaterThanOrEqual = "GREATER_THAN_OR_EQUAL"
@@ -12100,6 +12175,16 @@ const (
 	ComparisonOperatorLessThanOrEqual = "LESS_THAN_OR_EQUAL"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorGreaterThanOrEqual,
+		ComparisonOperatorGreaterThan,
+		ComparisonOperatorLessThan,
+		ComparisonOperatorLessThanOrEqual,
+	}
+}
+
 const (
 	// ComputeLimitsUnitTypeInstanceFleetUnits is a ComputeLimitsUnitType enum value
 	ComputeLimitsUnitTypeInstanceFleetUnits = "InstanceFleetUnits"
@@ -12111,6 +12196,15 @@ const (
 	ComputeLimitsUnitTypeVcpu = "VCPU"
 )
 
+// ComputeLimitsUnitType_Values returns all elements of the ComputeLimitsUnitType enum
+func ComputeLimitsUnitType_Values() []string {
+	return []string{
+		ComputeLimitsUnitTypeInstanceFleetUnits,
+		ComputeLimitsUnitTypeInstances,
+		ComputeLimitsUnitTypeVcpu,
+	}
+}
+
 const (
 	// InstanceCollectionTypeInstanceFleet is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceFleet = "INSTANCE_FLEET"
@@ -12118,6 +12212,14 @@ const (
 	// InstanceCollectionTypeInstanceGroup is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceGroup = "INSTANCE_GROUP"
 )
+
+// InstanceCollectionType_Values returns all elements of the InstanceCollectionType enum
+func InstanceCollectionType_Values() []string {
+	return []string{
+		InstanceCollectionTypeInstanceFleet,
+		InstanceCollectionTypeInstanceGroup,
+	}
+}
 
 const (
 	// InstanceFleetStateProvisioning is a InstanceFleetState enum value
@@ -12142,6 +12244,19 @@ const (
 	InstanceFleetStateTerminated = "TERMINATED"
 )
 
+// InstanceFleetState_Values returns all elements of the InstanceFleetState enum
+func InstanceFleetState_Values() []string {
+	return []string{
+		InstanceFleetStateProvisioning,
+		InstanceFleetStateBootstrapping,
+		InstanceFleetStateRunning,
+		InstanceFleetStateResizing,
+		InstanceFleetStateSuspended,
+		InstanceFleetStateTerminating,
+		InstanceFleetStateTerminated,
+	}
+}
+
 const (
 	// InstanceFleetStateChangeReasonCodeInternalError is a InstanceFleetStateChangeReasonCode enum value
 	InstanceFleetStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -12156,6 +12271,16 @@ const (
 	InstanceFleetStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
 
+// InstanceFleetStateChangeReasonCode_Values returns all elements of the InstanceFleetStateChangeReasonCode enum
+func InstanceFleetStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceFleetStateChangeReasonCodeInternalError,
+		InstanceFleetStateChangeReasonCodeValidationError,
+		InstanceFleetStateChangeReasonCodeInstanceFailure,
+		InstanceFleetStateChangeReasonCodeClusterTerminated,
+	}
+}
+
 const (
 	// InstanceFleetTypeMaster is a InstanceFleetType enum value
 	InstanceFleetTypeMaster = "MASTER"
@@ -12166,6 +12291,15 @@ const (
 	// InstanceFleetTypeTask is a InstanceFleetType enum value
 	InstanceFleetTypeTask = "TASK"
 )
+
+// InstanceFleetType_Values returns all elements of the InstanceFleetType enum
+func InstanceFleetType_Values() []string {
+	return []string{
+		InstanceFleetTypeMaster,
+		InstanceFleetTypeCore,
+		InstanceFleetTypeTask,
+	}
+}
 
 const (
 	// InstanceGroupStateProvisioning is a InstanceGroupState enum value
@@ -12202,6 +12336,23 @@ const (
 	InstanceGroupStateEnded = "ENDED"
 )
 
+// InstanceGroupState_Values returns all elements of the InstanceGroupState enum
+func InstanceGroupState_Values() []string {
+	return []string{
+		InstanceGroupStateProvisioning,
+		InstanceGroupStateBootstrapping,
+		InstanceGroupStateRunning,
+		InstanceGroupStateReconfiguring,
+		InstanceGroupStateResizing,
+		InstanceGroupStateSuspended,
+		InstanceGroupStateTerminating,
+		InstanceGroupStateTerminated,
+		InstanceGroupStateArrested,
+		InstanceGroupStateShuttingDown,
+		InstanceGroupStateEnded,
+	}
+}
+
 const (
 	// InstanceGroupStateChangeReasonCodeInternalError is a InstanceGroupStateChangeReasonCode enum value
 	InstanceGroupStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -12216,6 +12367,16 @@ const (
 	InstanceGroupStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
 
+// InstanceGroupStateChangeReasonCode_Values returns all elements of the InstanceGroupStateChangeReasonCode enum
+func InstanceGroupStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceGroupStateChangeReasonCodeInternalError,
+		InstanceGroupStateChangeReasonCodeValidationError,
+		InstanceGroupStateChangeReasonCodeInstanceFailure,
+		InstanceGroupStateChangeReasonCodeClusterTerminated,
+	}
+}
+
 const (
 	// InstanceGroupTypeMaster is a InstanceGroupType enum value
 	InstanceGroupTypeMaster = "MASTER"
@@ -12227,6 +12388,15 @@ const (
 	InstanceGroupTypeTask = "TASK"
 )
 
+// InstanceGroupType_Values returns all elements of the InstanceGroupType enum
+func InstanceGroupType_Values() []string {
+	return []string{
+		InstanceGroupTypeMaster,
+		InstanceGroupTypeCore,
+		InstanceGroupTypeTask,
+	}
+}
+
 const (
 	// InstanceRoleTypeMaster is a InstanceRoleType enum value
 	InstanceRoleTypeMaster = "MASTER"
@@ -12237,6 +12407,15 @@ const (
 	// InstanceRoleTypeTask is a InstanceRoleType enum value
 	InstanceRoleTypeTask = "TASK"
 )
+
+// InstanceRoleType_Values returns all elements of the InstanceRoleType enum
+func InstanceRoleType_Values() []string {
+	return []string{
+		InstanceRoleTypeMaster,
+		InstanceRoleTypeCore,
+		InstanceRoleTypeTask,
+	}
+}
 
 const (
 	// InstanceStateAwaitingFulfillment is a InstanceState enum value
@@ -12255,6 +12434,17 @@ const (
 	InstanceStateTerminated = "TERMINATED"
 )
 
+// InstanceState_Values returns all elements of the InstanceState enum
+func InstanceState_Values() []string {
+	return []string{
+		InstanceStateAwaitingFulfillment,
+		InstanceStateProvisioning,
+		InstanceStateBootstrapping,
+		InstanceStateRunning,
+		InstanceStateTerminated,
+	}
+}
+
 const (
 	// InstanceStateChangeReasonCodeInternalError is a InstanceStateChangeReasonCode enum value
 	InstanceStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -12271,6 +12461,17 @@ const (
 	// InstanceStateChangeReasonCodeClusterTerminated is a InstanceStateChangeReasonCode enum value
 	InstanceStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
+
+// InstanceStateChangeReasonCode_Values returns all elements of the InstanceStateChangeReasonCode enum
+func InstanceStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceStateChangeReasonCodeInternalError,
+		InstanceStateChangeReasonCodeValidationError,
+		InstanceStateChangeReasonCodeInstanceFailure,
+		InstanceStateChangeReasonCodeBootstrapFailure,
+		InstanceStateChangeReasonCodeClusterTerminated,
+	}
+}
 
 // The type of instance.
 const (
@@ -12299,6 +12500,20 @@ const (
 	JobFlowExecutionStateFailed = "FAILED"
 )
 
+// JobFlowExecutionState_Values returns all elements of the JobFlowExecutionState enum
+func JobFlowExecutionState_Values() []string {
+	return []string{
+		JobFlowExecutionStateStarting,
+		JobFlowExecutionStateBootstrapping,
+		JobFlowExecutionStateRunning,
+		JobFlowExecutionStateWaiting,
+		JobFlowExecutionStateShuttingDown,
+		JobFlowExecutionStateTerminated,
+		JobFlowExecutionStateCompleted,
+		JobFlowExecutionStateFailed,
+	}
+}
+
 const (
 	// MarketTypeOnDemand is a MarketType enum value
 	MarketTypeOnDemand = "ON_DEMAND"
@@ -12307,10 +12522,25 @@ const (
 	MarketTypeSpot = "SPOT"
 )
 
+// MarketType_Values returns all elements of the MarketType enum
+func MarketType_Values() []string {
+	return []string{
+		MarketTypeOnDemand,
+		MarketTypeSpot,
+	}
+}
+
 const (
 	// OnDemandProvisioningAllocationStrategyLowestPrice is a OnDemandProvisioningAllocationStrategy enum value
 	OnDemandProvisioningAllocationStrategyLowestPrice = "lowest-price"
 )
+
+// OnDemandProvisioningAllocationStrategy_Values returns all elements of the OnDemandProvisioningAllocationStrategy enum
+func OnDemandProvisioningAllocationStrategy_Values() []string {
+	return []string{
+		OnDemandProvisioningAllocationStrategyLowestPrice,
+	}
+}
 
 const (
 	// RepoUpgradeOnBootSecurity is a RepoUpgradeOnBoot enum value
@@ -12320,6 +12550,14 @@ const (
 	RepoUpgradeOnBootNone = "NONE"
 )
 
+// RepoUpgradeOnBoot_Values returns all elements of the RepoUpgradeOnBoot enum
+func RepoUpgradeOnBoot_Values() []string {
+	return []string{
+		RepoUpgradeOnBootSecurity,
+		RepoUpgradeOnBootNone,
+	}
+}
+
 const (
 	// ScaleDownBehaviorTerminateAtInstanceHour is a ScaleDownBehavior enum value
 	ScaleDownBehaviorTerminateAtInstanceHour = "TERMINATE_AT_INSTANCE_HOUR"
@@ -12328,10 +12566,25 @@ const (
 	ScaleDownBehaviorTerminateAtTaskCompletion = "TERMINATE_AT_TASK_COMPLETION"
 )
 
+// ScaleDownBehavior_Values returns all elements of the ScaleDownBehavior enum
+func ScaleDownBehavior_Values() []string {
+	return []string{
+		ScaleDownBehaviorTerminateAtInstanceHour,
+		ScaleDownBehaviorTerminateAtTaskCompletion,
+	}
+}
+
 const (
 	// SpotProvisioningAllocationStrategyCapacityOptimized is a SpotProvisioningAllocationStrategy enum value
 	SpotProvisioningAllocationStrategyCapacityOptimized = "capacity-optimized"
 )
+
+// SpotProvisioningAllocationStrategy_Values returns all elements of the SpotProvisioningAllocationStrategy enum
+func SpotProvisioningAllocationStrategy_Values() []string {
+	return []string{
+		SpotProvisioningAllocationStrategyCapacityOptimized,
+	}
+}
 
 const (
 	// SpotProvisioningTimeoutActionSwitchToOnDemand is a SpotProvisioningTimeoutAction enum value
@@ -12340,6 +12593,14 @@ const (
 	// SpotProvisioningTimeoutActionTerminateCluster is a SpotProvisioningTimeoutAction enum value
 	SpotProvisioningTimeoutActionTerminateCluster = "TERMINATE_CLUSTER"
 )
+
+// SpotProvisioningTimeoutAction_Values returns all elements of the SpotProvisioningTimeoutAction enum
+func SpotProvisioningTimeoutAction_Values() []string {
+	return []string{
+		SpotProvisioningTimeoutActionSwitchToOnDemand,
+		SpotProvisioningTimeoutActionTerminateCluster,
+	}
+}
 
 const (
 	// StatisticSampleCount is a Statistic enum value
@@ -12358,6 +12619,17 @@ const (
 	StatisticMaximum = "MAXIMUM"
 )
 
+// Statistic_Values returns all elements of the Statistic enum
+func Statistic_Values() []string {
+	return []string{
+		StatisticSampleCount,
+		StatisticAverage,
+		StatisticSum,
+		StatisticMinimum,
+		StatisticMaximum,
+	}
+}
+
 const (
 	// StepCancellationOptionSendInterrupt is a StepCancellationOption enum value
 	StepCancellationOptionSendInterrupt = "SEND_INTERRUPT"
@@ -12365,6 +12637,14 @@ const (
 	// StepCancellationOptionTerminateProcess is a StepCancellationOption enum value
 	StepCancellationOptionTerminateProcess = "TERMINATE_PROCESS"
 )
+
+// StepCancellationOption_Values returns all elements of the StepCancellationOption enum
+func StepCancellationOption_Values() []string {
+	return []string{
+		StepCancellationOptionSendInterrupt,
+		StepCancellationOptionTerminateProcess,
+	}
+}
 
 const (
 	// StepExecutionStatePending is a StepExecutionState enum value
@@ -12389,6 +12669,19 @@ const (
 	StepExecutionStateInterrupted = "INTERRUPTED"
 )
 
+// StepExecutionState_Values returns all elements of the StepExecutionState enum
+func StepExecutionState_Values() []string {
+	return []string{
+		StepExecutionStatePending,
+		StepExecutionStateRunning,
+		StepExecutionStateContinue,
+		StepExecutionStateCompleted,
+		StepExecutionStateCancelled,
+		StepExecutionStateFailed,
+		StepExecutionStateInterrupted,
+	}
+}
+
 const (
 	// StepStatePending is a StepState enum value
 	StepStatePending = "PENDING"
@@ -12412,10 +12705,30 @@ const (
 	StepStateInterrupted = "INTERRUPTED"
 )
 
+// StepState_Values returns all elements of the StepState enum
+func StepState_Values() []string {
+	return []string{
+		StepStatePending,
+		StepStateCancelPending,
+		StepStateRunning,
+		StepStateCompleted,
+		StepStateCancelled,
+		StepStateFailed,
+		StepStateInterrupted,
+	}
+}
+
 const (
 	// StepStateChangeReasonCodeNone is a StepStateChangeReasonCode enum value
 	StepStateChangeReasonCodeNone = "NONE"
 )
+
+// StepStateChangeReasonCode_Values returns all elements of the StepStateChangeReasonCode enum
+func StepStateChangeReasonCode_Values() []string {
+	return []string{
+		StepStateChangeReasonCodeNone,
+	}
+}
 
 const (
 	// UnitNone is a Unit enum value
@@ -12499,3 +12812,36 @@ const (
 	// UnitCountPerSecond is a Unit enum value
 	UnitCountPerSecond = "COUNT_PER_SECOND"
 )
+
+// Unit_Values returns all elements of the Unit enum
+func Unit_Values() []string {
+	return []string{
+		UnitNone,
+		UnitSeconds,
+		UnitMicroSeconds,
+		UnitMilliSeconds,
+		UnitBytes,
+		UnitKiloBytes,
+		UnitMegaBytes,
+		UnitGigaBytes,
+		UnitTeraBytes,
+		UnitBits,
+		UnitKiloBits,
+		UnitMegaBits,
+		UnitGigaBits,
+		UnitTeraBits,
+		UnitPercent,
+		UnitCount,
+		UnitBytesPerSecond,
+		UnitKiloBytesPerSecond,
+		UnitMegaBytesPerSecond,
+		UnitGigaBytesPerSecond,
+		UnitTeraBytesPerSecond,
+		UnitBitsPerSecond,
+		UnitKiloBitsPerSecond,
+		UnitMegaBitsPerSecond,
+		UnitGigaBitsPerSecond,
+		UnitTeraBitsPerSecond,
+		UnitCountPerSecond,
+	}
+}

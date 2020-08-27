@@ -11,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -699,7 +699,7 @@ resource "aws_db_instance" "bar" {
   backup_retention_period = 0
   skip_final_snapshot     = true
 
-  option_group_name = "${aws_db_option_group.bar.name}"
+  option_group_name = aws_db_option_group.bar.name
 }
 
 resource "aws_db_option_group" "bar" {
@@ -746,7 +746,7 @@ data "aws_iam_policy_document" "rds_assume_role" {
 
 resource "aws_iam_role" "sql_server_backup" {
   name               = "rds-backup-%s"
-  assume_role_policy = "${data.aws_iam_policy_document.rds_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.rds_assume_role.json
 }
 
 resource "aws_db_option_group" "bar" {
@@ -760,7 +760,7 @@ resource "aws_db_option_group" "bar" {
 
     option_settings {
       name  = "IAM_ROLE_ARN"
-      value = "${aws_iam_role.sql_server_backup.arn}"
+      value = aws_iam_role.sql_server_backup.arn
     }
   }
 }
@@ -830,7 +830,7 @@ resource "aws_db_option_group" "bar" {
     port        = "3872"
     version     = "%[2]s"
 
-    vpc_security_group_memberships = ["${aws_security_group.foo.id}"]
+    vpc_security_group_memberships = [aws_security_group.foo.id]
 
     option_settings {
       name  = "OMS_PORT"

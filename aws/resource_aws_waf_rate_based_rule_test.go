@@ -5,14 +5,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
@@ -114,10 +115,9 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSWafRuleDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRateBasedRuleConfig(ruleName),
@@ -127,8 +127,10 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					computeWafRateBasedRulePredicateWithIpSet(&ipset, false, "IPMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.negated", &idx, "false"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.type", &idx, "IPMatch"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
+						"negated": "false",
+						"type":    "IPMatch",
+					}),
 				),
 			},
 			{
@@ -139,8 +141,10 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					computeWafRateBasedRulePredicateWithByteMatchSet(&byteMatchSet, true, "ByteMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.negated", &idx, "true"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicates.%d.type", &idx, "ByteMatch"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
+						"negated": "true",
+						"type":    "ByteMatch",
+					}),
 				),
 			},
 			{
@@ -381,14 +385,14 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
   rate_key    = "IP"
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -408,14 +412,14 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "%s"
   metric_name = "%s"
   rate_key    = "IP"
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -456,7 +460,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicates {
-    data_id = "${aws_waf_byte_match_set.set.id}"
+    data_id = aws_waf_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }
@@ -484,7 +488,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   tags = {
-  	%q = %q
+    %q = %q
   }
 }
 `, name, name, tag1Key, tag1Value)
@@ -499,8 +503,8 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   tags = {
-  	%q = %q
-  	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, name, name, tag1Key, tag1Value, tag2Key, tag2Value)

@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -58,9 +58,11 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).ec2conn
 
 	createOpts := &ec2.CreateVpnGatewayInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		Type:             aws.String(ec2.GatewayTypeIpsec1),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		Type:              aws.String(ec2.GatewayTypeIpsec1),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpnGateway),
 	}
+
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
 		i, err := strconv.ParseInt(asn.(string), 10, 64)
 		if err != nil {
@@ -81,12 +83,6 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 	if _, ok := d.GetOk("vpc_id"); ok {
 		if err := resourceAwsVpnGatewayAttach(d, meta); err != nil {
 			return fmt.Errorf("error attaching EC2 VPN Gateway (%s) to VPC: %s", d.Id(), err)
-		}
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}
 
