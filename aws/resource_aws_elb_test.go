@@ -1952,7 +1952,7 @@ resource "aws_subnet" "public_a_two" {
 }
 
 resource "aws_elb" "test" {
-  name = "terraform-asg-deployment-2-1"
+  name = "terraform-asg-deployment-example"
 
   subnets = [
     aws_subnet.public_a_two.id,
