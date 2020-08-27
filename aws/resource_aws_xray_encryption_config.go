@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/xray/waiter"
@@ -52,7 +51,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.PutEncryptionConfig(input)
 	if err != nil {
-		return fmt.Errorf("error creating XRay Encryption Config: %s", err)
+		return fmt.Errorf("error creating XRay Encryption Config: %w", err)
 	}
 
 	d.SetId(meta.(*AWSClient).region)
@@ -70,7 +69,7 @@ func resourceAwsXrayEncryptionConfigRead(d *schema.ResourceData, meta interface{
 	config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading XRay Encryption Config: %s", err)
+		return fmt.Errorf("error reading XRay Encryption Config: %w", err)
 	}
 
 	d.Set("key_id", config.EncryptionConfig.KeyId)
