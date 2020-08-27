@@ -613,6 +613,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 									"allocation_strategy": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(emr.OnDemandProvisioningAllocationStrategy_Values(), false),
 									},
 								},
@@ -761,12 +762,12 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if l := d.Get("master_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceGroupTypeMaster)
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceFleetTypeMaster)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
 	}
 
 	if l := d.Get("core_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceGroupTypeCore)
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceFleetTypeCore)
 		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
 	}
 
@@ -2201,14 +2202,14 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 			config.Classification = aws.String(v)
 		}
 
-		if rawConfig, ok := configAttributes["configurations"]; ok {
-			config.Configurations = expandConfigurations(rawConfig.([]interface{}))
+		if v, ok := configAttributes["configurations"].([]interface{}); ok {
+			config.Configurations = expandConfigurations(v)
 		}
 
-		if v, ok := configAttributes["properties"]; ok {
+		if v, ok := configAttributes["properties"].(map[string]interface{}); ok {
 			properties := make(map[string]string)
-			for k, v := range v.(map[string]interface{}) {
-				properties[k] = v.(string)
+			for k, pv := range v {
+				properties[k] = pv.(string)
 			}
 			config.Properties = aws.StringMap(properties)
 		}

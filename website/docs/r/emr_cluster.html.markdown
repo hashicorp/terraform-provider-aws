@@ -489,13 +489,12 @@ Supported nested arguments for the `core_instance_fleet` configuration block:
 * `instance_type` - (Required) An EC2 instance type, such as m4.xlarge.
 * `weighted_capacity` - (Optional) The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `aws_emr_instance_fleet`.
 
-
 ## configurations Configuration Block
+
 A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. See [Configuring Applications](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-configure-apps.html).
 
-* `classification` - The classification within a configuration.
-
-* `properties` - A set of properties specified within a configuration classification
+* `classification` - (Optional) The classification within a configuration.
+* `properties` - (Optional) A map of properties specified within a configuration classification
 
 ## Attributes Reference
 
