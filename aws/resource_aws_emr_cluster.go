@@ -1968,10 +1968,10 @@ func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.Instance
 	return groups, err
 }
 
-func readInstanceFleetConfig(data map[string]interface{}, instanceGroupType string) *emr.InstanceFleetConfig {
+func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType string) *emr.InstanceFleetConfig {
 
 	config := &emr.InstanceFleetConfig{
-		InstanceFleetType:      &instanceGroupType,
+		InstanceFleetType:      &InstanceFleetType,
 		Name:                   aws.String(data["name"].(string)),
 		TargetOnDemandCapacity: aws.Int64(int64(data["target_on_demand_capacity"].(int))),
 		TargetSpotCapacity:     aws.Int64(int64(data["target_spot_capacity"].(int))),
