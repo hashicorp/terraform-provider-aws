@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -50,11 +49,13 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"zip_file"},
+				RequiredWith:  []string{"s3_key"},
 			},
 			"s3_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"zip_file"},
+				RequiredWith:  []string{"s3_bucket"},
 			},
 			"s3_version": {
 				Type:          schema.TypeString,
@@ -391,29 +392,20 @@ func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCo
 		Handler: aws.String(d.Get("handler").(string)),
 	}
 
-	zipFile, hasZipFile := d.GetOk("zip_file")
-	s3Bucket, bucketOk := d.GetOk("s3_bucket")
-	s3Key, keyOk := d.GetOk("s3_key")
-	s3Version, s3VersionOk := d.GetOk("s3_version")
-
-	if hasZipFile {
+	if v, ok := d.GetOk("zip_file"); ok {
 		awsMutexKV.Lock(awsMutexCanary)
 		defer awsMutexKV.Unlock(awsMutexCanary)
-		file, err := loadFileContent(zipFile.(string))
+		file, err := loadFileContent(v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("unable to load %q: %w", zipFile.(string), err)
+			return nil, fmt.Errorf("unable to load %q: %w", v.(string), err)
 		}
 		codeConfig.ZipFile = file
 	} else {
-		if !bucketOk || !keyOk {
-			return nil, errors.New("s3_bucket and s3_key must all be set while using S3 code source")
-		}
+		codeConfig.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+		codeConfig.S3Key = aws.String(d.Get("s3_key").(string))
 
-		codeConfig.S3Bucket = aws.String(s3Bucket.(string))
-		codeConfig.S3Key = aws.String(s3Key.(string))
-
-		if s3VersionOk {
-			codeConfig.S3Version = aws.String(s3Version.(string))
+		if v, ok := d.GetOk("s3_version"); ok {
+			codeConfig.S3Version = aws.String(v.(string))
 		}
 	}
 
