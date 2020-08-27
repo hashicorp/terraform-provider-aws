@@ -588,7 +588,7 @@ resource "aws_emr_cluster" "test" {
     target_spot_capacity      = 0
   }
 
-  service_role                      = "EMR_DefaultRole"
+  service_role      = "EMR_DefaultRole"
   ec2_attributes {
     instance_profile = "EMR_EC2_DefaultRole"
     subnet_id        = "subnet-01c9109ceb447a731"
