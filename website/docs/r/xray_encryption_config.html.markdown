@@ -10,6 +10,8 @@ description: |-
 
 Creates and manages an AWS XRay Encryption Config.
 
+~> **NOTE:** Removing this resource from Terraform has no effect to the encryption configuration within X-Ray.
+
 ## Example Usage
 
 ```hcl
