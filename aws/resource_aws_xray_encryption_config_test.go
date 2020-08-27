@@ -59,7 +59,7 @@ func testAccCheckXrayEncryptionConfigExists(n string, EncryptionConfig *xray.Enc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No XRay Sampling Rule ID is set")
+			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
 		conn := testAccProvider.Meta().(*AWSClient).xrayconn
 
