@@ -23,8 +23,9 @@ func resourceAwsXrayEncryptionConfig() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"type": {
 				Type:     schema.TypeString,
