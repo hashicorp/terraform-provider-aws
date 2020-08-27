@@ -258,7 +258,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("handler", canary.Code.Handler)
 	d.Set("source_location_arn", canary.Code.SourceLocationArn)
 
-	arn := arn.ARN{
+	canaryArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "synthetics",
 		Region:    meta.(*AWSClient).region,
@@ -266,7 +266,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 		Resource:  fmt.Sprintf("canary:%s", aws.StringValue(canary.Name)),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set("arn", canaryArn)
 
 	if err := d.Set("vpc_config", flattenAwsSyntheticsCanaryVpcConfig(canary.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc config: %w", err)
