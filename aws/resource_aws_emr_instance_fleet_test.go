@@ -149,16 +149,16 @@ func testAccCheckAWSEmrInstanceFleetExists(n string, v *emr.InstanceFleet) resou
 		}
 		meta := testAccProvider.Meta()
 		conn := meta.(*AWSClient).emrconn
-		f, err := fetchEMRInstanceFleet(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		instanceFleets, err := fetchAllEMRInstanceFleets(conn, rs.Primary.Attributes["cluster_id"])
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
 		}
 
-		if f == nil {
+		fleet := findInstanceFleetById(instanceFleets, rs.Primary.ID)
+		if fleet == nil {
 			return fmt.Errorf("No match found for (%s)", n)
 		}
-
-		v = f
+		v = fleet
 		return nil
 	}
 }
@@ -401,6 +401,7 @@ resource "aws_emr_cluster" "test" {
     }
     launch_specifications {
       spot_specification {
+        allocation_strategy      = "capacity-optimized"
         block_duration_minutes   = 0
         timeout_action           = "SWITCH_TO_ON_DEMAND"
         timeout_duration_minutes = 10
@@ -437,6 +438,7 @@ func testAccAWSEmrInstanceFleetConfig(r string) string {
         }
         launch_specifications {
           spot_specification {
+            allocation_strategy      = "capacity-optimized"
             block_duration_minutes   = 0
             timeout_action           = "SWITCH_TO_ON_DEMAND"
             timeout_duration_minutes = 10
@@ -462,6 +464,7 @@ func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
         }
         launch_specifications {
           spot_specification {
+            allocation_strategy      = "capacity-optimized"
             block_duration_minutes   = 0
             timeout_action           = "SWITCH_TO_ON_DEMAND"
             timeout_duration_minutes = 10
@@ -493,6 +496,7 @@ func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
         }
         launch_specifications {
           spot_specification {
+            allocation_strategy      = "capacity-optimized"
             block_duration_minutes   = 0
             timeout_action           = "SWITCH_TO_ON_DEMAND"
             timeout_duration_minutes = 10
@@ -507,7 +511,7 @@ func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 }
 
 func testAccAWSEmrInstanceFleetConfigFull(r string) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
+	return fmt.Sprintf(testAccAWSEmrInstanceFleetBaseCPP+`
     resource "aws_emr_instance_fleet" "task" {
       cluster_id            = "${aws_emr_cluster.test.id}"
       instance_fleet_type   = "TASK"
@@ -534,6 +538,7 @@ func testAccAWSEmrInstanceFleetConfigFull(r string) string {
         }
         launch_specifications {
           spot_specification {
+            allocation_strategy      = "capacity-optimized"
             block_duration_minutes   = 0
             timeout_action           = "SWITCH_TO_ON_DEMAND"
             timeout_duration_minutes = 10
@@ -547,3 +552,46 @@ func testAccAWSEmrInstanceFleetConfigFull(r string) string {
     }
 `, r)
 }
+
+const testAccAWSEmrInstanceFleetBaseCPP = `
+resource "aws_emr_cluster" "test" {
+  name                 = "%[1]s"
+  release_label        = "emr-5.30.1"
+  applications         = ["Hadoop", "Hive"]
+  master_instance_fleet    {
+    instance_type_configs        {
+          instance_type = "m3.xlarge"
+        }
+      target_on_demand_capacity = 1
+    }
+  core_instance_fleet {
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.xlarge"
+      weighted_capacity = 1
+    }
+    launch_specifications {
+      spot_specification {
+        allocation_strategy      = "capacity-optimized"
+        block_duration_minutes   = 0
+        timeout_action           = "SWITCH_TO_ON_DEMAND"
+        timeout_duration_minutes = 10
+      }
+    }
+    name                      = "core fleet"
+    target_on_demand_capacity = 1
+    target_spot_capacity      = 0
+  }
+
+  service_role                      = "EMR_DefaultRole"
+  ec2_attributes {
+    instance_profile = "EMR_EC2_DefaultRole"
+    subnet_id        = "subnet-01c9109ceb447a731"
+  }
+}
+`
