@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	emrInstanceGroupCreateTimeout = 15 * time.Minute
-	emrInstanceGroupUpdateTimeout = 15 * time.Minute
+	emrInstanceGroupCreateTimeout = 30 * time.Minute
+	emrInstanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func resourceAwsEMRInstanceGroup() *schema.Resource {
