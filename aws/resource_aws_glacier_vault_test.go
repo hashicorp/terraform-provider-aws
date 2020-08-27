@@ -91,6 +91,8 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "glacier", regexp.MustCompile(`vaults/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
 				),
 			},
 			{
