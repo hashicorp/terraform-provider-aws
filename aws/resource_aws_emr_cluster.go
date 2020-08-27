@@ -605,7 +605,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"on_demand_specification": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
@@ -621,7 +621,7 @@ func InstanceFleetConfigSchema() *schema.Resource {
 						},
 						"spot_specification": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
