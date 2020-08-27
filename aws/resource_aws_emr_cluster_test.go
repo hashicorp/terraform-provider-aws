@@ -3515,6 +3515,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     }
     launch_specifications {
       spot_specification {
+		allocation_strategy      = "capacity-optimized"
         block_duration_minutes   = 0
         timeout_action           = "SWITCH_TO_ON_DEMAND"
         timeout_duration_minutes = 10
