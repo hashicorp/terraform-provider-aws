@@ -165,13 +165,30 @@ func TestAccAWSGlacierVault_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
+					resource.TestMatchResourceAttr(resourceName, "access_policy",
+						regexp.MustCompile(`"Sid":"cross-account-upload".+`)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlacierVaultPolicyConfigUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlacierVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestMatchResourceAttr(resourceName, "access_policy",
+						regexp.MustCompile(`"Sid":"cross-account-upload1".+`)),
+				),
+			},
+			{
+				Config: testAccGlacierVaultBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlacierVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
+				),
 			},
 		},
 	})
@@ -371,6 +388,39 @@ resource "aws_glacier_vault" "test" {
     "Statement":[
        {
           "Sid":"cross-account-upload",
+          "Principal": {
+             "AWS": ["*"]
+          },
+          "Effect":"Allow",
+          "Action": [
+             "glacier:InitiateMultipartUpload",
+             "glacier:AbortMultipartUpload",
+             "glacier:CompleteMultipartUpload"
+          ],
+          "Resource": ["arn:aws:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
+       }
+    ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccGlacierVaultPolicyConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_glacier_vault" "test" {
+  name = %[1]q
+
+  access_policy = <<EOF
+{
+    "Version":"2012-10-17",
+    "Statement":[
+       {
+          "Sid":"cross-account-upload1",
           "Principal": {
              "AWS": ["*"]
           },
