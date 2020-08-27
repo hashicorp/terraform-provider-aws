@@ -357,10 +357,10 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 	s3conn := meta.(*AWSClient).s3conn
 
 	var err error
-	_, err = s3conn.HeadBucket(&s3.HeadBucketInput{
+	_, err = s3conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
 		Bucket: aws.String(d.Id()),
 	})
-	if err != nil {
+	if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() == 404 {
 			log.Printf("[WARN] S3 Bucket (%s) not found, error code (404)", d.Id())
 			d.SetId("")

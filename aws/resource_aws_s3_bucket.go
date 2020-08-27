@@ -69,16 +69,16 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acl": {
-				Type:          schema.TypeString,
-				Default:       "private",
-				Optional:      true,
+				Type:     schema.TypeString,
+				Default:  "private",
+				Optional: true,
 				// ConflictsWith: []string{"grant"},
 			},
 
 			"grant": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Set:           grantHash,
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      grantHash,
 				// ConflictsWith: []string{"acl"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -820,12 +820,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &s3.HeadBucketInput{
+	input := &s3.GetBucketEncryptionInput{
 		Bucket: aws.String(d.Id()),
 	}
 
 	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
-		_, err := s3conn.HeadBucket(input)
+		_, err := s3conn.GetBucketEncryption(input)
 
 		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
 			return resource.RetryableError(err)
@@ -835,7 +835,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 
-		if err != nil {
+		if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
 			return resource.NonRetryableError(err)
 		}
 
@@ -843,7 +843,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = s3conn.HeadBucket(input)
+		_, err = s3conn.GetBucketEncryption(input)
 	}
 
 	if isAWSErrRequestFailureStatusCode(err, 404) || isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
