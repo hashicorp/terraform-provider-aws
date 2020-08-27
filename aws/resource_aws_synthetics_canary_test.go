@@ -39,7 +39,10 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					//todo: add lambda arns, role arn, s3 validations
+					testAccMatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 				),
 			},
 			{
