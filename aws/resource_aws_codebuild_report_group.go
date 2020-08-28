@@ -165,23 +165,17 @@ func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interfac
 		Arn: aws.String(d.Id()),
 	}
 
-	updateNeeded := false
-
 	if d.HasChange("export_config") {
 		input.ExportConfig = expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{}))
-		updateNeeded = true
 	}
 
 	if d.HasChange("tags") {
 		input.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags()
-		updateNeeded = true
 	}
 
-	if updateNeeded {
-		_, err := conn.UpdateReportGroup(input)
-		if err != nil {
-			return fmt.Errorf("error updating CodeBuild Report Groups: %w", err)
-		}
+	_, err := conn.UpdateReportGroup(input)
+	if err != nil {
+		return fmt.Errorf("error updating CodeBuild Report Groups: %w", err)
 	}
 
 	return resourceAwsCodeBuildReportGroupRead(d, meta)
