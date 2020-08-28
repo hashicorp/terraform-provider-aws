@@ -222,7 +222,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 
 	output, err = snsconn.Subscribe(req)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating SNS topic: %s", err)
+		return nil, fmt.Errorf("Error creating SNS topic subscription: %s", err)
 	}
 
 	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
