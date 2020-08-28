@@ -199,7 +199,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSVolume_updateIops(t *testing.T) {
+func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
@@ -210,7 +210,7 @@ func TestAccAWSEBSVolume_updateIops(t *testing.T) {
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigWithIops,
+				Config: testAccAwsEbsVolumeConfigWithIopsIo1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
@@ -222,7 +222,40 @@ func TestAccAWSEBSVolume_updateIops(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigWithIopsUpdated,
+				Config: testAccAwsEbsVolumeConfigWithIopsIo1Updated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfigWithIopsIo2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsEbsVolumeConfigWithIopsIo2Updated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
@@ -646,7 +679,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIops = `
+const testAccAwsEbsVolumeConfigWithIopsIo1 = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -668,7 +701,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIopsUpdated = `
+const testAccAwsEbsVolumeConfigWithIopsIo1Updated = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -681,6 +714,50 @@ data "aws_availability_zones" "available" {
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "io1"
+  size              = 4
+  iops              = 200
+
+  tags = {
+    Name = "tf-acc-test-ebs-volume-test"
+  }
+}
+`
+
+const testAccAwsEbsVolumeConfigWithIopsIo2 = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "io2"
+  size              = 4
+  iops              = 100
+
+  tags = {
+    Name = "tf-acc-test-ebs-volume-test"
+  }
+}
+`
+
+const testAccAwsEbsVolumeConfigWithIopsIo2Updated = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "io2"
   size              = 4
   iops              = 200
 
