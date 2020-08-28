@@ -7,6 +7,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_emr_cluster: Prevent recreation when `ebs_config.volumes_per_instance` is greater than 1 [GH-14858]
 * resource/aws_opsworks_stack: Suppress equivalent `custom_json` differences [GH-14886]
 * resource/aws_rds_cluster_endpoint: Increase creation timeout to 30 minutes [GH-14862]
 
