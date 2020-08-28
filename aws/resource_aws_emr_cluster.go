@@ -1411,7 +1411,7 @@ func flattenEmrStepSummary(stepSummary *emr.StepSummary) map[string]interface{} 
 }
 
 func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
-
+	uniqueEBS := make(map[int]int)
 	ebsConfig := make([]interface{}, 0)
 	for _, ebs := range ebsBlockDevices {
 		ebsAttrs := make(map[string]interface{})
@@ -1425,10 +1425,13 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 			ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
 		}
 		ebsAttrs["volumes_per_instance"] = 1
-
+		uniqueEBS[resourceAwsEMRClusterEBSConfigHash(ebsAttrs)] += 1
 		ebsConfig = append(ebsConfig, ebsAttrs)
 	}
 
+	for _, ebs := range ebsConfig {
+		ebs.(map[string]interface{})["volumes_per_instance"] = uniqueEBS[resourceAwsEMRClusterEBSConfigHash(ebs)]
+	}
 	return schema.NewSet(resourceAwsEMRClusterEBSConfigHash, ebsConfig)
 }
 
