@@ -125,6 +125,7 @@ func resourceAwsEc2TransitGatewayMulticastDomainCreate(d *schema.ResourceData, m
 func resourceAwsEc2TransitGatewayMulticastDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	multicastDomain, err := ec2DescribeTransitGatewayMulticastDomain(conn, id)
 	if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
@@ -158,7 +159,7 @@ func resourceAwsEc2TransitGatewayMulticastDomainRead(d *schema.ResourceData, met
 		return nil
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(multicastDomain.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(multicastDomain.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error settings tags: %s", err)
 	}
 
