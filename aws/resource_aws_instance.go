@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1341,6 +1342,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("Error updating metadata options: %s", err)
 				}
+
 				stateConf := &resource.StateChangeConf{
 					Pending:    []string{ec2.InstanceMetadataOptionsStatePending},
 					Target:     []string{ec2.InstanceMetadataOptionsStateApplied},
@@ -1436,6 +1438,20 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("error modifying delete on termination attribute for EC2 instance %q block device %q: %w", d.Id(), deviceName, err)
 				}
+
+				stateConf := &resource.StateChangeConf{
+					Target:     []string{strconv.FormatBool(v)},
+					Refresh:    RootBlockDeviceDeleteOnTerminationRefreshFunc(conn, d.Id()),
+					Timeout:    d.Timeout(schema.TimeoutUpdate),
+					Delay:      10 * time.Second,
+					MinTimeout: 3 * time.Second,
+				}
+
+				_, err = stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf("Error waiting for instance (%s) to apply DeleteOnTermination attribute update: %s",
+						d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1510,6 +1526,36 @@ func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.State
 		state := aws.StringValue(instance.MetadataOptions.State)
 
 		return instance, state, nil
+	}
+}
+
+// RootBlockDeviceDeleteOnTerminationRefreshFunc returns a resource.StateRefreshFunc
+// that is used to watch changes in an EC2 instance's root block device's delete on termination attribute.
+func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		if err != nil {
+			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+				log.Printf("Error on InstanceStateRefresh: %s", err)
+				return nil, "", err
+			}
+		}
+
+		if instance == nil || len(instance.BlockDeviceMappings) == 0 {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		var deleteOnTermination string
+		for _, bd := range instance.BlockDeviceMappings {
+			if blockDeviceIsRoot(bd, instance) {
+				deleteOnTermination = strconv.FormatBool(aws.BoolValue(bd.Ebs.DeleteOnTermination))
+				break
+			}
+		}
+
+		return instance, deleteOnTermination, nil
 	}
 }
 
