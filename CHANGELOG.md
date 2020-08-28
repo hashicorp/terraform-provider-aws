@@ -1,4 +1,9 @@
 ## 3.5.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
+
 ## 3.4.0 (August 27, 2020)
 
 FEATURES
