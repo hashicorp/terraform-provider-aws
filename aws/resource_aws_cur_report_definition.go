@@ -29,37 +29,37 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					costandusagereportservice.TimeUnitDaily,
-					costandusagereportservice.TimeUnitHourly,
-				}, false),
+				ValidateFunc: validation.StringInSlice(
+					costandusagereportservice.TimeUnit_Values(),
+					false,
+				),
 			},
 			"format": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					costandusagereportservice.ReportFormatTextOrcsv,
-					costandusagereportservice.ReportFormatParquet,
-				}, false),
+				ValidateFunc: validation.StringInSlice(
+					costandusagereportservice.ReportFormat_Values(),
+					false,
+				),
 			},
 			"compression": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					costandusagereportservice.CompressionFormatGzip,
-					costandusagereportservice.CompressionFormatZip,
-					costandusagereportservice.CompressionFormatParquet,
-				}, false),
+				ValidateFunc: validation.StringInSlice(
+					costandusagereportservice.CompressionFormat_Values(),
+					false,
+				),
 			},
 			"additional_schema_elements": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						costandusagereportservice.SchemaElementResources,
-					}, false),
+					ValidateFunc: validation.StringInSlice(
+						costandusagereportservice.SchemaElement_Values(),
+						false,
+					),
 				},
 				Set:      schema.HashString,
 				Required: true,
@@ -84,11 +84,10 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			"additional_artifacts": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						costandusagereportservice.AdditionalArtifactQuicksight,
-						costandusagereportservice.AdditionalArtifactRedshift,
-						costandusagereportservice.AdditionalArtifactAthena,
-					}, false),
+					ValidateFunc: validation.StringInSlice(
+						costandusagereportservice.AdditionalArtifact_Values(),
+						false,
+					),
 				},
 				Set:      schema.HashString,
 				Optional: true,
@@ -105,10 +104,10 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 				Default:  costandusagereportservice.ReportVersioningCreateNewReport,
-				ValidateFunc: validation.StringInSlice([]string{
-					costandusagereportservice.ReportVersioningCreateNewReport,
-					costandusagereportservice.ReportVersioningOverwriteReport,
-				}, false),
+				ValidateFunc: validation.StringInSlice(
+					costandusagereportservice.ReportVersioning_Values(),
+					false,
+				),
 			},
 		},
 	}
