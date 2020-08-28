@@ -123,12 +123,9 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	prefix := aws.String(d.Get("s3_prefix").(string))
 	reportVersioning := aws.String(d.Get("report_versioning").(string))
 
-	// had some pointer addressing issues
 	additionalArtifactsList := make([]string, 0)
 	for i := 0; i < len(additionalArtifacts); i++ {
-		var artifact string
-		artifact = *additionalArtifacts[i]
-		additionalArtifactsList = append(additionalArtifactsList, artifact)
+		additionalArtifactsList = append(additionalArtifactsList, *additionalArtifacts[i])
 	}
 
 	err := checkAwsCurReportDefinitionPropertyCombination(
