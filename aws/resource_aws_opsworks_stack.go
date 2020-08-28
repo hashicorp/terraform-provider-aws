@@ -131,8 +131,9 @@ func resourceAwsOpsworksStack() *schema.Resource {
 			},
 
 			"custom_json": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 
 			"default_availability_zone": {
