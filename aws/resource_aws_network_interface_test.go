@@ -118,13 +118,30 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 					testAccCheckAWSENIAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIIPV6MultipleConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					testAccCheckAWSENIAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSENIIPV6Config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &conf),
+					testAccCheckAWSENIAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
 			},
 		},
 	})
@@ -293,7 +310,6 @@ func TestAccAWSENI_attached(t *testing.T) {
 					testAccCheckAWSENIAttributesWithAttachment(&conf),
 					testAccCheckAWSENIAvailabilityZone("data.aws_availability_zones.available", "names.0", &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test_interface"),
 				),
 			},
 			{
@@ -724,6 +740,16 @@ resource "aws_network_interface" "test" {
   subnet_id       = aws_subnet.test.id
   private_ips     = ["172.16.10.100"]
   ipv6_addresses  = [cidrhost(aws_subnet.test.ipv6_cidr_block, 4)]
+  security_groups = [aws_security_group.test.id]
+  description     = "Managed by Terraform"
+}
+`
+
+const testAccAWSENIIPV6MultipleConfig = testAccAWSENIIPV6ConfigBase + `
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  ipv6_addresses  = [cidrhost(aws_subnet.test.ipv6_cidr_block, 4), cidrhost(aws_subnet.test.ipv6_cidr_block, 8)]
   security_groups = [aws_security_group.test.id]
   description     = "Managed by Terraform"
 }
