@@ -7,6 +7,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_opsworks_stack: Suppress equivalent `custom_json` differences [GH-14886]
 * resource/aws_rds_cluster_endpoint: Increase creation timeout to 30 minutes [GH-14862]
 
 ## 3.4.0 (August 27, 2020)
