@@ -71,7 +71,7 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(opsworks.SourceType_Values(), false),
+							ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
 						"url": {
