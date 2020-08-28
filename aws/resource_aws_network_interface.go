@@ -41,10 +41,9 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 
 			"private_ip": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsIPv4Address,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 
 			"private_dns_name": {
@@ -56,10 +55,7 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsIPv4Address,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"private_ips_count": {
