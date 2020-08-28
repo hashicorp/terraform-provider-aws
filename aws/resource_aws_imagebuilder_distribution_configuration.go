@@ -38,7 +38,6 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"distributions": {
@@ -47,7 +46,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ami_distribution_configuration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -55,7 +54,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 									"ami_tags": tagsSchema(),
 									"description": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"kms_key_id": {
@@ -64,7 +63,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
 									"launch_permission": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -90,7 +89,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 									},
 									"name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 127),
 											validation.StringMatch(regexp.MustCompile(`^[-_A-Za-z0-9{][-_A-Za-z0-9\s:{}]+[-_A-Za-z0-9}]$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
@@ -273,8 +272,8 @@ func expandAwsImageBuilderDistribution(data map[string]interface{}) imagebuilder
 	}
 
 	if v, ok := data["ami_distribution_configuration"]; ok {
-		if len(v.(*schema.Set).List()) > 0 {
-			adc := v.(*schema.Set).List()[0].(map[string]interface{})
+		if len(v.([]interface{})) > 0 {
+			adc := v.([]interface{})[0].(map[string]interface{})
 
 			amidistconfig := imagebuilder.AmiDistributionConfiguration{
 				Description: aws.String((adc["description"]).(string)),
@@ -285,9 +284,9 @@ func expandAwsImageBuilderDistribution(data map[string]interface{}) imagebuilder
 				amidistconfig.KmsKeyId = aws.String(adc["kms_key_id"].(string))
 			}
 
-			if len(adc["launch_permission"].(*schema.Set).List()) > 0 {
+			if len(adc["launch_permission"].([]interface{})) > 0 {
 
-				lp := adc["launch_permission"].(*schema.Set).List()[0].(map[string]interface{})
+				lp := adc["launch_permission"].([]interface{})[0].(map[string]interface{})
 
 				launchperm := imagebuilder.LaunchPermissionConfiguration{
 					UserGroups: aws.StringSlice(sIfTosString(lp["user_groups"].(*schema.Set).List())),

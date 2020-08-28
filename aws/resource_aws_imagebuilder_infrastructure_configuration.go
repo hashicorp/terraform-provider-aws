@@ -144,6 +144,9 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 	if v, ok := d.GetOk("subnet_id"); ok {
 		input.SetSubnetId(v.(string))
 	}
+	if v, ok := d.GetOk("terminate_instance_on_failure"); ok {
+		input.SetTerminateInstanceOnFailure(v.(bool))
+	}
 	if v, ok := d.GetOk("tags"); ok {
 		input.SetTags(keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags())
 	}

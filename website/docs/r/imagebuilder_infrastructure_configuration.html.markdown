@@ -53,9 +53,11 @@ The following arguments are supported:
 
 ### Logging
 The logging object support the following blocks:
+
 * s3_logs
 
 The s3_logs block supports the following arguments:
+
 * `s3_bucket_name` - (Required) The name of the bucket to use.
 * `s3_key_prefix` - (Optional) The prefix to use for logs (Default: "/").
 

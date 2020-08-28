@@ -34,7 +34,7 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 			"distribution_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^arn:aws[^:]*:imagebuilder:[^:]+:(?:\\d{12}|aws):distribution-configuration/[a-z0-9-_]+$"), "valid distribution configuration ARN must be provided"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):distribution-configuration/[a-z0-9-_]+$`), "valid distribution configuration ARN must be provided"),
 			},
 			"enhanced_image_metadata_enabled": {
 				Type:     schema.TypeBool,
@@ -45,7 +45,7 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true, // this should be updatable, but recreating the recipe causes TF to error saying it's depended on by other resources, the pipeline
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^arn:aws[^:]*:imagebuilder:[^:]+:(?:\\d{12}|aws):image-recipe/[a-z0-9-_]+/\\d+\\.\\d+\\.\\d+$"), "valid image recipe ARN must be provided"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -71,7 +71,7 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^arn:aws[^:]*:imagebuilder:[^:]+:(?:\\d{12}|aws):infrastructure-configuration/[a-z0-9-_]+$"), "valid infrastructure configuration ARN must be provided"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[a-z0-9-_]+$`), "valid infrastructure configuration ARN must be provided"),
 			},
 			"name": {
 				Type:         schema.TypeString,
