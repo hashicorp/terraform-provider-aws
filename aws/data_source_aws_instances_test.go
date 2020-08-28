@@ -128,8 +128,8 @@ resource "aws_instance" "test" {
 
 data "aws_instances" "test" {
   instance_tags = {
-    Name      = aws_instance.test.0.tags["Name"]
-    SecondTag = aws_instance.test.1.tags["Name"]
+    Name      = aws_instance.test[0].tags["Name"]
+    SecondTag = aws_instance.test[1].tags["Name"]
   }
 }
 `, rInt, rInt)
@@ -165,7 +165,7 @@ resource "aws_instance" "test" {
 
 data "aws_instances" "test" {
   instance_tags = {
-    Name = aws_instance.test.0.tags["Name"]
+    Name = aws_instance.test[0].tags["Name"]
   }
 
   instance_state_names = ["pending", "running"]
