@@ -48,9 +48,9 @@ resource "aws_codebuild_report_group" "example" {
     type = "S3"
 
     s3_destination {
-      bucket              = "${aws_s3_bucket.example.id}"
+      bucket              = aws_s3_bucket.example.id
       encryption_disabled = false
-      encryption_key      = "${aws_kms_key.example.arn}"
+      encryption_key      = aws_kms_key.example.arn
       packaging           = "NONE"
       path                = "/some"
     }

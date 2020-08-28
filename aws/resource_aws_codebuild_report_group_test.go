@@ -266,9 +266,9 @@ resource "aws_codebuild_report_group" "test" {
     type = "S3"
 
     s3_destination {
-      bucket              = "${aws_s3_bucket.test.id}"
+      bucket              = aws_s3_bucket.test.id
       encryption_disabled = false
-      encryption_key      = "${aws_kms_key.test.arn}"
+      encryption_key      = aws_kms_key.test.arn
       packaging           = "NONE"
       path                = "/some"
     }
@@ -288,8 +288,8 @@ resource "aws_codebuild_report_group" "test" {
     type = "S3"
 
     s3_destination {
-      bucket              = "${aws_s3_bucket.test.id}"
-      encryption_key      = "${aws_kms_key.test.arn}"
+      bucket              = aws_s3_bucket.test.id
+      encryption_key      = aws_kms_key.test.arn
       encryption_disabled = false
       packaging           = "ZIP"
       path                = "/some2"
