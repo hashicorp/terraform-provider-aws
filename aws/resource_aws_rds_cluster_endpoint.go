@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	AWSRDSClusterEndpointCreateTimeout   = 30 * time.Minute
 	AWSRDSClusterEndpointRetryDelay      = 5 * time.Second
 	AWSRDSClusterEndpointRetryMinTimeout = 3 * time.Second
 )
@@ -104,7 +105,7 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(endpointId)
 
-	err = resourceAwsRDSClusterEndpointWaitForAvailable(d.Timeout(schema.TimeoutDelete), d.Id(), conn)
+	err = resourceAwsRDSClusterEndpointWaitForAvailable(AWSRDSClusterEndpointCreateTimeout, d.Id(), conn)
 	if err != nil {
 		return err
 	}
