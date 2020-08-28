@@ -460,49 +460,6 @@ func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
 	})
 }
 
-func TestAccAWSENI_tags(t *testing.T) {
-	var conf ec2.NetworkInterface
-	resourceName := "aws_network_interface.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSENIConfigTags1("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSENIExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSENIConfigTags2("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSENIExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSENIConfigTags1("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSENIExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
-			},
-		},
-	})
-}
-
 func testAccCheckAWSENIExists(n string, res *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -734,10 +691,10 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.10.0/24"
-  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16)}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16)
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-network-interface-ipv6"
@@ -745,7 +702,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
   description = "test"
   name        = "tf-acc-network-interface-ipv6"
 
@@ -764,30 +721,22 @@ resource "aws_security_group" "test" {
 
 const testAccAWSENIIPV6Config = testAccAWSENIIPV6ConfigBase + `
 resource "aws_network_interface" "test" {
-  subnet_id       = "${aws_subnet.test.id}"
+  subnet_id       = aws_subnet.test.id
   private_ips     = ["172.16.10.100"]
-  ipv6_addresses  = ["${cidrhost(aws_subnet.test.ipv6_cidr_block, 4)}"]
-  security_groups = ["${aws_security_group.test.id}"]
+  ipv6_addresses  = [cidrhost(aws_subnet.test.ipv6_cidr_block, 4)]
+  security_groups = [aws_security_group.test.id]
   description     = "Managed by Terraform"
-
-  tags = {
-    Name = "tf-acc-network-interface-ipv6"
-  }
 }
 `
 
 func testAccAWSENIIPV6CountConfig(ipCount int) string {
 	return testAccAWSENIIPV6ConfigBase + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
-  subnet_id           = "${aws_subnet.test.id}"
+  subnet_id           = aws_subnet.test.id
   private_ips         = ["172.16.10.100"]
   ipv6_address_count  = %[1]d
-  security_groups     = ["${aws_security_group.test.id}"]
+  security_groups     = [aws_security_group.test.id]
   description         = "Managed by Terraform"
-
-  tags = {
-    Name = "tf-acc-network-interface-ipv6"
-  }
 }
 `, ipCount)
 }
