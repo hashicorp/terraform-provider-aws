@@ -152,14 +152,12 @@ example Terraform configuration at the bottom of this page.
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
   master_instance_fleet {
-    instance_fleet_type = "MASTER"
     instance_type_configs {
       instance_type = "m4.xlarge"
     }
     target_on_demand_capacity = 1
   }
   core_instance_fleet {
-    instance_fleet_type = "CORE"
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 80
       ebs_config {
