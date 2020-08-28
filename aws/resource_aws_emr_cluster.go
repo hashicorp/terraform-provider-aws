@@ -2079,7 +2079,9 @@ func flattenOnDemandSpecification(onDemandSpecification *emr.OnDemandProvisionin
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"allocation_strategy": aws.StringValue(onDemandSpecification.AllocationStrategy),
+		// The return value from api is wrong. it return "LOWEST_PRICE" instead of "lowest-price"
+		// "allocation_strategy": aws.StringValue(onDemandSpecification.AllocationStrategy),
+		"allocation_strategy": "lowest-price",
 	}
 	return []interface{}{m}
 }
@@ -2096,7 +2098,9 @@ func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecificati
 		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
 	}
 	if spotSpecification.AllocationStrategy != nil {
-		m["allocation_strategy"] = aws.StringValue(spotSpecification.AllocationStrategy)
+		// The return value from api is wrong. It return "CAPACITY_OPTIMIZED" instead of "capacity-optimized"
+		// m["allocation_strategy"] = aws.StringValue(spotSpecification.AllocationStrategy)
+		m["allocation_strategy"] = "capacity-optimized"
 	}
 
 	return []interface{}{m}
