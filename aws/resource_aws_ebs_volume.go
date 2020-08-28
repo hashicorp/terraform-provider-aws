@@ -46,8 +46,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return (d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0") ||
-					    (d.Get("type").(string) != ec2.VolumeTypeIo2 && new == "0")
+					return (d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0") || (d.Get("type").(string) != ec2.VolumeTypeIo2 && new == "0")
 				},
 			},
 			"kms_key_id": {
