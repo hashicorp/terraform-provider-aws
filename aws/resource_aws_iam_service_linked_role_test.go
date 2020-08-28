@@ -30,7 +30,11 @@ func testSweepIamServiceLinkedRoles(region string) error {
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
 	}
-	customSuffixRegex := regexp.MustCompile(`_tf-acc-test-\d+$`)
+
+	// include generic service role names created by:
+	// TestAccAWSIAMServiceLinkedRole_basic
+	// TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc
+	customSuffixRegex := regexp.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
 	err = conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		if len(page.Roles) == 0 {
 			log.Printf("[INFO] No IAM Service Roles to sweep")

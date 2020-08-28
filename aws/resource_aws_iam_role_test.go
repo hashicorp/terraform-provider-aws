@@ -191,7 +191,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë“‘{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -724,7 +724,7 @@ func testAccAWSIAMRoleConfigWithDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
-  description = "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"
+  description = "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"
   path        = "/"
 
   assume_role_policy = <<EOF
@@ -753,7 +753,7 @@ func testAccAWSIAMRoleConfigWithUpdatedDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
-  description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë“‘{«¡Çø}"
+  description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"
   path        = "/"
 
   assume_role_policy = <<EOF

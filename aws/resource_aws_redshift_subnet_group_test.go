@@ -2,15 +2,81 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_redshift_subnet_group", &resource.Sweeper{
+		Name: "aws_redshift_subnet_group",
+		F:    testSweepRedshiftSubnetGroups,
+		Dependencies: []string{
+			"aws_redshift_cluster",
+		},
+	})
+}
+
+func testSweepRedshiftSubnetGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).redshiftconn
+	var sweeperErrs *multierror.Error
+
+	input := &redshift.DescribeClusterSubnetGroupsInput{}
+
+	err = conn.DescribeClusterSubnetGroupsPages(input, func(page *redshift.DescribeClusterSubnetGroupsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, clusterSubnetGroup := range page.ClusterSubnetGroups {
+			if clusterSubnetGroup == nil {
+				continue
+			}
+
+			name := aws.StringValue(clusterSubnetGroup.ClusterSubnetGroupName)
+
+			if name == "default" {
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Redshift Cluster Subnet Group: %s", name)
+			r := resourceAwsRedshiftSubnetGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Redshift Cluster Subnet Group sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Redshift Cluster Subnet Group: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
@@ -38,6 +104,28 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"description"},
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
+	var clusterSubnetGroup redshift.ClusterSubnetGroup
+	rInt := acctest.RandInt()
+	resourceName := "aws_redshift_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRedshiftSubnetGroupConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRedshiftSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
