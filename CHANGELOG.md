@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
+* resource/aws_ebs_volume: Support io2 type [GH-14894]
 * resource/aws_msk_configuration: Support resource in-place updates and deletion [GH-14826]
 
 BUG FIXES
