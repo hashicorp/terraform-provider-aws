@@ -535,8 +535,27 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 }
 
 func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if d.HasChange("etag") {
-		d.SetNewComputed("version_id")
+
+	for _, key := range []string{
+		"cache_control",
+		"content_base64",
+		"content_disposition",
+		"content_encoding",
+		"content_language",
+		"content_type",
+		"content",
+		"etag",
+		"kms_key_id",
+		"metadata",
+		"server_side_encryption",
+		"source",
+		"storage_class",
+		"website_redirect",
+	} {
+		if d.HasChange(key) {
+			return d.SetNewComputed("version_id")
+		}
+
 	}
 
 	return nil
