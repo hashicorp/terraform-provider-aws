@@ -799,7 +799,107 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#":                              "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": "0",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement_IPSetForwardedIPConfig(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For", "FIRST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
 						"statement.0.ip_set_reference_statement.#": "1",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "FIRST",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "NO_MATCH", "X-Forwarded-For", "LAST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#": "1",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "LAST",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "MATCH", "Updated", "ANY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#": "1",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "Updated",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "ANY",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#":                              "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": "0",
 					}),
 					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
@@ -2096,6 +2196,55 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, name, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(name, fallbackBehavior, headerName, position string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test" {
+  name               = "ip-set-%[1]s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.1.1.1/32", "2.2.2.2/32"]
+}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 5
+  name     = "%[1]s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.test.arn
+		ip_set_forwarded_ip_config {
+    	  fallback_behavior = "%[2]s"
+		  header_name       = "%[3]s"
+		  position          = "%[4]s"
+		}
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, fallbackBehavior, headerName, position)
 }
 
 func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(name string) string {
