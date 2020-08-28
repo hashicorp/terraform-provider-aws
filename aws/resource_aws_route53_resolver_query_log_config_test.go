@@ -75,7 +75,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfig(rName),
+				Config: testAccRoute53ResolverQueryLogConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
@@ -105,7 +105,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfig(rName),
+				Config: testAccRoute53ResolverQueryLogConfigConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverQueryLogConfig(), resourceName),
@@ -128,7 +128,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfigTags1(rName, "key1", "value1"),
+				Config: testAccRoute53ResolverQueryLogConfigConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, "arn"),
@@ -145,7 +145,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53ResolverQueryLogConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRoute53ResolverQueryLogConfigConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, "arn"),
@@ -158,7 +158,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoute53ResolverQueryLogConfigTags1(rName, "key2", "value2"),
+				Config: testAccRoute53ResolverQueryLogConfigConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, "arn"),
@@ -219,7 +219,7 @@ func testAccCheckRoute53ResolverQueryLogConfigExists(n string, v *route53resolve
 	}
 }
 
-func testAccRoute53ResolverQueryLogConfig(rName string) string {
+func testAccRoute53ResolverQueryLogConfigConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -233,7 +233,7 @@ resource "aws_route53_resolver_query_log_config" "test" {
 `, rName)
 }
 
-func testAccRoute53ResolverQueryLogConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccRoute53ResolverQueryLogConfigConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -250,7 +250,7 @@ resource "aws_route53_resolver_query_log_config" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccRoute53ResolverQueryLogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRoute53ResolverQueryLogConfigConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
