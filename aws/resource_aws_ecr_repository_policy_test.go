@@ -187,7 +187,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 resource "aws_ecr_repository_policy" "test" {
-  repository = "${aws_ecr_repository.test.name}"
+  repository = aws_ecr_repository.test.name
 
   policy = <<EOF
 {
