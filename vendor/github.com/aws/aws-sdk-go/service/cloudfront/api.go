@@ -1060,6 +1060,93 @@ func (c *CloudFront) CreateInvalidationWithContext(ctx aws.Context, input *Creat
 	return out, req.Send()
 }
 
+const opCreateMonitoringSubscription = "CreateMonitoringSubscription2020_05_31"
+
+// CreateMonitoringSubscriptionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateMonitoringSubscription operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateMonitoringSubscription for more information on using the CreateMonitoringSubscription
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateMonitoringSubscriptionRequest method.
+//    req, resp := client.CreateMonitoringSubscriptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateMonitoringSubscription
+func (c *CloudFront) CreateMonitoringSubscriptionRequest(input *CreateMonitoringSubscriptionInput) (req *request.Request, output *CreateMonitoringSubscriptionOutput) {
+	op := &request.Operation{
+		Name:       opCreateMonitoringSubscription,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/distributions/{DistributionId}/monitoring-subscription",
+	}
+
+	if input == nil {
+		input = &CreateMonitoringSubscriptionInput{}
+	}
+
+	output = &CreateMonitoringSubscriptionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateMonitoringSubscription API operation for Amazon CloudFront.
+//
+// Enables additional CloudWatch metrics for the specified CloudFront distribution.
+// The additional metrics incur an additional cost.
+//
+// For more information, see Viewing additional CloudFront distribution metrics
+// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/viewing-cloudfront-metrics.html#monitoring-console.distributions-additional)
+// in the Amazon CloudFront Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation CreateMonitoringSubscription for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchDistribution "NoSuchDistribution"
+//   The specified distribution does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateMonitoringSubscription
+func (c *CloudFront) CreateMonitoringSubscription(input *CreateMonitoringSubscriptionInput) (*CreateMonitoringSubscriptionOutput, error) {
+	req, out := c.CreateMonitoringSubscriptionRequest(input)
+	return out, req.Send()
+}
+
+// CreateMonitoringSubscriptionWithContext is the same as CreateMonitoringSubscription with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateMonitoringSubscription for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) CreateMonitoringSubscriptionWithContext(ctx aws.Context, input *CreateMonitoringSubscriptionInput, opts ...request.Option) (*CreateMonitoringSubscriptionOutput, error) {
+	req, out := c.CreateMonitoringSubscriptionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateOriginRequestPolicy = "CreateOriginRequestPolicy2020_05_31"
 
 // CreateOriginRequestPolicyRequest generates a "aws/request.Request" representing the
@@ -2015,6 +2102,89 @@ func (c *CloudFront) DeleteFieldLevelEncryptionProfile(input *DeleteFieldLevelEn
 // for more information on using Contexts.
 func (c *CloudFront) DeleteFieldLevelEncryptionProfileWithContext(ctx aws.Context, input *DeleteFieldLevelEncryptionProfileInput, opts ...request.Option) (*DeleteFieldLevelEncryptionProfileOutput, error) {
 	req, out := c.DeleteFieldLevelEncryptionProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteMonitoringSubscription = "DeleteMonitoringSubscription2020_05_31"
+
+// DeleteMonitoringSubscriptionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteMonitoringSubscription operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteMonitoringSubscription for more information on using the DeleteMonitoringSubscription
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteMonitoringSubscriptionRequest method.
+//    req, resp := client.DeleteMonitoringSubscriptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteMonitoringSubscription
+func (c *CloudFront) DeleteMonitoringSubscriptionRequest(input *DeleteMonitoringSubscriptionInput) (req *request.Request, output *DeleteMonitoringSubscriptionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteMonitoringSubscription,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2020-05-31/distributions/{DistributionId}/monitoring-subscription",
+	}
+
+	if input == nil {
+		input = &DeleteMonitoringSubscriptionInput{}
+	}
+
+	output = &DeleteMonitoringSubscriptionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteMonitoringSubscription API operation for Amazon CloudFront.
+//
+// Disables additional CloudWatch metrics for the specified CloudFront distribution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation DeleteMonitoringSubscription for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchDistribution "NoSuchDistribution"
+//   The specified distribution does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteMonitoringSubscription
+func (c *CloudFront) DeleteMonitoringSubscription(input *DeleteMonitoringSubscriptionInput) (*DeleteMonitoringSubscriptionOutput, error) {
+	req, out := c.DeleteMonitoringSubscriptionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteMonitoringSubscriptionWithContext is the same as DeleteMonitoringSubscription with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMonitoringSubscription for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) DeleteMonitoringSubscriptionWithContext(ctx aws.Context, input *DeleteMonitoringSubscriptionInput, opts ...request.Option) (*DeleteMonitoringSubscriptionOutput, error) {
+	req, out := c.DeleteMonitoringSubscriptionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3263,6 +3433,89 @@ func (c *CloudFront) GetInvalidation(input *GetInvalidationInput) (*GetInvalidat
 // for more information on using Contexts.
 func (c *CloudFront) GetInvalidationWithContext(ctx aws.Context, input *GetInvalidationInput, opts ...request.Option) (*GetInvalidationOutput, error) {
 	req, out := c.GetInvalidationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetMonitoringSubscription = "GetMonitoringSubscription2020_05_31"
+
+// GetMonitoringSubscriptionRequest generates a "aws/request.Request" representing the
+// client's request for the GetMonitoringSubscription operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetMonitoringSubscription for more information on using the GetMonitoringSubscription
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetMonitoringSubscriptionRequest method.
+//    req, resp := client.GetMonitoringSubscriptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetMonitoringSubscription
+func (c *CloudFront) GetMonitoringSubscriptionRequest(input *GetMonitoringSubscriptionInput) (req *request.Request, output *GetMonitoringSubscriptionOutput) {
+	op := &request.Operation{
+		Name:       opGetMonitoringSubscription,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/distributions/{DistributionId}/monitoring-subscription",
+	}
+
+	if input == nil {
+		input = &GetMonitoringSubscriptionInput{}
+	}
+
+	output = &GetMonitoringSubscriptionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetMonitoringSubscription API operation for Amazon CloudFront.
+//
+// Gets information about whether additional CloudWatch metrics are enabled
+// for the specified CloudFront distribution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation GetMonitoringSubscription for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDenied "AccessDenied"
+//   Access denied.
+//
+//   * ErrCodeNoSuchDistribution "NoSuchDistribution"
+//   The specified distribution does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetMonitoringSubscription
+func (c *CloudFront) GetMonitoringSubscription(input *GetMonitoringSubscriptionInput) (*GetMonitoringSubscriptionOutput, error) {
+	req, out := c.GetMonitoringSubscriptionRequest(input)
+	return out, req.Send()
+}
+
+// GetMonitoringSubscriptionWithContext is the same as GetMonitoringSubscription with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetMonitoringSubscription for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) GetMonitoringSubscriptionWithContext(ctx aws.Context, input *GetMonitoringSubscriptionInput, opts ...request.Option) (*GetMonitoringSubscriptionOutput, error) {
+	req, out := c.GetMonitoringSubscriptionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8621,6 +8874,91 @@ func (s *CreateInvalidationOutput) SetLocation(v string) *CreateInvalidationOutp
 	return s
 }
 
+type CreateMonitoringSubscriptionInput struct {
+	_ struct{} `locationName:"CreateMonitoringSubscriptionRequest" type:"structure" payload:"MonitoringSubscription"`
+
+	// The ID of the distribution that you are enabling metrics for.
+	//
+	// DistributionId is a required field
+	DistributionId *string `location:"uri" locationName:"DistributionId" type:"string" required:"true"`
+
+	// A monitoring subscription. This structure contains information about whether
+	// additional CloudWatch metrics are enabled for a given CloudFront distribution.
+	//
+	// MonitoringSubscription is a required field
+	MonitoringSubscription *MonitoringSubscription `locationName:"MonitoringSubscription" type:"structure" required:"true" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+}
+
+// String returns the string representation
+func (s CreateMonitoringSubscriptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMonitoringSubscriptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateMonitoringSubscriptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateMonitoringSubscriptionInput"}
+	if s.DistributionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DistributionId"))
+	}
+	if s.DistributionId != nil && len(*s.DistributionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DistributionId", 1))
+	}
+	if s.MonitoringSubscription == nil {
+		invalidParams.Add(request.NewErrParamRequired("MonitoringSubscription"))
+	}
+	if s.MonitoringSubscription != nil {
+		if err := s.MonitoringSubscription.Validate(); err != nil {
+			invalidParams.AddNested("MonitoringSubscription", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDistributionId sets the DistributionId field's value.
+func (s *CreateMonitoringSubscriptionInput) SetDistributionId(v string) *CreateMonitoringSubscriptionInput {
+	s.DistributionId = &v
+	return s
+}
+
+// SetMonitoringSubscription sets the MonitoringSubscription field's value.
+func (s *CreateMonitoringSubscriptionInput) SetMonitoringSubscription(v *MonitoringSubscription) *CreateMonitoringSubscriptionInput {
+	s.MonitoringSubscription = v
+	return s
+}
+
+type CreateMonitoringSubscriptionOutput struct {
+	_ struct{} `type:"structure" payload:"MonitoringSubscription"`
+
+	// A monitoring subscription. This structure contains information about whether
+	// additional CloudWatch metrics are enabled for a given CloudFront distribution.
+	MonitoringSubscription *MonitoringSubscription `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateMonitoringSubscriptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMonitoringSubscriptionOutput) GoString() string {
+	return s.String()
+}
+
+// SetMonitoringSubscription sets the MonitoringSubscription field's value.
+func (s *CreateMonitoringSubscriptionOutput) SetMonitoringSubscription(v *MonitoringSubscription) *CreateMonitoringSubscriptionOutput {
+	s.MonitoringSubscription = v
+	return s
+}
+
 type CreateOriginRequestPolicyInput struct {
 	_ struct{} `locationName:"CreateOriginRequestPolicyRequest" type:"structure" payload:"OriginRequestPolicyConfig"`
 
@@ -10023,6 +10361,61 @@ func (s DeleteFieldLevelEncryptionProfileOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteFieldLevelEncryptionProfileOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteMonitoringSubscriptionInput struct {
+	_ struct{} `locationName:"DeleteMonitoringSubscriptionRequest" type:"structure"`
+
+	// The ID of the distribution that you are disabling metrics for.
+	//
+	// DistributionId is a required field
+	DistributionId *string `location:"uri" locationName:"DistributionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteMonitoringSubscriptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMonitoringSubscriptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteMonitoringSubscriptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteMonitoringSubscriptionInput"}
+	if s.DistributionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DistributionId"))
+	}
+	if s.DistributionId != nil && len(*s.DistributionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DistributionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDistributionId sets the DistributionId field's value.
+func (s *DeleteMonitoringSubscriptionInput) SetDistributionId(v string) *DeleteMonitoringSubscriptionInput {
+	s.DistributionId = &v
+	return s
+}
+
+type DeleteMonitoringSubscriptionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteMonitoringSubscriptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMonitoringSubscriptionOutput) GoString() string {
 	return s.String()
 }
 
@@ -13003,6 +13396,71 @@ func (s *GetInvalidationOutput) SetInvalidation(v *Invalidation) *GetInvalidatio
 	return s
 }
 
+type GetMonitoringSubscriptionInput struct {
+	_ struct{} `locationName:"GetMonitoringSubscriptionRequest" type:"structure"`
+
+	// The ID of the distribution that you are getting metrics information for.
+	//
+	// DistributionId is a required field
+	DistributionId *string `location:"uri" locationName:"DistributionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetMonitoringSubscriptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetMonitoringSubscriptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetMonitoringSubscriptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetMonitoringSubscriptionInput"}
+	if s.DistributionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DistributionId"))
+	}
+	if s.DistributionId != nil && len(*s.DistributionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DistributionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDistributionId sets the DistributionId field's value.
+func (s *GetMonitoringSubscriptionInput) SetDistributionId(v string) *GetMonitoringSubscriptionInput {
+	s.DistributionId = &v
+	return s
+}
+
+type GetMonitoringSubscriptionOutput struct {
+	_ struct{} `type:"structure" payload:"MonitoringSubscription"`
+
+	// A monitoring subscription. This structure contains information about whether
+	// additional CloudWatch metrics are enabled for a given CloudFront distribution.
+	MonitoringSubscription *MonitoringSubscription `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetMonitoringSubscriptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetMonitoringSubscriptionOutput) GoString() string {
+	return s.String()
+}
+
+// SetMonitoringSubscription sets the MonitoringSubscription field's value.
+func (s *GetMonitoringSubscriptionOutput) SetMonitoringSubscription(v *MonitoringSubscription) *GetMonitoringSubscriptionOutput {
+	s.MonitoringSubscription = v
+	return s
+}
+
 type GetOriginRequestPolicyConfigInput struct {
 	_ struct{} `locationName:"GetOriginRequestPolicyConfigRequest" type:"structure"`
 
@@ -14985,6 +15443,46 @@ func (s *LoggingConfig) SetIncludeCookies(v bool) *LoggingConfig {
 // SetPrefix sets the Prefix field's value.
 func (s *LoggingConfig) SetPrefix(v string) *LoggingConfig {
 	s.Prefix = &v
+	return s
+}
+
+// A monitoring subscription. This structure contains information about whether
+// additional CloudWatch metrics are enabled for a given CloudFront distribution.
+type MonitoringSubscription struct {
+	_ struct{} `type:"structure"`
+
+	// A subscription configuration for additional CloudWatch metrics.
+	RealtimeMetricsSubscriptionConfig *RealtimeMetricsSubscriptionConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s MonitoringSubscription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MonitoringSubscription) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MonitoringSubscription) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MonitoringSubscription"}
+	if s.RealtimeMetricsSubscriptionConfig != nil {
+		if err := s.RealtimeMetricsSubscriptionConfig.Validate(); err != nil {
+			invalidParams.AddNested("RealtimeMetricsSubscriptionConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRealtimeMetricsSubscriptionConfig sets the RealtimeMetricsSubscriptionConfig field's value.
+func (s *MonitoringSubscription) SetRealtimeMetricsSubscriptionConfig(v *RealtimeMetricsSubscriptionConfig) *MonitoringSubscription {
+	s.RealtimeMetricsSubscriptionConfig = v
 	return s
 }
 
@@ -17107,6 +17605,46 @@ func (s *QueryStringNames) SetItems(v []*string) *QueryStringNames {
 // SetQuantity sets the Quantity field's value.
 func (s *QueryStringNames) SetQuantity(v int64) *QueryStringNames {
 	s.Quantity = &v
+	return s
+}
+
+// A subscription configuration for additional CloudWatch metrics.
+type RealtimeMetricsSubscriptionConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A flag that indicates whether additional CloudWatch metrics are enabled for
+	// a given CloudFront distribution.
+	//
+	// RealtimeMetricsSubscriptionStatus is a required field
+	RealtimeMetricsSubscriptionStatus *string `type:"string" required:"true" enum:"RealtimeMetricsSubscriptionStatus"`
+}
+
+// String returns the string representation
+func (s RealtimeMetricsSubscriptionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RealtimeMetricsSubscriptionConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RealtimeMetricsSubscriptionConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RealtimeMetricsSubscriptionConfig"}
+	if s.RealtimeMetricsSubscriptionStatus == nil {
+		invalidParams.Add(request.NewErrParamRequired("RealtimeMetricsSubscriptionStatus"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRealtimeMetricsSubscriptionStatus sets the RealtimeMetricsSubscriptionStatus field's value.
+func (s *RealtimeMetricsSubscriptionConfig) SetRealtimeMetricsSubscriptionStatus(v string) *RealtimeMetricsSubscriptionConfig {
+	s.RealtimeMetricsSubscriptionStatus = &v
 	return s
 }
 
@@ -19791,6 +20329,22 @@ func PriceClass_Values() []string {
 		PriceClassPriceClass100,
 		PriceClassPriceClass200,
 		PriceClassPriceClassAll,
+	}
+}
+
+const (
+	// RealtimeMetricsSubscriptionStatusEnabled is a RealtimeMetricsSubscriptionStatus enum value
+	RealtimeMetricsSubscriptionStatusEnabled = "Enabled"
+
+	// RealtimeMetricsSubscriptionStatusDisabled is a RealtimeMetricsSubscriptionStatus enum value
+	RealtimeMetricsSubscriptionStatusDisabled = "Disabled"
+)
+
+// RealtimeMetricsSubscriptionStatus_Values returns all elements of the RealtimeMetricsSubscriptionStatus enum
+func RealtimeMetricsSubscriptionStatus_Values() []string {
+	return []string{
+		RealtimeMetricsSubscriptionStatusEnabled,
+		RealtimeMetricsSubscriptionStatusDisabled,
 	}
 }
 
