@@ -120,9 +120,15 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
+
+	rules, err := expandWafv2Rules(d.Get("rule").(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+
+	params.Rules = rules
 
 	if v, ok := d.GetOk("description"); ok {
 		params.Description = aws.String(v.(string))
@@ -132,7 +138,7 @@ func resourceAwsWafv2RuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateRuleGroup(params)
 		if err != nil {
@@ -222,15 +228,21 @@ func resourceAwsWafv2RuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		LockToken:        aws.String(d.Get("lock_token").(string)),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
+
+	rules, err := expandWafv2Rules(d.Get("rule").(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+
+	u.Rules = rules
 
 	if v, ok := d.GetOk("description"); ok {
 		u.Description = aws.String(v.(string))
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateRuleGroup(u)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
