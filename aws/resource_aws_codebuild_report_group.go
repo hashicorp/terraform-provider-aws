@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -35,12 +35,10 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(2, 128),
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codebuild.ReportTypeTest,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(codebuild.ReportType_Values(), false),
 			},
 			"export_config": {
 				Type:     schema.TypeList,
@@ -49,12 +47,9 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ReportExportConfigTypeNoExport,
-								codebuild.ReportExportConfigTypeS3,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.ReportExportConfigType_Values(), false),
 						},
 						"s3_destination": {
 							Type:     schema.TypeList,
@@ -75,13 +70,10 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 										Required: true,
 									},
 									"packaging": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  codebuild.ReportPackagingTypeNone,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.ReportPackagingTypeNone,
-											codebuild.ReportPackagingTypeZip,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      codebuild.ReportPackagingTypeNone,
+										ValidateFunc: validation.StringInSlice(codebuild.ReportPackagingType_Values(), false),
 									},
 									"path": {
 										Type:     schema.TypeString,
