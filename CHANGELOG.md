@@ -1,5 +1,9 @@
 ## 3.5.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_codebuild_report_group` [GH-12573]
+
 ENHANCEMENTS
 
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
