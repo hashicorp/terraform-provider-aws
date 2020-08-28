@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
 )
 
 func resourceAwsCurReportDefinition() *schema.Resource {
@@ -122,76 +123,25 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	prefix := aws.String(d.Get("s3_prefix").(string))
 	reportVersioning := aws.String(d.Get("report_versioning").(string))
 
-	hasAthena := false
-
-	// perform various combination checks, AWS API unhelpfully just returns an empty ValidationException
-	// these combinations have been determined from the Create Report AWS Console Web Form
-	for _, artifact := range additionalArtifacts {
-		if *artifact == costandusagereportservice.AdditionalArtifactAthena {
-			hasAthena = true
-			break
-		}
+	// had some pointer addressing issues
+	additionalArtifactsList := make([]string, 0)
+	for i := 0; i < len(additionalArtifacts); i++ {
+		var artifact string
+		artifact = *additionalArtifacts[i]
+		additionalArtifactsList = append(additionalArtifactsList, artifact)
 	}
 
-	if hasAthena {
-		if len(additionalArtifacts) > 1 {
-			return fmt.Errorf(
-				"When %s exists within additional_artifacts, no other artifact type can be declared",
-				costandusagereportservice.AdditionalArtifactAthena,
-			)
-		}
+	err := checkAwsCurReportDefinitionPropertyCombination(
+		additionalArtifactsList,
+		*compression,
+		*format,
+		*prefix,
+		*reportVersioning,
+	)
 
-		if len(*prefix) == 0 {
-			return fmt.Errorf(
-				"When %s exists within additional_artifacts, prefix cannot be empty",
-				costandusagereportservice.AdditionalArtifactAthena,
-			)
-		}
-
-		if *reportVersioning != costandusagereportservice.ReportVersioningOverwriteReport {
-			return fmt.Errorf(
-				"When %s exists within additional_artifacts, report_versioning must be %s",
-				costandusagereportservice.AdditionalArtifactAthena,
-				costandusagereportservice.ReportVersioningOverwriteReport,
-			)
-		}
+	if err != nil {
+		return err
 	}
-
-	if *format == costandusagereportservice.ReportFormatParquet {
-		if *compression != costandusagereportservice.CompressionFormatParquet {
-			return fmt.Errorf(
-				"When format is %s, compression must also be %s",
-				costandusagereportservice.ReportFormatParquet,
-				costandusagereportservice.CompressionFormatParquet,
-			)
-		}
-	} else {
-		if *compression == costandusagereportservice.CompressionFormatParquet {
-			return fmt.Errorf(
-				"When format is %s, format must not be %s",
-				*format,
-				costandusagereportservice.CompressionFormatParquet,
-			)
-		}
-	}
-
-	if hasAthena && (*format != costandusagereportservice.ReportFormatParquet) {
-		return fmt.Errorf(
-			"When %s exists within additional_artifacts, both format and compression must be %s",
-			costandusagereportservice.AdditionalArtifactAthena,
-			costandusagereportservice.ReportFormatParquet,
-		)
-	}
-
-	if !hasAthena && len(additionalArtifacts) > 1 && (*format == costandusagereportservice.ReportFormatParquet) {
-		return fmt.Errorf(
-			"When additional_artifacts includes %s and/or %s, format must not be %s",
-			costandusagereportservice.AdditionalArtifactQuicksight,
-			costandusagereportservice.AdditionalArtifactRedshift,
-			costandusagereportservice.ReportFormatParquet,
-		)
-	}
-	// end checks
 
 	reportName := d.Get("report_name").(string)
 
@@ -214,7 +164,7 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[DEBUG] Creating AWS Cost and Usage Report Definition : %v", reportDefinitionInput)
 
-	_, err := conn.PutReportDefinition(reportDefinitionInput)
+	_, err = conn.PutReportDefinition(reportDefinitionInput)
 	if err != nil {
 		return fmt.Errorf("Error creating AWS Cost And Usage Report Definition: %s", err)
 	}
@@ -282,4 +232,78 @@ func describeCurReportDefinition(conn *costandusagereportservice.CostandUsageRep
 		return nil, err
 	}
 	return matchingReportDefinition, nil
+}
+
+func checkAwsCurReportDefinitionPropertyCombination(additionalArtifacts []string, compression string, format string, prefix string, reportVersioning string) error {
+	// perform various combination checks, AWS API unhelpfully just returns an empty ValidationException
+	// these combinations have been determined from the Create Report AWS Console Web Form
+
+	hasAthena := false
+
+	for _, artifact := range additionalArtifacts {
+		if artifact == costandusagereportservice.AdditionalArtifactAthena {
+			hasAthena = true
+			break
+		}
+	}
+
+	if hasAthena {
+		if len(additionalArtifacts) > 1 {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, no other artifact type can be declared",
+				costandusagereportservice.AdditionalArtifactAthena,
+			)
+		}
+
+		if len(prefix) == 0 {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, prefix cannot be empty",
+				costandusagereportservice.AdditionalArtifactAthena,
+			)
+		}
+
+		if reportVersioning != costandusagereportservice.ReportVersioningOverwriteReport {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, report_versioning must be %s",
+				costandusagereportservice.AdditionalArtifactAthena,
+				costandusagereportservice.ReportVersioningOverwriteReport,
+			)
+		}
+
+		if format != costandusagereportservice.ReportFormatParquet {
+			return fmt.Errorf(
+				"When %s exists within additional_artifacts, both format and compression must be %s",
+				costandusagereportservice.AdditionalArtifactAthena,
+				costandusagereportservice.ReportFormatParquet,
+			)
+		}
+	} else if len(additionalArtifacts) > 0 && (format == costandusagereportservice.ReportFormatParquet) {
+		return fmt.Errorf(
+			"When additional_artifacts includes %s and/or %s, format must not be %s",
+			costandusagereportservice.AdditionalArtifactQuicksight,
+			costandusagereportservice.AdditionalArtifactRedshift,
+			costandusagereportservice.ReportFormatParquet,
+		)
+	}
+
+	if format == costandusagereportservice.ReportFormatParquet {
+		if compression != costandusagereportservice.CompressionFormatParquet {
+			return fmt.Errorf(
+				"When format is %s, compression must also be %s",
+				costandusagereportservice.ReportFormatParquet,
+				costandusagereportservice.CompressionFormatParquet,
+			)
+		}
+	} else {
+		if compression == costandusagereportservice.CompressionFormatParquet {
+			return fmt.Errorf(
+				"When format is %s, compression must not be %s",
+				format,
+				costandusagereportservice.CompressionFormatParquet,
+			)
+		}
+	}
+	// end checks
+
+	return nil
 }
