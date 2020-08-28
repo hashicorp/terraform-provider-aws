@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func decodeEc2TransitGatewayRouteID(id string) (string, string, error) {
