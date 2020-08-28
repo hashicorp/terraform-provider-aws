@@ -625,14 +625,6 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 
 func testAccAWSENIConfig() string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
- 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -897,14 +889,6 @@ resource "aws_network_interface" "test" {
 
 func testAccAWSENIConfigWithAttachment() string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
- 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -975,15 +959,6 @@ resource "aws_network_interface" "test" {
 
 func testAccAWSENIConfigExternalAttachment() string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
- 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
