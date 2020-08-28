@@ -58,7 +58,7 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 				Computed: true,
 			},
 			"platform": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"schedule": {
