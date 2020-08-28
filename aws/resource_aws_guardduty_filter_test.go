@@ -34,31 +34,22 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/[a-z0-9]{32}/filter/test-filter$")),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":     "region",
-						"values.#":  "1",
-						"values.0":  "eu-west-1",
-						"condition": "equals",
+						"field":    "region",
+						"equals.#": "1",
+						"equals.0": "eu-west-1",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":     "service.additionalInfo.threatListName",
-						"values.#":  "2",
-						"values.0":  "some-threat",
-						"values.1":  "another-threat",
-						"condition": "not_equals",
+						"field":        "service.additionalInfo.threatListName",
+						"not_equals.#": "2",
+						"not_equals.0": "some-threat",
+						"not_equals.1": "another-threat",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":     "updatedAt",
-						"values.#":  "1",
-						"values.0":  "1570744740000",
-						"condition": "less_than",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":     "updatedAt",
-						"values.#":  "1",
-						"values.0":  "1570744240000",
-						"condition": "greater_than",
+						"field":        "updatedAt",
+						"greater_than": "1570744240000",
+						"less_than":    "1570744740000",
 					}),
 				),
 			},
@@ -97,7 +88,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
 			{
@@ -107,17 +98,15 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":     "region",
-						"values.#":  "1",
-						"values.0":  "us-west-2",
-						"condition": "equals",
+						"field":    "region",
+						"equals.#": "1",
+						"equals.0": "us-west-2",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":     "service.additionalInfo.threatListName",
-						"values.#":  "2",
-						"values.0":  "some-threat",
-						"values.1":  "yet-another-threat",
-						"condition": "not_equals",
+						"field":        "service.additionalInfo.threatListName",
+						"not_equals.#": "2",
+						"not_equals.0": "some-threat",
+						"not_equals.1": "yet-another-threat",
 					}),
 				),
 			},
@@ -249,160 +238,145 @@ func testAccGuardDutyFilterConfig_full() string {
 	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
-	name        = "test-filter"
-	action      = "ARCHIVE"
-	rank        = 1
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
 
   finding_criteria {
     criterion {
-      field     = "region"
-      values    = ["eu-west-1"]
-      condition = "equals"
+      field  = "region"
+      equals = ["eu-west-1"]
     }
 
     criterion {
-      field     = "service.additionalInfo.threatListName"
-      values    = ["some-threat", "another-threat"]
-      condition = "not_equals"
+      field      = "service.additionalInfo.threatListName"
+      not_equals = ["some-threat", "another-threat"]
     }
 
     criterion {
-      field     = "updatedAt"
-      values    = ["1570744740000"]
-      condition = "less_than"
-    }
-
-    criterion {
-      field     = "updatedAt"
-      values    = ["1570744240000"]
-      condition = "greater_than"
+      field        = "updatedAt"
+      greater_than = 1570744240000
+      less_than    = 1570744740000
     }
   }
 }
 
 resource "aws_guardduty_detector" "test" {
   enable = true
-}`
+}
+`
 }
 
 func testAccGuardDutyFilterConfigNoop_full() string {
 	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
-	name        = "test-filter"
-	action      = "NOOP"
-	description = "This is a NOOP"
-	rank        = 1
+  name        = "test-filter"
+  action      = "NOOP"
+  description = "This is a NOOP"
+  rank        = 1
 
   finding_criteria {
     criterion {
-      field     = "region"
-      values    = ["eu-west-1"]
-      condition = "equals"
+      field  = "region"
+      equals = ["eu-west-1"]
     }
 
     criterion {
-      field     = "service.additionalInfo.threatListName"
-      values    = ["some-threat", "another-threat"]
-      condition = "not_equals"
+      field      = "service.additionalInfo.threatListName"
+      not_equals = ["some-threat", "another-threat"]
     }
 
     criterion {
-      field     = "updatedAt"
-      values    = ["1570744740000"]
-      condition = "less_than"
-    }
-
-    criterion {
-      field     = "updatedAt"
-      values    = ["1570744240000"]
-      condition = "greater_than"
+      field        = "updatedAt"
+      greater_than = 1570744240000
+      less_than    = 1570744740000
     }
   }
 }
 
 resource "aws_guardduty_detector" "test" {
   enable = true
-}`
+}
+`
 }
 
 func testAccGuardDutyFilterConfig_multipleTags() string {
 	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
-	name        = "test-filter"
-	action      = "ARCHIVE"
-	rank        = 1
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
 
   finding_criteria {
     criterion {
-		field     = "region"
-		values    = ["us-west-2"]
-		condition = "equals"
-	  }
-	}
+      field  = "region"
+      equals = ["us-west-2"]
+    }
+  }
 
   tags = {
-	  Name= "test-filter"
-	  Key = "Value"
+    Name = "test-filter"
+    Key  = "Value"
   }
 }
 
 resource "aws_guardduty_detector" "test" {
   enable = true
-}`
+}
+`
 }
 
 func testAccGuardDutyFilterConfig_update() string {
 	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
-	name        = "test-filter"
-	action      = "ARCHIVE"
-	rank        = 1
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
 
   finding_criteria {
     criterion {
-      field     = "region"
-      values    = ["us-west-2"]
-      condition = "equals"
+      field  = "region"
+      equals = ["us-west-2"]
     }
 
     criterion {
-      field     = "service.additionalInfo.threatListName"
-      values    = ["some-threat", "yet-another-threat"]
-      condition = "not_equals"
+      field      = "service.additionalInfo.threatListName"
+      not_equals = ["some-threat", "yet-another-threat"]
     }
   }
 }
 
 resource "aws_guardduty_detector" "test" {
   enable = true
-}`
+}
+`
 }
 
 func testAccGuardDutyFilterConfig_updateTags() string {
 	return `
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
-	name        = "test-filter"
-	action      = "ARCHIVE"
-	rank        = 1
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
 
   finding_criteria {
     criterion {
-		field     = "region"
-		values    = ["us-west-2"]
-		condition = "equals"
-	  }
-	}
+      field  = "region"
+      equals = ["us-west-2"]
+    }
+  }
 
   tags = {
-	  Key = "Updated"
+    Key = "Updated"
   }
 }
 
 resource "aws_guardduty_detector" "test" {
   enable = true
-}`
+}
+`
 }
