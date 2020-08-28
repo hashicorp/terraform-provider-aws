@@ -63,7 +63,7 @@ resource "aws_codebuild_report_group" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of a Report Group.
-* `type` - (Required) The type of the Report Group. The one valid value is `TEST`.
+* `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `export_config` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
 * `tags` - (Optional) Key-value mapping of resource tags
 
