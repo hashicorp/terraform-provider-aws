@@ -75,7 +75,7 @@ The following arguments are supported:
 #### S3 Destination
 
 * `bucket`- (Required) The name of the S3 bucket where the raw data of a report are exported.
-* `encryption_key` - (Required) The encryption key for the report's encrypted raw data.
+* `encryption_key` - (Required) The encryption key for the report's encrypted raw data. The KMS key ARN.
 * `encryption_disabled`- (Optional) A boolean value that specifies if the results of a report are encrypted.
  **Note: the API does not currently allow setting encryption as disabled**
 * `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.

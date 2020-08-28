@@ -66,8 +66,9 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 										Optional: true,
 									},
 									"encryption_key": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 									"packaging": {
 										Type:         schema.TypeString,
