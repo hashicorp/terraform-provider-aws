@@ -698,7 +698,7 @@ func testAccAWSCloudTrailConfig(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
   name           = "tf-trail-foobar-%d"
-  s3_bucket_name = "${aws_s3_bucket.foo.id}"
+  s3_bucket_name = aws_s3_bucket.foo.id
 }
 
 resource "aws_s3_bucket" "foo" {
