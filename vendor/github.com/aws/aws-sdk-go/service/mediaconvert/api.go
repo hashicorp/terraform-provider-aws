@@ -3008,6 +3008,39 @@ func (s AssociateCertificateOutput) GoString() string {
 	return s.String()
 }
 
+// When you mimic a multi-channel audio layout with multiple mono-channel tracks,
+// you can tag each channel layout manually. For example, you would tag the
+// tracks that contain your left, right, and center audio with Left (L), Right
+// (R), and Center (C), respectively. When you don't specify a value, MediaConvert
+// labels your track as Center (C) by default. To use audio layout tagging,
+// your output must be in a QuickTime (.mov) container; your audio codec must
+// be AAC, WAV, or AIFF; and you must set up your audio track to have only one
+// channel.
+type AudioChannelTaggingSettings struct {
+	_ struct{} `type:"structure"`
+
+	// You can add a tag for this mono-channel audio track to mimic its placement
+	// in a multi-channel layout. For example, if this track is the left surround
+	// channel, choose Left surround (LS).
+	ChannelTag *string `locationName:"channelTag" type:"string" enum:"AudioChannelTag"`
+}
+
+// String returns the string representation
+func (s AudioChannelTaggingSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioChannelTaggingSettings) GoString() string {
+	return s.String()
+}
+
+// SetChannelTag sets the ChannelTag field's value.
+func (s *AudioChannelTaggingSettings) SetChannelTag(v string) *AudioChannelTaggingSettings {
+	s.ChannelTag = &v
+	return s
+}
+
 // Audio codec settings (CodecSettings) under (AudioDescriptions) contains the
 // group of settings related to audio encoding. The settings in this group vary
 // depending on the value that you choose for Audio codec (Codec). For each
@@ -3208,6 +3241,16 @@ func (s *AudioCodecSettings) SetWavSettings(v *WavSettings) *AudioCodecSettings 
 type AudioDescription struct {
 	_ struct{} `type:"structure"`
 
+	// When you mimic a multi-channel audio layout with multiple mono-channel tracks,
+	// you can tag each channel layout manually. For example, you would tag the
+	// tracks that contain your left, right, and center audio with Left (L), Right
+	// (R), and Center (C), respectively. When you don't specify a value, MediaConvert
+	// labels your track as Center (C) by default. To use audio layout tagging,
+	// your output must be in a QuickTime (.mov) container; your audio codec must
+	// be AAC, WAV, or AIFF; and you must set up your audio track to have only one
+	// channel.
+	AudioChannelTaggingSettings *AudioChannelTaggingSettings `locationName:"audioChannelTaggingSettings" type:"structure"`
+
 	// Advanced audio normalization settings. Ignore these settings unless you need
 	// to comply with a loudness standard.
 	AudioNormalizationSettings *AudioNormalizationSettings `locationName:"audioNormalizationSettings" type:"structure"`
@@ -3315,6 +3358,12 @@ func (s *AudioDescription) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAudioChannelTaggingSettings sets the AudioChannelTaggingSettings field's value.
+func (s *AudioDescription) SetAudioChannelTaggingSettings(v *AudioChannelTaggingSettings) *AudioDescription {
+	s.AudioChannelTaggingSettings = v
+	return s
 }
 
 // SetAudioNormalizationSettings sets the AudioNormalizationSettings field's value.
@@ -10337,6 +10386,12 @@ type HlsGroupSettings struct {
 	// a subset of the outputs in the output group, specify a list of them here.
 	AdditionalManifests []*HlsAdditionalManifest `locationName:"additionalManifests" type:"list"`
 
+	// Ignore this setting unless you are using FairPlay DRM with Verimatrix and
+	// you encounter playback issues. Keep the default value, Include (INCLUDE),
+	// to output audio-only headers. Choose Exclude (EXCLUDE) to remove the audio-only
+	// headers from your audio segments.
+	AudioOnlyHeader *string `locationName:"audioOnlyHeader" type:"string" enum:"HlsAudioOnlyHeader"`
+
 	// A partial URI prefix that will be prepended to each output in the media .m3u8
 	// file. Can be used if base manifest is delivered from a different URL than
 	// the main .m3u8 file.
@@ -10512,6 +10567,12 @@ func (s *HlsGroupSettings) SetAdMarkers(v []*string) *HlsGroupSettings {
 // SetAdditionalManifests sets the AdditionalManifests field's value.
 func (s *HlsGroupSettings) SetAdditionalManifests(v []*HlsAdditionalManifest) *HlsGroupSettings {
 	s.AdditionalManifests = v
+	return s
+}
+
+// SetAudioOnlyHeader sets the AudioOnlyHeader field's value.
+func (s *HlsGroupSettings) SetAudioOnlyHeader(v string) *HlsGroupSettings {
+	s.AudioOnlyHeader = &v
 	return s
 }
 
@@ -15322,9 +15383,11 @@ type NoiseReducerTemporalFilterSettings struct {
 	AggressiveMode *int64 `locationName:"aggressiveMode" type:"integer"`
 
 	// Optional. When you set Noise reducer (noiseReducer) to Temporal (TEMPORAL),
-	// you can optionally use this setting to apply additional sharpening. The default
-	// behavior, Auto (AUTO) allows the transcoder to determine whether to apply
-	// filtering, depending on input type and quality.
+	// you can use this setting to apply sharpening. The default behavior, Auto
+	// (AUTO), allows the transcoder to determine whether to apply filtering, depending
+	// on input type and quality. When you set Noise reducer to Temporal, your output
+	// bandwidth is reduced. When Post temporal sharpening is also enabled, that
+	// bandwidth reduction is smaller.
 	PostTemporalSharpening *string `locationName:"postTemporalSharpening" type:"string" enum:"NoiseFilterPostTemporalSharpening"`
 
 	// The speed of the filter (higher number is faster). Low setting reduces bit
@@ -19846,6 +19909,77 @@ func AntiAlias_Values() []string {
 	}
 }
 
+// You can add a tag for this mono-channel audio track to mimic its placement
+// in a multi-channel layout. For example, if this track is the left surround
+// channel, choose Left surround (LS).
+const (
+	// AudioChannelTagL is a AudioChannelTag enum value
+	AudioChannelTagL = "L"
+
+	// AudioChannelTagR is a AudioChannelTag enum value
+	AudioChannelTagR = "R"
+
+	// AudioChannelTagC is a AudioChannelTag enum value
+	AudioChannelTagC = "C"
+
+	// AudioChannelTagLfe is a AudioChannelTag enum value
+	AudioChannelTagLfe = "LFE"
+
+	// AudioChannelTagLs is a AudioChannelTag enum value
+	AudioChannelTagLs = "LS"
+
+	// AudioChannelTagRs is a AudioChannelTag enum value
+	AudioChannelTagRs = "RS"
+
+	// AudioChannelTagLc is a AudioChannelTag enum value
+	AudioChannelTagLc = "LC"
+
+	// AudioChannelTagRc is a AudioChannelTag enum value
+	AudioChannelTagRc = "RC"
+
+	// AudioChannelTagCs is a AudioChannelTag enum value
+	AudioChannelTagCs = "CS"
+
+	// AudioChannelTagLsd is a AudioChannelTag enum value
+	AudioChannelTagLsd = "LSD"
+
+	// AudioChannelTagRsd is a AudioChannelTag enum value
+	AudioChannelTagRsd = "RSD"
+
+	// AudioChannelTagTcs is a AudioChannelTag enum value
+	AudioChannelTagTcs = "TCS"
+
+	// AudioChannelTagVhl is a AudioChannelTag enum value
+	AudioChannelTagVhl = "VHL"
+
+	// AudioChannelTagVhc is a AudioChannelTag enum value
+	AudioChannelTagVhc = "VHC"
+
+	// AudioChannelTagVhr is a AudioChannelTag enum value
+	AudioChannelTagVhr = "VHR"
+)
+
+// AudioChannelTag_Values returns all elements of the AudioChannelTag enum
+func AudioChannelTag_Values() []string {
+	return []string{
+		AudioChannelTagL,
+		AudioChannelTagR,
+		AudioChannelTagC,
+		AudioChannelTagLfe,
+		AudioChannelTagLs,
+		AudioChannelTagRs,
+		AudioChannelTagLc,
+		AudioChannelTagRc,
+		AudioChannelTagCs,
+		AudioChannelTagLsd,
+		AudioChannelTagRsd,
+		AudioChannelTagTcs,
+		AudioChannelTagVhl,
+		AudioChannelTagVhc,
+		AudioChannelTagVhr,
+	}
+}
+
 // Type of Audio codec.
 const (
 	// AudioCodecAac is a AudioCodec enum value
@@ -23215,6 +23349,26 @@ func HlsAudioOnlyContainer_Values() []string {
 	}
 }
 
+// Ignore this setting unless you are using FairPlay DRM with Verimatrix and
+// you encounter playback issues. Keep the default value, Include (INCLUDE),
+// to output audio-only headers. Choose Exclude (EXCLUDE) to remove the audio-only
+// headers from your audio segments.
+const (
+	// HlsAudioOnlyHeaderInclude is a HlsAudioOnlyHeader enum value
+	HlsAudioOnlyHeaderInclude = "INCLUDE"
+
+	// HlsAudioOnlyHeaderExclude is a HlsAudioOnlyHeader enum value
+	HlsAudioOnlyHeaderExclude = "EXCLUDE"
+)
+
+// HlsAudioOnlyHeader_Values returns all elements of the HlsAudioOnlyHeader enum
+func HlsAudioOnlyHeader_Values() []string {
+	return []string{
+		HlsAudioOnlyHeaderInclude,
+		HlsAudioOnlyHeaderExclude,
+	}
+}
+
 // Four types of audio-only tracks are supported: Audio-Only Variant Stream
 // The client can play back this audio-only stream instead of video in low-bandwidth
 // scenarios. Represented as an EXT-X-STREAM-INF in the HLS manifest. Alternate
@@ -25615,9 +25769,11 @@ func MxfAfdSignaling_Values() []string {
 }
 
 // Optional. When you set Noise reducer (noiseReducer) to Temporal (TEMPORAL),
-// you can optionally use this setting to apply additional sharpening. The default
-// behavior, Auto (AUTO) allows the transcoder to determine whether to apply
-// filtering, depending on input type and quality.
+// you can use this setting to apply sharpening. The default behavior, Auto
+// (AUTO), allows the transcoder to determine whether to apply filtering, depending
+// on input type and quality. When you set Noise reducer to Temporal, your output
+// bandwidth is reduced. When Post temporal sharpening is also enabled, that
+// bandwidth reduction is smaller.
 const (
 	// NoiseFilterPostTemporalSharpeningDisabled is a NoiseFilterPostTemporalSharpening enum value
 	NoiseFilterPostTemporalSharpeningDisabled = "DISABLED"
