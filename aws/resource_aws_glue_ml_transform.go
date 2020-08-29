@@ -161,6 +161,66 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 					},
 				},
 			},
+			"evaluation_metrics": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"find_matches_metrics": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"area_under_pr_curve": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"f1": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"precision": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"recall": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"confusion_matrix": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"num_false_negatives": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"num_false_positives": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"num_true_negatives": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"num_true_positives": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"transform_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -501,4 +561,76 @@ func flattenGlueMLTransformSchemaColumns(schemaCols []*glue.SchemaColumn) []inte
 	}
 
 	return l
+}
+
+func flattenGlueMLTransformEvaluationMetrics(parameters *glue.EvaluationMetrics) []map[string]interface{} {
+	if parameters == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"transform_type": aws.StringValue(parameters.TransformType),
+	}
+
+	if parameters.FindMatchesMetrics != nil {
+		m["find_matches_metrics"] = flattenGlueMLTransformFindMatchesMetrics(parameters.FindMatchesMetrics)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenGlueMLTransformFindMatchesMetrics(parameters *glue.FindMatchesMetrics) []map[string]interface{} {
+	if parameters == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if parameters.AreaUnderPRCurve != nil {
+		m["area_under_pr_curve"] = aws.Float64Value(parameters.AreaUnderPRCurve)
+	}
+
+	if parameters.F1 != nil {
+		m["f1"] = aws.Float64Value(parameters.F1)
+	}
+
+	if parameters.Precision != nil {
+		m["precision"] = aws.Float64Value(parameters.Precision)
+	}
+
+	if parameters.Recall != nil {
+		m["recall"] = aws.Float64Value(parameters.Recall)
+	}
+
+	if parameters.ConfusionMatrix != nil {
+		m["confusion_matrix"] = flattenGlueMLTransformConfusionMatrix(parameters.ConfusionMatrix)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenGlueMLTransformConfusionMatrix(parameters *glue.ConfusionMatrix) []map[string]interface{} {
+	if parameters == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if parameters.NumFalseNegatives != nil {
+		m["num_false_negatives"] = aws.Int64Value(parameters.NumFalseNegatives)
+	}
+
+	if parameters.NumFalsePositives != nil {
+		m["num_false_positives"] = aws.Int64Value(parameters.NumFalsePositives)
+	}
+
+	if parameters.NumTrueNegatives != nil {
+		m["num_true_negatives"] = aws.Int64Value(parameters.NumTrueNegatives)
+	}
+
+	if parameters.NumTruePositives != nil {
+		m["num_true_positives"] = aws.Int64Value(parameters.NumTruePositives)
+	}
+
+	return []map[string]interface{}{m}
 }
