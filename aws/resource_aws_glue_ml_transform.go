@@ -270,10 +270,6 @@ func resourceAwsGlueMLTransformCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.TransformId))
 
-	if _, err := waiter.MLTransformReady(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Ready: %w", d.Id(), err)
-	}
-
 	return resourceAwsGlueMLTransformRead(d, meta)
 }
 
@@ -395,10 +391,6 @@ func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) 
 		_, err := conn.UpdateMLTransform(input)
 		if err != nil {
 			return fmt.Errorf("error updating Glue ML Transform (%s): %w", d.Id(), err)
-		}
-
-		if _, err := waiter.MLTransformReady(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Ready: %w", d.Id(), err)
 		}
 	}
 
