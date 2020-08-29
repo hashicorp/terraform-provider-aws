@@ -14,14 +14,14 @@ description: |-
 ```hcl
 data "aws_service_discovery_dns_namespace" "test" {
   name = "example.terraform.local"
-  dns_type = "DNS_PRIVATE"
+  type = "DNS_PRIVATE"
 }
 ```
 
 ## Argument Reference
 
 * `name` - (Required) The name of the service discovery dns namespace.
-* `dns_type` - (Required) The type of the namespace. Allowed values are DNS_PUBLIC or DNS_PRIVATE.
+* `type` - (Required) The type of the namespace. Allowed values are DNS_PUBLIC or DNS_PRIVATE.
 
 ## Attributes Reference
 

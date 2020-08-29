@@ -17,7 +17,7 @@ func dataSourceServiceDiscoveryDnsNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"dns_type": {
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -52,7 +52,7 @@ func dataSourceServiceDiscoveryDnsNamespaceRead(d *schema.ResourceData, meta int
 	filter := &servicediscovery.NamespaceFilter{
 		Condition: aws.String("EQ"),
 		Name:      aws.String("TYPE"),
-		Values:    []*string{aws.String(d.Get("dns_type").(string))},
+		Values:    []*string{aws.String(d.Get("type").(string))},
 	}
 
 	filters = append(filters, filter)

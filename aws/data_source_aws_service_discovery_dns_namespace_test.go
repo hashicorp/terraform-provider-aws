@@ -41,7 +41,7 @@ resource "aws_service_discovery_private_dns_namespace" "test" {
 
 data "aws_service_discovery_dns_namespace" "test" {
   name = "${aws_service_discovery_private_dns_namespace.test.name}"
-  dns_type = "DNS_PRIVATE"
+  type = "DNS_PRIVATE"
 }
 `)
 }
