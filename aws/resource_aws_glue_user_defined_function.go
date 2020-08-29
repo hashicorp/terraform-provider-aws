@@ -123,10 +123,8 @@ func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta inter
 		FunctionInput: expandAwsGlueUserDefinedFunctionInput(d),
 	}
 
-	if d.HasChanges("owner_name", "owner_type", "class_name", "resource_uris") {
-		if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
-			return err
-		}
+	if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
+		return fmt.Errorf("error updating Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsGlueUserDefinedFunctionRead(d, meta)
