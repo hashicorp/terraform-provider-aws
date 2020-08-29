@@ -3182,7 +3182,7 @@ EOT
 
 resource "aws_iam_role_policy_attachment" "emr_service" {
   role       = aws_iam_role.emr_service.id
-  policy_arn = arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
 }
 
 `, r)
