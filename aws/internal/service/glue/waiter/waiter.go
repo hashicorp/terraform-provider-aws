@@ -9,7 +9,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for an Operation to return Success
-	MLTransformDeleteTimeout = 5 * time.Minute
+	MLTransformDeleteTimeout = 2 * time.Minute
 )
 
 // MLTransformDeleted waits for an Operation to return Success

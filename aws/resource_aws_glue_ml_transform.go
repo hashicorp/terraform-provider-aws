@@ -409,11 +409,11 @@ func resourceAwsGlueMLTransformDelete(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())
 
-	input := &glue.DeleteJobInput{
-		JobName: aws.String(d.Id()),
+	input := &glue.DeleteMLTransformInput{
+		TransformId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteJob(input)
+	_, err := conn.DeleteMLTransform(input)
 	if err != nil {
 		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
