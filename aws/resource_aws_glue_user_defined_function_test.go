@@ -106,7 +106,6 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
-				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueUserDefinedFunction(), resourceName),
