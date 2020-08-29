@@ -78,10 +78,8 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 				Config: testAccAWSDBProxyConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyExists(resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", name),
-					resource.TestCheckResourceAttr(
-						resourceName, "engine_family", "MYSQL"),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db-proxy:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
@@ -96,7 +94,7 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", "id"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id"),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`fill me in`))),
+					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`))),
 			},
 			{
 				ResourceName:      resourceName,

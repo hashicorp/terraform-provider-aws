@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -108,7 +106,6 @@ func resourceAwsDbProxy() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDbProxyAuthHash,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -244,12 +241,12 @@ func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]inter
 	return m
 }
 
-func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) *schema.Set {
+func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{} {
 	s := []interface{}{}
 	for _, v := range userAuthConfigs {
 		s = append(s, flattenDbProxyAuth(v))
 	}
-	return schema.NewSet(resourceAwsDbProxyAuthHash, s)
+	return s
 }
 
 func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
@@ -397,25 +394,4 @@ func resourceAwsDbProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func resourceAwsDbProxyAuthHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["auth_scheme"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := m["description"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := m["iam_auth"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := m["secret_arn"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := m["username"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	return hashcode.String(buf.String())
 }
