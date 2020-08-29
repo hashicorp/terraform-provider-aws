@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 )
 
 func resourceAwsGlueMLTransform() *schema.Resource {
@@ -269,6 +270,10 @@ func resourceAwsGlueMLTransformCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.TransformId))
 
+	if _, err := waiter.MLTransformReady(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Ready: %w", d.Id(), err)
+	}
+
 	return resourceAwsGlueMLTransformRead(d, meta)
 }
 
@@ -391,6 +396,10 @@ func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("error updating Glue ML Transform (%s): %w", d.Id(), err)
 		}
+
+		if _, err := waiter.MLTransformReady(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Ready: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -418,6 +427,10 @@ func resourceAwsGlueMLTransformDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue ML Transform (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.MLTransformDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil
