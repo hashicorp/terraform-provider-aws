@@ -73,6 +73,47 @@ func TestAccAWSGlueWorkflow_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueWorkflow_maxConcurrentRuns(t *testing.T) {
+	var workflow glue.Workflow
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_workflow.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueWorkflow(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueWorkflowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueWorkflowConfigMaxConcurrentRuns(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueWorkflowExists(resourceName, &workflow),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueWorkflowConfigMaxConcurrentRuns(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueWorkflowExists(resourceName, &workflow),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "2"),
+				),
+			},
+			{
+				Config: testAccAWSGlueWorkflowConfigMaxConcurrentRuns(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueWorkflowExists(resourceName, &workflow),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueWorkflow_DefaultRunProperties(t *testing.T) {
 	var workflow glue.Workflow
 
@@ -309,6 +350,15 @@ resource "aws_glue_workflow" "test" {
   name = "%s"
 }
 `, rName)
+}
+
+func testAccAWSGlueWorkflowConfigMaxConcurrentRuns(rName string, runs int) string {
+	return fmt.Sprintf(`
+resource "aws_glue_workflow" "test" {
+  name                = %[1]q
+  max_concurrent_runs = %[2]d
+}
+`, rName, runs)
 }
 
 func testAccAWSGlueWorkflowConfigTags1(rName, tagKey1, tagValue1 string) string {
