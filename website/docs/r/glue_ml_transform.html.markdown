@@ -160,8 +160,15 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of Glue ML Transform
-* `id` - ML Transform ID
+* `arn` - Amazon Resource Name (ARN) of Glue ML Transform.
+* `id` - ML Transform ID.
+* `label_count` - The number of labels available for this transform.
+* `schema` - The object that represents the schema that this transform accepts. see [Schema](#schema).
+
+### schema
+
+* `name` - The name of the column.
+* `data_type` - The type of data in the column.
 
 ## Import
 
