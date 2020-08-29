@@ -23,7 +23,6 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
-				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
