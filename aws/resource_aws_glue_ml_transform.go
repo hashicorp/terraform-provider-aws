@@ -141,6 +141,26 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
+			"label_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"schema": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"data_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -235,6 +255,7 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("timeout", int(aws.Int64Value(output.Timeout)))
 	d.Set("worker_type", output.WorkerType)
 	d.Set("number_of_workers", int(aws.Int64Value(output.NumberOfWorkers)))
+	d.Set("label_count", int(aws.Int64Value(output.LabelCount)))
 
 	if err := d.Set("input_record_tables", flattenGlueMLTransformInputRecordTables(output.InputRecordTables)); err != nil {
 		return fmt.Errorf("error setting input_record_tables: %w", err)
@@ -242,6 +263,10 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 
 	if err := d.Set("parameters", flattenGlueMLTransformParameters(output.Parameters)); err != nil {
 		return fmt.Errorf("error setting parameters: %w", err)
+	}
+
+	if err := d.Set("schema", flattenGlueMLTransformSchemaColumns(output.Schema)); err != nil {
+		return fmt.Errorf("error setting schema: %w", err)
 	}
 
 	tags, err := keyvaluetags.GlueListTags(conn, mlTransformArn)
@@ -461,4 +486,19 @@ func flattenGlueMLTransformFindMatchesParameters(parameters *glue.FindMatchesPar
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenGlueMLTransformSchemaColumns(schemaCols []*glue.SchemaColumn) []interface{} {
+	l := []interface{}{}
+
+	for _, schemaCol := range schemaCols {
+		m := map[string]interface{}{
+			"name":      aws.StringValue(schemaCol.Name),
+			"data_type": aws.StringValue(schemaCol.DataType),
+		}
+
+		l = append(l, m)
+	}
+
+	return l
 }
