@@ -350,7 +350,7 @@ func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).glueconn
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
-		"role_arn", "timeout", "worker_type") {
+		"role_arn", "timeout", "worker_type", "parameters") {
 
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
