@@ -105,7 +105,8 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
-				ValidateFunc:  validation.IntAtLeast(1),
+				ValidateFunc:  validation.IntBetween(2, 100),
+				Default:       10,
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
