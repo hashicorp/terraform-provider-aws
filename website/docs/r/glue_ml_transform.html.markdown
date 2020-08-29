@@ -14,8 +14,8 @@ Provides a Glue ML Transform resource.
 
 ```hcl
 resource "aws_glue_ml_transform" "test" {
-  name         = "example"
-  role_arn     = aws_iam_role.test.arn
+  name     = "example"
+  role_arn = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
