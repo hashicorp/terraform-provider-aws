@@ -422,6 +422,9 @@ func resourceAwsGlueMLTransformDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := waiter.MLTransformDeleted(conn, d.Id()); err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			return nil
+		}
 		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Deleted: %w", d.Id(), err)
 	}
 
