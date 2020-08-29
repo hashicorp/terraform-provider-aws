@@ -329,6 +329,10 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting schema: %w", err)
 	}
 
+	if err := d.Set("evaluation_metrics", flattenGlueMLTransformEvaluationMetrics(output.EvaluationMetrics)); err != nil {
+		return fmt.Errorf("error setting evaluation_metrics: %w", err)
+	}
+
 	tags, err := keyvaluetags.GlueListTags(conn, mlTransformArn)
 
 	if err != nil {
