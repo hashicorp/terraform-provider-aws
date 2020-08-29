@@ -230,7 +230,12 @@ func expandAwsGlueUserDefinedFunctionResourceUri(conf *schema.Set) []*glue.Resou
 	result := make([]*glue.ResourceUri, 0, conf.Len())
 
 	for _, r := range conf.List() {
-		uriRaw := r.(map[string]interface{})
+		uriRaw, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
 		uri := &glue.ResourceUri{
 			ResourceType: aws.String(uriRaw["resource_type"].(string)),
 			Uri:          aws.String(uriRaw["uri"].(string)),
