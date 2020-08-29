@@ -3451,29 +3451,12 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 	)
 }
 
-func testAccAWSEmrClusterConfigInstanceFleets(r int) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
-resource "aws_iam_policy" "emr_service_spot" {
-  name = "%[1]s_emr_spot"
-
-  policy = <<EOT
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "arn:aws:iam::*:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot*",
-        "Action": [
-            "iam:CreateServiceLinkedRole"
-        ]
-    }]
-}
-EOT
-}
-
+func testAccAWSEmrClusterConfigInstanceFleets(r string) string {
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name                 = "%[1]s"
   release_label        = "emr-5.30.1"
