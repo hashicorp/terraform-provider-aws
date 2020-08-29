@@ -97,7 +97,7 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
-					resource.TestCheckResourceAttr(resourceName, "schema.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.data_type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "schema.1.data_type", "string"),
