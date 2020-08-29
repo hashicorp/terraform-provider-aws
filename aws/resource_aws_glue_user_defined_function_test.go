@@ -22,7 +22,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
+				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
@@ -38,7 +38,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, updated),
+				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -61,7 +61,7 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
+				Config: testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
@@ -73,14 +73,14 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccGlueUserDefinedFunctionResourceURIConfig2(rName),
+				Config: testAccGlueUserDefinedFunctionResourceURIConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "2"),
 				),
 			},
 			{
-				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
+				Config: testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
@@ -100,7 +100,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
+				Config: testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueUserDefinedFunction(), resourceName),
