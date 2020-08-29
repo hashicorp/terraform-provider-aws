@@ -176,7 +176,7 @@ func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFu
 		}
 
 		if out.UserDefinedFunction == nil {
-			return fmt.Errorf("No Glue Database Found")
+			return fmt.Errorf("No Glue User Defined Function Found")
 		}
 
 		if *out.UserDefinedFunction.FunctionName != funcName {
