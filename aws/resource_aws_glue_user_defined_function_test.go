@@ -85,7 +85,6 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 			},
 			{
 				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
-				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
