@@ -132,6 +132,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{
 											ec2.VolumeTypeStandard,
 											ec2.VolumeTypeIo1,
+											ec2.VolumeTypeIo2,
 											ec2.VolumeTypeGp2,
 											ec2.VolumeTypeSc1,
 											ec2.VolumeTypeSt1,
@@ -211,6 +212,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{
 											ec2.VolumeTypeStandard,
 											ec2.VolumeTypeIo1,
+											ec2.VolumeTypeIo2,
 											ec2.VolumeTypeGp2,
 											ec2.VolumeTypeSc1,
 											ec2.VolumeTypeSt1,
