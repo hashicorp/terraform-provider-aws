@@ -123,7 +123,7 @@ func resourceAwsEcsAccountSettingDefaultUpdate(d *schema.ResourceData, meta inte
 
 		_, err := conn.PutAccountSettingDefault(&input)
 		if err != nil {
-			fmt.Errorf("Error Updating Default Account settings (%s): %s", settingName, err)
+			return fmt.Errorf("Error Updating Default Account settings (%s): %s", settingName, err)
 		}
 	}
 
