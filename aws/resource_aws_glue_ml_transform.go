@@ -66,16 +66,18 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"accuracy_cost_trade_off": {
-										Type:     schema.TypeFloat,
-										Optional: true,
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: validation.FloatAtMost(1.0),
 									},
 									"enforce_provided_labels": {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
 									"precision_recall_trade_off": {
-										Type:     schema.TypeFloat,
-										Optional: true,
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: validation.FloatAtMost(1.0),
 									},
 									"primary_key_column_name": {
 										Type:     schema.TypeString,

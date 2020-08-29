@@ -92,7 +92,6 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
@@ -109,6 +108,65 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueMLTransform_typeFindMatchesFull(t *testing.T) {
+	var transform glue.GetMLTransformOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_ml_transform.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueMLTransformTypeFindMatchesFullConfig(rName, true, 0.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueMLTransformTypeFindMatchesFullConfig(rName, false, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
+				),
+			},
+			{
+				Config: testAccAWSGlueMLTransformTypeFindMatchesFullConfig(rName, true, 0.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "true"),
+				),
 			},
 		},
 	})
@@ -594,6 +652,33 @@ resource "aws_glue_ml_transform" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
+}
+
+func testAccAWSGlueMLTransformTypeFindMatchesFullConfig(rName string, enforce bool, tradeOff float64) string {
+	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
+resource "aws_glue_ml_transform" "test" {
+  name         = %[1]q
+  role_arn     = aws_iam_role.test.arn
+
+  input_record_tables {
+    database_name = aws_glue_catalog_table.test.database_name
+    table_name    = aws_glue_catalog_table.test.name
+  }
+
+  parameters {
+    transform_type = "FIND_MATCHES"
+
+    find_matches_parameters {
+      primary_key_column_name    = "my_column_1"
+      enforce_provided_labels    = %[2]t
+      precision_recall_trade_off = %[3]g
+      accuracy_cost_trade_off    = %[3]g
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, enforce, tradeOff)
 }
 
 func testAccAWSGlueMLTransformConfigDescription(rName, description string) string {
