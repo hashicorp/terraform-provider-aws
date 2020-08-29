@@ -71,6 +71,36 @@ func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lightsail_instance_public_ports.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			testAccPreCheckAWSLightsail(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLightsailInstancePublicPortsConfig_cidrs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstancePublicPortsExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.0.protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.0.from_port", "125"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.0.to_port", "125"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.0.cidrs.0", "192.168.1.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.0.cidrs.1", "1.1.1.1/32"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -185,6 +215,37 @@ resource "aws_lightsail_instance_public_ports" "test" {
     protocol  = "tcp"
     from_port = 443
     to_port   = 443
+  }
+}
+`, rName)
+}
+
+func testAccAWSLightsailInstancePublicPortsConfig_cidrs(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+}
+
+resource "aws_lightsail_instance_public_ports" "test" {
+  instance_name = aws_lightsail_instance.test.name
+
+  port_info {
+    protocol  = "tcp"
+    from_port = 125
+    to_port   = 125
+    cidrs     = ["192.168.1.0/24", "1.1.1.1/32"]
   }
 }
 `, rName)
