@@ -60,7 +60,7 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"find_matches_parameters": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -105,8 +105,7 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
-				ValidateFunc:  validation.IntBetween(2, 100),
-				Default:       10,
+				ValidateFunc:  validation.FloatBetween(2, 100),
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
@@ -383,6 +382,10 @@ func resourceAwsGlueMLTransformUpdate(d *schema.ResourceData, meta interface{}) 
 			input.GlueVersion = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("parameters"); ok {
+			input.Parameters = expandGlueMLTransformParameters(v.([]interface{}))
+		}
+
 		log.Printf("[DEBUG] Updating Glue ML Transform: %s", input)
 		_, err := conn.UpdateMLTransform(input)
 		if err != nil {
@@ -480,7 +483,7 @@ func expandGlueMLTransformParameters(l []interface{}) *glue.TransformParameters 
 		TransformType: aws.String(m["transform_type"].(string)),
 	}
 
-	if v, ok := m["find_matches_parameters"]; ok {
+	if v, ok := m["find_matches_parameters"]; ok && len(v.([]interface{})) > 0 {
 		param.FindMatchesParameters = expandGlueMLTransformFindMatchesParameters(v.([]interface{}))
 	}
 
