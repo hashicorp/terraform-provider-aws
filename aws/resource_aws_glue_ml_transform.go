@@ -135,12 +135,14 @@ func resourceAwsGlueMLTransform() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
+				RequiredWith:  []string{"number_of_workers"},
 			},
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.IntAtLeast(1),
+				RequiredWith:  []string{"worker_type"},
 			},
 			"label_count": {
 				Type:     schema.TypeInt,
@@ -297,6 +299,8 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 		d.SetId("")
 		return nil
 	}
+
+	log.Printf("setting Glue ML Transform: %#v", output)
 
 	mlTransformArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,

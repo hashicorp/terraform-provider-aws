@@ -301,24 +301,19 @@ func TestAccAWSGlueMLTransform_workerType(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueMLTransformConfigWorkerType(rName, "Standard"),
+				Config: testAccAWSGlueMLTransformConfigWorkerType(rName, "Standard", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "Standard"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "1"),
 				),
 			},
 			{
-				Config: testAccAWSGlueMLTransformConfigWorkerType(rName, "G.1X"),
+				Config: testAccAWSGlueMLTransformConfigWorkerType(rName, "G.1X", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.1X"),
-				),
-			},
-			{
-				Config: testAccAWSGlueMLTransformConfigWorkerType(rName, "G.2X"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.2X"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "2"),
 				),
 			},
 			{
@@ -748,12 +743,13 @@ resource "aws_glue_ml_transform" "test" {
 `, rName, timeout)
 }
 
-func testAccAWSGlueMLTransformConfigWorkerType(rName string, workerType string) string {
+func testAccAWSGlueMLTransformConfigWorkerType(rName, workerType string, numOfWorkers int) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  worker_type  = %[2]q
-  role_arn     = aws_iam_role.test.arn
+  name              = %[1]q
+  worker_type       = %[2]q
+  number_of_workers = %[3]d
+  role_arn          = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -770,7 +766,7 @@ resource "aws_glue_ml_transform" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, workerType)
+`, rName, workerType, numOfWorkers)
 }
 
 func testAccAWSGlueMLTransformConfigMaxCapacity(rName string, maxCapacity float64) string {
