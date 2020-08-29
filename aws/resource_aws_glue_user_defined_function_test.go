@@ -40,7 +40,6 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 			},
 			{
 				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, updated),
-				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
