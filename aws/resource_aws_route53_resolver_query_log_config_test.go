@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
 		Name: "aws_route53_resolver_query_log_config",
 		F:    testSweepRoute53ResolverQueryLogConfigs,
+		Dependencies: []string{
+			"aws_route53_resolver_query_log_config_association",
+		},
 	})
 }
 
