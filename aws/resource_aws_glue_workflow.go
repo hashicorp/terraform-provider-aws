@@ -44,7 +44,7 @@ func resourceAwsGlueWorkflow() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"tags": tagsSchema(),
 		},
