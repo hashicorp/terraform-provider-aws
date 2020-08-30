@@ -28,21 +28,21 @@ resource "aws_config_config_rule" "this" {
 
 resource "aws_config_remediation_configuration" "this" {
   config_rule_name = aws_config_config_rule.this.name
-  resource_type = "AWS::S3::Bucket"
-  target_type = "SSM_DOCUMENT"
-  target_id = "AWS-EnableS3BucketEncryption"
-  target_version = "1"
+  resource_type    = "AWS::S3::Bucket"
+  target_type      = "SSM_DOCUMENT"
+  target_id        = "AWS-EnableS3BucketEncryption"
+  target_version   = "1"
 
   parameter {
-    name = "AutomationAssumeRole"
+    name         = "AutomationAssumeRole"
     static_value = "arn:aws:iam::875924563244:role/security_config"
   }
   parameter {
-    name = "BucketName"
+    name           = "BucketName"
     resource_value = "RESOURCE_ID"
   }
   parameter {
-    name = "SSEAlgorithm"
+    name         = "SSEAlgorithm"
     static_value = "AES256"
   }
 }
