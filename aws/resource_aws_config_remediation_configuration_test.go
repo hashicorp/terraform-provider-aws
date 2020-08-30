@@ -138,12 +138,12 @@ resource "aws_config_config_rule" "test" {
 }
 
 resource "aws_config_configuration_recorder" "test" {
-  name     = "tf-acc-test-%d"
+  name     = "tf-acc-test-%[1]d"
   role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-acc-test-awsconfig-%d"
+  name = "tf-acc-test-awsconfig-%[1]d"
 
   assume_role_policy = <<EOF
 {
@@ -163,7 +163,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-acc-test-awsconfig-%d"
+  name = "tf-acc-test-awsconfig-%[1]d"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -180,5 +180,5 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, randInt, randInt, randInt, randInt)
+`, randInt)
 }
