@@ -449,7 +449,7 @@ func TestAccAWSRoute_LocalGatewayID(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: AccAWSRouteResourceConfigLocalGatewayID(),
+				Config: testAccAWSRouteResourceConfigLocalGatewayID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
@@ -1298,7 +1298,7 @@ resource "aws_route" "test" {
 `, rName, ipv6Route)
 }
 
-func AccAWSRouteResourceConfigLocalGatewayID() string {
+func testAccAWSRouteResourceConfigLocalGatewayID() string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 data "aws_ec2_local_gateway" "first" {

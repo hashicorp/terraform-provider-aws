@@ -61,7 +61,7 @@ func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: AccAWSRouteDataSourceConfigLocalGatewayID(),
+				Config: testAccAWSRouteDataSourceConfigLocalGatewayID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
@@ -246,7 +246,7 @@ data "aws_route" "test" {
 `
 }
 
-func AccAWSRouteDataSourceConfigLocalGatewayID() string {
+func testAccAWSRouteDataSourceConfigLocalGatewayID() string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 data "aws_ec2_local_gateway" "first" {
