@@ -19,10 +19,6 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -99,13 +95,8 @@ func resourceAwsGlueDataCatalogEncryptionSettingsPut(d *schema.ResourceData, met
 func resourceAwsGlueDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	catalogID, _, err := readAwsGlueCatalogID(d.Id())
-	if err != nil {
-		return err
-	}
-
 	input := &glue.GetDataCatalogEncryptionSettingsInput{
-		CatalogId: aws.String(catalogID),
+		CatalogId: aws.String(d.Id()),
 	}
 
 	out, err := conn.GetDataCatalogEncryptionSettings(input)
@@ -113,7 +104,7 @@ func resourceAwsGlueDataCatalogEncryptionSettingsRead(d *schema.ResourceData, me
 		return fmt.Errorf("Error reading Glue Data Catalog Encryption Settings: %w", err)
 	}
 
-	d.Set("catalog_id", catalogID)
+	d.Set("catalog_id", d.Id())
 
 	if err := d.Set("data_catalog_encryption_settings", flattenGlueDataCatalogEncryptionSettings(out.DataCatalogEncryptionSettings)); err != nil {
 		return fmt.Errorf("error setting data_catalog_encryption_settings: %w", err)
