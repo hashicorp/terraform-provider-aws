@@ -162,7 +162,7 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", input)
 	_, err := conn.PutRemediationConfigurations(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create AWSConfig remediation configuration: %w", err)
 	}
 
 	remediationConfigurationOutput, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
