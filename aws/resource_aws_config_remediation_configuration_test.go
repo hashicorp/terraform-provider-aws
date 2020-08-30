@@ -25,11 +25,11 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccConfigRemediationConfigurationConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRemediationConfigurationExists("aws_config_remediation_configuration.foo", &rc),
-					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "config_rule_name", expectedName),
-					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "target_id", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "target_type", "AWS-PublishSNSNotification"),
-					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "parameters.#", "2"),
+					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", "SSM_DOCUMENT"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS-PublishSNSNotification"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
 				),
 			},
 			{
