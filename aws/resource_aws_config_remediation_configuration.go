@@ -165,18 +165,7 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 		return fmt.Errorf("Failed to create AWSConfig remediation configuration: %w", err)
 	}
 
-	remediationConfigurationOutput, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
-		ConfigRuleNames: []*string{&name},
-	})
-	if err != nil {
-		return err
-	}
-	if len(remediationConfigurationOutput.RemediationConfigurations) != 1 {
-		return fmt.Errorf("Could not read configuration for %s.", name)
-	}
-
 	d.SetId(name)
-	d.Set("arn", remediationConfigurationOutput.RemediationConfigurations[0].Arn)
 
 	log.Printf("[DEBUG] AWSConfig config remediation configuration for rule %q created", name)
 
