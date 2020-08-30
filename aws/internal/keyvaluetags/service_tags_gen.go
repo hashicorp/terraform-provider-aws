@@ -62,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -79,6 +80,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 )
 
 // map[string]*string handling
@@ -2050,6 +2052,33 @@ func RedshiftKeyValueTags(tags []*redshift.Tag) KeyValueTags {
 	return New(m)
 }
 
+// ResourcegroupstaggingapiTags returns resourcegroupstaggingapi service tags.
+func (tags KeyValueTags) ResourcegroupstaggingapiTags() []*resourcegroupstaggingapi.Tag {
+	result := make([]*resourcegroupstaggingapi.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &resourcegroupstaggingapi.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ResourcegroupstaggingapiKeyValueTags creates KeyValueTags from resourcegroupstaggingapi service tags.
+func ResourcegroupstaggingapiKeyValueTags(tags []*resourcegroupstaggingapi.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // Route53Tags returns route53 service tags.
 func (tags KeyValueTags) Route53Tags() []*route53.Tag {
 	result := make([]*route53.Tag, 0, len(tags))
@@ -2527,6 +2556,33 @@ func (tags KeyValueTags) WorkspacesTags() []*workspaces.Tag {
 
 // WorkspacesKeyValueTags creates KeyValueTags from workspaces service tags.
 func WorkspacesKeyValueTags(tags []*workspaces.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// XrayTags returns xray service tags.
+func (tags KeyValueTags) XrayTags() []*xray.Tag {
+	result := make([]*xray.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &xray.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// XrayKeyValueTags creates KeyValueTags from xray service tags.
+func XrayKeyValueTags(tags []*xray.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

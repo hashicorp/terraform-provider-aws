@@ -77,6 +77,7 @@ var sliceServiceNames = []string{
 	"ram",
 	"rds",
 	"redshift",
+	"resourcegroupstaggingapi",
 	"route53",
 	"route53resolver",
 	"s3",
@@ -95,6 +96,7 @@ var sliceServiceNames = []string{
 	"wafregional",
 	"wafv2",
 	"workspaces",
+	"xray",
 }
 
 var mapServiceNames = []string{

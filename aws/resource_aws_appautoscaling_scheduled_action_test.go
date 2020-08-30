@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
@@ -233,8 +233,8 @@ func testAccAppautoscalingScheduledActionConfig_EMR(rName, ts string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type c4.large is not supported in the requested availability zone.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -256,9 +256,14 @@ resource "aws_emr_cluster" "hoge" {
     instance_profile                  = "${aws_iam_instance_profile.instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 2
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 2
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
@@ -277,7 +282,7 @@ resource "aws_emr_cluster" "hoge" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = ["aws_main_route_table_association.hoge"]
+  depends_on = [aws_main_route_table_association.hoge]
 
   service_role     = "${aws_iam_role.emr_role.arn}"
   autoscaling_role = "${aws_iam_role.autoscale_role.arn}"
@@ -308,7 +313,7 @@ resource "aws_security_group" "hoge" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.hoge"]
+  depends_on = [aws_subnet.hoge]
 
   lifecycle {
     ignore_changes = ["ingress", "egress"]

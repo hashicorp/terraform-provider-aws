@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestAccAWSGuardDuty(t *testing.T) {
+func TestAccAWSGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
 			"basic":            testAccAwsGuardDutyDetector_basic,
@@ -35,6 +35,10 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"inviteOnUpdate":     testAccAwsGuardDutyMember_invite_onUpdate,
 			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
+		},
+		"PublishingDestination": {
+			"basic":      testAccAwsGuardDutyPublishingDestination_basic,
+			"disappears": testAccAwsGuardDutyPublishingDestination_disappears,
 		},
 	}
 

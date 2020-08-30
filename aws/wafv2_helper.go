@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func wafv2EmptySchema() *schema.Schema {
@@ -143,6 +143,7 @@ func wafv2GeoMatchStatementSchema() *schema.Schema {
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
 			},
 		},
 	}
@@ -242,57 +243,81 @@ func wafv2XssMatchStatementSchema() *schema.Schema {
 		},
 	}
 }
+func wafv2FieldToMatchBaseSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"all_query_arguments": wafv2EmptySchema(),
+			"body":                wafv2EmptySchema(),
+			"method":              wafv2EmptySchema(),
+			"query_string":        wafv2EmptySchema(),
+			"single_header": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 40),
+								// The value is returned in lower case by the API.
+								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+							),
+						},
+					},
+				},
+			},
+			"single_query_argument": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 30),
+								// The value is returned in lower case by the API.
+								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+							),
+						},
+					},
+				},
+			},
+			"uri_path": wafv2EmptySchema(),
+		},
+	}
+}
 
 func wafv2FieldToMatchSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
+		Elem:     wafv2FieldToMatchBaseSchema(),
+	}
+}
+
+func wafv2ForwardedIPConfig() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"all_query_arguments": wafv2EmptySchema(),
-				"body":                wafv2EmptySchema(),
-				"method":              wafv2EmptySchema(),
-				"query_string":        wafv2EmptySchema(),
-				"single_header": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"name": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 40),
-									// The value is returned in lower case by the API.
-									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-									validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
-								),
-							},
-						},
-					},
+				"fallback_behavior": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
 				},
-				"single_query_argument": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"name": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 30),
-									// The value is returned in lower case by the API.
-									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-									validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
-								),
-							},
-						},
-					},
+				"header_name": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-				"uri_path": wafv2EmptySchema(),
 			},
 		},
 	}
@@ -339,7 +364,6 @@ func wafv2VisibilityConfigSchema() *schema.Schema {
 				"metric_name": {
 					Type:     schema.TypeString,
 					Required: true,
-					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
 						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -575,6 +599,19 @@ func expandWafv2FieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	return f
 }
 
+func expandWafv2ForwardedIPConfig(l []interface{}) *wafv2.ForwardedIPConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.ForwardedIPConfig{
+		FallbackBehavior: aws.String(m["fallback_behavior"].(string)),
+		HeaderName:       aws.String(m["header_name"].(string)),
+	}
+}
+
 func expandWafv2SingleHeader(l []interface{}) *wafv2.SingleHeader {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -646,9 +683,15 @@ func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
 
 	m := l[0].(map[string]interface{})
 
-	return &wafv2.GeoMatchStatement{
+	statement := &wafv2.GeoMatchStatement{
 		CountryCodes: expandStringList(m["country_codes"].([]interface{})),
 	}
+
+	if v, ok := m["forwarded_ip_config"]; ok {
+		statement.ForwardedIPConfig = expandWafv2ForwardedIPConfig(v.([]interface{}))
+	}
+
+	return statement
 }
 
 func expandWafv2NotStatement(l []interface{}) *wafv2.NotStatement {
@@ -906,6 +949,19 @@ func flattenWafv2FieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	return []interface{}{m}
 }
 
+func flattenWafv2ForwardedIPConfig(f *wafv2.ForwardedIPConfig) interface{} {
+	if f == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"fallback_behavior": aws.StringValue(f.FallbackBehavior),
+		"header_name":       aws.StringValue(f.HeaderName),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenWafv2SingleHeader(s *wafv2.SingleHeader) interface{} {
 	if s == nil {
 		return []interface{}{}
@@ -959,7 +1015,8 @@ func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"country_codes": flattenStringList(g.CountryCodes),
+		"country_codes":       flattenStringList(g.CountryCodes),
+		"forwarded_ip_config": flattenWafv2ForwardedIPConfig(g.ForwardedIPConfig),
 	}
 
 	return []interface{}{m}
