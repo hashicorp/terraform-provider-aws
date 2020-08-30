@@ -168,6 +168,9 @@ func (c *AppStream) BatchAssociateUserStackRequest(input *BatchAssociateUserStac
 //   * OperationNotPermittedException
 //   The attempted operation is not permitted.
 //
+//   * InvalidParameterCombinationException
+//   Indicates an incorrect combination of parameters, or a missing parameter.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/BatchAssociateUserStack
 func (c *AppStream) BatchAssociateUserStack(input *BatchAssociateUserStackInput) (*BatchAssociateUserStackOutput, error) {
 	req, out := c.BatchAssociateUserStackRequest(input)
@@ -242,6 +245,14 @@ func (c *AppStream) BatchDisassociateUserStackRequest(input *BatchDisassociateUs
 //
 // See the AWS API reference guide for Amazon AppStream's
 // API operation BatchDisassociateUserStack for usage and error information.
+//
+// Returned Error Types:
+//   * OperationNotPermittedException
+//   The attempted operation is not permitted.
+//
+//   * InvalidParameterCombinationException
+//   Indicates an incorrect combination of parameters, or a missing parameter.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/BatchDisassociateUserStack
 func (c *AppStream) BatchDisassociateUserStack(input *BatchDisassociateUserStackInput) (*BatchDisassociateUserStackOutput, error) {
 	req, out := c.BatchDisassociateUserStackRequest(input)
@@ -416,6 +427,9 @@ func (c *AppStream) CreateDirectoryConfigRequest(input *CreateDirectoryConfigInp
 // API operation CreateDirectoryConfig for usage and error information.
 //
 // Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource was not found.
+//
 //   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
@@ -425,6 +439,12 @@ func (c *AppStream) CreateDirectoryConfigRequest(input *CreateDirectoryConfigInp
 //   * InvalidAccountStatusException
 //   The resource cannot be created because your AWS account is suspended. For
 //   assistance, contact AWS Support.
+//
+//   * OperationNotPermittedException
+//   The attempted operation is not permitted.
+//
+//   * InvalidRoleException
+//   The specified role is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateDirectoryConfig
 func (c *AppStream) CreateDirectoryConfig(input *CreateDirectoryConfigInput) (*CreateDirectoryConfigOutput, error) {
@@ -514,6 +534,11 @@ func (c *AppStream) CreateFleetRequest(input *CreateFleetInput) (req *request.Re
 //
 //   * LimitExceededException
 //   The requested limit exceeds the permitted limit for an account.
+//
+//   * RequestLimitExceededException
+//   AppStream 2.0 can’t process the request right now because the Describe
+//   calls from your AWS account are being throttled by Amazon EC2. Try again
+//   later.
 //
 //   * InvalidAccountStatusException
 //   The resource cannot be created because your AWS account is suspended. For
@@ -616,6 +641,11 @@ func (c *AppStream) CreateImageBuilderRequest(input *CreateImageBuilderInput) (r
 // Returned Error Types:
 //   * LimitExceededException
 //   The requested limit exceeds the permitted limit for an account.
+//
+//   * RequestLimitExceededException
+//   AppStream 2.0 can’t process the request right now because the Describe
+//   calls from your AWS account are being throttled by Amazon EC2. Try again
+//   later.
 //
 //   * InvalidAccountStatusException
 //   The resource cannot be created because your AWS account is suspended. For
@@ -2635,6 +2665,9 @@ func (c *AppStream) DescribeUserStackAssociationsRequest(input *DescribeUserStac
 //   * InvalidParameterCombinationException
 //   Indicates an incorrect combination of parameters, or a missing parameter.
 //
+//   * OperationNotPermittedException
+//   The attempted operation is not permitted.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DescribeUserStackAssociations
 func (c *AppStream) DescribeUserStackAssociations(input *DescribeUserStackAssociationsInput) (*DescribeUserStackAssociationsOutput, error) {
 	req, out := c.DescribeUserStackAssociationsRequest(input)
@@ -2883,6 +2916,9 @@ func (c *AppStream) DisassociateFleetRequest(input *DisassociateFleetInput) (req
 //
 //   * ConcurrentModificationException
 //   An API error occurred. Wait a few minutes and try again.
+//
+//   * OperationNotPermittedException
+//   The attempted operation is not permitted.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/DisassociateFleet
 func (c *AppStream) DisassociateFleet(input *DisassociateFleetInput) (*DisassociateFleetOutput, error) {
@@ -3360,6 +3396,11 @@ func (c *AppStream) StartFleetRequest(input *StartFleetInput) (req *request.Requ
 //
 //   * LimitExceededException
 //   The requested limit exceeds the permitted limit for an account.
+//
+//   * RequestLimitExceededException
+//   AppStream 2.0 can’t process the request right now because the Describe
+//   calls from your AWS account are being throttled by Amazon EC2. Try again
+//   later.
 //
 //   * InvalidAccountStatusException
 //   The resource cannot be created because your AWS account is suspended. For
@@ -3904,6 +3945,12 @@ func (c *AppStream) UpdateDirectoryConfigRequest(input *UpdateDirectoryConfigInp
 //   * ConcurrentModificationException
 //   An API error occurred. Wait a few minutes and try again.
 //
+//   * OperationNotPermittedException
+//   The attempted operation is not permitted.
+//
+//   * InvalidRoleException
+//   The specified role is invalid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/UpdateDirectoryConfig
 func (c *AppStream) UpdateDirectoryConfig(input *UpdateDirectoryConfigInput) (*UpdateDirectoryConfigOutput, error) {
 	req, out := c.UpdateDirectoryConfigRequest(input)
@@ -3991,6 +4038,11 @@ func (c *AppStream) UpdateFleetRequest(input *UpdateFleetInput) (req *request.Re
 //
 //   * LimitExceededException
 //   The requested limit exceeds the permitted limit for an account.
+//
+//   * RequestLimitExceededException
+//   AppStream 2.0 can’t process the request right now because the Describe
+//   calls from your AWS account are being throttled by Amazon EC2. Try again
+//   later.
 //
 //   * InvalidAccountStatusException
 //   The resource cannot be created because your AWS account is suspended. For
@@ -4948,9 +5000,7 @@ type CreateDirectoryConfigInput struct {
 
 	// The credentials for the service account used by the fleet or image builder
 	// to connect to the directory.
-	//
-	// ServiceAccountCredentials is a required field
-	ServiceAccountCredentials *ServiceAccountCredentials `type:"structure" required:"true"`
+	ServiceAccountCredentials *ServiceAccountCredentials `type:"structure"`
 }
 
 // String returns the string representation
@@ -4971,9 +5021,6 @@ func (s *CreateDirectoryConfigInput) Validate() error {
 	}
 	if s.OrganizationalUnitDistinguishedNames == nil {
 		invalidParams.Add(request.NewErrParamRequired("OrganizationalUnitDistinguishedNames"))
-	}
-	if s.ServiceAccountCredentials == nil {
-		invalidParams.Add(request.NewErrParamRequired("ServiceAccountCredentials"))
 	}
 	if s.ServiceAccountCredentials != nil {
 		if err := s.ServiceAccountCredentials.Validate(); err != nil {
@@ -5076,7 +5123,7 @@ type CreateFleetInput struct {
 	// assume a role, a fleet instance calls the AWS Security Token Service (STS)
 	// AssumeRole API operation and passes the ARN of the role to use. The operation
 	// creates a new session with temporary credentials. AppStream 2.0 retrieves
-	// the temporary credentials and creates the AppStream_Machine_Role credential
+	// the temporary credentials and creates the appstream_machine_role credential
 	// profile on the instance.
 	//
 	// For more information, see Using an IAM Role to Grant Permissions to Applications
@@ -5141,6 +5188,18 @@ type CreateFleetInput struct {
 	//
 	//    * stream.memory.8xlarge
 	//
+	//    * stream.memory.z1d.large
+	//
+	//    * stream.memory.z1d.xlarge
+	//
+	//    * stream.memory.z1d.2xlarge
+	//
+	//    * stream.memory.z1d.3xlarge
+	//
+	//    * stream.memory.z1d.6xlarge
+	//
+	//    * stream.memory.z1d.12xlarge
+	//
 	//    * stream.graphics-design.large
 	//
 	//    * stream.graphics-design.xlarge
@@ -5150,6 +5209,18 @@ type CreateFleetInput struct {
 	//    * stream.graphics-design.4xlarge
 	//
 	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics.g4dn.xlarge
+	//
+	//    * stream.graphics.g4dn.2xlarge
+	//
+	//    * stream.graphics.g4dn.4xlarge
+	//
+	//    * stream.graphics.g4dn.8xlarge
+	//
+	//    * stream.graphics.g4dn.12xlarge
+	//
+	//    * stream.graphics.g4dn.16xlarge
 	//
 	//    * stream.graphics-pro.4xlarge
 	//
@@ -5173,6 +5244,14 @@ type CreateFleetInput struct {
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// The AppStream 2.0 view that is displayed to your users when they stream from
+	// the fleet. When APP is specified, only the windows of applications opened
+	// by users display. When DESKTOP is specified, the standard desktop that is
+	// provided by the operating system displays.
+	//
+	// The default value is APP.
+	StreamView *string `type:"string" enum:"StreamView"`
 
 	// The tags to associate with the fleet. A tag is a key-value pair, and the
 	// value is optional. For example, Environment=Test. If you do not specify a
@@ -5320,6 +5399,12 @@ func (s *CreateFleetInput) SetName(v string) *CreateFleetInput {
 	return s
 }
 
+// SetStreamView sets the StreamView field's value.
+func (s *CreateFleetInput) SetStreamView(v string) *CreateFleetInput {
+	s.StreamView = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateFleetInput) SetTags(v map[string]*string) *CreateFleetInput {
 	s.Tags = v
@@ -5383,7 +5468,7 @@ type CreateImageBuilderInput struct {
 	// To assume a role, the image builder calls the AWS Security Token Service
 	// (STS) AssumeRole API operation and passes the ARN of the role to use. The
 	// operation creates a new session with temporary credentials. AppStream 2.0
-	// retrieves the temporary credentials and creates the AppStream_Machine_Role
+	// retrieves the temporary credentials and creates the appstream_machine_role
 	// credential profile on the instance.
 	//
 	// For more information, see Using an IAM Role to Grant Permissions to Applications
@@ -5424,6 +5509,18 @@ type CreateImageBuilderInput struct {
 	//
 	//    * stream.memory.8xlarge
 	//
+	//    * stream.memory.z1d.large
+	//
+	//    * stream.memory.z1d.xlarge
+	//
+	//    * stream.memory.z1d.2xlarge
+	//
+	//    * stream.memory.z1d.3xlarge
+	//
+	//    * stream.memory.z1d.6xlarge
+	//
+	//    * stream.memory.z1d.12xlarge
+	//
 	//    * stream.graphics-design.large
 	//
 	//    * stream.graphics-design.xlarge
@@ -5433,6 +5530,18 @@ type CreateImageBuilderInput struct {
 	//    * stream.graphics-design.4xlarge
 	//
 	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics.g4dn.xlarge
+	//
+	//    * stream.graphics.g4dn.2xlarge
+	//
+	//    * stream.graphics.g4dn.4xlarge
+	//
+	//    * stream.graphics.g4dn.8xlarge
+	//
+	//    * stream.graphics.g4dn.12xlarge
+	//
+	//    * stream.graphics.g4dn.16xlarge
 	//
 	//    * stream.graphics-pro.4xlarge
 	//
@@ -7177,7 +7286,8 @@ type DescribeSessionsInput struct {
 	// StackName is a required field
 	StackName *string `min:"1" type:"string" required:"true"`
 
-	// The user identifier.
+	// The user identifier (ID). If you specify a user ID, you must also specify
+	// the authentication type.
 	UserId *string `min:"2" type:"string"`
 }
 
@@ -8076,7 +8186,7 @@ type Fleet struct {
 	// fleet instance calls the AWS Security Token Service (STS) AssumeRole API
 	// operation and passes the ARN of the role to use. The operation creates a
 	// new session with temporary credentials. AppStream 2.0 retrieves the temporary
-	// credentials and creates the AppStream_Machine_Role credential profile on
+	// credentials and creates the appstream_machine_role credential profile on
 	// the instance.
 	//
 	// For more information, see Using an IAM Role to Grant Permissions to Applications
@@ -8141,6 +8251,18 @@ type Fleet struct {
 	//
 	//    * stream.memory.8xlarge
 	//
+	//    * stream.memory.z1d.large
+	//
+	//    * stream.memory.z1d.xlarge
+	//
+	//    * stream.memory.z1d.2xlarge
+	//
+	//    * stream.memory.z1d.3xlarge
+	//
+	//    * stream.memory.z1d.6xlarge
+	//
+	//    * stream.memory.z1d.12xlarge
+	//
 	//    * stream.graphics-design.large
 	//
 	//    * stream.graphics-design.xlarge
@@ -8150,6 +8272,18 @@ type Fleet struct {
 	//    * stream.graphics-design.4xlarge
 	//
 	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics.g4dn.xlarge
+	//
+	//    * stream.graphics.g4dn.2xlarge
+	//
+	//    * stream.graphics.g4dn.4xlarge
+	//
+	//    * stream.graphics.g4dn.8xlarge
+	//
+	//    * stream.graphics.g4dn.12xlarge
+	//
+	//    * stream.graphics.g4dn.16xlarge
 	//
 	//    * stream.graphics-pro.4xlarge
 	//
@@ -8178,6 +8312,14 @@ type Fleet struct {
 	//
 	// State is a required field
 	State *string `type:"string" required:"true" enum:"FleetState"`
+
+	// The AppStream 2.0 view that is displayed to your users when they stream from
+	// the fleet. When APP is specified, only the windows of applications opened
+	// by users display. When DESKTOP is specified, the standard desktop that is
+	// provided by the operating system displays.
+	//
+	// The default value is APP.
+	StreamView *string `type:"string" enum:"StreamView"`
 
 	// The VPC configuration for the fleet.
 	VpcConfig *VpcConfig `type:"structure"`
@@ -8298,6 +8440,12 @@ func (s *Fleet) SetName(v string) *Fleet {
 // SetState sets the State field's value.
 func (s *Fleet) SetState(v string) *Fleet {
 	s.State = &v
+	return s
+}
+
+// SetStreamView sets the StreamView field's value.
+func (s *Fleet) SetStreamView(v string) *Fleet {
+	s.StreamView = &v
 	return s
 }
 
@@ -8541,7 +8689,7 @@ type ImageBuilder struct {
 	// role, the image builder calls the AWS Security Token Service (STS) AssumeRole
 	// API operation and passes the ARN of the role to use. The operation creates
 	// a new session with temporary credentials. AppStream 2.0 retrieves the temporary
-	// credentials and creates the AppStream_Machine_Role credential profile on
+	// credentials and creates the appstream_machine_role credential profile on
 	// the instance.
 	//
 	// For more information, see Using an IAM Role to Grant Permissions to Applications
@@ -8582,6 +8730,18 @@ type ImageBuilder struct {
 	//
 	//    * stream.memory.8xlarge
 	//
+	//    * stream.memory.z1d.large
+	//
+	//    * stream.memory.z1d.xlarge
+	//
+	//    * stream.memory.z1d.2xlarge
+	//
+	//    * stream.memory.z1d.3xlarge
+	//
+	//    * stream.memory.z1d.6xlarge
+	//
+	//    * stream.memory.z1d.12xlarge
+	//
 	//    * stream.graphics-design.large
 	//
 	//    * stream.graphics-design.xlarge
@@ -8591,6 +8751,18 @@ type ImageBuilder struct {
 	//    * stream.graphics-design.4xlarge
 	//
 	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics.g4dn.xlarge
+	//
+	//    * stream.graphics.g4dn.2xlarge
+	//
+	//    * stream.graphics.g4dn.4xlarge
+	//
+	//    * stream.graphics.g4dn.8xlarge
+	//
+	//    * stream.graphics.g4dn.12xlarge
+	//
+	//    * stream.graphics.g4dn.16xlarge
 	//
 	//    * stream.graphics-pro.4xlarge
 	//
@@ -9483,6 +9655,65 @@ func (s *OperationNotPermittedException) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s *OperationNotPermittedException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// AppStream 2.0 can’t process the request right now because the Describe
+// calls from your AWS account are being throttled by Amazon EC2. Try again
+// later.
+type RequestLimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The error message in the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s RequestLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RequestLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorRequestLimitExceededException(v protocol.ResponseMetadata) error {
+	return &RequestLimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *RequestLimitExceededException) Code() string {
+	return "RequestLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *RequestLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *RequestLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *RequestLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *RequestLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *RequestLimitExceededException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
@@ -10732,7 +10963,7 @@ type UpdateFleetInput struct {
 	// assume a role, a fleet instance calls the AWS Security Token Service (STS)
 	// AssumeRole API operation and passes the ARN of the role to use. The operation
 	// creates a new session with temporary credentials. AppStream 2.0 retrieves
-	// the temporary credentials and creates the AppStream_Machine_Role credential
+	// the temporary credentials and creates the appstream_machine_role credential
 	// profile on the instance.
 	//
 	// For more information, see Using an IAM Role to Grant Permissions to Applications
@@ -10797,6 +11028,18 @@ type UpdateFleetInput struct {
 	//
 	//    * stream.memory.8xlarge
 	//
+	//    * stream.memory.z1d.large
+	//
+	//    * stream.memory.z1d.xlarge
+	//
+	//    * stream.memory.z1d.2xlarge
+	//
+	//    * stream.memory.z1d.3xlarge
+	//
+	//    * stream.memory.z1d.6xlarge
+	//
+	//    * stream.memory.z1d.12xlarge
+	//
 	//    * stream.graphics-design.large
 	//
 	//    * stream.graphics-design.xlarge
@@ -10806,6 +11049,18 @@ type UpdateFleetInput struct {
 	//    * stream.graphics-design.4xlarge
 	//
 	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics.g4dn.xlarge
+	//
+	//    * stream.graphics.g4dn.2xlarge
+	//
+	//    * stream.graphics.g4dn.4xlarge
+	//
+	//    * stream.graphics.g4dn.8xlarge
+	//
+	//    * stream.graphics.g4dn.12xlarge
+	//
+	//    * stream.graphics.g4dn.16xlarge
 	//
 	//    * stream.graphics-pro.4xlarge
 	//
@@ -10825,6 +11080,14 @@ type UpdateFleetInput struct {
 
 	// A unique name for the fleet.
 	Name *string `min:"1" type:"string"`
+
+	// The AppStream 2.0 view that is displayed to your users when they stream from
+	// the fleet. When APP is specified, only the windows of applications opened
+	// by users display. When DESKTOP is specified, the standard desktop that is
+	// provided by the operating system displays.
+	//
+	// The default value is APP.
+	StreamView *string `type:"string" enum:"StreamView"`
 
 	// The VPC configuration for the fleet.
 	VpcConfig *VpcConfig `type:"structure"`
@@ -10951,6 +11214,12 @@ func (s *UpdateFleetInput) SetMaxUserDurationInSeconds(v int64) *UpdateFleetInpu
 // SetName sets the Name field's value.
 func (s *UpdateFleetInput) SetName(v string) *UpdateFleetInput {
 	s.Name = &v
+	return s
+}
+
+// SetStreamView sets the StreamView field's value.
+func (s *UpdateFleetInput) SetStreamView(v string) *UpdateFleetInput {
+	s.StreamView = &v
 	return s
 }
 
@@ -12191,6 +12460,22 @@ func StorageConnectorType_Values() []string {
 }
 
 const (
+	// StreamViewApp is a StreamView enum value
+	StreamViewApp = "APP"
+
+	// StreamViewDesktop is a StreamView enum value
+	StreamViewDesktop = "DESKTOP"
+)
+
+// StreamView_Values returns all elements of the StreamView enum
+func StreamView_Values() []string {
+	return []string{
+		StreamViewApp,
+		StreamViewDesktop,
+	}
+}
+
+const (
 	// UsageReportExecutionErrorCodeResourceNotFound is a UsageReportExecutionErrorCode enum value
 	UsageReportExecutionErrorCodeResourceNotFound = "RESOURCE_NOT_FOUND"
 
@@ -12229,6 +12514,9 @@ const (
 	// UserStackAssociationErrorCodeUserNameNotFound is a UserStackAssociationErrorCode enum value
 	UserStackAssociationErrorCodeUserNameNotFound = "USER_NAME_NOT_FOUND"
 
+	// UserStackAssociationErrorCodeDirectoryNotFound is a UserStackAssociationErrorCode enum value
+	UserStackAssociationErrorCodeDirectoryNotFound = "DIRECTORY_NOT_FOUND"
+
 	// UserStackAssociationErrorCodeInternalError is a UserStackAssociationErrorCode enum value
 	UserStackAssociationErrorCodeInternalError = "INTERNAL_ERROR"
 )
@@ -12238,6 +12526,7 @@ func UserStackAssociationErrorCode_Values() []string {
 	return []string{
 		UserStackAssociationErrorCodeStackNotFound,
 		UserStackAssociationErrorCodeUserNameNotFound,
+		UserStackAssociationErrorCodeDirectoryNotFound,
 		UserStackAssociationErrorCodeInternalError,
 	}
 }

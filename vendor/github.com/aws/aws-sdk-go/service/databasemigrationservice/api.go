@@ -61,7 +61,9 @@ func (c *DatabaseMigrationService) AddTagsToResourceRequest(input *AddTagsToReso
 // Adds metadata tags to an AWS DMS resource, including replication instance,
 // endpoint, security group, and migration task. These tags can also be used
 // with cost allocation reporting to track cost associated with DMS resources,
-// or used in a Condition statement in an IAM policy for DMS.
+// or used in a Condition statement in an IAM policy for DMS. For more information,
+// see Tag (https://docs.aws.amazon.com/dms/latest/APIReference/API_Tag.html)
+// data type description.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -535,9 +537,9 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 // AWS DMS requires that your account have certain roles with appropriate permissions
 // before you can create a replication instance. For information on the required
 // roles, see Creating the IAM Roles to Use With the AWS CLI and AWS DMS API
-// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html).
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.APIRole).
 // For information on the required permissions, see IAM Permissions Needed to
-// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html).
+// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.IAMPermissions).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4367,7 +4369,10 @@ func (c *DatabaseMigrationService) ListTagsForResourceRequest(input *ListTagsFor
 
 // ListTagsForResource API operation for AWS Database Migration Service.
 //
-// Lists all tags for an AWS DMS resource.
+// Lists all metadata tags attached to an AWS DMS resource, including replication
+// instance, endpoint, security group, and migration task. For more information,
+// see Tag (https://docs.aws.amazon.com/dms/latest/APIReference/API_Tag.html)
+// data type description.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5197,7 +5202,10 @@ func (c *DatabaseMigrationService) RemoveTagsFromResourceRequest(input *RemoveTa
 
 // RemoveTagsFromResource API operation for AWS Database Migration Service.
 //
-// Removes metadata tags from a DMS resource.
+// Removes metadata tags from an AWS DMS resource, including replication instance,
+// endpoint, security group, and migration task. For more information, see Tag
+// (https://docs.aws.amazon.com/dms/latest/APIReference/API_Tag.html) data type
+// description.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5975,7 +5983,11 @@ func (s *ApplyPendingMaintenanceActionOutput) SetResourcePendingMaintenanceActio
 	return s
 }
 
-// The name of an Availability Zone for use during database migration.
+// The name of an Availability Zone for use during database migration. AvailabilityZone
+// is an optional parameter to the CreateReplicationInstance (https://docs.aws.amazon.com/dms/latest/APIReference/API_CreateReplicationInstance.html)
+// operation, and it’s value relates to the AWS Region of an endpoint. For
+// example, the availability zone of an endpoint in the us-east-1 region might
+// be us-east-1a, us-east-1b, us-east-1c, or us-east-1d.
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
@@ -6293,7 +6305,7 @@ type CreateEndpointInput struct {
 
 	// The database endpoint identifier. Identifiers must begin with a letter and
 	// must contain only ASCII letters, digits, and hyphens. They can't end with
-	// a hyphen or contain two consecutive hyphens.
+	// a hyphen, or contain two consecutive hyphens.
 	//
 	// EndpointIdentifier is a required field
 	EndpointIdentifier *string `type:"string" required:"true"`
@@ -6306,7 +6318,7 @@ type CreateEndpointInput struct {
 	// The type of engine for the endpoint. Valid values, depending on the EndpointType
 	// value, include "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
+	// "kafka", "elasticsearch", "docdb", "sqlserver", and "neptune".
 	//
 	// EngineName is a required field
 	EngineName *string `type:"string" required:"true"`
@@ -6324,7 +6336,7 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source IBM Db2 LUW endpoint. For information
 	// about other available settings, see Extra connection attributes when using
-	// Db2 LUW as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.DB2.ConnectionAttrib)
+	// Db2 LUW as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.DB2.html)
 	// in the AWS Database Migration Service User Guide.
 	IBMDb2Settings *IBMDb2Settings `type:"structure"`
 
@@ -6352,9 +6364,9 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source and target Microsoft SQL Server endpoint.
 	// For information about other available settings, see Extra connection attributes
-	// when using SQL Server as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SQLServer.ConnectionAttrib)
+	// when using SQL Server as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SQLServer.html)
 	// and Extra connection attributes when using SQL Server as a target for AWS
-	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SQLServer.ConnectionAttrib)
+	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SQLServer.html)
 	// in the AWS Database Migration Service User Guide.
 	MicrosoftSQLServerSettings *MicrosoftSQLServerSettings `type:"structure"`
 
@@ -6366,9 +6378,9 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source and target MySQL endpoint. For information
 	// about other available settings, see Extra connection attributes when using
-	// MySQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.ConnectionAttrib)
+	// MySQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html)
 	// and Extra connection attributes when using a MySQL-compatible database as
-	// a target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.MySQL.ConnectionAttrib)
+	// a target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.MySQL.html)
 	// in the AWS Database Migration Service User Guide.
 	MySQLSettings *MySQLSettings `type:"structure"`
 
@@ -6380,9 +6392,9 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source and target Oracle endpoint. For information
 	// about other available settings, see Extra connection attributes when using
-	// Oracle as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.ConnectionAttrib)
+	// Oracle as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html)
 	// and Extra connection attributes when using Oracle as a target for AWS DMS
-	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Oracle.ConnectionAttrib)
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Oracle.html)
 	// in the AWS Database Migration Service User Guide.
 	OracleSettings *OracleSettings `type:"structure"`
 
@@ -6394,9 +6406,9 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source and target PostgreSQL endpoint. For
 	// information about other available settings, see Extra connection attributes
-	// when using PostgreSQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.ConnectionAttrib)
+	// when using PostgreSQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html)
 	// and Extra connection attributes when using PostgreSQL as a target for AWS
-	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.ConnectionAttrib)
+	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.html)
 	// in the AWS Database Migration Service User Guide.
 	PostgreSQLSettings *PostgreSQLSettings `type:"structure"`
 
@@ -6422,10 +6434,10 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source and target SAP ASE endpoint. For information
 	// about other available settings, see Extra connection attributes when using
-	// SAP ASE as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SAP.ConnectionAttrib)
+	// SAP ASE as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SAP.html)
 	// and Extra connection attributes when using SAP ASE as a target for AWS DMS
-	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SAP.ConnectionAttrib)
-	// in the AWS Database Migration Service User Guide.
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SAP.html) in
+	// the AWS Database Migration Service User Guide.
 	SybaseSettings *SybaseSettings `type:"structure"`
 
 	// One or more tags to be assigned to the endpoint.
@@ -6846,6 +6858,9 @@ type CreateReplicationInstanceInput struct {
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
+	//
+	// If an engine version number is not specified when a replication instance
+	// is created, the default is the latest engine version available.
 	EngineVersion *string `type:"string"`
 
 	// An AWS KMS key identifier that is used to encrypt the data on the replication
@@ -7189,9 +7204,9 @@ type CreateReplicationTaskInput struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
@@ -10600,7 +10615,9 @@ func (s *Event) SetSourceType(v string) *Event {
 }
 
 // Lists categories of events subscribed to, and generated by, the applicable
-// AWS DMS resource type.
+// AWS DMS resource type. This data type appears in response to the DescribeEventCategories
+// (https://docs.aws.amazon.com/dms/latest/APIReference/API_EventCategoryGroup.html)
+// action.
 type EventCategoryGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -11585,34 +11602,42 @@ type KafkaSettings struct {
 
 	// Shows detailed control information for table definition, column definition,
 	// and table and column changes in the Kafka message output. The default is
-	// False.
+	// false.
 	IncludeControlDetails *bool `type:"boolean"`
 
+	// Include NULL and empty columns for records migrated to the endpoint. The
+	// default is false.
+	IncludeNullAndEmpty *bool `type:"boolean"`
+
 	// Shows the partition value within the Kafka message output, unless the partition
-	// type is schema-table-type. The default is False.
+	// type is schema-table-type. The default is false.
 	IncludePartitionValue *bool `type:"boolean"`
 
 	// Includes any data definition language (DDL) operations that change the table
 	// in the control data, such as rename-table, drop-table, add-column, drop-column,
-	// and rename-column. The default is False.
+	// and rename-column. The default is false.
 	IncludeTableAlterOperations *bool `type:"boolean"`
 
 	// Provides detailed transaction information from the source database. This
 	// information includes a commit timestamp, a log position, and values for transaction_id,
 	// previous transaction_id, and transaction_record_id (the record offset within
-	// a transaction). The default is False.
+	// a transaction). The default is false.
 	IncludeTransactionDetails *bool `type:"boolean"`
 
 	// The output format for the records created on the endpoint. The message format
 	// is JSON (default) or JSON_UNFORMATTED (a single line with no tab).
 	MessageFormat *string `type:"string" enum:"MessageFormatValue"`
 
+	// The maximum size in bytes for records created on the endpoint The default
+	// is 1,000,000.
+	MessageMaxBytes *int64 `type:"integer"`
+
 	// Prefixes schema and table names to partition values, when the partition type
 	// is primary-key-type. Doing this increases data distribution among Kafka partitions.
 	// For example, suppose that a SysBench schema has thousands of tables and each
 	// table has only limited range for a primary key. In this case, the same primary
 	// key is sent from thousands of tables to the same partition, which causes
-	// throttling. The default is False.
+	// throttling. The default is false.
 	PartitionIncludeSchemaTable *bool `type:"boolean"`
 
 	// The topic to which you migrate the data. If you don't specify a topic, AWS
@@ -11642,6 +11667,12 @@ func (s *KafkaSettings) SetIncludeControlDetails(v bool) *KafkaSettings {
 	return s
 }
 
+// SetIncludeNullAndEmpty sets the IncludeNullAndEmpty field's value.
+func (s *KafkaSettings) SetIncludeNullAndEmpty(v bool) *KafkaSettings {
+	s.IncludeNullAndEmpty = &v
+	return s
+}
+
 // SetIncludePartitionValue sets the IncludePartitionValue field's value.
 func (s *KafkaSettings) SetIncludePartitionValue(v bool) *KafkaSettings {
 	s.IncludePartitionValue = &v
@@ -11666,6 +11697,12 @@ func (s *KafkaSettings) SetMessageFormat(v string) *KafkaSettings {
 	return s
 }
 
+// SetMessageMaxBytes sets the MessageMaxBytes field's value.
+func (s *KafkaSettings) SetMessageMaxBytes(v int64) *KafkaSettings {
+	s.MessageMaxBytes = &v
+	return s
+}
+
 // SetPartitionIncludeSchemaTable sets the PartitionIncludeSchemaTable field's value.
 func (s *KafkaSettings) SetPartitionIncludeSchemaTable(v bool) *KafkaSettings {
 	s.PartitionIncludeSchemaTable = &v
@@ -11686,22 +11723,26 @@ type KinesisSettings struct {
 
 	// Shows detailed control information for table definition, column definition,
 	// and table and column changes in the Kinesis message output. The default is
-	// False.
+	// false.
 	IncludeControlDetails *bool `type:"boolean"`
 
+	// Include NULL and empty columns for records migrated to the endpoint. The
+	// default is false.
+	IncludeNullAndEmpty *bool `type:"boolean"`
+
 	// Shows the partition value within the Kinesis message output, unless the partition
-	// type is schema-table-type. The default is False.
+	// type is schema-table-type. The default is false.
 	IncludePartitionValue *bool `type:"boolean"`
 
 	// Includes any data definition language (DDL) operations that change the table
 	// in the control data, such as rename-table, drop-table, add-column, drop-column,
-	// and rename-column. The default is False.
+	// and rename-column. The default is false.
 	IncludeTableAlterOperations *bool `type:"boolean"`
 
 	// Provides detailed transaction information from the source database. This
 	// information includes a commit timestamp, a log position, and values for transaction_id,
 	// previous transaction_id, and transaction_record_id (the record offset within
-	// a transaction). The default is False.
+	// a transaction). The default is false.
 	IncludeTransactionDetails *bool `type:"boolean"`
 
 	// The output format for the records created on the endpoint. The message format
@@ -11713,7 +11754,7 @@ type KinesisSettings struct {
 	// shards. For example, suppose that a SysBench schema has thousands of tables
 	// and each table has only limited range for a primary key. In this case, the
 	// same primary key is sent from thousands of tables to the same shard, which
-	// causes throttling. The default is False.
+	// causes throttling. The default is false.
 	PartitionIncludeSchemaTable *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for the AWS Identity and Access Management
@@ -11737,6 +11778,12 @@ func (s KinesisSettings) GoString() string {
 // SetIncludeControlDetails sets the IncludeControlDetails field's value.
 func (s *KinesisSettings) SetIncludeControlDetails(v bool) *KinesisSettings {
 	s.IncludeControlDetails = &v
+	return s
+}
+
+// SetIncludeNullAndEmpty sets the IncludeNullAndEmpty field's value.
+func (s *KinesisSettings) SetIncludeNullAndEmpty(v bool) *KinesisSettings {
+	s.IncludeNullAndEmpty = &v
 	return s
 }
 
@@ -12443,6 +12490,9 @@ type ModifyReplicationInstanceInput struct {
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
 	// The engine version number of the replication instance.
+	//
+	// When modifying a major engine version of an instance, also set AllowMajorVersionUpgrade
+	// to true.
 	EngineVersion *string `type:"string"`
 
 	// Specifies whether the replication instance is a Multi-AZ deployment. You
@@ -12718,9 +12768,9 @@ type ModifyReplicationTaskInput struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
@@ -13685,6 +13735,11 @@ type RedshiftSettings struct {
 	// The type of server-side encryption that you want to use for your data. This
 	// encryption type is part of the endpoint settings or the extra connections
 	// attributes for Amazon S3. You can choose either SSE_S3 (the default) or SSE_KMS.
+	//
+	// For the ModifyEndpoint operation, you can change the existing value of the
+	// EncryptionMode parameter from SSE_KMS to SSE_S3. But you can’t change the
+	// existing value from SSE_S3 to SSE_KMS.
+	//
 	// To use SSE_S3, create an AWS Identity and Access Management (IAM) role with
 	// a policy that allows "arn:aws:s3:::*" to use the following actions: "s3:PutObject",
 	// "s3:ListBucket"
@@ -14246,6 +14301,12 @@ type ReplicationInstance struct {
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
+	//
+	// If an engine version number is not specified when a replication instance
+	// is created, the default is the latest engine version available.
+	//
+	// When modifying a major engine version of an instance, also set AllowMajorVersionUpgrade
+	// to true.
 	EngineVersion *string `type:"string"`
 
 	// The expiration date of the free replication instance that is part of the
@@ -14273,7 +14334,8 @@ type ReplicationInstance struct {
 	// The pending modification values.
 	PendingModifiedValues *ReplicationPendingModifiedValues `type:"structure"`
 
-	// The maintenance window times for the replication instance.
+	// The maintenance window times for the replication instance. Any pending upgrades
+	// to the replication instance are performed during this time.
 	PreferredMaintenanceWindow *string `type:"string"`
 
 	// Specifies the accessibility options for the replication instance. A value
@@ -14285,15 +14347,16 @@ type ReplicationInstance struct {
 	ReplicationInstanceArn *string `type:"string"`
 
 	// The compute and memory capacity of the replication instance as defined for
-	// the specified replication instance class.
+	// the specified replication instance class. It is a required parameter, although
+	// a defualt value is pre-selected in the DMS console.
 	//
 	// For more information on the settings and capacities for the available replication
 	// instance classes, see Selecting the right AWS DMS replication instance for
 	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
-	// The replication instance identifier. This parameter is stored as a lowercase
-	// string.
+	// The replication instance identifier is a required parameter. This parameter
+	// is stored as a lowercase string.
 	//
 	// Constraints:
 	//
@@ -14552,8 +14615,8 @@ func (s *ReplicationInstanceTaskLog) SetReplicationTaskName(v string) *Replicati
 }
 
 // Provides information about the values of pending modifications to a replication
-// instance. This data type is an object of the ReplicationInstance user-defined
-// data type.
+// instance. This data type is an object of the ReplicationInstance (https://docs.aws.amazon.com/dms/latest/APIReference/API_ReplicationInstance.html)
+// user-defined data type.
 type ReplicationPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
@@ -14751,13 +14814,13 @@ type ReplicationTask struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
-	// The last error (failure) message generated for the replication instance.
+	// The last error (failure) message generated for the replication task.
 	LastFailureMessage *string `type:"string"`
 
 	// The type of migration.
@@ -15751,9 +15814,9 @@ type S3Settings struct {
 
 	// A value that enables a change data capture (CDC) load to write INSERT and
 	// UPDATE operations to .csv or .parquet (columnar storage) output files. The
-	// default setting is false, but when CdcInsertsAndUpdates is set to trueor
-	// y, INSERTs and UPDATEs from the source database are migrated to the .csv
-	// or .parquet file.
+	// default setting is false, but when CdcInsertsAndUpdates is set to true or
+	// y, only INSERTs and UPDATEs from the source database are migrated to the
+	// .csv or .parquet file.
 	//
 	// For .csv file format only, how these INSERTs and UPDATEs are recorded depends
 	// on the value of the IncludeOpForFullLoad parameter. If IncludeOpForFullLoad
@@ -15804,12 +15867,12 @@ type S3Settings struct {
 	// both .csv and .parquet file formats.
 	CompressionType *string `type:"string" enum:"CompressionTypeValue"`
 
-	// The delimiter used to separate columns in the source files. The default is
-	// a comma.
+	// The delimiter used to separate columns in the .csv file for both source and
+	// target. The default is a comma.
 	CsvDelimiter *string `type:"string"`
 
-	// The delimiter used to separate rows in the source files. The default is a
-	// carriage return (\n).
+	// The delimiter used to separate rows in the .csv file for both source and
+	// target. The default is a carriage return (\n).
 	CsvRowDelimiter *string `type:"string"`
 
 	// The format of the data that you want to use for output. You can choose one
@@ -15853,6 +15916,11 @@ type S3Settings struct {
 	// The type of server-side encryption that you want to use for your data. This
 	// encryption type is part of the endpoint settings or the extra connections
 	// attributes for Amazon S3. You can choose either SSE_S3 (the default) or SSE_KMS.
+	//
+	// For the ModifyEndpoint operation, you can change the existing value of the
+	// EncryptionMode parameter from SSE_KMS to SSE_S3. But you can’t change the
+	// existing value from SSE_S3 to SSE_KMS.
+	//
 	// To use SSE_S3, you need an AWS Identity and Access Management (IAM) role
 	// with permission to allow "arn:aws:s3:::dms-*" to use the following actions:
 	//
@@ -15879,7 +15947,7 @@ type S3Settings struct {
 	//    * s3:DeleteBucketPolicy
 	EncryptionMode *string `type:"string" enum:"EncryptionModeValue"`
 
-	// The external table definition.
+	// Specifies how tables are defined in the S3 source files only.
 	ExternalTableDefinition *string `type:"string"`
 
 	// A value that enables a full load to write INSERT operations to the comma-separated
@@ -15947,7 +16015,9 @@ type S3Settings struct {
 	// --endpoint-type target --engine-name s3 --s3-settings ServiceAccessRoleArn=value,BucketFolder=value,BucketName=value,EncryptionMode=SSE_KMS,ServerSideEncryptionKmsKeyId=value
 	ServerSideEncryptionKmsKeyId *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) used by the service access IAM role.
+	// The Amazon Resource Name (ARN) used by the service access IAM role. It is
+	// a required parameter that enables DMS to write and read objects from an 3S
+	// bucket.
 	ServiceAccessRoleArn *string `type:"string"`
 
 	// A value that when nonblank causes AWS DMS to add a column with timestamp
@@ -16497,9 +16567,9 @@ type StartReplicationTaskInput struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
@@ -17004,26 +17074,34 @@ type TableStatistics struct {
 	//
 	// This parameter can have the following values:
 	//
-	//    * Not enabled - Validation isn't enabled for the table in the migration
+	//    * Not enabled – Validation isn't enabled for the table in the migration
 	//    task.
 	//
-	//    * Pending records - Some records in the table are waiting for validation.
+	//    * Pending records – Some records in the table are waiting for validation.
 	//
-	//    * Mismatched records - Some records in the table don't match between the
-	//    source and target.
+	//    * Mismatched records – Some records in the table don't match between
+	//    the source and target.
 	//
-	//    * Suspended records - Some records in the table couldn't be validated.
+	//    * Suspended records – Some records in the table couldn't be validated.
 	//
-	//    * No primary key - The table couldn't be validated because it has no primary
-	//    key.
+	//    * No primary key –The table couldn't be validated because it has no
+	//    primary key.
 	//
-	//    * Table error - The table wasn't validated because it's in an error state
-	//    and some data wasn't migrated.
+	//    * Table error – The table wasn't validated because it's in an error
+	//    state and some data wasn't migrated.
 	//
-	//    * Validated - All rows in the table are validated. If the table is updated,
+	//    * Validated – All rows in the table are validated. If the table is updated,
 	//    the status can change from Validated.
 	//
-	//    * Error - The table couldn't be validated because of an unexpected error.
+	//    * Error – The table couldn't be validated because of an unexpected error.
+	//
+	//    * Pending validation – The table is waiting validation.
+	//
+	//    * Preparing table – Preparing the table enabled in the migration task
+	//    for validation.
+	//
+	//    * Pending revalidation – All rows in the table are pending validation
+	//    after the table was updated.
 	ValidationState *string `type:"string"`
 
 	// Additional details about the state of validation.

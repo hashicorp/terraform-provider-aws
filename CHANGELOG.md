@@ -1,19 +1,60 @@
-## 3.4.0 (Unreleased)
+## 3.5.0 (Unreleased)
+
+FEATURES
+
+* **New Data Source:** `aws_lex_slot_type` [GH-8916]
+* **New Resource:** `aws_codebuild_report_group` [GH-12573]
+* **New Resource:** `aws_lex_slot_type` [GH-8916]
 
 ENHANCEMENTS
-* resource/aws_globalaccelerator_endpoint_group: Add `client_ip_preservation_enabled` argument to the `endpoint_configuration` configuration block [GH-14486]
-* resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments [GH-12066]
-* resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument [GH-13563]
-* resource/aws_storagegateway_gateway: Add plan-time validation for `gateway_ip_address` argument [GH-13563]
-* resource/aws_storagegateway_nfs_file_share: Add `cache_attributes` configuration block [GH-14759]
-* resource/aws_storagegateway_nfs_file_share: Support `S3_INTELLIGENT_TIERING` value in `default_storage_class` argument plan-time validation [GH-14759]
+
+* resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
+* resource/aws_ebs_volume: Support io2 type [GH-14894]
+* resource/aws_msk_configuration: Support resource in-place updates and deletion [GH-14826]
 
 BUG FIXES
 
-* resource/aws_acmpca_certificate_authority: Ensure `DELETED` status triggers state removal [GH-13684]
-* resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks [GH-14074]
-* resource/aws_globalaccelerator_accelerator: Increase creation timeout to 10 minutes [GH-14486]
-* resource/aws_globalaccelerator_endpoint_group: Prevent differences with `health_check_path` defaults [GH-14486]
+* resource/aws_emr_cluster: Prevent recreation when `ebs_config.volumes_per_instance` is greater than 1 [GH-14858]
+* resource/aws_mq_configuration: Prevent additional revision creation with `tags` only updates [GH-14850]
+* resource/aws_opsworks_stack: Suppress equivalent `custom_json` differences [GH-14886]
+* resource/aws_rds_cluster_endpoint: Increase creation timeout to 30 minutes [GH-14862]
+
+## 3.4.0 (August 27, 2020)
+
+FEATURES
+
+* **New Data Source:** `aws_db_subnet_group` ([#9525](https://github.com/terraform-providers/terraform-provider-aws/issues/9525))
+* **New Resource:** `aws_emr_managed_scaling_policy` ([#13965](https://github.com/terraform-providers/terraform-provider-aws/issues/13965))
+* **New Resource:** `aws_guardduty_publishing_destination` ([#13894](https://github.com/terraform-providers/terraform-provider-aws/issues/13894))
+* **New Resource:** `aws_securityhub_action_target` ([#10493](https://github.com/terraform-providers/terraform-provider-aws/issues/10493))
+* **New Resource:** `aws_xray_encryption_config` ([#13600](https://github.com/terraform-providers/terraform-provider-aws/issues/13600))
+* **New Resource:** `aws_xray_group` ([#13597](https://github.com/terraform-providers/terraform-provider-aws/issues/13597))
+
+ENHANCEMENTS
+
+* resource/aws_apigatewayv2_integration: Add `integration_subtype` argument (Support AWS service integrations for HTTP APIs) ([#14860](https://github.com/terraform-providers/terraform-provider-aws/issues/14860))
+* resource/aws_elasticache_replication_group: Add plan-time validation for `notification_topic_arn` and `snapshot_arns` arguments ([#12974](https://github.com/terraform-providers/terraform-provider-aws/issues/12974))
+* resource/aws_globalaccelerator_endpoint_group: Add `client_ip_preservation_enabled` argument to the `endpoint_configuration` configuration block ([#14486](https://github.com/terraform-providers/terraform-provider-aws/issues/14486))
+* resource/aws_storagegateway_cached_iscsi_volume: Add `kms_encrypted` and `kms_key` arguments ([#12066](https://github.com/terraform-providers/terraform-provider-aws/issues/12066))
+* resource/aws_storagegateway_gateway: Add `smb_security_strategy` argument ([#13563](https://github.com/terraform-providers/terraform-provider-aws/issues/13563))
+* resource/aws_storagegateway_gateway: Add plan-time validation for `gateway_ip_address` argument ([#13563](https://github.com/terraform-providers/terraform-provider-aws/issues/13563))
+* resource/aws_storagegateway_gateway: Add `average_download_rate_limit_in_bits_per_sec` and `average_upload_rate_limit_in_bits_per_sec` arguments ([#13568](https://github.com/terraform-providers/terraform-provider-aws/issues/13568))
+* resource/aws_storagegateway_nfs_file_share: Add `cache_attributes` configuration block ([#14759](https://github.com/terraform-providers/terraform-provider-aws/issues/14759))
+* resource/aws_storagegateway_nfs_file_share: Support `S3_INTELLIGENT_TIERING` value in `default_storage_class` argument plan-time validation ([#14759](https://github.com/terraform-providers/terraform-provider-aws/issues/14759))
+* resource/aws_storagegateway_smb_file_share: Add `cache_attributes` configuration block and `case_sensitivity` argument ([#14790](https://github.com/terraform-providers/terraform-provider-aws/issues/14790))
+* resource/aws_storagegateway_smb_file_share: Support `S3_INTELLIGENT_TIERING` value in `default_storage_class` argument plan-time validation ([#14790](https://github.com/terraform-providers/terraform-provider-aws/issues/14790))
+* resource/aws_xray_sampling_rule: Add `tags` argument ([#14831](https://github.com/terraform-providers/terraform-provider-aws/issues/14831))
+
+BUG FIXES
+
+* resource/aws_acmpca_certificate_authority: Ensure `DELETED` status triggers state removal ([#13684](https://github.com/terraform-providers/terraform-provider-aws/issues/13684))
+* resource/aws_appmesh_virtual_node: Prevent panics with empty `backend` configuration blocks ([#14074](https://github.com/terraform-providers/terraform-provider-aws/issues/14074))
+* resource/aws_cloudfront_distribution: Preview panics during resource import with empty `forwarded_values.query_string` ([#14844](https://github.com/terraform-providers/terraform-provider-aws/issues/14844))
+* resource/aws_elasticache_replication_group: Ensure `tags` are stored in Terraform state and properly updated ([#12974](https://github.com/terraform-providers/terraform-provider-aws/issues/12974))
+* resource/aws_emr_instance_group: Increase creation and update timeout to 30 minutes ([#13077](https://github.com/terraform-providers/terraform-provider-aws/issues/13077)] / [[#14106](https://github.com/terraform-providers/terraform-provider-aws/issues/14106))
+* resource/aws_globalaccelerator_accelerator: Increase creation timeout to 10 minutes ([#14486](https://github.com/terraform-providers/terraform-provider-aws/issues/14486))
+* resource/aws_globalaccelerator_endpoint_group: Prevent differences with `health_check_path` defaults ([#14486](https://github.com/terraform-providers/terraform-provider-aws/issues/14486))
+* resource/aws_glue_crawler: Properly update `schedule` value ([#14792](https://github.com/terraform-providers/terraform-provider-aws/issues/14792))
 
 ## 3.3.0 (August 20, 2020)
 

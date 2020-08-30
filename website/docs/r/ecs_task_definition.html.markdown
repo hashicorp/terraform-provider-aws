@@ -91,12 +91,13 @@ resource "aws_ecs_task_definition" "service" {
 ### Top-Level Arguments
 
 * `family` - (Required) A unique name for your task definition.
-* `container_definitions` - (Required) A list of valid [container definitions]
-(http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html) provided as a
-single valid JSON document. Please note that you should only provide values that are part of the container
-definition document. For a detailed description of what parameters are available, see the [Task Definition Parameters]
-(https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the
-official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
+* `container_definitions` - (Required) A list of valid [container
+definitions](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html)
+provided as a single valid JSON document. Please note that you should only
+provide values that are part of the container definition document. For a
+detailed description of what parameters are available, see the [Task Definition
+Parameters](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html)
+section from the official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
 
 ~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g. `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g. `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
 

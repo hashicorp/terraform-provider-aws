@@ -154,8 +154,22 @@ func (c *QuickSight) CreateAccountCustomizationRequest(input *CreateAccountCusto
 
 // CreateAccountCustomization API operation for Amazon QuickSight.
 //
-// Creates a customization for the Amazon QuickSight subscription associated
-// with your AWS account.
+// Creates Amazon QuickSight customizations the current AWS Region. Currently,
+// you can add a custom default theme by using the CreateAccountCustomization
+// or UpdateAccountCustomization API operation. To further customize QuickSight
+// by removing QuickSight sample assets and videos for all new users, see Customizing
+// QuickSight (https://docs.aws.amazon.com/quicksight/latest/user/customizing-quicksight.html)
+// in the Amazon QuickSight User Guide.
+//
+// You can create customizations for your AWS account or, if you specify a namespace,
+// for a QuickSight namespace instead. Customizations that apply to a namespace
+// always override customizations that apply to an AWS account. To find out
+// which customizations apply, use the DescribeAccountCustomization API operation.
+//
+// Before you add a theme as the namespace default, make sure that you first
+// share the theme with the namespace. If you don't share it with the namespace,
+// the theme won't be visible to your users even if you use this API operation
+// to make it the default theme.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -212,6 +226,106 @@ func (c *QuickSight) CreateAccountCustomizationWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
+const opCreateAnalysis = "CreateAnalysis"
+
+// CreateAnalysisRequest generates a "aws/request.Request" representing the
+// client's request for the CreateAnalysis operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateAnalysis for more information on using the CreateAnalysis
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateAnalysisRequest method.
+//    req, resp := client.CreateAnalysisRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateAnalysis
+func (c *QuickSight) CreateAnalysisRequest(input *CreateAnalysisInput) (req *request.Request, output *CreateAnalysisOutput) {
+	op := &request.Operation{
+		Name:       opCreateAnalysis,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses/{AnalysisId}",
+	}
+
+	if input == nil {
+		input = &CreateAnalysisInput{}
+	}
+
+	output = &CreateAnalysisOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateAnalysis API operation for Amazon QuickSight.
+//
+// Creates an analysis in Amazon QuickSight.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation CreateAnalysis for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/CreateAnalysis
+func (c *QuickSight) CreateAnalysis(input *CreateAnalysisInput) (*CreateAnalysisOutput, error) {
+	req, out := c.CreateAnalysisRequest(input)
+	return out, req.Send()
+}
+
+// CreateAnalysisWithContext is the same as CreateAnalysis with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateAnalysis for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) CreateAnalysisWithContext(ctx aws.Context, input *CreateAnalysisInput, opts ...request.Option) (*CreateAnalysisOutput, error) {
+	req, out := c.CreateAnalysisRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateDashboard = "CreateDashboard"
 
 // CreateDashboardRequest generates a "aws/request.Request" representing the
@@ -261,10 +375,9 @@ func (c *QuickSight) CreateDashboardRequest(input *CreateDashboardInput) (req *r
 //
 // A dashboard is an entity in QuickSight that identifies QuickSight reports,
 // created from analyses. You can share QuickSight dashboards. With the right
-// permissions, you can create scheduled email reports from them. The CreateDashboard,
-// DescribeDashboard, and ListDashboardsByUser API operations act on the dashboard
-// entity. If you have the correct permissions, you can create a dashboard from
-// a template that exists in a different AWS account.
+// permissions, you can create scheduled email reports from them. If you have
+// the correct permissions, you can create a dashboard from a template that
+// exists in a different AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -822,8 +935,8 @@ func (c *QuickSight) CreateIAMPolicyAssignmentRequest(input *CreateIAMPolicyAssi
 //   Access is throttled.
 //
 //   * ConcurrentUpdatingException
-//   A resource is already in a state that indicates an action is happening that
-//   must complete before a new update can be applied.
+//   A resource is already in a state that indicates an operation is happening
+//   that must complete before a new update can be applied.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -1556,7 +1669,8 @@ func (c *QuickSight) DeleteAccountCustomizationRequest(input *DeleteAccountCusto
 
 // DeleteAccountCustomization API operation for Amazon QuickSight.
 //
-// Deletes customizations for the QuickSight subscription on your AWS account.
+// Deletes all Amazon QuickSight customizations in this AWS Region for the specified
+// AWS Account and QuickSight namespace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1605,6 +1719,117 @@ func (c *QuickSight) DeleteAccountCustomization(input *DeleteAccountCustomizatio
 // for more information on using Contexts.
 func (c *QuickSight) DeleteAccountCustomizationWithContext(ctx aws.Context, input *DeleteAccountCustomizationInput, opts ...request.Option) (*DeleteAccountCustomizationOutput, error) {
 	req, out := c.DeleteAccountCustomizationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteAnalysis = "DeleteAnalysis"
+
+// DeleteAnalysisRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAnalysis operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteAnalysis for more information on using the DeleteAnalysis
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteAnalysisRequest method.
+//    req, resp := client.DeleteAnalysisRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteAnalysis
+func (c *QuickSight) DeleteAnalysisRequest(input *DeleteAnalysisInput) (req *request.Request, output *DeleteAnalysisOutput) {
+	op := &request.Operation{
+		Name:       opDeleteAnalysis,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses/{AnalysisId}",
+	}
+
+	if input == nil {
+		input = &DeleteAnalysisInput{}
+	}
+
+	output = &DeleteAnalysisOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteAnalysis API operation for Amazon QuickSight.
+//
+// Deletes an analysis from Amazon QuickSight. You can optionally include a
+// recovery window during which you can restore the analysis. If you don't specify
+// a recovery window value, the operation defaults to 30 days. QuickSight attaches
+// a DeletionTime stamp to the response that specifies the end of the recovery
+// window. At the end of the recovery window, QuickSight deletes the analysis
+// permanently.
+//
+// At any time before recovery window ends, you can use the RestoreAnalysis
+// API operation to remove the DeletionTime stamp and cancel the deletion of
+// the analysis. The analysis remains visible in the API until it's deleted,
+// so you can describe it but you can't make a template from it.
+//
+// An analysis that's scheduled for deletion isn't accessible in the QuickSight
+// console. To access it in the console, restore it. Deleting an analysis doesn't
+// delete the dashboards that you publish from it.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DeleteAnalysis for usage and error information.
+//
+// Returned Error Types:
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DeleteAnalysis
+func (c *QuickSight) DeleteAnalysis(input *DeleteAnalysisInput) (*DeleteAnalysisOutput, error) {
+	req, out := c.DeleteAnalysisRequest(input)
+	return out, req.Send()
+}
+
+// DeleteAnalysisWithContext is the same as DeleteAnalysis with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAnalysis for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DeleteAnalysisWithContext(ctx aws.Context, input *DeleteAnalysisInput, opts ...request.Option) (*DeleteAnalysisOutput, error) {
+	req, out := c.DeleteAnalysisRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1846,7 +2071,7 @@ func (c *QuickSight) DeleteDataSourceRequest(input *DeleteDataSourceInput) (req 
 
 // DeleteDataSource API operation for Amazon QuickSight.
 //
-// Deletes the data source permanently. This action breaks all the datasets
+// Deletes the data source permanently. This operation breaks all the datasets
 // that reference the deleted data source.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2175,8 +2400,8 @@ func (c *QuickSight) DeleteIAMPolicyAssignmentRequest(input *DeleteIAMPolicyAssi
 //   Access is throttled.
 //
 //   * ConcurrentUpdatingException
-//   A resource is already in a state that indicates an action is happening that
-//   must complete before a new update can be applied.
+//   A resource is already in a state that indicates an operation is happening
+//   that must complete before a new update can be applied.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -2250,7 +2475,7 @@ func (c *QuickSight) DeleteNamespaceRequest(input *DeleteNamespaceInput) (req *r
 // Deletes a namespace and the users and groups that are associated with the
 // namespace. This is an asynchronous process. Assets including dashboards,
 // analyses, datasets and data sources are not deleted. To delete these assets,
-// you use the APIs for the relevant asset.
+// you use the API operations for the relevant asset.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2954,7 +3179,46 @@ func (c *QuickSight) DescribeAccountCustomizationRequest(input *DescribeAccountC
 
 // DescribeAccountCustomization API operation for Amazon QuickSight.
 //
-// Describes the customizations associated with your AWS account.
+// Describes the customizations associated with the provided AWS account and
+// Amazon QuickSight namespace in an AWS Region. The QuickSight console evaluates
+// which customizations to apply by running this API operation with the Resolved
+// flag included.
+//
+// To determine what customizations display when you run this command, it can
+// help to visualize the relationship of the entities involved.
+//
+//    * AWS Account - The AWS account exists at the top of the hierarchy. It
+//    has the potential to use all of the AWS Regions and AWS Services. When
+//    you subscribe to QuickSight, you choose one AWS Region to use as your
+//    home region. That's where your free SPICE capacity is located. You can
+//    use QuickSight in any supported AWS Region.
+//
+//    * AWS Region - In each AWS Region where you sign in to QuickSight at least
+//    once, QuickSight acts as a separate instance of the same service. If you
+//    have a user directory, it resides in us-east-1, which is the US East (N.
+//    Virginia). Generally speaking, these users have access to QuickSight in
+//    any AWS Region, unless they are constrained to a namespace. To run the
+//    command in a different AWS Region, you change your region settings. If
+//    you're using the AWS CLI, you can use one of the following options: Use
+//    command line options (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-options.html).
+//    Use named profiles (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html).
+//    Run aws configure to change your default AWS Region. Use Enter to key
+//    the same settings for your keys. For more information, see Configuring
+//    the AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+//
+//    * Namespace - A QuickSight namespace is a partition that contains users
+//    and assets (data sources, datasets, dashboards, and so on). To access
+//    assets that are in a specific namespace, users and groups must also be
+//    part of the same namespace. People who share a namespace are completely
+//    isolated from users and assets in other namespaces, even if they are in
+//    the same AWS account and AWS Region.
+//
+//    * Applied customizations - Within an AWS Region, a set of QuickSight customizations
+//    can apply to an AWS account or to a namespace. Settings that you apply
+//    to a namespace override settings that you apply to an AWS Account. All
+//    settings are isolated to a single AWS Region. To apply them in other AWS
+//    Regions, run the CreateAccountCustomization command in each AWS Region
+//    where you want to apply the same customizations.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3102,6 +3366,201 @@ func (c *QuickSight) DescribeAccountSettings(input *DescribeAccountSettingsInput
 // for more information on using Contexts.
 func (c *QuickSight) DescribeAccountSettingsWithContext(ctx aws.Context, input *DescribeAccountSettingsInput, opts ...request.Option) (*DescribeAccountSettingsOutput, error) {
 	req, out := c.DescribeAccountSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAnalysis = "DescribeAnalysis"
+
+// DescribeAnalysisRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAnalysis operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAnalysis for more information on using the DescribeAnalysis
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAnalysisRequest method.
+//    req, resp := client.DescribeAnalysisRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAnalysis
+func (c *QuickSight) DescribeAnalysisRequest(input *DescribeAnalysisInput) (req *request.Request, output *DescribeAnalysisOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAnalysis,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses/{AnalysisId}",
+	}
+
+	if input == nil {
+		input = &DescribeAnalysisInput{}
+	}
+
+	output = &DescribeAnalysisOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAnalysis API operation for Amazon QuickSight.
+//
+// Provides a summary of the metadata for an analysis.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeAnalysis for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * AccessDeniedException
+//   You don't have access to this item. The provided credentials couldn't be
+//   validated. You might not be authorized to carry out the request. Make sure
+//   that your account is authorized to use the Amazon QuickSight service, that
+//   your policies have the correct permissions, and that you are using the correct
+//   access keys.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAnalysis
+func (c *QuickSight) DescribeAnalysis(input *DescribeAnalysisInput) (*DescribeAnalysisOutput, error) {
+	req, out := c.DescribeAnalysisRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAnalysisWithContext is the same as DescribeAnalysis with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAnalysis for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeAnalysisWithContext(ctx aws.Context, input *DescribeAnalysisInput, opts ...request.Option) (*DescribeAnalysisOutput, error) {
+	req, out := c.DescribeAnalysisRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAnalysisPermissions = "DescribeAnalysisPermissions"
+
+// DescribeAnalysisPermissionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAnalysisPermissions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAnalysisPermissions for more information on using the DescribeAnalysisPermissions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAnalysisPermissionsRequest method.
+//    req, resp := client.DescribeAnalysisPermissionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAnalysisPermissions
+func (c *QuickSight) DescribeAnalysisPermissionsRequest(input *DescribeAnalysisPermissionsInput) (req *request.Request, output *DescribeAnalysisPermissionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAnalysisPermissions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses/{AnalysisId}/permissions",
+	}
+
+	if input == nil {
+		input = &DescribeAnalysisPermissionsInput{}
+	}
+
+	output = &DescribeAnalysisPermissionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAnalysisPermissions API operation for Amazon QuickSight.
+//
+// Provides the read and write permissions for an analysis.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation DescribeAnalysisPermissions for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/DescribeAnalysisPermissions
+func (c *QuickSight) DescribeAnalysisPermissions(input *DescribeAnalysisPermissionsInput) (*DescribeAnalysisPermissionsOutput, error) {
+	req, out := c.DescribeAnalysisPermissionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAnalysisPermissionsWithContext is the same as DescribeAnalysisPermissions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAnalysisPermissions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) DescribeAnalysisPermissionsWithContext(ctx aws.Context, input *DescribeAnalysisPermissionsInput, opts ...request.Option) (*DescribeAnalysisPermissionsOutput, error) {
+	req, out := c.DescribeAnalysisPermissionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4823,9 +5282,10 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 
 // GetDashboardEmbedUrl API operation for Amazon QuickSight.
 //
-// Generates a URL and authorization code that you can embed in your web server
-// code. Before you use this command, make sure that you have configured the
-// dashboards and permissions.
+// Generates a session URL and authorization code that you can use to embed
+// an Amazon QuickSight read-only dashboard in your web server code. Before
+// you use this command, make sure that you have configured the dashboards and
+// permissions.
 //
 // Currently, you can use GetDashboardEmbedURL only from the server, not from
 // the user's browser. The following rules apply to the combination of URL and
@@ -4839,10 +5299,8 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 //
 //    * The resulting user session is valid for 10 hours.
 //
-// For more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
-// in the Amazon QuickSight User Guide or Embedding Amazon QuickSight Dashboards
-// (https://docs.aws.amazon.com/quicksight/latest/APIReference/qs-dev-embedded-dashboards.html)
-// in the Amazon QuickSight API Reference.
+// For more information, see Embedding Amazon QuickSight (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
+// in the Amazon QuickSight User Guide .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4963,8 +5421,20 @@ func (c *QuickSight) GetSessionEmbedUrlRequest(input *GetSessionEmbedUrlInput) (
 
 // GetSessionEmbedUrl API operation for Amazon QuickSight.
 //
-// Generates a session URL and authorization code that you can embed in your
-// web server code.
+// Generates a session URL and authorization code that you can use to embed
+// the Amazon QuickSight console in your web server code. Use GetSessionEmbedUrl
+// where you want to provide an authoring portal that allows users to create
+// data sources, datasets, analyses, and dashboards. The users who access an
+// embedded QuickSight console need belong to the author or admin security cohort.
+// If you want to restrict permissions to some of these features, add a custom
+// permissions profile to the user with the UpdateUser API operation. Use RegisterUser
+// API operation to add a new user with a custom permission profile attached.
+// For more information, see the following sections in the Amazon QuickSight
+// User Guide:
+//
+//    * Embedding the Amazon QuickSight Console (https://docs.aws.amazon.com/quicksight/latest/user/embedding-the-quicksight-console.html)
+//
+//    * Customizing Access to the Amazon QuickSight Console (https://docs.aws.amazon.com/quicksight/latest/user/customizing-permissions-to-the-quicksight-console.html)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5031,6 +5501,155 @@ func (c *QuickSight) GetSessionEmbedUrlWithContext(ctx aws.Context, input *GetSe
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListAnalyses = "ListAnalyses"
+
+// ListAnalysesRequest generates a "aws/request.Request" representing the
+// client's request for the ListAnalyses operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAnalyses for more information on using the ListAnalyses
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAnalysesRequest method.
+//    req, resp := client.ListAnalysesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListAnalyses
+func (c *QuickSight) ListAnalysesRequest(input *ListAnalysesInput) (req *request.Request, output *ListAnalysesOutput) {
+	op := &request.Operation{
+		Name:       opListAnalyses,
+		HTTPMethod: "GET",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListAnalysesInput{}
+	}
+
+	output = &ListAnalysesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAnalyses API operation for Amazon QuickSight.
+//
+// Lists Amazon QuickSight analyses that exist in the specified AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation ListAnalyses for usage and error information.
+//
+// Returned Error Types:
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/ListAnalyses
+func (c *QuickSight) ListAnalyses(input *ListAnalysesInput) (*ListAnalysesOutput, error) {
+	req, out := c.ListAnalysesRequest(input)
+	return out, req.Send()
+}
+
+// ListAnalysesWithContext is the same as ListAnalyses with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAnalyses for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListAnalysesWithContext(ctx aws.Context, input *ListAnalysesInput, opts ...request.Option) (*ListAnalysesOutput, error) {
+	req, out := c.ListAnalysesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListAnalysesPages iterates over the pages of a ListAnalyses operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAnalyses method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAnalyses operation.
+//    pageNum := 0
+//    err := client.ListAnalysesPages(params,
+//        func(page *quicksight.ListAnalysesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *QuickSight) ListAnalysesPages(input *ListAnalysesInput, fn func(*ListAnalysesOutput, bool) bool) error {
+	return c.ListAnalysesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAnalysesPagesWithContext same as ListAnalysesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) ListAnalysesPagesWithContext(ctx aws.Context, input *ListAnalysesInput, fn func(*ListAnalysesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAnalysesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAnalysesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAnalysesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListDashboardVersions = "ListDashboardVersions"
@@ -6028,8 +6647,8 @@ func (c *QuickSight) ListIAMPolicyAssignmentsForUserRequest(input *ListIAMPolicy
 //   Access is throttled.
 //
 //   * ConcurrentUpdatingException
-//   A resource is already in a state that indicates an action is happening that
-//   must complete before a new update can be applied.
+//   A resource is already in a state that indicates an operation is happening
+//   that must complete before a new update can be applied.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -7558,6 +8177,258 @@ func (c *QuickSight) RegisterUserWithContext(ctx aws.Context, input *RegisterUse
 	return out, req.Send()
 }
 
+const opRestoreAnalysis = "RestoreAnalysis"
+
+// RestoreAnalysisRequest generates a "aws/request.Request" representing the
+// client's request for the RestoreAnalysis operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RestoreAnalysis for more information on using the RestoreAnalysis
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RestoreAnalysisRequest method.
+//    req, resp := client.RestoreAnalysisRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/RestoreAnalysis
+func (c *QuickSight) RestoreAnalysisRequest(input *RestoreAnalysisInput) (req *request.Request, output *RestoreAnalysisOutput) {
+	op := &request.Operation{
+		Name:       opRestoreAnalysis,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/restore/analyses/{AnalysisId}",
+	}
+
+	if input == nil {
+		input = &RestoreAnalysisInput{}
+	}
+
+	output = &RestoreAnalysisOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RestoreAnalysis API operation for Amazon QuickSight.
+//
+// Restores an analysis.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation RestoreAnalysis for usage and error information.
+//
+// Returned Error Types:
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/RestoreAnalysis
+func (c *QuickSight) RestoreAnalysis(input *RestoreAnalysisInput) (*RestoreAnalysisOutput, error) {
+	req, out := c.RestoreAnalysisRequest(input)
+	return out, req.Send()
+}
+
+// RestoreAnalysisWithContext is the same as RestoreAnalysis with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RestoreAnalysis for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) RestoreAnalysisWithContext(ctx aws.Context, input *RestoreAnalysisInput, opts ...request.Option) (*RestoreAnalysisOutput, error) {
+	req, out := c.RestoreAnalysisRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opSearchAnalyses = "SearchAnalyses"
+
+// SearchAnalysesRequest generates a "aws/request.Request" representing the
+// client's request for the SearchAnalyses operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SearchAnalyses for more information on using the SearchAnalyses
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SearchAnalysesRequest method.
+//    req, resp := client.SearchAnalysesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/SearchAnalyses
+func (c *QuickSight) SearchAnalysesRequest(input *SearchAnalysesInput) (req *request.Request, output *SearchAnalysesOutput) {
+	op := &request.Operation{
+		Name:       opSearchAnalyses,
+		HTTPMethod: "POST",
+		HTTPPath:   "/accounts/{AwsAccountId}/search/analyses",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &SearchAnalysesInput{}
+	}
+
+	output = &SearchAnalysesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// SearchAnalyses API operation for Amazon QuickSight.
+//
+// Searches for analyses that belong to the user specified in the filter.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation SearchAnalyses for usage and error information.
+//
+// Returned Error Types:
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InvalidNextTokenException
+//   The NextToken value isn't valid.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/SearchAnalyses
+func (c *QuickSight) SearchAnalyses(input *SearchAnalysesInput) (*SearchAnalysesOutput, error) {
+	req, out := c.SearchAnalysesRequest(input)
+	return out, req.Send()
+}
+
+// SearchAnalysesWithContext is the same as SearchAnalyses with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SearchAnalyses for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) SearchAnalysesWithContext(ctx aws.Context, input *SearchAnalysesInput, opts ...request.Option) (*SearchAnalysesOutput, error) {
+	req, out := c.SearchAnalysesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// SearchAnalysesPages iterates over the pages of a SearchAnalyses operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See SearchAnalyses method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a SearchAnalyses operation.
+//    pageNum := 0
+//    err := client.SearchAnalysesPages(params,
+//        func(page *quicksight.SearchAnalysesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *QuickSight) SearchAnalysesPages(input *SearchAnalysesInput, fn func(*SearchAnalysesOutput, bool) bool) error {
+	return c.SearchAnalysesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// SearchAnalysesPagesWithContext same as SearchAnalysesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) SearchAnalysesPagesWithContext(ctx aws.Context, input *SearchAnalysesInput, fn func(*SearchAnalysesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *SearchAnalysesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.SearchAnalysesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*SearchAnalysesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opSearchDashboards = "SearchDashboards"
 
 // SearchDashboardsRequest generates a "aws/request.Request" representing the
@@ -7608,7 +8479,7 @@ func (c *QuickSight) SearchDashboardsRequest(input *SearchDashboardsInput) (req 
 
 // SearchDashboards API operation for Amazon QuickSight.
 //
-// Searchs for dashboards that belong to a user.
+// Searches for dashboards that belong to a user.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7972,8 +8843,13 @@ func (c *QuickSight) UpdateAccountCustomizationRequest(input *UpdateAccountCusto
 
 // UpdateAccountCustomization API operation for Amazon QuickSight.
 //
-// Updates customizations associated with the QuickSight subscription on your
-// AWS account.
+// Updates Amazon QuickSight customizations the current AWS Region. Currently,
+// the only customization you can use is a theme.
+//
+// You can use customizations for your AWS account or, if you specify a namespace,
+// for a QuickSight namespace instead. Customizations that apply to a namespace
+// override customizations that apply to an AWS account. To find out which customizations
+// apply, use the DescribeAccountCustomization API operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8071,7 +8947,7 @@ func (c *QuickSight) UpdateAccountSettingsRequest(input *UpdateAccountSettingsIn
 
 // UpdateAccountSettings API operation for Amazon QuickSight.
 //
-// Updates the settings for the Amazon QuickSight subscription in your AWS Account.
+// Updates the Amazon QuickSight settings in your AWS Account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8120,6 +8996,203 @@ func (c *QuickSight) UpdateAccountSettings(input *UpdateAccountSettingsInput) (*
 // for more information on using Contexts.
 func (c *QuickSight) UpdateAccountSettingsWithContext(ctx aws.Context, input *UpdateAccountSettingsInput, opts ...request.Option) (*UpdateAccountSettingsOutput, error) {
 	req, out := c.UpdateAccountSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateAnalysis = "UpdateAnalysis"
+
+// UpdateAnalysisRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAnalysis operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAnalysis for more information on using the UpdateAnalysis
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAnalysisRequest method.
+//    req, resp := client.UpdateAnalysisRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAnalysis
+func (c *QuickSight) UpdateAnalysisRequest(input *UpdateAnalysisInput) (req *request.Request, output *UpdateAnalysisOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAnalysis,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses/{AnalysisId}",
+	}
+
+	if input == nil {
+		input = &UpdateAnalysisInput{}
+	}
+
+	output = &UpdateAnalysisOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateAnalysis API operation for Amazon QuickSight.
+//
+// Updates an analysis in Amazon QuickSight
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateAnalysis for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * ResourceExistsException
+//   The resource specified already exists.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAnalysis
+func (c *QuickSight) UpdateAnalysis(input *UpdateAnalysisInput) (*UpdateAnalysisOutput, error) {
+	req, out := c.UpdateAnalysisRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAnalysisWithContext is the same as UpdateAnalysis with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAnalysis for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateAnalysisWithContext(ctx aws.Context, input *UpdateAnalysisInput, opts ...request.Option) (*UpdateAnalysisOutput, error) {
+	req, out := c.UpdateAnalysisRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateAnalysisPermissions = "UpdateAnalysisPermissions"
+
+// UpdateAnalysisPermissionsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAnalysisPermissions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAnalysisPermissions for more information on using the UpdateAnalysisPermissions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAnalysisPermissionsRequest method.
+//    req, resp := client.UpdateAnalysisPermissionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAnalysisPermissions
+func (c *QuickSight) UpdateAnalysisPermissionsRequest(input *UpdateAnalysisPermissionsInput) (req *request.Request, output *UpdateAnalysisPermissionsOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAnalysisPermissions,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/accounts/{AwsAccountId}/analyses/{AnalysisId}/permissions",
+	}
+
+	if input == nil {
+		input = &UpdateAnalysisPermissionsInput{}
+	}
+
+	output = &UpdateAnalysisPermissionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateAnalysisPermissions API operation for Amazon QuickSight.
+//
+// Updates the read and write permissions for an analysis.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon QuickSight's
+// API operation UpdateAnalysisPermissions for usage and error information.
+//
+// Returned Error Types:
+//   * ThrottlingException
+//   Access is throttled.
+//
+//   * InvalidParameterValueException
+//   One or more parameters has a value that isn't valid.
+//
+//   * ResourceNotFoundException
+//   One or more resources can't be found.
+//
+//   * UnsupportedUserEditionException
+//   This error indicates that you are calling an operation on an Amazon QuickSight
+//   subscription where the edition doesn't include support for that operation.
+//   Amazon QuickSight currently has Standard Edition and Enterprise Edition.
+//   Not every operation and capability is available in every edition.
+//
+//   * ConflictException
+//   Updating or deleting a resource can cause an inconsistent state.
+//
+//   * InternalFailureException
+//   An internal failure occurred.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/quicksight-2018-04-01/UpdateAnalysisPermissions
+func (c *QuickSight) UpdateAnalysisPermissions(input *UpdateAnalysisPermissionsInput) (*UpdateAnalysisPermissionsOutput, error) {
+	req, out := c.UpdateAnalysisPermissionsRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAnalysisPermissionsWithContext is the same as UpdateAnalysisPermissions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAnalysisPermissions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *QuickSight) UpdateAnalysisPermissionsWithContext(ctx aws.Context, input *UpdateAnalysisPermissionsInput, opts ...request.Option) (*UpdateAnalysisPermissionsOutput, error) {
+	req, out := c.UpdateAnalysisPermissionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8998,8 +10071,8 @@ func (c *QuickSight) UpdateIAMPolicyAssignmentRequest(input *UpdateIAMPolicyAssi
 //   Access is throttled.
 //
 //   * ConcurrentUpdatingException
-//   A resource is already in a state that indicates an action is happening that
-//   must complete before a new update can be applied.
+//   A resource is already in a state that indicates an operation is happening
+//   that must complete before a new update can be applied.
 //
 //   * InternalFailureException
 //   An internal failure occurred.
@@ -9810,7 +10883,8 @@ func (s *AccessDeniedException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// The customizations associated with your AWS account for QuickSight.
+// The Amazon QuickSight customizations associated with your AWS account or
+// a QuickSight namespace in a specific AWS Region.
 type AccountCustomization struct {
 	_ struct{} `type:"structure"`
 
@@ -9838,13 +10912,16 @@ func (s *AccountCustomization) SetDefaultTheme(v string) *AccountCustomization {
 type AccountSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The name associated with the QuickSight subscription in your AWS account.
+	// The "account name" you provided for the QuickSight subscription in your AWS
+	// account. You create this name when you sign up for QuickSight. It is unique
+	// in all of AWS and it appears only in the console when users sign in.
 	AccountName *string `type:"string"`
 
 	// The default QuickSight namespace for your AWS account.
 	DefaultNamespace *string `type:"string"`
 
-	// The edition of QuickSight that you're currently subscribed to.
+	// The edition of QuickSight that you're currently subscribed to: Enterprise
+	// edition or Standard edition.
 	Edition *string `type:"string" enum:"Edition"`
 
 	// The main notification email for your QuickSight subscription.
@@ -9981,6 +11058,354 @@ func (s *AmazonElasticsearchParameters) Validate() error {
 // SetDomain sets the Domain field's value.
 func (s *AmazonElasticsearchParameters) SetDomain(v string) *AmazonElasticsearchParameters {
 	s.Domain = &v
+	return s
+}
+
+// Metadata structure for an analysis in Amazon QuickSight
+type Analysis struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the analysis.
+	Arn *string `type:"string"`
+
+	// The time that the analysis was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The ARNs of the datasets of the analysis.
+	DataSetArns []*string `type:"list"`
+
+	// Errors associated with the analysis.
+	Errors []*AnalysisError `min:"1" type:"list"`
+
+	// The time that the analysis was last updated.
+	LastUpdatedTime *time.Time `type:"timestamp"`
+
+	// The descriptive name of the analysis.
+	Name *string `min:"1" type:"string"`
+
+	// Status associated with the analysis.
+	Status *string `type:"string" enum:"ResourceStatus"`
+
+	// The ARN of the theme of the analysis.
+	ThemeArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Analysis) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Analysis) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *Analysis) SetAnalysisId(v string) *Analysis {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *Analysis) SetArn(v string) *Analysis {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *Analysis) SetCreatedTime(v time.Time) *Analysis {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDataSetArns sets the DataSetArns field's value.
+func (s *Analysis) SetDataSetArns(v []*string) *Analysis {
+	s.DataSetArns = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *Analysis) SetErrors(v []*AnalysisError) *Analysis {
+	s.Errors = v
+	return s
+}
+
+// SetLastUpdatedTime sets the LastUpdatedTime field's value.
+func (s *Analysis) SetLastUpdatedTime(v time.Time) *Analysis {
+	s.LastUpdatedTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Analysis) SetName(v string) *Analysis {
+	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *Analysis) SetStatus(v string) *Analysis {
+	s.Status = &v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *Analysis) SetThemeArn(v string) *Analysis {
+	s.ThemeArn = &v
+	return s
+}
+
+// A metadata error structure for an analysis.
+type AnalysisError struct {
+	_ struct{} `type:"structure"`
+
+	// The message associated with the analysis error.
+	Message *string `type:"string"`
+
+	// The type of the analysis error.
+	Type *string `type:"string" enum:"AnalysisErrorType"`
+}
+
+// String returns the string representation
+func (s AnalysisError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnalysisError) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *AnalysisError) SetMessage(v string) *AnalysisError {
+	s.Message = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *AnalysisError) SetType(v string) *AnalysisError {
+	s.Type = &v
+	return s
+}
+
+// A filter that you apply when searching for one or more analyses.
+type AnalysisSearchFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the value that you want to use as a filter, for example "Name":
+	// "QUICKSIGHT_USER".
+	Name *string `type:"string" enum:"AnalysisFilterAttribute"`
+
+	// The comparison operator that you want to use as a filter, for example "Operator":
+	// "StringEquals".
+	Operator *string `type:"string" enum:"FilterOperator"`
+
+	// The value of the named item, in this case QUICKSIGHT_USER, that you want
+	// to use as a filter, for example "Value". An example is "arn:aws:quicksight:us-east-1:1:user/default/UserName1".
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AnalysisSearchFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnalysisSearchFilter) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *AnalysisSearchFilter) SetName(v string) *AnalysisSearchFilter {
+	s.Name = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *AnalysisSearchFilter) SetOperator(v string) *AnalysisSearchFilter {
+	s.Operator = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *AnalysisSearchFilter) SetValue(v string) *AnalysisSearchFilter {
+	s.Value = &v
+	return s
+}
+
+// The source entity of an analysis.
+type AnalysisSourceEntity struct {
+	_ struct{} `type:"structure"`
+
+	// The source template for the source entity of the analysis.
+	SourceTemplate *AnalysisSourceTemplate `type:"structure"`
+}
+
+// String returns the string representation
+func (s AnalysisSourceEntity) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnalysisSourceEntity) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AnalysisSourceEntity) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AnalysisSourceEntity"}
+	if s.SourceTemplate != nil {
+		if err := s.SourceTemplate.Validate(); err != nil {
+			invalidParams.AddNested("SourceTemplate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSourceTemplate sets the SourceTemplate field's value.
+func (s *AnalysisSourceEntity) SetSourceTemplate(v *AnalysisSourceTemplate) *AnalysisSourceEntity {
+	s.SourceTemplate = v
+	return s
+}
+
+// The source template of an analysis.
+type AnalysisSourceTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the source template of an analysis.
+	//
+	// Arn is a required field
+	Arn *string `type:"string" required:"true"`
+
+	// The dataset references of the source template of an analysis.
+	//
+	// DataSetReferences is a required field
+	DataSetReferences []*DataSetReference `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AnalysisSourceTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnalysisSourceTemplate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AnalysisSourceTemplate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AnalysisSourceTemplate"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.DataSetReferences == nil {
+		invalidParams.Add(request.NewErrParamRequired("DataSetReferences"))
+	}
+	if s.DataSetReferences != nil && len(s.DataSetReferences) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DataSetReferences", 1))
+	}
+	if s.DataSetReferences != nil {
+		for i, v := range s.DataSetReferences {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DataSetReferences", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *AnalysisSourceTemplate) SetArn(v string) *AnalysisSourceTemplate {
+	s.Arn = &v
+	return s
+}
+
+// SetDataSetReferences sets the DataSetReferences field's value.
+func (s *AnalysisSourceTemplate) SetDataSetReferences(v []*DataSetReference) *AnalysisSourceTemplate {
+	s.DataSetReferences = v
+	return s
+}
+
+// The summary metadata that describes an analysis.
+type AnalysisSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis. This ID displays in the URL.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) for the analysis.
+	Arn *string `type:"string"`
+
+	// The time that the analysis was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The time that the analysis was last updated.
+	LastUpdatedTime *time.Time `type:"timestamp"`
+
+	// The name of the analysis. This name is displayed in the QuickSight console.
+	Name *string `min:"1" type:"string"`
+
+	// The last known status for the analysis.
+	Status *string `type:"string" enum:"ResourceStatus"`
+}
+
+// String returns the string representation
+func (s AnalysisSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnalysisSummary) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *AnalysisSummary) SetAnalysisId(v string) *AnalysisSummary {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *AnalysisSummary) SetArn(v string) *AnalysisSummary {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *AnalysisSummary) SetCreatedTime(v time.Time) *AnalysisSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetLastUpdatedTime sets the LastUpdatedTime field's value.
+func (s *AnalysisSummary) SetLastUpdatedTime(v time.Time) *AnalysisSummary {
+	s.LastUpdatedTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *AnalysisSummary) SetName(v string) *AnalysisSummary {
+	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AnalysisSummary) SetStatus(v string) *AnalysisSummary {
+	s.Status = &v
 	return s
 }
 
@@ -10674,8 +12099,8 @@ func (s *ColumnTag) SetColumnGeographicRole(v string) *ColumnTag {
 	return s
 }
 
-// A resource is already in a state that indicates an action is happening that
-// must complete before a new update can be applied.
+// A resource is already in a state that indicates an operation is happening
+// that must complete before a new update can be applied.
 type ConcurrentUpdatingException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -10795,10 +12220,14 @@ func (s *ConflictException) RequestID() string {
 type CreateAccountCustomizationInput struct {
 	_ struct{} `type:"structure"`
 
-	// The customizations you're adding to the QuickSight subscription for the AWS
-	// account. For example, you could add a default theme by setting AccountCustomization
-	// to the midnight theme (DefaultTheme="arn:aws:quicksight::aws:theme/MIDNIGHT")
-	// or to a custom theme (DefaultTheme="arn:aws:quicksight:us-west-2:111122223333:theme/bdb844d0-0fe9-4d9d-b520-0fe602d93639").
+	// The QuickSight customizations you're adding in the current AWS Region. You
+	// can add these to an AWS account and a QuickSight namespace.
+	//
+	// For example, you could add a default theme by setting AccountCustomization
+	// to the midnight theme: "AccountCustomization": { "DefaultTheme": "arn:aws:quicksight::aws:theme/MIDNIGHT"
+	// }. . Or, you could add a custom theme by specifying "AccountCustomization":
+	// { "DefaultTheme": "arn:aws:quicksight:us-west-2:111122223333:theme/bdb844d0-0fe9-4d9d-b520-0fe602d93639"
+	// }.
 	//
 	// AccountCustomization is a required field
 	AccountCustomization *AccountCustomization `type:"structure" required:"true"`
@@ -10808,7 +12237,7 @@ type CreateAccountCustomizationInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The namespace associated with the customization that you're creating.
+	// The QuickSight namespace that you want to add customizations to.
 	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
 }
 
@@ -10862,8 +12291,7 @@ func (s *CreateAccountCustomizationInput) SetNamespace(v string) *CreateAccountC
 type CreateAccountCustomizationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The customizations you're adding to the QuickSight subscription for the AWS
-	// account.
+	// The QuickSight customizations you're adding in the current AWS Region.
 	AccountCustomization *AccountCustomization `type:"structure"`
 
 	// The ID for the AWS account that you want to customize QuickSight for.
@@ -10915,6 +12343,238 @@ func (s *CreateAccountCustomizationOutput) SetRequestId(v string) *CreateAccount
 
 // SetStatus sets the Status field's value.
 func (s *CreateAccountCustomizationOutput) SetStatus(v int64) *CreateAccountCustomizationOutput {
+	s.Status = &v
+	return s
+}
+
+type CreateAnalysisInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the analysis that you're creating. This ID displays in the URL
+	// of the analysis.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account where you are creating an analysis.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// A descriptive name for the analysis that you're creating. This name displays
+	// for the analysis in the QuickSight console.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The parameter names and override values that you want to use. An analysis
+	// can have any parameter type, and some parameters might accept multiple values.
+	Parameters *Parameters `type:"structure"`
+
+	// A structure that describes the principals and the resource-level permissions
+	// on an analysis. You can use the Permissions structure to grant permissions
+	// by providing a list of AWS Identity and Access Management (IAM) action information
+	// for each principal listed by Amazon Resource Name (ARN).
+	//
+	// To specify no permissions, omit Permissions.
+	Permissions []*ResourcePermission `min:"1" type:"list"`
+
+	// A source entity to use for the analysis that you're creating. This metadata
+	// structure contains details that describe a source template and one or more
+	// datasets.
+	//
+	// SourceEntity is a required field
+	SourceEntity *AnalysisSourceEntity `type:"structure" required:"true"`
+
+	// Contains a map of the key-value pairs for the resource tag or tags assigned
+	// to the analysis.
+	Tags []*Tag `min:"1" type:"list"`
+
+	// The ARN for the theme to apply to the analysis that you're creating. To see
+	// the theme in the QuickSight console, make sure that you have access to it.
+	ThemeArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateAnalysisInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateAnalysisInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateAnalysisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateAnalysisInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Permissions != nil && len(s.Permissions) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Permissions", 1))
+	}
+	if s.SourceEntity == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceEntity"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Parameters != nil {
+		if err := s.Parameters.Validate(); err != nil {
+			invalidParams.AddNested("Parameters", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Permissions != nil {
+		for i, v := range s.Permissions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Permissions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.SourceEntity != nil {
+		if err := s.SourceEntity.Validate(); err != nil {
+			invalidParams.AddNested("SourceEntity", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *CreateAnalysisInput) SetAnalysisId(v string) *CreateAnalysisInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *CreateAnalysisInput) SetAwsAccountId(v string) *CreateAnalysisInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateAnalysisInput) SetName(v string) *CreateAnalysisInput {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *CreateAnalysisInput) SetParameters(v *Parameters) *CreateAnalysisInput {
+	s.Parameters = v
+	return s
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *CreateAnalysisInput) SetPermissions(v []*ResourcePermission) *CreateAnalysisInput {
+	s.Permissions = v
+	return s
+}
+
+// SetSourceEntity sets the SourceEntity field's value.
+func (s *CreateAnalysisInput) SetSourceEntity(v *AnalysisSourceEntity) *CreateAnalysisInput {
+	s.SourceEntity = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateAnalysisInput) SetTags(v []*Tag) *CreateAnalysisInput {
+	s.Tags = v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *CreateAnalysisInput) SetThemeArn(v string) *CreateAnalysisInput {
+	s.ThemeArn = &v
+	return s
+}
+
+type CreateAnalysisOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// The ARN for the analysis.
+	Arn *string `type:"string"`
+
+	// The status of the creation of the analysis.
+	CreationStatus *string `type:"string" enum:"ResourceStatus"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateAnalysisOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateAnalysisOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *CreateAnalysisOutput) SetAnalysisId(v string) *CreateAnalysisOutput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateAnalysisOutput) SetArn(v string) *CreateAnalysisOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationStatus sets the CreationStatus field's value.
+func (s *CreateAnalysisOutput) SetCreationStatus(v string) *CreateAnalysisOutput {
+	s.CreationStatus = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateAnalysisOutput) SetRequestId(v string) *CreateAnalysisOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CreateAnalysisOutput) SetStatus(v int64) *CreateAnalysisOutput {
 	s.Status = &v
 	return s
 }
@@ -10993,7 +12653,7 @@ type CreateDashboardInput struct {
 	//    ad hoc (one-time) filtering. This option is ENABLED by default.
 	//
 	//    * AvailabilityStatus for ExportToCSVOption - This status can be either
-	//    ENABLED or DISABLED. The visual option to export data to .csv format isn't
+	//    ENABLED or DISABLED. The visual option to export data to .CSV format isn't
 	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
 	//    * VisibilityState for SheetControlsOption - This visibility state can
@@ -11011,7 +12671,10 @@ type CreateDashboardInput struct {
 	Parameters *Parameters `type:"structure"`
 
 	// A structure that contains the permissions of the dashboard. You can use this
-	// structure for granting permissions with principal and action information.
+	// structure for granting permissions by providing a list of IAM action information
+	// for each principal ARN.
+	//
+	// To specify no permissions, omit the permissions list.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
 	// The entity that you are using as a source when you create the dashboard.
@@ -12501,7 +14164,7 @@ type CreateNamespaceOutput struct {
 	// The status of the creation of the namespace. This is an asynchronous process.
 	// A status of CREATED means that your namespace is ready to use. If an error
 	// occurs, it indicates if the process is retryable or non-retryable. In the
-	// case of a non-retryable error, refer to the error message for follow-up actions.
+	// case of a non-retryable error, refer to the error message for follow-up tasks.
 	CreationStatus *string `type:"string" enum:"NamespaceStatus"`
 
 	// Specifies the type of your user identity directory. Currently, this supports
@@ -13315,12 +14978,12 @@ type CredentialPair struct {
 	// A set of alternate data source parameters that you want to share for these
 	// credentials. The credentials are applied in tandem with the data source parameters
 	// when you copy a data source by using a create or update request. The API
-	// compares the DataSourceParameters structure that's in the request with the
-	// structures in the AlternateDataSourceParameters allowlist. If the structures
-	// are an exact match, the request is allowed to use the new data source with
-	// the existing credentials. If the AlternateDataSourceParameters list is null,
-	// the DataSourceParameters originally used with these Credentials is automatically
-	// allowed.
+	// operation compares the DataSourceParameters structure that's in the request
+	// with the structures in the AlternateDataSourceParameters allowlist. If the
+	// structures are an exact match, the request is allowed to use the new data
+	// source with the existing credentials. If the AlternateDataSourceParameters
+	// list is null, the DataSourceParameters originally used with these Credentials
+	// is automatically allowed.
 	AlternateDataSourceParameters []*DataSourceParameters `min:"1" type:"list"`
 
 	// Password.
@@ -13899,13 +15562,13 @@ type DashboardVersion struct {
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// The Amazon Resource Numbers (ARNs) for the datasets that are associated with
-	// a version of the dashboard.
+	// this version of the dashboard.
 	DataSetArns []*string `type:"list"`
 
 	// Description.
 	Description *string `min:"1" type:"string"`
 
-	// Errors.
+	// Errors associated with this dashboard version.
 	Errors []*DashboardError `min:"1" type:"list"`
 
 	// Source entity ARN.
@@ -13914,7 +15577,10 @@ type DashboardVersion struct {
 	// The HTTP status of the request.
 	Status *string `type:"string" enum:"ResourceStatus"`
 
-	// Version number.
+	// The ARN of the theme associated with a version of the dashboard.
+	ThemeArn *string `type:"string"`
+
+	// Version number for this version of the dashboard.
 	VersionNumber *int64 `min:"1" type:"long"`
 }
 
@@ -13967,6 +15633,12 @@ func (s *DashboardVersion) SetSourceEntityArn(v string) *DashboardVersion {
 // SetStatus sets the Status field's value.
 func (s *DashboardVersion) SetStatus(v string) *DashboardVersion {
 	s.Status = &v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *DashboardVersion) SetThemeArn(v string) *DashboardVersion {
+	s.ThemeArn = &v
 	return s
 }
 
@@ -14421,8 +16093,8 @@ type DataSource struct {
 	// A set of alternate data source parameters that you want to share for the
 	// credentials stored with this data source. The credentials are applied in
 	// tandem with the data source parameters when you copy a data source by using
-	// a create or update request. The API compares the DataSourceParameters structure
-	// that's in the request with the structures in the AlternateDataSourceParameters
+	// a create or update request. The API operation compares the DataSourceParameters
+	// structure that's in the request with the structures in the AlternateDataSourceParameters
 	// allowlist. If the structures are an exact match, the request is allowed to
 	// use the credentials from this existing data source. If the AlternateDataSourceParameters
 	// list is null, the Credentials originally used with this DataSourceParameters
@@ -14930,16 +16602,16 @@ func (s *DataSourceParameters) SetTwitterParameters(v *TwitterParameters) *DataS
 	return s
 }
 
-// Date time parameter.
+// A date-time parameter.
 type DateTimeParameter struct {
 	_ struct{} `type:"structure"`
 
-	// A display name for the dataset.
+	// A display name for the date-time parameter.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// Values.
+	// The values for the date-time parameter.
 	//
 	// Values is a required field
 	Values []*time.Time `type:"list" required:"true"`
@@ -14983,16 +16655,16 @@ func (s *DateTimeParameter) SetValues(v []*time.Time) *DateTimeParameter {
 	return s
 }
 
-// Decimal parameter.
+// A decimal parameter.
 type DecimalParameter struct {
 	_ struct{} `type:"structure"`
 
-	// A display name for the dataset.
+	// A display name for the decimal parameter.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// Values.
+	// The values for the decimal parameter.
 	//
 	// Values is a required field
 	Values []*float64 `type:"list" required:"true"`
@@ -15040,12 +16712,12 @@ type DeleteAccountCustomizationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID for the AWS account that you want to delete QuickSight customizations
-	// from.
+	// from in this AWS Region.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The namespace associated with the customization that you're deleting.
+	// The QuickSight namespace that you're deleting the customizations from.
 	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
 }
 
@@ -15115,6 +16787,148 @@ func (s *DeleteAccountCustomizationOutput) SetRequestId(v string) *DeleteAccount
 
 // SetStatus sets the Status field's value.
 func (s *DeleteAccountCustomizationOutput) SetStatus(v int64) *DeleteAccountCustomizationOutput {
+	s.Status = &v
+	return s
+}
+
+type DeleteAnalysisInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis that you're deleting.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account where you want to delete an analysis.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// This option defaults to the value NoForceDeleteWithoutRecovery. To immediately
+	// delete the analysis, add the ForceDeleteWithoutRecovery option. You can't
+	// restore an analysis after it's deleted.
+	ForceDeleteWithoutRecovery *bool `location:"querystring" locationName:"force-delete-without-recovery" type:"boolean"`
+
+	// A value that specifies the number of days that QuickSight waits before it
+	// deletes the analysis. You can't use this parameter with the ForceDeleteWithoutRecovery
+	// option in the same API call. The default value is 30.
+	RecoveryWindowInDays *int64 `location:"querystring" locationName:"recovery-window-in-days" min:"7" type:"long"`
+}
+
+// String returns the string representation
+func (s DeleteAnalysisInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAnalysisInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAnalysisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAnalysisInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.RecoveryWindowInDays != nil && *s.RecoveryWindowInDays < 7 {
+		invalidParams.Add(request.NewErrParamMinValue("RecoveryWindowInDays", 7))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *DeleteAnalysisInput) SetAnalysisId(v string) *DeleteAnalysisInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DeleteAnalysisInput) SetAwsAccountId(v string) *DeleteAnalysisInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetForceDeleteWithoutRecovery sets the ForceDeleteWithoutRecovery field's value.
+func (s *DeleteAnalysisInput) SetForceDeleteWithoutRecovery(v bool) *DeleteAnalysisInput {
+	s.ForceDeleteWithoutRecovery = &v
+	return s
+}
+
+// SetRecoveryWindowInDays sets the RecoveryWindowInDays field's value.
+func (s *DeleteAnalysisInput) SetRecoveryWindowInDays(v int64) *DeleteAnalysisInput {
+	s.RecoveryWindowInDays = &v
+	return s
+}
+
+type DeleteAnalysisOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the deleted analysis.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the deleted analysis.
+	Arn *string `type:"string"`
+
+	// The date and time that the analysis is scheduled to be deleted.
+	DeletionTime *time.Time `type:"timestamp"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DeleteAnalysisOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAnalysisOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *DeleteAnalysisOutput) SetAnalysisId(v string) *DeleteAnalysisOutput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteAnalysisOutput) SetArn(v string) *DeleteAnalysisOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetDeletionTime sets the DeletionTime field's value.
+func (s *DeleteAnalysisOutput) SetDeletionTime(v time.Time) *DeleteAnalysisOutput {
+	s.DeletionTime = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DeleteAnalysisOutput) SetRequestId(v string) *DeleteAnalysisOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DeleteAnalysisOutput) SetStatus(v int64) *DeleteAnalysisOutput {
 	s.Status = &v
 	return s
 }
@@ -16640,11 +18454,15 @@ type DescribeAccountCustomizationInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The namespace associated with the customization that you're describing.
+	// The QuickSight namespace that you want to describe QuickSight customizations
+	// for.
 	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
 
-	// The status of the creation of the customization. This is an asynchronous
-	// process. A status of CREATED means that your customization is ready to use.
+	// The Resolved flag works with the other parameters to determine which view
+	// of QuickSight customizations is returned. You can add this flag to your command
+	// to use the same view that QuickSight uses to identify which customizations
+	// to apply to the console. Omit this flag, or set it to no-resolved, to reveal
+	// customizations that are configured at different levels.
 	Resolved *bool `location:"querystring" locationName:"resolved" type:"boolean"`
 }
 
@@ -16695,14 +18513,13 @@ func (s *DescribeAccountCustomizationInput) SetResolved(v bool) *DescribeAccount
 type DescribeAccountCustomizationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The customizations associated with QuickSight.
+	// The QuickSight customizations that exist in the current AWS Region.
 	AccountCustomization *AccountCustomization `type:"structure"`
 
-	// The ID for the AWS account that you want to describe QuickSight customizations
-	// for.
+	// The ID for the AWS account that you're describing.
 	AwsAccountId *string `min:"12" type:"string"`
 
-	// The namespace associated with the customization that you're describing.
+	// The QuickSight namespace that you're describing.
 	Namespace *string `type:"string"`
 
 	// The AWS request ID for this operation.
@@ -16755,8 +18572,7 @@ func (s *DescribeAccountCustomizationOutput) SetStatus(v int64) *DescribeAccount
 type DescribeAccountSettingsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID for the AWS account that contains the QuickSight namespaces that you
-	// want to list.
+	// The ID for the AWS account that contains the settings that you want to list.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
@@ -16797,12 +18613,14 @@ func (s *DescribeAccountSettingsInput) SetAwsAccountId(v string) *DescribeAccoun
 type DescribeAccountSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The settings associated with the QuickSight subscription associated with
-	// this AWS account. This information includes the edition of Amazon QuickSight
-	// that you subscribed to (Standard or Enterprise) and the notification email
-	// for the QuickSight subscription. The QuickSight console, the QuickSight subscription
-	// is sometimes referred to as a QuickSight "account" even though it is technically
-	// not an account, but a subscription in your AWS account.
+	// The QuickSight settings for this AWS account. This information includes the
+	// edition of Amazon QuickSight that you subscribed to (Standard or Enterprise)
+	// and the notification email for the QuickSight subscription. The QuickSight
+	// console, the QuickSight subscription is sometimes referred to as a QuickSight
+	// "account" even though it's technically not an account by itself. Instead,
+	// it's a subscription to the QuickSight service for your AWS account. The edition
+	// that you subscribe to applies to QuickSight in every AWS Region where you
+	// use it.
 	AccountSettings *AccountSettings `type:"structure"`
 
 	// The AWS request ID for this operation.
@@ -16836,6 +18654,228 @@ func (s *DescribeAccountSettingsOutput) SetRequestId(v string) *DescribeAccountS
 
 // SetStatus sets the Status field's value.
 func (s *DescribeAccountSettingsOutput) SetStatus(v int64) *DescribeAccountSettingsOutput {
+	s.Status = &v
+	return s
+}
+
+type DescribeAnalysisInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis that you're describing. The ID is part of the URL
+	// of the analysis.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the analysis. You must be using the
+	// AWS account that the analysis is in.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAnalysisInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAnalysisInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAnalysisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAnalysisInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *DescribeAnalysisInput) SetAnalysisId(v string) *DescribeAnalysisInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeAnalysisInput) SetAwsAccountId(v string) *DescribeAnalysisInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+type DescribeAnalysisOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A metadata structure that contains summary information for the analysis that
+	// you're describing.
+	Analysis *Analysis `type:"structure"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeAnalysisOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAnalysisOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysis sets the Analysis field's value.
+func (s *DescribeAnalysisOutput) SetAnalysis(v *Analysis) *DescribeAnalysisOutput {
+	s.Analysis = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeAnalysisOutput) SetRequestId(v string) *DescribeAnalysisOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeAnalysisOutput) SetStatus(v int64) *DescribeAnalysisOutput {
+	s.Status = &v
+	return s
+}
+
+type DescribeAnalysisPermissionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis whose permissions you're describing. The ID is part
+	// of the analysis URL.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the analysis whose permissions you're
+	// describing. You must be using the AWS account that the analysis is in.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAnalysisPermissionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAnalysisPermissionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAnalysisPermissionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAnalysisPermissionsInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *DescribeAnalysisPermissionsInput) SetAnalysisId(v string) *DescribeAnalysisPermissionsInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *DescribeAnalysisPermissionsInput) SetAwsAccountId(v string) *DescribeAnalysisPermissionsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+type DescribeAnalysisPermissionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the analysis whose permissions you're describing.
+	AnalysisArn *string `type:"string"`
+
+	// The ID of the analysis whose permissions you're describing.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// A structure that describes the principals and the resource-level permissions
+	// on an analysis.
+	Permissions []*ResourcePermission `min:"1" type:"list"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeAnalysisPermissionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAnalysisPermissionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisArn sets the AnalysisArn field's value.
+func (s *DescribeAnalysisPermissionsOutput) SetAnalysisArn(v string) *DescribeAnalysisPermissionsOutput {
+	s.AnalysisArn = &v
+	return s
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *DescribeAnalysisPermissionsOutput) SetAnalysisId(v string) *DescribeAnalysisPermissionsOutput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *DescribeAnalysisPermissionsOutput) SetPermissions(v []*ResourcePermission) *DescribeAnalysisPermissionsOutput {
+	s.Permissions = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *DescribeAnalysisPermissionsOutput) SetRequestId(v string) *DescribeAnalysisPermissionsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeAnalysisPermissionsOutput) SetStatus(v int64) *DescribeAnalysisPermissionsOutput {
 	s.Status = &v
 	return s
 }
@@ -17934,8 +19974,8 @@ type DescribeNamespaceOutput struct {
 	// The information about the namespace that you're describing. The response
 	// includes the namespace ARN, name, AWS Region, creation status, and identity
 	// store. DescribeNamespace also works for namespaces that are in the process
-	// of being created. For incomplete namespaces, this API lists the namespace
-	// error types and messages associated with the creation process.
+	// of being created. For incomplete namespaces, this API operation lists the
+	// namespace error types and messages associated with the creation process.
 	Namespace *NamespaceInfoV2 `type:"structure"`
 
 	// The AWS request ID for this operation.
@@ -19086,6 +21126,9 @@ type GetDashboardEmbedUrlInput struct {
 	//
 	//    * IAM users and IAM role-based sessions authenticated through Federated
 	//    Single Sign-On using SAML, OpenID Connect, or IAM federation.
+	//
+	// Omit this parameter for users in the third group – IAM users and IAM role-based
+	// sessions.
 	UserArn *string `location:"querystring" locationName:"user-arn" type:"string"`
 }
 
@@ -19173,9 +21216,9 @@ type GetDashboardEmbedUrlOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A single-use URL that you can put into your server-side webpage to embed
-	// your dashboard. This URL is valid for 5 minutes. The API provides the URL
-	// with an auth_code value that enables one (and only one) sign-on to a user
-	// session that is valid for 10 hours.
+	// your dashboard. This URL is valid for 5 minutes. The API operation provides
+	// the URL with an auth_code value that enables one (and only one) sign-on to
+	// a user session that is valid for 10 hours.
 	EmbedUrl *string `type:"string" sensitive:"true"`
 
 	// The AWS request ID for this operation.
@@ -19216,13 +21259,27 @@ func (s *GetDashboardEmbedUrlOutput) SetStatus(v int64) *GetDashboardEmbedUrlOut
 type GetSessionEmbedUrlInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID for the AWS account that contains the QuickSight session that you're
-	// embedding.
+	// The ID for the AWS account associated with your QuickSight subscription.
 	//
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The entry point for the embedded session.
+	// The URL you use to access the embedded session. The entry point URL is constrained
+	// to the following paths:
+	//
+	//    * /start
+	//
+	//    * /start/analyses
+	//
+	//    * /start/dashboards
+	//
+	//    * /start/favorites
+	//
+	//    * /dashboards/DashboardId - where DashboardId is the actual ID key from
+	//    the QuickSight console URL of the dashboard
+	//
+	//    * /analyses/AnalysisId - where AnalysisId is the actual ID key from the
+	//    QuickSight console URL of the analysis
 	EntryPoint *string `location:"querystring" locationName:"entry-point" min:"1" type:"string"`
 
 	// How many minutes the session is valid. The session lifetime must be 15-600
@@ -19230,15 +21287,19 @@ type GetSessionEmbedUrlInput struct {
 	SessionLifetimeInMinutes *int64 `location:"querystring" locationName:"session-lifetime" min:"15" type:"long"`
 
 	// The Amazon QuickSight user's Amazon Resource Name (ARN), for use with QUICKSIGHT
-	// identity type. You can use this for any Amazon QuickSight users in your account
-	// (readers, authors, or admins) authenticated as one of the following:
+	// identity type. You can use this for any type of Amazon QuickSight users in
+	// your account (readers, authors, or admins). They need to be authenticated
+	// as one of the following:
 	//
-	//    * Active Directory (AD) users or group members
+	// Active Directory (AD) users or group members
 	//
-	//    * Invited nonfederated users
+	// Invited nonfederated users
 	//
-	//    * IAM users and IAM role-based sessions authenticated through Federated
-	//    Single Sign-On using SAML, OpenID Connect, or IAM federation.
+	// IAM users and IAM role-based sessions authenticated through Federated Single
+	// Sign-On using SAML, OpenID Connect, or IAM federation
+	//
+	// Omit this parameter for users in the third group – IAM users and IAM role-based
+	// sessions.
 	UserArn *string `location:"querystring" locationName:"user-arn" type:"string"`
 }
 
@@ -19302,9 +21363,9 @@ type GetSessionEmbedUrlOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A single-use URL that you can put into your server-side web page to embed
-	// your QuickSight session. This URL is valid for 5 minutes. The API provides
-	// the URL with an auth_code value that enables one (and only one) sign-on to
-	// a user session that is valid for 10 hours.
+	// your QuickSight session. This URL is valid for 5 minutes. The API operation
+	// provides the URL with an auth_code value that enables one (and only one)
+	// sign-on to a user session that is valid for 10 hours.
 	EmbedUrl *string `type:"string" sensitive:"true"`
 
 	// The AWS request ID for this operation.
@@ -19343,8 +21404,7 @@ func (s *GetSessionEmbedUrlOutput) SetStatus(v int64) *GetSessionEmbedUrlOutput 
 }
 
 // A group in Amazon QuickSight consists of a set of users. You can use groups
-// to make it easier to manage access and security. Currently, an Amazon QuickSight
-// subscription can't contain more than 500 Amazon QuickSight groups.
+// to make it easier to manage access and security.
 type Group struct {
 	_ struct{} `type:"structure"`
 
@@ -19792,16 +21852,16 @@ func (s *InputColumn) SetType(v string) *InputColumn {
 	return s
 }
 
-// Integer parameter.
+// An integer parameter.
 type IntegerParameter struct {
 	_ struct{} `type:"structure"`
 
-	// A display name for the dataset.
+	// The name of the integer parameter.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// Values.
+	// The values for the integer parameter.
 	//
 	// Values is a required field
 	Values []*int64 `type:"list" required:"true"`
@@ -20214,6 +22274,118 @@ func (s *LimitExceededException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *LimitExceededException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+type ListAnalysesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the analyses.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The maximum number of results to return.
+	MaxResults *int64 `location:"querystring" locationName:"max-results" min:"1" type:"integer"`
+
+	// A pagination token that can be used in a subsequent request.
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAnalysesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAnalysesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAnalysesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAnalysesInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *ListAnalysesInput) SetAwsAccountId(v string) *ListAnalysesInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAnalysesInput) SetMaxResults(v int64) *ListAnalysesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAnalysesInput) SetNextToken(v string) *ListAnalysesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListAnalysesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Metadata describing each of the analyses that are listed.
+	AnalysisSummaryList []*AnalysisSummary `type:"list"`
+
+	// A pagination token that can be used in a subsequent request.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListAnalysesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAnalysesOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisSummaryList sets the AnalysisSummaryList field's value.
+func (s *ListAnalysesOutput) SetAnalysisSummaryList(v []*AnalysisSummary) *ListAnalysesOutput {
+	s.AnalysisSummaryList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAnalysesOutput) SetNextToken(v string) *ListAnalysesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *ListAnalysesOutput) SetRequestId(v string) *ListAnalysesOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListAnalysesOutput) SetStatus(v int64) *ListAnalysesOutput {
+	s.Status = &v
+	return s
 }
 
 type ListDashboardVersionsInput struct {
@@ -23030,7 +25202,7 @@ type NamespaceInfoV2 struct {
 	// The name of the error.
 	Name *string `type:"string"`
 
-	// An error that occured when the namespace was created.
+	// An error that occurred when the namespace was created.
 	NamespaceError *NamespaceError `type:"structure"`
 }
 
@@ -23113,11 +25285,11 @@ func (s *OutputColumn) SetType(v string) *OutputColumn {
 	return s
 }
 
-// Parameters.
+// A list of QuickSight parameters and the list's override values.
 type Parameters struct {
 	_ struct{} `type:"structure"`
 
-	// DateTime parameters.
+	// Date-time parameters.
 	DateTimeParameters []*DateTimeParameter `type:"list"`
 
 	// Decimal parameters.
@@ -23718,24 +25890,27 @@ type RegisterUserInput struct {
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
 	// (Enterprise edition only) The name of the custom permissions profile that
-	// you want to assign to this user. Currently, custom permissions profile names
-	// are assigned to permissions profiles in the QuickSight console. You use this
-	// API to assign the named set of permissions to a QuickSight user.
+	// you want to assign to this user. Customized permissions allows you to control
+	// a user's access by restricting access the following operations:
 	//
-	// Customizing permissions in the QuickSight UI allows you to control a user's
-	// access to the following operations:
+	//    * Create and update data sources
 	//
-	//    *
+	//    * Create and update datasets
 	//
-	//    *
+	//    * Create and update email reports
 	//
-	//    *
+	//    * Subscribe to email reports
 	//
-	//    *
+	// To add custom permissions to an existing user, use UpdateUser instead.
+	//
+	// A set of custom permissions includes any combination of these restrictions.
+	// Currently, you need to create the profile names for custom permission sets
+	// by using the QuickSight console. Then, you use the RegisterUser API operation
+	// to assign the named set of permissions to a QuickSight user.
 	//
 	// QuickSight custom permissions are applied through IAM policies. Therefore,
 	// they override the permissions typically granted by assigning QuickSight users
-	// to one of the default security cohorts (admin, author, reader) in QuickSight.
+	// to one of the default security cohorts in QuickSight (admin, author, reader).
 	//
 	// This feature is available only to QuickSight Enterprise edition subscriptions
 	// that use SAML 2.0-Based Federation for Single Sign-On (SSO).
@@ -23910,7 +26085,7 @@ type RegisterUserOutput struct {
 	// The HTTP status of the request.
 	Status *int64 `location:"statusCode" type:"integer"`
 
-	// The user name.
+	// The user's user name.
 	User *User `type:"structure"`
 
 	// The URL the user visits to complete registration and provide a password.
@@ -24231,7 +26406,7 @@ func (s *ResourceNotFoundException) RequestID() string {
 type ResourcePermission struct {
 	_ struct{} `type:"structure"`
 
-	// The action to grant or revoke permissions on, for example "quicksight:DescribeDashboard".
+	// The IAM action to grant or revoke permissions on, for example "quicksight:DescribeDashboard".
 	//
 	// Actions is a required field
 	Actions []*string `min:"1" type:"list" required:"true"`
@@ -24353,6 +26528,114 @@ func (s *ResourceUnavailableException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ResourceUnavailableException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+type RestoreAnalysisInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis that you're restoring.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the analysis.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RestoreAnalysisInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreAnalysisInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RestoreAnalysisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RestoreAnalysisInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *RestoreAnalysisInput) SetAnalysisId(v string) *RestoreAnalysisInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *RestoreAnalysisInput) SetAwsAccountId(v string) *RestoreAnalysisInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+type RestoreAnalysisOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis that you're restoring.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the analysis that you're restoring.
+	Arn *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s RestoreAnalysisOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreAnalysisOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *RestoreAnalysisOutput) SetAnalysisId(v string) *RestoreAnalysisOutput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *RestoreAnalysisOutput) SetArn(v string) *RestoreAnalysisOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *RestoreAnalysisOutput) SetRequestId(v string) *RestoreAnalysisOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *RestoreAnalysisOutput) SetStatus(v int64) *RestoreAnalysisOutput {
+	s.Status = &v
+	return s
 }
 
 // Information about rows for a data set SPICE ingestion.
@@ -24572,6 +26855,133 @@ func (s *S3Source) SetInputColumns(v []*InputColumn) *S3Source {
 // SetUploadSettings sets the UploadSettings field's value.
 func (s *S3Source) SetUploadSettings(v *UploadSettings) *S3Source {
 	s.UploadSettings = v
+	return s
+}
+
+type SearchAnalysesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that contains the analyses that you're searching
+	// for.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// The structure for the search filters that you want to apply to your search.
+	//
+	// Filters is a required field
+	Filters []*AnalysisSearchFilter `type:"list" required:"true"`
+
+	// The maximum number of results to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A pagination token that can be used in a subsequent request.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SearchAnalysesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchAnalysesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SearchAnalysesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SearchAnalysesInput"}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Filters == nil {
+		invalidParams.Add(request.NewErrParamRequired("Filters"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *SearchAnalysesInput) SetAwsAccountId(v string) *SearchAnalysesInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *SearchAnalysesInput) SetFilters(v []*AnalysisSearchFilter) *SearchAnalysesInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *SearchAnalysesInput) SetMaxResults(v int64) *SearchAnalysesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *SearchAnalysesInput) SetNextToken(v string) *SearchAnalysesInput {
+	s.NextToken = &v
+	return s
+}
+
+type SearchAnalysesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Metadata describing the analyses that you searched for.
+	AnalysisSummaryList []*AnalysisSummary `type:"list"`
+
+	// A pagination token that can be used in a subsequent request.
+	NextToken *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s SearchAnalysesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchAnalysesOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisSummaryList sets the AnalysisSummaryList field's value.
+func (s *SearchAnalysesOutput) SetAnalysisSummaryList(v []*AnalysisSummary) *SearchAnalysesOutput {
+	s.AnalysisSummaryList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *SearchAnalysesOutput) SetNextToken(v string) *SearchAnalysesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *SearchAnalysesOutput) SetRequestId(v string) *SearchAnalysesOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *SearchAnalysesOutput) SetStatus(v int64) *SearchAnalysesOutput {
+	s.Status = &v
 	return s
 }
 
@@ -25107,16 +27517,16 @@ func (s *SslProperties) SetDisableSsl(v bool) *SslProperties {
 	return s
 }
 
-// String parameter.
+// A string parameter.
 type StringParameter struct {
 	_ struct{} `type:"structure"`
 
-	// A display name for the dataset.
+	// A display name for a string parameter.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// Values.
+	// The values of a string parameter.
 	//
 	// Values is a required field
 	Values []*string `type:"list" required:"true"`
@@ -25385,7 +27795,7 @@ func (s *TagResourceOutput) SetStatus(v int64) *TagResourceOutput {
 // A template object. A template is an entity in QuickSight that encapsulates
 // the metadata required to create an analysis and that you can use to create
 // a dashboard. A template adds a layer of abstraction by using placeholders
-// to replace the dataset associated with the analysis. You can use templates
+// to replace the dataset associated with an analysis. You can use templates
 // to create dashboards by replacing dataset placeholders with datasets that
 // follow the same schema that was used to create the source analysis and template.
 //
@@ -25769,25 +28179,28 @@ type TemplateVersion struct {
 	// The time that this template version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
-	// Schema of the dataset identified by the placeholder. The idea is that any
-	// dashboard created from the template should be bound to new datasets matching
-	// the same schema described through this API. .
+	// Schema of the dataset identified by the placeholder. Any dashboard created
+	// from this template should be bound to new datasets matching the same schema
+	// described through this API operation.
 	DataSetConfigurations []*DataSetConfiguration `type:"list"`
 
 	// The description of the template.
 	Description *string `min:"1" type:"string"`
 
-	// Errors associated with the template.
+	// Errors associated with this template version.
 	Errors []*TemplateError `min:"1" type:"list"`
 
-	// The Amazon Resource Name (ARN) of the analysis or template which was used
-	// to create this template.
+	// The Amazon Resource Name (ARN) of an analysis or template that was used to
+	// create this template.
 	SourceEntityArn *string `type:"string"`
 
 	// The HTTP status of the request.
 	Status *string `type:"string" enum:"ResourceStatus"`
 
-	// The version number of the template.
+	// The ARN of the theme associated with this version of the template.
+	ThemeArn *string `type:"string"`
+
+	// The version number of the template version.
 	VersionNumber *int64 `min:"1" type:"long"`
 }
 
@@ -25834,6 +28247,12 @@ func (s *TemplateVersion) SetSourceEntityArn(v string) *TemplateVersion {
 // SetStatus sets the Status field's value.
 func (s *TemplateVersion) SetStatus(v string) *TemplateVersion {
 	s.Status = &v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *TemplateVersion) SetThemeArn(v string) *TemplateVersion {
+	s.ThemeArn = &v
 	return s
 }
 
@@ -25979,6 +28398,7 @@ func (s *TeradataParameters) SetPort(v int64) *TeradataParameters {
 	return s
 }
 
+// Summary information about a theme.
 type Theme struct {
 	_ struct{} `type:"structure"`
 
@@ -27009,7 +29429,7 @@ func (s *UntagResourceOutput) SetStatus(v int64) *UntagResourceOutput {
 type UpdateAccountCustomizationInput struct {
 	_ struct{} `type:"structure"`
 
-	// The customizations you want to update in QuickSight.
+	// The QuickSight customizations you're updating in the current AWS Region.
 	//
 	// AccountCustomization is a required field
 	AccountCustomization *AccountCustomization `type:"structure" required:"true"`
@@ -27020,7 +29440,7 @@ type UpdateAccountCustomizationInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The namespace associated with the customization that you're updating.
+	// The namespace that you want to update QuickSight customizations for.
 	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
 }
 
@@ -27074,7 +29494,7 @@ func (s *UpdateAccountCustomizationInput) SetNamespace(v string) *UpdateAccountC
 type UpdateAccountCustomizationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The customizations associated with your QuickSight subscription.
+	// The QuickSight customizations you're updating in the current AWS Region.
 	AccountCustomization *AccountCustomization `type:"structure"`
 
 	// The ID for the AWS account that you want to update QuickSight customizations
@@ -27134,7 +29554,7 @@ func (s *UpdateAccountCustomizationOutput) SetStatus(v int64) *UpdateAccountCust
 type UpdateAccountSettingsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID for the AWS account that contains the QuickSight namespaces that you
+	// The ID for the AWS account that contains the QuickSight settings that you
 	// want to list.
 	//
 	// AwsAccountId is a required field
@@ -27147,7 +29567,8 @@ type UpdateAccountSettingsInput struct {
 	// DefaultNamespace is a required field
 	DefaultNamespace *string `type:"string" required:"true"`
 
-	// Email address used to send notifications regarding administration of QuickSight.
+	// The email address that you want QuickSight to send notifications to regarding
+	// your AWS account or QuickSight subscription.
 	NotificationEmail *string `type:"string"`
 }
 
@@ -27230,6 +29651,349 @@ func (s *UpdateAccountSettingsOutput) SetStatus(v int64) *UpdateAccountSettingsO
 	return s
 }
 
+type UpdateAnalysisInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID for the analysis that you're updating. This ID displays in the URL
+	// of the analysis.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the analysis that you're updating.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// A descriptive name for the analysis that you're updating. This name displays
+	// for the analysis in the QuickSight console.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The parameter names and override values that you want to use. An analysis
+	// can have any parameter type, and some parameters might accept multiple values.
+	Parameters *Parameters `type:"structure"`
+
+	// A source entity to use for the analysis that you're updating. This metadata
+	// structure contains details that describe a source template and one or more
+	// datasets.
+	//
+	// SourceEntity is a required field
+	SourceEntity *AnalysisSourceEntity `type:"structure" required:"true"`
+
+	// The Amazon Resource Name (ARN) for the theme to apply to the analysis that
+	// you're creating. To see the theme in the QuickSight console, make sure that
+	// you have access to it.
+	ThemeArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateAnalysisInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAnalysisInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAnalysisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAnalysisInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.SourceEntity == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceEntity"))
+	}
+	if s.Parameters != nil {
+		if err := s.Parameters.Validate(); err != nil {
+			invalidParams.AddNested("Parameters", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SourceEntity != nil {
+		if err := s.SourceEntity.Validate(); err != nil {
+			invalidParams.AddNested("SourceEntity", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *UpdateAnalysisInput) SetAnalysisId(v string) *UpdateAnalysisInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateAnalysisInput) SetAwsAccountId(v string) *UpdateAnalysisInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateAnalysisInput) SetName(v string) *UpdateAnalysisInput {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *UpdateAnalysisInput) SetParameters(v *Parameters) *UpdateAnalysisInput {
+	s.Parameters = v
+	return s
+}
+
+// SetSourceEntity sets the SourceEntity field's value.
+func (s *UpdateAnalysisInput) SetSourceEntity(v *AnalysisSourceEntity) *UpdateAnalysisInput {
+	s.SourceEntity = v
+	return s
+}
+
+// SetThemeArn sets the ThemeArn field's value.
+func (s *UpdateAnalysisInput) SetThemeArn(v string) *UpdateAnalysisInput {
+	s.ThemeArn = &v
+	return s
+}
+
+type UpdateAnalysisOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// The ARN of the analysis that you're updating.
+	Arn *string `type:"string"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+
+	// The update status of the last update that was made to the analysis.
+	UpdateStatus *string `type:"string" enum:"ResourceStatus"`
+}
+
+// String returns the string representation
+func (s UpdateAnalysisOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAnalysisOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *UpdateAnalysisOutput) SetAnalysisId(v string) *UpdateAnalysisOutput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateAnalysisOutput) SetArn(v string) *UpdateAnalysisOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateAnalysisOutput) SetRequestId(v string) *UpdateAnalysisOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateAnalysisOutput) SetStatus(v int64) *UpdateAnalysisOutput {
+	s.Status = &v
+	return s
+}
+
+// SetUpdateStatus sets the UpdateStatus field's value.
+func (s *UpdateAnalysisOutput) SetUpdateStatus(v string) *UpdateAnalysisOutput {
+	s.UpdateStatus = &v
+	return s
+}
+
+type UpdateAnalysisPermissionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the analysis whose permissions you're updating. The ID is part
+	// of the analysis URL.
+	//
+	// AnalysisId is a required field
+	AnalysisId *string `location:"uri" locationName:"AnalysisId" min:"1" type:"string" required:"true"`
+
+	// The ID of the AWS account that contains the analysis whose permissions you're
+	// updating. You must be using the AWS account that the analysis is in.
+	//
+	// AwsAccountId is a required field
+	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
+
+	// A structure that describes the permissions to add and the principal to add
+	// them to.
+	GrantPermissions []*ResourcePermission `type:"list"`
+
+	// A structure that describes the permissions to remove and the principal to
+	// remove them from.
+	RevokePermissions []*ResourcePermission `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateAnalysisPermissionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAnalysisPermissionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAnalysisPermissionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAnalysisPermissionsInput"}
+	if s.AnalysisId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalysisId"))
+	}
+	if s.AnalysisId != nil && len(*s.AnalysisId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AnalysisId", 1))
+	}
+	if s.AwsAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AwsAccountId"))
+	}
+	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.GrantPermissions != nil {
+		for i, v := range s.GrantPermissions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "GrantPermissions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.RevokePermissions != nil {
+		for i, v := range s.RevokePermissions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RevokePermissions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *UpdateAnalysisPermissionsInput) SetAnalysisId(v string) *UpdateAnalysisPermissionsInput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetAwsAccountId sets the AwsAccountId field's value.
+func (s *UpdateAnalysisPermissionsInput) SetAwsAccountId(v string) *UpdateAnalysisPermissionsInput {
+	s.AwsAccountId = &v
+	return s
+}
+
+// SetGrantPermissions sets the GrantPermissions field's value.
+func (s *UpdateAnalysisPermissionsInput) SetGrantPermissions(v []*ResourcePermission) *UpdateAnalysisPermissionsInput {
+	s.GrantPermissions = v
+	return s
+}
+
+// SetRevokePermissions sets the RevokePermissions field's value.
+func (s *UpdateAnalysisPermissionsInput) SetRevokePermissions(v []*ResourcePermission) *UpdateAnalysisPermissionsInput {
+	s.RevokePermissions = v
+	return s
+}
+
+type UpdateAnalysisPermissionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the analysis that you updated.
+	AnalysisArn *string `type:"string"`
+
+	// The ID of the analysis that you updated permissions for.
+	AnalysisId *string `min:"1" type:"string"`
+
+	// A structure that describes the principals and the resource-level permissions
+	// on an analysis.
+	Permissions []*ResourcePermission `min:"1" type:"list"`
+
+	// The AWS request ID for this operation.
+	RequestId *string `type:"string"`
+
+	// The HTTP status of the request.
+	Status *int64 `location:"statusCode" type:"integer"`
+}
+
+// String returns the string representation
+func (s UpdateAnalysisPermissionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAnalysisPermissionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnalysisArn sets the AnalysisArn field's value.
+func (s *UpdateAnalysisPermissionsOutput) SetAnalysisArn(v string) *UpdateAnalysisPermissionsOutput {
+	s.AnalysisArn = &v
+	return s
+}
+
+// SetAnalysisId sets the AnalysisId field's value.
+func (s *UpdateAnalysisPermissionsOutput) SetAnalysisId(v string) *UpdateAnalysisPermissionsOutput {
+	s.AnalysisId = &v
+	return s
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *UpdateAnalysisPermissionsOutput) SetPermissions(v []*ResourcePermission) *UpdateAnalysisPermissionsOutput {
+	s.Permissions = v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *UpdateAnalysisPermissionsOutput) SetRequestId(v string) *UpdateAnalysisPermissionsOutput {
+	s.RequestId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateAnalysisPermissionsOutput) SetStatus(v int64) *UpdateAnalysisPermissionsOutput {
+	s.Status = &v
+	return s
+}
+
 type UpdateDashboardInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27251,7 +30015,7 @@ type UpdateDashboardInput struct {
 	//    ad hoc (one-time) filtering. This option is ENABLED by default.
 	//
 	//    * AvailabilityStatus for ExportToCSVOption - This status can be either
-	//    ENABLED or DISABLED. The visual option to export data to .csv format isn't
+	//    ENABLED or DISABLED. The visual option to export data to .CSV format isn't
 	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
 	//    * VisibilityState for SheetControlsOption - This visibility state can
@@ -29768,10 +32532,29 @@ type UpdateUserInput struct {
 	// AwsAccountId is a required field
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
-	// The name of the custom permissions profile that you want to assign to this
-	// user. Currently, custom permissions profile names are assigned to permissions
-	// profiles in the QuickSight console. You use this API to assign the named
-	// set of permissions to a QuickSight user.
+	// (Enterprise edition only) The name of the custom permissions profile that
+	// you want to assign to this user. Customized permissions allows you to control
+	// a user's access by restricting access the following operations:
+	//
+	//    * Create and update data sources
+	//
+	//    * Create and update datasets
+	//
+	//    * Create and update email reports
+	//
+	//    * Subscribe to email reports
+	//
+	// A set of custom permissions includes any combination of these restrictions.
+	// Currently, you need to create the profile names for custom permission sets
+	// by using the QuickSight console. Then, you use the RegisterUser API operation
+	// to assign the named set of permissions to a QuickSight user.
+	//
+	// QuickSight custom permissions are applied through IAM policies. Therefore,
+	// they override the permissions typically granted by assigning QuickSight users
+	// to one of the default security cohorts in QuickSight (admin, author, reader).
+	//
+	// This feature is available only to QuickSight Enterprise edition subscriptions
+	// that use SAML 2.0-Based Federation for Single Sign-On (SSO).
 	CustomPermissionsName *string `min:"1" type:"string"`
 
 	// The email address of the user that you want to update.
@@ -29784,7 +32567,8 @@ type UpdateUserInput struct {
 	// Namespace is a required field
 	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
 
-	// The Amazon QuickSight role of the user. The user role can be one of the following:
+	// The Amazon QuickSight role of the user. The role can be one of the following
+	// default security cohorts:
 	//
 	//    * READER: A user who has read-only access to dashboards.
 	//
@@ -29793,6 +32577,9 @@ type UpdateUserInput struct {
 	//
 	//    * ADMIN: A user who is an author, who can also manage Amazon QuickSight
 	//    settings.
+	//
+	// The name of the QuickSight role is invisible to the user except for the console
+	// screens dealing with permissions.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true" enum:"UserRole"`
@@ -30015,8 +32802,7 @@ func (s *UploadSettings) SetTextQualifier(v string) *UploadSettings {
 	return s
 }
 
-// A registered user of Amazon QuickSight. Currently, an Amazon QuickSight subscription
-// can't contain more than 20 million users.
+// A registered user of Amazon QuickSight.
 type User struct {
 	_ struct{} `type:"structure"`
 
@@ -30216,6 +33002,66 @@ func (s *VpcConnectionProperties) Validate() error {
 func (s *VpcConnectionProperties) SetVpcConnectionArn(v string) *VpcConnectionProperties {
 	s.VpcConnectionArn = &v
 	return s
+}
+
+const (
+	// AnalysisErrorTypeAccessDenied is a AnalysisErrorType enum value
+	AnalysisErrorTypeAccessDenied = "ACCESS_DENIED"
+
+	// AnalysisErrorTypeSourceNotFound is a AnalysisErrorType enum value
+	AnalysisErrorTypeSourceNotFound = "SOURCE_NOT_FOUND"
+
+	// AnalysisErrorTypeDataSetNotFound is a AnalysisErrorType enum value
+	AnalysisErrorTypeDataSetNotFound = "DATA_SET_NOT_FOUND"
+
+	// AnalysisErrorTypeInternalFailure is a AnalysisErrorType enum value
+	AnalysisErrorTypeInternalFailure = "INTERNAL_FAILURE"
+
+	// AnalysisErrorTypeParameterValueIncompatible is a AnalysisErrorType enum value
+	AnalysisErrorTypeParameterValueIncompatible = "PARAMETER_VALUE_INCOMPATIBLE"
+
+	// AnalysisErrorTypeParameterTypeInvalid is a AnalysisErrorType enum value
+	AnalysisErrorTypeParameterTypeInvalid = "PARAMETER_TYPE_INVALID"
+
+	// AnalysisErrorTypeParameterNotFound is a AnalysisErrorType enum value
+	AnalysisErrorTypeParameterNotFound = "PARAMETER_NOT_FOUND"
+
+	// AnalysisErrorTypeColumnTypeMismatch is a AnalysisErrorType enum value
+	AnalysisErrorTypeColumnTypeMismatch = "COLUMN_TYPE_MISMATCH"
+
+	// AnalysisErrorTypeColumnGeographicRoleMismatch is a AnalysisErrorType enum value
+	AnalysisErrorTypeColumnGeographicRoleMismatch = "COLUMN_GEOGRAPHIC_ROLE_MISMATCH"
+
+	// AnalysisErrorTypeColumnReplacementMissing is a AnalysisErrorType enum value
+	AnalysisErrorTypeColumnReplacementMissing = "COLUMN_REPLACEMENT_MISSING"
+)
+
+// AnalysisErrorType_Values returns all elements of the AnalysisErrorType enum
+func AnalysisErrorType_Values() []string {
+	return []string{
+		AnalysisErrorTypeAccessDenied,
+		AnalysisErrorTypeSourceNotFound,
+		AnalysisErrorTypeDataSetNotFound,
+		AnalysisErrorTypeInternalFailure,
+		AnalysisErrorTypeParameterValueIncompatible,
+		AnalysisErrorTypeParameterTypeInvalid,
+		AnalysisErrorTypeParameterNotFound,
+		AnalysisErrorTypeColumnTypeMismatch,
+		AnalysisErrorTypeColumnGeographicRoleMismatch,
+		AnalysisErrorTypeColumnReplacementMissing,
+	}
+}
+
+const (
+	// AnalysisFilterAttributeQuicksightUser is a AnalysisFilterAttribute enum value
+	AnalysisFilterAttributeQuicksightUser = "QUICKSIGHT_USER"
+)
+
+// AnalysisFilterAttribute_Values returns all elements of the AnalysisFilterAttribute enum
+func AnalysisFilterAttribute_Values() []string {
+	return []string{
+		AnalysisFilterAttributeQuicksightUser,
+	}
 }
 
 const (
@@ -31044,6 +33890,9 @@ const (
 
 	// ResourceStatusUpdateFailed is a ResourceStatus enum value
 	ResourceStatusUpdateFailed = "UPDATE_FAILED"
+
+	// ResourceStatusDeleted is a ResourceStatus enum value
+	ResourceStatusDeleted = "DELETED"
 )
 
 // ResourceStatus_Values returns all elements of the ResourceStatus enum
@@ -31055,6 +33904,7 @@ func ResourceStatus_Values() []string {
 		ResourceStatusUpdateInProgress,
 		ResourceStatusUpdateSuccessful,
 		ResourceStatusUpdateFailed,
+		ResourceStatusDeleted,
 	}
 }
 
@@ -31083,6 +33933,9 @@ const (
 
 	// TemplateErrorTypeInternalFailure is a TemplateErrorType enum value
 	TemplateErrorTypeInternalFailure = "INTERNAL_FAILURE"
+
+	// TemplateErrorTypeAccessDenied is a TemplateErrorType enum value
+	TemplateErrorTypeAccessDenied = "ACCESS_DENIED"
 )
 
 // TemplateErrorType_Values returns all elements of the TemplateErrorType enum
@@ -31091,6 +33944,7 @@ func TemplateErrorType_Values() []string {
 		TemplateErrorTypeSourceNotFound,
 		TemplateErrorTypeDataSetNotFound,
 		TemplateErrorTypeInternalFailure,
+		TemplateErrorTypeAccessDenied,
 	}
 }
 

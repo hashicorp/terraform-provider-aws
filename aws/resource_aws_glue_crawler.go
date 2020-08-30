@@ -81,23 +81,16 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"delete_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  glue.DeleteBehaviorDeprecateInDatabase,
-							ValidateFunc: validation.StringInSlice([]string{
-								glue.DeleteBehaviorDeleteFromDatabase,
-								glue.DeleteBehaviorDeprecateInDatabase,
-								glue.DeleteBehaviorLog,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.DeleteBehaviorDeprecateInDatabase,
+							ValidateFunc: validation.StringInSlice(glue.DeleteBehavior_Values(), false),
 						},
 						"update_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  glue.UpdateBehaviorUpdateInDatabase,
-							ValidateFunc: validation.StringInSlice([]string{
-								glue.UpdateBehaviorLog,
-								glue.UpdateBehaviorUpdateInDatabase,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.UpdateBehaviorUpdateInDatabase,
+							ValidateFunc: validation.StringInSlice(glue.UpdateBehavior_Values(), false),
 						},
 					},
 				},
@@ -291,9 +284,13 @@ func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Updat
 	if description, ok := d.GetOk("description"); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
+
 	if schedule, ok := d.GetOk("schedule"); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
+	} else {
+		crawlerInput.Schedule = aws.String("")
 	}
+
 	if classifiers, ok := d.GetOk("classifiers"); ok {
 		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
 	}

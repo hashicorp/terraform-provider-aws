@@ -4920,7 +4920,11 @@ func (s *AvailabilityZone) SetZoneName(v string) *AvailabilityZone {
 type AwsAutoScalingAutoScalingGroupDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The datetime when the auto scaling group was created.
+	// Indicates when the auto scaling group was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreatedTime *string `type:"string"`
 
 	// The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before
@@ -4987,7 +4991,11 @@ type AwsCloudFrontDistributionDetails struct {
 	// The entity tag is a hash of the object.
 	ETag *string `type:"string"`
 
-	// The date and time that the distribution was last modified.
+	// Indicates when that the distribution was last modified.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LastModifiedTime *string `type:"string"`
 
 	// A complex type that controls whether access logs are written for the distribution.
@@ -5506,6 +5514,940 @@ func (s *AwsCodeBuildProjectVpcConfig) SetVpcId(v string) *AwsCodeBuildProjectVp
 	return s
 }
 
+// Contains a definition of an attribute for the table.
+type AwsDynamoDbTableAttributeDefinition struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the attribute.
+	AttributeName *string `type:"string"`
+
+	// The type of the attribute.
+	AttributeType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableAttributeDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableAttributeDefinition) GoString() string {
+	return s.String()
+}
+
+// SetAttributeName sets the AttributeName field's value.
+func (s *AwsDynamoDbTableAttributeDefinition) SetAttributeName(v string) *AwsDynamoDbTableAttributeDefinition {
+	s.AttributeName = &v
+	return s
+}
+
+// SetAttributeType sets the AttributeType field's value.
+func (s *AwsDynamoDbTableAttributeDefinition) SetAttributeType(v string) *AwsDynamoDbTableAttributeDefinition {
+	s.AttributeType = &v
+	return s
+}
+
+// Provides information about the billing for read/write capacity on the table.
+type AwsDynamoDbTableBillingModeSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The method used to charge for read and write throughput and to manage capacity.
+	BillingMode *string `type:"string"`
+
+	// If the billing mode is PAY_PER_REQUEST, indicates when the billing mode was
+	// set to that value.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	LastUpdateToPayPerRequestDateTime *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableBillingModeSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableBillingModeSummary) GoString() string {
+	return s.String()
+}
+
+// SetBillingMode sets the BillingMode field's value.
+func (s *AwsDynamoDbTableBillingModeSummary) SetBillingMode(v string) *AwsDynamoDbTableBillingModeSummary {
+	s.BillingMode = &v
+	return s
+}
+
+// SetLastUpdateToPayPerRequestDateTime sets the LastUpdateToPayPerRequestDateTime field's value.
+func (s *AwsDynamoDbTableBillingModeSummary) SetLastUpdateToPayPerRequestDateTime(v string) *AwsDynamoDbTableBillingModeSummary {
+	s.LastUpdateToPayPerRequestDateTime = &v
+	return s
+}
+
+// Provides details about a DynamoDB table.
+type AwsDynamoDbTableDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A list of attribute definitions for the table.
+	AttributeDefinitions []*AwsDynamoDbTableAttributeDefinition `type:"list"`
+
+	// Information about the billing for read/write capacity on the table.
+	BillingModeSummary *AwsDynamoDbTableBillingModeSummary `type:"structure"`
+
+	// Indicates when the table was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	CreationDateTime *string `type:"string"`
+
+	// List of global secondary indexes for the table.
+	GlobalSecondaryIndexes []*AwsDynamoDbTableGlobalSecondaryIndex `type:"list"`
+
+	// The version of global tables being used.
+	GlobalTableVersion *string `type:"string"`
+
+	// The number of items in the table.
+	ItemCount *int64 `type:"integer"`
+
+	// The primary key structure for the table.
+	KeySchema []*AwsDynamoDbTableKeySchema `type:"list"`
+
+	// The ARN of the latest stream for the table.
+	LatestStreamArn *string `type:"string"`
+
+	// The label of the latest stream. The label is not a unique identifier.
+	LatestStreamLabel *string `type:"string"`
+
+	// The list of local secondary indexes for the table.
+	LocalSecondaryIndexes []*AwsDynamoDbTableLocalSecondaryIndex `type:"list"`
+
+	// Information about the provisioned throughput for the table.
+	ProvisionedThroughput *AwsDynamoDbTableProvisionedThroughput `type:"structure"`
+
+	// The list of replicas of this table.
+	Replicas []*AwsDynamoDbTableReplica `type:"list"`
+
+	// Information about the restore for the table.
+	RestoreSummary *AwsDynamoDbTableRestoreSummary `type:"structure"`
+
+	// Information about the server-side encryption for the table.
+	SseDescription *AwsDynamoDbTableSseDescription `type:"structure"`
+
+	// The current DynamoDB Streams configuration for the table.
+	StreamSpecification *AwsDynamoDbTableStreamSpecification `type:"structure"`
+
+	// The identifier of the table.
+	TableId *string `type:"string"`
+
+	// The name of the table.
+	TableName *string `type:"string"`
+
+	// The total size of the table in bytes.
+	TableSizeBytes *int64 `type:"long"`
+
+	// The current status of the table.
+	TableStatus *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableDetails) GoString() string {
+	return s.String()
+}
+
+// SetAttributeDefinitions sets the AttributeDefinitions field's value.
+func (s *AwsDynamoDbTableDetails) SetAttributeDefinitions(v []*AwsDynamoDbTableAttributeDefinition) *AwsDynamoDbTableDetails {
+	s.AttributeDefinitions = v
+	return s
+}
+
+// SetBillingModeSummary sets the BillingModeSummary field's value.
+func (s *AwsDynamoDbTableDetails) SetBillingModeSummary(v *AwsDynamoDbTableBillingModeSummary) *AwsDynamoDbTableDetails {
+	s.BillingModeSummary = v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *AwsDynamoDbTableDetails) SetCreationDateTime(v string) *AwsDynamoDbTableDetails {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
+func (s *AwsDynamoDbTableDetails) SetGlobalSecondaryIndexes(v []*AwsDynamoDbTableGlobalSecondaryIndex) *AwsDynamoDbTableDetails {
+	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetGlobalTableVersion sets the GlobalTableVersion field's value.
+func (s *AwsDynamoDbTableDetails) SetGlobalTableVersion(v string) *AwsDynamoDbTableDetails {
+	s.GlobalTableVersion = &v
+	return s
+}
+
+// SetItemCount sets the ItemCount field's value.
+func (s *AwsDynamoDbTableDetails) SetItemCount(v int64) *AwsDynamoDbTableDetails {
+	s.ItemCount = &v
+	return s
+}
+
+// SetKeySchema sets the KeySchema field's value.
+func (s *AwsDynamoDbTableDetails) SetKeySchema(v []*AwsDynamoDbTableKeySchema) *AwsDynamoDbTableDetails {
+	s.KeySchema = v
+	return s
+}
+
+// SetLatestStreamArn sets the LatestStreamArn field's value.
+func (s *AwsDynamoDbTableDetails) SetLatestStreamArn(v string) *AwsDynamoDbTableDetails {
+	s.LatestStreamArn = &v
+	return s
+}
+
+// SetLatestStreamLabel sets the LatestStreamLabel field's value.
+func (s *AwsDynamoDbTableDetails) SetLatestStreamLabel(v string) *AwsDynamoDbTableDetails {
+	s.LatestStreamLabel = &v
+	return s
+}
+
+// SetLocalSecondaryIndexes sets the LocalSecondaryIndexes field's value.
+func (s *AwsDynamoDbTableDetails) SetLocalSecondaryIndexes(v []*AwsDynamoDbTableLocalSecondaryIndex) *AwsDynamoDbTableDetails {
+	s.LocalSecondaryIndexes = v
+	return s
+}
+
+// SetProvisionedThroughput sets the ProvisionedThroughput field's value.
+func (s *AwsDynamoDbTableDetails) SetProvisionedThroughput(v *AwsDynamoDbTableProvisionedThroughput) *AwsDynamoDbTableDetails {
+	s.ProvisionedThroughput = v
+	return s
+}
+
+// SetReplicas sets the Replicas field's value.
+func (s *AwsDynamoDbTableDetails) SetReplicas(v []*AwsDynamoDbTableReplica) *AwsDynamoDbTableDetails {
+	s.Replicas = v
+	return s
+}
+
+// SetRestoreSummary sets the RestoreSummary field's value.
+func (s *AwsDynamoDbTableDetails) SetRestoreSummary(v *AwsDynamoDbTableRestoreSummary) *AwsDynamoDbTableDetails {
+	s.RestoreSummary = v
+	return s
+}
+
+// SetSseDescription sets the SseDescription field's value.
+func (s *AwsDynamoDbTableDetails) SetSseDescription(v *AwsDynamoDbTableSseDescription) *AwsDynamoDbTableDetails {
+	s.SseDescription = v
+	return s
+}
+
+// SetStreamSpecification sets the StreamSpecification field's value.
+func (s *AwsDynamoDbTableDetails) SetStreamSpecification(v *AwsDynamoDbTableStreamSpecification) *AwsDynamoDbTableDetails {
+	s.StreamSpecification = v
+	return s
+}
+
+// SetTableId sets the TableId field's value.
+func (s *AwsDynamoDbTableDetails) SetTableId(v string) *AwsDynamoDbTableDetails {
+	s.TableId = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *AwsDynamoDbTableDetails) SetTableName(v string) *AwsDynamoDbTableDetails {
+	s.TableName = &v
+	return s
+}
+
+// SetTableSizeBytes sets the TableSizeBytes field's value.
+func (s *AwsDynamoDbTableDetails) SetTableSizeBytes(v int64) *AwsDynamoDbTableDetails {
+	s.TableSizeBytes = &v
+	return s
+}
+
+// SetTableStatus sets the TableStatus field's value.
+func (s *AwsDynamoDbTableDetails) SetTableStatus(v string) *AwsDynamoDbTableDetails {
+	s.TableStatus = &v
+	return s
+}
+
+// Information abut a global secondary index for the table.
+type AwsDynamoDbTableGlobalSecondaryIndex struct {
+	_ struct{} `type:"structure"`
+
+	// Whether the index is currently backfilling.
+	Backfilling *bool `type:"boolean"`
+
+	// The ARN of the index.
+	IndexArn *string `type:"string"`
+
+	// The name of the index.
+	IndexName *string `type:"string"`
+
+	// The total size in bytes of the index.
+	IndexSizeBytes *int64 `type:"long"`
+
+	// The current status of the index.
+	IndexStatus *string `type:"string"`
+
+	// The number of items in the index.
+	ItemCount *int64 `type:"integer"`
+
+	// The key schema for the index.
+	KeySchema []*AwsDynamoDbTableKeySchema `type:"list"`
+
+	// Attributes that are copied from the table into an index.
+	Projection *AwsDynamoDbTableProjection `type:"structure"`
+
+	// Information about the provisioned throughput settings for the indexes.
+	ProvisionedThroughput *AwsDynamoDbTableProvisionedThroughput `type:"structure"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableGlobalSecondaryIndex) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableGlobalSecondaryIndex) GoString() string {
+	return s.String()
+}
+
+// SetBackfilling sets the Backfilling field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetBackfilling(v bool) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.Backfilling = &v
+	return s
+}
+
+// SetIndexArn sets the IndexArn field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetIndexArn(v string) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.IndexArn = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetIndexName(v string) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.IndexName = &v
+	return s
+}
+
+// SetIndexSizeBytes sets the IndexSizeBytes field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetIndexSizeBytes(v int64) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.IndexSizeBytes = &v
+	return s
+}
+
+// SetIndexStatus sets the IndexStatus field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetIndexStatus(v string) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.IndexStatus = &v
+	return s
+}
+
+// SetItemCount sets the ItemCount field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetItemCount(v int64) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.ItemCount = &v
+	return s
+}
+
+// SetKeySchema sets the KeySchema field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetKeySchema(v []*AwsDynamoDbTableKeySchema) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.KeySchema = v
+	return s
+}
+
+// SetProjection sets the Projection field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetProjection(v *AwsDynamoDbTableProjection) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.Projection = v
+	return s
+}
+
+// SetProvisionedThroughput sets the ProvisionedThroughput field's value.
+func (s *AwsDynamoDbTableGlobalSecondaryIndex) SetProvisionedThroughput(v *AwsDynamoDbTableProvisionedThroughput) *AwsDynamoDbTableGlobalSecondaryIndex {
+	s.ProvisionedThroughput = v
+	return s
+}
+
+// A component of the key schema for the DynamoDB table, a global secondary
+// index, or a local secondary index.
+type AwsDynamoDbTableKeySchema struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the key schema attribute.
+	AttributeName *string `type:"string"`
+
+	// The type of key used for the key schema attribute.
+	KeyType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableKeySchema) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableKeySchema) GoString() string {
+	return s.String()
+}
+
+// SetAttributeName sets the AttributeName field's value.
+func (s *AwsDynamoDbTableKeySchema) SetAttributeName(v string) *AwsDynamoDbTableKeySchema {
+	s.AttributeName = &v
+	return s
+}
+
+// SetKeyType sets the KeyType field's value.
+func (s *AwsDynamoDbTableKeySchema) SetKeyType(v string) *AwsDynamoDbTableKeySchema {
+	s.KeyType = &v
+	return s
+}
+
+// Information about a local secondary index for a DynamoDB table.
+type AwsDynamoDbTableLocalSecondaryIndex struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the index.
+	IndexArn *string `type:"string"`
+
+	// The name of the index.
+	IndexName *string `type:"string"`
+
+	// The complete key schema for the index.
+	KeySchema []*AwsDynamoDbTableKeySchema `type:"list"`
+
+	// Attributes that are copied from the table into the index. These are in addition
+	// to the primary key attributes and index key attributes, which are automatically
+	// projected.
+	Projection *AwsDynamoDbTableProjection `type:"structure"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableLocalSecondaryIndex) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableLocalSecondaryIndex) GoString() string {
+	return s.String()
+}
+
+// SetIndexArn sets the IndexArn field's value.
+func (s *AwsDynamoDbTableLocalSecondaryIndex) SetIndexArn(v string) *AwsDynamoDbTableLocalSecondaryIndex {
+	s.IndexArn = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *AwsDynamoDbTableLocalSecondaryIndex) SetIndexName(v string) *AwsDynamoDbTableLocalSecondaryIndex {
+	s.IndexName = &v
+	return s
+}
+
+// SetKeySchema sets the KeySchema field's value.
+func (s *AwsDynamoDbTableLocalSecondaryIndex) SetKeySchema(v []*AwsDynamoDbTableKeySchema) *AwsDynamoDbTableLocalSecondaryIndex {
+	s.KeySchema = v
+	return s
+}
+
+// SetProjection sets the Projection field's value.
+func (s *AwsDynamoDbTableLocalSecondaryIndex) SetProjection(v *AwsDynamoDbTableProjection) *AwsDynamoDbTableLocalSecondaryIndex {
+	s.Projection = v
+	return s
+}
+
+// For global and local secondary indexes, identifies the attributes that are
+// copied from the table into the index.
+type AwsDynamoDbTableProjection struct {
+	_ struct{} `type:"structure"`
+
+	// The nonkey attributes that are projected into the index. For each attribute,
+	// provide the attribute name.
+	NonKeyAttributes []*string `type:"list"`
+
+	// The types of attributes that are projected into the index.
+	ProjectionType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableProjection) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableProjection) GoString() string {
+	return s.String()
+}
+
+// SetNonKeyAttributes sets the NonKeyAttributes field's value.
+func (s *AwsDynamoDbTableProjection) SetNonKeyAttributes(v []*string) *AwsDynamoDbTableProjection {
+	s.NonKeyAttributes = v
+	return s
+}
+
+// SetProjectionType sets the ProjectionType field's value.
+func (s *AwsDynamoDbTableProjection) SetProjectionType(v string) *AwsDynamoDbTableProjection {
+	s.ProjectionType = &v
+	return s
+}
+
+// Information about the provisioned throughput for the table or for a global
+// secondary index.
+type AwsDynamoDbTableProvisionedThroughput struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates when the provisioned throughput was last decreased.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	LastDecreaseDateTime *string `type:"string"`
+
+	// Indicates when the provisioned throughput was last increased.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	LastIncreaseDateTime *string `type:"string"`
+
+	// The number of times during the current UTC calendar day that the provisioned
+	// throughput was decreased.
+	NumberOfDecreasesToday *int64 `type:"integer"`
+
+	// The maximum number of strongly consistent reads consumed per second before
+	// DynamoDB returns a ThrottlingException.
+	ReadCapacityUnits *int64 `type:"integer"`
+
+	// The maximum number of writes consumed per second before DynamoDB returns
+	// a ThrottlingException.
+	WriteCapacityUnits *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableProvisionedThroughput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableProvisionedThroughput) GoString() string {
+	return s.String()
+}
+
+// SetLastDecreaseDateTime sets the LastDecreaseDateTime field's value.
+func (s *AwsDynamoDbTableProvisionedThroughput) SetLastDecreaseDateTime(v string) *AwsDynamoDbTableProvisionedThroughput {
+	s.LastDecreaseDateTime = &v
+	return s
+}
+
+// SetLastIncreaseDateTime sets the LastIncreaseDateTime field's value.
+func (s *AwsDynamoDbTableProvisionedThroughput) SetLastIncreaseDateTime(v string) *AwsDynamoDbTableProvisionedThroughput {
+	s.LastIncreaseDateTime = &v
+	return s
+}
+
+// SetNumberOfDecreasesToday sets the NumberOfDecreasesToday field's value.
+func (s *AwsDynamoDbTableProvisionedThroughput) SetNumberOfDecreasesToday(v int64) *AwsDynamoDbTableProvisionedThroughput {
+	s.NumberOfDecreasesToday = &v
+	return s
+}
+
+// SetReadCapacityUnits sets the ReadCapacityUnits field's value.
+func (s *AwsDynamoDbTableProvisionedThroughput) SetReadCapacityUnits(v int64) *AwsDynamoDbTableProvisionedThroughput {
+	s.ReadCapacityUnits = &v
+	return s
+}
+
+// SetWriteCapacityUnits sets the WriteCapacityUnits field's value.
+func (s *AwsDynamoDbTableProvisionedThroughput) SetWriteCapacityUnits(v int64) *AwsDynamoDbTableProvisionedThroughput {
+	s.WriteCapacityUnits = &v
+	return s
+}
+
+// Replica-specific configuration for the provisioned throughput.
+type AwsDynamoDbTableProvisionedThroughputOverride struct {
+	_ struct{} `type:"structure"`
+
+	// The read capacity units for the replica.
+	ReadCapacityUnits *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableProvisionedThroughputOverride) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableProvisionedThroughputOverride) GoString() string {
+	return s.String()
+}
+
+// SetReadCapacityUnits sets the ReadCapacityUnits field's value.
+func (s *AwsDynamoDbTableProvisionedThroughputOverride) SetReadCapacityUnits(v int64) *AwsDynamoDbTableProvisionedThroughputOverride {
+	s.ReadCapacityUnits = &v
+	return s
+}
+
+// Information about a replica of a DynamoDB table.
+type AwsDynamoDbTableReplica struct {
+	_ struct{} `type:"structure"`
+
+	// List of global secondary indexes for the replica.
+	GlobalSecondaryIndexes []*AwsDynamoDbTableReplicaGlobalSecondaryIndex `type:"list"`
+
+	// The identifier of the AWS KMS customer master key (CMK) that will be used
+	// for AWS KMS encryption for the replica.
+	KmsMasterKeyId *string `type:"string"`
+
+	// Replica-specific configuration for the provisioned throughput.
+	ProvisionedThroughputOverride *AwsDynamoDbTableProvisionedThroughputOverride `type:"structure"`
+
+	// The name of the Region where the replica is located.
+	RegionName *string `type:"string"`
+
+	// The current status of the replica.
+	ReplicaStatus *string `type:"string"`
+
+	// Detailed information about the replica status.
+	ReplicaStatusDescription *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableReplica) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableReplica) GoString() string {
+	return s.String()
+}
+
+// SetGlobalSecondaryIndexes sets the GlobalSecondaryIndexes field's value.
+func (s *AwsDynamoDbTableReplica) SetGlobalSecondaryIndexes(v []*AwsDynamoDbTableReplicaGlobalSecondaryIndex) *AwsDynamoDbTableReplica {
+	s.GlobalSecondaryIndexes = v
+	return s
+}
+
+// SetKmsMasterKeyId sets the KmsMasterKeyId field's value.
+func (s *AwsDynamoDbTableReplica) SetKmsMasterKeyId(v string) *AwsDynamoDbTableReplica {
+	s.KmsMasterKeyId = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *AwsDynamoDbTableReplica) SetProvisionedThroughputOverride(v *AwsDynamoDbTableProvisionedThroughputOverride) *AwsDynamoDbTableReplica {
+	s.ProvisionedThroughputOverride = v
+	return s
+}
+
+// SetRegionName sets the RegionName field's value.
+func (s *AwsDynamoDbTableReplica) SetRegionName(v string) *AwsDynamoDbTableReplica {
+	s.RegionName = &v
+	return s
+}
+
+// SetReplicaStatus sets the ReplicaStatus field's value.
+func (s *AwsDynamoDbTableReplica) SetReplicaStatus(v string) *AwsDynamoDbTableReplica {
+	s.ReplicaStatus = &v
+	return s
+}
+
+// SetReplicaStatusDescription sets the ReplicaStatusDescription field's value.
+func (s *AwsDynamoDbTableReplica) SetReplicaStatusDescription(v string) *AwsDynamoDbTableReplica {
+	s.ReplicaStatusDescription = &v
+	return s
+}
+
+// Information about a global secondary index for a DynamoDB table replica.
+type AwsDynamoDbTableReplicaGlobalSecondaryIndex struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the index.
+	IndexName *string `type:"string"`
+
+	// Replica-specific configuration for the provisioned throughput for the index.
+	ProvisionedThroughputOverride *AwsDynamoDbTableProvisionedThroughputOverride `type:"structure"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableReplicaGlobalSecondaryIndex) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableReplicaGlobalSecondaryIndex) GoString() string {
+	return s.String()
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *AwsDynamoDbTableReplicaGlobalSecondaryIndex) SetIndexName(v string) *AwsDynamoDbTableReplicaGlobalSecondaryIndex {
+	s.IndexName = &v
+	return s
+}
+
+// SetProvisionedThroughputOverride sets the ProvisionedThroughputOverride field's value.
+func (s *AwsDynamoDbTableReplicaGlobalSecondaryIndex) SetProvisionedThroughputOverride(v *AwsDynamoDbTableProvisionedThroughputOverride) *AwsDynamoDbTableReplicaGlobalSecondaryIndex {
+	s.ProvisionedThroughputOverride = v
+	return s
+}
+
+// Information about the restore for the table.
+type AwsDynamoDbTableRestoreSummary struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates the point in time that the table was restored to.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	RestoreDateTime *string `type:"string"`
+
+	// Whether a restore is currently in progress.
+	RestoreInProgress *bool `type:"boolean"`
+
+	// The ARN of the source backup from which the table was restored.
+	SourceBackupArn *string `type:"string"`
+
+	// The ARN of the source table for the backup.
+	SourceTableArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableRestoreSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableRestoreSummary) GoString() string {
+	return s.String()
+}
+
+// SetRestoreDateTime sets the RestoreDateTime field's value.
+func (s *AwsDynamoDbTableRestoreSummary) SetRestoreDateTime(v string) *AwsDynamoDbTableRestoreSummary {
+	s.RestoreDateTime = &v
+	return s
+}
+
+// SetRestoreInProgress sets the RestoreInProgress field's value.
+func (s *AwsDynamoDbTableRestoreSummary) SetRestoreInProgress(v bool) *AwsDynamoDbTableRestoreSummary {
+	s.RestoreInProgress = &v
+	return s
+}
+
+// SetSourceBackupArn sets the SourceBackupArn field's value.
+func (s *AwsDynamoDbTableRestoreSummary) SetSourceBackupArn(v string) *AwsDynamoDbTableRestoreSummary {
+	s.SourceBackupArn = &v
+	return s
+}
+
+// SetSourceTableArn sets the SourceTableArn field's value.
+func (s *AwsDynamoDbTableRestoreSummary) SetSourceTableArn(v string) *AwsDynamoDbTableRestoreSummary {
+	s.SourceTableArn = &v
+	return s
+}
+
+// Information about the server-side encryption for the table.
+type AwsDynamoDbTableSseDescription struct {
+	_ struct{} `type:"structure"`
+
+	// If the key is inaccessible, the date and time when DynamoDB detected that
+	// the key was inaccessible.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	InaccessibleEncryptionDateTime *string `type:"string"`
+
+	// The ARN of the AWS KMS customer master key (CMK) that is used for the AWS
+	// KMS encryption.
+	KmsMasterKeyArn *string `type:"string"`
+
+	// The type of server-side encryption.
+	SseType *string `type:"string"`
+
+	// The status of the server-side encryption.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableSseDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableSseDescription) GoString() string {
+	return s.String()
+}
+
+// SetInaccessibleEncryptionDateTime sets the InaccessibleEncryptionDateTime field's value.
+func (s *AwsDynamoDbTableSseDescription) SetInaccessibleEncryptionDateTime(v string) *AwsDynamoDbTableSseDescription {
+	s.InaccessibleEncryptionDateTime = &v
+	return s
+}
+
+// SetKmsMasterKeyArn sets the KmsMasterKeyArn field's value.
+func (s *AwsDynamoDbTableSseDescription) SetKmsMasterKeyArn(v string) *AwsDynamoDbTableSseDescription {
+	s.KmsMasterKeyArn = &v
+	return s
+}
+
+// SetSseType sets the SseType field's value.
+func (s *AwsDynamoDbTableSseDescription) SetSseType(v string) *AwsDynamoDbTableSseDescription {
+	s.SseType = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsDynamoDbTableSseDescription) SetStatus(v string) *AwsDynamoDbTableSseDescription {
+	s.Status = &v
+	return s
+}
+
+// The current DynamoDB Streams configuration for the table.
+type AwsDynamoDbTableStreamSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether DynamoDB Streams is enabled on the table.
+	StreamEnabled *bool `type:"boolean"`
+
+	// Determines the information that is written to the table.
+	StreamViewType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsDynamoDbTableStreamSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsDynamoDbTableStreamSpecification) GoString() string {
+	return s.String()
+}
+
+// SetStreamEnabled sets the StreamEnabled field's value.
+func (s *AwsDynamoDbTableStreamSpecification) SetStreamEnabled(v bool) *AwsDynamoDbTableStreamSpecification {
+	s.StreamEnabled = &v
+	return s
+}
+
+// SetStreamViewType sets the StreamViewType field's value.
+func (s *AwsDynamoDbTableStreamSpecification) SetStreamViewType(v string) *AwsDynamoDbTableStreamSpecification {
+	s.StreamViewType = &v
+	return s
+}
+
+// Information about an Elastic IP address.
+type AwsEc2EipDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier that AWS assigns to represent the allocation of the Elastic
+	// IP address for use with Amazon VPC.
+	AllocationId *string `type:"string"`
+
+	// The identifier that represents the association of the Elastic IP address
+	// with an EC2 instance.
+	AssociationId *string `type:"string"`
+
+	// The domain in which to allocate the address.
+	//
+	// If the address is for use with EC2 instances in a VPC, then Domain is vpc.
+	// Otherwise, Domain is standard.
+	Domain *string `type:"string"`
+
+	// The identifier of the EC2 instance.
+	InstanceId *string `type:"string"`
+
+	// The name of the location from which the Elastic IP address is advertised.
+	NetworkBorderGroup *string `type:"string"`
+
+	// The identifier of the network interface.
+	NetworkInterfaceId *string `type:"string"`
+
+	// The AWS account ID of the owner of the network interface.
+	NetworkInterfaceOwnerId *string `type:"string"`
+
+	// The private IP address that is associated with the Elastic IP address.
+	PrivateIpAddress *string `type:"string"`
+
+	// A public IP address that is associated with the EC2 instance.
+	PublicIp *string `type:"string"`
+
+	// The identifier of an IP address pool. This parameter allows Amazon EC2 to
+	// select an IP address from the address pool.
+	PublicIpv4Pool *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsEc2EipDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsEc2EipDetails) GoString() string {
+	return s.String()
+}
+
+// SetAllocationId sets the AllocationId field's value.
+func (s *AwsEc2EipDetails) SetAllocationId(v string) *AwsEc2EipDetails {
+	s.AllocationId = &v
+	return s
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *AwsEc2EipDetails) SetAssociationId(v string) *AwsEc2EipDetails {
+	s.AssociationId = &v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *AwsEc2EipDetails) SetDomain(v string) *AwsEc2EipDetails {
+	s.Domain = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *AwsEc2EipDetails) SetInstanceId(v string) *AwsEc2EipDetails {
+	s.InstanceId = &v
+	return s
+}
+
+// SetNetworkBorderGroup sets the NetworkBorderGroup field's value.
+func (s *AwsEc2EipDetails) SetNetworkBorderGroup(v string) *AwsEc2EipDetails {
+	s.NetworkBorderGroup = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *AwsEc2EipDetails) SetNetworkInterfaceId(v string) *AwsEc2EipDetails {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetNetworkInterfaceOwnerId sets the NetworkInterfaceOwnerId field's value.
+func (s *AwsEc2EipDetails) SetNetworkInterfaceOwnerId(v string) *AwsEc2EipDetails {
+	s.NetworkInterfaceOwnerId = &v
+	return s
+}
+
+// SetPrivateIpAddress sets the PrivateIpAddress field's value.
+func (s *AwsEc2EipDetails) SetPrivateIpAddress(v string) *AwsEc2EipDetails {
+	s.PrivateIpAddress = &v
+	return s
+}
+
+// SetPublicIp sets the PublicIp field's value.
+func (s *AwsEc2EipDetails) SetPublicIp(v string) *AwsEc2EipDetails {
+	s.PublicIp = &v
+	return s
+}
+
+// SetPublicIpv4Pool sets the PublicIpv4Pool field's value.
+func (s *AwsEc2EipDetails) SetPublicIpv4Pool(v string) *AwsEc2EipDetails {
+	s.PublicIpv4Pool = &v
+	return s
+}
+
 // The details of an Amazon EC2 instance.
 type AwsEc2InstanceDetails struct {
 	_ struct{} `type:"structure"`
@@ -5525,7 +6467,11 @@ type AwsEc2InstanceDetails struct {
 	// The key name associated with the instance.
 	KeyName *string `type:"string"`
 
-	// The date/time the instance was launched.
+	// Indicates when the instance was launched.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LaunchedAt *string `type:"string"`
 
 	// The identifier of the subnet that the instance was launched in.
@@ -5606,7 +6552,11 @@ func (s *AwsEc2InstanceDetails) SetVpcId(v string) *AwsEc2InstanceDetails {
 type AwsEc2NetworkInterfaceAttachment struct {
 	_ struct{} `type:"structure"`
 
-	// The timestamp indicating when the attachment initiated.
+	// Indicates when the attachment initiated.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	AttachTime *string `type:"string"`
 
 	// The identifier of the network interface attachment
@@ -6144,7 +7094,11 @@ type AwsEc2VolumeDetails struct {
 	// The volume attachments.
 	Attachments []*AwsEc2VolumeAttachment `type:"list"`
 
-	// The datetime when the volume was created.
+	// Indicates when the volume was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreateTime *string `type:"string"`
 
 	// Whether the volume is encrypted.
@@ -6546,7 +7500,11 @@ type AwsElbv2LoadBalancerDetails struct {
 	// The ID of the Amazon Route 53 hosted zone associated with the load balancer.
 	CanonicalHostedZoneId *string `type:"string"`
 
-	// The date and time the load balancer was created.
+	// Indicates when the load balancer was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreatedTime *string `type:"string"`
 
 	// The public DNS name of the load balancer.
@@ -6647,7 +7605,11 @@ func (s *AwsElbv2LoadBalancerDetails) SetVpcId(v string) *AwsElbv2LoadBalancerDe
 type AwsIamAccessKeyDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The creation date/time of the IAM access key related to a finding.
+	// Indicates when the IAM access key was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreatedAt *string `type:"string"`
 
 	// The ID of the principal associated with an access key.
@@ -6717,6 +7679,242 @@ func (s *AwsIamAccessKeyDetails) SetUserName(v string) *AwsIamAccessKeyDetails {
 	return s
 }
 
+// A managed policy that is attached to an IAM user.
+type AwsIamAttachedManagedPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the policy.
+	PolicyArn *string `type:"string"`
+
+	// The name of the policy.
+	PolicyName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsIamAttachedManagedPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamAttachedManagedPolicy) GoString() string {
+	return s.String()
+}
+
+// SetPolicyArn sets the PolicyArn field's value.
+func (s *AwsIamAttachedManagedPolicy) SetPolicyArn(v string) *AwsIamAttachedManagedPolicy {
+	s.PolicyArn = &v
+	return s
+}
+
+// SetPolicyName sets the PolicyName field's value.
+func (s *AwsIamAttachedManagedPolicy) SetPolicyName(v string) *AwsIamAttachedManagedPolicy {
+	s.PolicyName = &v
+	return s
+}
+
+// Information about the policy used to set the permissions boundary for an
+// IAM user.
+type AwsIamPermissionsBoundary struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the policy used to set the permissions boundary for the user.
+	PermissionsBoundaryArn *string `type:"string"`
+
+	// The usage type for the permissions boundary.
+	PermissionsBoundaryType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsIamPermissionsBoundary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamPermissionsBoundary) GoString() string {
+	return s.String()
+}
+
+// SetPermissionsBoundaryArn sets the PermissionsBoundaryArn field's value.
+func (s *AwsIamPermissionsBoundary) SetPermissionsBoundaryArn(v string) *AwsIamPermissionsBoundary {
+	s.PermissionsBoundaryArn = &v
+	return s
+}
+
+// SetPermissionsBoundaryType sets the PermissionsBoundaryType field's value.
+func (s *AwsIamPermissionsBoundary) SetPermissionsBoundaryType(v string) *AwsIamPermissionsBoundary {
+	s.PermissionsBoundaryType = &v
+	return s
+}
+
+// Represents an IAM permissions policy.
+type AwsIamPolicyDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The number of users, groups, and roles that the policy is attached to.
+	AttachmentCount *int64 `type:"integer"`
+
+	// When the policy was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	CreateDate *string `type:"string"`
+
+	// The identifier of the default version of the policy.
+	DefaultVersionId *string `type:"string"`
+
+	// A description of the policy.
+	Description *string `type:"string"`
+
+	// Whether the policy can be attached to a user, group, or role.
+	IsAttachable *bool `type:"boolean"`
+
+	// The path to the policy.
+	Path *string `type:"string"`
+
+	// The number of users and roles that use the policy to set the permissions
+	// boundary.
+	PermissionsBoundaryUsageCount *int64 `type:"integer"`
+
+	// The unique identifier of the policy.
+	PolicyId *string `type:"string"`
+
+	// The name of the policy.
+	PolicyName *string `type:"string"`
+
+	// List of versions of the policy.
+	PolicyVersionList []*AwsIamPolicyVersion `type:"list"`
+
+	// When the policy was most recently updated.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	UpdateDate *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsIamPolicyDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamPolicyDetails) GoString() string {
+	return s.String()
+}
+
+// SetAttachmentCount sets the AttachmentCount field's value.
+func (s *AwsIamPolicyDetails) SetAttachmentCount(v int64) *AwsIamPolicyDetails {
+	s.AttachmentCount = &v
+	return s
+}
+
+// SetCreateDate sets the CreateDate field's value.
+func (s *AwsIamPolicyDetails) SetCreateDate(v string) *AwsIamPolicyDetails {
+	s.CreateDate = &v
+	return s
+}
+
+// SetDefaultVersionId sets the DefaultVersionId field's value.
+func (s *AwsIamPolicyDetails) SetDefaultVersionId(v string) *AwsIamPolicyDetails {
+	s.DefaultVersionId = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *AwsIamPolicyDetails) SetDescription(v string) *AwsIamPolicyDetails {
+	s.Description = &v
+	return s
+}
+
+// SetIsAttachable sets the IsAttachable field's value.
+func (s *AwsIamPolicyDetails) SetIsAttachable(v bool) *AwsIamPolicyDetails {
+	s.IsAttachable = &v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *AwsIamPolicyDetails) SetPath(v string) *AwsIamPolicyDetails {
+	s.Path = &v
+	return s
+}
+
+// SetPermissionsBoundaryUsageCount sets the PermissionsBoundaryUsageCount field's value.
+func (s *AwsIamPolicyDetails) SetPermissionsBoundaryUsageCount(v int64) *AwsIamPolicyDetails {
+	s.PermissionsBoundaryUsageCount = &v
+	return s
+}
+
+// SetPolicyId sets the PolicyId field's value.
+func (s *AwsIamPolicyDetails) SetPolicyId(v string) *AwsIamPolicyDetails {
+	s.PolicyId = &v
+	return s
+}
+
+// SetPolicyName sets the PolicyName field's value.
+func (s *AwsIamPolicyDetails) SetPolicyName(v string) *AwsIamPolicyDetails {
+	s.PolicyName = &v
+	return s
+}
+
+// SetPolicyVersionList sets the PolicyVersionList field's value.
+func (s *AwsIamPolicyDetails) SetPolicyVersionList(v []*AwsIamPolicyVersion) *AwsIamPolicyDetails {
+	s.PolicyVersionList = v
+	return s
+}
+
+// SetUpdateDate sets the UpdateDate field's value.
+func (s *AwsIamPolicyDetails) SetUpdateDate(v string) *AwsIamPolicyDetails {
+	s.UpdateDate = &v
+	return s
+}
+
+// A version of an IAM policy.
+type AwsIamPolicyVersion struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates when the version was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	CreateDate *string `type:"string"`
+
+	// Whether the version is the default version.
+	IsDefaultVersion *bool `type:"boolean"`
+
+	// The identifier of the policy version.
+	VersionId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsIamPolicyVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamPolicyVersion) GoString() string {
+	return s.String()
+}
+
+// SetCreateDate sets the CreateDate field's value.
+func (s *AwsIamPolicyVersion) SetCreateDate(v string) *AwsIamPolicyVersion {
+	s.CreateDate = &v
+	return s
+}
+
+// SetIsDefaultVersion sets the IsDefaultVersion field's value.
+func (s *AwsIamPolicyVersion) SetIsDefaultVersion(v bool) *AwsIamPolicyVersion {
+	s.IsDefaultVersion = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *AwsIamPolicyVersion) SetVersionId(v string) *AwsIamPolicyVersion {
+	s.VersionId = &v
+	return s
+}
+
 // Contains information about an IAM role, including all of the role's policies.
 type AwsIamRoleDetails struct {
 	_ struct{} `type:"structure"`
@@ -6724,7 +7922,11 @@ type AwsIamRoleDetails struct {
 	// The trust policy that grants permission to assume the role.
 	AssumeRolePolicyDocument *string `min:"1" type:"string"`
 
-	// The date and time, in ISO 8601 date-time format, when the role was created.
+	// Indicates when the role was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreateDate *string `type:"string"`
 
 	// The maximum session duration (in seconds) that you want to set for the specified
@@ -6800,6 +8002,121 @@ func (s *AwsIamRoleDetails) SetRoleName(v string) *AwsIamRoleDetails {
 	return s
 }
 
+// Information about an IAM user.
+type AwsIamUserDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the managed policies that are attached to the user.
+	AttachedManagedPolicies []*AwsIamAttachedManagedPolicy `type:"list"`
+
+	// Indicates when the user was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	CreateDate *string `type:"string"`
+
+	// A list of IAM groups that the user belongs to.
+	GroupList []*string `type:"list"`
+
+	// The path to the user.
+	Path *string `type:"string"`
+
+	// The permissions boundary for the user.
+	PermissionsBoundary *AwsIamPermissionsBoundary `type:"structure"`
+
+	// The unique identifier for the user.
+	UserId *string `type:"string"`
+
+	// The name of the user.
+	UserName *string `type:"string"`
+
+	// The list of inline policies that are embedded in the user.
+	UserPolicyList []*AwsIamUserPolicy `type:"list"`
+}
+
+// String returns the string representation
+func (s AwsIamUserDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamUserDetails) GoString() string {
+	return s.String()
+}
+
+// SetAttachedManagedPolicies sets the AttachedManagedPolicies field's value.
+func (s *AwsIamUserDetails) SetAttachedManagedPolicies(v []*AwsIamAttachedManagedPolicy) *AwsIamUserDetails {
+	s.AttachedManagedPolicies = v
+	return s
+}
+
+// SetCreateDate sets the CreateDate field's value.
+func (s *AwsIamUserDetails) SetCreateDate(v string) *AwsIamUserDetails {
+	s.CreateDate = &v
+	return s
+}
+
+// SetGroupList sets the GroupList field's value.
+func (s *AwsIamUserDetails) SetGroupList(v []*string) *AwsIamUserDetails {
+	s.GroupList = v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *AwsIamUserDetails) SetPath(v string) *AwsIamUserDetails {
+	s.Path = &v
+	return s
+}
+
+// SetPermissionsBoundary sets the PermissionsBoundary field's value.
+func (s *AwsIamUserDetails) SetPermissionsBoundary(v *AwsIamPermissionsBoundary) *AwsIamUserDetails {
+	s.PermissionsBoundary = v
+	return s
+}
+
+// SetUserId sets the UserId field's value.
+func (s *AwsIamUserDetails) SetUserId(v string) *AwsIamUserDetails {
+	s.UserId = &v
+	return s
+}
+
+// SetUserName sets the UserName field's value.
+func (s *AwsIamUserDetails) SetUserName(v string) *AwsIamUserDetails {
+	s.UserName = &v
+	return s
+}
+
+// SetUserPolicyList sets the UserPolicyList field's value.
+func (s *AwsIamUserDetails) SetUserPolicyList(v []*AwsIamUserPolicy) *AwsIamUserDetails {
+	s.UserPolicyList = v
+	return s
+}
+
+// Information about an inline policy that is embedded in the user.
+type AwsIamUserPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the policy.
+	PolicyName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsIamUserPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamUserPolicy) GoString() string {
+	return s.String()
+}
+
+// SetPolicyName sets the PolicyName field's value.
+func (s *AwsIamUserPolicy) SetPolicyName(v string) *AwsIamUserPolicy {
+	s.PolicyName = &v
+	return s
+}
+
 // Contains metadata about a customer master key (CMK).
 type AwsKmsKeyDetails struct {
 	_ struct{} `type:"structure"`
@@ -6807,8 +8124,15 @@ type AwsKmsKeyDetails struct {
 	// The twelve-digit account ID of the AWS account that owns the CMK.
 	AWSAccountId *string `type:"string"`
 
-	// The date and time when the CMK was created.
+	// Indicates when the CMK was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreationDate *float64 `type:"double"`
+
+	// A description of the key.
+	Description *string `type:"string"`
 
 	// The globally unique identifier for the CMK.
 	KeyId *string `type:"string"`
@@ -6851,6 +8175,12 @@ func (s *AwsKmsKeyDetails) SetAWSAccountId(v string) *AwsKmsKeyDetails {
 // SetCreationDate sets the CreationDate field's value.
 func (s *AwsKmsKeyDetails) SetCreationDate(v float64) *AwsKmsKeyDetails {
 	s.CreationDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *AwsKmsKeyDetails) SetDescription(v string) *AwsKmsKeyDetails {
+	s.Description = &v
 	return s
 }
 
@@ -6982,8 +8312,11 @@ type AwsLambdaFunctionDetails struct {
 	// This key is only returned if you've configured a customer managed CMK.
 	KmsKeyArn *string `type:"string"`
 
-	// The date and time that the function was last updated, in ISO-8601 format
-	// (YYYY-MM-DDThh:mm:ss.sTZD).
+	// Indicates when the function was last updated.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LastModified *string `type:"string"`
 
 	// The function's layers.
@@ -7312,7 +8645,11 @@ type AwsLambdaLayerVersionDetails struct {
 	// | provided
 	CompatibleRuntimes []*string `type:"list"`
 
-	// The date that the version was created, in ISO 8601 format. For example, 2018-11-27T15:10:45.123+0000.
+	// Indicates when the version was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreatedDate *string `type:"string"`
 
 	// The version number.
@@ -7344,6 +8681,735 @@ func (s *AwsLambdaLayerVersionDetails) SetCreatedDate(v string) *AwsLambdaLayerV
 // SetVersion sets the Version field's value.
 func (s *AwsLambdaLayerVersionDetails) SetVersion(v int64) *AwsLambdaLayerVersionDetails {
 	s.Version = &v
+	return s
+}
+
+// An IAM role that is associated with the Amazon RDS DB cluster.
+type AwsRdsDbClusterAssociatedRole struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the IAM role.
+	RoleArn *string `type:"string"`
+
+	// The status of the association between the IAM role and the DB cluster.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbClusterAssociatedRole) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbClusterAssociatedRole) GoString() string {
+	return s.String()
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *AwsRdsDbClusterAssociatedRole) SetRoleArn(v string) *AwsRdsDbClusterAssociatedRole {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbClusterAssociatedRole) SetStatus(v string) *AwsRdsDbClusterAssociatedRole {
+	s.Status = &v
+	return s
+}
+
+// Information about an Amazon RDS DB cluster.
+type AwsRdsDbClusterDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the database activity stream.
+	ActivityStreamStatus *string `type:"string"`
+
+	// For all database engines except Aurora, specifies the allocated storage size
+	// in gibibytes (GiB).
+	AllocatedStorage *int64 `type:"integer"`
+
+	// A list of the IAM roles that are associated with the DB cluster.
+	AssociatedRoles []*AwsRdsDbClusterAssociatedRole `type:"list"`
+
+	// A list of Availability Zones (AZs) where instances in the DB cluster can
+	// be created.
+	AvailabilityZones []*string `type:"list"`
+
+	// The number of days for which automated backups are retained.
+	BackupRetentionPeriod *int64 `type:"integer"`
+
+	// Indicates when the DB cluster was created, in Universal Coordinated Time
+	// (UTC).
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	ClusterCreateTime *string `type:"string"`
+
+	// Whether tags are copied from the DB cluster to snapshots of the DB cluster.
+	CopyTagsToSnapshot *bool `type:"boolean"`
+
+	// Whether the DB cluster is a clone of a DB cluster owned by a different AWS
+	// account.
+	CrossAccountClone *bool `type:"boolean"`
+
+	// A list of custom endpoints for the DB cluster.
+	CustomEndpoints []*string `type:"list"`
+
+	// The name of the database.
+	DatabaseName *string `type:"string"`
+
+	// The DB cluster identifier that the user assigned to the cluster. This identifier
+	// is the unique key that identifies a DB cluster.
+	DbClusterIdentifier *string `type:"string"`
+
+	// The list of instances that make up the DB cluster.
+	DbClusterMembers []*AwsRdsDbClusterMember `type:"list"`
+
+	// The list of option group memberships for this DB cluster.
+	DbClusterOptionGroupMemberships []*AwsRdsDbClusterOptionGroupMembership `type:"list"`
+
+	// The name of the DB cluster parameter group for the DB cluster.
+	DbClusterParameterGroup *string `type:"string"`
+
+	// The identifier of the DB cluster. The identifier must be unique within each
+	// AWS Region and is immutable.
+	DbClusterResourceId *string `type:"string"`
+
+	// The subnet group that is associated with the DB cluster, including the name,
+	// description, and subnets in the subnet group.
+	DbSubnetGroup *string `type:"string"`
+
+	// Whether the DB cluster has deletion protection enabled.
+	DeletionProtection *bool `type:"boolean"`
+
+	// The Active Directory domain membership records that are associated with the
+	// DB cluster.
+	DomainMemberships []*AwsRdsDbDomainMembership `type:"list"`
+
+	// A list of log types that this DB cluster is configured to export to CloudWatch
+	// Logs.
+	EnabledCloudWatchLogsExports []*string `type:"list"`
+
+	// The connection endpoint for the primary instance of the DB cluster.
+	Endpoint *string `type:"string"`
+
+	// The name of the database engine to use for this DB cluster.
+	Engine *string `type:"string"`
+
+	// The database engine mode of the DB cluster.
+	EngineMode *string `type:"string"`
+
+	// The version number of the database engine to use.
+	EngineVersion *string `type:"string"`
+
+	// Specifies the identifier that Amazon Route 53 assigns when you create a hosted
+	// zone.
+	HostedZoneId *string `type:"string"`
+
+	// Whether the HTTP endpoint for an Aurora Serverless DB cluster is enabled.
+	HttpEndpointEnabled *bool `type:"boolean"`
+
+	// Whether the mapping of IAM accounts to database accounts is enabled.
+	IamDatabaseAuthenticationEnabled *bool `type:"boolean"`
+
+	// The ARN of the AWS KMS master key that is used to encrypt the database instances
+	// in the DB cluster.
+	KmsKeyId *string `type:"string"`
+
+	// The name of the master user for the DB cluster.
+	MasterUsername *string `type:"string"`
+
+	// Whether the DB cluster has instances in multiple Availability Zones.
+	MultiAz *bool `type:"boolean"`
+
+	// The port number on which the DB instances in the DB cluster accept connections.
+	Port *int64 `type:"integer"`
+
+	// The range of time each day when automated backups are created, if automated
+	// backups are enabled.
+	//
+	// Uses the format HH:MM-HH:MM. For example, 04:52-05:22.
+	PreferredBackupWindow *string `type:"string"`
+
+	// The weekly time range during which system maintenance can occur, in Universal
+	// Coordinated Time (UTC).
+	//
+	// Uses the format <day>:HH:MM-<day>:HH:MM.
+	//
+	// For the day values, use mon|tue|wed|thu|fri|sat|sun.
+	//
+	// For example, sun:09:32-sun:10:02.
+	PreferredMaintenanceWindow *string `type:"string"`
+
+	// The identifiers of the read replicas that are associated with this DB cluster.
+	ReadReplicaIdentifiers []*string `type:"list"`
+
+	// The reader endpoint for the DB cluster.
+	ReaderEndpoint *string `type:"string"`
+
+	// The current status of this DB cluster.
+	Status *string `type:"string"`
+
+	// Whether the DB cluster is encrypted.
+	StorageEncrypted *bool `type:"boolean"`
+
+	// A list of VPC security groups that the DB cluster belongs to.
+	VpcSecurityGroups []*AwsRdsDbInstanceVpcSecurityGroup `type:"list"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbClusterDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbClusterDetails) GoString() string {
+	return s.String()
+}
+
+// SetActivityStreamStatus sets the ActivityStreamStatus field's value.
+func (s *AwsRdsDbClusterDetails) SetActivityStreamStatus(v string) *AwsRdsDbClusterDetails {
+	s.ActivityStreamStatus = &v
+	return s
+}
+
+// SetAllocatedStorage sets the AllocatedStorage field's value.
+func (s *AwsRdsDbClusterDetails) SetAllocatedStorage(v int64) *AwsRdsDbClusterDetails {
+	s.AllocatedStorage = &v
+	return s
+}
+
+// SetAssociatedRoles sets the AssociatedRoles field's value.
+func (s *AwsRdsDbClusterDetails) SetAssociatedRoles(v []*AwsRdsDbClusterAssociatedRole) *AwsRdsDbClusterDetails {
+	s.AssociatedRoles = v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *AwsRdsDbClusterDetails) SetAvailabilityZones(v []*string) *AwsRdsDbClusterDetails {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetBackupRetentionPeriod sets the BackupRetentionPeriod field's value.
+func (s *AwsRdsDbClusterDetails) SetBackupRetentionPeriod(v int64) *AwsRdsDbClusterDetails {
+	s.BackupRetentionPeriod = &v
+	return s
+}
+
+// SetClusterCreateTime sets the ClusterCreateTime field's value.
+func (s *AwsRdsDbClusterDetails) SetClusterCreateTime(v string) *AwsRdsDbClusterDetails {
+	s.ClusterCreateTime = &v
+	return s
+}
+
+// SetCopyTagsToSnapshot sets the CopyTagsToSnapshot field's value.
+func (s *AwsRdsDbClusterDetails) SetCopyTagsToSnapshot(v bool) *AwsRdsDbClusterDetails {
+	s.CopyTagsToSnapshot = &v
+	return s
+}
+
+// SetCrossAccountClone sets the CrossAccountClone field's value.
+func (s *AwsRdsDbClusterDetails) SetCrossAccountClone(v bool) *AwsRdsDbClusterDetails {
+	s.CrossAccountClone = &v
+	return s
+}
+
+// SetCustomEndpoints sets the CustomEndpoints field's value.
+func (s *AwsRdsDbClusterDetails) SetCustomEndpoints(v []*string) *AwsRdsDbClusterDetails {
+	s.CustomEndpoints = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *AwsRdsDbClusterDetails) SetDatabaseName(v string) *AwsRdsDbClusterDetails {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetDbClusterIdentifier sets the DbClusterIdentifier field's value.
+func (s *AwsRdsDbClusterDetails) SetDbClusterIdentifier(v string) *AwsRdsDbClusterDetails {
+	s.DbClusterIdentifier = &v
+	return s
+}
+
+// SetDbClusterMembers sets the DbClusterMembers field's value.
+func (s *AwsRdsDbClusterDetails) SetDbClusterMembers(v []*AwsRdsDbClusterMember) *AwsRdsDbClusterDetails {
+	s.DbClusterMembers = v
+	return s
+}
+
+// SetDbClusterOptionGroupMemberships sets the DbClusterOptionGroupMemberships field's value.
+func (s *AwsRdsDbClusterDetails) SetDbClusterOptionGroupMemberships(v []*AwsRdsDbClusterOptionGroupMembership) *AwsRdsDbClusterDetails {
+	s.DbClusterOptionGroupMemberships = v
+	return s
+}
+
+// SetDbClusterParameterGroup sets the DbClusterParameterGroup field's value.
+func (s *AwsRdsDbClusterDetails) SetDbClusterParameterGroup(v string) *AwsRdsDbClusterDetails {
+	s.DbClusterParameterGroup = &v
+	return s
+}
+
+// SetDbClusterResourceId sets the DbClusterResourceId field's value.
+func (s *AwsRdsDbClusterDetails) SetDbClusterResourceId(v string) *AwsRdsDbClusterDetails {
+	s.DbClusterResourceId = &v
+	return s
+}
+
+// SetDbSubnetGroup sets the DbSubnetGroup field's value.
+func (s *AwsRdsDbClusterDetails) SetDbSubnetGroup(v string) *AwsRdsDbClusterDetails {
+	s.DbSubnetGroup = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *AwsRdsDbClusterDetails) SetDeletionProtection(v bool) *AwsRdsDbClusterDetails {
+	s.DeletionProtection = &v
+	return s
+}
+
+// SetDomainMemberships sets the DomainMemberships field's value.
+func (s *AwsRdsDbClusterDetails) SetDomainMemberships(v []*AwsRdsDbDomainMembership) *AwsRdsDbClusterDetails {
+	s.DomainMemberships = v
+	return s
+}
+
+// SetEnabledCloudWatchLogsExports sets the EnabledCloudWatchLogsExports field's value.
+func (s *AwsRdsDbClusterDetails) SetEnabledCloudWatchLogsExports(v []*string) *AwsRdsDbClusterDetails {
+	s.EnabledCloudWatchLogsExports = v
+	return s
+}
+
+// SetEndpoint sets the Endpoint field's value.
+func (s *AwsRdsDbClusterDetails) SetEndpoint(v string) *AwsRdsDbClusterDetails {
+	s.Endpoint = &v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *AwsRdsDbClusterDetails) SetEngine(v string) *AwsRdsDbClusterDetails {
+	s.Engine = &v
+	return s
+}
+
+// SetEngineMode sets the EngineMode field's value.
+func (s *AwsRdsDbClusterDetails) SetEngineMode(v string) *AwsRdsDbClusterDetails {
+	s.EngineMode = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *AwsRdsDbClusterDetails) SetEngineVersion(v string) *AwsRdsDbClusterDetails {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetHostedZoneId sets the HostedZoneId field's value.
+func (s *AwsRdsDbClusterDetails) SetHostedZoneId(v string) *AwsRdsDbClusterDetails {
+	s.HostedZoneId = &v
+	return s
+}
+
+// SetHttpEndpointEnabled sets the HttpEndpointEnabled field's value.
+func (s *AwsRdsDbClusterDetails) SetHttpEndpointEnabled(v bool) *AwsRdsDbClusterDetails {
+	s.HttpEndpointEnabled = &v
+	return s
+}
+
+// SetIamDatabaseAuthenticationEnabled sets the IamDatabaseAuthenticationEnabled field's value.
+func (s *AwsRdsDbClusterDetails) SetIamDatabaseAuthenticationEnabled(v bool) *AwsRdsDbClusterDetails {
+	s.IamDatabaseAuthenticationEnabled = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *AwsRdsDbClusterDetails) SetKmsKeyId(v string) *AwsRdsDbClusterDetails {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetMasterUsername sets the MasterUsername field's value.
+func (s *AwsRdsDbClusterDetails) SetMasterUsername(v string) *AwsRdsDbClusterDetails {
+	s.MasterUsername = &v
+	return s
+}
+
+// SetMultiAz sets the MultiAz field's value.
+func (s *AwsRdsDbClusterDetails) SetMultiAz(v bool) *AwsRdsDbClusterDetails {
+	s.MultiAz = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *AwsRdsDbClusterDetails) SetPort(v int64) *AwsRdsDbClusterDetails {
+	s.Port = &v
+	return s
+}
+
+// SetPreferredBackupWindow sets the PreferredBackupWindow field's value.
+func (s *AwsRdsDbClusterDetails) SetPreferredBackupWindow(v string) *AwsRdsDbClusterDetails {
+	s.PreferredBackupWindow = &v
+	return s
+}
+
+// SetPreferredMaintenanceWindow sets the PreferredMaintenanceWindow field's value.
+func (s *AwsRdsDbClusterDetails) SetPreferredMaintenanceWindow(v string) *AwsRdsDbClusterDetails {
+	s.PreferredMaintenanceWindow = &v
+	return s
+}
+
+// SetReadReplicaIdentifiers sets the ReadReplicaIdentifiers field's value.
+func (s *AwsRdsDbClusterDetails) SetReadReplicaIdentifiers(v []*string) *AwsRdsDbClusterDetails {
+	s.ReadReplicaIdentifiers = v
+	return s
+}
+
+// SetReaderEndpoint sets the ReaderEndpoint field's value.
+func (s *AwsRdsDbClusterDetails) SetReaderEndpoint(v string) *AwsRdsDbClusterDetails {
+	s.ReaderEndpoint = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbClusterDetails) SetStatus(v string) *AwsRdsDbClusterDetails {
+	s.Status = &v
+	return s
+}
+
+// SetStorageEncrypted sets the StorageEncrypted field's value.
+func (s *AwsRdsDbClusterDetails) SetStorageEncrypted(v bool) *AwsRdsDbClusterDetails {
+	s.StorageEncrypted = &v
+	return s
+}
+
+// SetVpcSecurityGroups sets the VpcSecurityGroups field's value.
+func (s *AwsRdsDbClusterDetails) SetVpcSecurityGroups(v []*AwsRdsDbInstanceVpcSecurityGroup) *AwsRdsDbClusterDetails {
+	s.VpcSecurityGroups = v
+	return s
+}
+
+// Information about an instance in the DB cluster.
+type AwsRdsDbClusterMember struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the DB cluster parameter group for this member of the DB cluster.
+	DbClusterParameterGroupStatus *string `type:"string"`
+
+	// The instance identifier for this member of the DB cluster.
+	DbInstanceIdentifier *string `type:"string"`
+
+	// Whether the cluster member is the primary instance for the DB cluster.
+	IsClusterWriter *bool `type:"boolean"`
+
+	// Specifies the order in which an Aurora replica is promoted to the primary
+	// instance when the existing primary instance fails.
+	PromotionTier *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbClusterMember) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbClusterMember) GoString() string {
+	return s.String()
+}
+
+// SetDbClusterParameterGroupStatus sets the DbClusterParameterGroupStatus field's value.
+func (s *AwsRdsDbClusterMember) SetDbClusterParameterGroupStatus(v string) *AwsRdsDbClusterMember {
+	s.DbClusterParameterGroupStatus = &v
+	return s
+}
+
+// SetDbInstanceIdentifier sets the DbInstanceIdentifier field's value.
+func (s *AwsRdsDbClusterMember) SetDbInstanceIdentifier(v string) *AwsRdsDbClusterMember {
+	s.DbInstanceIdentifier = &v
+	return s
+}
+
+// SetIsClusterWriter sets the IsClusterWriter field's value.
+func (s *AwsRdsDbClusterMember) SetIsClusterWriter(v bool) *AwsRdsDbClusterMember {
+	s.IsClusterWriter = &v
+	return s
+}
+
+// SetPromotionTier sets the PromotionTier field's value.
+func (s *AwsRdsDbClusterMember) SetPromotionTier(v int64) *AwsRdsDbClusterMember {
+	s.PromotionTier = &v
+	return s
+}
+
+// Information about an option group membership for a DB cluster.
+type AwsRdsDbClusterOptionGroupMembership struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the DB cluster option group.
+	DbClusterOptionGroupName *string `type:"string"`
+
+	// The status of the DB cluster option group.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbClusterOptionGroupMembership) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbClusterOptionGroupMembership) GoString() string {
+	return s.String()
+}
+
+// SetDbClusterOptionGroupName sets the DbClusterOptionGroupName field's value.
+func (s *AwsRdsDbClusterOptionGroupMembership) SetDbClusterOptionGroupName(v string) *AwsRdsDbClusterOptionGroupMembership {
+	s.DbClusterOptionGroupName = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbClusterOptionGroupMembership) SetStatus(v string) *AwsRdsDbClusterOptionGroupMembership {
+	s.Status = &v
+	return s
+}
+
+// Information about an Amazon RDS DB cluster snapshot.
+type AwsRdsDbClusterSnapshotDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the allocated storage size in gibibytes (GiB).
+	AllocatedStorage *int64 `type:"integer"`
+
+	// A list of Availability Zones where instances in the DB cluster can be created.
+	AvailabilityZones []*string `type:"list"`
+
+	// Indicates when the DB cluster was created, in Universal Coordinated Time
+	// (UTC).
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	ClusterCreateTime *string `type:"string"`
+
+	// The DB cluster identifier.
+	DbClusterIdentifier *string `type:"string"`
+
+	// The identifier of the DB cluster snapshot.
+	DbClusterSnapshotIdentifier *string `type:"string"`
+
+	Engine *string `type:"string"`
+
+	// The version of the database engine to use.
+	EngineVersion *string `type:"string"`
+
+	// Whether mapping of IAM accounts to database accounts is enabled.
+	IamDatabaseAuthenticationEnabled *bool `type:"boolean"`
+
+	// The ARN of the AWS KMS master key that is used to encrypt the database instances
+	// in the DB cluster.
+	KmsKeyId *string `type:"string"`
+
+	// The license model information for this DB cluster snapshot.
+	LicenseModel *string `type:"string"`
+
+	// The name of the master user for the DB cluster.
+	MasterUsername *string `type:"string"`
+
+	// Specifies the percentage of the estimated data that has been transferred.
+	PercentProgress *int64 `type:"integer"`
+
+	// The port number on which the DB instances in the DB cluster accept connections.
+	Port *int64 `type:"integer"`
+
+	// Indicates when the snapshot was taken.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	SnapshotCreateTime *string `type:"string"`
+
+	// The type of DB cluster snapshot.
+	SnapshotType *string `type:"string"`
+
+	// The status of this DB cluster snapshot.
+	Status *string `type:"string"`
+
+	// Whether the DB cluster is encrypted.
+	StorageEncrypted *bool `type:"boolean"`
+
+	// The VPC ID that is associated with the DB cluster snapshot.
+	VpcId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbClusterSnapshotDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbClusterSnapshotDetails) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedStorage sets the AllocatedStorage field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetAllocatedStorage(v int64) *AwsRdsDbClusterSnapshotDetails {
+	s.AllocatedStorage = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetAvailabilityZones(v []*string) *AwsRdsDbClusterSnapshotDetails {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetClusterCreateTime sets the ClusterCreateTime field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetClusterCreateTime(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.ClusterCreateTime = &v
+	return s
+}
+
+// SetDbClusterIdentifier sets the DbClusterIdentifier field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetDbClusterIdentifier(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.DbClusterIdentifier = &v
+	return s
+}
+
+// SetDbClusterSnapshotIdentifier sets the DbClusterSnapshotIdentifier field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetDbClusterSnapshotIdentifier(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.DbClusterSnapshotIdentifier = &v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetEngine(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.Engine = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetEngineVersion(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetIamDatabaseAuthenticationEnabled sets the IamDatabaseAuthenticationEnabled field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetIamDatabaseAuthenticationEnabled(v bool) *AwsRdsDbClusterSnapshotDetails {
+	s.IamDatabaseAuthenticationEnabled = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetKmsKeyId(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetLicenseModel sets the LicenseModel field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetLicenseModel(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.LicenseModel = &v
+	return s
+}
+
+// SetMasterUsername sets the MasterUsername field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetMasterUsername(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.MasterUsername = &v
+	return s
+}
+
+// SetPercentProgress sets the PercentProgress field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetPercentProgress(v int64) *AwsRdsDbClusterSnapshotDetails {
+	s.PercentProgress = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetPort(v int64) *AwsRdsDbClusterSnapshotDetails {
+	s.Port = &v
+	return s
+}
+
+// SetSnapshotCreateTime sets the SnapshotCreateTime field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetSnapshotCreateTime(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.SnapshotCreateTime = &v
+	return s
+}
+
+// SetSnapshotType sets the SnapshotType field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetSnapshotType(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.SnapshotType = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetStatus(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.Status = &v
+	return s
+}
+
+// SetStorageEncrypted sets the StorageEncrypted field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetStorageEncrypted(v bool) *AwsRdsDbClusterSnapshotDetails {
+	s.StorageEncrypted = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *AwsRdsDbClusterSnapshotDetails) SetVpcId(v string) *AwsRdsDbClusterSnapshotDetails {
+	s.VpcId = &v
+	return s
+}
+
+// Information about an Active Directory domain membership record associated
+// with the DB instance.
+type AwsRdsDbDomainMembership struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the Active Directory domain.
+	Domain *string `type:"string"`
+
+	// The fully qualified domain name of the Active Directory domain.
+	Fqdn *string `type:"string"`
+
+	// The name of the IAM role to use when making API calls to the Directory Service.
+	IamRoleName *string `type:"string"`
+
+	// The status of the Active Directory Domain membership for the DB instance.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbDomainMembership) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbDomainMembership) GoString() string {
+	return s.String()
+}
+
+// SetDomain sets the Domain field's value.
+func (s *AwsRdsDbDomainMembership) SetDomain(v string) *AwsRdsDbDomainMembership {
+	s.Domain = &v
+	return s
+}
+
+// SetFqdn sets the Fqdn field's value.
+func (s *AwsRdsDbDomainMembership) SetFqdn(v string) *AwsRdsDbDomainMembership {
+	s.Fqdn = &v
+	return s
+}
+
+// SetIamRoleName sets the IamRoleName field's value.
+func (s *AwsRdsDbDomainMembership) SetIamRoleName(v string) *AwsRdsDbDomainMembership {
+	s.IamRoleName = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbDomainMembership) SetStatus(v string) *AwsRdsDbDomainMembership {
+	s.Status = &v
 	return s
 }
 
@@ -7404,12 +9470,30 @@ func (s *AwsRdsDbInstanceAssociatedRole) SetStatus(v string) *AwsRdsDbInstanceAs
 type AwsRdsDbInstanceDetails struct {
 	_ struct{} `type:"structure"`
 
+	// The amount of storage (in gigabytes) to initially allocate for the DB instance.
+	AllocatedStorage *int64 `type:"integer"`
+
 	// The AWS Identity and Access Management (IAM) roles associated with the DB
 	// instance.
 	AssociatedRoles []*AwsRdsDbInstanceAssociatedRole `type:"list"`
 
+	// Indicates whether minor version patches are applied automatically.
+	AutoMinorVersionUpgrade *bool `type:"boolean"`
+
+	// The Availability Zone where the DB instance will be created.
+	AvailabilityZone *string `type:"string"`
+
+	// The number of days for which to retain automated backups.
+	BackupRetentionPeriod *int64 `type:"integer"`
+
 	// The identifier of the CA certificate for this DB instance.
 	CACertificateIdentifier *string `type:"string"`
+
+	// The name of the character set that this DB instance is associated with.
+	CharacterSetName *string `type:"string"`
+
+	// Whether to copy resource tags to snapshots of the DB instance.
+	CopyTagsToSnapshot *bool `type:"boolean"`
 
 	// If the DB instance is a member of a DB cluster, contains the name of the
 	// DB cluster that the DB instance is a member of.
@@ -7441,6 +9525,18 @@ type AwsRdsDbInstanceDetails struct {
 	// part of a DB cluster, this can be a different port than the DB cluster port.
 	DbInstancePort *int64 `type:"integer"`
 
+	// The current status of the DB instance.
+	DbInstanceStatus *string `type:"string"`
+
+	// A list of the DB parameter groups to assign to the DB instance.
+	DbParameterGroups []*AwsRdsDbParameterGroup `type:"list"`
+
+	// A list of the DB security groups to assign to the DB instance.
+	DbSecurityGroups []*string `type:"list"`
+
+	// Information about the subnet group that is associated with the DB instance.
+	DbSubnetGroup *AwsRdsDbSubnetGroup `type:"structure"`
+
 	// The AWS Region-unique, immutable identifier for the DB instance. This identifier
 	// is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB
 	// instance is accessed.
@@ -7451,6 +9547,13 @@ type AwsRdsDbInstanceDetails struct {
 	// When deletion protection is enabled, the database cannot be deleted.
 	DeletionProtection *bool `type:"boolean"`
 
+	// The Active Directory domain membership records associated with the DB instance.
+	DomainMemberships []*AwsRdsDbDomainMembership `type:"list"`
+
+	// A list of log types that this DB instance is configured to export to CloudWatch
+	// Logs.
+	EnabledCloudWatchLogsExports []*string `type:"list"`
+
 	// Specifies the connection endpoint.
 	Endpoint *AwsRdsDbInstanceEndpoint `type:"structure"`
 
@@ -7459,6 +9562,10 @@ type AwsRdsDbInstanceDetails struct {
 
 	// Indicates the database engine version.
 	EngineVersion *string `type:"string"`
+
+	// The ARN of the CloudWatch Logs log stream that receives the enhanced monitoring
+	// metrics data for the DB instance.
+	EnhancedMonitoringResourceArn *string `type:"string"`
 
 	// True if mapping of AWS Identity and Access Management (IAM) accounts to database
 	// accounts is enabled, and otherwise false.
@@ -7472,12 +9579,91 @@ type AwsRdsDbInstanceDetails struct {
 	//    * Aurora 5.6 or higher
 	IAMDatabaseAuthenticationEnabled *bool `type:"boolean"`
 
-	// Provides the date and time the DB instance was created.
+	// Indicates when the DB instance was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	InstanceCreateTime *string `type:"string"`
+
+	// Specifies the provisioned IOPS (I/O operations per second) for this DB instance.
+	Iops *int64 `type:"integer"`
 
 	// If StorageEncrypted is true, the AWS KMS key identifier for the encrypted
 	// DB instance.
 	KmsKeyId *string `type:"string"`
+
+	// Specifies the latest time to which a database can be restored with point-in-time
+	// restore.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	LatestRestorableTime *string `type:"string"`
+
+	// License model information for this DB instance.
+	LicenseModel *string `type:"string"`
+
+	// Specifies the connection endpoint.
+	ListenerEndpoint *AwsRdsDbInstanceEndpoint `type:"structure"`
+
+	// The master user name of the DB instance.
+	MasterUsername *string `type:"string"`
+
+	// The upper limit to which Amazon RDS can automatically scale the storage of
+	// the DB instance.
+	MaxAllocatedStorage *int64 `type:"integer"`
+
+	// The interval, in seconds, between points when enhanced monitoring metrics
+	// are collected for the DB instance.
+	MonitoringInterval *int64 `type:"integer"`
+
+	// The ARN for the IAM role that permits Amazon RDS to send enhanced monitoring
+	// metrics to CloudWatch Logs.
+	MonitoringRoleArn *string `type:"string"`
+
+	// Whether the DB instance is a multiple Availability Zone deployment.
+	MultiAz *bool `type:"boolean"`
+
+	// The list of option group memberships for this DB instance.
+	OptionGroupMemberships []*AwsRdsDbOptionGroupMembership `type:"list"`
+
+	// Changes to the DB instance that are currently pending.
+	PendingModifiedValues *AwsRdsDbPendingModifiedValues `type:"structure"`
+
+	// Indicates whether Performance Insights is enabled for the DB instance.
+	PerformanceInsightsEnabled *bool `type:"boolean"`
+
+	// The identifier of the AWS KMS key used to encrypt the Performance Insights
+	// data.
+	PerformanceInsightsKmsKeyId *string `type:"string"`
+
+	// The number of days to retain Performance Insights data.
+	PerformanceInsightsRetentionPeriod *int64 `type:"integer"`
+
+	// The range of time each day when automated backups are created, if automated
+	// backups are enabled.
+	//
+	// Uses the format HH:MM-HH:MM. For example, 04:52-05:22.
+	PreferredBackupWindow *string `type:"string"`
+
+	// The weekly time range during which system maintenance can occur, in Universal
+	// Coordinated Time (UTC).
+	//
+	// Uses the format <day>:HH:MM-<day>:HH:MM.
+	//
+	// For the day values, use mon|tue|wed|thu|fri|sat|sun.
+	//
+	// For example, sun:09:32-sun:10:02.
+	PreferredMaintenanceWindow *string `type:"string"`
+
+	// The number of CPU cores and the number of threads per core for the DB instance
+	// class of the DB instance.
+	ProcessorFeatures []*AwsRdsDbProcessorFeature `type:"list"`
+
+	// The order in which to promote an Aurora replica to the primary instance after
+	// a failure of the existing primary instance.
+	PromotionTier *int64 `type:"integer"`
 
 	// Specifies the accessibility options for the DB instance.
 	//
@@ -7488,12 +9674,37 @@ type AwsRdsDbInstanceDetails struct {
 	// to a private IP address.
 	PubliclyAccessible *bool `type:"boolean"`
 
+	// List of identifiers of Aurora DB clusters to which the RDS DB instance is
+	// replicated as a read replica.
+	ReadReplicaDBClusterIdentifiers []*string `type:"list"`
+
+	// List of identifiers of the read replicas associated with this DB instance.
+	ReadReplicaDBInstanceIdentifiers []*string `type:"list"`
+
+	// If this DB instance is a read replica, contains the identifier of the source
+	// DB instance.
+	ReadReplicaSourceDBInstanceIdentifier *string `type:"string"`
+
+	// For a DB instance with multi-Availability Zone support, the name of the secondary
+	// Availability Zone.
+	SecondaryAvailabilityZone *string `type:"string"`
+
+	// The status of a read replica. If the instance isn't a read replica, this
+	// is empty.
+	StatusInfos []*AwsRdsDbStatusInfo `type:"list"`
+
 	// Specifies whether the DB instance is encrypted.
 	StorageEncrypted *bool `type:"boolean"`
+
+	// The storage type for the DB instance.
+	StorageType *string `type:"string"`
 
 	// The ARN from the key store with which the instance is associated for TDE
 	// encryption.
 	TdeCredentialArn *string `type:"string"`
+
+	// The time zone of the DB instance.
+	Timezone *string `type:"string"`
 
 	// A list of VPC security groups that the DB instance belongs to.
 	VpcSecurityGroups []*AwsRdsDbInstanceVpcSecurityGroup `type:"list"`
@@ -7509,15 +9720,51 @@ func (s AwsRdsDbInstanceDetails) GoString() string {
 	return s.String()
 }
 
+// SetAllocatedStorage sets the AllocatedStorage field's value.
+func (s *AwsRdsDbInstanceDetails) SetAllocatedStorage(v int64) *AwsRdsDbInstanceDetails {
+	s.AllocatedStorage = &v
+	return s
+}
+
 // SetAssociatedRoles sets the AssociatedRoles field's value.
 func (s *AwsRdsDbInstanceDetails) SetAssociatedRoles(v []*AwsRdsDbInstanceAssociatedRole) *AwsRdsDbInstanceDetails {
 	s.AssociatedRoles = v
 	return s
 }
 
+// SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
+func (s *AwsRdsDbInstanceDetails) SetAutoMinorVersionUpgrade(v bool) *AwsRdsDbInstanceDetails {
+	s.AutoMinorVersionUpgrade = &v
+	return s
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *AwsRdsDbInstanceDetails) SetAvailabilityZone(v string) *AwsRdsDbInstanceDetails {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetBackupRetentionPeriod sets the BackupRetentionPeriod field's value.
+func (s *AwsRdsDbInstanceDetails) SetBackupRetentionPeriod(v int64) *AwsRdsDbInstanceDetails {
+	s.BackupRetentionPeriod = &v
+	return s
+}
+
 // SetCACertificateIdentifier sets the CACertificateIdentifier field's value.
 func (s *AwsRdsDbInstanceDetails) SetCACertificateIdentifier(v string) *AwsRdsDbInstanceDetails {
 	s.CACertificateIdentifier = &v
+	return s
+}
+
+// SetCharacterSetName sets the CharacterSetName field's value.
+func (s *AwsRdsDbInstanceDetails) SetCharacterSetName(v string) *AwsRdsDbInstanceDetails {
+	s.CharacterSetName = &v
+	return s
+}
+
+// SetCopyTagsToSnapshot sets the CopyTagsToSnapshot field's value.
+func (s *AwsRdsDbInstanceDetails) SetCopyTagsToSnapshot(v bool) *AwsRdsDbInstanceDetails {
+	s.CopyTagsToSnapshot = &v
 	return s
 }
 
@@ -7551,6 +9798,30 @@ func (s *AwsRdsDbInstanceDetails) SetDbInstancePort(v int64) *AwsRdsDbInstanceDe
 	return s
 }
 
+// SetDbInstanceStatus sets the DbInstanceStatus field's value.
+func (s *AwsRdsDbInstanceDetails) SetDbInstanceStatus(v string) *AwsRdsDbInstanceDetails {
+	s.DbInstanceStatus = &v
+	return s
+}
+
+// SetDbParameterGroups sets the DbParameterGroups field's value.
+func (s *AwsRdsDbInstanceDetails) SetDbParameterGroups(v []*AwsRdsDbParameterGroup) *AwsRdsDbInstanceDetails {
+	s.DbParameterGroups = v
+	return s
+}
+
+// SetDbSecurityGroups sets the DbSecurityGroups field's value.
+func (s *AwsRdsDbInstanceDetails) SetDbSecurityGroups(v []*string) *AwsRdsDbInstanceDetails {
+	s.DbSecurityGroups = v
+	return s
+}
+
+// SetDbSubnetGroup sets the DbSubnetGroup field's value.
+func (s *AwsRdsDbInstanceDetails) SetDbSubnetGroup(v *AwsRdsDbSubnetGroup) *AwsRdsDbInstanceDetails {
+	s.DbSubnetGroup = v
+	return s
+}
+
 // SetDbiResourceId sets the DbiResourceId field's value.
 func (s *AwsRdsDbInstanceDetails) SetDbiResourceId(v string) *AwsRdsDbInstanceDetails {
 	s.DbiResourceId = &v
@@ -7560,6 +9831,18 @@ func (s *AwsRdsDbInstanceDetails) SetDbiResourceId(v string) *AwsRdsDbInstanceDe
 // SetDeletionProtection sets the DeletionProtection field's value.
 func (s *AwsRdsDbInstanceDetails) SetDeletionProtection(v bool) *AwsRdsDbInstanceDetails {
 	s.DeletionProtection = &v
+	return s
+}
+
+// SetDomainMemberships sets the DomainMemberships field's value.
+func (s *AwsRdsDbInstanceDetails) SetDomainMemberships(v []*AwsRdsDbDomainMembership) *AwsRdsDbInstanceDetails {
+	s.DomainMemberships = v
+	return s
+}
+
+// SetEnabledCloudWatchLogsExports sets the EnabledCloudWatchLogsExports field's value.
+func (s *AwsRdsDbInstanceDetails) SetEnabledCloudWatchLogsExports(v []*string) *AwsRdsDbInstanceDetails {
+	s.EnabledCloudWatchLogsExports = v
 	return s
 }
 
@@ -7581,6 +9864,12 @@ func (s *AwsRdsDbInstanceDetails) SetEngineVersion(v string) *AwsRdsDbInstanceDe
 	return s
 }
 
+// SetEnhancedMonitoringResourceArn sets the EnhancedMonitoringResourceArn field's value.
+func (s *AwsRdsDbInstanceDetails) SetEnhancedMonitoringResourceArn(v string) *AwsRdsDbInstanceDetails {
+	s.EnhancedMonitoringResourceArn = &v
+	return s
+}
+
 // SetIAMDatabaseAuthenticationEnabled sets the IAMDatabaseAuthenticationEnabled field's value.
 func (s *AwsRdsDbInstanceDetails) SetIAMDatabaseAuthenticationEnabled(v bool) *AwsRdsDbInstanceDetails {
 	s.IAMDatabaseAuthenticationEnabled = &v
@@ -7593,9 +9882,117 @@ func (s *AwsRdsDbInstanceDetails) SetInstanceCreateTime(v string) *AwsRdsDbInsta
 	return s
 }
 
+// SetIops sets the Iops field's value.
+func (s *AwsRdsDbInstanceDetails) SetIops(v int64) *AwsRdsDbInstanceDetails {
+	s.Iops = &v
+	return s
+}
+
 // SetKmsKeyId sets the KmsKeyId field's value.
 func (s *AwsRdsDbInstanceDetails) SetKmsKeyId(v string) *AwsRdsDbInstanceDetails {
 	s.KmsKeyId = &v
+	return s
+}
+
+// SetLatestRestorableTime sets the LatestRestorableTime field's value.
+func (s *AwsRdsDbInstanceDetails) SetLatestRestorableTime(v string) *AwsRdsDbInstanceDetails {
+	s.LatestRestorableTime = &v
+	return s
+}
+
+// SetLicenseModel sets the LicenseModel field's value.
+func (s *AwsRdsDbInstanceDetails) SetLicenseModel(v string) *AwsRdsDbInstanceDetails {
+	s.LicenseModel = &v
+	return s
+}
+
+// SetListenerEndpoint sets the ListenerEndpoint field's value.
+func (s *AwsRdsDbInstanceDetails) SetListenerEndpoint(v *AwsRdsDbInstanceEndpoint) *AwsRdsDbInstanceDetails {
+	s.ListenerEndpoint = v
+	return s
+}
+
+// SetMasterUsername sets the MasterUsername field's value.
+func (s *AwsRdsDbInstanceDetails) SetMasterUsername(v string) *AwsRdsDbInstanceDetails {
+	s.MasterUsername = &v
+	return s
+}
+
+// SetMaxAllocatedStorage sets the MaxAllocatedStorage field's value.
+func (s *AwsRdsDbInstanceDetails) SetMaxAllocatedStorage(v int64) *AwsRdsDbInstanceDetails {
+	s.MaxAllocatedStorage = &v
+	return s
+}
+
+// SetMonitoringInterval sets the MonitoringInterval field's value.
+func (s *AwsRdsDbInstanceDetails) SetMonitoringInterval(v int64) *AwsRdsDbInstanceDetails {
+	s.MonitoringInterval = &v
+	return s
+}
+
+// SetMonitoringRoleArn sets the MonitoringRoleArn field's value.
+func (s *AwsRdsDbInstanceDetails) SetMonitoringRoleArn(v string) *AwsRdsDbInstanceDetails {
+	s.MonitoringRoleArn = &v
+	return s
+}
+
+// SetMultiAz sets the MultiAz field's value.
+func (s *AwsRdsDbInstanceDetails) SetMultiAz(v bool) *AwsRdsDbInstanceDetails {
+	s.MultiAz = &v
+	return s
+}
+
+// SetOptionGroupMemberships sets the OptionGroupMemberships field's value.
+func (s *AwsRdsDbInstanceDetails) SetOptionGroupMemberships(v []*AwsRdsDbOptionGroupMembership) *AwsRdsDbInstanceDetails {
+	s.OptionGroupMemberships = v
+	return s
+}
+
+// SetPendingModifiedValues sets the PendingModifiedValues field's value.
+func (s *AwsRdsDbInstanceDetails) SetPendingModifiedValues(v *AwsRdsDbPendingModifiedValues) *AwsRdsDbInstanceDetails {
+	s.PendingModifiedValues = v
+	return s
+}
+
+// SetPerformanceInsightsEnabled sets the PerformanceInsightsEnabled field's value.
+func (s *AwsRdsDbInstanceDetails) SetPerformanceInsightsEnabled(v bool) *AwsRdsDbInstanceDetails {
+	s.PerformanceInsightsEnabled = &v
+	return s
+}
+
+// SetPerformanceInsightsKmsKeyId sets the PerformanceInsightsKmsKeyId field's value.
+func (s *AwsRdsDbInstanceDetails) SetPerformanceInsightsKmsKeyId(v string) *AwsRdsDbInstanceDetails {
+	s.PerformanceInsightsKmsKeyId = &v
+	return s
+}
+
+// SetPerformanceInsightsRetentionPeriod sets the PerformanceInsightsRetentionPeriod field's value.
+func (s *AwsRdsDbInstanceDetails) SetPerformanceInsightsRetentionPeriod(v int64) *AwsRdsDbInstanceDetails {
+	s.PerformanceInsightsRetentionPeriod = &v
+	return s
+}
+
+// SetPreferredBackupWindow sets the PreferredBackupWindow field's value.
+func (s *AwsRdsDbInstanceDetails) SetPreferredBackupWindow(v string) *AwsRdsDbInstanceDetails {
+	s.PreferredBackupWindow = &v
+	return s
+}
+
+// SetPreferredMaintenanceWindow sets the PreferredMaintenanceWindow field's value.
+func (s *AwsRdsDbInstanceDetails) SetPreferredMaintenanceWindow(v string) *AwsRdsDbInstanceDetails {
+	s.PreferredMaintenanceWindow = &v
+	return s
+}
+
+// SetProcessorFeatures sets the ProcessorFeatures field's value.
+func (s *AwsRdsDbInstanceDetails) SetProcessorFeatures(v []*AwsRdsDbProcessorFeature) *AwsRdsDbInstanceDetails {
+	s.ProcessorFeatures = v
+	return s
+}
+
+// SetPromotionTier sets the PromotionTier field's value.
+func (s *AwsRdsDbInstanceDetails) SetPromotionTier(v int64) *AwsRdsDbInstanceDetails {
+	s.PromotionTier = &v
 	return s
 }
 
@@ -7605,15 +10002,57 @@ func (s *AwsRdsDbInstanceDetails) SetPubliclyAccessible(v bool) *AwsRdsDbInstanc
 	return s
 }
 
+// SetReadReplicaDBClusterIdentifiers sets the ReadReplicaDBClusterIdentifiers field's value.
+func (s *AwsRdsDbInstanceDetails) SetReadReplicaDBClusterIdentifiers(v []*string) *AwsRdsDbInstanceDetails {
+	s.ReadReplicaDBClusterIdentifiers = v
+	return s
+}
+
+// SetReadReplicaDBInstanceIdentifiers sets the ReadReplicaDBInstanceIdentifiers field's value.
+func (s *AwsRdsDbInstanceDetails) SetReadReplicaDBInstanceIdentifiers(v []*string) *AwsRdsDbInstanceDetails {
+	s.ReadReplicaDBInstanceIdentifiers = v
+	return s
+}
+
+// SetReadReplicaSourceDBInstanceIdentifier sets the ReadReplicaSourceDBInstanceIdentifier field's value.
+func (s *AwsRdsDbInstanceDetails) SetReadReplicaSourceDBInstanceIdentifier(v string) *AwsRdsDbInstanceDetails {
+	s.ReadReplicaSourceDBInstanceIdentifier = &v
+	return s
+}
+
+// SetSecondaryAvailabilityZone sets the SecondaryAvailabilityZone field's value.
+func (s *AwsRdsDbInstanceDetails) SetSecondaryAvailabilityZone(v string) *AwsRdsDbInstanceDetails {
+	s.SecondaryAvailabilityZone = &v
+	return s
+}
+
+// SetStatusInfos sets the StatusInfos field's value.
+func (s *AwsRdsDbInstanceDetails) SetStatusInfos(v []*AwsRdsDbStatusInfo) *AwsRdsDbInstanceDetails {
+	s.StatusInfos = v
+	return s
+}
+
 // SetStorageEncrypted sets the StorageEncrypted field's value.
 func (s *AwsRdsDbInstanceDetails) SetStorageEncrypted(v bool) *AwsRdsDbInstanceDetails {
 	s.StorageEncrypted = &v
 	return s
 }
 
+// SetStorageType sets the StorageType field's value.
+func (s *AwsRdsDbInstanceDetails) SetStorageType(v string) *AwsRdsDbInstanceDetails {
+	s.StorageType = &v
+	return s
+}
+
 // SetTdeCredentialArn sets the TdeCredentialArn field's value.
 func (s *AwsRdsDbInstanceDetails) SetTdeCredentialArn(v string) *AwsRdsDbInstanceDetails {
 	s.TdeCredentialArn = &v
+	return s
+}
+
+// SetTimezone sets the Timezone field's value.
+func (s *AwsRdsDbInstanceDetails) SetTimezone(v string) *AwsRdsDbInstanceDetails {
+	s.Timezone = &v
 	return s
 }
 
@@ -7698,11 +10137,689 @@ func (s *AwsRdsDbInstanceVpcSecurityGroup) SetVpcSecurityGroupId(v string) *AwsR
 	return s
 }
 
+type AwsRdsDbOptionGroupMembership struct {
+	_ struct{} `type:"structure"`
+
+	OptionGroupName *string `type:"string"`
+
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbOptionGroupMembership) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbOptionGroupMembership) GoString() string {
+	return s.String()
+}
+
+// SetOptionGroupName sets the OptionGroupName field's value.
+func (s *AwsRdsDbOptionGroupMembership) SetOptionGroupName(v string) *AwsRdsDbOptionGroupMembership {
+	s.OptionGroupName = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbOptionGroupMembership) SetStatus(v string) *AwsRdsDbOptionGroupMembership {
+	s.Status = &v
+	return s
+}
+
+type AwsRdsDbParameterGroup struct {
+	_ struct{} `type:"structure"`
+
+	DbParameterGroupName *string `type:"string"`
+
+	ParameterApplyStatus *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbParameterGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbParameterGroup) GoString() string {
+	return s.String()
+}
+
+// SetDbParameterGroupName sets the DbParameterGroupName field's value.
+func (s *AwsRdsDbParameterGroup) SetDbParameterGroupName(v string) *AwsRdsDbParameterGroup {
+	s.DbParameterGroupName = &v
+	return s
+}
+
+// SetParameterApplyStatus sets the ParameterApplyStatus field's value.
+func (s *AwsRdsDbParameterGroup) SetParameterApplyStatus(v string) *AwsRdsDbParameterGroup {
+	s.ParameterApplyStatus = &v
+	return s
+}
+
+type AwsRdsDbPendingModifiedValues struct {
+	_ struct{} `type:"structure"`
+
+	AllocatedStorage *int64 `type:"integer"`
+
+	BackupRetentionPeriod *int64 `type:"integer"`
+
+	CaCertificateIdentifier *string `type:"string"`
+
+	DbInstanceClass *string `type:"string"`
+
+	DbInstanceIdentifier *string `type:"string"`
+
+	DbSubnetGroupName *string `type:"string"`
+
+	EngineVersion *string `type:"string"`
+
+	Iops *int64 `type:"integer"`
+
+	LicenseModel *string `type:"string"`
+
+	MasterUserPassword *string `type:"string"`
+
+	MultiAZ *bool `type:"boolean"`
+
+	// Identifies the log types to enable and disable.
+	PendingCloudWatchLogsExports *AwsRdsPendingCloudWatchLogsExports `type:"structure"`
+
+	Port *int64 `type:"integer"`
+
+	ProcessorFeatures []*AwsRdsDbProcessorFeature `type:"list"`
+
+	StorageType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbPendingModifiedValues) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbPendingModifiedValues) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedStorage sets the AllocatedStorage field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetAllocatedStorage(v int64) *AwsRdsDbPendingModifiedValues {
+	s.AllocatedStorage = &v
+	return s
+}
+
+// SetBackupRetentionPeriod sets the BackupRetentionPeriod field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetBackupRetentionPeriod(v int64) *AwsRdsDbPendingModifiedValues {
+	s.BackupRetentionPeriod = &v
+	return s
+}
+
+// SetCaCertificateIdentifier sets the CaCertificateIdentifier field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetCaCertificateIdentifier(v string) *AwsRdsDbPendingModifiedValues {
+	s.CaCertificateIdentifier = &v
+	return s
+}
+
+// SetDbInstanceClass sets the DbInstanceClass field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetDbInstanceClass(v string) *AwsRdsDbPendingModifiedValues {
+	s.DbInstanceClass = &v
+	return s
+}
+
+// SetDbInstanceIdentifier sets the DbInstanceIdentifier field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetDbInstanceIdentifier(v string) *AwsRdsDbPendingModifiedValues {
+	s.DbInstanceIdentifier = &v
+	return s
+}
+
+// SetDbSubnetGroupName sets the DbSubnetGroupName field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetDbSubnetGroupName(v string) *AwsRdsDbPendingModifiedValues {
+	s.DbSubnetGroupName = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetEngineVersion(v string) *AwsRdsDbPendingModifiedValues {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetIops sets the Iops field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetIops(v int64) *AwsRdsDbPendingModifiedValues {
+	s.Iops = &v
+	return s
+}
+
+// SetLicenseModel sets the LicenseModel field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetLicenseModel(v string) *AwsRdsDbPendingModifiedValues {
+	s.LicenseModel = &v
+	return s
+}
+
+// SetMasterUserPassword sets the MasterUserPassword field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetMasterUserPassword(v string) *AwsRdsDbPendingModifiedValues {
+	s.MasterUserPassword = &v
+	return s
+}
+
+// SetMultiAZ sets the MultiAZ field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetMultiAZ(v bool) *AwsRdsDbPendingModifiedValues {
+	s.MultiAZ = &v
+	return s
+}
+
+// SetPendingCloudWatchLogsExports sets the PendingCloudWatchLogsExports field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetPendingCloudWatchLogsExports(v *AwsRdsPendingCloudWatchLogsExports) *AwsRdsDbPendingModifiedValues {
+	s.PendingCloudWatchLogsExports = v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetPort(v int64) *AwsRdsDbPendingModifiedValues {
+	s.Port = &v
+	return s
+}
+
+// SetProcessorFeatures sets the ProcessorFeatures field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetProcessorFeatures(v []*AwsRdsDbProcessorFeature) *AwsRdsDbPendingModifiedValues {
+	s.ProcessorFeatures = v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *AwsRdsDbPendingModifiedValues) SetStorageType(v string) *AwsRdsDbPendingModifiedValues {
+	s.StorageType = &v
+	return s
+}
+
+type AwsRdsDbProcessorFeature struct {
+	_ struct{} `type:"structure"`
+
+	Name *string `type:"string"`
+
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbProcessorFeature) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbProcessorFeature) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *AwsRdsDbProcessorFeature) SetName(v string) *AwsRdsDbProcessorFeature {
+	s.Name = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *AwsRdsDbProcessorFeature) SetValue(v string) *AwsRdsDbProcessorFeature {
+	s.Value = &v
+	return s
+}
+
+type AwsRdsDbSnapshotDetails struct {
+	_ struct{} `type:"structure"`
+
+	AllocatedStorage *int64 `type:"integer"`
+
+	AvailabilityZone *string `type:"string"`
+
+	DbInstanceIdentifier *string `type:"string"`
+
+	DbSnapshotIdentifier *string `type:"string"`
+
+	DbiResourceId *string `type:"string"`
+
+	Encrypted *bool `type:"boolean"`
+
+	Engine *string `type:"string"`
+
+	EngineVersion *string `type:"string"`
+
+	IamDatabaseAuthenticationEnabled *bool `type:"boolean"`
+
+	InstanceCreateTime *string `type:"string"`
+
+	Iops *int64 `type:"integer"`
+
+	KmsKeyId *string `type:"string"`
+
+	LicenseModel *string `type:"string"`
+
+	MasterUsername *string `type:"string"`
+
+	OptionGroupName *string `type:"string"`
+
+	PercentProgress *int64 `type:"integer"`
+
+	Port *int64 `type:"integer"`
+
+	ProcessorFeatures []*AwsRdsDbProcessorFeature `type:"list"`
+
+	SnapshotCreateTime *string `type:"string"`
+
+	SnapshotType *string `type:"string"`
+
+	SourceDbSnapshotIdentifier *string `type:"string"`
+
+	SourceRegion *string `type:"string"`
+
+	Status *string `type:"string"`
+
+	StorageType *string `type:"string"`
+
+	TdeCredentialArn *string `type:"string"`
+
+	Timezone *string `type:"string"`
+
+	VpcId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbSnapshotDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbSnapshotDetails) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedStorage sets the AllocatedStorage field's value.
+func (s *AwsRdsDbSnapshotDetails) SetAllocatedStorage(v int64) *AwsRdsDbSnapshotDetails {
+	s.AllocatedStorage = &v
+	return s
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *AwsRdsDbSnapshotDetails) SetAvailabilityZone(v string) *AwsRdsDbSnapshotDetails {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetDbInstanceIdentifier sets the DbInstanceIdentifier field's value.
+func (s *AwsRdsDbSnapshotDetails) SetDbInstanceIdentifier(v string) *AwsRdsDbSnapshotDetails {
+	s.DbInstanceIdentifier = &v
+	return s
+}
+
+// SetDbSnapshotIdentifier sets the DbSnapshotIdentifier field's value.
+func (s *AwsRdsDbSnapshotDetails) SetDbSnapshotIdentifier(v string) *AwsRdsDbSnapshotDetails {
+	s.DbSnapshotIdentifier = &v
+	return s
+}
+
+// SetDbiResourceId sets the DbiResourceId field's value.
+func (s *AwsRdsDbSnapshotDetails) SetDbiResourceId(v string) *AwsRdsDbSnapshotDetails {
+	s.DbiResourceId = &v
+	return s
+}
+
+// SetEncrypted sets the Encrypted field's value.
+func (s *AwsRdsDbSnapshotDetails) SetEncrypted(v bool) *AwsRdsDbSnapshotDetails {
+	s.Encrypted = &v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *AwsRdsDbSnapshotDetails) SetEngine(v string) *AwsRdsDbSnapshotDetails {
+	s.Engine = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *AwsRdsDbSnapshotDetails) SetEngineVersion(v string) *AwsRdsDbSnapshotDetails {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetIamDatabaseAuthenticationEnabled sets the IamDatabaseAuthenticationEnabled field's value.
+func (s *AwsRdsDbSnapshotDetails) SetIamDatabaseAuthenticationEnabled(v bool) *AwsRdsDbSnapshotDetails {
+	s.IamDatabaseAuthenticationEnabled = &v
+	return s
+}
+
+// SetInstanceCreateTime sets the InstanceCreateTime field's value.
+func (s *AwsRdsDbSnapshotDetails) SetInstanceCreateTime(v string) *AwsRdsDbSnapshotDetails {
+	s.InstanceCreateTime = &v
+	return s
+}
+
+// SetIops sets the Iops field's value.
+func (s *AwsRdsDbSnapshotDetails) SetIops(v int64) *AwsRdsDbSnapshotDetails {
+	s.Iops = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *AwsRdsDbSnapshotDetails) SetKmsKeyId(v string) *AwsRdsDbSnapshotDetails {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetLicenseModel sets the LicenseModel field's value.
+func (s *AwsRdsDbSnapshotDetails) SetLicenseModel(v string) *AwsRdsDbSnapshotDetails {
+	s.LicenseModel = &v
+	return s
+}
+
+// SetMasterUsername sets the MasterUsername field's value.
+func (s *AwsRdsDbSnapshotDetails) SetMasterUsername(v string) *AwsRdsDbSnapshotDetails {
+	s.MasterUsername = &v
+	return s
+}
+
+// SetOptionGroupName sets the OptionGroupName field's value.
+func (s *AwsRdsDbSnapshotDetails) SetOptionGroupName(v string) *AwsRdsDbSnapshotDetails {
+	s.OptionGroupName = &v
+	return s
+}
+
+// SetPercentProgress sets the PercentProgress field's value.
+func (s *AwsRdsDbSnapshotDetails) SetPercentProgress(v int64) *AwsRdsDbSnapshotDetails {
+	s.PercentProgress = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *AwsRdsDbSnapshotDetails) SetPort(v int64) *AwsRdsDbSnapshotDetails {
+	s.Port = &v
+	return s
+}
+
+// SetProcessorFeatures sets the ProcessorFeatures field's value.
+func (s *AwsRdsDbSnapshotDetails) SetProcessorFeatures(v []*AwsRdsDbProcessorFeature) *AwsRdsDbSnapshotDetails {
+	s.ProcessorFeatures = v
+	return s
+}
+
+// SetSnapshotCreateTime sets the SnapshotCreateTime field's value.
+func (s *AwsRdsDbSnapshotDetails) SetSnapshotCreateTime(v string) *AwsRdsDbSnapshotDetails {
+	s.SnapshotCreateTime = &v
+	return s
+}
+
+// SetSnapshotType sets the SnapshotType field's value.
+func (s *AwsRdsDbSnapshotDetails) SetSnapshotType(v string) *AwsRdsDbSnapshotDetails {
+	s.SnapshotType = &v
+	return s
+}
+
+// SetSourceDbSnapshotIdentifier sets the SourceDbSnapshotIdentifier field's value.
+func (s *AwsRdsDbSnapshotDetails) SetSourceDbSnapshotIdentifier(v string) *AwsRdsDbSnapshotDetails {
+	s.SourceDbSnapshotIdentifier = &v
+	return s
+}
+
+// SetSourceRegion sets the SourceRegion field's value.
+func (s *AwsRdsDbSnapshotDetails) SetSourceRegion(v string) *AwsRdsDbSnapshotDetails {
+	s.SourceRegion = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbSnapshotDetails) SetStatus(v string) *AwsRdsDbSnapshotDetails {
+	s.Status = &v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *AwsRdsDbSnapshotDetails) SetStorageType(v string) *AwsRdsDbSnapshotDetails {
+	s.StorageType = &v
+	return s
+}
+
+// SetTdeCredentialArn sets the TdeCredentialArn field's value.
+func (s *AwsRdsDbSnapshotDetails) SetTdeCredentialArn(v string) *AwsRdsDbSnapshotDetails {
+	s.TdeCredentialArn = &v
+	return s
+}
+
+// SetTimezone sets the Timezone field's value.
+func (s *AwsRdsDbSnapshotDetails) SetTimezone(v string) *AwsRdsDbSnapshotDetails {
+	s.Timezone = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *AwsRdsDbSnapshotDetails) SetVpcId(v string) *AwsRdsDbSnapshotDetails {
+	s.VpcId = &v
+	return s
+}
+
+// Information about the status of a read replica.
+type AwsRdsDbStatusInfo struct {
+	_ struct{} `type:"structure"`
+
+	// If the read replica is currently in an error state, provides the error details.
+	Message *string `type:"string"`
+
+	// Whether the read replica instance is operating normally.
+	Normal *bool `type:"boolean"`
+
+	// The status of the read replica instance.
+	Status *string `type:"string"`
+
+	// The type of status. For a read replica, the status type is read replication.
+	StatusType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbStatusInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbStatusInfo) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *AwsRdsDbStatusInfo) SetMessage(v string) *AwsRdsDbStatusInfo {
+	s.Message = &v
+	return s
+}
+
+// SetNormal sets the Normal field's value.
+func (s *AwsRdsDbStatusInfo) SetNormal(v bool) *AwsRdsDbStatusInfo {
+	s.Normal = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsRdsDbStatusInfo) SetStatus(v string) *AwsRdsDbStatusInfo {
+	s.Status = &v
+	return s
+}
+
+// SetStatusType sets the StatusType field's value.
+func (s *AwsRdsDbStatusInfo) SetStatusType(v string) *AwsRdsDbStatusInfo {
+	s.StatusType = &v
+	return s
+}
+
+// Information about the subnet group for the database instance.
+type AwsRdsDbSubnetGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the subnet group.
+	DbSubnetGroupArn *string `type:"string"`
+
+	// The description of the subnet group.
+	DbSubnetGroupDescription *string `type:"string"`
+
+	// The name of the subnet group.
+	DbSubnetGroupName *string `type:"string"`
+
+	// The status of the subnet group.
+	SubnetGroupStatus *string `type:"string"`
+
+	// A list of subnets in the subnet group.
+	Subnets []*AwsRdsDbSubnetGroupSubnet `type:"list"`
+
+	// The VPC ID of the subnet group.
+	VpcId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbSubnetGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbSubnetGroup) GoString() string {
+	return s.String()
+}
+
+// SetDbSubnetGroupArn sets the DbSubnetGroupArn field's value.
+func (s *AwsRdsDbSubnetGroup) SetDbSubnetGroupArn(v string) *AwsRdsDbSubnetGroup {
+	s.DbSubnetGroupArn = &v
+	return s
+}
+
+// SetDbSubnetGroupDescription sets the DbSubnetGroupDescription field's value.
+func (s *AwsRdsDbSubnetGroup) SetDbSubnetGroupDescription(v string) *AwsRdsDbSubnetGroup {
+	s.DbSubnetGroupDescription = &v
+	return s
+}
+
+// SetDbSubnetGroupName sets the DbSubnetGroupName field's value.
+func (s *AwsRdsDbSubnetGroup) SetDbSubnetGroupName(v string) *AwsRdsDbSubnetGroup {
+	s.DbSubnetGroupName = &v
+	return s
+}
+
+// SetSubnetGroupStatus sets the SubnetGroupStatus field's value.
+func (s *AwsRdsDbSubnetGroup) SetSubnetGroupStatus(v string) *AwsRdsDbSubnetGroup {
+	s.SubnetGroupStatus = &v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *AwsRdsDbSubnetGroup) SetSubnets(v []*AwsRdsDbSubnetGroupSubnet) *AwsRdsDbSubnetGroup {
+	s.Subnets = v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *AwsRdsDbSubnetGroup) SetVpcId(v string) *AwsRdsDbSubnetGroup {
+	s.VpcId = &v
+	return s
+}
+
+// Information about a subnet in a subnet group.
+type AwsRdsDbSubnetGroupSubnet struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Availability Zone for a subnet in the subnet group.
+	SubnetAvailabilityZone *AwsRdsDbSubnetGroupSubnetAvailabilityZone `type:"structure"`
+
+	// The identifier of a subnet in the subnet group.
+	SubnetIdentifier *string `type:"string"`
+
+	// The status of a subnet in the subnet group.
+	SubnetStatus *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbSubnetGroupSubnet) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbSubnetGroupSubnet) GoString() string {
+	return s.String()
+}
+
+// SetSubnetAvailabilityZone sets the SubnetAvailabilityZone field's value.
+func (s *AwsRdsDbSubnetGroupSubnet) SetSubnetAvailabilityZone(v *AwsRdsDbSubnetGroupSubnetAvailabilityZone) *AwsRdsDbSubnetGroupSubnet {
+	s.SubnetAvailabilityZone = v
+	return s
+}
+
+// SetSubnetIdentifier sets the SubnetIdentifier field's value.
+func (s *AwsRdsDbSubnetGroupSubnet) SetSubnetIdentifier(v string) *AwsRdsDbSubnetGroupSubnet {
+	s.SubnetIdentifier = &v
+	return s
+}
+
+// SetSubnetStatus sets the SubnetStatus field's value.
+func (s *AwsRdsDbSubnetGroupSubnet) SetSubnetStatus(v string) *AwsRdsDbSubnetGroupSubnet {
+	s.SubnetStatus = &v
+	return s
+}
+
+// An Availability Zone for a subnet in a subnet group.
+type AwsRdsDbSubnetGroupSubnetAvailabilityZone struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Availability Zone for a subnet in the subnet group.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsRdsDbSubnetGroupSubnetAvailabilityZone) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsDbSubnetGroupSubnetAvailabilityZone) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *AwsRdsDbSubnetGroupSubnetAvailabilityZone) SetName(v string) *AwsRdsDbSubnetGroupSubnetAvailabilityZone {
+	s.Name = &v
+	return s
+}
+
+// Identifies the log types to enable and disable.
+type AwsRdsPendingCloudWatchLogsExports struct {
+	_ struct{} `type:"structure"`
+
+	// A list of log types that are being disabled.
+	LogTypesToDisable []*string `type:"list"`
+
+	// A list of log types that are being enabled.
+	LogTypesToEnable []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s AwsRdsPendingCloudWatchLogsExports) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsRdsPendingCloudWatchLogsExports) GoString() string {
+	return s.String()
+}
+
+// SetLogTypesToDisable sets the LogTypesToDisable field's value.
+func (s *AwsRdsPendingCloudWatchLogsExports) SetLogTypesToDisable(v []*string) *AwsRdsPendingCloudWatchLogsExports {
+	s.LogTypesToDisable = v
+	return s
+}
+
+// SetLogTypesToEnable sets the LogTypesToEnable field's value.
+func (s *AwsRdsPendingCloudWatchLogsExports) SetLogTypesToEnable(v []*string) *AwsRdsPendingCloudWatchLogsExports {
+	s.LogTypesToEnable = v
+	return s
+}
+
 // The details of an Amazon S3 bucket.
 type AwsS3BucketDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The date and time when the S3 bucket was created.
+	// Indicates when the S3 bucket was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	CreatedAt *string `type:"string"`
 
 	// The canonical user ID of the owner of the S3 bucket.
@@ -7844,7 +10961,11 @@ type AwsS3ObjectDetails struct {
 	// resource found at a URL.
 	ETag *string `type:"string"`
 
-	// The date and time when the object was last modified.
+	// Indicates when the object was last modified.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LastModified *string `type:"string"`
 
 	// The identifier of the AWS Key Management Service (AWS KMS) symmetric customer
@@ -7905,6 +11026,118 @@ func (s *AwsS3ObjectDetails) SetVersionId(v string) *AwsS3ObjectDetails {
 	return s
 }
 
+// Details about an AWS Secrets Manager secret.
+type AwsSecretsManagerSecretDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Whether the secret is deleted.
+	Deleted *bool `type:"boolean"`
+
+	// The user-provided description of the secret.
+	Description *string `type:"string"`
+
+	// The ARN, Key ID, or alias of the AWS KMS customer master key (CMK) used to
+	// encrypt the SecretString or SecretBinary values for versions of this secret.
+	KmsKeyId *string `type:"string"`
+
+	// The name of the secret.
+	Name *string `type:"string"`
+
+	// Whether rotation is enabled.
+	RotationEnabled *bool `type:"boolean"`
+
+	// The ARN of the Lambda function that rotates the secret.
+	RotationLambdaArn *string `type:"string"`
+
+	// Whether the rotation occurred within the specified rotation frequency.
+	RotationOccurredWithinFrequency *bool `type:"boolean"`
+
+	// Defines the rotation schedule for the secret.
+	RotationRules *AwsSecretsManagerSecretRotationRules `type:"structure"`
+}
+
+// String returns the string representation
+func (s AwsSecretsManagerSecretDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsSecretsManagerSecretDetails) GoString() string {
+	return s.String()
+}
+
+// SetDeleted sets the Deleted field's value.
+func (s *AwsSecretsManagerSecretDetails) SetDeleted(v bool) *AwsSecretsManagerSecretDetails {
+	s.Deleted = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *AwsSecretsManagerSecretDetails) SetDescription(v string) *AwsSecretsManagerSecretDetails {
+	s.Description = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *AwsSecretsManagerSecretDetails) SetKmsKeyId(v string) *AwsSecretsManagerSecretDetails {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *AwsSecretsManagerSecretDetails) SetName(v string) *AwsSecretsManagerSecretDetails {
+	s.Name = &v
+	return s
+}
+
+// SetRotationEnabled sets the RotationEnabled field's value.
+func (s *AwsSecretsManagerSecretDetails) SetRotationEnabled(v bool) *AwsSecretsManagerSecretDetails {
+	s.RotationEnabled = &v
+	return s
+}
+
+// SetRotationLambdaArn sets the RotationLambdaArn field's value.
+func (s *AwsSecretsManagerSecretDetails) SetRotationLambdaArn(v string) *AwsSecretsManagerSecretDetails {
+	s.RotationLambdaArn = &v
+	return s
+}
+
+// SetRotationOccurredWithinFrequency sets the RotationOccurredWithinFrequency field's value.
+func (s *AwsSecretsManagerSecretDetails) SetRotationOccurredWithinFrequency(v bool) *AwsSecretsManagerSecretDetails {
+	s.RotationOccurredWithinFrequency = &v
+	return s
+}
+
+// SetRotationRules sets the RotationRules field's value.
+func (s *AwsSecretsManagerSecretDetails) SetRotationRules(v *AwsSecretsManagerSecretRotationRules) *AwsSecretsManagerSecretDetails {
+	s.RotationRules = v
+	return s
+}
+
+// Defines the rotation schedule for the secret.
+type AwsSecretsManagerSecretRotationRules struct {
+	_ struct{} `type:"structure"`
+
+	// The number of days after the previous rotation to rotate the secret.
+	AutomaticallyAfterDays *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsSecretsManagerSecretRotationRules) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsSecretsManagerSecretRotationRules) GoString() string {
+	return s.String()
+}
+
+// SetAutomaticallyAfterDays sets the AutomaticallyAfterDays field's value.
+func (s *AwsSecretsManagerSecretRotationRules) SetAutomaticallyAfterDays(v int64) *AwsSecretsManagerSecretRotationRules {
+	s.AutomaticallyAfterDays = &v
+	return s
+}
+
 // Provides consistent format for the contents of the Security Hub-aggregated
 // findings. AwsSecurityFinding format enables you to share findings between
 // AWS security services and third-party solutions, and security standards checks.
@@ -7932,8 +11165,12 @@ type AwsSecurityFinding struct {
 	// zero percent confidence and 100 means 100 percent confidence.
 	Confidence *int64 `type:"integer"`
 
-	// An ISO8601-formatted timestamp that indicates when the security-findings
-	// provider created the potential security issue that a finding captured.
+	// Indicates when the security-findings provider created the potential security
+	// issue that a finding captured.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	//
 	// CreatedAt is a required field
 	CreatedAt *string `type:"string" required:"true"`
@@ -7951,8 +11188,12 @@ type AwsSecurityFinding struct {
 	// Description is a required field
 	Description *string `type:"string" required:"true"`
 
-	// An ISO8601-formatted timestamp that indicates when the security-findings
-	// provider first observed the potential security issue that a finding captured.
+	// Indicates when the security-findings provider first observed the potential
+	// security issue that a finding captured.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	FirstObservedAt *string `type:"string"`
 
 	// The identifier for the solution-specific component (a discrete unit of logic)
@@ -7967,9 +11208,12 @@ type AwsSecurityFinding struct {
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
 
-	// An ISO8601-formatted timestamp that indicates when the security-findings
-	// provider most recently observed the potential security issue that a finding
-	// captured.
+	// Indicates when the security-findings provider most recently observed the
+	// potential security issue that a finding captured.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LastObservedAt *string `type:"string"`
 
 	// A list of malware related to a finding.
@@ -8047,8 +11291,11 @@ type AwsSecurityFinding struct {
 	// Types is a required field
 	Types []*string `type:"list" required:"true"`
 
-	// An ISO8601-formatted timestamp that indicates when the security-findings
-	// provider last updated the finding record.
+	// Indicates when the security-findings provider last updated the finding record.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	//
 	// UpdatedAt is a required field
 	UpdatedAt *string `type:"string" required:"true"`
@@ -10161,7 +13408,11 @@ type ContainerDetails struct {
 	// The name of the image related to a finding.
 	ImageName *string `type:"string"`
 
-	// The date and time when the container started.
+	// Indicates when the container started.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LaunchedAt *string `type:"string"`
 
 	// The name of the container related to a finding.
@@ -13111,18 +16362,39 @@ func (s *Malware) SetType(v string) *Malware {
 	return s
 }
 
-// The map filter for querying findings.
+// A map filter for querying findings. Each map filter provides the field to
+// check, the value to look for, and the comparison operator.
 type MapFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The condition to apply to a key value when querying for findings with a map
-	// filter.
+	// The condition to apply to the key value when querying for findings with a
+	// map filter.
+	//
+	// To search for values that exactly match the filter value, use EQUALS. For
+	// example, for the ResourceTags field, the filter Department EQUALS Security
+	// matches findings that have the value Security for the tag Department.
+	//
+	// To search for values other than the filter value, use NOT_EQUALS. For example,
+	// for the ResourceTags field, the filter Department NOT_EQUALS Finance matches
+	// findings that do not have the value Finance for the tag Department.
+	//
+	// EQUALS filters on the same field are joined by OR. A finding matches if it
+	// matches any one of those filters.
+	//
+	// NOT_EQUALS filters on the same field are joined by AND. A finding matches
+	// only if it matches all of those filters.
+	//
+	// You cannot have both an EQUALS filter and a NOT_EQUALS filter on the same
+	// field.
 	Comparison *string `type:"string" enum:"MapFilterComparison"`
 
-	// The key of the map filter.
+	// The key of the map filter. For example, for ResourceTags, Key identifies
+	// the name of the tag. For UserDefinedFields, Key is the name of the field.
 	Key *string `type:"string"`
 
-	// The value for the key in the map filter.
+	// The value for the key in the map filter. Filter values are case sensitive.
+	// For example, one of the values for a tag called Department might be Security.
+	// If you provide security as the filter value, then there is no match.
 	Value *string `type:"string"`
 }
 
@@ -13490,6 +16762,10 @@ type Note struct {
 
 	// The timestamp of when the note was updated.
 	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	//
 	// UpdatedAt is a required field
 	UpdatedAt *string `type:"string" required:"true"`
 
@@ -13681,7 +16957,11 @@ func (s *PortRange) SetEnd(v int64) *PortRange {
 type ProcessDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The date/time that the process was launched.
+	// Indicates when the process was launched.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LaunchedAt *string `type:"string"`
 
 	// The name of the process.
@@ -13696,7 +16976,11 @@ type ProcessDetails struct {
 	// The process ID.
 	Pid *int64 `type:"integer"`
 
-	// The date and time when the process was terminated.
+	// Indicates when the process was terminated.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	TerminatedAt *string `type:"string"`
 }
 
@@ -14145,6 +17429,12 @@ type ResourceDetails struct {
 	// Details for an AWS CodeBuild project.
 	AwsCodeBuildProject *AwsCodeBuildProjectDetails `type:"structure"`
 
+	// Details about a DynamoDB table.
+	AwsDynamoDbTable *AwsDynamoDbTableDetails `type:"structure"`
+
+	// Details about an Elastic IP address.
+	AwsEc2Eip *AwsEc2EipDetails `type:"structure"`
+
 	// Details about an Amazon EC2 instance related to a finding.
 	AwsEc2Instance *AwsEc2InstanceDetails `type:"structure"`
 
@@ -14169,8 +17459,14 @@ type ResourceDetails struct {
 	// Details about an IAM access key related to a finding.
 	AwsIamAccessKey *AwsIamAccessKeyDetails `type:"structure"`
 
+	// Details about an IAM permissions policy.
+	AwsIamPolicy *AwsIamPolicyDetails `type:"structure"`
+
 	// Details about an IAM role.
 	AwsIamRole *AwsIamRoleDetails `type:"structure"`
+
+	// Details about an IAM user.
+	AwsIamUser *AwsIamUserDetails `type:"structure"`
 
 	// Details about a KMS key.
 	AwsKmsKey *AwsKmsKeyDetails `type:"structure"`
@@ -14181,14 +17477,26 @@ type ResourceDetails struct {
 	// Details for a Lambda layer version.
 	AwsLambdaLayerVersion *AwsLambdaLayerVersionDetails `type:"structure"`
 
-	// Details for an Amazon RDS database instance.
+	// Details about an Amazon RDS database cluster.
+	AwsRdsDbCluster *AwsRdsDbClusterDetails `type:"structure"`
+
+	// Details about an Amazon RDS database cluster snapshot.
+	AwsRdsDbClusterSnapshot *AwsRdsDbClusterSnapshotDetails `type:"structure"`
+
+	// Details about an Amazon RDS database instance.
 	AwsRdsDbInstance *AwsRdsDbInstanceDetails `type:"structure"`
+
+	// Details about an Amazon RDS database snapshot.
+	AwsRdsDbSnapshot *AwsRdsDbSnapshotDetails `type:"structure"`
 
 	// Details about an Amazon S3 bucket related to a finding.
 	AwsS3Bucket *AwsS3BucketDetails `type:"structure"`
 
 	// Details about an Amazon S3 object related to a finding.
 	AwsS3Object *AwsS3ObjectDetails `type:"structure"`
+
+	// Details about a Secrets Manager secret.
+	AwsSecretsManagerSecret *AwsSecretsManagerSecretDetails `type:"structure"`
 
 	// Details about an SNS topic.
 	AwsSnsTopic *AwsSnsTopicDetails `type:"structure"`
@@ -14258,6 +17566,18 @@ func (s *ResourceDetails) SetAwsCodeBuildProject(v *AwsCodeBuildProjectDetails) 
 	return s
 }
 
+// SetAwsDynamoDbTable sets the AwsDynamoDbTable field's value.
+func (s *ResourceDetails) SetAwsDynamoDbTable(v *AwsDynamoDbTableDetails) *ResourceDetails {
+	s.AwsDynamoDbTable = v
+	return s
+}
+
+// SetAwsEc2Eip sets the AwsEc2Eip field's value.
+func (s *ResourceDetails) SetAwsEc2Eip(v *AwsEc2EipDetails) *ResourceDetails {
+	s.AwsEc2Eip = v
+	return s
+}
+
 // SetAwsEc2Instance sets the AwsEc2Instance field's value.
 func (s *ResourceDetails) SetAwsEc2Instance(v *AwsEc2InstanceDetails) *ResourceDetails {
 	s.AwsEc2Instance = v
@@ -14306,9 +17626,21 @@ func (s *ResourceDetails) SetAwsIamAccessKey(v *AwsIamAccessKeyDetails) *Resourc
 	return s
 }
 
+// SetAwsIamPolicy sets the AwsIamPolicy field's value.
+func (s *ResourceDetails) SetAwsIamPolicy(v *AwsIamPolicyDetails) *ResourceDetails {
+	s.AwsIamPolicy = v
+	return s
+}
+
 // SetAwsIamRole sets the AwsIamRole field's value.
 func (s *ResourceDetails) SetAwsIamRole(v *AwsIamRoleDetails) *ResourceDetails {
 	s.AwsIamRole = v
+	return s
+}
+
+// SetAwsIamUser sets the AwsIamUser field's value.
+func (s *ResourceDetails) SetAwsIamUser(v *AwsIamUserDetails) *ResourceDetails {
+	s.AwsIamUser = v
 	return s
 }
 
@@ -14330,9 +17662,27 @@ func (s *ResourceDetails) SetAwsLambdaLayerVersion(v *AwsLambdaLayerVersionDetai
 	return s
 }
 
+// SetAwsRdsDbCluster sets the AwsRdsDbCluster field's value.
+func (s *ResourceDetails) SetAwsRdsDbCluster(v *AwsRdsDbClusterDetails) *ResourceDetails {
+	s.AwsRdsDbCluster = v
+	return s
+}
+
+// SetAwsRdsDbClusterSnapshot sets the AwsRdsDbClusterSnapshot field's value.
+func (s *ResourceDetails) SetAwsRdsDbClusterSnapshot(v *AwsRdsDbClusterSnapshotDetails) *ResourceDetails {
+	s.AwsRdsDbClusterSnapshot = v
+	return s
+}
+
 // SetAwsRdsDbInstance sets the AwsRdsDbInstance field's value.
 func (s *ResourceDetails) SetAwsRdsDbInstance(v *AwsRdsDbInstanceDetails) *ResourceDetails {
 	s.AwsRdsDbInstance = v
+	return s
+}
+
+// SetAwsRdsDbSnapshot sets the AwsRdsDbSnapshot field's value.
+func (s *ResourceDetails) SetAwsRdsDbSnapshot(v *AwsRdsDbSnapshotDetails) *ResourceDetails {
+	s.AwsRdsDbSnapshot = v
 	return s
 }
 
@@ -14345,6 +17695,12 @@ func (s *ResourceDetails) SetAwsS3Bucket(v *AwsS3BucketDetails) *ResourceDetails
 // SetAwsS3Object sets the AwsS3Object field's value.
 func (s *ResourceDetails) SetAwsS3Object(v *AwsS3ObjectDetails) *ResourceDetails {
 	s.AwsS3Object = v
+	return s
+}
+
+// SetAwsSecretsManagerSecret sets the AwsSecretsManagerSecret field's value.
+func (s *ResourceDetails) SetAwsSecretsManagerSecret(v *AwsSecretsManagerSecretDetails) *ResourceDetails {
+	s.AwsSecretsManagerSecret = v
 	return s
 }
 
@@ -15062,10 +18418,63 @@ func (s *StatusReason) SetReasonCode(v string) *StatusReason {
 type StringFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The condition to be applied to a string value when querying for findings.
+	// The condition to apply to a string value when querying for findings. To search
+	// for values that contain the filter criteria value, use one of the following
+	// comparison operators:
+	//
+	//    * To search for values that exactly match the filter value, use EQUALS.
+	//    For example, the filter ResourceType EQUALS AwsEc2SecurityGroup only matches
+	//    findings that have a resource type of AwsEc2SecurityGroup.
+	//
+	//    * To search for values that start with the filter value, use PREFIX. For
+	//    example, the filter ResourceType PREFIX AwsIam matches findings that have
+	//    a resource type that starts with AwsIam. Findings with a resource type
+	//    of AwsIamPolicy, AwsIamRole, or AwsIamUser would all match.
+	//
+	// EQUALS and PREFIX filters on the same field are joined by OR. A finding matches
+	// if it matches any one of those filters.
+	//
+	// To search for values that do not contain the filter criteria value, use one
+	// of the following comparison operators:
+	//
+	//    * To search for values that do not exactly match the filter value, use
+	//    NOT_EQUALS. For example, the filter ResourceType NOT_EQUALS AwsIamPolicy
+	//    matches findings that have a resource type other than AwsIamPolicy.
+	//
+	//    * To search for values that do not start with the filter value, use PREFIX_NOT_EQUALS.
+	//    For example, the filter ResourceType PREFIX_NOT_EQUALS AwsIam matches
+	//    findings that have a resource type that does not start with AwsIam. Findings
+	//    with a resource type of AwsIamPolicy, AwsIamRole, or AwsIamUser would
+	//    all be excluded from the results.
+	//
+	// NOT_EQUALS and PREFIX_NOT_EQUALS filters on the same field are joined by
+	// AND. A finding matches only if it matches all of those filters.
+	//
+	// For filters on the same field, you cannot provide both an EQUALS filter and
+	// a NOT_EQUALS or PREFIX_NOT_EQUALS filter. Combining filters in this way always
+	// returns an error, even if the provided filter values would return valid results.
+	//
+	// You can combine PREFIX filters with NOT_EQUALS or PREFIX_NOT_EQUALS filters
+	// for the same field. Security Hub first processes the PREFIX filters, then
+	// the NOT_EQUALS or PREFIX_NOT_EQUALS filters.
+	//
+	// For example, for the following filter, Security Hub first identifies findings
+	// that have resource types that start with either AwsIAM or AwsEc2. It then
+	// excludes findings that have a resource type of AwsIamPolicy and findings
+	// that have a resource type of AwsEc2NetworkInterface.
+	//
+	//    * ResourceType PREFIX AwsIam
+	//
+	//    * ResourceType PREFIX AwsEc2
+	//
+	//    * ResourceType NOT_EQUALS AwsIamPolicy
+	//
+	//    * ResourceType NOT_EQUALS AwsEc2NetworkInterface
 	Comparison *string `type:"string" enum:"StringFilterComparison"`
 
-	// The string filter value.
+	// The string filter value. Filter values are case sensitive. For example, the
+	// product name for control-based findings is Security Hub. If you provide security
+	// hub as the filter text, then there is no match.
 	Value *string `type:"string"`
 }
 
@@ -15170,8 +18579,12 @@ type ThreatIntelIndicator struct {
 	// The category of a threat intelligence indicator.
 	Category *string `type:"string" enum:"ThreatIntelIndicatorCategory"`
 
-	// The date and time when the most recent instance of a threat intelligence
-	// indicator was observed.
+	// Indicates when the most recent instance of a threat intelligence indicator
+	// was observed.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	LastObservedAt *string `type:"string"`
 
 	// The source of the threat intelligence indicator.
@@ -15752,13 +19165,21 @@ type VulnerabilityVendor struct {
 	// The URL of the vulnerability advisory.
 	Url *string `type:"string"`
 
-	// The datetime when the vulnerability advisory was created.
+	// Indicates when the vulnerability advisory was created.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	VendorCreatedAt *string `type:"string"`
 
 	// The severity that the vendor assigned to the vulnerability.
 	VendorSeverity *string `type:"string"`
 
-	// The datetime when the vulnerability advisory was last updated.
+	// Indicates when the vulnerability advisory was last updated.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
 	VendorUpdatedAt *string `type:"string"`
 }
 
@@ -16151,12 +19572,16 @@ func MalwareType_Values() []string {
 const (
 	// MapFilterComparisonEquals is a MapFilterComparison enum value
 	MapFilterComparisonEquals = "EQUALS"
+
+	// MapFilterComparisonNotEquals is a MapFilterComparison enum value
+	MapFilterComparisonNotEquals = "NOT_EQUALS"
 )
 
 // MapFilterComparison_Values returns all elements of the MapFilterComparison enum
 func MapFilterComparison_Values() []string {
 	return []string{
 		MapFilterComparisonEquals,
+		MapFilterComparisonNotEquals,
 	}
 }
 
@@ -16314,6 +19739,12 @@ const (
 
 	// StringFilterComparisonPrefix is a StringFilterComparison enum value
 	StringFilterComparisonPrefix = "PREFIX"
+
+	// StringFilterComparisonNotEquals is a StringFilterComparison enum value
+	StringFilterComparisonNotEquals = "NOT_EQUALS"
+
+	// StringFilterComparisonPrefixNotEquals is a StringFilterComparison enum value
+	StringFilterComparisonPrefixNotEquals = "PREFIX_NOT_EQUALS"
 )
 
 // StringFilterComparison_Values returns all elements of the StringFilterComparison enum
@@ -16321,6 +19752,8 @@ func StringFilterComparison_Values() []string {
 	return []string{
 		StringFilterComparisonEquals,
 		StringFilterComparisonPrefix,
+		StringFilterComparisonNotEquals,
+		StringFilterComparisonPrefixNotEquals,
 	}
 }
 

@@ -146,6 +146,16 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(storagegateway.SMBSecurityStrategy_Values(), false),
 			},
+			"average_download_rate_limit_in_bits_per_sec": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(102400),
+			},
+			"average_upload_rate_limit_in_bits_per_sec": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(51200),
+			},
 		},
 	}
 }
@@ -314,6 +324,26 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	bandwidthInput := &storagegateway.UpdateBandwidthRateLimitInput{
+		GatewayARN: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("average_download_rate_limit_in_bits_per_sec"); ok {
+		bandwidthInput.AverageDownloadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("average_upload_rate_limit_in_bits_per_sec"); ok {
+		bandwidthInput.AverageUploadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
+	}
+
+	if bandwidthInput.AverageDownloadRateLimitInBitsPerSec != nil || bandwidthInput.AverageUploadRateLimitInBitsPerSec != nil {
+		log.Printf("[DEBUG] Storage Gateway Gateway %q setting Bandwidth Rate Limit: %#v", d.Id(), bandwidthInput)
+		_, err := conn.UpdateBandwidthRateLimit(bandwidthInput)
+		if err != nil {
+			return fmt.Errorf("error setting Bandwidth Rate Limit: %s", err)
+		}
+	}
+
 	return resourceAwsStorageGatewayGatewayRead(d, meta)
 }
 
@@ -420,6 +450,20 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupARN)
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 
+	bandwidthInput := &storagegateway.DescribeBandwidthRateLimitInput{
+		GatewayARN: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Reading Storage Gateway Bandwidth rate limit: %s", bandwidthInput)
+	bandwidthOutput, err := conn.DescribeBandwidthRateLimit(bandwidthInput)
+	if err != nil && !isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified operation is not supported") {
+		return fmt.Errorf("error reading Storage Gateway Bandwidth rate limit: %s", err)
+	}
+	if err == nil {
+		d.Set("average_download_rate_limit_in_bits_per_sec", aws.Int64Value(bandwidthOutput.AverageDownloadRateLimitInBitsPerSec))
+		d.Set("average_upload_rate_limit_in_bits_per_sec", aws.Int64Value(bandwidthOutput.AverageUploadRateLimitInBitsPerSec))
+	}
+
 	return nil
 }
 
@@ -490,6 +534,56 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		if err != nil {
 			return fmt.Errorf("error updating SMB Security Strategy: %w", err)
 		}
+	}
+
+	if d.HasChanges("average_download_rate_limit_in_bits_per_sec",
+		"average_upload_rate_limit_in_bits_per_sec") {
+
+		deleteInput := &storagegateway.DeleteBandwidthRateLimitInput{
+			GatewayARN: aws.String(d.Id()),
+		}
+		updateInput := &storagegateway.UpdateBandwidthRateLimitInput{
+			GatewayARN: aws.String(d.Id()),
+		}
+		needsDelete := false
+		needsUpdate := false
+
+		if v, ok := d.GetOk("average_download_rate_limit_in_bits_per_sec"); ok {
+			updateInput.AverageDownloadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
+			needsUpdate = true
+		} else if d.HasChange("average_download_rate_limit_in_bits_per_sec") {
+			deleteInput.BandwidthType = aws.String("DOWNLOAD")
+			needsDelete = true
+		}
+
+		if v, ok := d.GetOk("average_upload_rate_limit_in_bits_per_sec"); ok {
+			updateInput.AverageUploadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
+			needsUpdate = true
+		} else if d.HasChange("average_upload_rate_limit_in_bits_per_sec") {
+			if needsDelete {
+				deleteInput.BandwidthType = aws.String("ALL")
+			} else {
+				deleteInput.BandwidthType = aws.String("UPLOAD")
+				needsDelete = true
+			}
+		}
+
+		if needsUpdate {
+			log.Printf("[DEBUG] Storage Gateway Gateway (%q) updating Bandwidth Rate Limit: %#v", d.Id(), updateInput)
+			_, err := conn.UpdateBandwidthRateLimit(updateInput)
+			if err != nil {
+				return fmt.Errorf("error updating Bandwidth Rate Limit: %w", err)
+			}
+		}
+
+		if needsDelete {
+			log.Printf("[DEBUG] Storage Gateway Gateway (%q) unsetting Bandwidth Rate Limit: %#v", d.Id(), deleteInput)
+			_, err := conn.DeleteBandwidthRateLimit(deleteInput)
+			if err != nil {
+				return fmt.Errorf("error unsetting Bandwidth Rate Limit: %w", err)
+			}
+		}
+
 	}
 
 	return resourceAwsStorageGatewayGatewayRead(d, meta)

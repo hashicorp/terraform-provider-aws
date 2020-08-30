@@ -392,14 +392,14 @@ func (c *SageMaker) CreateAutoMLJobRequest(input *CreateAutoMLJobInput) (req *re
 
 // CreateAutoMLJob API operation for Amazon SageMaker Service.
 //
-// Creates an AutoPilot job.
+// Creates an Autopilot job.
 //
-// After you run an AutoPilot job, you can find the best performing model by
-// calling , and then deploy that model by following the steps described in
-// Step 6.1: Deploy the Model to Amazon SageMaker Hosting Services (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html).
+// Find the best performing model after you run an Autopilot job by calling
+// . Deploy that model by following the steps described in Step 6.1: Deploy
+// the Model to Amazon SageMaker Hosting Services (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html).
 //
-// For information about how to use AutoPilot, see Use AutoPilot to Automate
-// Model Development (https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-automate-model-development.html).
+// For information about how to use Autopilot, see Automate Model Development
+// with Amazon SageMaker Autopilot (https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-automate-model-development.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2754,11 +2754,11 @@ func (c *SageMaker) CreateWorkforceRequest(input *CreateWorkforceInput) (req *re
 //
 // Use this operation to create a workforce. This operation will return an error
 // if a workforce already exists in the AWS Region that you specify. You can
-// only create one workforce in each AWS Region.
+// only create one workforce in each AWS Region per AWS account.
 //
-// If you want to create a new workforce in an AWS Region where the a workforce
+// If you want to create a new workforce in an AWS Region where a workforce
 // already exists, use the API operation to delete the existing workforce and
-// then use this operation to create a new workforce.
+// then use CreateWorkforce to create a new workforce.
 //
 // To create a private workforce using Amazon Cognito, you must specify a Cognito
 // user pool in CognitoConfig. You can also create an Amazon Cognito workforce
@@ -2766,9 +2766,9 @@ func (c *SageMaker) CreateWorkforceRequest(input *CreateWorkforceInput) (req *re
 // Workforce (Amazon Cognito) (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 //
 // To create a private workforce using your own OIDC Identity Provider (IdP),
-// specify your IdP configuration in OidcConfig. You must create a OIDC IdP
-// workforce using this API operation. For more information, see Create a Private
-// Workforce (OIDC IdP) (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private-oidc.html).
+// specify your IdP configuration in OidcConfig. Your OIDC IdP must support
+// groups because groups are used by Ground Truth and Amazon A2I to create work
+// teams. For more information, see Create a Private Workforce (OIDC IdP) (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private-oidc.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4384,9 +4384,14 @@ func (c *SageMaker) DeleteWorkforceRequest(input *DeleteWorkforceInput) (req *re
 //
 // Use this operation to delete a workforce.
 //
-// If you want to create a new workforce in an AWS Region where the a workforce
+// If you want to create a new workforce in an AWS Region where a workforce
 // already exists, use this operation to delete the existing workforce and then
 // use to create a new workforce.
+//
+// If a private workforce contains one or more work teams, you must use the
+// operation to delete all work teams before you delete the workforce. If you
+// try to delete a workforce that contains one or more work teams, you will
+// recieve a ResourceInUse error.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10950,8 +10955,8 @@ func (c *SageMaker) ListWorkteamsRequest(input *ListWorkteamsInput) (req *reques
 
 // ListWorkteams API operation for Amazon SageMaker Service.
 //
-// Gets a list of work teams that you have defined in a region. The list may
-// be empty if no work team satisfies the filter specified in the NameContains
+// Gets a list of private work teams that you have defined in a region. The
+// list may be empty if no work team satisfies the filter specified in the NameContains
 // parameter.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -13136,18 +13141,29 @@ func (c *SageMaker) UpdateWorkforceRequest(input *UpdateWorkforceInput) (req *re
 
 // UpdateWorkforce API operation for Amazon SageMaker Service.
 //
-// Restricts access to tasks assigned to workers in the specified workforce
-// to those within specific ranges of IP addresses. You specify allowed IP addresses
-// by creating a list of up to ten CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html).
+// Use this operation to update your workforce. You can use this operation to
+// require that workers use specific IP addresses to work on tasks and to update
+// your OpenID Connect (OIDC) Identity Provider (IdP) workforce configuration.
 //
+// Use SourceIpConfig to restrict worker access to tasks to a specific range
+// of IP addresses. You specify allowed IP addresses by creating a list of up
+// to ten CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html).
 // By default, a workforce isn't restricted to specific IP addresses. If you
 // specify a range of IP addresses, workers who attempt to access tasks using
-// any IP address outside the specified range are denied access and get a Not
-// Found error message on the worker portal. After restricting access with this
-// operation, you can see the allowed IP values for a private workforce with
-// the operation.
+// any IP address outside the specified range are denied and get a Not Found
+// error message on the worker portal.
 //
-// This operation applies only to private workforces.
+// Use OidcConfig to update the configuration of a workforce created using your
+// own OIDC IdP.
+//
+// You can only update your OIDC IdP configuration when there are no work teams
+// associated with your workforce. You can delete work teams using the operation.
+//
+// After restricting access to a range of IP addresses or updating your OIDC
+// IdP configuration with this operation, you can view details about your update
+// workforce using the operation.
+//
+// This operation only applies to private workforces.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -14424,8 +14440,8 @@ func (s *AssociateTrialComponentOutput) SetTrialComponentArn(v string) *Associat
 	return s
 }
 
-// An AutoPilot job will return recommendations, or candidates. Each candidate
-// has futher details about the steps involed, and the status.
+// An Autopilot job returns recommendations, or candidates. Each candidate has
+// futher details about the steps involed, and the status.
 type AutoMLCandidate struct {
 	_ struct{} `type:"structure"`
 
@@ -14455,7 +14471,7 @@ type AutoMLCandidate struct {
 	// The failure reason.
 	FailureReason *string `type:"string"`
 
-	// The candidate result from a job.
+	// The best candidate result from an AutoML training job.
 	FinalAutoMLJobObjectiveMetric *FinalAutoMLJobObjectiveMetric `type:"structure"`
 
 	// The inference containers.
@@ -14711,7 +14727,7 @@ func (s *AutoMLContainerDefinition) SetModelDataUrl(v string) *AutoMLContainerDe
 	return s
 }
 
-// The data source for the AutoPilot job.
+// The data source for the Autopilot job.
 type AutoMLDataSource struct {
 	_ struct{} `type:"structure"`
 
@@ -14907,11 +14923,76 @@ func (s *AutoMLJobConfig) SetSecurityConfig(v *AutoMLSecurityConfig) *AutoMLJobC
 	return s
 }
 
-// Applies a metric to minimize or maximize for the job's objective.
+// Specifies a metric to minimize or maximize as the objective of a job.
 type AutoMLJobObjective struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the metric.
+	// The name of the objective metric used to measure the predictive quality of
+	// a machine learning system. This metric is optimized during training to provide
+	// the best estimate for model parameter values from data.
+	//
+	// Here are the options:
+	//
+	//    * MSE: The mean squared error (MSE) is the average of the squared differences
+	//    between the predicted and actual values. It is used for regression. MSE
+	//    values are always positive, the better a model is at predicting the actual
+	//    values the smaller the MSE value. When the data contains outliers, they
+	//    tend to dominate the MSE which might cause subpar prediction performance.
+	//
+	//    * Accuracy: The ratio of the number correctly classified items to the
+	//    total number (correctly and incorrectly) classified. It is used for binary
+	//    and multiclass classification. Measures how close the predicted class
+	//    values are to the actual values. Accuracy values vary between zero and
+	//    one, one being perfect accuracy and zero perfect inaccuracy.
+	//
+	//    * F1: The F1 score is the harmonic mean of the precision and recall. It
+	//    is used for binary classification into classes traditionally referred
+	//    to as positive and negative. Predictions are said to be true when they
+	//    match their actual (correct) class; false when they do not. Precision
+	//    is the ratio of the true positive predictions to all positive predictions
+	//    (including the false positives) in a data set and measures the quality
+	//    of the prediction when it predicts the positive class. Recall (or sensitivity)
+	//    is the ratio of the true positive predictions to all actual positive instances
+	//    and measures how completely a model predicts the actual class members
+	//    in a data set. The standard F1 score weighs precision and recall equally.
+	//    But which metric is paramount typically depends on specific aspects of
+	//    a problem. F1 scores vary between zero and one, one being the best possible
+	//    performance and zero the worst.
+	//
+	//    * AUC: The area under the curve (AUC) metric is used to compare and evaluate
+	//    binary classification by algorithms such as logistic regression that return
+	//    probabilities. A threshold is needed to map the probabilities into classifications.
+	//    The relevant curve is the receiver operating characteristic curve that
+	//    plots the true positive rate (TPR) of predictions (or recall) against
+	//    the false positive rate (FPR) as a function of the threshold value, above
+	//    which a prediction is considered positive. Increasing the threshold results
+	//    in fewer false positives but more false negatives. AUC is the area under
+	//    this receiver operating characteristic curve and so provides an aggregated
+	//    measure of the model performance across all possible classification thresholds.
+	//    The AUC score can also be interpreted as the probability that a randomly
+	//    selected positive data point is more likely to be predicted positive than
+	//    a randomly selected negative example. AUC scores vary between zero and
+	//    one, one being perfect accuracy and one half not better than a random
+	//    classifier. Values less that one half predict worse than a random predictor
+	//    and such consistently bad predictors can be inverted to obtain better
+	//    than random predictors.
+	//
+	//    * F1macro: The F1macro score applies F1 scoring to multiclass classification.
+	//    In this context, you have multiple classes to predict. You just calculate
+	//    the precision and recall for each class as you did for the positive class
+	//    in binary classification. Then used these values to calculate the F1 score
+	//    for each class and average them to obtain the F1macro score. F1macro scores
+	//    vary between zero and one, one being the best possible performance and
+	//    zero the worst.
+	//
+	// If you do not specify a metric explicitly, the default behavior is to automatically
+	// use:
+	//
+	//    * MSE: for regression.
+	//
+	//    * F1: for binary classification
+	//
+	//    * Accuracy: for multiclass classification.
 	//
 	// MetricName is a required field
 	MetricName *string `type:"string" required:"true" enum:"AutoMLMetricEnum"`
@@ -14975,10 +15056,10 @@ type AutoMLJobSummary struct {
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
-	// The end time.
+	// The end time of an AutoML job.
 	EndTime *time.Time `type:"timestamp"`
 
-	// The failure reason.
+	// The failure reason of a job.
 	FailureReason *string `type:"string"`
 
 	// When the job was last modified.
@@ -16158,6 +16239,12 @@ type ContainerDefinition struct {
 	// Using Your Own Algorithms with Amazon SageMaker (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html)
 	Image *string `type:"string"`
 
+	// Specifies whether the model container is in Amazon ECR or a private Docker
+	// registry in your Amazon Virtual Private Cloud (VPC). For information about
+	// storing containers in a private Docker registry, see Use a Private Docker
+	// Registry for Real-Time Inference Containers (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html)
+	ImageConfig *ImageConfig `type:"structure"`
+
 	// Whether the container hosts a single model or multiple models.
 	Mode *string `type:"string" enum:"ContainerMode"`
 
@@ -16200,6 +16287,11 @@ func (s *ContainerDefinition) Validate() error {
 	if s.ModelPackageName != nil && len(*s.ModelPackageName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ModelPackageName", 1))
 	}
+	if s.ImageConfig != nil {
+		if err := s.ImageConfig.Validate(); err != nil {
+			invalidParams.AddNested("ImageConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -16222,6 +16314,12 @@ func (s *ContainerDefinition) SetEnvironment(v map[string]*string) *ContainerDef
 // SetImage sets the Image field's value.
 func (s *ContainerDefinition) SetImage(v string) *ContainerDefinition {
 	s.Image = &v
+	return s
+}
+
+// SetImageConfig sets the ImageConfig field's value.
+func (s *ContainerDefinition) SetImageConfig(v *ImageConfig) *ContainerDefinition {
+	s.ImageConfig = v
 	return s
 }
 
@@ -16702,19 +16800,19 @@ type CreateAutoMLJobInput struct {
 	// Contains CompletionCriteria and SecurityConfig.
 	AutoMLJobConfig *AutoMLJobConfig `type:"structure"`
 
-	// Identifies an AutoPilot job. Must be unique to your account and is case-insensitive.
+	// Identifies an Autopilot job. Must be unique to your account and is case-insensitive.
 	//
 	// AutoMLJobName is a required field
 	AutoMLJobName *string `min:"1" type:"string" required:"true"`
 
-	// Defines the job's objective. You provide a MetricName and AutoML will infer
-	// minimize or maximize. If this is not provided, the most commonly used ObjectiveMetric
-	// for problem type will be selected.
+	// Defines the objective of a an AutoML job. You provide a AutoMLJobObjective$MetricName
+	// and Autopilot infers whether to minimize or maximize it. If a metric is not
+	// specified, the most commonly used ObjectiveMetric for problem type is automaically
+	// selected.
 	AutoMLJobObjective *AutoMLJobObjective `type:"structure"`
 
-	// This will generate possible candidates without training a model. A candidate
-	// is a combination of data preprocessors, algorithms, and algorithm parameter
-	// settings.
+	// Generates possible candidates without training a model. A candidate is a
+	// combination of data preprocessors, algorithms, and algorithm parameter settings.
 	GenerateCandidateDefinitionsOnly *bool `type:"boolean"`
 
 	// Similar to InputDataConfig supported by Tuning. Format(s) supported: CSV.
@@ -16732,7 +16830,7 @@ type CreateAutoMLJobInput struct {
 	// Options include: BinaryClassification, MulticlassClassification, and Regression.
 	ProblemType *string `type:"string" enum:"ProblemType"`
 
-	// The ARN of the role that will be used to access the data.
+	// The ARN of the role that is used to access the data.
 	//
 	// RoleArn is a required field
 	RoleArn *string `min:"20" type:"string" required:"true"`
@@ -20720,12 +20818,15 @@ type CreateWorkforceInput struct {
 	CognitoConfig *CognitoConfig `type:"structure"`
 
 	// Use this parameter to configure a private workforce using your own OIDC Identity
-	// Provider. Do not use CognitoConfig if you specify values for OidcConfig.
+	// Provider.
+	//
+	// Do not use CognitoConfig if you specify values for OidcConfig.
 	OidcConfig *OidcConfig `type:"structure"`
 
 	// A list of IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
-	// Used to create an allow list of IP addresses for a private workforce. For
-	// more information, see .
+	// Used to create an allow list of IP addresses for a private workforce. Workers
+	// will only be able to login to their worker portal from an IP address within
+	// this range. By default, a workforce isn't restricted to specific IP addresses.
 	SourceIpConfig *SourceIpConfig `type:"structure"`
 
 	// An array of key-value pairs that contain metadata to help you categorize
@@ -20854,11 +20955,23 @@ type CreateWorkteamInput struct {
 	Description *string `min:"1" type:"string" required:"true"`
 
 	// A list of MemberDefinition objects that contains objects that identify the
-	// Amazon Cognito user pool that makes up the work team. For more information,
-	// see Amazon Cognito User Pools (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
+	// workers that make up the work team.
 	//
+	// Workforces can be created using Amazon Cognito or your own OIDC Identity
+	// Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition.
+	// For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition.
+	// Do not provide input for both of these parameters in a single request.
+	//
+	// For workforces created using Amazon Cognito, private work teams correspond
+	// to Amazon Cognito user groups within the user pool used to create a workforce.
 	// All of the CognitoMemberDefinition objects that make up the member definition
-	// must have the same ClientId and UserPool values.
+	// must have the same ClientId and UserPool values. To add a Amazon Cognito
+	// user group to an existing worker pool, see Adding groups to a User Pool.
+	// For more information about user pools, see Amazon Cognito User Pools (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
+	//
+	// For workforces created using your own OIDC IdP, specify the user groups that
+	// you want to include in your private work team in OidcMemberDefinition by
+	// listing those groups in Groups.
 	//
 	// MemberDefinitions is a required field
 	MemberDefinitions []*MemberDefinition `min:"1" type:"list" required:"true"`
@@ -26419,7 +26532,7 @@ type DescribeTrainingJobOutput struct {
 	//    * MaxRuntimeExceeded - The job stopped because it exceeded the maximum
 	//    allowed runtime.
 	//
-	//    * MaxWaitTmeExceeded - The job stopped because it exceeded the maximum
+	//    * MaxWaitTimeExceeded - The job stopped because it exceeded the maximum
 	//    allowed wait time.
 	//
 	//    * Stopped - The training job has stopped.
@@ -28656,19 +28769,20 @@ func (s *Filter) SetValue(v string) *Filter {
 	return s
 }
 
-// The candidate result from a job.
+// The best candidate result from an AutoML training job.
 type FinalAutoMLJobObjectiveMetric struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the metric.
+	// The name of the metric with the best result. For a description of the possible
+	// objective metrics, see AutoMLJobObjective$MetricName.
 	//
 	// MetricName is a required field
 	MetricName *string `type:"string" required:"true" enum:"AutoMLMetricEnum"`
 
-	// The metric type used.
+	// The type of metric with the best result.
 	Type *string `type:"string" enum:"AutoMLJobObjectiveType"`
 
-	// The value of the metric.
+	// The value of the metric with the best result.
 	//
 	// Value is a required field
 	Value *float64 `type:"float" required:"true"`
@@ -31491,6 +31605,51 @@ func (s *HyperParameterTuningJobWarmStartConfig) SetWarmStartType(v string) *Hyp
 	return s
 }
 
+// Specifies whether the model container is in Amazon ECR or a private Docker
+// registry in your Amazon Virtual Private Cloud (VPC).
+type ImageConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Set this to one of the following values:
+	//
+	//    * Platform - The model image is hosted in Amazon ECR.
+	//
+	//    * VPC - The model image is hosted in a private Docker registry in your
+	//    VPC.
+	//
+	// RepositoryAccessMode is a required field
+	RepositoryAccessMode *string `type:"string" required:"true" enum:"RepositoryAccessMode"`
+}
+
+// String returns the string representation
+func (s ImageConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImageConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ImageConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ImageConfig"}
+	if s.RepositoryAccessMode == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryAccessMode"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRepositoryAccessMode sets the RepositoryAccessMode field's value.
+func (s *ImageConfig) SetRepositoryAccessMode(v string) *ImageConfig {
+	s.RepositoryAccessMode = &v
+	return s
+}
+
 // Defines how to perform inference generation after a training job is run.
 type InferenceSpecification struct {
 	_ struct{} `type:"structure"`
@@ -32918,8 +33077,8 @@ type ListAutoMLJobsInput struct {
 	// Request a list of jobs, using a search filter for name.
 	NameContains *string `type:"string"`
 
-	// If the previous response was truncated, you will receive this token. Use
-	// it in your next request to receive the next set of results.
+	// If the previous response was truncated, you receive this token. Use it in
+	// your next request to receive the next set of results.
 	NextToken *string `type:"string"`
 
 	// The parameter by which to sort the results. The default is AutoMLJobName.
@@ -33023,8 +33182,8 @@ type ListAutoMLJobsOutput struct {
 	// AutoMLJobSummaries is a required field
 	AutoMLJobSummaries []*AutoMLJobSummary `type:"list" required:"true"`
 
-	// If the previous response was truncated, you will receive this token. Use
-	// it in your next request to receive the next set of results.
+	// If the previous response was truncated, you receive this token. Use it in
+	// your next request to receive the next set of results.
 	NextToken *string `type:"string"`
 }
 
@@ -33064,8 +33223,8 @@ type ListCandidatesForAutoMLJobInput struct {
 	// List the job's Candidates up to a specified limit.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// If the previous response was truncated, you will receive this token. Use
-	// it in your next request to receive the next set of results.
+	// If the previous response was truncated, you receive this token. Use it in
+	// your next request to receive the next set of results.
 	NextToken *string `type:"string"`
 
 	// The parameter by which to sort the results. The default is Descending.
@@ -33160,8 +33319,8 @@ type ListCandidatesForAutoMLJobOutput struct {
 	// Candidates is a required field
 	Candidates []*AutoMLCandidate `type:"list" required:"true"`
 
-	// If the previous response was truncated, you will receive this token. Use
-	// it in your next request to receive the next set of results.
+	// If the previous response was truncated, you receive this token. Use it in
+	// your next request to receive the next set of results.
 	NextToken *string `type:"string"`
 }
 
@@ -37067,7 +37226,8 @@ func (s *ListWorkteamsOutput) SetWorkteams(v []*Workteam) *ListWorkteamsOutput {
 	return s
 }
 
-// Defines the Amazon Cognito user group that is part of a work team.
+// Defines an Amazon Cognito or your own OIDC IdP user group that is part of
+// a work team.
 type MemberDefinition struct {
 	_ struct{} `type:"structure"`
 
@@ -39302,7 +39462,7 @@ func (s *OidcConfig) SetUserInfoEndpoint(v string) *OidcConfig {
 	return s
 }
 
-// Your Amazon Cognito workforce configuration.
+// Your OIDC IdP workforce configuration.
 type OidcConfigForResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -39380,10 +39540,10 @@ func (s *OidcConfigForResponse) SetUserInfoEndpoint(v string) *OidcConfigForResp
 	return s
 }
 
-// A list user groups that exist in your OIDC Identity Provider (IdP). One to
-// ten groups can be used to create a single private work team. When you add
-// a user group to the list of Groups, you can add that user group to one or
-// more private work teams. If you add a user group to a private work team,
+// A list of user groups that exist in your OIDC Identity Provider (IdP). One
+// to ten groups can be used to create a single private work team. When you
+// add a user group to the list of Groups, you can add that user group to one
+// or more private work teams. If you add a user group to a private work team,
 // all workers in that user group are added to the work team.
 type OidcMemberDefinition struct {
 	_ struct{} `type:"structure"`
@@ -41430,7 +41590,7 @@ func (s *RenderingError) SetMessage(v string) *RenderingError {
 type ResolvedAttributes struct {
 	_ struct{} `type:"structure"`
 
-	// Applies a metric to minimize or maximize for the job's objective.
+	// Specifies a metric to minimize or maximize as the objective of a job.
 	AutoMLJobObjective *AutoMLJobObjective `type:"structure"`
 
 	// How long a job is allowed to run, or how many candidates a job is allowed
@@ -42735,8 +42895,9 @@ func (s *SourceAlgorithmSpecification) SetSourceAlgorithms(v []*SourceAlgorithm)
 }
 
 // A list of IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
-// Used to create an allow list of IP addresses for a private workforce. For
-// more information, see .
+// Used to create an allow list of IP addresses for a private workforce. Workers
+// will only be able to login to their worker portal from an IP address within
+// this range. By default, a workforce isn't restricted to specific IP addresses.
 type SourceIpConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -44736,6 +44897,11 @@ type TransformInput struct {
 	// payloads contain the entire contents of an input object. Set the value of
 	// this parameter to Line to split records on a newline character boundary.
 	// SplitType also supports a number of record-oriented binary data formats.
+	// Currently, the supported record formats are:
+	//
+	//    * RecordIO
+	//
+	//    * TFRecord
 	//
 	// When splitting is enabled, the size of a mini-batch depends on the values
 	// of the BatchStrategy and MaxPayloadInMB parameters. When the value of BatchStrategy
@@ -46445,7 +46611,7 @@ func (s *TrialSummary) SetTrialSource(v *TrialSource) *TrialSummary {
 type TuningJobCompletionCriteria struct {
 	_ struct{} `type:"structure"`
 
-	// The objective metric's value.
+	// The value of the objective metric.
 	//
 	// TargetObjectiveMetricValue is a required field
 	TargetObjectiveMetricValue *float64 `type:"float" required:"true"`
@@ -47868,9 +48034,8 @@ type UpdateWorkforceInput struct {
 	// Maximum: Ten CIDR values
 	SourceIpConfig *SourceIpConfig `type:"structure"`
 
-	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to default when a workforce is created and cannot be
-	// modified.
+	// The name of the private workforce that you want to update. You can find your
+	// workforce name by using the operation.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -47933,8 +48098,7 @@ func (s *UpdateWorkforceInput) SetWorkforceName(v string) *UpdateWorkforceInput 
 type UpdateWorkforceOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A single private workforce, which is automatically created when you create
-	// your first private work team. You can create one private work force in each
+	// A single private workforce. You can create one private work force in each
 	// AWS Region. By default, any workforce-related API operation used in a specific
 	// region will apply to the workforce created in that region. To learn how to
 	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
@@ -47965,7 +48129,27 @@ type UpdateWorkteamInput struct {
 	// An updated description for the work team.
 	Description *string `min:"1" type:"string"`
 
-	// A list of MemberDefinition objects that contain the updated work team members.
+	// A list of MemberDefinition objects that contains objects that identify the
+	// workers that make up the work team.
+	//
+	// Workforces can be created using Amazon Cognito or your own OIDC Identity
+	// Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition.
+	// For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition.
+	// You should not provide input for both of these parameters in a single request.
+	//
+	// For workforces created using Amazon Cognito, private work teams correspond
+	// to Amazon Cognito user groups within the user pool used to create a workforce.
+	// All of the CognitoMemberDefinition objects that make up the member definition
+	// must have the same ClientId and UserPool values. To add a Amazon Cognito
+	// user group to an existing worker pool, see Adding groups to a User Pool.
+	// For more information about user pools, see Amazon Cognito User Pools (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html).
+	//
+	// For workforces created using your own OIDC IdP, specify the user groups that
+	// you want to include in your private work team in OidcMemberDefinition by
+	// listing those groups in Groups. Be aware that user groups that are already
+	// in the work team must also be listed in Groups when you make this request
+	// to remain on the work team. If you do not include these user groups, they
+	// will no longer be associated with the work team you update.
 	MemberDefinitions []*MemberDefinition `min:"1" type:"list"`
 
 	// Configures SNS topic notifications for available or expiring work items
@@ -48394,7 +48578,8 @@ type Workforce struct {
 	OidcConfig *OidcConfigForResponse `type:"structure"`
 
 	// A list of one to ten IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
-	// to be added to the workforce allow list.
+	// to be added to the workforce allow list. By default, a workforce isn't restricted
+	// to specific IP addresses.
 	SourceIpConfig *SourceIpConfig `type:"structure"`
 
 	// The subdomain for your OIDC Identity Provider.
@@ -48484,7 +48669,12 @@ type Workteam struct {
 	// The date and time that the work team was last updated (timestamp).
 	LastUpdatedDate *time.Time `type:"timestamp"`
 
-	// The Amazon Cognito user groups that make up the work team.
+	// A list of MemberDefinition objects that contains objects that identify the
+	// workers that make up the work team.
+	//
+	// Workforces can be created using Amazon Cognito or your own OIDC Identity
+	// Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition.
+	// For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition.
 	//
 	// MemberDefinitions is a required field
 	MemberDefinitions []*MemberDefinition `min:"1" type:"list" required:"true"`
@@ -48960,6 +49150,9 @@ const (
 
 	// AutoMLMetricEnumF1macro is a AutoMLMetricEnum enum value
 	AutoMLMetricEnumF1macro = "F1macro"
+
+	// AutoMLMetricEnumAuc is a AutoMLMetricEnum enum value
+	AutoMLMetricEnumAuc = "AUC"
 )
 
 // AutoMLMetricEnum_Values returns all elements of the AutoMLMetricEnum enum
@@ -48969,6 +49162,7 @@ func AutoMLMetricEnum_Values() []string {
 		AutoMLMetricEnumMse,
 		AutoMLMetricEnumF1,
 		AutoMLMetricEnumF1macro,
+		AutoMLMetricEnumAuc,
 	}
 }
 
@@ -50959,6 +51153,22 @@ func RecordWrapper_Values() []string {
 	return []string{
 		RecordWrapperNone,
 		RecordWrapperRecordIo,
+	}
+}
+
+const (
+	// RepositoryAccessModePlatform is a RepositoryAccessMode enum value
+	RepositoryAccessModePlatform = "Platform"
+
+	// RepositoryAccessModeVpc is a RepositoryAccessMode enum value
+	RepositoryAccessModeVpc = "Vpc"
+)
+
+// RepositoryAccessMode_Values returns all elements of the RepositoryAccessMode enum
+func RepositoryAccessMode_Values() []string {
+	return []string{
+		RepositoryAccessModePlatform,
+		RepositoryAccessModeVpc,
 	}
 }
 

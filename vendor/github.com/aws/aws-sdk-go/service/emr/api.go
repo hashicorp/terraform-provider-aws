@@ -809,6 +809,89 @@ func (c *EMR) DescribeJobFlowsWithContext(ctx aws.Context, input *DescribeJobFlo
 	return out, req.Send()
 }
 
+const opDescribeNotebookExecution = "DescribeNotebookExecution"
+
+// DescribeNotebookExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeNotebookExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeNotebookExecution for more information on using the DescribeNotebookExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeNotebookExecutionRequest method.
+//    req, resp := client.DescribeNotebookExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeNotebookExecution
+func (c *EMR) DescribeNotebookExecutionRequest(input *DescribeNotebookExecutionInput) (req *request.Request, output *DescribeNotebookExecutionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeNotebookExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeNotebookExecutionInput{}
+	}
+
+	output = &DescribeNotebookExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeNotebookExecution API operation for Amazon Elastic MapReduce.
+//
+// Provides details of a notebook execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation DescribeNotebookExecution for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeNotebookExecution
+func (c *EMR) DescribeNotebookExecution(input *DescribeNotebookExecutionInput) (*DescribeNotebookExecutionOutput, error) {
+	req, out := c.DescribeNotebookExecutionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeNotebookExecutionWithContext is the same as DescribeNotebookExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeNotebookExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) DescribeNotebookExecutionWithContext(ctx aws.Context, input *DescribeNotebookExecutionInput, opts ...request.Option) (*DescribeNotebookExecutionOutput, error) {
+	req, out := c.DescribeNotebookExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeSecurityConfiguration = "DescribeSecurityConfiguration"
 
 // DescribeSecurityConfigurationRequest generates a "aws/request.Request" representing the
@@ -1836,6 +1919,150 @@ func (c *EMR) ListInstancesPagesWithContext(ctx aws.Context, input *ListInstance
 
 	for p.Next() {
 		if !fn(p.Page().(*ListInstancesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListNotebookExecutions = "ListNotebookExecutions"
+
+// ListNotebookExecutionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListNotebookExecutions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListNotebookExecutions for more information on using the ListNotebookExecutions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListNotebookExecutionsRequest method.
+//    req, resp := client.ListNotebookExecutionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListNotebookExecutions
+func (c *EMR) ListNotebookExecutionsRequest(input *ListNotebookExecutionsInput) (req *request.Request, output *ListNotebookExecutionsOutput) {
+	op := &request.Operation{
+		Name:       opListNotebookExecutions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListNotebookExecutionsInput{}
+	}
+
+	output = &ListNotebookExecutionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListNotebookExecutions API operation for Amazon Elastic MapReduce.
+//
+// Provides summaries of all notebook executions. You can filter the list based
+// on multiple criteria such as status, time range, and editor id. Returns a
+// maximum of 50 notebook executions and a marker to track the paging of a longer
+// notebook execution list across multiple ListNotebookExecution calls.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation ListNotebookExecutions for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListNotebookExecutions
+func (c *EMR) ListNotebookExecutions(input *ListNotebookExecutionsInput) (*ListNotebookExecutionsOutput, error) {
+	req, out := c.ListNotebookExecutionsRequest(input)
+	return out, req.Send()
+}
+
+// ListNotebookExecutionsWithContext is the same as ListNotebookExecutions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListNotebookExecutions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ListNotebookExecutionsWithContext(ctx aws.Context, input *ListNotebookExecutionsInput, opts ...request.Option) (*ListNotebookExecutionsOutput, error) {
+	req, out := c.ListNotebookExecutionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListNotebookExecutionsPages iterates over the pages of a ListNotebookExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListNotebookExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListNotebookExecutions operation.
+//    pageNum := 0
+//    err := client.ListNotebookExecutionsPages(params,
+//        func(page *emr.ListNotebookExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EMR) ListNotebookExecutionsPages(input *ListNotebookExecutionsInput, fn func(*ListNotebookExecutionsOutput, bool) bool) error {
+	return c.ListNotebookExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListNotebookExecutionsPagesWithContext same as ListNotebookExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ListNotebookExecutionsPagesWithContext(ctx aws.Context, input *ListNotebookExecutionsInput, fn func(*ListNotebookExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListNotebookExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListNotebookExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListNotebookExecutionsOutput), !p.HasNextPage()) {
 			break
 		}
 	}
@@ -3150,6 +3377,172 @@ func (c *EMR) SetVisibleToAllUsers(input *SetVisibleToAllUsersInput) (*SetVisibl
 // for more information on using Contexts.
 func (c *EMR) SetVisibleToAllUsersWithContext(ctx aws.Context, input *SetVisibleToAllUsersInput, opts ...request.Option) (*SetVisibleToAllUsersOutput, error) {
 	req, out := c.SetVisibleToAllUsersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartNotebookExecution = "StartNotebookExecution"
+
+// StartNotebookExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the StartNotebookExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartNotebookExecution for more information on using the StartNotebookExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartNotebookExecutionRequest method.
+//    req, resp := client.StartNotebookExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StartNotebookExecution
+func (c *EMR) StartNotebookExecutionRequest(input *StartNotebookExecutionInput) (req *request.Request, output *StartNotebookExecutionOutput) {
+	op := &request.Operation{
+		Name:       opStartNotebookExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartNotebookExecutionInput{}
+	}
+
+	output = &StartNotebookExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartNotebookExecution API operation for Amazon Elastic MapReduce.
+//
+// Starts a notebook execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation StartNotebookExecution for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   This exception occurs when there is an internal failure in the EMR service.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StartNotebookExecution
+func (c *EMR) StartNotebookExecution(input *StartNotebookExecutionInput) (*StartNotebookExecutionOutput, error) {
+	req, out := c.StartNotebookExecutionRequest(input)
+	return out, req.Send()
+}
+
+// StartNotebookExecutionWithContext is the same as StartNotebookExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartNotebookExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) StartNotebookExecutionWithContext(ctx aws.Context, input *StartNotebookExecutionInput, opts ...request.Option) (*StartNotebookExecutionOutput, error) {
+	req, out := c.StartNotebookExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopNotebookExecution = "StopNotebookExecution"
+
+// StopNotebookExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the StopNotebookExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopNotebookExecution for more information on using the StopNotebookExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopNotebookExecutionRequest method.
+//    req, resp := client.StopNotebookExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StopNotebookExecution
+func (c *EMR) StopNotebookExecutionRequest(input *StopNotebookExecutionInput) (req *request.Request, output *StopNotebookExecutionOutput) {
+	op := &request.Operation{
+		Name:       opStopNotebookExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopNotebookExecutionInput{}
+	}
+
+	output = &StopNotebookExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopNotebookExecution API operation for Amazon Elastic MapReduce.
+//
+// Stops a notebook execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation StopNotebookExecution for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StopNotebookExecution
+func (c *EMR) StopNotebookExecution(input *StopNotebookExecutionInput) (*StopNotebookExecutionOutput, error) {
+	req, out := c.StopNotebookExecutionRequest(input)
+	return out, req.Send()
+}
+
+// StopNotebookExecutionWithContext is the same as StopNotebookExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopNotebookExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) StopNotebookExecutionWithContext(ctx aws.Context, input *StopNotebookExecutionInput, opts ...request.Option) (*StopNotebookExecutionOutput, error) {
+	req, out := c.StopNotebookExecutionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5318,6 +5711,67 @@ func (s *DescribeJobFlowsOutput) SetJobFlows(v []*JobFlowDetail) *DescribeJobFlo
 	return s
 }
 
+type DescribeNotebookExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the notebook execution.
+	//
+	// NotebookExecutionId is a required field
+	NotebookExecutionId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeNotebookExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNotebookExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNotebookExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNotebookExecutionInput"}
+	if s.NotebookExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookExecutionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *DescribeNotebookExecutionInput) SetNotebookExecutionId(v string) *DescribeNotebookExecutionInput {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+type DescribeNotebookExecutionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Properties of the notebook execution.
+	NotebookExecution *NotebookExecution `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeNotebookExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNotebookExecutionOutput) GoString() string {
+	return s.String()
+}
+
+// SetNotebookExecution sets the NotebookExecution field's value.
+func (s *DescribeNotebookExecutionOutput) SetNotebookExecution(v *NotebookExecution) *DescribeNotebookExecutionOutput {
+	s.NotebookExecution = v
+	return s
+}
+
 type DescribeSecurityConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5785,6 +6239,68 @@ func (s *Ec2InstanceAttributes) SetRequestedEc2SubnetIds(v []*string) *Ec2Instan
 // SetServiceAccessSecurityGroup sets the ServiceAccessSecurityGroup field's value.
 func (s *Ec2InstanceAttributes) SetServiceAccessSecurityGroup(v string) *Ec2InstanceAttributes {
 	s.ServiceAccessSecurityGroup = &v
+	return s
+}
+
+// Specifies the execution engine (cluster) to run the notebook and perform
+// the notebook execution, for example, an EMR cluster.
+type ExecutionEngineConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the execution engine. For an EMR cluster, this is
+	// the cluster ID.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// An optional unique ID of an EC2 security group to associate with the master
+	// instance of the EMR cluster for this notebook execution. For more information
+	// see Specifying EC2 Security Groups for EMR Notebooks (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-managed-notebooks-security-groups.html)
+	// in the EMR Management Guide.
+	MasterInstanceSecurityGroupId *string `type:"string"`
+
+	// The type of execution engine. A value of EMR specifies an EMR cluster.
+	Type *string `type:"string" enum:"ExecutionEngineType"`
+}
+
+// String returns the string representation
+func (s ExecutionEngineConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionEngineConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExecutionEngineConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExecutionEngineConfig"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *ExecutionEngineConfig) SetId(v string) *ExecutionEngineConfig {
+	s.Id = &v
+	return s
+}
+
+// SetMasterInstanceSecurityGroupId sets the MasterInstanceSecurityGroupId field's value.
+func (s *ExecutionEngineConfig) SetMasterInstanceSecurityGroupId(v string) *ExecutionEngineConfig {
+	s.MasterInstanceSecurityGroupId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ExecutionEngineConfig) SetType(v string) *ExecutionEngineConfig {
+	s.Type = &v
 	return s
 }
 
@@ -9210,6 +9726,126 @@ func (s *ListInstancesOutput) SetMarker(v string) *ListInstancesOutput {
 	return s
 }
 
+type ListNotebookExecutionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ID of the editor associated with the notebook execution.
+	EditorId *string `type:"string"`
+
+	// The beginning of time range filter for listing notebook executions. The default
+	// is the timestamp of 30 days ago.
+	From *time.Time `type:"timestamp"`
+
+	// The pagination token, returned by a previous ListNotebookExecutions call,
+	// that indicates the start of the list for this ListNotebookExecutions call.
+	Marker *string `type:"string"`
+
+	// The status filter for listing notebook executions.
+	//
+	//    * START_PENDING indicates that the cluster has received the execution
+	//    request but execution has not begun.
+	//
+	//    * STARTING indicates that the execution is starting on the cluster.
+	//
+	//    * RUNNING indicates that the execution is being processed by the cluster.
+	//
+	//    * FINISHING indicates that execution processing is in the final stages.
+	//
+	//    * FINISHED indicates that the execution has completed without error.
+	//
+	//    * FAILING indicates that the execution is failing and will not finish
+	//    successfully.
+	//
+	//    * FAILED indicates that the execution failed.
+	//
+	//    * STOP_PENDING indicates that the cluster has received a StopNotebookExecution
+	//    request and the stop is pending.
+	//
+	//    * STOPPING indicates that the cluster is in the process of stopping the
+	//    execution as a result of a StopNotebookExecution request.
+	//
+	//    * STOPPED indicates that the execution stopped because of a StopNotebookExecution
+	//    request.
+	Status *string `type:"string" enum:"NotebookExecutionStatus"`
+
+	// The end of time range filter for listing notebook executions. The default
+	// is the current timestamp.
+	To *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ListNotebookExecutionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNotebookExecutionsInput) GoString() string {
+	return s.String()
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *ListNotebookExecutionsInput) SetEditorId(v string) *ListNotebookExecutionsInput {
+	s.EditorId = &v
+	return s
+}
+
+// SetFrom sets the From field's value.
+func (s *ListNotebookExecutionsInput) SetFrom(v time.Time) *ListNotebookExecutionsInput {
+	s.From = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListNotebookExecutionsInput) SetMarker(v string) *ListNotebookExecutionsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListNotebookExecutionsInput) SetStatus(v string) *ListNotebookExecutionsInput {
+	s.Status = &v
+	return s
+}
+
+// SetTo sets the To field's value.
+func (s *ListNotebookExecutionsInput) SetTo(v time.Time) *ListNotebookExecutionsInput {
+	s.To = &v
+	return s
+}
+
+type ListNotebookExecutionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A pagination token that a subsequent ListNotebookExecutions can use to determine
+	// the next set of results to retrieve.
+	Marker *string `type:"string"`
+
+	// A list of notebook executions.
+	NotebookExecutions []*NotebookExecutionSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListNotebookExecutionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNotebookExecutionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListNotebookExecutionsOutput) SetMarker(v string) *ListNotebookExecutionsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetNotebookExecutions sets the NotebookExecutions field's value.
+func (s *ListNotebookExecutionsOutput) SetNotebookExecutions(v []*NotebookExecutionSummary) *ListNotebookExecutionsOutput {
+	s.NotebookExecutions = v
+	return s
+}
+
 type ListSecurityConfigurationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9660,6 +10296,264 @@ func (s ModifyInstanceGroupsOutput) GoString() string {
 	return s.String()
 }
 
+// A notebook execution. An execution is a specific instance that an EMR Notebook
+// is run using the StartNotebookExecution action.
+type NotebookExecution struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the notebook execution.
+	Arn *string `type:"string"`
+
+	// The unique identifier of the EMR Notebook that is used for the notebook execution.
+	EditorId *string `type:"string"`
+
+	// The timestamp when notebook execution ended.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The execution engine, such as an EMR cluster, used to run the EMR notebook
+	// and perform the notebook execution.
+	ExecutionEngine *ExecutionEngineConfig `type:"structure"`
+
+	// The reason for the latest status change of the notebook execution.
+	LastStateChangeReason *string `type:"string"`
+
+	// The unique identifier of a notebook execution.
+	NotebookExecutionId *string `type:"string"`
+
+	// A name for the notebook execution.
+	NotebookExecutionName *string `type:"string"`
+
+	// The unique identifier of the EC2 security group associated with the EMR Notebook
+	// instance. For more information see Specifying EC2 Security Groups for EMR
+	// Notebooks (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-managed-notebooks-security-groups.html)
+	// in the EMR Management Guide.
+	NotebookInstanceSecurityGroupId *string `type:"string"`
+
+	// Input parameters in JSON format passed to the EMR Notebook at runtime for
+	// execution.
+	NotebookParams *string `type:"string"`
+
+	// The location of the notebook execution's output file in Amazon S3.
+	OutputNotebookURI *string `type:"string"`
+
+	// The timestamp when notebook execution started.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The status of the notebook execution.
+	//
+	//    * START_PENDING indicates that the cluster has received the execution
+	//    request but execution has not begun.
+	//
+	//    * STARTING indicates that the execution is starting on the cluster.
+	//
+	//    * RUNNING indicates that the execution is being processed by the cluster.
+	//
+	//    * FINISHING indicates that execution processing is in the final stages.
+	//
+	//    * FINISHED indicates that the execution has completed without error.
+	//
+	//    * FAILING indicates that the execution is failing and will not finish
+	//    successfully.
+	//
+	//    * FAILED indicates that the execution failed.
+	//
+	//    * STOP_PENDING indicates that the cluster has received a StopNotebookExecution
+	//    request and the stop is pending.
+	//
+	//    * STOPPING indicates that the cluster is in the process of stopping the
+	//    execution as a result of a StopNotebookExecution request.
+	//
+	//    * STOPPED indicates that the execution stopped because of a StopNotebookExecution
+	//    request.
+	Status *string `type:"string" enum:"NotebookExecutionStatus"`
+
+	// A list of tags associated with a notebook execution. Tags are user-defined
+	// key value pairs that consist of a required key string with a maximum of 128
+	// characters and an optional value string with a maximum of 256 characters.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s NotebookExecution) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotebookExecution) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *NotebookExecution) SetArn(v string) *NotebookExecution {
+	s.Arn = &v
+	return s
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *NotebookExecution) SetEditorId(v string) *NotebookExecution {
+	s.EditorId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *NotebookExecution) SetEndTime(v time.Time) *NotebookExecution {
+	s.EndTime = &v
+	return s
+}
+
+// SetExecutionEngine sets the ExecutionEngine field's value.
+func (s *NotebookExecution) SetExecutionEngine(v *ExecutionEngineConfig) *NotebookExecution {
+	s.ExecutionEngine = v
+	return s
+}
+
+// SetLastStateChangeReason sets the LastStateChangeReason field's value.
+func (s *NotebookExecution) SetLastStateChangeReason(v string) *NotebookExecution {
+	s.LastStateChangeReason = &v
+	return s
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *NotebookExecution) SetNotebookExecutionId(v string) *NotebookExecution {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+// SetNotebookExecutionName sets the NotebookExecutionName field's value.
+func (s *NotebookExecution) SetNotebookExecutionName(v string) *NotebookExecution {
+	s.NotebookExecutionName = &v
+	return s
+}
+
+// SetNotebookInstanceSecurityGroupId sets the NotebookInstanceSecurityGroupId field's value.
+func (s *NotebookExecution) SetNotebookInstanceSecurityGroupId(v string) *NotebookExecution {
+	s.NotebookInstanceSecurityGroupId = &v
+	return s
+}
+
+// SetNotebookParams sets the NotebookParams field's value.
+func (s *NotebookExecution) SetNotebookParams(v string) *NotebookExecution {
+	s.NotebookParams = &v
+	return s
+}
+
+// SetOutputNotebookURI sets the OutputNotebookURI field's value.
+func (s *NotebookExecution) SetOutputNotebookURI(v string) *NotebookExecution {
+	s.OutputNotebookURI = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *NotebookExecution) SetStartTime(v time.Time) *NotebookExecution {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NotebookExecution) SetStatus(v string) *NotebookExecution {
+	s.Status = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *NotebookExecution) SetTags(v []*Tag) *NotebookExecution {
+	s.Tags = v
+	return s
+}
+
+type NotebookExecutionSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the editor associated with the notebook execution.
+	EditorId *string `type:"string"`
+
+	// The timestamp when notebook execution started.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The unique identifier of the notebook execution.
+	NotebookExecutionId *string `type:"string"`
+
+	// The name of the notebook execution.
+	NotebookExecutionName *string `type:"string"`
+
+	// The timestamp when notebook execution started.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The status of the notebook execution.
+	//
+	//    * START_PENDING indicates that the cluster has received the execution
+	//    request but execution has not begun.
+	//
+	//    * STARTING indicates that the execution is starting on the cluster.
+	//
+	//    * RUNNING indicates that the execution is being processed by the cluster.
+	//
+	//    * FINISHING indicates that execution processing is in the final stages.
+	//
+	//    * FINISHED indicates that the execution has completed without error.
+	//
+	//    * FAILING indicates that the execution is failing and will not finish
+	//    successfully.
+	//
+	//    * FAILED indicates that the execution failed.
+	//
+	//    * STOP_PENDING indicates that the cluster has received a StopNotebookExecution
+	//    request and the stop is pending.
+	//
+	//    * STOPPING indicates that the cluster is in the process of stopping the
+	//    execution as a result of a StopNotebookExecution request.
+	//
+	//    * STOPPED indicates that the execution stopped because of a StopNotebookExecution
+	//    request.
+	Status *string `type:"string" enum:"NotebookExecutionStatus"`
+}
+
+// String returns the string representation
+func (s NotebookExecutionSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotebookExecutionSummary) GoString() string {
+	return s.String()
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *NotebookExecutionSummary) SetEditorId(v string) *NotebookExecutionSummary {
+	s.EditorId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *NotebookExecutionSummary) SetEndTime(v time.Time) *NotebookExecutionSummary {
+	s.EndTime = &v
+	return s
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *NotebookExecutionSummary) SetNotebookExecutionId(v string) *NotebookExecutionSummary {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+// SetNotebookExecutionName sets the NotebookExecutionName field's value.
+func (s *NotebookExecutionSummary) SetNotebookExecutionName(v string) *NotebookExecutionSummary {
+	s.NotebookExecutionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *NotebookExecutionSummary) SetStartTime(v time.Time) *NotebookExecutionSummary {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NotebookExecutionSummary) SetStatus(v string) *NotebookExecutionSummary {
+	s.Status = &v
+	return s
+}
+
 // The launch specification for On-Demand instances in the instance fleet, which
 // determines the allocation strategy.
 //
@@ -9775,8 +10669,14 @@ func (s PortRange) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *PortRange) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "PortRange"}
+	if s.MaxRange != nil && *s.MaxRange < -1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxRange", -1))
+	}
 	if s.MinRange == nil {
 		invalidParams.Add(request.NewErrParamRequired("MinRange"))
+	}
+	if s.MinRange != nil && *s.MinRange < -1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinRange", -1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11361,6 +12261,160 @@ func (s *SpotProvisioningSpecification) SetTimeoutDurationMinutes(v int64) *Spot
 	return s
 }
 
+type StartNotebookExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the EMR Notebook to use for notebook execution.
+	//
+	// EditorId is a required field
+	EditorId *string `type:"string" required:"true"`
+
+	// Specifies the execution engine (cluster) that runs the notebook execution.
+	//
+	// ExecutionEngine is a required field
+	ExecutionEngine *ExecutionEngineConfig `type:"structure" required:"true"`
+
+	// An optional name for the notebook execution.
+	NotebookExecutionName *string `type:"string"`
+
+	// The unique identifier of the Amazon EC2 security group to associate with
+	// the EMR Notebook for this notebook execution.
+	NotebookInstanceSecurityGroupId *string `type:"string"`
+
+	// Input parameters in JSON format passed to the EMR Notebook at runtime for
+	// execution.
+	NotebookParams *string `type:"string"`
+
+	// The path and file name of the notebook file for this execution, relative
+	// to the path specified for the EMR Notebook. For example, if you specify a
+	// path of s3://MyBucket/MyNotebooks when you create an EMR Notebook for a notebook
+	// with an ID of e-ABCDEFGHIJK1234567890ABCD (the EditorID of this request),
+	// and you specify a RelativePath of my_notebook_executions/notebook_execution.ipynb,
+	// the location of the file for the notebook execution is s3://MyBucket/MyNotebooks/e-ABCDEFGHIJK1234567890ABCD/my_notebook_executions/notebook_execution.ipynb.
+	//
+	// RelativePath is a required field
+	RelativePath *string `type:"string" required:"true"`
+
+	// The name or ARN of the IAM role that is used as the service role for Amazon
+	// EMR (the EMR role) for the notebook execution.
+	//
+	// ServiceRole is a required field
+	ServiceRole *string `type:"string" required:"true"`
+
+	// A list of tags associated with a notebook execution. Tags are user-defined
+	// key value pairs that consist of a required key string with a maximum of 128
+	// characters and an optional value string with a maximum of 256 characters.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s StartNotebookExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartNotebookExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartNotebookExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartNotebookExecutionInput"}
+	if s.EditorId == nil {
+		invalidParams.Add(request.NewErrParamRequired("EditorId"))
+	}
+	if s.ExecutionEngine == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExecutionEngine"))
+	}
+	if s.RelativePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("RelativePath"))
+	}
+	if s.ServiceRole == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceRole"))
+	}
+	if s.ExecutionEngine != nil {
+		if err := s.ExecutionEngine.Validate(); err != nil {
+			invalidParams.AddNested("ExecutionEngine", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *StartNotebookExecutionInput) SetEditorId(v string) *StartNotebookExecutionInput {
+	s.EditorId = &v
+	return s
+}
+
+// SetExecutionEngine sets the ExecutionEngine field's value.
+func (s *StartNotebookExecutionInput) SetExecutionEngine(v *ExecutionEngineConfig) *StartNotebookExecutionInput {
+	s.ExecutionEngine = v
+	return s
+}
+
+// SetNotebookExecutionName sets the NotebookExecutionName field's value.
+func (s *StartNotebookExecutionInput) SetNotebookExecutionName(v string) *StartNotebookExecutionInput {
+	s.NotebookExecutionName = &v
+	return s
+}
+
+// SetNotebookInstanceSecurityGroupId sets the NotebookInstanceSecurityGroupId field's value.
+func (s *StartNotebookExecutionInput) SetNotebookInstanceSecurityGroupId(v string) *StartNotebookExecutionInput {
+	s.NotebookInstanceSecurityGroupId = &v
+	return s
+}
+
+// SetNotebookParams sets the NotebookParams field's value.
+func (s *StartNotebookExecutionInput) SetNotebookParams(v string) *StartNotebookExecutionInput {
+	s.NotebookParams = &v
+	return s
+}
+
+// SetRelativePath sets the RelativePath field's value.
+func (s *StartNotebookExecutionInput) SetRelativePath(v string) *StartNotebookExecutionInput {
+	s.RelativePath = &v
+	return s
+}
+
+// SetServiceRole sets the ServiceRole field's value.
+func (s *StartNotebookExecutionInput) SetServiceRole(v string) *StartNotebookExecutionInput {
+	s.ServiceRole = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartNotebookExecutionInput) SetTags(v []*Tag) *StartNotebookExecutionInput {
+	s.Tags = v
+	return s
+}
+
+type StartNotebookExecutionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the notebook execution.
+	NotebookExecutionId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s StartNotebookExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartNotebookExecutionOutput) GoString() string {
+	return s.String()
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *StartNotebookExecutionOutput) SetNotebookExecutionId(v string) *StartNotebookExecutionOutput {
+	s.NotebookExecutionId = &v
+	return s
+}
+
 // This represents a step in a cluster.
 type Step struct {
 	_ struct{} `type:"structure"`
@@ -11781,6 +12835,58 @@ func (s *StepTimeline) SetEndDateTime(v time.Time) *StepTimeline {
 func (s *StepTimeline) SetStartDateTime(v time.Time) *StepTimeline {
 	s.StartDateTime = &v
 	return s
+}
+
+type StopNotebookExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the notebook execution.
+	//
+	// NotebookExecutionId is a required field
+	NotebookExecutionId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopNotebookExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopNotebookExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopNotebookExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopNotebookExecutionInput"}
+	if s.NotebookExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookExecutionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *StopNotebookExecutionInput) SetNotebookExecutionId(v string) *StopNotebookExecutionInput {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+type StopNotebookExecutionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopNotebookExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopNotebookExecutionOutput) GoString() string {
+	return s.String()
 }
 
 // The list of supported product configurations which allow user-supplied arguments.
@@ -12206,6 +13312,18 @@ func ComputeLimitsUnitType_Values() []string {
 }
 
 const (
+	// ExecutionEngineTypeEmr is a ExecutionEngineType enum value
+	ExecutionEngineTypeEmr = "EMR"
+)
+
+// ExecutionEngineType_Values returns all elements of the ExecutionEngineType enum
+func ExecutionEngineType_Values() []string {
+	return []string{
+		ExecutionEngineTypeEmr,
+	}
+}
+
+const (
 	// InstanceCollectionTypeInstanceFleet is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceFleet = "INSTANCE_FLEET"
 
@@ -12527,6 +13645,54 @@ func MarketType_Values() []string {
 	return []string{
 		MarketTypeOnDemand,
 		MarketTypeSpot,
+	}
+}
+
+const (
+	// NotebookExecutionStatusStartPending is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStartPending = "START_PENDING"
+
+	// NotebookExecutionStatusStarting is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStarting = "STARTING"
+
+	// NotebookExecutionStatusRunning is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusRunning = "RUNNING"
+
+	// NotebookExecutionStatusFinishing is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFinishing = "FINISHING"
+
+	// NotebookExecutionStatusFinished is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFinished = "FINISHED"
+
+	// NotebookExecutionStatusFailing is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFailing = "FAILING"
+
+	// NotebookExecutionStatusFailed is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFailed = "FAILED"
+
+	// NotebookExecutionStatusStopPending is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStopPending = "STOP_PENDING"
+
+	// NotebookExecutionStatusStopping is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStopping = "STOPPING"
+
+	// NotebookExecutionStatusStopped is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStopped = "STOPPED"
+)
+
+// NotebookExecutionStatus_Values returns all elements of the NotebookExecutionStatus enum
+func NotebookExecutionStatus_Values() []string {
+	return []string{
+		NotebookExecutionStatusStartPending,
+		NotebookExecutionStatusStarting,
+		NotebookExecutionStatusRunning,
+		NotebookExecutionStatusFinishing,
+		NotebookExecutionStatusFinished,
+		NotebookExecutionStatusFailing,
+		NotebookExecutionStatusFailed,
+		NotebookExecutionStatusStopPending,
+		NotebookExecutionStatusStopping,
+		NotebookExecutionStatusStopped,
 	}
 }
 

@@ -5936,6 +5936,8 @@ func (s *ListAgentsOutput) SetNextToken(v string) *ListAgentsOutput {
 type ListLocationsInput struct {
 	_ struct{} `type:"structure"`
 
+	Filters []*LocationFilter `type:"list"`
+
 	// The maximum number of locations to return.
 	MaxResults *int64 `type:"integer"`
 
@@ -5952,6 +5954,32 @@ func (s ListLocationsInput) String() string {
 // GoString returns the string representation
 func (s ListLocationsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListLocationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListLocationsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *ListLocationsInput) SetFilters(v []*LocationFilter) *ListLocationsInput {
+	s.Filters = v
+	return s
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -6173,6 +6201,8 @@ func (s *ListTaskExecutionsOutput) SetTaskExecutions(v []*TaskExecutionListEntry
 type ListTasksInput struct {
 	_ struct{} `type:"structure"`
 
+	Filters []*TaskFilter `type:"list"`
+
 	// The maximum number of tasks to return.
 	MaxResults *int64 `type:"integer"`
 
@@ -6189,6 +6219,32 @@ func (s ListTasksInput) String() string {
 // GoString returns the string representation
 func (s ListTasksInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTasksInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTasksInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *ListTasksInput) SetFilters(v []*TaskFilter) *ListTasksInput {
+	s.Filters = v
+	return s
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -6234,6 +6290,66 @@ func (s *ListTasksOutput) SetNextToken(v string) *ListTasksOutput {
 // SetTasks sets the Tasks field's value.
 func (s *ListTasksOutput) SetTasks(v []*TaskListEntry) *ListTasksOutput {
 	s.Tasks = v
+	return s
+}
+
+type LocationFilter struct {
+	_ struct{} `type:"structure"`
+
+	// Name is a required field
+	Name *string `type:"string" required:"true" enum:"LocationFilterName"`
+
+	// Operator is a required field
+	Operator *string `type:"string" required:"true" enum:"Operator"`
+
+	// Values is a required field
+	Values []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s LocationFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LocationFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LocationFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LocationFilter"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Operator == nil {
+		invalidParams.Add(request.NewErrParamRequired("Operator"))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *LocationFilter) SetName(v string) *LocationFilter {
+	s.Name = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *LocationFilter) SetOperator(v string) *LocationFilter {
+	s.Operator = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *LocationFilter) SetValues(v []*string) *LocationFilter {
+	s.Values = v
 	return s
 }
 
@@ -7131,6 +7247,66 @@ func (s *TaskExecutionResultDetail) SetVerifyStatus(v string) *TaskExecutionResu
 	return s
 }
 
+type TaskFilter struct {
+	_ struct{} `type:"structure"`
+
+	// Name is a required field
+	Name *string `type:"string" required:"true" enum:"TaskFilterName"`
+
+	// Operator is a required field
+	Operator *string `type:"string" required:"true" enum:"Operator"`
+
+	// Values is a required field
+	Values []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TaskFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TaskFilter"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Operator == nil {
+		invalidParams.Add(request.NewErrParamRequired("Operator"))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *TaskFilter) SetName(v string) *TaskFilter {
+	s.Name = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *TaskFilter) SetOperator(v string) *TaskFilter {
+	s.Operator = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *TaskFilter) SetValues(v []*string) *TaskFilter {
+	s.Values = v
+	return s
+}
+
 // Represents a single entry in a list of tasks. TaskListEntry returns an array
 // that contains a list of tasks when the ListTasks operation is called. A task
 // includes the source and destination file systems to sync and the options
@@ -7567,6 +7743,26 @@ func Gid_Values() []string {
 }
 
 const (
+	// LocationFilterNameLocationUri is a LocationFilterName enum value
+	LocationFilterNameLocationUri = "LocationUri"
+
+	// LocationFilterNameLocationType is a LocationFilterName enum value
+	LocationFilterNameLocationType = "LocationType"
+
+	// LocationFilterNameCreationTime is a LocationFilterName enum value
+	LocationFilterNameCreationTime = "CreationTime"
+)
+
+// LocationFilterName_Values returns all elements of the LocationFilterName enum
+func LocationFilterName_Values() []string {
+	return []string{
+		LocationFilterNameLocationUri,
+		LocationFilterNameLocationType,
+		LocationFilterNameCreationTime,
+	}
+}
+
+const (
 	// LogLevelOff is a LogLevel enum value
 	LogLevelOff = "OFF"
 
@@ -7639,6 +7835,54 @@ func ObjectStorageServerProtocol_Values() []string {
 	return []string{
 		ObjectStorageServerProtocolHttps,
 		ObjectStorageServerProtocolHttp,
+	}
+}
+
+const (
+	// OperatorEquals is a Operator enum value
+	OperatorEquals = "Equals"
+
+	// OperatorNotEquals is a Operator enum value
+	OperatorNotEquals = "NotEquals"
+
+	// OperatorIn is a Operator enum value
+	OperatorIn = "In"
+
+	// OperatorLessThanOrEqual is a Operator enum value
+	OperatorLessThanOrEqual = "LessThanOrEqual"
+
+	// OperatorLessThan is a Operator enum value
+	OperatorLessThan = "LessThan"
+
+	// OperatorGreaterThanOrEqual is a Operator enum value
+	OperatorGreaterThanOrEqual = "GreaterThanOrEqual"
+
+	// OperatorGreaterThan is a Operator enum value
+	OperatorGreaterThan = "GreaterThan"
+
+	// OperatorContains is a Operator enum value
+	OperatorContains = "Contains"
+
+	// OperatorNotContains is a Operator enum value
+	OperatorNotContains = "NotContains"
+
+	// OperatorBeginsWith is a Operator enum value
+	OperatorBeginsWith = "BeginsWith"
+)
+
+// Operator_Values returns all elements of the Operator enum
+func Operator_Values() []string {
+	return []string{
+		OperatorEquals,
+		OperatorNotEquals,
+		OperatorIn,
+		OperatorLessThanOrEqual,
+		OperatorLessThan,
+		OperatorGreaterThanOrEqual,
+		OperatorGreaterThan,
+		OperatorContains,
+		OperatorNotContains,
+		OperatorBeginsWith,
 	}
 }
 
@@ -7811,6 +8055,22 @@ func TaskExecutionStatus_Values() []string {
 		TaskExecutionStatusVerifying,
 		TaskExecutionStatusSuccess,
 		TaskExecutionStatusError,
+	}
+}
+
+const (
+	// TaskFilterNameLocationId is a TaskFilterName enum value
+	TaskFilterNameLocationId = "LocationId"
+
+	// TaskFilterNameCreationTime is a TaskFilterName enum value
+	TaskFilterNameCreationTime = "CreationTime"
+)
+
+// TaskFilterName_Values returns all elements of the TaskFilterName enum
+func TaskFilterName_Values() []string {
+	return []string{
+		TaskFilterNameLocationId,
+		TaskFilterNameCreationTime,
 	}
 }
 
