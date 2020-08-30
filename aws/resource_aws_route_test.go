@@ -444,7 +444,7 @@ func TestAccAWSRoute_LocalGatewayID(t *testing.T) {
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{

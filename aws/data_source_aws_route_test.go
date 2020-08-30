@@ -56,7 +56,7 @@ func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 	resourceName := "aws_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{

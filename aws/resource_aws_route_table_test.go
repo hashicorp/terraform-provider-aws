@@ -382,7 +382,7 @@ func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
 	resourceName := "aws_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
