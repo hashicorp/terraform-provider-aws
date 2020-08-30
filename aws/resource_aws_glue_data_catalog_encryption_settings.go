@@ -38,8 +38,9 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"aws_kms_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"return_connection_password_encrypted": {
 										Type:     schema.TypeBool,
@@ -60,8 +61,9 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(glue.CatalogEncryptionMode_Values(), false),
 									},
 									"sse_aws_kms_key_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 								},
 							},
