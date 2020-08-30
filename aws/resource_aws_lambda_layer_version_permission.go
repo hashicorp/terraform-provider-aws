@@ -16,9 +16,9 @@ import (
 
 func resourceAwsLambdaLayerVersionPermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLambdaLayerVersionPermissionAdd,
-		Read:   resourceAwsLambdaLayerVersionPermissionGet,
-		Delete: resourceAwsLambdaLayerVersionPermissionRemove,
+		Create: resourceAwsLambdaLayerVersionPermissionCreate,
+		Read:   resourceAwsLambdaLayerVersionPermissionRead,
+		Delete: resourceAwsLambdaLayerVersionPermissionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -26,9 +26,10 @@ func resourceAwsLambdaLayerVersionPermission() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"layer_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				ValidateFunc: validateArn,
+				Required:     true,
+				ForceNew:     true,
 			},
 			"layer_version": {
 				Type:     schema.TypeInt,
@@ -67,41 +68,33 @@ func resourceAwsLambdaLayerVersionPermission() *schema.Resource {
 	}
 }
 
-func resourceAwsLambdaLayerVersionPermissionAdd(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLambdaLayerVersionPermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	layerArn := aws.String(d.Get("layer_arn").(string))
-	layerVersion := aws.Int64(int64(d.Get("layer_version").(int)))
-	statementId := aws.String(d.Get("statement_id").(string))
-	principal := aws.String(d.Get("principal").(string))
-	organizationId, hasOrganizationId := d.GetOk("organization_id")
-	action := aws.String(d.Get("action").(string))
-
 	params := &lambda.AddLayerVersionPermissionInput{
-		LayerName:     layerArn,
-		VersionNumber: layerVersion,
-		Action:        action,
-		Principal:     principal,
-		StatementId:   statementId,
+		LayerName:     aws.String(d.Get("layer_arn").(string)),
+		VersionNumber: aws.Int64(int64(d.Get("layer_version").(int))),
+		Action:        aws.String(d.Get("action").(string)),
+		Principal:     aws.String(d.Get("principal").(string)),
+		StatementId:   aws.String(d.Get("statement_id").(string)),
 	}
 
-	if hasOrganizationId {
-		params.OrganizationId = aws.String(organizationId.(string))
+	if d.Get("organization_id").(string) != "" {
+		params.OrganizationId = aws.String(d.Get("organization_id").(string))
 	}
 
 	log.Printf("[DEBUG] Adding Lambda layer permissions: %s", params)
-	result, err := conn.AddLayerVersionPermission(params)
+	_, err := conn.AddLayerVersionPermission(params)
 	if err != nil {
 		return fmt.Errorf("Error adding lambda layer permissions: %s", err)
 	}
 
-	d.SetId(*layerArn + ":" + strconv.FormatInt(*layerVersion, 10))
-	d.Set("revision_id", result.RevisionId)
+	d.SetId(fmt.Sprintf("%s:%s", *params.LayerName, strconv.FormatInt(*params.VersionNumber, 10)))
 
-	return resourceAwsLambdaLayerVersionPermissionGet(d, meta)
+	return resourceAwsLambdaLayerVersionPermissionRead(d, meta)
 }
 
-func resourceAwsLambdaLayerVersionPermissionGet(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLambdaLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
 	layerName, layerArn, version, err := resourceAwsLambdaLayerVersionPermissionParseId(d.Id())
@@ -172,7 +165,7 @@ func resourceAwsLambdaLayerVersionPermissionGet(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsLambdaLayerVersionPermissionRemove(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLambdaLayerVersionPermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
 	layerName, _, version, err := resourceAwsLambdaLayerVersionPermissionParseId(d.Id())

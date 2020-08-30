@@ -64,7 +64,7 @@ func testSweepLambdaLayerVersionPermission(region string) error {
 
 func TestAccAWSLambdaLayerVersionPermission_all(t *testing.T) {
 	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_version_permission_testing_%s", acctest.RandString(8))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -72,13 +72,14 @@ func TestAccAWSLambdaLayerVersionPermission_all(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaLayerVersionPermission_all(layerName),
+				Config: testAccAWSLambdaLayerVersionPermission_all(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", layerName),
-					testAccCheckAwsLambdaLayerVersionPermissionExists("aws_lambda_layer_version_permission.lambda_layer_permission", layerName),
+					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", rName),
+					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
+					resource.TestCheckResourceAttrPair(resourceName, "layer_arn", "aws_lambda_layer_version.lambda_layer", "layer_arn"),
 				),
 			},
 
@@ -93,7 +94,7 @@ func TestAccAWSLambdaLayerVersionPermission_all(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersionPermission_org(t *testing.T) {
 	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_version_permission_testing_%s", acctest.RandString(8))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -101,14 +102,15 @@ func TestAccAWSLambdaLayerVersionPermission_org(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaLayerVersionPermission_org(layerName),
+				Config: testAccAWSLambdaLayerVersionPermission_org(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", layerName),
-					testAccCheckAwsLambdaLayerVersionPermissionExists("aws_lambda_layer_version_permission.lambda_layer_permission", layerName),
+					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", rName),
+					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 					resource.TestCheckResourceAttr(resourceName, "organization_id", "o-0123456789"),
+					resource.TestCheckResourceAttrPair(resourceName, "layer_arn", "aws_lambda_layer_version.lambda_layer", "layer_arn"),
 				),
 			},
 
@@ -123,7 +125,7 @@ func TestAccAWSLambdaLayerVersionPermission_org(t *testing.T) {
 
 func TestAccAWSLambdaLayerVersionPermission_account(t *testing.T) {
 	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_version_permission_testing_%s", acctest.RandString(8))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -131,13 +133,14 @@ func TestAccAWSLambdaLayerVersionPermission_account(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaLayerVersionPermission_account(layerName),
+				Config: testAccAWSLambdaLayerVersionPermission_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", layerName),
-					testAccCheckAwsLambdaLayerVersionPermissionExists("aws_lambda_layer_version_permission.lambda_layer_permission", layerName),
+					testAccCheckAwsLambdaLayerVersionExists("aws_lambda_layer_version.lambda_layer", rName),
+					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "456789820214"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
+					resource.TestCheckResourceAttrPair(resourceName, "layer_arn", "aws_lambda_layer_version.lambda_layer", "layer_arn"),
 				),
 			},
 
@@ -145,6 +148,27 @@ func TestAccAWSLambdaLayerVersionPermission_account(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaLayerVersionPermission_disappears(t *testing.T) {
+	resourceName := "aws_lambda_layer_version_permission.lambda_layer_permission"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaLayerVersionPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaLayerVersionPermission_account(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionPermissionExists(resourceName, rName),
+					testAccCheckAwsLambdaLayerVersionPermissionDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -272,4 +296,26 @@ func testAccCheckLambdaLayerVersionPermissionDestroy(s *terraform.State) error {
 		return fmt.Errorf("Lambda Layer Version Permission (%s) still exists", rs.Primary.ID)
 	}
 	return nil
+}
+
+func testAccCheckAwsLambdaLayerVersionPermissionDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, _ := s.RootModule().Resources[resourceName]
+
+		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+
+		layerName, _, version, _ := resourceAwsLambdaLayerVersionPermissionParseId(rs.Primary.Attributes["id"])
+
+		req := &lambda.RemoveLayerVersionPermissionInput{
+			LayerName:     aws.String(layerName),
+			VersionNumber: aws.Int64(version),
+			StatementId:   aws.String(rs.Primary.Attributes["statement_id"]),
+		}
+
+		_, err2 := conn.RemoveLayerVersionPermission(req)
+		if err2 != nil {
+			return err2
+		}
+		return nil
+	}
 }
