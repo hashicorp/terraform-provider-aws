@@ -266,7 +266,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	}
 
 	if strings.Contains(protocol, "email") {
-	    req.ReturnSubscriptionArn = aws.Bool(true)
+		req.ReturnSubscriptionArn = aws.Bool(true)
 	}
 
 	output, err = snsconn.Subscribe(req)
