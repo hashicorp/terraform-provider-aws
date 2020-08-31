@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
@@ -78,6 +78,7 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
+								// This isn't available as a constant
 								ValidateFunc: validation.StringInSlice([]string{
 									"EXCLUDE_VARIABLE_SETS",
 								}, false),
@@ -116,12 +117,7 @@ func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta inter
 	d.Set("name", tg.TargetGroupName)
 
 	cpc := tg.ConnectionPoolConfig
-
-	d.Set("connection_borrow_timeout", cpc.ConnectionBorrowTimeout)
-	d.Set("init_query", cpc.InitQuery)
-	d.Set("max_connections_percent", cpc.MaxConnectionsPercent)
-	d.Set("max_idle_connections_percent", cpc.MaxIdleConnectionsPercent)
-	d.Set("session_pinning_filters", flattenStringSet(cpc.SessionPinningFilters))
+	d.Set("connection_pool_config", flattenDbProxyTargetGroupConnectionPoolConfig(cpc))
 
 	return nil
 }
@@ -179,25 +175,43 @@ func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoo
 	return result
 }
 
+func flattenDbProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfigurationInfo) []interface{} {
+	if cpc == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	m["connection_borrow_timeout"] = aws.Int64Value(cpc.ConnectionBorrowTimeout)
+	m["init_query"] = aws.StringValue(cpc.InitQuery)
+	m["max_connections_percent"] = aws.Int64Value(cpc.MaxConnectionsPercent)
+	m["max_idle_connections_percent"] = aws.Int64Value(cpc.MaxIdleConnectionsPercent)
+	m["session_pinning_filters"] = flattenStringSet(cpc.SessionPinningFilters)
+
+	return []interface{}{m}
+}
+
 func resourceAwsDbProxyDefaultTargetGroupGet(conn *rds.RDS, proxyName string) (*rds.DBProxyTargetGroup, error) {
 	params := &rds.DescribeDBProxyTargetGroupsInput{
 		DBProxyName: aws.String(proxyName),
 	}
 
-	resp, err := conn.DescribeDBProxyTargetGroups(params)
+	var defaultTargetGroup *rds.DBProxyTargetGroup
+	err := conn.DescribeDBProxyTargetGroupsPages(params, func(page *rds.DescribeDBProxyTargetGroupsOutput, lastPage bool) bool {
+		for _, targetGroup := range page.TargetGroups {
+			if *targetGroup.IsDefault {
+				defaultTargetGroup = targetGroup
+				return false
+			}
+		}
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Return default target group
-	for _, tg := range resp.TargetGroups {
-		if *tg.IsDefault {
-			return tg, nil
-		}
-	}
-
-	return nil, nil
+	return defaultTargetGroup, nil
 }
 
 func resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
