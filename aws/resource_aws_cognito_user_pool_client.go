@@ -179,9 +179,10 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			},
 
 			"prevent_user_existence_errors": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.PreventUserExistenceErrorTypes_Values(), false),
 			},
 
 			"supported_identity_providers": {
