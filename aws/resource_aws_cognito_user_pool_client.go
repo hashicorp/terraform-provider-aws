@@ -359,31 +359,33 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
-	d.Set("user_pool_id", resp.UserPoolClient.UserPoolId)
-	d.Set("name", resp.UserPoolClient.ClientName)
-	d.Set("explicit_auth_flows", flattenStringSet(resp.UserPoolClient.ExplicitAuthFlows))
-	d.Set("read_attributes", flattenStringSet(resp.UserPoolClient.ReadAttributes))
-	d.Set("write_attributes", flattenStringSet(resp.UserPoolClient.WriteAttributes))
-	d.Set("refresh_token_validity", resp.UserPoolClient.RefreshTokenValidity)
-	d.Set("access_token_validity", resp.UserPoolClient.AccessTokenValidity)
-	d.Set("id_token_validity", resp.UserPoolClient.IdTokenValidity)
-	d.Set("client_secret", resp.UserPoolClient.ClientSecret)
-	d.Set("allowed_oauth_flows", flattenStringSet(resp.UserPoolClient.AllowedOAuthFlows))
-	d.Set("allowed_oauth_flows_user_pool_client", resp.UserPoolClient.AllowedOAuthFlowsUserPoolClient)
-	d.Set("allowed_oauth_scopes", flattenStringSet(resp.UserPoolClient.AllowedOAuthScopes))
-	d.Set("callback_urls", flattenStringSet(resp.UserPoolClient.CallbackURLs))
-	d.Set("default_redirect_uri", resp.UserPoolClient.DefaultRedirectURI)
-	d.Set("logout_urls", flattenStringSet(resp.UserPoolClient.LogoutURLs))
-	d.Set("prevent_user_existence_errors", resp.UserPoolClient.PreventUserExistenceErrors)
-	d.Set("supported_identity_providers", flattenStringSet(resp.UserPoolClient.SupportedIdentityProviders))
+	userPoolClient := resp.UserPoolClient
+	d.Set("user_pool_id", userPoolClient.UserPoolId)
+	d.Set("name", userPoolClient.ClientName)
+	d.Set("explicit_auth_flows", flattenStringSet(userPoolClient.ExplicitAuthFlows))
+	d.Set("read_attributes", flattenStringSet(userPoolClient.ReadAttributes))
+	d.Set("write_attributes", flattenStringSet(userPoolClient.WriteAttributes))
+	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
+	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
+	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
+	d.Set("client_secret", userPoolClient.ClientSecret)
+	d.Set("allowed_oauth_flows", flattenStringSet(userPoolClient.AllowedOAuthFlows))
+	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
+	d.Set("allowed_oauth_scopes", flattenStringSet(userPoolClient.AllowedOAuthScopes))
+	d.Set("callback_urls", flattenStringSet(userPoolClient.CallbackURLs))
+	d.Set("default_redirect_uri", userPoolClient.DefaultRedirectURI)
+	d.Set("logout_urls", flattenStringSet(userPoolClient.LogoutURLs))
+	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
+	d.Set("supported_identity_providers", flattenStringSet(userPoolClient.SupportedIdentityProviders))
 
-	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(resp.UserPoolClient.AnalyticsConfiguration)); err != nil {
+	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
 		return fmt.Errorf("error setting analytics_configuration: %s", err)
 	}
 
-	if err := d.Set("token_validity_units", flattenAwsCognitoUserPoolClientTokenValidityUnitsType(resp.UserPoolClient.TokenValidityUnits)); err != nil {
-		return fmt.Errorf("error setting token_validity_units: %w", err)
+	if userPoolClient.TokenValidityUnits != nil {
+		if err := d.Set("token_validity_units", flattenAwsCognitoUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
+			return fmt.Errorf("error setting token_validity_units: %w", err)
+		}
 	}
 
 	return nil
