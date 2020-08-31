@@ -287,9 +287,13 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("target_on_demand_capacity"); ok {
 		modifyConfig.TargetOnDemandCapacity = aws.Int64(int64(v.(int)))
+	} else {
+		modifyConfig.TargetOnDemandCapacity = aws.Int64(0)
 	}
 	if v, ok := d.GetOk("target_spot_capacity"); ok {
 		modifyConfig.TargetSpotCapacity = aws.Int64(int64(v.(int)))
+	} else {
+		modifyConfig.TargetSpotCapacity = aws.Int64(0)
 	}
 
 	modifyInstanceFleetInput := &emr.ModifyInstanceFleetInput{
