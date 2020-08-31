@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,6 +19,19 @@ func resourceAwsEMRInstanceFleet() *schema.Resource {
 		Read:   resourceAwsEMRInstanceFleetRead,
 		Update: resourceAwsEMRInstanceFleetUpdate,
 		Delete: resourceAwsEMRInstanceFleetDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected cluster-id/fleet-id", d.Id())
+				}
+				clusterID := idParts[0]
+				resourceID := idParts[1]
+				d.Set("cluster_id", clusterID)
+				d.SetId(resourceID)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
 				Type:     schema.TypeString,
@@ -56,7 +70,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Creating EMR instance fleet params: %s", addInstanceFleetInput)
 	resp, err := conn.AddInstanceFleet(addInstanceFleetInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("error adding EMR Instance Fleet: %w", err)
 	}
 
 	log.Printf("[DEBUG] Created EMR instance fleet finished: %#v", resp)
@@ -95,7 +109,7 @@ func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) e
 
 func findInstanceFleetById(instanceFleets []*emr.InstanceFleet, fleetId string) *emr.InstanceFleet {
 	for _, fleet := range instanceFleets {
-		if *fleet.Id == fleetId {
+		if fleet != nil && aws.StringValue(fleet.Id) == fleetId {
 			return fleet
 		}
 	}
@@ -127,7 +141,7 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.ModifyInstanceFleet(modifyInstanceFleetInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("error modifying EMR Instance Fleet (%s): %w", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -186,7 +200,7 @@ func resourceAwsEMRInstanceFleetDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.ModifyInstanceFleet(modifyInstanceFleetInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleteing/modifying EMR Instance Fleet (%s): %w", d.Id(), err)
 	}
 
 	return nil

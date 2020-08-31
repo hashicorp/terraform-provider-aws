@@ -16,7 +16,7 @@ import (
 func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
@@ -67,7 +67,7 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
@@ -88,7 +88,7 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
@@ -246,75 +246,12 @@ resource "aws_iam_role" "emr_service" {
 }
 EOT
 }
+
 resource "aws_iam_role_policy_attachment" "emr_service" {
   role       = aws_iam_role.emr_service.id
-  policy_arn = aws_iam_policy.emr_service.arn
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
 }
-resource "aws_iam_policy" "emr_service" {
-  name = "%[1]s_emr"
-  policy = <<EOT
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "ec2:AuthorizeSecurityGroupEgress",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:CancelSpotInstanceRequests",
-            "ec2:CreateNetworkInterface",
-            "ec2:CreateSecurityGroup",
-            "ec2:CreateTags",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DeleteSecurityGroup",
-            "ec2:DeleteTags",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeAccountAttributes",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstances",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeNetworkAcls",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DescribePrefixLists",
-            "ec2:DescribeRouteTables",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeSpotInstanceRequests",
-            "ec2:DescribeSpotPriceHistory",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeVpcAttribute",
-            "ec2:DescribeVpcEndpoints",
-            "ec2:DescribeVpcEndpointServices",
-            "ec2:DescribeVpcs",
-            "ec2:DetachNetworkInterface",
-            "ec2:ModifyImageAttribute",
-            "ec2:ModifyInstanceAttribute",
-            "ec2:RequestSpotInstances",
-            "ec2:RevokeSecurityGroupEgress",
-            "ec2:RunInstances",
-            "ec2:TerminateInstances",
-            "ec2:DeleteVolume",
-            "ec2:DescribeVolumeStatus",
-            "iam:GetRole",
-            "iam:GetRolePolicy",
-            "iam:ListInstanceProfiles",
-            "iam:ListRolePolicies",
-            "iam:PassRole",
-            "s3:CreateBucket",
-            "s3:Get*",
-            "s3:List*",
-            "sdb:BatchPutAttributes",
-            "sdb:Select",
-            "sqs:CreateQueue",
-            "sqs:Delete*",
-            "sqs:GetQueue*",
-            "sqs:PurgeQueue",
-            "sqs:ReceiveMessage"
-        ]
-    }]
-}
-EOT
-}
+
 resource "aws_iam_instance_profile" "emr_instance_profile" {
   name = "%[1]s_profile"
   role = aws_iam_role.emr_instance_profile.name
@@ -421,7 +358,7 @@ resource "aws_emr_cluster" "test" {
 func testAccAWSEmrInstanceFleetConfig(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = "${aws_emr_cluster.test.id}"
+      cluster_id            = aws_emr_cluster.test.id
       instance_fleet_type   = "TASK"
       instance_fleet {
         instance_type_configs        {
@@ -433,14 +370,6 @@ func testAccAWSEmrInstanceFleetConfig(r string) string {
             allocation_strategy = "lowest-price"
           }
         }
-#        launch_specifications {
-#          spot_specification {
-#            allocation_strategy      = "capacity-optimized"
-#            block_duration_minutes   = 0
-#            timeout_action           = "SWITCH_TO_ON_DEMAND"
-#            timeout_duration_minutes = 10
-#          }
-#        }
         name                      = "emr_instance_fleet_%[1]s"
         target_on_demand_capacity = 1
         target_spot_capacity      = 0
@@ -452,7 +381,7 @@ func testAccAWSEmrInstanceFleetConfig(r string) string {
 func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = "${aws_emr_cluster.test.id}"
+      cluster_id            = aws_emr_cluster.test.id
       instance_fleet_type   = "TASK"
       instance_fleet {
         instance_type_configs        {
@@ -478,7 +407,7 @@ func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
 func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = "${aws_emr_cluster.test.id}"
+      cluster_id            = aws_emr_cluster.test.id
       instance_fleet_type   = "TASK"
       instance_fleet {
         instance_type_configs {
@@ -510,7 +439,7 @@ func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 func testAccAWSEmrInstanceFleetConfigFull(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = "${aws_emr_cluster.test.id}"
+      cluster_id            = aws_emr_cluster.test.id
       instance_fleet_type   = "TASK"
       instance_fleet {
         instance_type_configs {
