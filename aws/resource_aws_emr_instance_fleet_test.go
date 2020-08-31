@@ -24,10 +24,9 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 			{
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_spot_capacity", "0"),
 				),
 			},
 		},
@@ -45,19 +44,18 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 			{
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_spot_capacity", "1"),
 				),
 			},
 			{
 				Config: testAccAWSEmrInstanceFleetConfigZeroCount(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.instance_fleet_type", "TASK"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_spot_capacity", "0"),
 				),
 			},
 		},
@@ -75,10 +73,9 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 			{
 				Config: testAccAWSEmrInstanceFleetConfigEbsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_spot_capacity", "1"),
 				),
 			},
 		},
@@ -96,10 +93,9 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 			{
 				Config: testAccAWSEmrInstanceFleetConfigFull(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet_type", "TASK"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.instance_type_configs.#", "2"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_on_demand_capacity", "2"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_fleet.0.target_spot_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.instance_type_configs.#", "2"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_on_demand_capacity", "2"),
+					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "task_instance_fleet.0.target_spot_capacity", "2"),
 				),
 			},
 		},
@@ -358,9 +354,8 @@ resource "aws_emr_cluster" "test" {
 func testAccAWSEmrInstanceFleetConfig(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = aws_emr_cluster.test.id
-      instance_fleet_type   = "TASK"
-      instance_fleet {
+      cluster_id = aws_emr_cluster.test.id
+      task_instance_fleet {
         instance_type_configs        {
           instance_type = "m3.xlarge"
           weighted_capacity = 1
@@ -381,9 +376,8 @@ func testAccAWSEmrInstanceFleetConfig(r string) string {
 func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = aws_emr_cluster.test.id
-      instance_fleet_type   = "TASK"
-      instance_fleet {
+      cluster_id = aws_emr_cluster.test.id
+      task_instance_fleet {
         instance_type_configs        {
           instance_type = "m3.xlarge"
           weighted_capacity = 1
@@ -407,9 +401,8 @@ func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
 func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = aws_emr_cluster.test.id
-      instance_fleet_type   = "TASK"
-      instance_fleet {
+      cluster_id = aws_emr_cluster.test.id
+      task_instance_fleet {
         instance_type_configs {
           bid_price_as_percentage_of_on_demand_price = 100
           ebs_config {
@@ -439,15 +432,19 @@ func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 func testAccAWSEmrInstanceFleetConfigFull(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id            = aws_emr_cluster.test.id
-      instance_fleet_type   = "TASK"
-      instance_fleet {
+      cluster_id = aws_emr_cluster.test.id
+      task_instance_fleet {
         instance_type_configs {
           bid_price_as_percentage_of_on_demand_price = 100
           ebs_config {
             size                 = 10
             type                 = "gp2"
             volumes_per_instance = 1
+          }
+          ebs_config {
+            size                 = 20
+            type                 = "gp2"
+            volumes_per_instance = 2
           }
           instance_type     = "m4.xlarge"
           weighted_capacity = 1

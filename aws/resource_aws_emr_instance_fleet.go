@@ -37,7 +37,7 @@ func resourceAwsEMRInstanceFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_fleet": {
+			"task_instance_fleet": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -54,7 +54,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 	}
 
-	if l := d.Get("instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
+	if l := d.Get("task_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
 		addInstanceFleetInput.InstanceFleet = readInstanceFleetConfig(
 			l[0].(map[string]interface{}), emr.InstanceFleetTypeTask)
 	}
@@ -90,8 +90,8 @@ func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	if err := d.Set("instance_fleet", flattenInstanceFleet(fleet)); err != nil {
-		return fmt.Errorf("error setting instance_fleet: %s", err)
+	if err := d.Set("task_instance_fleet", flattenInstanceFleet(fleet)); err != nil {
+		return fmt.Errorf("error setting task_instance_fleet: %s", err)
 	}
 
 	return nil
@@ -115,7 +115,7 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 		InstanceFleetId: aws.String(d.Id()),
 	}
 
-	data := d.Get("instance_fleet").([]interface{})[0].(map[string]interface{})
+	data := d.Get("task_instance_fleet").([]interface{})[0].(map[string]interface{})
 
 	if v, ok := data["target_on_demand_capacity"]; ok {
 		modifyConfig.TargetOnDemandCapacity = aws.Int64(int64(v.(int)))
@@ -138,9 +138,9 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 		Pending:    []string{emr.InstanceFleetStateProvisioning, emr.InstanceFleetStateBootstrapping, emr.InstanceFleetStateResizing},
 		Target:     []string{emr.InstanceFleetStateRunning},
 		Refresh:    instanceFleetStateRefresh(conn, d.Get("cluster_id").(string), d.Id()),
-		Timeout:    30 * time.Minute,
+		Timeout:    75 * time.Minute,
 		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		MinTimeout: 30 * time.Second,
 	}
 
 	_, err = stateConf.WaitForState()
