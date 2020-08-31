@@ -20,39 +20,37 @@ Terraform will resize any Instance Fleet to zero when destroying the resource.
 ```hcl
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.cluster.id
-  task_instance_fleet {
-    instance_type_configs {
-      bid_price_as_percentage_of_on_demand_price = 100
-      ebs_config {
-        size                 = 100
-        type                 = "gp2"
-        volumes_per_instance = 1
-      }
-      instance_type     = "m4.xlarge"
-      weighted_capacity = 1
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
     }
-    instance_type_configs {
-      bid_price_as_percentage_of_on_demand_price = 100
-      ebs_config {
-        size                 = 100
-        type                 = "gp2"
-        volumes_per_instance = 1
-      }
-      instance_type     = "m4.2xlarge"
-      weighted_capacity = 2
-    }
-    launch_specifications {
-      spot_specification {
-        allocation_strategy      = "capacity-optimized"
-        block_duration_minutes   = 0
-        timeout_action           = "TERMINATE_CLUSTER"
-        timeout_duration_minutes = 10
-      }
-    }
-    name                      = "task fleet"
-    target_on_demand_capacity = 1
-    target_spot_capacity      = 1
+    instance_type     = "m4.xlarge"
+    weighted_capacity = 1
   }
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    instance_type     = "m4.2xlarge"
+    weighted_capacity = 2
+  }
+  launch_specifications {
+    spot_specification {
+      allocation_strategy      = "capacity-optimized"
+      block_duration_minutes   = 0
+      timeout_action           = "TERMINATE_CLUSTER"
+      timeout_duration_minutes = 10
+    }
+  }
+  name                      = "task fleet"
+  target_on_demand_capacity = 1
+  target_spot_capacity      = 1
 }
 ```
 
@@ -61,11 +59,6 @@ resource "aws_emr_instance_fleet" "task" {
 The following arguments are supported:
 
 * `cluster_id` - (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
-
-* `task_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html)
-
-## task_instance_fleet Configuration Block
-
 * `instance_type_configs` - (Optional) Configuration block for instance fleet
 * `launch_specifications` - (Optional) Configuration block for launch specification
 * `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsEMRInstanceFleet() *schema.Resource {
@@ -37,11 +38,172 @@ func resourceAwsEMRInstanceFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"task_instance_fleet": {
+			"instance_type_configs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bid_price": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"bid_price_as_percentage_of_on_demand_price": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							ForceNew: true,
+							Default:  100,
+						},
+						"configurations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"classification": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"properties": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										ForceNew: true,
+										Elem:     schema.TypeString,
+									},
+								},
+							},
+						},
+						"ebs_config": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"iops": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"size": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validateAwsEmrEbsVolumeType(),
+									},
+									"volumes_per_instance": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+										Default:  1,
+									},
+								},
+							},
+							Set: resourceAwsEMRClusterEBSConfigHash,
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"weighted_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+							Default:  1,
+						},
+					},
+				},
+				Set: resourceAwsEMRInstanceTypeConfigHash,
+			},
+			"launch_specifications": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
-				Elem:     InstanceFleetConfigSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_demand_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"allocation_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(emr.OnDemandProvisioningAllocationStrategy_Values(), false),
+									},
+								},
+							},
+						},
+						"spot_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"allocation_strategy": {
+										Type:         schema.TypeString,
+										ForceNew:     true,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningAllocationStrategy_Values(), false),
+									},
+									"block_duration_minutes": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+										Default:  0,
+									},
+									"timeout_action": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningTimeoutAction_Values(), false),
+									},
+									"timeout_duration_minutes": {
+										Type:     schema.TypeInt,
+										ForceNew: true,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"target_on_demand_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"target_spot_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"provisioned_on_demand_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"provisioned_spot_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -54,10 +216,14 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 	}
 
-	if l := d.Get("task_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		addInstanceFleetInput.InstanceFleet = readInstanceFleetConfig(
-			l[0].(map[string]interface{}), emr.InstanceFleetTypeTask)
+	taskFleet := map[string]interface{}{
+		"name":                      d.Get("name"),
+		"target_on_demand_capacity": d.Get("target_on_demand_capacity"),
+		"target_spot_capacity":      d.Get("target_spot_capacity"),
+		"instance_type_configs":     d.Get("instance_type_configs"),
+		"launch_specifications":     d.Get("launch_specifications"),
 	}
+	addInstanceFleetInput.InstanceFleet = readInstanceFleetConfig(taskFleet, emr.InstanceFleetTypeTask)
 
 	log.Printf("[DEBUG] Creating EMR instance fleet params: %s", addInstanceFleetInput)
 	resp, err := conn.AddInstanceFleet(addInstanceFleetInput)
@@ -90,10 +256,14 @@ func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	if err := d.Set("task_instance_fleet", flattenInstanceFleet(fleet)); err != nil {
-		return fmt.Errorf("error setting task_instance_fleet: %s", err)
-	}
-
+	taskFleet := flattenInstanceFleet(fleet)[0].(map[string]interface{})
+	d.Set("name", taskFleet["name"])
+	d.Set("target_on_demand_capacity", taskFleet["target_on_demand_capacity"])
+	d.Set("target_spot_capacity", taskFleet["target_spot_capacity"])
+	d.Set("instance_type_configs", taskFleet["instance_type_configs"])
+	d.Set("launch_specifications", taskFleet["launch_specifications"])
+	d.Set("provisioned_on_demand_capacity", taskFleet["provisioned_on_demand_capacity"])
+	d.Set("provisioned_spot_capacity", taskFleet["provisioned_spot_capacity"])
 	return nil
 }
 
@@ -115,12 +285,10 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 		InstanceFleetId: aws.String(d.Id()),
 	}
 
-	data := d.Get("task_instance_fleet").([]interface{})[0].(map[string]interface{})
-
-	if v, ok := data["target_on_demand_capacity"]; ok {
+	if v, ok := d.GetOk("target_on_demand_capacity"); ok {
 		modifyConfig.TargetOnDemandCapacity = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := data["target_spot_capacity"]; ok {
+	if v, ok := d.GetOk("target_spot_capacity"); ok {
 		modifyConfig.TargetSpotCapacity = aws.Int64(int64(v.(int)))
 	}
 
