@@ -141,6 +141,10 @@ func resourceAwsS3BucketMetricRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
 	output, err := conn.GetBucketMetricsConfiguration(input)
 	if err != nil {
+		if isAWSErrRequestFailureStatusCode(err, 403) {
+			return fmt.Errorf("permissions error on S3 Bucket (%s) while getting metrics configuration (%s): %s", bucket, name, err)
+		}
+
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			log.Printf("[WARN] %s S3 bucket metrics configuration not found, removing from state.", d.Id())
 			d.SetId("")

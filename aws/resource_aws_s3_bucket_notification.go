@@ -361,6 +361,10 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 		Bucket: aws.String(d.Id()),
 	})
 	if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
+		if isAWSErrRequestFailureStatusCode(err, 403) {
+			return fmt.Errorf("permissions error on S3 Bucket (%s) while verifying bucket existence: %s", d.Id(), err)
+		}
+
 		if awsError, ok := err.(awserr.RequestFailure); ok && awsError.StatusCode() == 404 {
 			log.Printf("[WARN] S3 Bucket (%s) not found, error code (404)", d.Id())
 			d.SetId("")
@@ -376,6 +380,11 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 	notificationConfigs, err := s3conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 		Bucket: aws.String(d.Id()),
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting notification configuration: %s", d.Id(), err)
+	}
+
 	if err != nil {
 		return err
 	}

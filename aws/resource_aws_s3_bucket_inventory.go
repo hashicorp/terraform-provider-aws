@@ -311,6 +311,11 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 		}
 		return nil
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting inventory configuration (%s): %s", bucket, name, err)
+	}
+
 	if isResourceTimeoutError(err) {
 		output, err = conn.GetBucketInventoryConfiguration(input)
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {

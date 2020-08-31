@@ -852,6 +852,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting encryption configuration: %s", d.Id(), err)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error reading S3 Bucket (%s): %s", d.Id(), err)
 	}
@@ -871,6 +875,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				Bucket: aws.String(d.Id()),
 			})
 		})
+		if isAWSErrRequestFailureStatusCode(err, 403) {
+			return fmt.Errorf("permissions error on S3 Bucket (%s) while getting bucket policy: %s", d.Id(), err)
+		}
 		log.Printf("[DEBUG] S3 bucket: %s, read policy: %v", d.Id(), pol)
 		if err != nil {
 			if err := d.Set("policy", ""); err != nil {
@@ -902,6 +909,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				Bucket: aws.String(d.Id()),
 			})
 		})
+		if isAWSErrRequestFailureStatusCode(err, 403) {
+			return fmt.Errorf("permissions error on S3 Bucket (%s) while getting ACL configuration: %s", d.Id(), err)
+		}
 		if err != nil {
 			return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
 		}
@@ -918,6 +928,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting CORS configuration: %s", d.Id(), err)
+	}
+
 	if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
@@ -950,6 +965,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting website configuration: %s", d.Id(), err)
+	}
+
 	if err != nil && !isAWSErr(err, "NotImplemented", "") && !isAWSErr(err, "NoSuchWebsiteConfiguration", "") {
 		return fmt.Errorf("error getting S3 Bucket website configuration: %s", err)
 	}
@@ -1017,6 +1037,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting versioning configuration: %s", d.Id(), err)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -1049,6 +1074,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting acceleration configuration: %s", d.Id(), err)
+	}
 	// Amazon S3 Transfer Acceleration might not be supported in the region
 	if err != nil && !isAWSErr(err, "MethodNotAllowed", "") && !isAWSErr(err, "UnsupportedArgument", "") {
 		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
@@ -1065,6 +1093,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting request payment configuration: %s", d.Id(), err)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error getting S3 Bucket request payment: %s", err)
 	}
@@ -1079,6 +1111,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting logging configuration: %s", d.Id(), err)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
@@ -1107,6 +1143,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting lifecycle configuration: %s", d.Id(), err)
+	}
+
 	if err != nil && !isAWSErr(err, "NoSuchLifecycleConfiguration", "") {
 		return err
 	}
@@ -1236,6 +1277,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting replication configuration: %s", d.Id(), err)
+	}
+
 	if err != nil && !isAWSErr(err, "ReplicationConfigurationNotFoundError", "") {
 		return fmt.Errorf("error getting S3 Bucket replication: %s", err)
 	}
@@ -1255,6 +1301,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting encryption configuration: %s", d.Id(), err)
+	}
+
 	if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
 		return fmt.Errorf("error getting S3 Bucket encryption: %s", err)
 	}
@@ -1286,6 +1337,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			},
 		)
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting location: %s", d.Id(), err)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error getting S3 Bucket location: %s", err)
 	}
@@ -1332,6 +1388,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return keyvaluetags.S3BucketListTags(s3conn, d.Id())
 	})
+
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while listing tags: %s", d.Id(), err)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
