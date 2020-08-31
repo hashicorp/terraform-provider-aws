@@ -158,6 +158,31 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"token_validity_units": {
+                Type:     schema.TypeList,
+                Optional: true,
+                MaxItems: 1,
+                MinItems: 1,
+                Elem: &schema.Resource{
+                    Schema: map[string]*schema.Schema{
+                        "access_token": {
+                            Type:     schema.TypeString,
+                            Required: true,
+                        },
+                        "id_token": {
+                            Type:     schema.TypeString,
+                            Required: true,
+                        },
+                        "refresh_token": {
+                            Type:         schema.TypeString,
+                            Required:     true,
+                            ValidateFunc: validateArn,
+                        },
+                    },
+                },
+            },
+
 			"analytics_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -249,6 +274,10 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 		params.AnalyticsConfiguration = expandAwsCognitoUserPoolClientAnalyticsConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("TokenValidityUnits"); ok {
+		params.TokenValidityUnits = expandAwsCognitoUserPoolClientTokenValidityUnits(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("prevent_user_existence_errors"); ok {
 		params.PreventUserExistenceErrors = aws.String(v.(string))
 	}
@@ -306,6 +335,10 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 
 	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(resp.UserPoolClient.AnalyticsConfiguration)); err != nil {
 		return fmt.Errorf("error setting analytics_configuration: %s", err)
+	}
+
+	if err := d.Set("token_validity_units", flattenAwsCognitoUserPoolClientTokenValidityUnits(resp.UserPoolClient.TokenValidityUnits)); err != nil {
+		return fmt.Errorf("error setting token_validity_units: %s", err)
 	}
 
 	return nil
@@ -373,6 +406,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("analytics_configuration"); ok {
 		params.AnalyticsConfiguration = expandAwsCognitoUserPoolClientAnalyticsConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("token_validity_units"); ok {
+		params.TokenValidityUnits = expandAwsCognitoUserPoolClientTokenValidityUnits(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
@@ -447,6 +484,36 @@ func flattenAwsCognitoUserPoolClientAnalyticsConfig(analyticsConfig *cognitoiden
 		"external_id":      aws.StringValue(analyticsConfig.ExternalId),
 		"role_arn":         aws.StringValue(analyticsConfig.RoleArn),
 		"user_data_shared": aws.BoolValue(analyticsConfig.UserDataShared),
+	}
+
+	return []interface{}{m}
+}
+
+func expandAwsCognitoUserPoolClientTokenValidityUnits(l []interface{}) *cognitoidentityprovider.TokenValidityUnitsType {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	TokenValidityUnits := &cognitoidentityprovider.TokenValidityUnitsType{
+		AccessToken:    aws.String(m["access_token"].(string)),
+		IdToken:        aws.String(m["id_token"].(string)),
+		RefreshToken:   aws.String(m["refresh_token"].(string)),
+	}
+
+	return TokenValidityUnits
+}
+
+func flattenAwsCognitoUserPoolClientTokenValidityUnits(TokenValidityUnits *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
+	if TokenValidityUnits == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"access_token":     aws.StringValue(TokenValidityUnits.AccessToken),
+		"id_token":         aws.StringValue(TokenValidityUnits.IdToken),
+		"refresh_token":    aws.StringValue(TokenValidityUnits.RefreshToken),
 	}
 
 	return []interface{}{m}
