@@ -2,8 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -144,8 +142,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "elasticsearch_settings.0.endpoint_uri", regexp.MustCompile(
-						`^search\-estest\.[^\.]+.es.`)),
+					testAccCheckResourceAttrRegionalHostname(resourceName, "elasticsearch_settings.0.endpoint_uri", "es", "search-estest"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
 				),
@@ -237,9 +234,10 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	brokerPrefix := "ec2-12-345-678-901.compute-1"
-	brokerPort1 := "2345"
-	brokerPort2 := "3456"
+	brokerPrefix := "ec2-12-345-678-901"
+	brokerService := "compute-1"
+	brokerPort1 := 2345
+	brokerPort2 := 3456
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -247,12 +245,11 @@ func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 		CheckDestroy: dmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerPort1),
+				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerService, brokerPort1),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "kafka_settings.0.broker", regexp.MustCompile(
-						strings.ReplaceAll(strings.ReplaceAll(fmt.Sprintf(`^%s.[^:]+:%s`, brokerPrefix, brokerPort1), "-", `\-`), ".", `\.`))),
+					testAccCheckResourceAttrHostnameWithPort(resourceName, "kafka_settings.0.broker", brokerService, brokerPrefix, brokerPort1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
 				),
 			},
@@ -263,12 +260,11 @@ func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerPort2),
+				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerService, brokerPort2),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "kafka_settings.0.broker", regexp.MustCompile(
-						strings.ReplaceAll(strings.ReplaceAll(fmt.Sprintf(`^%s.[^:]+:%s`, brokerPrefix, brokerPort2), "-", `\-`), ".", `\.`))),
+					testAccCheckResourceAttrHostnameWithPort(resourceName, "kafka_settings.0.broker", brokerService, brokerPrefix, brokerPort2),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
 				),
 			},
@@ -912,7 +908,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri            = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    endpoint_uri            = "search-estest.es.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
     service_access_role_arn = aws_iam_role.test.arn
   }
 
@@ -961,7 +957,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName, fullLoadErrorPercentage))
 }
 
-func dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerPort string) string {
+func dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerServiceName string, brokerPort int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -971,10 +967,11 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "kafka"
 
   kafka_settings {
-    broker = "%[2]s.${data.aws_partition.current.dns_suffix}:%[3]s"
+	// example kafka broker: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+    broker = "%[2]s.%[3]s.${data.aws_partition.current.dns_suffix}:%[4]d"
   }
 }
-`, rName, brokerPrefix, brokerPort)
+`, rName, brokerPrefix, brokerServiceName, brokerPort)
 }
 
 func dmsEndpointKafkaConfigTopic(rName string, topic string) string {
