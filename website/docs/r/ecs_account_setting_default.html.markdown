@@ -37,8 +37,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.
+ECS Account Setting defaults can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_ecs_account_setting_default.example 'taskLongArnFormat
+$ terraform import aws_ecs_account_setting_default.example taskLongArnFormat
 ```
