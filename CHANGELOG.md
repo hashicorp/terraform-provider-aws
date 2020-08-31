@@ -16,6 +16,8 @@ ENHANCEMENTS
 * resource/aws_kinesis_firehose_delivery_stream: Add `elasticsearch_configuration` `cluster_endpoint` argument [GH-12484]
 * resource/aws_kinesis_firehose_delivery_stream: Add various plan-time validations for arguments [GH-12484]
 * resource/aws_msk_configuration: Support resource in-place updates and deletion [GH-14826]
+* resource/aws_wafv2_rule_group: Add `ip_set_forwarded_ip_config` configuration block to `ip_set_reference_statement` [GH-14902]
+* resource/aws_wafv2_web_acl: Add `ip_set_forwarded_ip_config` configuration block to `ip_set_reference_statement` [GH-14902]
 
 BUG FIXES
 
