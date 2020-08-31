@@ -351,12 +351,6 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting analytics_configuration: %s", err)
 	}
 
-	if userPoolClient.TokenValidityUnits != nil {
-		if err := d.Set("token_validity_units", flattenAwsCognitoUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
-			return fmt.Errorf("error setting token_validity_units: %w", err)
-		}
-	}
-
 	return nil
 }
 
@@ -430,10 +424,6 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("analytics_configuration"); ok {
 		params.AnalyticsConfiguration = expandAwsCognitoUserPoolClientAnalyticsConfig(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("token_validity_units"); ok {
-		params.TokenValidityUnits = expandAwsCognitoUserPoolClientTokenValidityUnitsType(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
