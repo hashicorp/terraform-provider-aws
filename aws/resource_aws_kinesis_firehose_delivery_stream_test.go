@@ -1103,6 +1103,78 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 	})
 }
 
+func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+	ri := acctest.RandInt()
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+	preConfigWithVpc := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic,
+		ri, ri, ri, ri, ri)
+
+	postConfigWithVpc := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate,
+			ri, ri, ri, ri, ri)
+
+	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
+		BufferingHints: &firehose.ElasticsearchBufferingHints{
+			IntervalInSeconds: aws.Int64(500),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfigWithVpc,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: postConfigWithVpc,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+				),
+			},
+		},
+	})
+}
+
 // Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1657
 func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
@@ -2452,6 +2524,108 @@ EOF
 }
 `
 
+// ElasticSearch associated with VPC
+var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+data "aws_availability_zones" "available" {
+	state = "available"
+  
+	filter {
+	  name   = "opt-in-status"
+	  values = ["opt-in-not-required"]
+	}
+  }
+  
+  resource "aws_vpc" "elasticsearch_in_vpc" {
+	cidr_block = "192.168.0.0/22"
+  
+	tags = {
+	  Name = "terraform-testacc-elasticsearch-domain-in-vpc"
+	}
+  }
+  
+  resource "aws_subnet" "first" {
+	vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+	availability_zone = data.aws_availability_zones.available.names[0]
+	cidr_block        = "192.168.0.0/24"
+  
+	tags = {
+	  Name = "tf-acc-elasticsearch-domain-in-vpc-first"
+	}
+  }
+  
+  resource "aws_subnet" "second" {
+	vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+	availability_zone = data.aws_availability_zones.available.names[1]
+	cidr_block        = "192.168.1.0/24"
+  
+	tags = {
+	  Name = "tf-acc-elasticsearch-domain-in-vpc-second"
+	}
+  }
+  
+  resource "aws_security_group" "first" {
+	vpc_id = aws_vpc.elasticsearch_in_vpc.id
+  }
+  
+  resource "aws_security_group" "second" {
+	vpc_id = aws_vpc.elasticsearch_in_vpc.id
+  }
+  
+  resource "aws_elasticsearch_domain" "test_cluster" {
+	domain_name = "es-test-%d"
+  
+	cluster_config {
+	  instance_count         = 2
+	  zone_awareness_enabled = true
+	  instance_type          = "t2.small.elasticsearch"
+	}
+  
+	ebs_options {
+	  ebs_enabled = true
+	  volume_size = 10
+	}
+  
+	vpc_options {
+	  security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+	  subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+	}
+  }
+  
+  resource "aws_iam_role_policy" "firehose-elasticsearch" {
+	name   = "elasticsearch"
+	role   = aws_iam_role.firehose.id
+	policy = <<EOF
+{
+	"Version":"2012-10-17",
+	"Statement":[
+	   {
+		  "Effect":"Allow",
+		  "Action":[
+			 "es:*"
+		  ],
+		  "Resource":[
+			"${aws_elasticsearch_domain.test_cluster.arn}",
+			"${aws_elasticsearch_domain.test_cluster.arn}/*"
+		  ]
+	   },
+	   {
+		  "Effect":"Allow",
+		  "Action":[
+			 "ec2:Describe*",
+			 "ec2:CreateNetworkInterface",
+			 "ec2:CreateNetworkInterfacePermission",
+			 "ec2:DeleteNetworkInterface"
+		  ],
+		  "Resource":[
+			 "*"
+		  ]
+	   }
+	]
+}
+EOF
+  }
+`
+
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
@@ -2473,6 +2647,30 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `
 
+var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+	depends_on = [aws_iam_role_policy.firehose-elasticsearch]
+  
+	name        = "terraform-kinesis-firehose-es-%d"
+	destination = "elasticsearch"
+	s3_configuration {
+	  role_arn   = aws_iam_role.firehose.arn
+	  bucket_arn = aws_s3_bucket.bucket.arn
+	}
+	elasticsearch_configuration {
+	  domain_arn = aws_elasticsearch_domain.test_cluster.arn
+	  role_arn   = aws_iam_role.firehose.arn
+	  index_name = "test"
+	  type_name  = "test"
+  
+	  vpc_config {
+		subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+		security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+		role_arn           = aws_iam_role.firehose.arn
+	  }
+	}
+  }
+`
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
@@ -2507,6 +2705,40 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `
+
+var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+	depends_on = [aws_iam_role_policy.firehose-elasticsearch]
+  
+	name        = "terraform-kinesis-firehose-es-%d"
+	destination = "elasticsearch"
+	s3_configuration {
+	  role_arn   = aws_iam_role.firehose.arn
+	  bucket_arn = aws_s3_bucket.bucket.arn
+	}
+	elasticsearch_configuration {
+	  domain_arn         = aws_elasticsearch_domain.test_cluster.arn
+	  role_arn           = aws_iam_role.firehose.arn
+	  index_name         = "test"
+	  type_name          = "test"
+	  buffering_interval = 500
+	  vpc_config {
+		subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+		security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+		role_arn           = aws_iam_role.firehose.arn
+	  }
+	  processing_configuration {
+		enabled = false
+		processors {
+		  type = "Lambda"
+		  parameters {
+			parameter_name  = "LambdaArn"
+			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+		  }
+		}
+	  }
+	}
+  }`
 
 func testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(rInt int) string {
 	return fmt.Sprintf(`
