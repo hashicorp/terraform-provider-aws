@@ -142,7 +142,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.endpoint_uri", "search-estest.us-west-2.es.amazonaws.com"),
+					testAccCheckResourceAttrRegionalHostname(resourceName, "elasticsearch_settings.0.endpoint_uri", "es", "search-estest"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
 				),
@@ -234,6 +234,10 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	brokerPrefix := "ec2-12-345-678-901"
+	brokerService := "compute-1"
+	brokerPort1 := 2345
+	brokerPort2 := 3456
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -241,11 +245,11 @@ func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 		CheckDestroy: dmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKafkaConfigBroker(rName, "ec2-12-345-678-901.compute-1.amazonaws.com:2345"),
+				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerService, brokerPort1),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.broker", "ec2-12-345-678-901.compute-1.amazonaws.com:2345"),
+					testAccCheckResourceAttrHostnameWithPort(resourceName, "kafka_settings.0.broker", brokerService, brokerPrefix, brokerPort1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
 				),
 			},
@@ -256,11 +260,11 @@ func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKafkaConfigBroker(rName, "ec2-12-345-678-901.compute-1.amazonaws.com:3456"),
+				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerService, brokerPort2),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.broker", "ec2-12-345-678-901.compute-1.amazonaws.com:3456"),
+					testAccCheckResourceAttrHostnameWithPort(resourceName, "kafka_settings.0.broker", brokerService, brokerPrefix, brokerPort2),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
 				),
 			},
@@ -560,6 +564,8 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func dmsEndpointDynamoDbConfig(randId string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id         = "tf-test-dms-endpoint-%[1]s"
   endpoint_type       = "target"
@@ -586,7 +592,7 @@ resource "aws_iam_role" "iam_role" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}
@@ -624,6 +630,8 @@ EOF
 
 func dmsEndpointDynamoDbConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id         = "tf-test-dms-endpoint-%[1]s"
   endpoint_type       = "target"
@@ -648,7 +656,7 @@ resource "aws_iam_role" "iam_role" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}
@@ -686,6 +694,8 @@ EOF
 
 func dmsEndpointS3Config(randId string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
   endpoint_type               = "target"
@@ -717,7 +727,7 @@ resource "aws_iam_role" "iam_role" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}
@@ -760,6 +770,8 @@ EOF
 
 func dmsEndpointS3ConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
   endpoint_type               = "target"
@@ -794,7 +806,7 @@ resource "aws_iam_role" "iam_role" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}
@@ -837,6 +849,10 @@ EOF
 
 func dmsEndpointElasticsearchConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -847,7 +863,7 @@ resource "aws_iam_role" "test" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}
@@ -892,7 +908,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri            = "search-estest.us-west-2.es.amazonaws.com"
+    endpoint_uri            = "search-estest.es.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
     service_access_role_arn = aws_iam_role.test.arn
   }
 
@@ -911,7 +927,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    endpoint_uri               = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
     error_retry_duration       = %[2]d
     service_access_role_arn    = aws_iam_role.test.arn
   }
@@ -931,7 +947,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    endpoint_uri               = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
     full_load_error_percentage = %[2]d
     service_access_role_arn    = aws_iam_role.test.arn
   }
@@ -941,29 +957,34 @@ resource "aws_dms_endpoint" "test" {
 `, rName, fullLoadErrorPercentage))
 }
 
-func dmsEndpointKafkaConfigBroker(rName string, broker string) string {
+func dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerServiceName string, brokerPort int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
   engine_name   = "kafka"
 
   kafka_settings {
-    broker = %[2]q
+	// example kafka broker: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+    broker = "%[2]s.%[3]s.${data.aws_partition.current.dns_suffix}:%[4]d"
   }
 }
-`, rName, broker)
+`, rName, brokerPrefix, brokerServiceName, brokerPort)
 }
 
 func dmsEndpointKafkaConfigTopic(rName string, topic string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
   engine_name   = "kafka"
 
   kafka_settings {
-    broker = "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+    broker = "ec2-12-345-678-901.compute-1.${data.aws_partition.current.dns_suffix}:2345"
     topic  = %[2]q
   }
 }
@@ -972,6 +993,8 @@ resource "aws_dms_endpoint" "test" {
 
 func dmsEndpointKinesisConfig(randId string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id   = "tf-test-dms-endpoint-%[1]s"
   endpoint_type = "target"
@@ -1005,7 +1028,7 @@ resource "aws_iam_role" "iam_role" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}
@@ -1038,6 +1061,8 @@ data "aws_iam_policy_document" "dms_kinesis_access" {
 
 func dmsEndpointKinesisConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_dms_endpoint" "dms_endpoint" {
   endpoint_id   = "tf-test-dms-endpoint-%[1]s"
   endpoint_type = "target"
@@ -1071,7 +1096,7 @@ resource "aws_iam_role" "iam_role" {
 		{
 			"Action": "sts:AssumeRole",
 			"Principal": {
-				"Service": "dms.amazonaws.com"
+				"Service": "dms.${data.aws_partition.current.dns_suffix}"
 			},
 			"Effect": "Allow"
 		}

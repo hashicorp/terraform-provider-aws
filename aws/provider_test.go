@@ -153,6 +153,25 @@ func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, a
 	}
 }
 
+// testAccCheckResourceAttrRegionalHostname ensures the Terraform state exactly matches a formatted DNS hostname with region and partition DNS suffix
+func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, serviceName, hostnamePrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		hostname := fmt.Sprintf("%s.%s.%s.%s", hostnamePrefix, serviceName, testAccGetRegion(), testAccGetPartitionDNSSuffix())
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// testAccCheckResourceAttrHostnameWithPort ensures the Terraform state regexp matches a formatted DNS hostname with prefix, partition DNS suffix, and given port
+func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, serviceName, hostnamePrefix string, port int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// kafka broker example: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+		hostname := fmt.Sprintf("%s.%s.%s:%d", hostnamePrefix, serviceName, testAccGetPartitionDNSSuffix(), port)
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
