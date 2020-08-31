@@ -79,6 +79,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Default:      30,
 				ValidateFunc: validation.IntBetween(0, 3650),
 			},
+			"access_token_validity": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 86400),
+			},
 
 			"allowed_oauth_flows": {
 				Type:     schema.TypeSet,
@@ -224,6 +229,10 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 		params.RefreshTokenValidity = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("access_token_validity"); ok {
+		params.AccessTokenValidity = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("allowed_oauth_flows"); ok {
 		params.AllowedOAuthFlows = expandStringSet(v.(*schema.Set))
 	}
@@ -301,6 +310,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	d.Set("read_attributes", flattenStringSet(resp.UserPoolClient.ReadAttributes))
 	d.Set("write_attributes", flattenStringSet(resp.UserPoolClient.WriteAttributes))
 	d.Set("refresh_token_validity", resp.UserPoolClient.RefreshTokenValidity)
+	d.Set("refresh_token_validity", resp.UserPoolClient.AccessTokenValidity)
 	d.Set("client_secret", resp.UserPoolClient.ClientSecret)
 	d.Set("allowed_oauth_flows", flattenStringSet(resp.UserPoolClient.AllowedOAuthFlows))
 	d.Set("allowed_oauth_flows_user_pool_client", resp.UserPoolClient.AllowedOAuthFlowsUserPoolClient)
@@ -344,6 +354,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("refresh_token_validity"); ok {
 		params.RefreshTokenValidity = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("access_token_validity"); ok {
+		params.AccessTokenValidity = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("allowed_oauth_flows"); ok {
