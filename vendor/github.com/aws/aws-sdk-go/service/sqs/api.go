@@ -1006,6 +1006,14 @@ func (c *SQS) ListDeadLetterSourceQueuesRequest(input *ListDeadLetterSourceQueue
 // Returns a list of your queues that have the RedrivePolicy queue attribute
 // configured with a dead-letter queue.
 //
+// The ListDeadLetterSourceQueues methods supports pagination. Set parameter
+// MaxResults in the request to specify the maximum number of results to be
+// returned in the response. If you do not set MaxResults, the response includes
+// a maximum of 1,000 results. If you set MaxResults and there are additional
+// results to display, the response includes a value for NextToken. Use NextToken
+// as a parameter in your next request to ListDeadLetterSourceQueues to receive
+// the next page of results.
+//
 // For more information about using dead-letter queues, see Using Amazon SQS
 // Dead-Letter Queues (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 // in the Amazon Simple Queue Service Developer Guide.
@@ -1225,9 +1233,17 @@ func (c *SQS) ListQueuesRequest(input *ListQueuesInput) (req *request.Request, o
 
 // ListQueues API operation for Amazon Simple Queue Service.
 //
-// Returns a list of your queues. The maximum number of queues that can be returned
-// is 1,000. If you specify a value for the optional QueueNamePrefix parameter,
-// only queues with a name that begins with the specified value are returned.
+// Returns a list of your queues in the current region. The response includes
+// a maximum of 1,000 results. If you specify a value for the optional QueueNamePrefix
+// parameter, only queues with a name that begins with the specified value are
+// returned.
+//
+// The listQueues methods supports pagination. Set parameter MaxResults in the
+// request to specify the maximum number of results to be returned in the response.
+// If you do not set MaxResults, the response includes a maximum of 1,000 results.
+// If you set MaxResults and there are additional results to display, the response
+// includes a value for NextToken. Use NextToken as a parameter in your next
+// request to listQueues to receive the next page of results.
 //
 // Cross-account permissions don't apply to this action. For more information,
 // see Grant Cross-Account Permissions to a Role and a User Name (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-customer-managed-policy-examples.html#grant-cross-account-permissions-to-role-and-user-name)
@@ -2503,7 +2519,7 @@ type ChangeMessageVisibilityInput struct {
 	// ReceiptHandle is a required field
 	ReceiptHandle *string `type:"string" required:"true"`
 
-	// The new value for the message's visibility timeout (in seconds). Values values:
+	// The new value for the message's visibility timeout (in seconds). Values range:
 	// 0 to 43200. Maximum: 12 hours.
 	//
 	// VisibilityTimeout is a required field
@@ -3323,7 +3339,8 @@ func (s *GetQueueUrlOutput) SetQueueUrl(v string) *GetQueueUrlOutput {
 type ListDeadLetterSourceQueuesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Maximum number of results to include in the response.
+	// Maximum number of results to include in the response. Value range is 1 to
+	// 1000. You must set MaxResults to receive a value for NextToken in the response.
 	MaxResults *int64 `type:"integer"`
 
 	// Pagination token to request the next set of results.
@@ -3382,7 +3399,9 @@ func (s *ListDeadLetterSourceQueuesInput) SetQueueUrl(v string) *ListDeadLetterS
 type ListDeadLetterSourceQueuesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Pagination token to include in the next request.
+	// Pagination token to include in the next request. Token value is null if there
+	// are no additional results to request, or if you did not set MaxResults in
+	// the request.
 	NextToken *string `type:"string"`
 
 	// A list of source queue URLs that have the RedrivePolicy queue attribute configured
@@ -3478,7 +3497,8 @@ func (s *ListQueueTagsOutput) SetTags(v map[string]*string) *ListQueueTagsOutput
 type ListQueuesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Maximum number of results to include in the response.
+	// Maximum number of results to include in the response. Value range is 1 to
+	// 1000. You must set MaxResults to receive a value for NextToken in the response.
 	MaxResults *int64 `type:"integer"`
 
 	// Pagination token to request the next set of results.
@@ -3523,7 +3543,9 @@ func (s *ListQueuesInput) SetQueueNamePrefix(v string) *ListQueuesInput {
 type ListQueuesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Pagination token to include in the next request.
+	// Pagination token to include in the next request. Token value is null if there
+	// are no additional results to request, or if you did not set MaxResults in
+	// the request.
 	NextToken *string `type:"string"`
 
 	// A list of queue URLs, up to 1,000 entries, or the value of MaxResults that
@@ -3592,7 +3614,7 @@ type Message struct {
 	MD5OfMessageAttributes *string `type:"string"`
 
 	// Each message attribute consists of a Name, Type, and Value. For more information,
-	// see Amazon SQS Message Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-attributes.html)
+	// see Amazon SQS Message Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 	// in the Amazon Simple Queue Service Developer Guide.
 	MessageAttributes map[string]*MessageAttributeValue `locationName:"MessageAttribute" locationNameKey:"Name" locationNameValue:"Value" type:"map" flattened:"true"`
 
@@ -3681,7 +3703,7 @@ type MessageAttributeValue struct {
 	// Binary. For the Number data type, you must use StringValue.
 	//
 	// You can also append custom labels. For more information, see Amazon SQS Message
-	// Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-attributes.html)
+	// Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 	// in the Amazon Simple Queue Service Developer Guide.
 	//
 	// DataType is a required field
@@ -3769,7 +3791,7 @@ type MessageSystemAttributeValue struct {
 	// Binary. For the Number data type, you must use StringValue.
 	//
 	// You can also append custom labels. For more information, see Amazon SQS Message
-	// Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-attributes.html)
+	// Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 	// in the Amazon Simple Queue Service Developer Guide.
 	//
 	// DataType is a required field
@@ -4313,7 +4335,7 @@ type SendMessageBatchRequestEntry struct {
 	Id *string `type:"string" required:"true"`
 
 	// Each message attribute consists of a Name, Type, and Value. For more information,
-	// see Amazon SQS Message Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-attributes.html)
+	// see Amazon SQS Message Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 	// in the Amazon Simple Queue Service Developer Guide.
 	MessageAttributes map[string]*MessageAttributeValue `locationName:"MessageAttribute" locationNameKey:"Name" locationNameValue:"Value" type:"map" flattened:"true"`
 
@@ -4596,11 +4618,12 @@ type SendMessageInput struct {
 	DelaySeconds *int64 `type:"integer"`
 
 	// Each message attribute consists of a Name, Type, and Value. For more information,
-	// see Amazon SQS Message Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-attributes.html)
+	// see Amazon SQS Message Attributes (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 	// in the Amazon Simple Queue Service Developer Guide.
 	MessageAttributes map[string]*MessageAttributeValue `locationName:"MessageAttribute" locationNameKey:"Name" locationNameValue:"Value" type:"map" flattened:"true"`
 
-	// The message to send. The maximum string size is 256 KB.
+	// The message to send. The minimum size is one character. The maximum size
+	// is 256 KB.
 	//
 	// A message can include only XML, JSON, and unformatted text. The following
 	// Unicode characters are allowed:
