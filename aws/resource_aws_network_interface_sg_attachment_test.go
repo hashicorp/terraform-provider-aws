@@ -56,7 +56,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 				Config: testAccAwsNetworkInterfaceSGAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName, &networkInterface),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkInterface(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
