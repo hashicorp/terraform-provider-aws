@@ -1849,22 +1849,6 @@ func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es
 	return
 }
 
-func validateCognitoUserPoolClientURL(v interface{}, k string) (ws []string, es []error) {
-	value := v.(string)
-	if len(value) < 1 {
-		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
-	}
-
-	if len(value) > 1024 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 1024 character", k))
-	}
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+`, k))
-	}
-	return
-}
-
 func validateCognitoResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 

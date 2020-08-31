@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -112,8 +113,12 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Optional: true,
 				MaxItems: 100,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateCognitoUserPoolClientURL,
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+							"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
+					),
 				},
 			},
 
@@ -127,8 +132,12 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Optional: true,
 				MaxItems: 100,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateCognitoUserPoolClientURL,
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+							"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
+					),
 				},
 			},
 
