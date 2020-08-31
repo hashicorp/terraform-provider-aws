@@ -45,6 +45,8 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 					"lambda",
 					"sms",
 					"sqs",
+					"email",
+					"email-json",
 				}, true),
 			},
 			"endpoint": {
@@ -262,6 +264,10 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		TopicArn:   aws.String(topic_arn),
 		Attributes: attributes,
 	}
+
+	if strings.Contains(protocol, "email") {
+        req.ReturnSubscriptionArn = aws.Bool(true)
+    }
 
 	output, err = snsconn.Subscribe(req)
 	if err != nil {

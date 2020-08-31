@@ -231,7 +231,7 @@ resource "aws_sns_topic_subscription" "sns-topic" {
 The following arguments are supported:
 
 * `topic_arn` - (Required) The ARN of the SNS topic to subscribe to
-* `protocol` - (Required) The protocol to use. The possible values for this are: `sqs`, `sms`, `lambda`, `application`. (`http` or `https` are partially supported, see below) (`email` is an option but is unsupported, see below).
+* `protocol` - (Required) The protocol to use. The possible values for this are: `sqs`, `sms`, `lambda`, `application`, `email`, `email-json`. (`http` or `https` are partially supported, see below).
 * `endpoint` - (Required) The endpoint to send data to, the contents will vary with the protocol. (see below for more information)
 * `endpoint_auto_confirms` - (Optional) Boolean indicating whether the end point is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) e.g., PagerDuty (default is false)
 * `confirmation_timeout_in_minutes` - (Optional) Integer indicating number of minutes to wait in retying mode for fetching subscription arn before marking it as failure. Only applicable for http and https protocols (default is 1 minute).
@@ -248,16 +248,13 @@ Supported SNS protocols include:
 * `sqs` -- delivery of JSON-encoded message to an Amazon SQS queue
 * `application` -- delivery of JSON-encoded message to an EndpointArn for a mobile app and device
 * `sms` -- delivery text message
+* `email` -- delivery of message via SMTP (Confirmation tokens are valid for three days).
+* `email-json` -- delivery of JSON-encoded message via SMTP (Confirmation tokens are valid for three days).
 
 Partially supported SNS protocols include:
 
 * `http` -- delivery of JSON-encoded messages via HTTP. Supported only for the end points that auto confirms the subscription.
 * `https` -- delivery of JSON-encoded messages via HTTPS. Supported only for the end points that auto confirms the subscription.
-
-Unsupported protocols include the following:
-
-* `email` -- delivery of message via SMTP
-* `email-json` -- delivery of JSON-encoded message via SMTP
 
 These are unsupported because the endpoint needs to be authorized and does not
 generate an ARN until the target email address has been validated. This breaks
