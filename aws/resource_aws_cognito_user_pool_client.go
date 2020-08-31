@@ -77,7 +77,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      30,
-				ValidateFunc: validation.IntBetween(0, 3650),
+				ValidateFunc: validation.IntBetween(0, 315360000),
 			},
 			"access_token_validity": {
 				Type:         schema.TypeInt,
