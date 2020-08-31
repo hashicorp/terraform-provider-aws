@@ -52,6 +52,7 @@ func resourceAwsDbProxy() *schema.Resource {
 			"idle_client_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"require_tls": {
 				Type:     schema.TypeBool,
@@ -293,7 +294,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set("role_arn", dbProxy.RoleArn)
 	d.Set("vpc_subnet_ids", flattenStringSet(dbProxy.VpcSubnetIds))
-	d.Set("security_group_ids", flattenStringSet(dbProxy.VpcSecurityGroupIds))
+	d.Set("vpc_security_group_ids", flattenStringSet(dbProxy.VpcSecurityGroupIds))
 	d.Set("endpoint", dbProxy.Endpoint)
 
 	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
@@ -345,6 +346,11 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error updating DB Proxy: %s", err)
 		}
+
+		// DB Proxy Name is used as an ID as the API doesn't provide a way to read/
+		// update/delete DB proxies using the ARN
+		d.SetId(nName.(string))
+		log.Printf("[INFO] Updated DB Proxy ID: %s", d.Id())
 
 		stateChangeConf := &resource.StateChangeConf{
 			Pending: []string{rds.DBProxyStatusModifying},
