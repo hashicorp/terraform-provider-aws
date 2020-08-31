@@ -1,12 +1,12 @@
 ---
 subcategory: "ECS"
 layout: "aws"
-page_title: "AWS: aws_ecs_default_account_settings"
+page_title: "AWS: aws_ecs_default_account_setting"
 description: |-
   Provides an ECS Default account setting.
 ---
 
-# Resource: aws_ecs_account_settings_default
+# Resource: aws_ecs_account_setting_default
 
 Provides an ECS default account setting for a specific ECS Resource name within a specific region. More information can be found on the [ECS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-account-settings.html).
 
@@ -16,7 +16,7 @@ Provides an ECS default account setting for a specific ECS Resource name within 
 
 ```hcl
 resource "aws_ecs_account_setting_default" "test" {
-  name = "taskLongArnFormat"
+  name  = "taskLongArnFormat"
   value = "enabled"
 }
 ```
