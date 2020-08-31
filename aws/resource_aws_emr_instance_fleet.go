@@ -38,12 +38,6 @@ func resourceAwsEMRInstanceFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_fleet_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(emr.InstanceFleetType_Values(), false),
-			},
 			"instance_fleet": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -63,8 +57,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 
 	if l := d.Get("instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
 		addInstanceFleetInput.InstanceFleet = readInstanceFleetConfig(
-			l[0].(map[string]interface{}),
-			*aws.String(d.Get("instance_fleet_type").(string)))
+			l[0].(map[string]interface{}), emr.InstanceFleetTypeTask)
 	}
 
 	log.Printf("[DEBUG] Creating EMR instance fleet params: %s", addInstanceFleetInput)
@@ -97,8 +90,6 @@ func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) e
 		d.SetId("")
 		return nil
 	}
-
-	d.Set("instance_fleet_type", aws.StringValue(fleet.InstanceFleetType))
 
 	if err := d.Set("instance_fleet", flattenInstanceFleet(fleet)); err != nil {
 		return fmt.Errorf("error setting instance_fleet: %s", err)
@@ -200,7 +191,7 @@ func resourceAwsEMRInstanceFleetDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.ModifyInstanceFleet(modifyInstanceFleetInput)
 	if err != nil {
-		return fmt.Errorf("error deleteing/modifying EMR Instance Fleet (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting/modifying EMR Instance Fleet (%s): %w", d.Id(), err)
 	}
 
 	return nil
