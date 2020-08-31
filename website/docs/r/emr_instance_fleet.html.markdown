@@ -20,7 +20,7 @@ Terraform will resize any Instance Fleet to zero when destroying the resource.
 ```hcl
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.cluster.id
-  instance_fleet {
+  task_instance_fleet {
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 100
       ebs_config {
@@ -62,9 +62,9 @@ The following arguments are supported:
 
 * `cluster_id` - (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 
-* `instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html)
+* `task_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html)
 
-## instance_fleet Configuration Block
+## task_instance_fleet Configuration Block
 
 * `instance_type_configs` - (Optional) Configuration block for instance fleet
 * `launch_specifications` - (Optional) Configuration block for launch specification

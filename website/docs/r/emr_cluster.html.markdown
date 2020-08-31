@@ -204,7 +204,7 @@ resource "aws_emr_cluster" "example" {
 
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.example.id
-  instance_fleet {
+  task_instance_fleet {
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 100
       ebs_config {
