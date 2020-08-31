@@ -28,6 +28,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`[\w\s+=,.@-]+`),
+						"must satisfy regular expression pattern: `[\\w\\s+=,.@-]+`"),
+				),
 			},
 
 			"client_secret": {
@@ -162,6 +167,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			"default_redirect_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 1024),
+					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+						"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
+				),
 			},
 
 			"logout_urls": {
@@ -190,6 +200,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 32),
+						validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+							"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
+					),
 				},
 			},
 			"analytics_configuration": {
