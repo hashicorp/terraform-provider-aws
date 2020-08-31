@@ -76,6 +76,74 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_AccessTokenValidity(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName, 120),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "120"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_IdTokenValidity(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 120),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "120"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -325,7 +393,7 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					testAccCheckAWSCognitoUserPoolClientDisappears(&client),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolClient(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -418,21 +486,6 @@ func testAccCheckAWSCognitoUserPoolClientExists(name string, client *cognitoiden
 	}
 }
 
-func testAccCheckAWSCognitoUserPoolClientDisappears(client *cognitoidentityprovider.UserPoolClientType) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
-
-		params := &cognitoidentityprovider.DeleteUserPoolClientInput{
-			ClientId:   client.ClientId,
-			UserPoolId: client.UserPoolId,
-		}
-
-		_, err := conn.DeleteUserPoolClient(params)
-
-		return err
-	}
-}
-
 func testAccAWSCognitoUserPoolClientConfig_basic(userPoolName, clientName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -459,6 +512,34 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id           = aws_cognito_user_pool.test.id
 }
 `, rName, rName, refreshTokenValidity)
+}
+
+func testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName string, validity int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                  = "%s"
+  access_token_validity = %d
+  user_pool_id          = aws_cognito_user_pool.test.id
+}
+`, rName, rName, validity)
+}
+
+func testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName string, validity int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name              = "%s"
+  id_token_validity = %d
+  user_pool_id      = aws_cognito_user_pool.test.id
+}
+`, rName, rName, validity)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_Name(rName, name string) string {
