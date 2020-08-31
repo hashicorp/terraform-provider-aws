@@ -3,7 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -12,6 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+var guardDutyFilterCriterionValidateFunc = validation.Any(
+	validation.IsRFC3339Time,
+	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be an integer value"),
 )
 
 func resourceAwsGuardDutyFilter() *schema.Resource {
@@ -75,20 +83,24 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"greater_than": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: guardDutyFilterCriterionValidateFunc,
 									},
 									"greater_than_or_equal": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: guardDutyFilterCriterionValidateFunc,
 									},
 									"less_than": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: guardDutyFilterCriterionValidateFunc,
 									},
 									"less_than_or_equal": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: guardDutyFilterCriterionValidateFunc,
 									},
 								},
 							},
@@ -123,7 +135,11 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 	}
 
-	input.FindingCriteria = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	var err error
+	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	if err != nil {
+		return err
+	}
 
 	if v, ok := d.GetOk("tags"); ok {
 		tags := v.(map[string]interface{})
@@ -214,11 +230,15 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 	}
 
-	input.FindingCriteria = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	var err error
+	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
 
-	_, err := conn.UpdateFilter(&input)
+	_, err = conn.UpdateFilter(&input)
 	if err != nil {
 		return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
 	}
@@ -257,65 +277,6 @@ func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func expandFindingCriteria(raw []interface{}) *guardduty.FindingCriteria {
-	findingCriteria := raw[0].(map[string]interface{})
-	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
-	criteria := map[string]*guardduty.Condition{}
-	for _, criterion := range inputFindingCriteria {
-		typedCriterion := criterion.(map[string]interface{})
-
-		field := typedCriterion["field"].(string)
-		// if _,ok:=criteria[field]; ok {
-		// 	return nil,fmt.Errorf("each field in finding_criteria can only be defined once; %q was defined more than once")
-		// }
-		conditionX := guardduty.Condition{}
-		if x, ok := typedCriterion["equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
-				foo := make([]*string, len(v))
-				for i := range v {
-					s := v[i].(string)
-					foo[i] = &s
-				}
-				conditionX.Equals = foo
-			}
-		}
-		if x, ok := typedCriterion["not_equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
-				foo := make([]*string, len(v))
-				for i := range v {
-					s := v[i].(string)
-					foo[i] = &s
-				}
-				conditionX.NotEquals = foo
-			}
-		}
-		if x, ok := typedCriterion["greater_than"]; ok {
-			if v, ok := x.(int); ok && v > 0 {
-				conditionX.GreaterThan = aws.Int64(int64(v))
-			}
-		}
-		if x, ok := typedCriterion["greater_than_or_equal"]; ok {
-			if v, ok := x.(int); ok && v > 0 {
-				conditionX.GreaterThanOrEqual = aws.Int64(int64(v))
-			}
-		}
-		if x, ok := typedCriterion["less_than"]; ok {
-			if v, ok := x.(int); ok && v > 0 {
-				conditionX.LessThan = aws.Int64(int64(v))
-			}
-		}
-		if x, ok := typedCriterion["less_than_or_equal"]; ok {
-			if v, ok := x.(int); ok && v > 0 {
-				conditionX.LessThanOrEqual = aws.Int64(int64(v))
-			}
-		}
-		criteria[field] = &conditionX
-	}
-	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
-
-	return &guardduty.FindingCriteria{Criterion: criteria}
-}
-
 func joinGuardDutyFilterID(detectorID, filterName string) string {
 	return detectorID + "_" + filterName
 }
@@ -326,6 +287,94 @@ func parseImportedId(importedId string) (string, string, error) {
 		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
 	}
 	return parts[0], parts[1], nil
+}
+
+func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error) {
+	findingCriteria := raw[0].(map[string]interface{})
+	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
+
+	criteria := map[string]*guardduty.Condition{}
+	for _, criterion := range inputFindingCriteria {
+		typedCriterion := criterion.(map[string]interface{})
+		field := typedCriterion["field"].(string)
+
+		condition := guardduty.Condition{}
+		if x, ok := typedCriterion["equals"]; ok {
+			if v, ok := x.([]interface{}); ok && len(v) > 0 {
+				foo := make([]*string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = &s
+				}
+				condition.Equals = foo
+			}
+		}
+		if x, ok := typedCriterion["not_equals"]; ok {
+			if v, ok := x.([]interface{}); ok && len(v) > 0 {
+				foo := make([]*string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = &s
+				}
+				condition.NotEquals = foo
+			}
+		}
+		if x, ok := typedCriterion["greater_than"]; ok {
+			if v, ok := x.(string); ok && v != "" {
+				i, err := expandConditionIntField(field, v)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "greater_than", field, err)
+				}
+				condition.GreaterThan = aws.Int64(i)
+			}
+		}
+		if x, ok := typedCriterion["greater_than_or_equal"]; ok {
+			if v, ok := x.(string); ok && v != "" {
+				i, err := expandConditionIntField(field, v)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "greater_than_or_equal", field, err)
+				}
+				condition.GreaterThanOrEqual = aws.Int64(i)
+			}
+		}
+		if x, ok := typedCriterion["less_than"]; ok {
+			if v, ok := x.(string); ok && v != "" {
+				i, err := expandConditionIntField(field, v)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "less_than", field, err)
+				}
+				condition.LessThan = aws.Int64(i)
+			}
+		}
+		if x, ok := typedCriterion["less_than_or_equal"]; ok {
+			if v, ok := x.(string); ok && v != "" {
+				i, err := expandConditionIntField(field, v)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "less_than_or_equal", field, err)
+				}
+				condition.LessThanOrEqual = aws.Int64(i)
+			}
+		}
+		criteria[field] = &condition
+	}
+
+	return &guardduty.FindingCriteria{Criterion: criteria}, nil
+}
+
+func expandConditionIntField(field, v string) (int64, error) {
+	if field == "updatedAt" {
+		date, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return 0, err
+		}
+		return date.UnixNano() / 1000000, nil
+	}
+
+	i, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
 }
 
 func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []interface{} {
@@ -342,16 +391,16 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 			criterion["not_equals"] = aws.StringValueSlice(conditions.NotEquals)
 		}
 		if v := aws.Int64Value(conditions.GreaterThan); v > 0 {
-			criterion["greater_than"] = v
+			criterion["greater_than"] = flattenConditionIntField(field, v)
 		}
 		if v := aws.Int64Value(conditions.GreaterThanOrEqual); v > 0 {
-			criterion["greater_than_or_equal"] = v
+			criterion["greater_than_or_equal"] = flattenConditionIntField(field, v)
 		}
 		if v := aws.Int64Value(conditions.LessThan); v > 0 {
-			criterion["less_than"] = v
+			criterion["less_than"] = flattenConditionIntField(field, v)
 		}
 		if v := aws.Int64Value(conditions.LessThanOrEqual); v > 0 {
-			criterion["less_than_or_equal"] = v
+			criterion["less_than_or_equal"] = flattenConditionIntField(field, v)
 		}
 		flatCriteria = append(flatCriteria, criterion)
 	}
@@ -361,4 +410,14 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 			"criterion": flatCriteria,
 		},
 	}
+}
+
+func flattenConditionIntField(field string, v int64) string {
+	if field == "updatedAt" {
+		seconds := v / 1000
+		nanoseconds := v % 1000
+		date := time.Unix(seconds, nanoseconds).UTC()
+		return date.Format(time.RFC3339)
+	}
+	return strconv.FormatInt(v, 10)
 }

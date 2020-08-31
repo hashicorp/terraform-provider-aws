@@ -17,13 +17,16 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 	resourceName := "aws_guardduty_filter.test"
 	detectorResourceName := "aws_guardduty_detector.test"
 
+	startDate := "2020-01-01T00:00:00Z"
+	endDate := "2020-02-01T00:00:00Z"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_full(),
+				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -47,9 +50,9 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 						"not_equals.1": "another-threat",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":        "updatedAt",
-						"greater_than": "1570744240000",
-						"less_than":    "1570744740000",
+						"field":                 "updatedAt",
+						"greater_than_or_equal": startDate,
+						"less_than":             endDate,
 					}),
 				),
 			},
@@ -59,7 +62,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyFilterConfigNoop_full(),
+				Config: testAccGuardDutyFilterConfigNoop_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -68,6 +71,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a NOOP"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
 		},
@@ -78,13 +82,16 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 	var v1, v2 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
+	startDate := "2020-01-01T00:00:00Z"
+	endDate := "2020-02-01T00:00:00Z"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_full(),
+				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
@@ -118,6 +125,9 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 	var v1, v2, v3 guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
+	startDate := "2020-01-01T00:00:00Z"
+	endDate := "2020-02-01T00:00:00Z"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -141,7 +151,7 @@ func testAccAwsGuardDutyFilter_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyFilterConfig_full(),
+				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -155,13 +165,16 @@ func testAccAwsGuardDutyFilter_disappears(t *testing.T) {
 	var v guardduty.GetFilterOutput
 	resourceName := "aws_guardduty_filter.test"
 
+	startDate := "2020-01-01T00:00:00Z"
+	endDate := "2020-02-01T00:00:00Z"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_full(),
+				Config: testAccGuardDutyFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGuardDutyFilter(), resourceName),
@@ -234,8 +247,8 @@ func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilt
 	}
 }
 
-func testAccGuardDutyFilterConfig_full() string {
-	return `
+func testAccGuardDutyFilterConfig_full(startDate, endDate string) string {
+	return fmt.Sprintf(`
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
   name        = "test-filter"
@@ -254,9 +267,9 @@ resource "aws_guardduty_filter" "test" {
     }
 
     criterion {
-      field        = "updatedAt"
-      greater_than = 1570744240000
-      less_than    = 1570744740000
+      field                 = "updatedAt"
+      greater_than_or_equal = %[1]q
+      less_than             = %[2]q
     }
   }
 }
@@ -264,11 +277,11 @@ resource "aws_guardduty_filter" "test" {
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
-`
+`, startDate, endDate)
 }
 
-func testAccGuardDutyFilterConfigNoop_full() string {
-	return `
+func testAccGuardDutyFilterConfigNoop_full(startDate, endDate string) string {
+	return fmt.Sprintf(`
 resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
   name        = "test-filter"
@@ -288,9 +301,9 @@ resource "aws_guardduty_filter" "test" {
     }
 
     criterion {
-      field        = "updatedAt"
-      greater_than = 1570744240000
-      less_than    = 1570744740000
+      field                 = "updatedAt"
+      greater_than_or_equal = %[1]q
+      less_than             = %[2]q
     }
   }
 }
@@ -298,7 +311,7 @@ resource "aws_guardduty_filter" "test" {
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
-`
+`, startDate, endDate)
 }
 
 func testAccGuardDutyFilterConfig_multipleTags() string {

@@ -32,18 +32,15 @@ resource "aws_guardduty_filter" "MyFilter" {
 
     criterion {
       field        = "updatedAt"
-      greater_than = time_static.start_time.unix * 1000
-      less_than    = time_static.end_time.unix * 1000
+      greater_than = "2020-01-01T00:00:00Z"
+      less_than    = "2020-02-01T00:00:00Z"
+    }
+
+    criterion {
+      field                 = "severity"
+      greater_than_or_equal = "4"
     }
   }
-}
-
-resource "time_static" "start_time" {
-  rfc3339 = "2020-01-01T00:00:00"
-}
-
-resource "time_static" "end_time" {
-  rfc3339 = "2020-02-01T00:00:00"
 }
 ```
 
@@ -66,12 +63,10 @@ The `criterion` block suports the following:
 * `field` - (Required) The name of the field to be evaluated. The full list of field names can be found in [AWS documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_filter-findings.html#filter_criteria).
 * `equals` - (Optional) List of string values to be evaluated.
 * `not_equals` - (Optional) List of string values to be evaluated.
-* `greater_than` - (Optional) An integer to be evaluated.
-* `greater_than_or_equal` - (Optional) An integer to be evaluated.
-* `less_than` - (Optional) An integer to be evaluated.
-* `less_than_or_equal` - (Optional) An integer to be evaluated.
-
-The field `updatedAt` uses dates and times encoded as Unix timestamps with milliseconds. This can be determined using the [`time_static`](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) resource from the [`time` provider](https://registry.terraform.io/providers/hashicorp/time/latest/docs).
+* `greater_than` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `greater_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `less_than` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `less_than_or_equal` - (Optional) A value to be evaluated. Accepts either an integer or a date in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
 ## Attributes Reference
 
