@@ -1,7 +1,7 @@
 ---
 subcategory: "ECS"
 layout: "aws"
-page_title: "AWS: aws_ecs_default_account_setting"
+page_title: "AWS: aws_ecs_account_setting_default"
 description: |-
   Provides an ECS Default account setting.
 ---
