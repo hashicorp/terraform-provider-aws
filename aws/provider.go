@@ -628,6 +628,7 @@ func Provider() *schema.Provider {
 			"aws_glue_job":                                            resourceAwsGlueJob(),
 			"aws_glue_security_configuration":                         resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
+			"aws_glue_user_defined_function":                          resourceAwsGlueUserDefinedFunction(),
 			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
 			"aws_guardduty_publishing_destination":                    resourceAwsGuardDutyPublishingDestination(),
