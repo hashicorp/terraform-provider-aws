@@ -11,6 +11,7 @@ ENHANCEMENTS
 
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
 * resource/aws_ebs_volume: Support io2 type [GH-14894]
+* resource/aws_emr_cluster: Add `core_instance_fleet` and `master_instance_fleet` configuration blocks [GH-14788]
 * resource/aws_kinesis_firehose_delivery_stream: Add `elasticsearch_configuration` `vpc_config` configuration block [GH-13269]
 * resource/aws_kinesis_firehose_delivery_stream: Add `elasticsearch_configuration` `cluster_endpoint` argument [GH-12484]
 * resource/aws_kinesis_firehose_delivery_stream: Add various plan-time validations for arguments [GH-12484]
