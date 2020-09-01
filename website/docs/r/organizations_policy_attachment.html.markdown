@@ -1,4 +1,5 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_policy_attachment"
 description: |-
@@ -15,7 +16,7 @@ Provides a resource to attach an AWS Organizations policy to an organization acc
 
 ```hcl
 resource "aws_organizations_policy_attachment" "account" {
-  policy_id = "${aws_organizations_policy.example.id}"
+  policy_id = aws_organizations_policy.example.id
   target_id = "123456789012"
 }
 ```
@@ -24,8 +25,8 @@ resource "aws_organizations_policy_attachment" "account" {
 
 ```hcl
 resource "aws_organizations_policy_attachment" "root" {
-  policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "${aws_organizations_organization.example.roots.0.id}"
+  policy_id = aws_organizations_policy.example.id
+  target_id = aws_organizations_organization.example.roots[0].id
 }
 ```
 
@@ -33,8 +34,8 @@ resource "aws_organizations_policy_attachment" "root" {
 
 ```hcl
 resource "aws_organizations_policy_attachment" "unit" {
-  policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "${aws_organizations_organizational_unit.example.id}"
+  policy_id = aws_organizations_policy.example.id
+  target_id = aws_organizations_organizational_unit.example.id
 }
 ```
 

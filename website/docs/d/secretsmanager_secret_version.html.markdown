@@ -1,4 +1,5 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_version"
 description: |-
@@ -17,7 +18,7 @@ By default, this data sources retrieves information based on the `AWSCURRENT` st
 
 ```hcl
 data "aws_secretsmanager_secret_version" "example" {
-  secret_id = "${data.aws_secretsmanager_secret.example.id}"
+  secret_id = data.aws_secretsmanager_secret.example.id
 }
 ```
 
@@ -25,7 +26,7 @@ data "aws_secretsmanager_secret_version" "example" {
 
 ```hcl
 data "aws_secretsmanager_secret_version" "by-version-stage" {
-  secret_id     = "${data.aws_secretsmanager_secret.example.id}"
+  secret_id     = data.aws_secretsmanager_secret.example.id
   version_stage = "example"
 }
 ```

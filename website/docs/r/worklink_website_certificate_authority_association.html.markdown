@@ -1,4 +1,5 @@
 ---
+subcategory: "WorkLink"
 layout: "aws"
 page_title: "AWS: aws_worklink_website_certificate_authority_association"
 description: |-
@@ -15,8 +16,8 @@ resource "aws_worklink_fleet" "example" {
 }
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
-  fleet_arn   = "${aws_worklink_fleet.test.arn}"
-  certificate = "${file("certificate.pem")}"
+  fleet_arn   = aws_worklink_fleet.test.arn
+  certificate = file("certificate.pem")
 }
 ```
 

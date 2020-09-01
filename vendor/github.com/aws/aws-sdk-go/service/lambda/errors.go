@@ -2,6 +2,10 @@
 
 package lambda
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCodeStorageExceededException for service response error code
@@ -30,20 +34,44 @@ const (
 	// the Lambda function.
 	ErrCodeEC2UnexpectedException = "EC2UnexpectedException"
 
+	// ErrCodeEFSIOException for service response error code
+	// "EFSIOException".
+	//
+	// An error occured when reading from or writing to a connected file system.
+	ErrCodeEFSIOException = "EFSIOException"
+
+	// ErrCodeEFSMountConnectivityException for service response error code
+	// "EFSMountConnectivityException".
+	//
+	// The function couldn't make a network connection to the configured file system.
+	ErrCodeEFSMountConnectivityException = "EFSMountConnectivityException"
+
+	// ErrCodeEFSMountFailureException for service response error code
+	// "EFSMountFailureException".
+	//
+	// The function couldn't mount the configured file system due to a permission
+	// or configuration issue.
+	ErrCodeEFSMountFailureException = "EFSMountFailureException"
+
+	// ErrCodeEFSMountTimeoutException for service response error code
+	// "EFSMountTimeoutException".
+	//
+	// The function was able to make a network connection to the configured file
+	// system, but the mount operation timed out.
+	ErrCodeEFSMountTimeoutException = "EFSMountTimeoutException"
+
 	// ErrCodeENILimitReachedException for service response error code
 	// "ENILimitReachedException".
 	//
-	// AWS Lambda was not able to create an Elastic Network Interface (ENI) in the
-	// VPC, specified as part of Lambda function configuration, because the limit
-	// for network interfaces has been reached.
+	// AWS Lambda was not able to create an elastic network interface in the VPC,
+	// specified as part of Lambda function configuration, because the limit for
+	// network interfaces has been reached.
 	ErrCodeENILimitReachedException = "ENILimitReachedException"
 
 	// ErrCodeInvalidParameterValueException for service response error code
 	// "InvalidParameterValueException".
 	//
-	// One of the parameters in the request is invalid. For example, if you provided
-	// an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-	// API, that AWS Lambda is unable to assume you will get this exception.
+	// One of the parameters in the request is invalid.
 	ErrCodeInvalidParameterValueException = "InvalidParameterValueException"
 
 	// ErrCodeInvalidRequestContentException for service response error code
@@ -119,6 +147,12 @@ const (
 	// latest RevisionId for your resource.
 	ErrCodePreconditionFailedException = "PreconditionFailedException"
 
+	// ErrCodeProvisionedConcurrencyConfigNotFoundException for service response error code
+	// "ProvisionedConcurrencyConfigNotFoundException".
+	//
+	// The specified configuration does not exist.
+	ErrCodeProvisionedConcurrencyConfigNotFoundException = "ProvisionedConcurrencyConfigNotFoundException"
+
 	// ErrCodeRequestTooLargeException for service response error code
 	// "RequestTooLargeException".
 	//
@@ -129,7 +163,7 @@ const (
 	// ErrCodeResourceConflictException for service response error code
 	// "ResourceConflictException".
 	//
-	// The resource already exists.
+	// The resource already exists, or another operation is in progress.
 	ErrCodeResourceConflictException = "ResourceConflictException"
 
 	// ErrCodeResourceInUseException for service response error code
@@ -143,9 +177,15 @@ const (
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
 	//
-	// The resource (for example, a Lambda function or access policy statement)
-	// specified in the request does not exist.
+	// The resource specified in the request does not exist.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
+
+	// ErrCodeResourceNotReadyException for service response error code
+	// "ResourceNotReadyException".
+	//
+	// The function is inactive and its VPC connection is no longer available. Wait
+	// for the VPC connection to reestablish and try again.
+	ErrCodeResourceNotReadyException = "ResourceNotReadyException"
 
 	// ErrCodeServiceException for service response error code
 	// "ServiceException".
@@ -163,7 +203,7 @@ const (
 	// ErrCodeTooManyRequestsException for service response error code
 	// "TooManyRequestsException".
 	//
-	// Request throughput limit exceeded.
+	// The request throughput limit was exceeded.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 
 	// ErrCodeUnsupportedMediaTypeException for service response error code
@@ -172,3 +212,37 @@ const (
 	// The content type of the Invoke request body is not JSON.
 	ErrCodeUnsupportedMediaTypeException = "UnsupportedMediaTypeException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CodeStorageExceededException":                  newErrorCodeStorageExceededException,
+	"EC2AccessDeniedException":                      newErrorEC2AccessDeniedException,
+	"EC2ThrottledException":                         newErrorEC2ThrottledException,
+	"EC2UnexpectedException":                        newErrorEC2UnexpectedException,
+	"EFSIOException":                                newErrorEFSIOException,
+	"EFSMountConnectivityException":                 newErrorEFSMountConnectivityException,
+	"EFSMountFailureException":                      newErrorEFSMountFailureException,
+	"EFSMountTimeoutException":                      newErrorEFSMountTimeoutException,
+	"ENILimitReachedException":                      newErrorENILimitReachedException,
+	"InvalidParameterValueException":                newErrorInvalidParameterValueException,
+	"InvalidRequestContentException":                newErrorInvalidRequestContentException,
+	"InvalidRuntimeException":                       newErrorInvalidRuntimeException,
+	"InvalidSecurityGroupIDException":               newErrorInvalidSecurityGroupIDException,
+	"InvalidSubnetIDException":                      newErrorInvalidSubnetIDException,
+	"InvalidZipFileException":                       newErrorInvalidZipFileException,
+	"KMSAccessDeniedException":                      newErrorKMSAccessDeniedException,
+	"KMSDisabledException":                          newErrorKMSDisabledException,
+	"KMSInvalidStateException":                      newErrorKMSInvalidStateException,
+	"KMSNotFoundException":                          newErrorKMSNotFoundException,
+	"PolicyLengthExceededException":                 newErrorPolicyLengthExceededException,
+	"PreconditionFailedException":                   newErrorPreconditionFailedException,
+	"ProvisionedConcurrencyConfigNotFoundException": newErrorProvisionedConcurrencyConfigNotFoundException,
+	"RequestTooLargeException":                      newErrorRequestTooLargeException,
+	"ResourceConflictException":                     newErrorResourceConflictException,
+	"ResourceInUseException":                        newErrorResourceInUseException,
+	"ResourceNotFoundException":                     newErrorResourceNotFoundException,
+	"ResourceNotReadyException":                     newErrorResourceNotReadyException,
+	"ServiceException":                              newErrorServiceException,
+	"SubnetIPAddressLimitReachedException":          newErrorSubnetIPAddressLimitReachedException,
+	"TooManyRequestsException":                      newErrorTooManyRequestsException,
+	"UnsupportedMediaTypeException":                 newErrorUnsupportedMediaTypeException,
+}

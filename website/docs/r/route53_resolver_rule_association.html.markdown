@@ -1,4 +1,5 @@
 ---
+subcategory: "Route53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule_association"
 description: |-
@@ -13,8 +14,8 @@ Provides a Route53 Resolver rule association.
 
 ```hcl
 resource "aws_route53_resolver_rule_association" "example" {
-  resolver_rule_id = "${aws_route53_resolver_rule.sys.id}"
-  vpc_id           = "${aws_vpc.foo.id}"
+  resolver_rule_id = aws_route53_resolver_rule.sys.id
+  vpc_id           = aws_vpc.foo.id
 }
 ```
 

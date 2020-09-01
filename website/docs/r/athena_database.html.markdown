@@ -1,4 +1,5 @@
 ---
+subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_database"
 description: |-
@@ -18,7 +19,7 @@ resource "aws_s3_bucket" "hoge" {
 
 resource "aws_athena_database" "hoge" {
   name   = "database_name"
-  bucket = "${aws_s3_bucket.hoge.bucket}"
+  bucket = aws_s3_bucket.hoge.bucket
 }
 ```
 

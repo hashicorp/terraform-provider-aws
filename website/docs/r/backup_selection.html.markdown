@@ -1,4 +1,5 @@
 ---
+subcategory: "Backup"
 layout: "aws"
 page_title: "AWS: aws_backup_selection"
 description: |-
@@ -38,13 +39,13 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
-  role       = "${aws_iam_role.example.name}"
+  role       = aws_iam_role.example.name
 }
 
 resource "aws_backup_selection" "example" {
   # ... other configuration ...
 
-  iam_role_arn = "${aws_iam_role.example.arn}"
+  iam_role_arn = aws_iam_role.example.arn
 }
 ```
 
@@ -52,9 +53,9 @@ resource "aws_backup_selection" "example" {
 
 ```hcl
 resource "aws_backup_selection" "example" {
-  iam_role_arn = "${aws_iam_role.example.arn}"
+  iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
-  plan_id      = "${aws_backup_plan.example.id}"
+  plan_id      = aws_backup_plan.example.id
 
   selection_tag {
     type  = "STRINGEQUALS"
@@ -68,14 +69,14 @@ resource "aws_backup_selection" "example" {
 
 ```hcl
 resource "aws_backup_selection" "example" {
-  iam_role_arn = "${aws_iam_role.example.arn}"
+  iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
-  plan_id      = "${aws_backup_plan.example.id}"
+  plan_id      = aws_backup_plan.example.id
 
   resources = [
-    "${aws_db_instance.example.arn}",
-    "${aws_ebs_volume.example.arn}",
-    "${aws_efs_file_system.example.arn}",
+    aws_db_instance.example.arn,
+    aws_ebs_volume.example.arn,
+    aws_efs_file_system.example.arn,
   ]
 }
 ```

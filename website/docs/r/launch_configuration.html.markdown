@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
 description: |-
@@ -30,7 +31,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_launch_configuration" "as_conf" {
   name          = "web_config"
-  image_id      = "${data.aws_ami.ubuntu.id}"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
 }
 ```
@@ -64,7 +65,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_launch_configuration" "as_conf" {
   name_prefix   = "terraform-lc-example-"
-  image_id      = "${data.aws_ami.ubuntu.id}"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
 
   lifecycle {
@@ -74,7 +75,7 @@ resource "aws_launch_configuration" "as_conf" {
 
 resource "aws_autoscaling_group" "bar" {
   name                 = "terraform-asg-example"
-  launch_configuration = "${aws_launch_configuration.as_conf.name}"
+  launch_configuration = aws_launch_configuration.as_conf.name
   min_size             = 1
   max_size             = 2
 
@@ -115,7 +116,7 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_launch_configuration" "as_conf" {
-  image_id      = "${data.aws_ami.ubuntu.id}"
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = "m4.large"
   spot_price    = "0.001"
 
@@ -126,7 +127,7 @@ resource "aws_launch_configuration" "as_conf" {
 
 resource "aws_autoscaling_group" "bar" {
   name                 = "terraform-asg-example"
-  launch_configuration = "${aws_launch_configuration.as_conf.name}"
+  launch_configuration = aws_launch_configuration.as_conf.name
 }
 ```
 
@@ -197,6 +198,7 @@ Each `ebs_block_device` supports the following:
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Whether the volume should be encrypted or not. Do not use this option if you are using `snapshot_id` as the encrypted flag will be determined by the snapshot. (Default: `false`).
+* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
 
 Modifying any `ebs_block_device` currently requires resource replacement.
 
@@ -223,6 +225,7 @@ configuration, resource recreation can be manually triggered by using the
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the launch configuration.
+* `arn` - The Amazon Resource Name of the launch configuration.
 * `name` - The name of the launch configuration.
 
 [1]: /docs/providers/aws/r/autoscaling_group.html

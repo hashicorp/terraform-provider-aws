@@ -1,4 +1,5 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_catalog_database"
 description: |-
@@ -26,6 +27,13 @@ The following arguments are supported:
 * `description` - (Optional) Description of the database.
 * `location_uri` - (Optional) The location of the database (for example, an HDFS path).
 * `parameters` - (Optional) A list of key-value pairs that define parameters and properties of the database.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Catalog ID and name of the database
+* `arn` - The ARN of the Glue Catalog Database.
 
 ## Import
 

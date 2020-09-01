@@ -1,4 +1,5 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_connection_association"
 description: |-
@@ -25,8 +26,8 @@ resource "aws_dx_lag" "example" {
 }
 
 resource "aws_dx_connection_association" "example" {
-  connection_id = "${aws_dx_connection.example.id}"
-  lag_id        = "${aws_dx_lag.example.id}"
+  connection_id = aws_dx_connection.example.id
+  lag_id        = aws_dx_lag.example.id
 }
 ```
 

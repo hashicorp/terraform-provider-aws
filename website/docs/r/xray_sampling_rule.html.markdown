@@ -1,4 +1,5 @@
 ---
+subcategory: "XRay"
 layout: "aws"
 page_title: "AWS: aws_xray_sampling_rule"
 description: |-
@@ -45,6 +46,7 @@ resource "aws_xray_sampling_rule" "example" {
 * `url_path` - (Required) Matches the path from a request URL.
 * `version` - (Required) The version of the sampling rule format (`1` )
 * `attributes` - (Optional) Matches attributes derived from the request.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 

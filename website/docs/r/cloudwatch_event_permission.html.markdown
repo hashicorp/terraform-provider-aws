@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_permission"
 description: |-
@@ -30,7 +31,7 @@ resource "aws_cloudwatch_event_permission" "OrganizationAccess" {
   condition {
     key   = "aws:PrincipalOrgID"
     type  = "StringEquals"
-    value = "${aws_organizations_organization.example.id}"
+    value = aws_organizations_organization.example.id
   }
 }
 ```

@@ -1,4 +1,5 @@
 ---
+subcategory: "Step Function (SFN)"
 layout: "aws"
 page_title: "AWS: aws_sfn_activity"
 description: |-
@@ -22,7 +23,7 @@ resource "aws_sfn_activity" "sfn_activity" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the activity to create.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 ## Attributes Reference
 

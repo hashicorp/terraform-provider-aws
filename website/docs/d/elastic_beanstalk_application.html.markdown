@@ -1,4 +1,5 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_application"
 description: |-
@@ -17,11 +18,11 @@ data "aws_elastic_beanstalk_application" "example" {
 }
 
 output "arn" {
-  value = "${data.aws_elastic_beanstalk_application.example.arn}"
+  value = data.aws_elastic_beanstalk_application.example.arn
 }
 
 output "description" {
-  value = "${data.aws_elastic_beanstalk_application.example.description}"
+  value = data.aws_elastic_beanstalk_application.example.description
 }
 ```
 

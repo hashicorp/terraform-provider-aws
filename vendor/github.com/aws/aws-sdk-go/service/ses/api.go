@@ -3188,10 +3188,12 @@ func (c *SES) ListCustomVerificationEmailTemplatesPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCustomVerificationEmailTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCustomVerificationEmailTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3322,10 +3324,12 @@ func (c *SES) ListIdentitiesPagesWithContext(ctx aws.Context, input *ListIdentit
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListIdentitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListIdentitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15120,6 +15124,14 @@ const (
 	BehaviorOnMXFailureRejectMessage = "RejectMessage"
 )
 
+// BehaviorOnMXFailure_Values returns all elements of the BehaviorOnMXFailure enum
+func BehaviorOnMXFailure_Values() []string {
+	return []string{
+		BehaviorOnMXFailureUseDefaultValue,
+		BehaviorOnMXFailureRejectMessage,
+	}
+}
+
 const (
 	// BounceTypeDoesNotExist is a BounceType enum value
 	BounceTypeDoesNotExist = "DoesNotExist"
@@ -15139,6 +15151,18 @@ const (
 	// BounceTypeTemporaryFailure is a BounceType enum value
 	BounceTypeTemporaryFailure = "TemporaryFailure"
 )
+
+// BounceType_Values returns all elements of the BounceType enum
+func BounceType_Values() []string {
+	return []string{
+		BounceTypeDoesNotExist,
+		BounceTypeMessageTooLarge,
+		BounceTypeExceededQuota,
+		BounceTypeContentRejected,
+		BounceTypeUndefined,
+		BounceTypeTemporaryFailure,
+	}
+}
 
 const (
 	// BulkEmailStatusSuccess is a BulkEmailStatus enum value
@@ -15184,6 +15208,26 @@ const (
 	BulkEmailStatusFailed = "Failed"
 )
 
+// BulkEmailStatus_Values returns all elements of the BulkEmailStatus enum
+func BulkEmailStatus_Values() []string {
+	return []string{
+		BulkEmailStatusSuccess,
+		BulkEmailStatusMessageRejected,
+		BulkEmailStatusMailFromDomainNotVerified,
+		BulkEmailStatusConfigurationSetDoesNotExist,
+		BulkEmailStatusTemplateDoesNotExist,
+		BulkEmailStatusAccountSuspended,
+		BulkEmailStatusAccountThrottled,
+		BulkEmailStatusAccountDailyQuotaExceeded,
+		BulkEmailStatusInvalidSendingPoolName,
+		BulkEmailStatusAccountSendingPaused,
+		BulkEmailStatusConfigurationSetSendingPaused,
+		BulkEmailStatusInvalidParameterValue,
+		BulkEmailStatusTransientFailure,
+		BulkEmailStatusFailed,
+	}
+}
+
 const (
 	// ConfigurationSetAttributeEventDestinations is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeEventDestinations = "eventDestinations"
@@ -15197,6 +15241,16 @@ const (
 	// ConfigurationSetAttributeReputationOptions is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeReputationOptions = "reputationOptions"
 )
+
+// ConfigurationSetAttribute_Values returns all elements of the ConfigurationSetAttribute enum
+func ConfigurationSetAttribute_Values() []string {
+	return []string{
+		ConfigurationSetAttributeEventDestinations,
+		ConfigurationSetAttributeTrackingOptions,
+		ConfigurationSetAttributeDeliveryOptions,
+		ConfigurationSetAttributeReputationOptions,
+	}
+}
 
 const (
 	// CustomMailFromStatusPending is a CustomMailFromStatus enum value
@@ -15212,6 +15266,16 @@ const (
 	CustomMailFromStatusTemporaryFailure = "TemporaryFailure"
 )
 
+// CustomMailFromStatus_Values returns all elements of the CustomMailFromStatus enum
+func CustomMailFromStatus_Values() []string {
+	return []string{
+		CustomMailFromStatusPending,
+		CustomMailFromStatusSuccess,
+		CustomMailFromStatusFailed,
+		CustomMailFromStatusTemporaryFailure,
+	}
+}
+
 const (
 	// DimensionValueSourceMessageTag is a DimensionValueSource enum value
 	DimensionValueSourceMessageTag = "messageTag"
@@ -15222,6 +15286,15 @@ const (
 	// DimensionValueSourceLinkTag is a DimensionValueSource enum value
 	DimensionValueSourceLinkTag = "linkTag"
 )
+
+// DimensionValueSource_Values returns all elements of the DimensionValueSource enum
+func DimensionValueSource_Values() []string {
+	return []string{
+		DimensionValueSourceMessageTag,
+		DimensionValueSourceEmailHeader,
+		DimensionValueSourceLinkTag,
+	}
+}
 
 const (
 	// DsnActionFailed is a DsnAction enum value
@@ -15239,6 +15312,17 @@ const (
 	// DsnActionExpanded is a DsnAction enum value
 	DsnActionExpanded = "expanded"
 )
+
+// DsnAction_Values returns all elements of the DsnAction enum
+func DsnAction_Values() []string {
+	return []string{
+		DsnActionFailed,
+		DsnActionDelayed,
+		DsnActionDelivered,
+		DsnActionRelayed,
+		DsnActionExpanded,
+	}
+}
 
 const (
 	// EventTypeSend is a EventType enum value
@@ -15266,6 +15350,20 @@ const (
 	EventTypeRenderingFailure = "renderingFailure"
 )
 
+// EventType_Values returns all elements of the EventType enum
+func EventType_Values() []string {
+	return []string{
+		EventTypeSend,
+		EventTypeReject,
+		EventTypeBounce,
+		EventTypeComplaint,
+		EventTypeDelivery,
+		EventTypeOpen,
+		EventTypeClick,
+		EventTypeRenderingFailure,
+	}
+}
+
 const (
 	// IdentityTypeEmailAddress is a IdentityType enum value
 	IdentityTypeEmailAddress = "EmailAddress"
@@ -15274,6 +15372,14 @@ const (
 	IdentityTypeDomain = "Domain"
 )
 
+// IdentityType_Values returns all elements of the IdentityType enum
+func IdentityType_Values() []string {
+	return []string{
+		IdentityTypeEmailAddress,
+		IdentityTypeDomain,
+	}
+}
+
 const (
 	// InvocationTypeEvent is a InvocationType enum value
 	InvocationTypeEvent = "Event"
@@ -15281,6 +15387,14 @@ const (
 	// InvocationTypeRequestResponse is a InvocationType enum value
 	InvocationTypeRequestResponse = "RequestResponse"
 )
+
+// InvocationType_Values returns all elements of the InvocationType enum
+func InvocationType_Values() []string {
+	return []string{
+		InvocationTypeEvent,
+		InvocationTypeRequestResponse,
+	}
+}
 
 const (
 	// NotificationTypeBounce is a NotificationType enum value
@@ -15293,6 +15407,15 @@ const (
 	NotificationTypeDelivery = "Delivery"
 )
 
+// NotificationType_Values returns all elements of the NotificationType enum
+func NotificationType_Values() []string {
+	return []string{
+		NotificationTypeBounce,
+		NotificationTypeComplaint,
+		NotificationTypeDelivery,
+	}
+}
+
 const (
 	// ReceiptFilterPolicyBlock is a ReceiptFilterPolicy enum value
 	ReceiptFilterPolicyBlock = "Block"
@@ -15300,6 +15423,14 @@ const (
 	// ReceiptFilterPolicyAllow is a ReceiptFilterPolicy enum value
 	ReceiptFilterPolicyAllow = "Allow"
 )
+
+// ReceiptFilterPolicy_Values returns all elements of the ReceiptFilterPolicy enum
+func ReceiptFilterPolicy_Values() []string {
+	return []string{
+		ReceiptFilterPolicyBlock,
+		ReceiptFilterPolicyAllow,
+	}
+}
 
 const (
 	// SNSActionEncodingUtf8 is a SNSActionEncoding enum value
@@ -15309,10 +15440,25 @@ const (
 	SNSActionEncodingBase64 = "Base64"
 )
 
+// SNSActionEncoding_Values returns all elements of the SNSActionEncoding enum
+func SNSActionEncoding_Values() []string {
+	return []string{
+		SNSActionEncodingUtf8,
+		SNSActionEncodingBase64,
+	}
+}
+
 const (
 	// StopScopeRuleSet is a StopScope enum value
 	StopScopeRuleSet = "RuleSet"
 )
+
+// StopScope_Values returns all elements of the StopScope enum
+func StopScope_Values() []string {
+	return []string{
+		StopScopeRuleSet,
+	}
+}
 
 const (
 	// TlsPolicyRequire is a TlsPolicy enum value
@@ -15321,6 +15467,14 @@ const (
 	// TlsPolicyOptional is a TlsPolicy enum value
 	TlsPolicyOptional = "Optional"
 )
+
+// TlsPolicy_Values returns all elements of the TlsPolicy enum
+func TlsPolicy_Values() []string {
+	return []string{
+		TlsPolicyRequire,
+		TlsPolicyOptional,
+	}
+}
 
 const (
 	// VerificationStatusPending is a VerificationStatus enum value
@@ -15338,3 +15492,14 @@ const (
 	// VerificationStatusNotStarted is a VerificationStatus enum value
 	VerificationStatusNotStarted = "NotStarted"
 )
+
+// VerificationStatus_Values returns all elements of the VerificationStatus enum
+func VerificationStatus_Values() []string {
+	return []string{
+		VerificationStatusPending,
+		VerificationStatusSuccess,
+		VerificationStatusFailed,
+		VerificationStatusTemporaryFailure,
+		VerificationStatusNotStarted,
+	}
+}

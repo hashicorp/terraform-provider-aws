@@ -17,6 +17,9 @@ type testSuitesXML struct {
 type testSuiteXML struct {
 	XMLName   xml.Name      `xml:"testsuite"`
 	Suite     string        `xml:"name,attr"`
+	Tests     int           `xml:"tests,attr"`
+	Errors    int           `xml:"errors,attr"`
+	Failures  int           `xml:"failures,attr"`
 	TestCases []testCaseXML `xml:"testcase"`
 }
 
@@ -38,13 +41,16 @@ func NewJunitXML() *JunitXML {
 	return &JunitXML{}
 }
 
-func (JunitXML) Print(ctx context.Context, issues <-chan result.Issue) error {
+func (JunitXML) Print(ctx context.Context, issues []result.Issue) error {
 	suites := make(map[string]testSuiteXML) // use a map to group by file
 
-	for i := range issues {
+	for ind := range issues {
+		i := &issues[ind]
 		suiteName := i.FilePath()
 		testSuite := suites[suiteName]
 		testSuite.Suite = i.FilePath()
+		testSuite.Tests++
+		testSuite.Failures++
 
 		tc := testCaseXML{
 			Name:      i.FromLinter,

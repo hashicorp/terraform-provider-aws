@@ -1,4 +1,5 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_proxy_protocol_policy"
 description: |-
@@ -32,7 +33,7 @@ resource "aws_elb" "lb" {
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = "${aws_elb.lb.name}"
+  load_balancer  = aws_elb.lb.name
   instance_ports = ["25", "587"]
 }
 ```

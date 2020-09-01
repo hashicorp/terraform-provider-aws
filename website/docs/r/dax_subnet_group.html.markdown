@@ -1,4 +1,5 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_subnet_group"
 description: |-
@@ -14,7 +15,7 @@ Provides a DAX Subnet Group resource.
 ```hcl
 resource "aws_dax_subnet_group" "example" {
   name       = "example"
-  subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+  subnet_ids = [aws_subnet.example1.id, aws_subnet.example2.id]
 }
 ```
 

@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_export"
 description: |-
@@ -21,8 +22,8 @@ data "aws_cloudformation_export" "subnet_id" {
 
 resource "aws_instance" "web" {
   ami           = "ami-abb07bcb"
-  instance_type = "t1.micro"
-  subnet_id     = "${data.aws_cloudformation_export.subnet_id.value}"
+  instance_type = "t2.micro"
+  subnet_id     = data.aws_cloudformation_export.subnet_id.value
 }
 ```
 

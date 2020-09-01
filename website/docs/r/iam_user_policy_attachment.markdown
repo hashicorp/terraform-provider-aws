@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user_policy_attachment"
 description: |-
@@ -21,12 +22,12 @@ resource "aws_iam_user" "user" {
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-  policy      = ""              # insert policy here
+  policy      = "{ ... policy JSON ... }"
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
-  user       = "${aws_iam_user.user.name}"
-  policy_arn = "${aws_iam_policy.policy.arn}"
+  user       = aws_iam_user.user.name
+  policy_arn = aws_iam_policy.policy.arn
 }
 ```
 

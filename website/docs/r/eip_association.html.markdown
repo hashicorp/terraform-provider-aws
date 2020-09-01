@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_eip_association"
 description: |-
@@ -19,14 +20,14 @@ pre-existing or distributed to customers or users and therefore cannot be change
 
 ```hcl
 resource "aws_eip_association" "eip_assoc" {
-  instance_id   = "${aws_instance.web.id}"
-  allocation_id = "${aws_eip.example.id}"
+  instance_id   = aws_instance.web.id
+  allocation_id = aws_eip.example.id
 }
 
 resource "aws_instance" "web" {
   ami               = "ami-21f78e11"
   availability_zone = "us-west-2a"
-  instance_type     = "t1.micro"
+  instance_type     = "t2.micro"
 
   tags = {
     Name = "HelloWorld"

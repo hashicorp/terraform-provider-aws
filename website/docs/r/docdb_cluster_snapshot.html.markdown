@@ -1,4 +1,5 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_snapshot"
 description: |-
@@ -13,7 +14,7 @@ Manages a DocDB database cluster snapshot for DocDB clusters.
 
 ```hcl
 resource "aws_docdb_cluster_snapshot" "example" {
-  db_cluster_identifier          = "${aws_docdb_cluster.example.id}"
+  db_cluster_identifier          = aws_docdb_cluster.example.id
   db_cluster_snapshot_identifier = "resourcetestsnapshot1234"
 }
 ```

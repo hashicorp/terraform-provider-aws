@@ -1,4 +1,5 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_delivery_channel"
 description: |-
@@ -16,8 +17,8 @@ Provides an AWS Config Delivery Channel.
 ```hcl
 resource "aws_config_delivery_channel" "foo" {
   name           = "example"
-  s3_bucket_name = "${aws_s3_bucket.b.bucket}"
-  depends_on     = ["aws_config_configuration_recorder.foo"]
+  s3_bucket_name = aws_s3_bucket.b.bucket
+  depends_on     = [aws_config_configuration_recorder.foo]
 }
 
 resource "aws_s3_bucket" "b" {
@@ -27,7 +28,7 @@ resource "aws_s3_bucket" "b" {
 
 resource "aws_config_configuration_recorder" "foo" {
   name     = "example"
-  role_arn = "${aws_iam_role.r.arn}"
+  role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "r" {
@@ -52,7 +53,7 @@ POLICY
 
 resource "aws_iam_role_policy" "p" {
   name = "awsconfig-example"
-  role = "${aws_iam_role.r.id}"
+  role = aws_iam_role.r.id
 
   policy = <<POLICY
 {

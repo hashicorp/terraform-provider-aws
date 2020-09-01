@@ -7,17 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
-
-var validAppsyncAuthTypes = []string{
-	appsync.AuthenticationTypeApiKey,
-	appsync.AuthenticationTypeAwsIam,
-	appsync.AuthenticationTypeAmazonCognitoUserPools,
-	appsync.AuthenticationTypeOpenidConnect,
-}
 
 func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 	return &schema.Resource{
@@ -39,7 +33,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 						"authentication_type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(validAppsyncAuthTypes, false),
+							ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
 						},
 						"openid_connect_config": {
 							Type:     schema.TypeList,
@@ -94,7 +88,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 			"authentication_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(validAppsyncAuthTypes, false),
+				ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
 			},
 			"schema": {
 				Type:     schema.TypeString,
@@ -129,6 +123,11 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 								appsync.FieldLogLevelError,
 								appsync.FieldLogLevelNone,
 							}, false),
+						},
+						"exclude_verbose_content": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -198,6 +197,10 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tagsSchema(),
+			"xray_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -227,7 +230,11 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().AppsyncTags()
+	}
+
+	if v, ok := d.GetOk("xray_enabled"); ok {
+		input.XrayEnabled = aws.Bool(v.(bool))
 	}
 
 	resp, err := conn.CreateGraphqlApi(input)
@@ -246,6 +253,7 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &appsync.GetGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
@@ -287,8 +295,12 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting uris: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMapGeneric(resp.GraphqlApi.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("xray_enabled", aws.BoolValue(resp.GraphqlApi.XrayEnabled)); err != nil {
+		return fmt.Errorf("error setting xray_enabled: %s", err)
 	}
 
 	return nil
@@ -297,9 +309,12 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
 
-	arn := d.Get("arn").(string)
-	if tagErr := setTagsAppsync(conn, d, arn); tagErr != nil {
-		return tagErr
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.AppsyncUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating AppSync GraphQL API (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	input := &appsync.UpdateGraphqlApiInput{
@@ -322,6 +337,10 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
 		input.AdditionalAuthenticationProviders = expandAppsyncGraphqlApiAdditionalAuthProviders(v.([]interface{}), meta.(*AWSClient).region)
+	}
+
+	if v, ok := d.GetOk("xray_enabled"); ok {
+		input.XrayEnabled = aws.Bool(v.(bool))
 	}
 
 	_, err := conn.UpdateGraphqlApi(input)
@@ -367,6 +386,7 @@ func expandAppsyncGraphqlApiLogConfig(l []interface{}) *appsync.LogConfig {
 	logConfig := &appsync.LogConfig{
 		CloudWatchLogsRoleArn: aws.String(m["cloudwatch_logs_role_arn"].(string)),
 		FieldLogLevel:         aws.String(m["field_log_level"].(string)),
+		ExcludeVerboseContent: aws.Bool(m["exclude_verbose_content"].(bool)),
 	}
 
 	return logConfig
@@ -483,6 +503,7 @@ func flattenAppsyncGraphqlApiLogConfig(logConfig *appsync.LogConfig) []interface
 	m := map[string]interface{}{
 		"cloudwatch_logs_role_arn": aws.StringValue(logConfig.CloudWatchLogsRoleArn),
 		"field_log_level":          aws.StringValue(logConfig.FieldLogLevel),
+		"exclude_verbose_content":  aws.BoolValue(logConfig.ExcludeVerboseContent),
 	}
 
 	return []interface{}{m}

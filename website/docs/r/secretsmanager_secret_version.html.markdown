@@ -1,4 +1,5 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_version"
 description: |-
@@ -17,7 +18,7 @@ Provides a resource to manage AWS Secrets Manager secret version including its s
 
 ```hcl
 resource "aws_secretsmanager_secret_version" "example" {
-  secret_id     = "${aws_secretsmanager_secret.example.id}"
+  secret_id     = aws_secretsmanager_secret.example.id
   secret_string = "example-string-to-protect"
 }
 ```
@@ -35,12 +36,12 @@ variable "example" {
     key2 = "value2"
   }
 
-  type = "map"
+  type = map(string)
 }
 
 resource "aws_secretsmanager_secret_version" "example" {
-  secret_id     = "${aws_secretsmanager_secret.example.id}"
-  secret_string = "${jsonencode(var.example)}"
+  secret_id     = aws_secretsmanager_secret.example.id
+  secret_string = jsonencode(var.example)
 }
 ```
 

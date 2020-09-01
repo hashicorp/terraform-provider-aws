@@ -1,4 +1,5 @@
 ---
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_conditional_forwarder"
 description: |-
@@ -13,7 +14,7 @@ Provides a conditional forwarder for managed Microsoft AD in AWS Directory Servi
 
 ```hcl
 resource "aws_directory_service_conditional_forwarder" "example" {
-  directory_id       = "${aws_directory_service_directory.ad.id}"
+  directory_id       = aws_directory_service_directory.ad.id
   remote_domain_name = "example.com"
 
   dns_ips = [

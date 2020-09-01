@@ -2,6 +2,10 @@
 
 package athena
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeInternalServerException for service response error code
@@ -18,6 +22,16 @@ const (
 	// a required parameter may be missing or out of range.
 	ErrCodeInvalidRequestException = "InvalidRequestException"
 
+	// ErrCodeMetadataException for service response error code
+	// "MetadataException".
+	//
+	// An exception that Athena received when it called a custom metastore. Occurs
+	// if the error is not caused by user input (InvalidRequestException) or from
+	// the Athena platform (InternalServerException). For example, if a user-created
+	// Lambda function is missing permissions, the Lambda 4XX exception is returned
+	// in a MetadataException.
+	ErrCodeMetadataException = "MetadataException"
+
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
 	//
@@ -30,3 +44,11 @@ const (
 	// Indicates that the request was throttled.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"InternalServerException":   newErrorInternalServerException,
+	"InvalidRequestException":   newErrorInvalidRequestException,
+	"MetadataException":         newErrorMetadataException,
+	"ResourceNotFoundException": newErrorResourceNotFoundException,
+	"TooManyRequestsException":  newErrorTooManyRequestsException,
+}

@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsNetworkInterface() *schema.Resource {
@@ -32,6 +33,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"mac_address": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"private_ip": {
@@ -73,6 +79,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Default:  true,
 			},
 
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -111,7 +122,8 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).ec2conn
 
 	request := &ec2.CreateNetworkInterfaceInput{
-		SubnetId: aws.String(d.Get("subnet_id").(string)),
+		SubnetId:          aws.String(d.Get("subnet_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeNetworkInterface),
 	}
 
 	security_groups := d.Get("security_groups").(*schema.Set).List()
@@ -139,13 +151,14 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(*resp.NetworkInterface.NetworkInterfaceId)
-	log.Printf("[INFO] ENI ID: %s", d.Id())
+
 	return resourceAwsNetworkInterfaceUpdate(d, meta)
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []*string{aws.String(d.Id())},
 	}
@@ -178,7 +191,9 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("description", eni.Description)
 	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("mac_address", eni.MacAddress)
 	d.Set("private_ip", eni.PrivateIpAddress)
+	d.Set("outpost_arn", eni.OutpostArn)
 
 	if err := d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %s", err)
@@ -193,7 +208,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	if err := d.Set("tags", tagsToMap(eni.TagSet)); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -254,7 +269,6 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 
 func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	d.Partial(true)
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
@@ -278,8 +292,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 				return fmt.Errorf("Error attaching ENI: %s", attach_err)
 			}
 		}
-
-		d.SetPartial("attachment")
 	}
 
 	if d.HasChange("private_ips") {
@@ -319,21 +331,21 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 				return fmt.Errorf("Failure to assign Private IPs: %s", err)
 			}
 		}
-
-		d.SetPartial("private_ips")
 	}
 
-	request := &ec2.ModifyNetworkInterfaceAttributeInput{
-		NetworkInterfaceId: aws.String(d.Id()),
-		SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(d.Get("source_dest_check").(bool))},
-	}
+	// ModifyNetworkInterfaceAttribute needs to be called after creating an ENI
+	// since CreateNetworkInterface doesn't take SourceDeskCheck parameter.
+	if d.HasChange("source_dest_check") || d.IsNewResource() {
+		request := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			SourceDestCheck:    &ec2.AttributeBooleanValue{Value: aws.Bool(d.Get("source_dest_check").(bool))},
+		}
 
-	_, err := conn.ModifyNetworkInterfaceAttribute(request)
-	if err != nil {
-		return fmt.Errorf("Failure updating ENI: %s", err)
+		_, err := conn.ModifyNetworkInterfaceAttribute(request)
+		if err != nil {
+			return fmt.Errorf("Failure updating ENI: %s", err)
+		}
 	}
-
-	d.SetPartial("source_dest_check")
 
 	if d.HasChange("private_ips_count") && !d.IsNewResource() {
 		o, n := d.GetChange("private_ips_count")
@@ -373,8 +385,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 					return fmt.Errorf("Failure to unassign Private IPs: %s", err)
 				}
 			}
-
-			d.SetPartial("private_ips_count")
 		}
 	}
 
@@ -388,8 +398,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("Failure updating ENI: %s", err)
 		}
-
-		d.SetPartial("security_groups")
 	}
 
 	if d.HasChange("description") {
@@ -402,17 +410,15 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("Failure updating ENI: %s", err)
 		}
-
-		d.SetPartial("description")
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
-	}
+	if d.HasChange("tags") && !d.IsNewResource() {
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsNetworkInterfaceRead(d, meta)
 }

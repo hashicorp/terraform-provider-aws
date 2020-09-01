@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -89,6 +89,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -111,6 +112,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -154,6 +156,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -178,6 +181,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -318,6 +322,7 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -341,6 +346,7 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -477,6 +483,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "LOG"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", "{\"Version\":1.0,\"Grouping\":{\"TableGroupingPolicy\":\"CombineCompatibleSchemas\"}}"),
 				),
 			},
@@ -503,6 +510,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "LOG"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", "{\"Version\":1.0,\"Grouping\":{\"TableGroupingPolicy\":\"CombineCompatibleSchemas\"}}"),
 				),
 			},
@@ -570,7 +578,7 @@ func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueCrawler_recreates(t *testing.T) {
+func TestAccAWSGlueCrawler_disappears(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_crawler.test"
@@ -584,23 +592,9 @@ func TestAccAWSGlueCrawler_recreates(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCrawler(), resourceName),
 				),
-			},
-			{
-				// Simulate deleting the crawler outside Terraform
-				PreConfig: func() {
-					conn := testAccProvider.Meta().(*AWSClient).glueconn
-					input := &glue.DeleteCrawlerInput{
-						Name: aws.String(rName),
-					}
-					_, err := conn.DeleteCrawler(input)
-					if err != nil {
-						t.Fatalf("error deleting Glue Crawler: %s", err)
-					}
-				},
-				Config:             testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
 			},
 		},
 	})
@@ -826,6 +820,13 @@ func TestAccAWSGlueCrawler_Schedule(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+				),
+			},
 		},
 	})
 }
@@ -895,6 +896,50 @@ func TestAccAWSGlueCrawler_TablePrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCrawler_Tags(t *testing.T) {
+	var crawler1, crawler2, crawler3 glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -1017,8 +1062,8 @@ func testAccGlueCrawlerConfig_Base(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %q
-  assume_role_policy = "${data.aws_iam_policy_document.assume.json}"
+  name               = %q
+  assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
 data "aws_iam_policy_document" "assume" {
@@ -1037,8 +1082,8 @@ data "aws_iam_policy" "AWSGlueServiceRole" {
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "${data.aws_iam_policy.AWSGlueServiceRole.arn}"
-  role       = "${aws_iam_role.test.name}"
+  policy_arn = data.aws_iam_policy.AWSGlueServiceRole.arn
+  role       = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -1068,12 +1113,12 @@ resource "aws_glue_classifier" "test2" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  classifiers   = ["${aws_glue_classifier.test1.id}"]
+  classifiers   = [aws_glue_classifier.test1.id]
   name          = %q
-  database_name = "${aws_glue_catalog_database.test.name}"
-  role          = "${aws_iam_role.test.name}"
+  database_name = aws_glue_catalog_database.test.name
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
@@ -1107,12 +1152,12 @@ resource "aws_glue_classifier" "test2" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  classifiers   = ["${aws_glue_classifier.test1.id}", "${aws_glue_classifier.test2.id}"]
+  classifiers   = [aws_glue_classifier.test1.id, aws_glue_classifier.test2.id]
   name          = %q
-  database_name = "${aws_glue_catalog_database.test.name}"
-  role          = "${aws_iam_role.test.name}"
+  database_name = aws_glue_catalog_database.test.name
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
@@ -1128,12 +1173,12 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   configuration = %s
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
@@ -1149,12 +1194,12 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   description   = %q
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
@@ -1170,11 +1215,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   dynamodb_target {
     path = %q
@@ -1200,14 +1245,14 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   jdbc_target {
-    connection_name = "${aws_glue_connection.test.name}"
+    connection_name = aws_glue_connection.test.name
     path            = %q
   }
 }
@@ -1231,14 +1276,14 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   jdbc_target {
-    connection_name = "${aws_glue_connection.test.name}"
+    connection_name = aws_glue_connection.test.name
     exclusions      = [%q]
     path            = "database-name/table1"
   }
@@ -1263,14 +1308,14 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   jdbc_target {
-    connection_name = "${aws_glue_connection.test.name}"
+    connection_name = aws_glue_connection.test.name
     exclusions      = [%q, %q]
     path            = "database-name/table1"
   }
@@ -1295,19 +1340,19 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   jdbc_target {
-    connection_name = "${aws_glue_connection.test.name}"
+    connection_name = aws_glue_connection.test.name
     path            = %q
   }
 
   jdbc_target {
-    connection_name = "${aws_glue_connection.test.name}"
+    connection_name = aws_glue_connection.test.name
     path            = %q
   }
 }
@@ -1321,11 +1366,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
 
   s3_target {
     path = "s3://bucket-name"
@@ -1361,7 +1406,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_glue_catalog_database" "test" {
@@ -1369,11 +1414,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
 
   s3_target {
     path = "s3://bucket-name"
@@ -1409,7 +1454,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_glue_catalog_database" "test" {
@@ -1417,9 +1462,9 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
   role          = "${replace(aws_iam_role.test.path, "/^\\//", "")}${aws_iam_role.test.name}"
 
@@ -1437,11 +1482,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = %q
@@ -1457,11 +1502,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     exclusions = [%q]
@@ -1478,11 +1523,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     exclusions = [%q, %q]
@@ -1499,11 +1544,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = %q
@@ -1523,41 +1568,41 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_s3_bucket" "default" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
 resource "aws_glue_catalog_table" "test" {
-	count = %[2]d
+  count = %[2]d
 
-	database_name = "${aws_glue_catalog_database.test.name}"
-	name          = "%[1]s_table_${count.index}"
-	table_type    = "EXTERNAL_TABLE"
+  database_name = aws_glue_catalog_database.test.name
+  name          = "%[1]s_table_${count.index}"
+  table_type    = "EXTERNAL_TABLE"
 
-	storage_descriptor {
-		location      = "s3://${aws_s3_bucket.default.bucket}"
-	}
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.default.bucket}"
+  }
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %[1]q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   schema_change_policy {
     delete_behavior = "LOG"
   }
 
   catalog_target {
-    database_name = "${aws_glue_catalog_database.test.name}"
-    tables = flatten(["${aws_glue_catalog_table.test[*].name}"])
+    database_name = aws_glue_catalog_database.test.name
+    tables        = flatten([aws_glue_catalog_table.test[*].name])
   }
 
   configuration = <<EOF
 {
-  "Version":1.0,
+  "Version": 1,
   "Grouping": {
     "TableGroupingPolicy": "CombineCompatibleSchemas"
   }
@@ -1570,50 +1615,50 @@ EOF
 func testAccGlueCrawlerConfig_CatalogTarget_Multiple(rName string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-	count = 2
-  name = "%[1]s_database_${count.index}"
+  count = 2
+  name  = "%[1]s_database_${count.index}"
 }
 
 resource "aws_glue_catalog_table" "test" {
-	count = 2
-  database_name = "${aws_glue_catalog_database.test[count.index].name}"
+  count         = 2
+  database_name = aws_glue_catalog_database.test[count.index].name
   name          = "%[1]s_table_${count.index}"
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.default.bucket}"
+    location = "s3://${aws_s3_bucket.default.bucket}"
   }
 }
 
 resource "aws_s3_bucket" "default" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test[0].name}"
+  database_name = aws_glue_catalog_database.test[0].name
   name          = %[1]q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   schema_change_policy {
     delete_behavior = "LOG"
   }
 
   catalog_target {
-    database_name = "${aws_glue_catalog_database.test[0].name}"
-    tables = ["${aws_glue_catalog_table.test[0].name}"]
+    database_name = aws_glue_catalog_database.test[0].name
+    tables        = [aws_glue_catalog_table.test[0].name]
   }
 
   catalog_target {
-    database_name = "${aws_glue_catalog_database.test[1].name}"
-    tables = ["${aws_glue_catalog_table.test[1].name}"]
+    database_name = aws_glue_catalog_database.test[1].name
+    tables        = [aws_glue_catalog_table.test[1].name]
   }
 
   configuration = <<EOF
 {
-  "Version":1.0,
+  "Version": 1,
   "Grouping": {
     "TableGroupingPolicy": "CombineCompatibleSchemas"
   }
@@ -1630,11 +1675,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
   schedule      = %q
 
   s3_target {
@@ -1651,11 +1696,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
@@ -1676,11 +1721,11 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = %q
-  role          = "${aws_iam_role.test.name}"
+  role          = aws_iam_role.test.name
   table_prefix  = %q
 
   s3_target {
@@ -1688,6 +1733,57 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, rName, tablePrefix)
+}
+
+func testAccGlueCrawlerConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+  table_prefix  = %[1]q
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccGlueCrawlerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+  table_prefix  = %[1]q
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccGlueCrawlerConfig_SecurityConfiguration(rName, securityConfiguration string) string {
@@ -1715,12 +1811,12 @@ resource "aws_glue_security_configuration" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name          = "${aws_glue_catalog_database.test.name}"
+  database_name          = aws_glue_catalog_database.test.name
   name                   = %q
-  role                   = "${aws_iam_role.test.name}"
-  security_configuration = "${aws_glue_security_configuration.test.name}"
+  role                   = aws_iam_role.test.name
+  security_configuration = aws_glue_security_configuration.test.name
 
   s3_target {
     path = "s3://bucket-name"

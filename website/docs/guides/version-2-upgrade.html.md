@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Version 2 Upgrade Guide"
 description: |-
@@ -243,7 +244,7 @@ resource "aws_api_gateway_api_key" "example" {
 }
 
 resource "aws_api_gateway_usage_plan" "example" {
-  name         = "example"
+  name = "example"
 
   api_stages {
     api_id = "${aws_api_gateway_rest_api.example.id}"
@@ -351,7 +352,7 @@ resource "aws_api_gateway_method" "example" {
 
   request_parameters = {
     "method.request.header.Content-Type" = false
-    "method.request.querystring.page" = true
+    "method.request.querystring.page"    = true
   }
 }
 ```
@@ -734,9 +735,9 @@ resource "aws_redshift_cluster" "example" {
   # ... other configuration ...
 
   logging {
-    bucket_name    = "example"
-    enable         = true
-    s3_key_prefix  = "example"
+    bucket_name   = "example"
+    enable        = true
+    s3_key_prefix = "example"
   }
 }
 ```

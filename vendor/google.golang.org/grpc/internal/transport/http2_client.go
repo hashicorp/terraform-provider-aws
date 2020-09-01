@@ -35,17 +35,25 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/internal"
 	"google.golang.org/grpc/internal/channelz"
 	"google.golang.org/grpc/internal/syscall"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 )
 
+// clientConnectionCounter counts the number of connections a client has
+// initiated (equal to the number of http2Clients created). Must be accessed
+// atomically.
+var clientConnectionCounter uint64
+
 // http2Client implements the ClientTransport interface with HTTP2.
 type http2Client struct {
+	lastRead   int64 // Keep this field 64-bit aligned. Accessed atomically.
 	ctx        context.Context
 	cancel     context.CancelFunc
 	ctxDone    <-chan struct{} // Cache the ctx.Done() chan.
@@ -62,8 +70,6 @@ type http2Client struct {
 	// goAway is closed to notify the upper layer (i.e., addrConn.transportMonitor)
 	// that the server sent GoAway on this transport.
 	goAway chan struct{}
-	// awakenKeepalive is used to wake up keepalive when after it has gone dormant.
-	awakenKeepalive chan struct{}
 
 	framer *framer
 	// controlBuf delivers all the control related tasks (e.g., window
@@ -77,9 +83,6 @@ type http2Client struct {
 
 	perRPCCreds []credentials.PerRPCCredentials
 
-	// Boolean to keep track of reading activity on transport.
-	// 1 is true and 0 is false.
-	activity         uint32 // Accessed atomically.
 	kp               keepalive.ClientParameters
 	keepaliveEnabled bool
 
@@ -110,6 +113,16 @@ type http2Client struct {
 	// goAwayReason records the http2.ErrCode and debug data received with the
 	// GoAway frame.
 	goAwayReason GoAwayReason
+	// A condition variable used to signal when the keepalive goroutine should
+	// go dormant. The condition for dormancy is based on the number of active
+	// streams and the `PermitWithoutStream` keepalive client parameter. And
+	// since the number of active streams is guarded by the above mutex, we use
+	// the same for this condition variable as well.
+	kpDormancyCond *sync.Cond
+	// A boolean to track whether the keepalive goroutine is dormant or not.
+	// This is checked before attempting to signal the above condition
+	// variable.
+	kpDormant bool
 
 	// Fields below are for channelz metric collection.
 	channelzID int64 // channelz unique identification number
@@ -119,6 +132,8 @@ type http2Client struct {
 	onClose  func()
 
 	bufferPool *bufferPool
+
+	connectionID uint64
 }
 
 func dial(ctx context.Context, fn func(context.Context, string) (net.Conn, error), addr string) (net.Conn, error) {
@@ -147,7 +162,7 @@ func isTemporary(err error) bool {
 // newHTTP2Client constructs a connected ClientTransport to addr based on HTTP2
 // and starts to receive messages on it. Non-nil error returns if construction
 // fails.
-func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts ConnectOptions, onPrefaceReceipt func(), onGoAway func(GoAwayReason), onClose func()) (_ *http2Client, err error) {
+func newHTTP2Client(connectCtx, ctx context.Context, addr resolver.Address, opts ConnectOptions, onPrefaceReceipt func(), onGoAway func(GoAwayReason), onClose func()) (_ *http2Client, err error) {
 	scheme := "http"
 	ctx, cancel := context.WithCancel(ctx)
 	defer func() {
@@ -200,12 +215,20 @@ func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts Conne
 		}
 	}
 	if transportCreds != nil {
-		scheme = "https"
-		conn, authInfo, err = transportCreds.ClientHandshake(connectCtx, addr.Authority, conn)
+		// gRPC, resolver, balancer etc. can specify arbitrary data in the
+		// Attributes field of resolver.Address, which is shoved into connectCtx
+		// and passed to the credential handshaker. This makes it possible for
+		// address specific arbitrary data to reach the credential handshaker.
+		contextWithHandshakeInfo := internal.NewClientHandshakeInfoContext.(func(context.Context, credentials.ClientHandshakeInfo) context.Context)
+		connectCtx = contextWithHandshakeInfo(connectCtx, credentials.ClientHandshakeInfo{Attributes: addr.Attributes})
+		conn, authInfo, err = transportCreds.ClientHandshake(connectCtx, addr.ServerName, conn)
 		if err != nil {
 			return nil, connectionErrorf(isTemporary(err), err, "transport: authentication handshake failed: %v", err)
 		}
 		isSecure = true
+		if transportCreds.Info().SecurityProtocol == "tls" {
+			scheme = "https"
+		}
 	}
 	dynamicWindow := true
 	icwz := int32(initialWindowSize)
@@ -232,7 +255,6 @@ func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts Conne
 		readerDone:            make(chan struct{}),
 		writerDone:            make(chan struct{}),
 		goAway:                make(chan struct{}),
-		awakenKeepalive:       make(chan struct{}, 1),
 		framer:                newFramer(conn, writeBufSize, readBufSize, maxHeaderListSize),
 		fc:                    &trInFlow{limit: uint32(icwz)},
 		scheme:                scheme,
@@ -264,9 +286,6 @@ func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts Conne
 			updateFlowControl: t.updateFlowControl,
 		}
 	}
-	// Make sure awakenKeepalive can't be written upon.
-	// keepalive routine will make it writable, if need be.
-	t.awakenKeepalive <- struct{}{}
 	if t.statsHandler != nil {
 		t.ctx = t.statsHandler.TagConn(t.ctx, &stats.ConnTagInfo{
 			RemoteAddr: t.remoteAddr,
@@ -281,6 +300,7 @@ func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts Conne
 		t.channelzID = channelz.RegisterNormalSocket(t, opts.ChannelzParentID, fmt.Sprintf("%s -> %s", t.localAddr, t.remoteAddr))
 	}
 	if t.keepaliveEnabled {
+		t.kpDormancyCond = sync.NewCond(&t.mu)
 		go t.keepalive()
 	}
 	// Start the reader goroutine for incoming message. Each transport has
@@ -325,6 +345,8 @@ func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts Conne
 		}
 	}
 
+	t.connectionID = atomic.AddUint64(&clientConnectionCounter, 1)
+
 	if err := t.framer.writer.Flush(); err != nil {
 		return nil, err
 	}
@@ -347,6 +369,7 @@ func newHTTP2Client(connectCtx, ctx context.Context, addr TargetInfo, opts Conne
 func (t *http2Client) newStream(ctx context.Context, callHdr *CallHdr) *Stream {
 	// TODO(zhaoq): Handle uint32 overflow of Stream.id.
 	s := &Stream{
+		ct:             t,
 		done:           make(chan struct{}),
 		method:         callHdr.Method,
 		sendCompress:   callHdr.SendCompress,
@@ -380,23 +403,24 @@ func (t *http2Client) newStream(ctx context.Context, callHdr *CallHdr) *Stream {
 }
 
 func (t *http2Client) getPeer() *peer.Peer {
-	pr := &peer.Peer{
-		Addr: t.remoteAddr,
+	return &peer.Peer{
+		Addr:     t.remoteAddr,
+		AuthInfo: t.authInfo,
 	}
-	// Attach Auth info if there is any.
-	if t.authInfo != nil {
-		pr.AuthInfo = t.authInfo
-	}
-	return pr
 }
 
 func (t *http2Client) createHeaderFields(ctx context.Context, callHdr *CallHdr) ([]hpack.HeaderField, error) {
 	aud := t.createAudience(callHdr)
-	authData, err := t.getTrAuthData(ctx, aud)
+	ri := credentials.RequestInfo{
+		Method:   callHdr.Method,
+		AuthInfo: t.authInfo,
+	}
+	ctxWithRequestInfo := internal.NewRequestInfoContext.(func(context.Context, credentials.RequestInfo) context.Context)(ctx, ri)
+	authData, err := t.getTrAuthData(ctxWithRequestInfo, aud)
 	if err != nil {
 		return nil, err
 	}
-	callAuthData, err := t.getCallAuthData(ctx, aud, callHdr)
+	callAuthData, err := t.getCallAuthData(ctxWithRequestInfo, aud, callHdr)
 	if err != nil {
 		return nil, err
 	}
@@ -419,6 +443,7 @@ func (t *http2Client) createHeaderFields(ctx context.Context, callHdr *CallHdr) 
 
 	if callHdr.SendCompress != "" {
 		headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-encoding", Value: callHdr.SendCompress})
+		headerFields = append(headerFields, hpack.HeaderField{Name: "grpc-accept-encoding", Value: callHdr.SendCompress})
 	}
 	if dl, ok := ctx.Deadline(); ok {
 		// Send out timeout regardless its value. The server can detect timeout context by itself.
@@ -538,13 +563,26 @@ func (t *http2Client) getCallAuthData(ctx context.Context, audience string, call
 	return callAuthData, nil
 }
 
+// PerformedIOError wraps an error to indicate IO may have been performed
+// before the error occurred.
+type PerformedIOError struct {
+	Err error
+}
+
+// Error implements error.
+func (p PerformedIOError) Error() string {
+	return p.Err.Error()
+}
+
 // NewStream creates a stream and registers it into the transport as "active"
 // streams.
 func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (_ *Stream, err error) {
 	ctx = peer.NewContext(ctx, t.getPeer())
 	headerFields, err := t.createHeaderFields(ctx, callHdr)
 	if err != nil {
-		return nil, err
+		// We may have performed I/O in the per-RPC creds callback, so do not
+		// allow transparent retry.
+		return nil, PerformedIOError{err}
 	}
 	s := t.newStream(ctx, callHdr)
 	cleanup := func(err error) {
@@ -564,7 +602,7 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (_ *Strea
 	hdr := &headerFrame{
 		hf:        headerFields,
 		endStream: false,
-		initStream: func(id uint32) (bool, error) {
+		initStream: func(id uint32) error {
 			t.mu.Lock()
 			if state := t.state; state != reachable {
 				t.mu.Unlock()
@@ -574,29 +612,19 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (_ *Strea
 					err = ErrConnClosing
 				}
 				cleanup(err)
-				return false, err
+				return err
 			}
 			t.activeStreams[id] = s
 			if channelz.IsOn() {
 				atomic.AddInt64(&t.czData.streamsStarted, 1)
 				atomic.StoreInt64(&t.czData.lastStreamCreatedTime, time.Now().UnixNano())
 			}
-			var sendPing bool
-			// If the number of active streams change from 0 to 1, then check if keepalive
-			// has gone dormant. If so, wake it up.
-			if len(t.activeStreams) == 1 && t.keepaliveEnabled {
-				select {
-				case t.awakenKeepalive <- struct{}{}:
-					sendPing = true
-					// Fill the awakenKeepalive channel again as this channel must be
-					// kept non-writable except at the point that the keepalive()
-					// goroutine is waiting either to be awaken or shutdown.
-					t.awakenKeepalive <- struct{}{}
-				default:
-				}
+			// If the keepalive goroutine has gone dormant, wake it up.
+			if t.kpDormant {
+				t.kpDormancyCond.Signal()
 			}
 			t.mu.Unlock()
-			return sendPing, nil
+			return nil
 		},
 		onOrphaned: cleanup,
 		wq:         s.wq,
@@ -674,12 +702,21 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (_ *Strea
 		}
 	}
 	if t.statsHandler != nil {
+		header, ok := metadata.FromOutgoingContext(ctx)
+		if ok {
+			header.Set("user-agent", t.userAgent)
+		} else {
+			header = metadata.Pairs("user-agent", t.userAgent)
+		}
+		// Note: The header fields are compressed with hpack after this call returns.
+		// No WireLength field is set here.
 		outHeader := &stats.OutHeader{
 			Client:      true,
 			FullMethod:  callHdr.Method,
 			RemoteAddr:  t.remoteAddr,
 			LocalAddr:   t.localAddr,
 			Compression: callHdr.SendCompress,
+			Header:      header,
 		}
 		t.statsHandler.HandleRPC(s.ctx, outHeader)
 	}
@@ -778,6 +815,11 @@ func (t *http2Client) Close() error {
 	t.state = closing
 	streams := t.activeStreams
 	t.activeStreams = nil
+	if t.kpDormant {
+		// If the keepalive goroutine is blocked on this condition variable, we
+		// should unblock it so that the goroutine eventually exits.
+		t.kpDormancyCond.Signal()
+	}
 	t.mu.Unlock()
 	t.controlBuf.finish()
 	t.cancel()
@@ -834,18 +876,10 @@ func (t *http2Client) Write(s *Stream, hdr []byte, data []byte, opts *Options) e
 	df := &dataFrame{
 		streamID:  s.id,
 		endStream: opts.Last,
+		h:         hdr,
+		d:         data,
 	}
-	if hdr != nil || data != nil { // If it's not an empty data frame.
-		// Add some data to grpc message header so that we can equally
-		// distribute bytes across frames.
-		emptyLen := http2MaxFrameLen - len(hdr)
-		if emptyLen > len(data) {
-			emptyLen = len(data)
-		}
-		hdr = append(hdr, data[:emptyLen]...)
-		data = data[emptyLen:]
-		df.h, df.d = hdr, data
-		// TODO(mmukhi): The above logic in this if can be moved to loopyWriter's data handler.
+	if hdr != nil || data != nil { // If it's not an empty data frame, check quota.
 		if err := s.wq.get(int32(len(hdr) + len(data))); err != nil {
 			return err
 		}
@@ -853,11 +887,11 @@ func (t *http2Client) Write(s *Stream, hdr []byte, data []byte, opts *Options) e
 	return t.controlBuf.put(df)
 }
 
-func (t *http2Client) getStream(f http2.Frame) (*Stream, bool) {
+func (t *http2Client) getStream(f http2.Frame) *Stream {
 	t.mu.Lock()
-	defer t.mu.Unlock()
-	s, ok := t.activeStreams[f.Header().StreamID]
-	return s, ok
+	s := t.activeStreams[f.Header().StreamID]
+	t.mu.Unlock()
+	return s
 }
 
 // adjustWindow sends out extra window update over the initial window size
@@ -937,8 +971,8 @@ func (t *http2Client) handleData(f *http2.DataFrame) {
 		t.controlBuf.put(bdpPing)
 	}
 	// Select the right stream to dispatch.
-	s, ok := t.getStream(f)
-	if !ok {
+	s := t.getStream(f)
+	if s == nil {
 		return
 	}
 	if size > 0 {
@@ -969,8 +1003,8 @@ func (t *http2Client) handleData(f *http2.DataFrame) {
 }
 
 func (t *http2Client) handleRSTStream(f *http2.RSTStreamFrame) {
-	s, ok := t.getStream(f)
-	if !ok {
+	s := t.getStream(f)
+	if s == nil {
 		return
 	}
 	if f.ErrCode == http2.ErrCodeRefusedStream {
@@ -1147,8 +1181,8 @@ func (t *http2Client) handleWindowUpdate(f *http2.WindowUpdateFrame) {
 
 // operateHeaders takes action on the decoded headers.
 func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
-	s, ok := t.getStream(frame)
-	if !ok {
+	s := t.getStream(frame)
+	if s == nil {
 		return
 	}
 	endStream := frame.StreamEnded()
@@ -1175,14 +1209,17 @@ func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
 		if t.statsHandler != nil {
 			if isHeader {
 				inHeader := &stats.InHeader{
-					Client:     true,
-					WireLength: int(frame.Header().Length),
+					Client:      true,
+					WireLength:  int(frame.Header().Length),
+					Header:      s.header.Copy(),
+					Compression: s.recvCompress,
 				}
 				t.statsHandler.HandleRPC(s.ctx, inHeader)
 			} else {
 				inTrailer := &stats.InTrailer{
 					Client:     true,
 					WireLength: int(frame.Header().Length),
+					Trailer:    s.trailer.Copy(),
 				}
 				t.statsHandler.HandleRPC(s.ctx, inTrailer)
 			}
@@ -1191,6 +1228,7 @@ func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
 
 	// If headerChan hasn't been closed yet
 	if atomic.CompareAndSwapUint32(&s.headerChanClosed, 0, 1) {
+		s.headerValid = true
 		if !endStream {
 			// HEADERS frame block carries a Response-Headers.
 			isHeader = true
@@ -1233,7 +1271,7 @@ func (t *http2Client) reader() {
 	}
 	t.conn.SetReadDeadline(time.Time{}) // reset deadline once we get the settings frame (we didn't time out, yay!)
 	if t.keepaliveEnabled {
-		atomic.CompareAndSwapUint32(&t.activity, 0, 1)
+		atomic.StoreInt64(&t.lastRead, time.Now().UnixNano())
 	}
 	sf, ok := frame.(*http2.SettingsFrame)
 	if !ok {
@@ -1248,7 +1286,7 @@ func (t *http2Client) reader() {
 		t.controlBuf.throttle()
 		frame, err := t.framer.fr.ReadFrame()
 		if t.keepaliveEnabled {
-			atomic.CompareAndSwapUint32(&t.activity, 0, 1)
+			atomic.StoreInt64(&t.lastRead, time.Now().UnixNano())
 		}
 		if err != nil {
 			// Abort an active stream if the http2.Framer returns a
@@ -1292,56 +1330,83 @@ func (t *http2Client) reader() {
 	}
 }
 
+func minTime(a, b time.Duration) time.Duration {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // keepalive running in a separate goroutune makes sure the connection is alive by sending pings.
 func (t *http2Client) keepalive() {
 	p := &ping{data: [8]byte{}}
+	// True iff a ping has been sent, and no data has been received since then.
+	outstandingPing := false
+	// Amount of time remaining before which we should receive an ACK for the
+	// last sent ping.
+	timeoutLeft := time.Duration(0)
+	// Records the last value of t.lastRead before we go block on the timer.
+	// This is required to check for read activity since then.
+	prevNano := time.Now().UnixNano()
 	timer := time.NewTimer(t.kp.Time)
 	for {
 		select {
 		case <-timer.C:
-			if atomic.CompareAndSwapUint32(&t.activity, 1, 0) {
-				timer.Reset(t.kp.Time)
+			lastRead := atomic.LoadInt64(&t.lastRead)
+			if lastRead > prevNano {
+				// There has been read activity since the last time we were here.
+				outstandingPing = false
+				// Next timer should fire at kp.Time seconds from lastRead time.
+				timer.Reset(time.Duration(lastRead) + t.kp.Time - time.Duration(time.Now().UnixNano()))
+				prevNano = lastRead
 				continue
 			}
-			// Check if keepalive should go dormant.
+			if outstandingPing && timeoutLeft <= 0 {
+				t.Close()
+				return
+			}
 			t.mu.Lock()
+			if t.state == closing {
+				// If the transport is closing, we should exit from the
+				// keepalive goroutine here. If not, we could have a race
+				// between the call to Signal() from Close() and the call to
+				// Wait() here, whereby the keepalive goroutine ends up
+				// blocking on the condition variable which will never be
+				// signalled again.
+				t.mu.Unlock()
+				return
+			}
 			if len(t.activeStreams) < 1 && !t.kp.PermitWithoutStream {
-				// Make awakenKeepalive writable.
-				<-t.awakenKeepalive
-				t.mu.Unlock()
-				select {
-				case <-t.awakenKeepalive:
-					// If the control gets here a ping has been sent
-					// need to reset the timer with keepalive.Timeout.
-				case <-t.ctx.Done():
-					return
-				}
-			} else {
-				t.mu.Unlock()
+				// If a ping was sent out previously (because there were active
+				// streams at that point) which wasn't acked and its timeout
+				// hadn't fired, but we got here and are about to go dormant,
+				// we should make sure that we unconditionally send a ping once
+				// we awaken.
+				outstandingPing = false
+				t.kpDormant = true
+				t.kpDormancyCond.Wait()
+			}
+			t.kpDormant = false
+			t.mu.Unlock()
+
+			// We get here either because we were dormant and a new stream was
+			// created which unblocked the Wait() call, or because the
+			// keepalive timer expired. In both cases, we need to send a ping.
+			if !outstandingPing {
 				if channelz.IsOn() {
 					atomic.AddInt64(&t.czData.kpCount, 1)
 				}
-				// Send ping.
 				t.controlBuf.put(p)
+				timeoutLeft = t.kp.Timeout
+				outstandingPing = true
 			}
-
-			// By the time control gets here a ping has been sent one way or the other.
-			timer.Reset(t.kp.Timeout)
-			select {
-			case <-timer.C:
-				if atomic.CompareAndSwapUint32(&t.activity, 1, 0) {
-					timer.Reset(t.kp.Time)
-					continue
-				}
-				infof("transport: closing client transport due to idleness.")
-				t.Close()
-				return
-			case <-t.ctx.Done():
-				if !timer.Stop() {
-					<-timer.C
-				}
-				return
-			}
+			// The amount of time to sleep here is the minimum of kp.Time and
+			// timeoutLeft. This will ensure that we wait only for kp.Time
+			// before sending out the next ping (for cases where the ping is
+			// acked).
+			sleepDuration := minTime(t.kp.Time, timeoutLeft)
+			timeoutLeft -= sleepDuration
+			timer.Reset(sleepDuration)
 		case <-t.ctx.Done():
 			if !timer.Stop() {
 				<-timer.C

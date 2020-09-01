@@ -1,4 +1,5 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_resource_server"
 side_bar_current: "docs-aws-resource-cognito-resource-server"
@@ -23,7 +24,7 @@ resource "aws_cognito_resource_server" "resource" {
   identifier = "https://example.com"
   name       = "example"
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 ```
 
@@ -43,7 +44,7 @@ resource "aws_cognito_resource_server" "resource" {
     scope_description = "a Sample Scope Description"
   }
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 ```
 

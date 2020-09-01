@@ -90,13 +90,13 @@ func (c *SWF) CountClosedWorkflowExecutionsRequest(input *CountClosedWorkflowExe
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountClosedWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -198,13 +198,13 @@ func (c *SWF) CountOpenWorkflowExecutionsRequest(input *CountOpenWorkflowExecuti
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountOpenWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -304,13 +304,13 @@ func (c *SWF) CountPendingActivityTasksRequest(input *CountPendingActivityTasksI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountPendingActivityTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -410,13 +410,13 @@ func (c *SWF) CountPendingDecisionTasksRequest(input *CountPendingDecisionTasksI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation CountPendingDecisionTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -520,16 +520,16 @@ func (c *SWF) DeprecateActivityTypeRequest(input *DeprecateActivityTypeInput) (r
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DeprecateActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeDeprecatedFault "TypeDeprecatedFault"
+//   * TypeDeprecatedFault
 //   Returned when the specified activity or workflow type was already deprecated.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -633,16 +633,16 @@ func (c *SWF) DeprecateDomainRequest(input *DeprecateDomainInput) (req *request.
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DeprecateDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeDomainDeprecatedFault "DomainDeprecatedFault"
+//   * DomainDeprecatedFault
 //   Returned when the specified domain has been deprecated.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -747,16 +747,16 @@ func (c *SWF) DeprecateWorkflowTypeRequest(input *DeprecateWorkflowTypeInput) (r
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DeprecateWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeDeprecatedFault "TypeDeprecatedFault"
+//   * TypeDeprecatedFault
 //   Returned when the specified activity or workflow type was already deprecated.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -856,13 +856,13 @@ func (c *SWF) DescribeActivityTypeRequest(input *DescribeActivityTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -958,13 +958,13 @@ func (c *SWF) DescribeDomainRequest(input *DescribeDomainInput) (req *request.Re
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1063,13 +1063,13 @@ func (c *SWF) DescribeWorkflowExecutionRequest(input *DescribeWorkflowExecutionI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1169,13 +1169,13 @@ func (c *SWF) DescribeWorkflowTypeRequest(input *DescribeWorkflowTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation DescribeWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1281,13 +1281,13 @@ func (c *SWF) GetWorkflowExecutionHistoryRequest(input *GetWorkflowExecutionHist
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation GetWorkflowExecutionHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1355,10 +1355,12 @@ func (c *SWF) GetWorkflowExecutionHistoryPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetWorkflowExecutionHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetWorkflowExecutionHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1442,12 +1444,12 @@ func (c *SWF) ListActivityTypesRequest(input *ListActivityTypesInput) (req *requ
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListActivityTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+// Returned Error Types:
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
@@ -1516,10 +1518,12 @@ func (c *SWF) ListActivityTypesPagesWithContext(ctx aws.Context, input *ListActi
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListActivityTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListActivityTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1608,13 +1612,13 @@ func (c *SWF) ListClosedWorkflowExecutionsRequest(input *ListClosedWorkflowExecu
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListClosedWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1682,10 +1686,12 @@ func (c *SWF) ListClosedWorkflowExecutionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1771,8 +1777,8 @@ func (c *SWF) ListDomainsRequest(input *ListDomainsInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListDomains for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+// Returned Error Types:
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -1840,10 +1846,12 @@ func (c *SWF) ListDomainsPagesWithContext(ctx aws.Context, input *ListDomainsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDomainsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDomainsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1932,13 +1940,13 @@ func (c *SWF) ListOpenWorkflowExecutionsRequest(input *ListOpenWorkflowExecution
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListOpenWorkflowExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2006,10 +2014,12 @@ func (c *SWF) ListOpenWorkflowExecutionsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2064,18 +2074,18 @@ func (c *SWF) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2178,12 +2188,12 @@ func (c *SWF) ListWorkflowTypesRequest(input *ListWorkflowTypesInput) (req *requ
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation ListWorkflowTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+// Returned Error Types:
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
@@ -2252,10 +2262,12 @@ func (c *SWF) ListWorkflowTypesPagesWithContext(ctx aws.Context, input *ListWork
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkflowTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkflowTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2341,17 +2353,17 @@ func (c *SWF) PollForActivityTaskRequest(input *PollForActivityTaskInput) (req *
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation PollForActivityTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
@@ -2475,17 +2487,17 @@ func (c *SWF) PollForDecisionTaskRequest(input *PollForDecisionTaskInput) (req *
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation PollForDecisionTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
@@ -2554,10 +2566,12 @@ func (c *SWF) PollForDecisionTaskPagesWithContext(ctx aws.Context, input *PollFo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*PollForDecisionTaskOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*PollForDecisionTaskOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2656,13 +2670,13 @@ func (c *SWF) RecordActivityTaskHeartbeatRequest(input *RecordActivityTaskHeartb
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RecordActivityTaskHeartbeat for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2766,23 +2780,23 @@ func (c *SWF) RegisterActivityTypeRequest(input *RegisterActivityTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RegisterActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTypeAlreadyExistsFault "TypeAlreadyExistsFault"
+// Returned Error Types:
+//   * TypeAlreadyExistsFault
 //   Returned if the type already exists in the specified domain. You may get
 //   this fault if you are registering a type that is either already registered
 //   or deprecated, or if you undeprecate a type that is currently registered.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -2879,22 +2893,22 @@ func (c *SWF) RegisterDomainRequest(input *RegisterDomainInput) (req *request.Re
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RegisterDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDomainAlreadyExistsFault "DomainAlreadyExistsFault"
+// Returned Error Types:
+//   * DomainAlreadyExistsFault
 //   Returned if the domain already exists. You may get this fault if you are
 //   registering a domain that is either already registered or deprecated, or
 //   if you undeprecate a domain that is currently registered.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeTooManyTagsFault "TooManyTagsFault"
+//   * TooManyTagsFault
 //   You've exceeded the number of tags allowed for a domain.
 //
 func (c *SWF) RegisterDomain(input *RegisterDomainInput) (*RegisterDomainOutput, error) {
@@ -3000,23 +3014,23 @@ func (c *SWF) RegisterWorkflowTypeRequest(input *RegisterWorkflowTypeInput) (req
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RegisterWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeTypeAlreadyExistsFault "TypeAlreadyExistsFault"
+// Returned Error Types:
+//   * TypeAlreadyExistsFault
 //   Returned if the type already exists in the specified domain. You may get
 //   this fault if you are registering a type that is either already registered
 //   or deprecated, or if you undeprecate a type that is currently registered.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3123,13 +3137,13 @@ func (c *SWF) RequestCancelWorkflowExecutionRequest(input *RequestCancelWorkflow
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RequestCancelWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3239,13 +3253,13 @@ func (c *SWF) RespondActivityTaskCanceledRequest(input *RespondActivityTaskCance
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondActivityTaskCanceled for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3354,13 +3368,13 @@ func (c *SWF) RespondActivityTaskCompletedRequest(input *RespondActivityTaskComp
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondActivityTaskCompleted for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3464,13 +3478,13 @@ func (c *SWF) RespondActivityTaskFailedRequest(input *RespondActivityTaskFailedI
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondActivityTaskFailed for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3563,13 +3577,13 @@ func (c *SWF) RespondDecisionTaskCompletedRequest(input *RespondDecisionTaskComp
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation RespondDecisionTaskCompleted for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3674,13 +3688,13 @@ func (c *SWF) SignalWorkflowExecutionRequest(input *SignalWorkflowExecutionInput
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation SignalWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -3785,29 +3799,29 @@ func (c *SWF) StartWorkflowExecutionRequest(input *StartWorkflowExecutionInput) 
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation StartWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeDeprecatedFault "TypeDeprecatedFault"
+//   * TypeDeprecatedFault
 //   Returned when the specified activity or workflow type was already deprecated.
 //
-//   * ErrCodeWorkflowExecutionAlreadyStartedFault "WorkflowExecutionAlreadyStartedFault"
+//   * WorkflowExecutionAlreadyStartedFault
 //   Returned by StartWorkflowExecution when an open execution with the same workflowId
 //   is already running in the specified domain.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
-//   * ErrCodeDefaultUndefinedFault "DefaultUndefinedFault"
+//   * DefaultUndefinedFault
 //   The StartWorkflowExecution API action was called without the required parameters
 //   set.
 //
@@ -3895,21 +3909,21 @@ func (c *SWF) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTooManyTagsFault "TooManyTagsFault"
+//   * TooManyTagsFault
 //   You've exceeded the number of tags allowed for a domain.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -4019,13 +4033,13 @@ func (c *SWF) TerminateWorkflowExecutionRequest(input *TerminateWorkflowExecutio
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation TerminateWorkflowExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -4128,18 +4142,18 @@ func (c *SWF) UndeprecateActivityTypeRequest(input *UndeprecateActivityTypeInput
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation UndeprecateActivityType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeAlreadyExistsFault "TypeAlreadyExistsFault"
+//   * TypeAlreadyExistsFault
 //   Returned if the type already exists in the specified domain. You may get
 //   this fault if you are registering a type that is either already registered
 //   or deprecated, or if you undeprecate a type that is currently registered.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -4239,18 +4253,18 @@ func (c *SWF) UndeprecateDomainRequest(input *UndeprecateDomainInput) (req *requ
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation UndeprecateDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeDomainAlreadyExistsFault "DomainAlreadyExistsFault"
+//   * DomainAlreadyExistsFault
 //   Returned if the domain already exists. You may get this fault if you are
 //   registering a domain that is either already registered or deprecated, or
 //   if you undeprecate a domain that is currently registered.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -4353,18 +4367,18 @@ func (c *SWF) UndeprecateWorkflowTypeRequest(input *UndeprecateWorkflowTypeInput
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation UndeprecateWorkflowType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeTypeAlreadyExistsFault "TypeAlreadyExistsFault"
+//   * TypeAlreadyExistsFault
 //   Returned if the type already exists in the specified domain. You may get
 //   this fault if you are registering a type that is either already registered
 //   or deprecated, or if you undeprecate a type that is currently registered.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -4441,18 +4455,18 @@ func (c *SWF) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Simple Workflow Service's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeUnknownResourceFault "UnknownResourceFault"
+// Returned Error Types:
+//   * UnknownResourceFault
 //   Returned when the named resource cannot be found with in the scope of this
 //   operation (region or domain). This could happen if the named resource was
 //   never created or is no longer available for this operation.
 //
-//   * ErrCodeLimitExceededFault "LimitExceededFault"
+//   * LimitExceededFault
 //   Returned by any operation if a system imposed limitation has been reached.
 //   To address this fault you should either clean up unused resources or increase
 //   the limit by contacting AWS.
 //
-//   * ErrCodeOperationNotPermittedFault "OperationNotPermittedFault"
+//   * OperationNotPermittedFault
 //   Returned when the caller doesn't have sufficient permissions to invoke the
 //   action.
 //
@@ -7117,6 +7131,72 @@ func (s *DecisionTaskTimedOutEventAttributes) SetTimeoutType(v string) *Decision
 	return s
 }
 
+// The StartWorkflowExecution API action was called without the required parameters
+// set.
+//
+// Some workflow execution parameters, such as the decision taskList, must be
+// set to start the execution. However, these parameters might have been set
+// as defaults when the workflow type was registered. In this case, you can
+// omit these parameters from the StartWorkflowExecution call and Amazon SWF
+// uses the values defined in the workflow type.
+//
+// If these parameters aren't set and no default parameters were defined in
+// the workflow type, this error is displayed.
+type DefaultUndefinedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DefaultUndefinedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DefaultUndefinedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorDefaultUndefinedFault(v protocol.ResponseMetadata) error {
+	return &DefaultUndefinedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DefaultUndefinedFault) Code() string {
+	return "DefaultUndefinedFault"
+}
+
+// Message returns the exception's message.
+func (s *DefaultUndefinedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DefaultUndefinedFault) OrigErr() error {
+	return nil
+}
+
+func (s *DefaultUndefinedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DefaultUndefinedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DefaultUndefinedFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type DeprecateActivityTypeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7746,6 +7826,65 @@ func (s *DescribeWorkflowTypeOutput) SetTypeInfo(v *WorkflowTypeInfo) *DescribeW
 	return s
 }
 
+// Returned if the domain already exists. You may get this fault if you are
+// registering a domain that is either already registered or deprecated, or
+// if you undeprecate a domain that is currently registered.
+type DomainAlreadyExistsFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DomainAlreadyExistsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainAlreadyExistsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorDomainAlreadyExistsFault(v protocol.ResponseMetadata) error {
+	return &DomainAlreadyExistsFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DomainAlreadyExistsFault) Code() string {
+	return "DomainAlreadyExistsFault"
+}
+
+// Message returns the exception's message.
+func (s *DomainAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DomainAlreadyExistsFault) OrigErr() error {
+	return nil
+}
+
+func (s *DomainAlreadyExistsFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DomainAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DomainAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Contains the configuration settings of a domain.
 type DomainConfiguration struct {
 	_ struct{} `type:"structure"`
@@ -7770,6 +7909,63 @@ func (s DomainConfiguration) GoString() string {
 func (s *DomainConfiguration) SetWorkflowExecutionRetentionPeriodInDays(v string) *DomainConfiguration {
 	s.WorkflowExecutionRetentionPeriodInDays = &v
 	return s
+}
+
+// Returned when the specified domain has been deprecated.
+type DomainDeprecatedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DomainDeprecatedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainDeprecatedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorDomainDeprecatedFault(v protocol.ResponseMetadata) error {
+	return &DomainDeprecatedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DomainDeprecatedFault) Code() string {
+	return "DomainDeprecatedFault"
+}
+
+// Message returns the exception's message.
+func (s *DomainDeprecatedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DomainDeprecatedFault) OrigErr() error {
+	return nil
+}
+
+func (s *DomainDeprecatedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DomainDeprecatedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DomainDeprecatedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains general information about a domain.
@@ -9238,6 +9434,65 @@ func (s *LambdaFunctionTimedOutEventAttributes) SetTimeoutType(v string) *Lambda
 	return s
 }
 
+// Returned by any operation if a system imposed limitation has been reached.
+// To address this fault you should either clean up unused resources or increase
+// the limit by contacting AWS.
+type LimitExceededFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededFault) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededFault(v protocol.ResponseMetadata) error {
+	return &LimitExceededFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededFault) Code() string {
+	return "LimitExceededFault"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededFault) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type ListActivityTypesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10092,6 +10347,64 @@ func (s *MarkerRecordedEventAttributes) SetDetails(v string) *MarkerRecordedEven
 func (s *MarkerRecordedEventAttributes) SetMarkerName(v string) *MarkerRecordedEventAttributes {
 	s.MarkerName = &v
 	return s
+}
+
+// Returned when the caller doesn't have sufficient permissions to invoke the
+// action.
+type OperationNotPermittedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s OperationNotPermittedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OperationNotPermittedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorOperationNotPermittedFault(v protocol.ResponseMetadata) error {
+	return &OperationNotPermittedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *OperationNotPermittedFault) Code() string {
+	return "OperationNotPermittedFault"
+}
+
+// Message returns the exception's message.
+func (s *OperationNotPermittedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *OperationNotPermittedFault) OrigErr() error {
+	return nil
+}
+
+func (s *OperationNotPermittedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *OperationNotPermittedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *OperationNotPermittedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains the count of tasks in a task list.
@@ -14288,6 +14601,178 @@ func (s *TimerStartedEventAttributes) SetTimerId(v string) *TimerStartedEventAtt
 	return s
 }
 
+// You've exceeded the number of tags allowed for a domain.
+type TooManyTagsFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTagsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsFault(v protocol.ResponseMetadata) error {
+	return &TooManyTagsFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyTagsFault) Code() string {
+	return "TooManyTagsFault"
+}
+
+// Message returns the exception's message.
+func (s *TooManyTagsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyTagsFault) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyTagsFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyTagsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyTagsFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Returned if the type already exists in the specified domain. You may get
+// this fault if you are registering a type that is either already registered
+// or deprecated, or if you undeprecate a type that is currently registered.
+type TypeAlreadyExistsFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TypeAlreadyExistsFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TypeAlreadyExistsFault) GoString() string {
+	return s.String()
+}
+
+func newErrorTypeAlreadyExistsFault(v protocol.ResponseMetadata) error {
+	return &TypeAlreadyExistsFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TypeAlreadyExistsFault) Code() string {
+	return "TypeAlreadyExistsFault"
+}
+
+// Message returns the exception's message.
+func (s *TypeAlreadyExistsFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TypeAlreadyExistsFault) OrigErr() error {
+	return nil
+}
+
+func (s *TypeAlreadyExistsFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TypeAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TypeAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Returned when the specified activity or workflow type was already deprecated.
+type TypeDeprecatedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TypeDeprecatedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TypeDeprecatedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorTypeDeprecatedFault(v protocol.ResponseMetadata) error {
+	return &TypeDeprecatedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TypeDeprecatedFault) Code() string {
+	return "TypeDeprecatedFault"
+}
+
+// Message returns the exception's message.
+func (s *TypeDeprecatedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TypeDeprecatedFault) OrigErr() error {
+	return nil
+}
+
+func (s *TypeDeprecatedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TypeDeprecatedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TypeDeprecatedFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type UndeprecateActivityTypeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14491,6 +14976,65 @@ func (s UndeprecateWorkflowTypeOutput) GoString() string {
 	return s.String()
 }
 
+// Returned when the named resource cannot be found with in the scope of this
+// operation (region or domain). This could happen if the named resource was
+// never created or is no longer available for this operation.
+type UnknownResourceFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnknownResourceFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnknownResourceFault) GoString() string {
+	return s.String()
+}
+
+func newErrorUnknownResourceFault(v protocol.ResponseMetadata) error {
+	return &UnknownResourceFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnknownResourceFault) Code() string {
+	return "UnknownResourceFault"
+}
+
+// Message returns the exception's message.
+func (s *UnknownResourceFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnknownResourceFault) OrigErr() error {
+	return nil
+}
+
+func (s *UnknownResourceFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnknownResourceFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnknownResourceFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14617,6 +15161,64 @@ func (s *WorkflowExecution) SetRunId(v string) *WorkflowExecution {
 func (s *WorkflowExecution) SetWorkflowId(v string) *WorkflowExecution {
 	s.WorkflowId = &v
 	return s
+}
+
+// Returned by StartWorkflowExecution when an open execution with the same workflowId
+// is already running in the specified domain.
+type WorkflowExecutionAlreadyStartedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description that may help with diagnosing the cause of the fault.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s WorkflowExecutionAlreadyStartedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WorkflowExecutionAlreadyStartedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorWorkflowExecutionAlreadyStartedFault(v protocol.ResponseMetadata) error {
+	return &WorkflowExecutionAlreadyStartedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *WorkflowExecutionAlreadyStartedFault) Code() string {
+	return "WorkflowExecutionAlreadyStartedFault"
+}
+
+// Message returns the exception's message.
+func (s *WorkflowExecutionAlreadyStartedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *WorkflowExecutionAlreadyStartedFault) OrigErr() error {
+	return nil
+}
+
+func (s *WorkflowExecutionAlreadyStartedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *WorkflowExecutionAlreadyStartedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *WorkflowExecutionAlreadyStartedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides the details of the WorkflowExecutionCancelRequested event.
@@ -16005,6 +16607,16 @@ const (
 	ActivityTaskTimeoutTypeHeartbeat = "HEARTBEAT"
 )
 
+// ActivityTaskTimeoutType_Values returns all elements of the ActivityTaskTimeoutType enum
+func ActivityTaskTimeoutType_Values() []string {
+	return []string{
+		ActivityTaskTimeoutTypeStartToClose,
+		ActivityTaskTimeoutTypeScheduleToStart,
+		ActivityTaskTimeoutTypeScheduleToClose,
+		ActivityTaskTimeoutTypeHeartbeat,
+	}
+}
+
 const (
 	// CancelTimerFailedCauseTimerIdUnknown is a CancelTimerFailedCause enum value
 	CancelTimerFailedCauseTimerIdUnknown = "TIMER_ID_UNKNOWN"
@@ -16013,6 +16625,14 @@ const (
 	CancelTimerFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// CancelTimerFailedCause_Values returns all elements of the CancelTimerFailedCause enum
+func CancelTimerFailedCause_Values() []string {
+	return []string{
+		CancelTimerFailedCauseTimerIdUnknown,
+		CancelTimerFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// CancelWorkflowExecutionFailedCauseUnhandledDecision is a CancelWorkflowExecutionFailedCause enum value
 	CancelWorkflowExecutionFailedCauseUnhandledDecision = "UNHANDLED_DECISION"
@@ -16020,6 +16640,14 @@ const (
 	// CancelWorkflowExecutionFailedCauseOperationNotPermitted is a CancelWorkflowExecutionFailedCause enum value
 	CancelWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// CancelWorkflowExecutionFailedCause_Values returns all elements of the CancelWorkflowExecutionFailedCause enum
+func CancelWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		CancelWorkflowExecutionFailedCauseUnhandledDecision,
+		CancelWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// ChildPolicyTerminate is a ChildPolicy enum value
@@ -16031,6 +16659,15 @@ const (
 	// ChildPolicyAbandon is a ChildPolicy enum value
 	ChildPolicyAbandon = "ABANDON"
 )
+
+// ChildPolicy_Values returns all elements of the ChildPolicy enum
+func ChildPolicy_Values() []string {
+	return []string{
+		ChildPolicyTerminate,
+		ChildPolicyRequestCancel,
+		ChildPolicyAbandon,
+	}
+}
 
 const (
 	// CloseStatusCompleted is a CloseStatus enum value
@@ -16052,6 +16689,18 @@ const (
 	CloseStatusTimedOut = "TIMED_OUT"
 )
 
+// CloseStatus_Values returns all elements of the CloseStatus enum
+func CloseStatus_Values() []string {
+	return []string{
+		CloseStatusCompleted,
+		CloseStatusFailed,
+		CloseStatusCanceled,
+		CloseStatusTerminated,
+		CloseStatusContinuedAsNew,
+		CloseStatusTimedOut,
+	}
+}
+
 const (
 	// CompleteWorkflowExecutionFailedCauseUnhandledDecision is a CompleteWorkflowExecutionFailedCause enum value
 	CompleteWorkflowExecutionFailedCauseUnhandledDecision = "UNHANDLED_DECISION"
@@ -16059,6 +16708,14 @@ const (
 	// CompleteWorkflowExecutionFailedCauseOperationNotPermitted is a CompleteWorkflowExecutionFailedCause enum value
 	CompleteWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// CompleteWorkflowExecutionFailedCause_Values returns all elements of the CompleteWorkflowExecutionFailedCause enum
+func CompleteWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		CompleteWorkflowExecutionFailedCauseUnhandledDecision,
+		CompleteWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// ContinueAsNewWorkflowExecutionFailedCauseUnhandledDecision is a ContinueAsNewWorkflowExecutionFailedCause enum value
@@ -16089,10 +16746,32 @@ const (
 	ContinueAsNewWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// ContinueAsNewWorkflowExecutionFailedCause_Values returns all elements of the ContinueAsNewWorkflowExecutionFailedCause enum
+func ContinueAsNewWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		ContinueAsNewWorkflowExecutionFailedCauseUnhandledDecision,
+		ContinueAsNewWorkflowExecutionFailedCauseWorkflowTypeDeprecated,
+		ContinueAsNewWorkflowExecutionFailedCauseWorkflowTypeDoesNotExist,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultExecutionStartToCloseTimeoutUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultTaskStartToCloseTimeoutUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultTaskListUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultChildPolicyUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseContinueAsNewWorkflowExecutionRateExceeded,
+		ContinueAsNewWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// DecisionTaskTimeoutTypeStartToClose is a DecisionTaskTimeoutType enum value
 	DecisionTaskTimeoutTypeStartToClose = "START_TO_CLOSE"
 )
+
+// DecisionTaskTimeoutType_Values returns all elements of the DecisionTaskTimeoutType enum
+func DecisionTaskTimeoutType_Values() []string {
+	return []string{
+		DecisionTaskTimeoutTypeStartToClose,
+	}
+}
 
 const (
 	// DecisionTypeScheduleActivityTask is a DecisionType enum value
@@ -16134,6 +16813,25 @@ const (
 	// DecisionTypeScheduleLambdaFunction is a DecisionType enum value
 	DecisionTypeScheduleLambdaFunction = "ScheduleLambdaFunction"
 )
+
+// DecisionType_Values returns all elements of the DecisionType enum
+func DecisionType_Values() []string {
+	return []string{
+		DecisionTypeScheduleActivityTask,
+		DecisionTypeRequestCancelActivityTask,
+		DecisionTypeCompleteWorkflowExecution,
+		DecisionTypeFailWorkflowExecution,
+		DecisionTypeCancelWorkflowExecution,
+		DecisionTypeContinueAsNewWorkflowExecution,
+		DecisionTypeRecordMarker,
+		DecisionTypeStartTimer,
+		DecisionTypeCancelTimer,
+		DecisionTypeSignalExternalWorkflowExecution,
+		DecisionTypeRequestCancelExternalWorkflowExecution,
+		DecisionTypeStartChildWorkflowExecution,
+		DecisionTypeScheduleLambdaFunction,
+	}
+}
 
 const (
 	// EventTypeWorkflowExecutionStarted is a EventType enum value
@@ -16299,6 +16997,66 @@ const (
 	EventTypeStartLambdaFunctionFailed = "StartLambdaFunctionFailed"
 )
 
+// EventType_Values returns all elements of the EventType enum
+func EventType_Values() []string {
+	return []string{
+		EventTypeWorkflowExecutionStarted,
+		EventTypeWorkflowExecutionCancelRequested,
+		EventTypeWorkflowExecutionCompleted,
+		EventTypeCompleteWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionFailed,
+		EventTypeFailWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionTimedOut,
+		EventTypeWorkflowExecutionCanceled,
+		EventTypeCancelWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionContinuedAsNew,
+		EventTypeContinueAsNewWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionTerminated,
+		EventTypeDecisionTaskScheduled,
+		EventTypeDecisionTaskStarted,
+		EventTypeDecisionTaskCompleted,
+		EventTypeDecisionTaskTimedOut,
+		EventTypeActivityTaskScheduled,
+		EventTypeScheduleActivityTaskFailed,
+		EventTypeActivityTaskStarted,
+		EventTypeActivityTaskCompleted,
+		EventTypeActivityTaskFailed,
+		EventTypeActivityTaskTimedOut,
+		EventTypeActivityTaskCanceled,
+		EventTypeActivityTaskCancelRequested,
+		EventTypeRequestCancelActivityTaskFailed,
+		EventTypeWorkflowExecutionSignaled,
+		EventTypeMarkerRecorded,
+		EventTypeRecordMarkerFailed,
+		EventTypeTimerStarted,
+		EventTypeStartTimerFailed,
+		EventTypeTimerFired,
+		EventTypeTimerCanceled,
+		EventTypeCancelTimerFailed,
+		EventTypeStartChildWorkflowExecutionInitiated,
+		EventTypeStartChildWorkflowExecutionFailed,
+		EventTypeChildWorkflowExecutionStarted,
+		EventTypeChildWorkflowExecutionCompleted,
+		EventTypeChildWorkflowExecutionFailed,
+		EventTypeChildWorkflowExecutionTimedOut,
+		EventTypeChildWorkflowExecutionCanceled,
+		EventTypeChildWorkflowExecutionTerminated,
+		EventTypeSignalExternalWorkflowExecutionInitiated,
+		EventTypeSignalExternalWorkflowExecutionFailed,
+		EventTypeExternalWorkflowExecutionSignaled,
+		EventTypeRequestCancelExternalWorkflowExecutionInitiated,
+		EventTypeRequestCancelExternalWorkflowExecutionFailed,
+		EventTypeExternalWorkflowExecutionCancelRequested,
+		EventTypeLambdaFunctionScheduled,
+		EventTypeLambdaFunctionStarted,
+		EventTypeLambdaFunctionCompleted,
+		EventTypeLambdaFunctionFailed,
+		EventTypeLambdaFunctionTimedOut,
+		EventTypeScheduleLambdaFunctionFailed,
+		EventTypeStartLambdaFunctionFailed,
+	}
+}
+
 const (
 	// ExecutionStatusOpen is a ExecutionStatus enum value
 	ExecutionStatusOpen = "OPEN"
@@ -16306,6 +17064,14 @@ const (
 	// ExecutionStatusClosed is a ExecutionStatus enum value
 	ExecutionStatusClosed = "CLOSED"
 )
+
+// ExecutionStatus_Values returns all elements of the ExecutionStatus enum
+func ExecutionStatus_Values() []string {
+	return []string{
+		ExecutionStatusOpen,
+		ExecutionStatusClosed,
+	}
+}
 
 const (
 	// FailWorkflowExecutionFailedCauseUnhandledDecision is a FailWorkflowExecutionFailedCause enum value
@@ -16315,15 +17081,37 @@ const (
 	FailWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// FailWorkflowExecutionFailedCause_Values returns all elements of the FailWorkflowExecutionFailedCause enum
+func FailWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		FailWorkflowExecutionFailedCauseUnhandledDecision,
+		FailWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// LambdaFunctionTimeoutTypeStartToClose is a LambdaFunctionTimeoutType enum value
 	LambdaFunctionTimeoutTypeStartToClose = "START_TO_CLOSE"
 )
 
+// LambdaFunctionTimeoutType_Values returns all elements of the LambdaFunctionTimeoutType enum
+func LambdaFunctionTimeoutType_Values() []string {
+	return []string{
+		LambdaFunctionTimeoutTypeStartToClose,
+	}
+}
+
 const (
 	// RecordMarkerFailedCauseOperationNotPermitted is a RecordMarkerFailedCause enum value
 	RecordMarkerFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// RecordMarkerFailedCause_Values returns all elements of the RecordMarkerFailedCause enum
+func RecordMarkerFailedCause_Values() []string {
+	return []string{
+		RecordMarkerFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// RegistrationStatusRegistered is a RegistrationStatus enum value
@@ -16333,6 +17121,14 @@ const (
 	RegistrationStatusDeprecated = "DEPRECATED"
 )
 
+// RegistrationStatus_Values returns all elements of the RegistrationStatus enum
+func RegistrationStatus_Values() []string {
+	return []string{
+		RegistrationStatusRegistered,
+		RegistrationStatusDeprecated,
+	}
+}
+
 const (
 	// RequestCancelActivityTaskFailedCauseActivityIdUnknown is a RequestCancelActivityTaskFailedCause enum value
 	RequestCancelActivityTaskFailedCauseActivityIdUnknown = "ACTIVITY_ID_UNKNOWN"
@@ -16340,6 +17136,14 @@ const (
 	// RequestCancelActivityTaskFailedCauseOperationNotPermitted is a RequestCancelActivityTaskFailedCause enum value
 	RequestCancelActivityTaskFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// RequestCancelActivityTaskFailedCause_Values returns all elements of the RequestCancelActivityTaskFailedCause enum
+func RequestCancelActivityTaskFailedCause_Values() []string {
+	return []string{
+		RequestCancelActivityTaskFailedCauseActivityIdUnknown,
+		RequestCancelActivityTaskFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// RequestCancelExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution is a RequestCancelExternalWorkflowExecutionFailedCause enum value
@@ -16351,6 +17155,15 @@ const (
 	// RequestCancelExternalWorkflowExecutionFailedCauseOperationNotPermitted is a RequestCancelExternalWorkflowExecutionFailedCause enum value
 	RequestCancelExternalWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// RequestCancelExternalWorkflowExecutionFailedCause_Values returns all elements of the RequestCancelExternalWorkflowExecutionFailedCause enum
+func RequestCancelExternalWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		RequestCancelExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution,
+		RequestCancelExternalWorkflowExecutionFailedCauseRequestCancelExternalWorkflowExecutionRateExceeded,
+		RequestCancelExternalWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// ScheduleActivityTaskFailedCauseActivityTypeDeprecated is a ScheduleActivityTaskFailedCause enum value
@@ -16387,6 +17200,23 @@ const (
 	ScheduleActivityTaskFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// ScheduleActivityTaskFailedCause_Values returns all elements of the ScheduleActivityTaskFailedCause enum
+func ScheduleActivityTaskFailedCause_Values() []string {
+	return []string{
+		ScheduleActivityTaskFailedCauseActivityTypeDeprecated,
+		ScheduleActivityTaskFailedCauseActivityTypeDoesNotExist,
+		ScheduleActivityTaskFailedCauseActivityIdAlreadyInUse,
+		ScheduleActivityTaskFailedCauseOpenActivitiesLimitExceeded,
+		ScheduleActivityTaskFailedCauseActivityCreationRateExceeded,
+		ScheduleActivityTaskFailedCauseDefaultScheduleToCloseTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseDefaultTaskListUndefined,
+		ScheduleActivityTaskFailedCauseDefaultScheduleToStartTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseDefaultStartToCloseTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseDefaultHeartbeatTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// ScheduleLambdaFunctionFailedCauseIdAlreadyInUse is a ScheduleLambdaFunctionFailedCause enum value
 	ScheduleLambdaFunctionFailedCauseIdAlreadyInUse = "ID_ALREADY_IN_USE"
@@ -16401,6 +17231,16 @@ const (
 	ScheduleLambdaFunctionFailedCauseLambdaServiceNotAvailableInRegion = "LAMBDA_SERVICE_NOT_AVAILABLE_IN_REGION"
 )
 
+// ScheduleLambdaFunctionFailedCause_Values returns all elements of the ScheduleLambdaFunctionFailedCause enum
+func ScheduleLambdaFunctionFailedCause_Values() []string {
+	return []string{
+		ScheduleLambdaFunctionFailedCauseIdAlreadyInUse,
+		ScheduleLambdaFunctionFailedCauseOpenLambdaFunctionsLimitExceeded,
+		ScheduleLambdaFunctionFailedCauseLambdaFunctionCreationRateExceeded,
+		ScheduleLambdaFunctionFailedCauseLambdaServiceNotAvailableInRegion,
+	}
+}
+
 const (
 	// SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution is a SignalExternalWorkflowExecutionFailedCause enum value
 	SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution = "UNKNOWN_EXTERNAL_WORKFLOW_EXECUTION"
@@ -16411,6 +17251,15 @@ const (
 	// SignalExternalWorkflowExecutionFailedCauseOperationNotPermitted is a SignalExternalWorkflowExecutionFailedCause enum value
 	SignalExternalWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// SignalExternalWorkflowExecutionFailedCause_Values returns all elements of the SignalExternalWorkflowExecutionFailedCause enum
+func SignalExternalWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution,
+		SignalExternalWorkflowExecutionFailedCauseSignalExternalWorkflowExecutionRateExceeded,
+		SignalExternalWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// StartChildWorkflowExecutionFailedCauseWorkflowTypeDoesNotExist is a StartChildWorkflowExecutionFailedCause enum value
@@ -16447,10 +17296,34 @@ const (
 	StartChildWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// StartChildWorkflowExecutionFailedCause_Values returns all elements of the StartChildWorkflowExecutionFailedCause enum
+func StartChildWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		StartChildWorkflowExecutionFailedCauseWorkflowTypeDoesNotExist,
+		StartChildWorkflowExecutionFailedCauseWorkflowTypeDeprecated,
+		StartChildWorkflowExecutionFailedCauseOpenChildrenLimitExceeded,
+		StartChildWorkflowExecutionFailedCauseOpenWorkflowsLimitExceeded,
+		StartChildWorkflowExecutionFailedCauseChildCreationRateExceeded,
+		StartChildWorkflowExecutionFailedCauseWorkflowAlreadyRunning,
+		StartChildWorkflowExecutionFailedCauseDefaultExecutionStartToCloseTimeoutUndefined,
+		StartChildWorkflowExecutionFailedCauseDefaultTaskListUndefined,
+		StartChildWorkflowExecutionFailedCauseDefaultTaskStartToCloseTimeoutUndefined,
+		StartChildWorkflowExecutionFailedCauseDefaultChildPolicyUndefined,
+		StartChildWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// StartLambdaFunctionFailedCauseAssumeRoleFailed is a StartLambdaFunctionFailedCause enum value
 	StartLambdaFunctionFailedCauseAssumeRoleFailed = "ASSUME_ROLE_FAILED"
 )
+
+// StartLambdaFunctionFailedCause_Values returns all elements of the StartLambdaFunctionFailedCause enum
+func StartLambdaFunctionFailedCause_Values() []string {
+	return []string{
+		StartLambdaFunctionFailedCauseAssumeRoleFailed,
+	}
+}
 
 const (
 	// StartTimerFailedCauseTimerIdAlreadyInUse is a StartTimerFailedCause enum value
@@ -16466,10 +17339,27 @@ const (
 	StartTimerFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// StartTimerFailedCause_Values returns all elements of the StartTimerFailedCause enum
+func StartTimerFailedCause_Values() []string {
+	return []string{
+		StartTimerFailedCauseTimerIdAlreadyInUse,
+		StartTimerFailedCauseOpenTimersLimitExceeded,
+		StartTimerFailedCauseTimerCreationRateExceeded,
+		StartTimerFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// WorkflowExecutionCancelRequestedCauseChildPolicyApplied is a WorkflowExecutionCancelRequestedCause enum value
 	WorkflowExecutionCancelRequestedCauseChildPolicyApplied = "CHILD_POLICY_APPLIED"
 )
+
+// WorkflowExecutionCancelRequestedCause_Values returns all elements of the WorkflowExecutionCancelRequestedCause enum
+func WorkflowExecutionCancelRequestedCause_Values() []string {
+	return []string{
+		WorkflowExecutionCancelRequestedCauseChildPolicyApplied,
+	}
+}
 
 const (
 	// WorkflowExecutionTerminatedCauseChildPolicyApplied is a WorkflowExecutionTerminatedCause enum value
@@ -16482,7 +17372,23 @@ const (
 	WorkflowExecutionTerminatedCauseOperatorInitiated = "OPERATOR_INITIATED"
 )
 
+// WorkflowExecutionTerminatedCause_Values returns all elements of the WorkflowExecutionTerminatedCause enum
+func WorkflowExecutionTerminatedCause_Values() []string {
+	return []string{
+		WorkflowExecutionTerminatedCauseChildPolicyApplied,
+		WorkflowExecutionTerminatedCauseEventLimitExceeded,
+		WorkflowExecutionTerminatedCauseOperatorInitiated,
+	}
+}
+
 const (
 	// WorkflowExecutionTimeoutTypeStartToClose is a WorkflowExecutionTimeoutType enum value
 	WorkflowExecutionTimeoutTypeStartToClose = "START_TO_CLOSE"
 )
+
+// WorkflowExecutionTimeoutType_Values returns all elements of the WorkflowExecutionTimeoutType enum
+func WorkflowExecutionTimeoutType_Values() []string {
+	return []string{
+		WorkflowExecutionTimeoutTypeStartToClose,
+	}
+}

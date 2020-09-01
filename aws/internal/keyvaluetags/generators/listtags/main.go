@@ -17,29 +17,41 @@ import (
 const filename = `list_tags_gen.go`
 
 var serviceNames = []string{
+	"accessanalyzer",
+	"acm",
 	"acmpca",
 	"amplify",
+	"apigatewayv2",
 	"appmesh",
 	"appstream",
 	"appsync",
 	"athena",
 	"backup",
+	"cloud9",
+	"cloudfront",
 	"cloudhsmv2",
+	"cloudtrail",
 	"cloudwatch",
 	"cloudwatchevents",
+	"cloudwatchlogs",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
 	"databasemigrationservice",
+	"dataexchange",
 	"datasync",
 	"dax",
 	"devicefarm",
+	"directconnect",
 	"directoryservice",
+	"dlm",
 	"docdb",
 	"dynamodb",
+	"ec2",
 	"ecr",
 	"ecs",
 	"efs",
@@ -47,39 +59,62 @@ var serviceNames = []string{
 	"elasticache",
 	"elasticbeanstalk",
 	"elasticsearchservice",
+	"elb",
+	"elbv2",
 	"firehose",
 	"fsx",
+	"gamelift",
+	"glacier",
+	"globalaccelerator",
 	"glue",
 	"guardduty",
+	"greengrass",
+	"imagebuilder",
 	"inspector",
 	"iot",
 	"iotanalytics",
 	"iotevents",
 	"kafka",
+	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
+	"kinesisvideo",
 	"kms",
 	"lambda",
 	"licensemanager",
 	"mediaconnect",
+	"mediaconvert",
 	"medialive",
 	"mediapackage",
 	"mediastore",
 	"mq",
 	"neptune",
+	"networkmanager",
 	"opsworks",
 	"organizations",
+	"pinpoint",
+	"qldb",
+	"quicksight",
 	"rds",
+	"resourcegroups",
+	"route53",
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
+	"servicediscovery",
 	"sfn",
 	"sns",
+	"sqs",
 	"ssm",
 	"storagegateway",
 	"swf",
 	"transfer",
+	"waf",
+	"wafregional",
+	"wafv2",
+	"worklink",
 	"workspaces",
+	"xray",
 }
 
 type TemplateData struct {
@@ -94,12 +129,15 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                     keyvaluetags.ServiceClientType,
-		"ListTagsFunction":               ServiceListTagsFunction,
-		"ListTagsInputIdentifierField":   ServiceListTagsInputIdentifierField,
-		"ListTagsInputResourceTypeField": ServiceListTagsInputResourceTypeField,
-		"ListTagsOutputTagsField":        ServiceListTagsOutputTagsField,
-		"Title":                          strings.Title,
+		"ClientType":                           keyvaluetags.ServiceClientType,
+		"ListTagsFunction":                     keyvaluetags.ServiceListTagsFunction,
+		"ListTagsInputFilterIdentifierName":    keyvaluetags.ServiceListTagsInputFilterIdentifierName,
+		"ListTagsInputIdentifierField":         keyvaluetags.ServiceListTagsInputIdentifierField,
+		"ListTagsInputIdentifierRequiresSlice": keyvaluetags.ServiceListTagsInputIdentifierRequiresSlice,
+		"ListTagsInputResourceTypeField":       keyvaluetags.ServiceListTagsInputResourceTypeField,
+		"ListTagsOutputTagsField":              keyvaluetags.ServiceListTagsOutputTagsField,
+		"TagPackage":                           keyvaluetags.ServiceTagPackage,
+		"Title":                                strings.Title,
 	}
 
 	tmpl, err := template.New("listtags").Funcs(templateFuncMap).Parse(templateBody)
@@ -153,10 +191,23 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
-	input := &{{ . }}.{{ . | ListTagsFunction }}Input{
+	input := &{{ . | TagPackage  }}.{{ . | ListTagsFunction }}Input{
+		{{- if . | ListTagsInputFilterIdentifierName }}
+		Filters: []*{{ . | TagPackage  }}.Filter{
+			{
+				Name:   aws.String("{{ . | ListTagsInputFilterIdentifierName }}"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+		{{- else }}
+		{{- if . | ListTagsInputIdentifierRequiresSlice }}
+		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+		{{- else }}
 		{{ . | ListTagsInputIdentifierField }}:   aws.String(identifier),
+		{{- end }}
 		{{- if . | ListTagsInputResourceTypeField }}
 		{{ . | ListTagsInputResourceTypeField }}: aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 	}
 
@@ -170,143 +221,3 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 }
 {{- end }}
 `
-
-// ServiceListTagsFunction determines the service tagging function.
-func ServiceListTagsFunction(serviceName string) string {
-	switch serviceName {
-	case "acmpca":
-		return "ListTags"
-	case "backup":
-		return "ListTags"
-	case "cloudhsmv2":
-		return "ListTags"
-	case "dax":
-		return "ListTags"
-	case "dynamodb":
-		return "ListTagsOfResource"
-	case "efs":
-		return "DescribeTags"
-	case "elasticsearchservice":
-		return "ListTags"
-	case "firehose":
-		return "ListTagsForDeliveryStream"
-	case "glue":
-		return "GetTags"
-	case "kms":
-		return "ListResourceTags"
-	case "lambda":
-		return "ListTags"
-	case "mq":
-		return "ListTags"
-	case "opsworks":
-		return "ListTags"
-	case "redshift":
-		return "DescribeTags"
-	case "sagemaker":
-		return "ListTags"
-	case "workspaces":
-		return "DescribeTags"
-	default:
-		return "ListTagsForResource"
-	}
-}
-
-// ServiceListTagsInputIdentifierField determines the service tag identifier field.
-func ServiceListTagsInputIdentifierField(serviceName string) string {
-	switch serviceName {
-	case "acmpca":
-		return "CertificateAuthorityArn"
-	case "athena":
-		return "ResourceARN"
-	case "cloudhsmv2":
-		return "ResourceId"
-	case "cloudwatch":
-		return "ResourceARN"
-	case "cloudwatchevents":
-		return "ResourceARN"
-	case "dax":
-		return "ResourceName"
-	case "devicefarm":
-		return "ResourceARN"
-	case "directoryservice":
-		return "ResourceId"
-	case "docdb":
-		return "ResourceName"
-	case "efs":
-		return "FileSystemId"
-	case "elasticache":
-		return "ResourceName"
-	case "elasticsearchservice":
-		return "ARN"
-	case "firehose":
-		return "DeliveryStreamName"
-	case "fsx":
-		return "ResourceARN"
-	case "kinesisanalytics":
-		return "ResourceARN"
-	case "kinesisanalyticsv2":
-		return "ResourceARN"
-	case "kms":
-		return "KeyId"
-	case "lambda":
-		return "Resource"
-	case "mediastore":
-		return "Resource"
-	case "neptune":
-		return "ResourceName"
-	case "organizations":
-		return "ResourceId"
-	case "rds":
-		return "ResourceName"
-	case "redshift":
-		return "ResourceName"
-	case "ssm":
-		return "ResourceId"
-	case "storagegateway":
-		return "ResourceARN"
-	case "transfer":
-		return "Arn"
-	case "workspaces":
-		return "ResourceId"
-	default:
-		return "ResourceArn"
-	}
-}
-
-// ServiceListTagsInputResourceTypeField determines the service tagging resource type field.
-func ServiceListTagsInputResourceTypeField(serviceName string) string {
-	switch serviceName {
-	case "ssm":
-		return "ResourceType"
-	default:
-		return ""
-	}
-}
-
-// ServiceListTagsOutputTagsField determines the service tag field.
-func ServiceListTagsOutputTagsField(serviceName string) string {
-	switch serviceName {
-	case "cloudhsmv2":
-		return "TagList"
-	case "databasemigrationservice":
-		return "TagList"
-	case "docdb":
-		return "TagList"
-	case "elasticache":
-		return "TagList"
-	case "elasticbeanstalk":
-		return "ResourceTags"
-	case "elasticsearchservice":
-		return "TagList"
-	case "neptune":
-		return "TagList"
-	case "rds":
-		return "TagList"
-	case "ssm":
-		return "TagList"
-	case "workspaces":
-		return "TagList"
-	default:
-		return "Tags"
-	}
-}

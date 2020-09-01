@@ -1,4 +1,5 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_instance"
 description: |-
@@ -13,10 +14,10 @@ Provides an OpsWorks instance resource.
 
 ```hcl
 resource "aws_opsworks_instance" "my-instance" {
-  stack_id = "${aws_opsworks_stack.main.id}"
+  stack_id = aws_opsworks_stack.main.id
 
   layer_ids = [
-    "${aws_opsworks_custom_layer.my-layer.id}",
+    aws_opsworks_custom_layer.my-layer.id,
   ]
 
   instance_type = "t2.micro"

@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
 description: |-
@@ -25,7 +26,7 @@ resource "aws_elb" "elb" {
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${data.aws_iam_server_certificate.my-domain.arn}"
+    ssl_certificate_id = data.aws_iam_server_certificate.my-domain.arn
   }
 }
 ```

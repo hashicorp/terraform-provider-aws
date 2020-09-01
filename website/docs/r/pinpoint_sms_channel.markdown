@@ -1,4 +1,5 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_sms_channel"
 description: |-
@@ -13,7 +14,7 @@ Provides a Pinpoint SMS Channel resource.
 
 ```hcl
 resource "aws_pinpoint_sms_channel" "sms" {
-  application_id = "${aws_pinpoint_app.app.application_id}"
+  application_id = aws_pinpoint_app.app.application_id
 }
 
 resource "aws_pinpoint_app" "app" {}

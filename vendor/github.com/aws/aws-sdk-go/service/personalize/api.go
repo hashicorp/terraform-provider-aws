@@ -13,6 +13,99 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
+const opCreateBatchInferenceJob = "CreateBatchInferenceJob"
+
+// CreateBatchInferenceJobRequest generates a "aws/request.Request" representing the
+// client's request for the CreateBatchInferenceJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateBatchInferenceJob for more information on using the CreateBatchInferenceJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateBatchInferenceJobRequest method.
+//    req, resp := client.CreateBatchInferenceJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateBatchInferenceJob
+func (c *Personalize) CreateBatchInferenceJobRequest(input *CreateBatchInferenceJobInput) (req *request.Request, output *CreateBatchInferenceJobOutput) {
+	op := &request.Operation{
+		Name:       opCreateBatchInferenceJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateBatchInferenceJobInput{}
+	}
+
+	output = &CreateBatchInferenceJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateBatchInferenceJob API operation for Amazon Personalize.
+//
+// Creates a batch inference job. The operation can handle up to 50 million
+// records and the input file must be in JSON format. For more information,
+// see recommendations-batch.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation CreateBatchInferenceJob for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * ResourceAlreadyExistsException
+//   The specified resource already exists.
+//
+//   * LimitExceededException
+//   The limit on the number of requests per second has been exceeded.
+//
+//   * ResourceNotFoundException
+//   Could not find the specified resource.
+//
+//   * ResourceInUseException
+//   The specified resource is in use.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateBatchInferenceJob
+func (c *Personalize) CreateBatchInferenceJob(input *CreateBatchInferenceJobInput) (*CreateBatchInferenceJobOutput, error) {
+	req, out := c.CreateBatchInferenceJobRequest(input)
+	return out, req.Send()
+}
+
+// CreateBatchInferenceJobWithContext is the same as CreateBatchInferenceJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateBatchInferenceJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) CreateBatchInferenceJobWithContext(ctx aws.Context, input *CreateBatchInferenceJobInput, opts ...request.Option) (*CreateBatchInferenceJobOutput, error) {
+	req, out := c.CreateBatchInferenceJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateCampaign = "CreateCampaign"
 
 // CreateCampaignRequest generates a "aws/request.Request" representing the
@@ -105,20 +198,20 @@ func (c *Personalize) CreateCampaignRequest(input *CreateCampaignInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateCampaign
@@ -227,20 +320,20 @@ func (c *Personalize) CreateDatasetRequest(input *CreateDatasetInput) (req *requ
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateDataset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateDataset
@@ -362,14 +455,14 @@ func (c *Personalize) CreateDatasetGroupRequest(input *CreateDatasetGroupInput) 
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateDatasetGroup
@@ -441,7 +534,9 @@ func (c *Personalize) CreateDatasetImportJobRequest(input *CreateDatasetImportJo
 // Creates a job that imports training data from your data source (an Amazon
 // S3 bucket) to an Amazon Personalize dataset. To allow Amazon Personalize
 // to import the training data, you must specify an AWS Identity and Access
-// Management (IAM) role that has permission to read from the data source.
+// Management (IAM) role that has permission to read from the data source, as
+// Amazon Personalize makes a copy of your data and processes it in an internal
+// AWS system.
 //
 // The dataset import job replaces any previous data in the dataset.
 //
@@ -473,20 +568,20 @@ func (c *Personalize) CreateDatasetImportJobRequest(input *CreateDatasetImportJo
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateDatasetImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateDatasetImportJob
@@ -596,20 +691,20 @@ func (c *Personalize) CreateEventTrackerRequest(input *CreateEventTrackerInput) 
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateEventTracker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateEventTracker
@@ -629,6 +724,95 @@ func (c *Personalize) CreateEventTracker(input *CreateEventTrackerInput) (*Creat
 // for more information on using Contexts.
 func (c *Personalize) CreateEventTrackerWithContext(ctx aws.Context, input *CreateEventTrackerInput, opts ...request.Option) (*CreateEventTrackerOutput, error) {
 	req, out := c.CreateEventTrackerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateFilter = "CreateFilter"
+
+// CreateFilterRequest generates a "aws/request.Request" representing the
+// client's request for the CreateFilter operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateFilter for more information on using the CreateFilter
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateFilterRequest method.
+//    req, resp := client.CreateFilterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateFilter
+func (c *Personalize) CreateFilterRequest(input *CreateFilterInput) (req *request.Request, output *CreateFilterOutput) {
+	op := &request.Operation{
+		Name:       opCreateFilter,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateFilterInput{}
+	}
+
+	output = &CreateFilterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateFilter API operation for Amazon Personalize.
+//
+// Creates a recommendation filter. For more information, see Using Filters
+// with Amazon Personalize (https://docs.aws.amazon.com/personalize/latest/dg/filters.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation CreateFilter for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * ResourceAlreadyExistsException
+//   The specified resource already exists.
+//
+//   * ResourceNotFoundException
+//   Could not find the specified resource.
+//
+//   * LimitExceededException
+//   The limit on the number of requests per second has been exceeded.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateFilter
+func (c *Personalize) CreateFilter(input *CreateFilterInput) (*CreateFilterOutput, error) {
+	req, out := c.CreateFilterRequest(input)
+	return out, req.Send()
+}
+
+// CreateFilterWithContext is the same as CreateFilter with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateFilter for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) CreateFilterWithContext(ctx aws.Context, input *CreateFilterInput, opts ...request.Option) (*CreateFilterOutput, error) {
+	req, out := c.CreateFilterRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -700,14 +884,14 @@ func (c *Personalize) CreateSchemaRequest(input *CreateSchemaInput) (req *reques
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateSchema for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateSchema
@@ -827,20 +1011,20 @@ func (c *Personalize) CreateSolutionRequest(input *CreateSolutionInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateSolution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified resource already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The limit on the number of requests per second has been exceeded.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateSolution
@@ -946,14 +1130,17 @@ func (c *Personalize) CreateSolutionVersionRequest(input *CreateSolutionVersionI
 // See the AWS API reference guide for Amazon Personalize's
 // API operation CreateSolutionVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * LimitExceededException
+//   The limit on the number of requests per second has been exceeded.
+//
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateSolutionVersion
@@ -1035,14 +1222,14 @@ func (c *Personalize) DeleteCampaignRequest(input *DeleteCampaignInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DeleteCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteCampaign
@@ -1123,14 +1310,14 @@ func (c *Personalize) DeleteDatasetRequest(input *DeleteDatasetInput) (req *requ
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DeleteDataset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteDataset
@@ -1216,14 +1403,14 @@ func (c *Personalize) DeleteDatasetGroupRequest(input *DeleteDatasetGroupInput) 
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DeleteDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteDatasetGroup
@@ -1304,14 +1491,14 @@ func (c *Personalize) DeleteEventTrackerRequest(input *DeleteEventTrackerInput) 
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DeleteEventTracker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteEventTracker
@@ -1331,6 +1518,92 @@ func (c *Personalize) DeleteEventTracker(input *DeleteEventTrackerInput) (*Delet
 // for more information on using Contexts.
 func (c *Personalize) DeleteEventTrackerWithContext(ctx aws.Context, input *DeleteEventTrackerInput, opts ...request.Option) (*DeleteEventTrackerOutput, error) {
 	req, out := c.DeleteEventTrackerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteFilter = "DeleteFilter"
+
+// DeleteFilterRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteFilter operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteFilter for more information on using the DeleteFilter
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteFilterRequest method.
+//    req, resp := client.DeleteFilterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteFilter
+func (c *Personalize) DeleteFilterRequest(input *DeleteFilterInput) (req *request.Request, output *DeleteFilterOutput) {
+	op := &request.Operation{
+		Name:       opDeleteFilter,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteFilterInput{}
+	}
+
+	output = &DeleteFilterOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteFilter API operation for Amazon Personalize.
+//
+// Deletes a filter.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation DeleteFilter for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * ResourceNotFoundException
+//   Could not find the specified resource.
+//
+//   * ResourceInUseException
+//   The specified resource is in use.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteFilter
+func (c *Personalize) DeleteFilter(input *DeleteFilterInput) (*DeleteFilterOutput, error) {
+	req, out := c.DeleteFilterRequest(input)
+	return out, req.Send()
+}
+
+// DeleteFilterWithContext is the same as DeleteFilter with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteFilter for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) DeleteFilterWithContext(ctx aws.Context, input *DeleteFilterInput, opts ...request.Option) (*DeleteFilterOutput, error) {
+	req, out := c.DeleteFilterRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1391,14 +1664,14 @@ func (c *Personalize) DeleteSchemaRequest(input *DeleteSchemaInput) (req *reques
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DeleteSchema for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteSchema
@@ -1482,14 +1755,14 @@ func (c *Personalize) DeleteSolutionRequest(input *DeleteSolutionInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DeleteSolution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DeleteSolution
@@ -1567,11 +1840,11 @@ func (c *Personalize) DescribeAlgorithmRequest(input *DescribeAlgorithmInput) (r
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeAlgorithm for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeAlgorithm
@@ -1591,6 +1864,90 @@ func (c *Personalize) DescribeAlgorithm(input *DescribeAlgorithmInput) (*Describ
 // for more information on using Contexts.
 func (c *Personalize) DescribeAlgorithmWithContext(ctx aws.Context, input *DescribeAlgorithmInput, opts ...request.Option) (*DescribeAlgorithmOutput, error) {
 	req, out := c.DescribeAlgorithmRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeBatchInferenceJob = "DescribeBatchInferenceJob"
+
+// DescribeBatchInferenceJobRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeBatchInferenceJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeBatchInferenceJob for more information on using the DescribeBatchInferenceJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeBatchInferenceJobRequest method.
+//    req, resp := client.DescribeBatchInferenceJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeBatchInferenceJob
+func (c *Personalize) DescribeBatchInferenceJobRequest(input *DescribeBatchInferenceJobInput) (req *request.Request, output *DescribeBatchInferenceJobOutput) {
+	op := &request.Operation{
+		Name:       opDescribeBatchInferenceJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeBatchInferenceJobInput{}
+	}
+
+	output = &DescribeBatchInferenceJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeBatchInferenceJob API operation for Amazon Personalize.
+//
+// Gets the properties of a batch inference job including name, Amazon Resource
+// Name (ARN), status, input and output configurations, and the ARN of the solution
+// version used to generate the recommendations.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation DescribeBatchInferenceJob for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * ResourceNotFoundException
+//   Could not find the specified resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeBatchInferenceJob
+func (c *Personalize) DescribeBatchInferenceJob(input *DescribeBatchInferenceJobInput) (*DescribeBatchInferenceJobOutput, error) {
+	req, out := c.DescribeBatchInferenceJobRequest(input)
+	return out, req.Send()
+}
+
+// DescribeBatchInferenceJobWithContext is the same as DescribeBatchInferenceJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeBatchInferenceJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) DescribeBatchInferenceJobWithContext(ctx aws.Context, input *DescribeBatchInferenceJobInput, opts ...request.Option) (*DescribeBatchInferenceJobOutput, error) {
+	req, out := c.DescribeBatchInferenceJobRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1660,11 +2017,11 @@ func (c *Personalize) DescribeCampaignRequest(input *DescribeCampaignInput) (req
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeCampaign
@@ -1742,11 +2099,11 @@ func (c *Personalize) DescribeDatasetRequest(input *DescribeDatasetInput) (req *
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeDataset for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeDataset
@@ -1825,11 +2182,11 @@ func (c *Personalize) DescribeDatasetGroupRequest(input *DescribeDatasetGroupInp
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeDatasetGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeDatasetGroup
@@ -1908,11 +2265,11 @@ func (c *Personalize) DescribeDatasetImportJobRequest(input *DescribeDatasetImpo
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeDatasetImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeDatasetImportJob
@@ -1991,11 +2348,11 @@ func (c *Personalize) DescribeEventTrackerRequest(input *DescribeEventTrackerInp
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeEventTracker for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeEventTracker
@@ -2073,11 +2430,11 @@ func (c *Personalize) DescribeFeatureTransformationRequest(input *DescribeFeatur
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeFeatureTransformation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeFeatureTransformation
@@ -2097,6 +2454,88 @@ func (c *Personalize) DescribeFeatureTransformation(input *DescribeFeatureTransf
 // for more information on using Contexts.
 func (c *Personalize) DescribeFeatureTransformationWithContext(ctx aws.Context, input *DescribeFeatureTransformationInput, opts ...request.Option) (*DescribeFeatureTransformationOutput, error) {
 	req, out := c.DescribeFeatureTransformationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeFilter = "DescribeFilter"
+
+// DescribeFilterRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFilter operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeFilter for more information on using the DescribeFilter
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeFilterRequest method.
+//    req, resp := client.DescribeFilterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeFilter
+func (c *Personalize) DescribeFilterRequest(input *DescribeFilterInput) (req *request.Request, output *DescribeFilterOutput) {
+	op := &request.Operation{
+		Name:       opDescribeFilter,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeFilterInput{}
+	}
+
+	output = &DescribeFilterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeFilter API operation for Amazon Personalize.
+//
+// Describes a filter's properties.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation DescribeFilter for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * ResourceNotFoundException
+//   Could not find the specified resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeFilter
+func (c *Personalize) DescribeFilter(input *DescribeFilterInput) (*DescribeFilterOutput, error) {
+	req, out := c.DescribeFilterRequest(input)
+	return out, req.Send()
+}
+
+// DescribeFilterWithContext is the same as DescribeFilter with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeFilter for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) DescribeFilterWithContext(ctx aws.Context, input *DescribeFilterInput, opts ...request.Option) (*DescribeFilterOutput, error) {
+	req, out := c.DescribeFilterRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2171,11 +2610,11 @@ func (c *Personalize) DescribeRecipeRequest(input *DescribeRecipeInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeRecipe for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeRecipe
@@ -2253,11 +2692,11 @@ func (c *Personalize) DescribeSchemaRequest(input *DescribeSchemaInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeSchema for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeSchema
@@ -2335,11 +2774,11 @@ func (c *Personalize) DescribeSolutionRequest(input *DescribeSolutionInput) (req
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeSolution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeSolution
@@ -2418,11 +2857,11 @@ func (c *Personalize) DescribeSolutionVersionRequest(input *DescribeSolutionVers
 // See the AWS API reference guide for Amazon Personalize's
 // API operation DescribeSolutionVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeSolutionVersion
@@ -2500,14 +2939,14 @@ func (c *Personalize) GetSolutionMetricsRequest(input *GetSolutionMetricsInput) 
 // See the AWS API reference guide for Amazon Personalize's
 // API operation GetSolutionMetrics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/GetSolutionMetrics
@@ -2530,6 +2969,147 @@ func (c *Personalize) GetSolutionMetricsWithContext(ctx aws.Context, input *GetS
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListBatchInferenceJobs = "ListBatchInferenceJobs"
+
+// ListBatchInferenceJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListBatchInferenceJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListBatchInferenceJobs for more information on using the ListBatchInferenceJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListBatchInferenceJobsRequest method.
+//    req, resp := client.ListBatchInferenceJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListBatchInferenceJobs
+func (c *Personalize) ListBatchInferenceJobsRequest(input *ListBatchInferenceJobsInput) (req *request.Request, output *ListBatchInferenceJobsOutput) {
+	op := &request.Operation{
+		Name:       opListBatchInferenceJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListBatchInferenceJobsInput{}
+	}
+
+	output = &ListBatchInferenceJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListBatchInferenceJobs API operation for Amazon Personalize.
+//
+// Gets a list of the batch inference jobs that have been performed off of a
+// solution version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation ListBatchInferenceJobs for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * InvalidNextTokenException
+//   The token is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListBatchInferenceJobs
+func (c *Personalize) ListBatchInferenceJobs(input *ListBatchInferenceJobsInput) (*ListBatchInferenceJobsOutput, error) {
+	req, out := c.ListBatchInferenceJobsRequest(input)
+	return out, req.Send()
+}
+
+// ListBatchInferenceJobsWithContext is the same as ListBatchInferenceJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListBatchInferenceJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) ListBatchInferenceJobsWithContext(ctx aws.Context, input *ListBatchInferenceJobsInput, opts ...request.Option) (*ListBatchInferenceJobsOutput, error) {
+	req, out := c.ListBatchInferenceJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListBatchInferenceJobsPages iterates over the pages of a ListBatchInferenceJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBatchInferenceJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBatchInferenceJobs operation.
+//    pageNum := 0
+//    err := client.ListBatchInferenceJobsPages(params,
+//        func(page *personalize.ListBatchInferenceJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Personalize) ListBatchInferenceJobsPages(input *ListBatchInferenceJobsInput, fn func(*ListBatchInferenceJobsOutput, bool) bool) error {
+	return c.ListBatchInferenceJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBatchInferenceJobsPagesWithContext same as ListBatchInferenceJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) ListBatchInferenceJobsPagesWithContext(ctx aws.Context, input *ListBatchInferenceJobsInput, fn func(*ListBatchInferenceJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBatchInferenceJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBatchInferenceJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListBatchInferenceJobsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListCampaigns = "ListCampaigns"
@@ -2594,11 +3174,11 @@ func (c *Personalize) ListCampaignsRequest(input *ListCampaignsInput) (req *requ
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListCampaigns for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListCampaigns
@@ -2666,10 +3246,12 @@ func (c *Personalize) ListCampaignsPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCampaignsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCampaignsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2734,8 +3316,8 @@ func (c *Personalize) ListDatasetGroupsRequest(input *ListDatasetGroupsInput) (r
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListDatasetGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListDatasetGroups
@@ -2803,10 +3385,12 @@ func (c *Personalize) ListDatasetGroupsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDatasetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDatasetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2874,11 +3458,11 @@ func (c *Personalize) ListDatasetImportJobsRequest(input *ListDatasetImportJobsI
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListDatasetImportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListDatasetImportJobs
@@ -2946,10 +3530,12 @@ func (c *Personalize) ListDatasetImportJobsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDatasetImportJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDatasetImportJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3014,11 +3600,11 @@ func (c *Personalize) ListDatasetsRequest(input *ListDatasetsInput) (req *reques
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListDatasets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListDatasets
@@ -3086,10 +3672,12 @@ func (c *Personalize) ListDatasetsPagesWithContext(ctx aws.Context, input *ListD
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDatasetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDatasetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3154,11 +3742,11 @@ func (c *Personalize) ListEventTrackersRequest(input *ListEventTrackersInput) (r
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListEventTrackers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListEventTrackers
@@ -3226,11 +3814,95 @@ func (c *Personalize) ListEventTrackersPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEventTrackersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEventTrackersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opListFilters = "ListFilters"
+
+// ListFiltersRequest generates a "aws/request.Request" representing the
+// client's request for the ListFilters operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListFilters for more information on using the ListFilters
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListFiltersRequest method.
+//    req, resp := client.ListFiltersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListFilters
+func (c *Personalize) ListFiltersRequest(input *ListFiltersInput) (req *request.Request, output *ListFiltersOutput) {
+	op := &request.Operation{
+		Name:       opListFilters,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListFiltersInput{}
+	}
+
+	output = &ListFiltersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListFilters API operation for Amazon Personalize.
+//
+// Lists all filters that belong to a given dataset group.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation ListFilters for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   Provide a valid value for the field or parameter.
+//
+//   * InvalidNextTokenException
+//   The token is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListFilters
+func (c *Personalize) ListFilters(input *ListFiltersInput) (*ListFiltersOutput, error) {
+	req, out := c.ListFiltersRequest(input)
+	return out, req.Send()
+}
+
+// ListFiltersWithContext is the same as ListFilters with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListFilters for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) ListFiltersWithContext(ctx aws.Context, input *ListFiltersInput, opts ...request.Option) (*ListFiltersOutput, error) {
+	req, out := c.ListFiltersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListRecipes = "ListRecipes"
@@ -3293,8 +3965,8 @@ func (c *Personalize) ListRecipesRequest(input *ListRecipesInput) (req *request.
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListRecipes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListRecipes
@@ -3362,10 +4034,12 @@ func (c *Personalize) ListRecipesPagesWithContext(ctx aws.Context, input *ListRe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRecipesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRecipesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3430,8 +4104,8 @@ func (c *Personalize) ListSchemasRequest(input *ListSchemasInput) (req *request.
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListSchemas for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListSchemas
@@ -3499,10 +4173,12 @@ func (c *Personalize) ListSchemasPagesWithContext(ctx aws.Context, input *ListSc
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSchemasOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSchemasOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3568,14 +4244,14 @@ func (c *Personalize) ListSolutionVersionsRequest(input *ListSolutionVersionsInp
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListSolutionVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListSolutionVersions
@@ -3643,10 +4319,12 @@ func (c *Personalize) ListSolutionVersionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSolutionVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSolutionVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3712,11 +4390,11 @@ func (c *Personalize) ListSolutionsRequest(input *ListSolutionsInput) (req *requ
 // See the AWS API reference guide for Amazon Personalize's
 // API operation ListSolutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListSolutions
@@ -3784,10 +4462,12 @@ func (c *Personalize) ListSolutionsPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSolutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSolutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3853,14 +4533,14 @@ func (c *Personalize) UpdateCampaignRequest(input *UpdateCampaignInput) (req *re
 // See the AWS API reference guide for Amazon Personalize's
 // API operation UpdateCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   Provide a valid value for the field or parameter.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Could not find the specified resource.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/UpdateCampaign
@@ -4088,6 +4768,356 @@ func (s *AutoMLResult) SetBestRecipeArn(v string) *AutoMLResult {
 	return s
 }
 
+// Contains information on a batch inference job.
+type BatchInferenceJob struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the batch inference job.
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string"`
+
+	// A string to string map of the configuration details of a batch inference
+	// job.
+	BatchInferenceJobConfig *BatchInferenceJobConfig `locationName:"batchInferenceJobConfig" type:"structure"`
+
+	// The time at which the batch inference job was created.
+	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
+
+	// If the batch inference job failed, the reason for the failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The ARN of the filter used on the batch inference job.
+	FilterArn *string `locationName:"filterArn" type:"string"`
+
+	// The Amazon S3 path that leads to the input data used to generate the batch
+	// inference job.
+	JobInput *BatchInferenceJobInput `locationName:"jobInput" type:"structure"`
+
+	// The name of the batch inference job.
+	JobName *string `locationName:"jobName" min:"1" type:"string"`
+
+	// The Amazon S3 bucket that contains the output data generated by the batch
+	// inference job.
+	JobOutput *BatchInferenceJobOutput `locationName:"jobOutput" type:"structure"`
+
+	// The time at which the batch inference job was last updated.
+	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
+
+	// The number of recommendations generated by the batch inference job. This
+	// number includes the error messages generated for failed input records.
+	NumResults *int64 `locationName:"numResults" type:"integer"`
+
+	// The ARN of the Amazon Identity and Access Management (IAM) role that requested
+	// the batch inference job.
+	RoleArn *string `locationName:"roleArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the solution version from which the batch
+	// inference job was created.
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string"`
+
+	// The status of the batch inference job. The status is one of the following
+	// values:
+	//
+	//    * PENDING
+	//
+	//    * IN PROGRESS
+	//
+	//    * ACTIVE
+	//
+	//    * CREATE FAILED
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJob) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *BatchInferenceJob) SetBatchInferenceJobArn(v string) *BatchInferenceJob {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
+// SetBatchInferenceJobConfig sets the BatchInferenceJobConfig field's value.
+func (s *BatchInferenceJob) SetBatchInferenceJobConfig(v *BatchInferenceJobConfig) *BatchInferenceJob {
+	s.BatchInferenceJobConfig = v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *BatchInferenceJob) SetCreationDateTime(v time.Time) *BatchInferenceJob {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *BatchInferenceJob) SetFailureReason(v string) *BatchInferenceJob {
+	s.FailureReason = &v
+	return s
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *BatchInferenceJob) SetFilterArn(v string) *BatchInferenceJob {
+	s.FilterArn = &v
+	return s
+}
+
+// SetJobInput sets the JobInput field's value.
+func (s *BatchInferenceJob) SetJobInput(v *BatchInferenceJobInput) *BatchInferenceJob {
+	s.JobInput = v
+	return s
+}
+
+// SetJobName sets the JobName field's value.
+func (s *BatchInferenceJob) SetJobName(v string) *BatchInferenceJob {
+	s.JobName = &v
+	return s
+}
+
+// SetJobOutput sets the JobOutput field's value.
+func (s *BatchInferenceJob) SetJobOutput(v *BatchInferenceJobOutput) *BatchInferenceJob {
+	s.JobOutput = v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *BatchInferenceJob) SetLastUpdatedDateTime(v time.Time) *BatchInferenceJob {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+// SetNumResults sets the NumResults field's value.
+func (s *BatchInferenceJob) SetNumResults(v int64) *BatchInferenceJob {
+	s.NumResults = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *BatchInferenceJob) SetRoleArn(v string) *BatchInferenceJob {
+	s.RoleArn = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *BatchInferenceJob) SetSolutionVersionArn(v string) *BatchInferenceJob {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *BatchInferenceJob) SetStatus(v string) *BatchInferenceJob {
+	s.Status = &v
+	return s
+}
+
+// The configuration details of a batch inference job.
+type BatchInferenceJobConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A string to string map specifying the inference hyperparameters you wish
+	// to use for hyperparameter optimization. See customizing-solution-config-hpo.
+	ItemExplorationConfig map[string]*string `locationName:"itemExplorationConfig" type:"map"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobConfig) GoString() string {
+	return s.String()
+}
+
+// SetItemExplorationConfig sets the ItemExplorationConfig field's value.
+func (s *BatchInferenceJobConfig) SetItemExplorationConfig(v map[string]*string) *BatchInferenceJobConfig {
+	s.ItemExplorationConfig = v
+	return s
+}
+
+// The input configuration of a batch inference job.
+type BatchInferenceJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The URI of the Amazon S3 location that contains your input data. The Amazon
+	// S3 bucket must be in the same region as the API endpoint you are calling.
+	//
+	// S3DataSource is a required field
+	S3DataSource *S3DataConfig `locationName:"s3DataSource" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchInferenceJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchInferenceJobInput"}
+	if s.S3DataSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3DataSource"))
+	}
+	if s.S3DataSource != nil {
+		if err := s.S3DataSource.Validate(); err != nil {
+			invalidParams.AddNested("S3DataSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3DataSource sets the S3DataSource field's value.
+func (s *BatchInferenceJobInput) SetS3DataSource(v *S3DataConfig) *BatchInferenceJobInput {
+	s.S3DataSource = v
+	return s
+}
+
+// The output configuration parameters of a batch inference job.
+type BatchInferenceJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information on the Amazon S3 bucket in which the batch inference job's output
+	// is stored.
+	//
+	// S3DataDestination is a required field
+	S3DataDestination *S3DataConfig `locationName:"s3DataDestination" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobOutput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchInferenceJobOutput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchInferenceJobOutput"}
+	if s.S3DataDestination == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3DataDestination"))
+	}
+	if s.S3DataDestination != nil {
+		if err := s.S3DataDestination.Validate(); err != nil {
+			invalidParams.AddNested("S3DataDestination", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3DataDestination sets the S3DataDestination field's value.
+func (s *BatchInferenceJobOutput) SetS3DataDestination(v *S3DataConfig) *BatchInferenceJobOutput {
+	s.S3DataDestination = v
+	return s
+}
+
+// A truncated version of the BatchInferenceJob datatype. The ListBatchInferenceJobs
+// operation returns a list of batch inference job summaries.
+type BatchInferenceJobSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the batch inference job.
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string"`
+
+	// The time at which the batch inference job was created.
+	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
+
+	// If the batch inference job failed, the reason for the failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The name of the batch inference job.
+	JobName *string `locationName:"jobName" min:"1" type:"string"`
+
+	// The time at which the batch inference job was last updated.
+	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
+
+	// The ARN of the solution version used by the batch inference job.
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string"`
+
+	// The status of the batch inference job. The status is one of the following
+	// values:
+	//
+	//    * PENDING
+	//
+	//    * IN PROGRESS
+	//
+	//    * ACTIVE
+	//
+	//    * CREATE FAILED
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobSummary) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *BatchInferenceJobSummary) SetBatchInferenceJobArn(v string) *BatchInferenceJobSummary {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *BatchInferenceJobSummary) SetCreationDateTime(v time.Time) *BatchInferenceJobSummary {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *BatchInferenceJobSummary) SetFailureReason(v string) *BatchInferenceJobSummary {
+	s.FailureReason = &v
+	return s
+}
+
+// SetJobName sets the JobName field's value.
+func (s *BatchInferenceJobSummary) SetJobName(v string) *BatchInferenceJobSummary {
+	s.JobName = &v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *BatchInferenceJobSummary) SetLastUpdatedDateTime(v time.Time) *BatchInferenceJobSummary {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *BatchInferenceJobSummary) SetSolutionVersionArn(v string) *BatchInferenceJobSummary {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *BatchInferenceJobSummary) SetStatus(v string) *BatchInferenceJobSummary {
+	s.Status = &v
+	return s
+}
+
 // Describes a deployed solution version, otherwise known as a campaign. For
 // more information on campaigns, see CreateCampaign.
 type Campaign struct {
@@ -4095,6 +5125,9 @@ type Campaign struct {
 
 	// The Amazon Resource Name (ARN) of the campaign.
 	CampaignArn *string `locationName:"campaignArn" type:"string"`
+
+	// The configuration details of a campaign.
+	CampaignConfig *CampaignConfig `locationName:"campaignConfig" type:"structure"`
 
 	// The date and time (in Unix format) that the campaign was created.
 	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
@@ -4145,6 +5178,12 @@ func (s *Campaign) SetCampaignArn(v string) *Campaign {
 	return s
 }
 
+// SetCampaignConfig sets the CampaignConfig field's value.
+func (s *Campaign) SetCampaignConfig(v *CampaignConfig) *Campaign {
+	s.CampaignConfig = v
+	return s
+}
+
 // SetCreationDateTime sets the CreationDateTime field's value.
 func (s *Campaign) SetCreationDateTime(v time.Time) *Campaign {
 	s.CreationDateTime = &v
@@ -4190,6 +5229,31 @@ func (s *Campaign) SetSolutionVersionArn(v string) *Campaign {
 // SetStatus sets the Status field's value.
 func (s *Campaign) SetStatus(v string) *Campaign {
 	s.Status = &v
+	return s
+}
+
+// The configuration details of a campaign.
+type CampaignConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A string to string map specifying the inference hyperparameters you wish
+	// to use for hyperparameter optimization. See customizing-solution-config-hpo.
+	ItemExplorationConfig map[string]*string `locationName:"itemExplorationConfig" type:"map"`
+}
+
+// String returns the string representation
+func (s CampaignConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CampaignConfig) GoString() string {
+	return s.String()
+}
+
+// SetItemExplorationConfig sets the ItemExplorationConfig field's value.
+func (s *CampaignConfig) SetItemExplorationConfig(v map[string]*string) *CampaignConfig {
+	s.ItemExplorationConfig = v
 	return s
 }
 
@@ -4274,6 +5338,9 @@ func (s *CampaignSummary) SetStatus(v string) *CampaignSummary {
 type CampaignUpdateSummary struct {
 	_ struct{} `type:"structure"`
 
+	// The configuration details of a campaign.
+	CampaignConfig *CampaignConfig `locationName:"campaignConfig" type:"structure"`
+
 	// The date and time (in Unix time) that the campaign update was created.
 	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
 
@@ -4308,6 +5375,12 @@ func (s CampaignUpdateSummary) String() string {
 // GoString returns the string representation
 func (s CampaignUpdateSummary) GoString() string {
 	return s.String()
+}
+
+// SetCampaignConfig sets the CampaignConfig field's value.
+func (s *CampaignUpdateSummary) SetCampaignConfig(v *CampaignConfig) *CampaignUpdateSummary {
+	s.CampaignConfig = v
+	return s
 }
 
 // SetCreationDateTime sets the CreationDateTime field's value.
@@ -4437,8 +5510,172 @@ func (s *ContinuousHyperParameterRange) SetName(v string) *ContinuousHyperParame
 	return s
 }
 
+type CreateBatchInferenceJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The configuration details of a batch inference job.
+	BatchInferenceJobConfig *BatchInferenceJobConfig `locationName:"batchInferenceJobConfig" type:"structure"`
+
+	// The ARN of the filter to apply to the batch inference job. For more information
+	// on using filters, see Using Filters with Amazon Personalize.
+	FilterArn *string `locationName:"filterArn" type:"string"`
+
+	// The Amazon S3 path that leads to the input file to base your recommendations
+	// on. The input material must be in JSON format.
+	//
+	// JobInput is a required field
+	JobInput *BatchInferenceJobInput `locationName:"jobInput" type:"structure" required:"true"`
+
+	// The name of the batch inference job to create.
+	//
+	// JobName is a required field
+	JobName *string `locationName:"jobName" min:"1" type:"string" required:"true"`
+
+	// The path to the Amazon S3 bucket where the job's output will be stored.
+	//
+	// JobOutput is a required field
+	JobOutput *BatchInferenceJobOutput `locationName:"jobOutput" type:"structure" required:"true"`
+
+	// The number of recommendations to retreive.
+	NumResults *int64 `locationName:"numResults" type:"integer"`
+
+	// The ARN of the Amazon Identity and Access Management role that has permissions
+	// to read and write to your input and out Amazon S3 buckets respectively.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the solution version that will be used
+	// to generate the batch inference recommendations.
+	//
+	// SolutionVersionArn is a required field
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateBatchInferenceJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateBatchInferenceJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateBatchInferenceJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateBatchInferenceJobInput"}
+	if s.JobInput == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobInput"))
+	}
+	if s.JobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobName"))
+	}
+	if s.JobName != nil && len(*s.JobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobName", 1))
+	}
+	if s.JobOutput == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobOutput"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.SolutionVersionArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("SolutionVersionArn"))
+	}
+	if s.JobInput != nil {
+		if err := s.JobInput.Validate(); err != nil {
+			invalidParams.AddNested("JobInput", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.JobOutput != nil {
+		if err := s.JobOutput.Validate(); err != nil {
+			invalidParams.AddNested("JobOutput", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBatchInferenceJobConfig sets the BatchInferenceJobConfig field's value.
+func (s *CreateBatchInferenceJobInput) SetBatchInferenceJobConfig(v *BatchInferenceJobConfig) *CreateBatchInferenceJobInput {
+	s.BatchInferenceJobConfig = v
+	return s
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *CreateBatchInferenceJobInput) SetFilterArn(v string) *CreateBatchInferenceJobInput {
+	s.FilterArn = &v
+	return s
+}
+
+// SetJobInput sets the JobInput field's value.
+func (s *CreateBatchInferenceJobInput) SetJobInput(v *BatchInferenceJobInput) *CreateBatchInferenceJobInput {
+	s.JobInput = v
+	return s
+}
+
+// SetJobName sets the JobName field's value.
+func (s *CreateBatchInferenceJobInput) SetJobName(v string) *CreateBatchInferenceJobInput {
+	s.JobName = &v
+	return s
+}
+
+// SetJobOutput sets the JobOutput field's value.
+func (s *CreateBatchInferenceJobInput) SetJobOutput(v *BatchInferenceJobOutput) *CreateBatchInferenceJobInput {
+	s.JobOutput = v
+	return s
+}
+
+// SetNumResults sets the NumResults field's value.
+func (s *CreateBatchInferenceJobInput) SetNumResults(v int64) *CreateBatchInferenceJobInput {
+	s.NumResults = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateBatchInferenceJobInput) SetRoleArn(v string) *CreateBatchInferenceJobInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *CreateBatchInferenceJobInput) SetSolutionVersionArn(v string) *CreateBatchInferenceJobInput {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+type CreateBatchInferenceJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the batch inference job.
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateBatchInferenceJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateBatchInferenceJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *CreateBatchInferenceJobOutput) SetBatchInferenceJobArn(v string) *CreateBatchInferenceJobOutput {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
 type CreateCampaignInput struct {
 	_ struct{} `type:"structure"`
+
+	// The configuration details of a campaign.
+	CampaignConfig *CampaignConfig `locationName:"campaignConfig" type:"structure"`
 
 	// Specifies the requested minimum provisioned transactions (recommendations)
 	// per second that Amazon Personalize will support.
@@ -4491,6 +5728,12 @@ func (s *CreateCampaignInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCampaignConfig sets the CampaignConfig field's value.
+func (s *CreateCampaignInput) SetCampaignConfig(v *CampaignConfig) *CreateCampaignInput {
+	s.CampaignConfig = v
+	return s
 }
 
 // SetMinProvisionedTPS sets the MinProvisionedTPS field's value.
@@ -4929,6 +6172,108 @@ func (s *CreateEventTrackerOutput) SetTrackingId(v string) *CreateEventTrackerOu
 	return s
 }
 
+type CreateFilterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the dataset group that the filter will belong to.
+	//
+	// DatasetGroupArn is a required field
+	DatasetGroupArn *string `locationName:"datasetGroupArn" type:"string" required:"true"`
+
+	// The filter expression that designates the interaction types that the filter
+	// will filter out. A filter expression must follow the following format:
+	//
+	// EXCLUDE itemId WHERE INTERACTIONS.event_type in ("EVENT_TYPE")
+	//
+	// Where "EVENT_TYPE" is the type of event to filter out. To filter out all
+	// items with any interactions history, set "*" as the EVENT_TYPE. For more
+	// information, see Using Filters with Amazon Personalize (https://docs.aws.amazon.com/personalize/latest/dg/filters.html).
+	//
+	// FilterExpression is a required field
+	FilterExpression *string `locationName:"filterExpression" min:"1" type:"string" required:"true" sensitive:"true"`
+
+	// The name of the filter to create.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateFilterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateFilterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateFilterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateFilterInput"}
+	if s.DatasetGroupArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatasetGroupArn"))
+	}
+	if s.FilterExpression == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilterExpression"))
+	}
+	if s.FilterExpression != nil && len(*s.FilterExpression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FilterExpression", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDatasetGroupArn sets the DatasetGroupArn field's value.
+func (s *CreateFilterInput) SetDatasetGroupArn(v string) *CreateFilterInput {
+	s.DatasetGroupArn = &v
+	return s
+}
+
+// SetFilterExpression sets the FilterExpression field's value.
+func (s *CreateFilterInput) SetFilterExpression(v string) *CreateFilterInput {
+	s.FilterExpression = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateFilterInput) SetName(v string) *CreateFilterInput {
+	s.Name = &v
+	return s
+}
+
+type CreateFilterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the new filter.
+	FilterArn *string `locationName:"filterArn" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateFilterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateFilterOutput) GoString() string {
+	return s.String()
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *CreateFilterOutput) SetFilterArn(v string) *CreateFilterOutput {
+	s.FilterArn = &v
+	return s
+}
+
 type CreateSchemaInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5160,6 +6505,18 @@ type CreateSolutionVersionInput struct {
 	//
 	// SolutionArn is a required field
 	SolutionArn *string `locationName:"solutionArn" type:"string" required:"true"`
+
+	// The scope of training to be performed when creating the solution version.
+	// The FULL option trains the solution version based on the entirety of the
+	// input solution's training data, while the UPDATE option processes only the
+	// data that has changed in comparison to the input solution. Choose UPDATE
+	// when you want to incrementally update your solution version instead of creating
+	// an entirely new one.
+	//
+	// The UPDATE option can only be used when you already have an active solution
+	// version created from the input solution using the FULL option and the input
+	// solution was trained with the native-recipe-hrnn-coldstart recipe.
+	TrainingMode *string `locationName:"trainingMode" type:"string" enum:"TrainingMode"`
 }
 
 // String returns the string representation
@@ -5188,6 +6545,12 @@ func (s *CreateSolutionVersionInput) Validate() error {
 // SetSolutionArn sets the SolutionArn field's value.
 func (s *CreateSolutionVersionInput) SetSolutionArn(v string) *CreateSolutionVersionInput {
 	s.SolutionArn = &v
+	return s
+}
+
+// SetTrainingMode sets the TrainingMode field's value.
+func (s *CreateSolutionVersionInput) SetTrainingMode(v string) *CreateSolutionVersionInput {
+	s.TrainingMode = &v
 	return s
 }
 
@@ -6295,6 +7658,58 @@ func (s DeleteEventTrackerOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteFilterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the filter to delete.
+	//
+	// FilterArn is a required field
+	FilterArn *string `locationName:"filterArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteFilterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFilterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteFilterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteFilterInput"}
+	if s.FilterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilterArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *DeleteFilterInput) SetFilterArn(v string) *DeleteFilterInput {
+	s.FilterArn = &v
+	return s
+}
+
+type DeleteFilterOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteFilterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFilterOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteSchemaInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6457,6 +7872,67 @@ func (s DescribeAlgorithmOutput) GoString() string {
 // SetAlgorithm sets the Algorithm field's value.
 func (s *DescribeAlgorithmOutput) SetAlgorithm(v *Algorithm) *DescribeAlgorithmOutput {
 	s.Algorithm = v
+	return s
+}
+
+type DescribeBatchInferenceJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the batch inference job to describe.
+	//
+	// BatchInferenceJobArn is a required field
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeBatchInferenceJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBatchInferenceJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeBatchInferenceJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeBatchInferenceJobInput"}
+	if s.BatchInferenceJobArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("BatchInferenceJobArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *DescribeBatchInferenceJobInput) SetBatchInferenceJobArn(v string) *DescribeBatchInferenceJobInput {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
+type DescribeBatchInferenceJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information on the specified batch inference job.
+	BatchInferenceJob *BatchInferenceJob `locationName:"batchInferenceJob" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeBatchInferenceJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBatchInferenceJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJob sets the BatchInferenceJob field's value.
+func (s *DescribeBatchInferenceJobOutput) SetBatchInferenceJob(v *BatchInferenceJob) *DescribeBatchInferenceJobOutput {
+	s.BatchInferenceJob = v
 	return s
 }
 
@@ -6833,6 +8309,67 @@ func (s DescribeFeatureTransformationOutput) GoString() string {
 // SetFeatureTransformation sets the FeatureTransformation field's value.
 func (s *DescribeFeatureTransformationOutput) SetFeatureTransformation(v *FeatureTransformation) *DescribeFeatureTransformationOutput {
 	s.FeatureTransformation = v
+	return s
+}
+
+type DescribeFilterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the filter to describe.
+	//
+	// FilterArn is a required field
+	FilterArn *string `locationName:"filterArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeFilterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeFilterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeFilterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeFilterInput"}
+	if s.FilterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilterArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *DescribeFilterInput) SetFilterArn(v string) *DescribeFilterInput {
+	s.FilterArn = &v
+	return s
+}
+
+type DescribeFilterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The filter's details.
+	Filter *Filter `locationName:"filter" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeFilterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeFilterOutput) GoString() string {
+	return s.String()
+}
+
+// SetFilter sets the Filter field's value.
+func (s *DescribeFilterOutput) SetFilter(v *Filter) *DescribeFilterOutput {
+	s.Filter = v
 	return s
 }
 
@@ -7317,6 +8854,178 @@ func (s *FeatureTransformation) SetStatus(v string) *FeatureTransformation {
 	return s
 }
 
+// Contains information on a recommendation filter, including its ARN, status,
+// and filter expression.
+type Filter struct {
+	_ struct{} `type:"structure"`
+
+	// The time at which the filter was created.
+	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
+
+	// The ARN of the dataset group to which the filter belongs.
+	DatasetGroupArn *string `locationName:"datasetGroupArn" type:"string"`
+
+	// If the filter failed, the reason for its failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The ARN of the filter.
+	FilterArn *string `locationName:"filterArn" type:"string"`
+
+	// Specifies the type of item interactions to filter out of recommendation results.
+	// The filter expression must follow the following format:
+	//
+	// EXCLUDE itemId WHERE INTERACTIONS.event_type in ("EVENT_TYPE")
+	//
+	// Where "EVENT_TYPE" is the type of event to filter out. For more information,
+	// see Using Filters with Amazon Personalize (https://docs.aws.amazon.com/personalize/latest/dg/filters.html).
+	FilterExpression *string `locationName:"filterExpression" min:"1" type:"string" sensitive:"true"`
+
+	// The time at which the filter was last updated.
+	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
+
+	// The name of the filter.
+	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The status of the filter.
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s Filter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Filter) GoString() string {
+	return s.String()
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *Filter) SetCreationDateTime(v time.Time) *Filter {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetDatasetGroupArn sets the DatasetGroupArn field's value.
+func (s *Filter) SetDatasetGroupArn(v string) *Filter {
+	s.DatasetGroupArn = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *Filter) SetFailureReason(v string) *Filter {
+	s.FailureReason = &v
+	return s
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *Filter) SetFilterArn(v string) *Filter {
+	s.FilterArn = &v
+	return s
+}
+
+// SetFilterExpression sets the FilterExpression field's value.
+func (s *Filter) SetFilterExpression(v string) *Filter {
+	s.FilterExpression = &v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *Filter) SetLastUpdatedDateTime(v time.Time) *Filter {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Filter) SetName(v string) *Filter {
+	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *Filter) SetStatus(v string) *Filter {
+	s.Status = &v
+	return s
+}
+
+// A short summary of a filter's attributes.
+type FilterSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The time at which the filter was created.
+	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
+
+	// The ARN of the dataset group to which the filter belongs.
+	DatasetGroupArn *string `locationName:"datasetGroupArn" type:"string"`
+
+	// If the filter failed, the reason for the failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The ARN of the filter.
+	FilterArn *string `locationName:"filterArn" type:"string"`
+
+	// The time at which the filter was last updated.
+	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
+
+	// The name of the filter.
+	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The status of the filter.
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s FilterSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FilterSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *FilterSummary) SetCreationDateTime(v time.Time) *FilterSummary {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetDatasetGroupArn sets the DatasetGroupArn field's value.
+func (s *FilterSummary) SetDatasetGroupArn(v string) *FilterSummary {
+	s.DatasetGroupArn = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *FilterSummary) SetFailureReason(v string) *FilterSummary {
+	s.FailureReason = &v
+	return s
+}
+
+// SetFilterArn sets the FilterArn field's value.
+func (s *FilterSummary) SetFilterArn(v string) *FilterSummary {
+	s.FilterArn = &v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *FilterSummary) SetLastUpdatedDateTime(v time.Time) *FilterSummary {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *FilterSummary) SetName(v string) *FilterSummary {
+	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *FilterSummary) SetStatus(v string) *FilterSummary {
+	s.Status = &v
+	return s
+}
+
 type GetSolutionMetricsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7456,7 +9165,7 @@ type HPOObjective struct {
 	// A regular expression for finding the metric in the training job logs.
 	MetricRegex *string `locationName:"metricRegex" type:"string"`
 
-	// The data type of the metric.
+	// The type of the metric. Valid values are Maximize and Minimize.
 	Type *string `locationName:"type" type:"string"`
 }
 
@@ -7492,10 +9201,12 @@ func (s *HPOObjective) SetType(v string) *HPOObjective {
 type HPOResourceConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of training jobs.
+	// The maximum number of training jobs when you create a solution version. The
+	// maximum value for maxNumberOfTrainingJobs is 40.
 	MaxNumberOfTrainingJobs *string `locationName:"maxNumberOfTrainingJobs" type:"string"`
 
-	// The maximum number of parallel training jobs.
+	// The maximum number of parallel training jobs when you create a solution version.
+	// The maximum value for maxParallelTrainingJobs is 10.
 	MaxParallelTrainingJobs *string `locationName:"maxParallelTrainingJobs" type:"string"`
 }
 
@@ -7646,6 +9357,263 @@ func (s *IntegerHyperParameterRange) SetMinValue(v int64) *IntegerHyperParameter
 // SetName sets the Name field's value.
 func (s *IntegerHyperParameterRange) SetName(v string) *IntegerHyperParameterRange {
 	s.Name = &v
+	return s
+}
+
+// Provide a valid value for the field or parameter.
+type InvalidInputException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidInputException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInputException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
+	return &InvalidInputException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidInputException) Code() string {
+	return "InvalidInputException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidInputException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidInputException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidInputException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The token is not valid.
+type InvalidNextTokenException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidNextTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidNextTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The limit on the number of requests per second has been exceeded.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type ListBatchInferenceJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of batch inference job results to return in each page.
+	// The default value is 100.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token to request the next page of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the solution version from which the batch
+	// inference jobs were created.
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string"`
+}
+
+// String returns the string representation
+func (s ListBatchInferenceJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBatchInferenceJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListBatchInferenceJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListBatchInferenceJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListBatchInferenceJobsInput) SetMaxResults(v int64) *ListBatchInferenceJobsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListBatchInferenceJobsInput) SetNextToken(v string) *ListBatchInferenceJobsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *ListBatchInferenceJobsInput) SetSolutionVersionArn(v string) *ListBatchInferenceJobsInput {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+type ListBatchInferenceJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list containing information on each job that is returned.
+	BatchInferenceJobs []*BatchInferenceJobSummary `locationName:"batchInferenceJobs" type:"list"`
+
+	// The token to use to retreive the next page of results. The value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListBatchInferenceJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBatchInferenceJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobs sets the BatchInferenceJobs field's value.
+func (s *ListBatchInferenceJobsOutput) SetBatchInferenceJobs(v []*BatchInferenceJobSummary) *ListBatchInferenceJobsOutput {
+	s.BatchInferenceJobs = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListBatchInferenceJobsOutput) SetNextToken(v string) *ListBatchInferenceJobsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -8075,6 +10043,93 @@ func (s *ListEventTrackersOutput) SetEventTrackers(v []*EventTrackerSummary) *Li
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListEventTrackersOutput) SetNextToken(v string) *ListEventTrackersOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListFiltersInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the dataset group that contains the filters.
+	DatasetGroupArn *string `locationName:"datasetGroupArn" type:"string"`
+
+	// The maximum number of filters to return.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// A token returned from the previous call to ListFilters for getting the next
+	// set of filters (if they exist).
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListFiltersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListFiltersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListFiltersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListFiltersInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDatasetGroupArn sets the DatasetGroupArn field's value.
+func (s *ListFiltersInput) SetDatasetGroupArn(v string) *ListFiltersInput {
+	s.DatasetGroupArn = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListFiltersInput) SetMaxResults(v int64) *ListFiltersInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListFiltersInput) SetNextToken(v string) *ListFiltersInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListFiltersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of returned filters.
+	Filters []*FilterSummary `type:"list"`
+
+	// A token for getting the next set of filters (if they exist).
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListFiltersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListFiltersOutput) GoString() string {
+	return s.String()
+}
+
+// SetFilters sets the Filters field's value.
+func (s *ListFiltersOutput) SetFilters(v []*FilterSummary) *ListFiltersOutput {
+	s.Filters = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListFiltersOutput) SetNextToken(v string) *ListFiltersOutput {
 	s.NextToken = &v
 	return s
 }
@@ -8584,6 +10639,224 @@ func (s *RecipeSummary) SetStatus(v string) *RecipeSummary {
 	return s
 }
 
+// The specified resource already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The specified resource is in use.
+type ResourceInUseException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Could not find the specified resource.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The configuration details of an Amazon S3 input or output bucket.
+type S3DataConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Amazon Key Management Service (KMS)
+	// key that Amazon Personalize uses to encrypt or decrypt the input and output
+	// files of a batch inference job.
+	KmsKeyArn *string `locationName:"kmsKeyArn" type:"string"`
+
+	// The file path of the Amazon S3 bucket.
+	//
+	// Path is a required field
+	Path *string `locationName:"path" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s S3DataConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3DataConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3DataConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3DataConfig"}
+	if s.Path == nil {
+		invalidParams.Add(request.NewErrParamRequired("Path"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *S3DataConfig) SetKmsKeyArn(v string) *S3DataConfig {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *S3DataConfig) SetPath(v string) *S3DataConfig {
+	s.Path = &v
+	return s
+}
+
 // An object that provides information about a solution. A solution is a trained
 // model that can be deployed as a campaign.
 type Solution struct {
@@ -8748,9 +11021,7 @@ type SolutionConfig struct {
 	// Lists the feature transformation parameters.
 	FeatureTransformationParameters map[string]*string `locationName:"featureTransformationParameters" type:"map"`
 
-	// Describes the properties for hyperparameter optimization (HPO). For use with
-	// the bring-your-own-recipe feature. Not used with Amazon Personalize predefined
-	// recipes.
+	// Describes the properties for hyperparameter optimization (HPO).
 	HpoConfig *HPOConfig `locationName:"hpoConfig" type:"structure"`
 }
 
@@ -8891,15 +11162,15 @@ type SolutionVersion struct {
 	// the model.
 	EventType *string `locationName:"eventType" type:"string"`
 
-	// If training a solution version fails, the reason behind the failure.
+	// If training a solution version fails, the reason for the failure.
 	FailureReason *string `locationName:"failureReason" type:"string"`
 
 	// The date and time (in Unix time) that the solution was last updated.
 	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
 
-	// When true, Amazon Personalize performs a search for the most optimal recipe
-	// according to the solution configuration. When false (the default), Amazon
-	// Personalize uses recipeArn.
+	// When true, Amazon Personalize searches for the most optimal recipe according
+	// to the solution configuration. When false (the default), Amazon Personalize
+	// uses recipeArn.
 	PerformAutoML *bool `locationName:"performAutoML" type:"boolean"`
 
 	// Whether to perform hyperparameter optimization (HPO) on the chosen recipe.
@@ -8922,11 +11193,34 @@ type SolutionVersion struct {
 	//
 	// A solution version can be in one of the following states:
 	//
-	//    * CREATE PENDING > CREATE IN_PROGRESS > ACTIVE -or- CREATE FAILED
+	//    * CREATE PENDING
+	//
+	//    * CREATE IN_PROGRESS
+	//
+	//    * ACTIVE
+	//
+	//    * CREATE FAILED
 	Status *string `locationName:"status" type:"string"`
 
-	// The time used to train the model.
+	// The time used to train the model. You are billed for the time it takes to
+	// train a model. This field is visible only after Amazon Personalize successfully
+	// trains a model.
 	TrainingHours *float64 `locationName:"trainingHours" type:"double"`
+
+	// The scope of training used to create the solution version. The FULL option
+	// trains the solution version based on the entirety of the input solution's
+	// training data, while the UPDATE option processes only the training data that
+	// has changed since the creation of the last solution version. Choose UPDATE
+	// when you want to start recommending items added to the dataset without retraining
+	// the model.
+	//
+	// The UPDATE option can only be used after you've created a solution version
+	// with the FULL option and the training solution uses the native-recipe-hrnn-coldstart.
+	TrainingMode *string `locationName:"trainingMode" type:"string" enum:"TrainingMode"`
+
+	// If hyperparameter optimization was performed, contains the hyperparameter
+	// values of the best performing model.
+	TunedHPOParams *TunedHPOParams `locationName:"tunedHPOParams" type:"structure"`
 }
 
 // String returns the string representation
@@ -9017,6 +11311,18 @@ func (s *SolutionVersion) SetTrainingHours(v float64) *SolutionVersion {
 	return s
 }
 
+// SetTrainingMode sets the TrainingMode field's value.
+func (s *SolutionVersion) SetTrainingMode(v string) *SolutionVersion {
+	s.TrainingMode = &v
+	return s
+}
+
+// SetTunedHPOParams sets the TunedHPOParams field's value.
+func (s *SolutionVersion) SetTunedHPOParams(v *TunedHPOParams) *SolutionVersion {
+	s.TunedHPOParams = v
+	return s
+}
+
 // Provides a summary of the properties of a solution version. For a complete
 // listing, call the DescribeSolutionVersion API.
 type SolutionVersionSummary struct {
@@ -9082,6 +11388,31 @@ func (s *SolutionVersionSummary) SetStatus(v string) *SolutionVersionSummary {
 	return s
 }
 
+// If hyperparameter optimization (HPO) was performed, contains the hyperparameter
+// values of the best performing model.
+type TunedHPOParams struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the hyperparameter values of the best performing model.
+	AlgorithmHyperParameters map[string]*string `locationName:"algorithmHyperParameters" type:"map"`
+}
+
+// String returns the string representation
+func (s TunedHPOParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TunedHPOParams) GoString() string {
+	return s.String()
+}
+
+// SetAlgorithmHyperParameters sets the AlgorithmHyperParameters field's value.
+func (s *TunedHPOParams) SetAlgorithmHyperParameters(v map[string]*string) *TunedHPOParams {
+	s.AlgorithmHyperParameters = v
+	return s
+}
+
 type UpdateCampaignInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9089,6 +11420,9 @@ type UpdateCampaignInput struct {
 	//
 	// CampaignArn is a required field
 	CampaignArn *string `locationName:"campaignArn" type:"string" required:"true"`
+
+	// The configuration details of a campaign.
+	CampaignConfig *CampaignConfig `locationName:"campaignConfig" type:"structure"`
 
 	// Specifies the requested minimum provisioned transactions (recommendations)
 	// per second that Amazon Personalize will support.
@@ -9127,6 +11461,12 @@ func (s *UpdateCampaignInput) Validate() error {
 // SetCampaignArn sets the CampaignArn field's value.
 func (s *UpdateCampaignInput) SetCampaignArn(v string) *UpdateCampaignInput {
 	s.CampaignArn = &v
+	return s
+}
+
+// SetCampaignConfig sets the CampaignConfig field's value.
+func (s *UpdateCampaignInput) SetCampaignConfig(v *CampaignConfig) *UpdateCampaignInput {
+	s.CampaignConfig = v
 	return s
 }
 
@@ -9169,3 +11509,26 @@ const (
 	// RecipeProviderService is a RecipeProvider enum value
 	RecipeProviderService = "SERVICE"
 )
+
+// RecipeProvider_Values returns all elements of the RecipeProvider enum
+func RecipeProvider_Values() []string {
+	return []string{
+		RecipeProviderService,
+	}
+}
+
+const (
+	// TrainingModeFull is a TrainingMode enum value
+	TrainingModeFull = "FULL"
+
+	// TrainingModeUpdate is a TrainingMode enum value
+	TrainingModeUpdate = "UPDATE"
+)
+
+// TrainingMode_Values returns all elements of the TrainingMode enum
+func TrainingMode_Values() []string {
+	return []string{
+		TrainingModeFull,
+		TrainingModeUpdate,
+	}
+}

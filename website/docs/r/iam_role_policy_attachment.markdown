@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_role_policy_attachment"
 description: |-
@@ -55,8 +56,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = "${aws_iam_role.role.name}"
-  policy_arn = "${aws_iam_policy.policy.arn}"
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy.arn
 }
 ```
 

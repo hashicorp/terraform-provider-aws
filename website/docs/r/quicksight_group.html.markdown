@@ -1,19 +1,20 @@
 ---
+subcategory: "QuickSight"
 layout: "aws"
 page_title: "AWS: aws_quicksight_group"
 description: |-
-  Manages a Resource Quick Sight Group.
+  Manages a Resource QuickSight Group.
 ---
 
 # Resource: aws_quicksight_group
 
-Resource for managing Quick Sight Group
+Resource for managing QuickSight Group
 
 ## Example Usage
 
 ```hcl
 resource "aws_quicksight_group" "example" {
-	group_name = "tf-example"
+  group_name = "tf-example"
 }
 ```
 
@@ -34,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Quick Sight Group can be imported using the aws account id, namespace and group name separated by `/`.
+QuickSight Group can be imported using the aws account id, namespace and group name separated by `/`.
 
 ```
 $ terraform import aws_quicksight_group.example 123456789123/default/tf-example

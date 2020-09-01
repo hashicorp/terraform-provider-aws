@@ -1,4 +1,5 @@
 ---
+subcategory: "Backup"
 layout: "aws"
 page_title: "AWS: aws_backup_vault"
 description: |-
@@ -14,7 +15,7 @@ Provides an AWS Backup vault resource.
 ```hcl
 resource "aws_backup_vault" "example" {
   name        = "example_backup_vault"
-  kms_key_arn = "${aws_kms_key.example.arn}"
+  kms_key_arn = aws_kms_key.example.arn
 }
 ```
 

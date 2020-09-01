@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsCurReportDefinition_basic(t *testing.T) {
@@ -18,10 +18,9 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
-
+	s3BucketResourceName := "aws_s3_bucket.test"
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
-	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
@@ -29,7 +28,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
+				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
@@ -38,7 +37,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
 				),
 			},
@@ -105,7 +104,7 @@ func testAccPreCheckAWSCur(t *testing.T) {
 }
 
 // note: cur report definitions are currently only supported in us-east-1
-func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketRegion string) string {
+func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -115,39 +114,38 @@ resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
   force_destroy = true
-  region        = "%[3]s"
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = "${aws_s3_bucket.test.id}"
+  bucket = aws_s3_bucket.test.id
 
   policy = <<POLICY
 {
-    "Version": "2008-10-17",
-    "Id": "s3policy",
-    "Statement": [
-        {
-            "Sid": "AllowCURBillingACLPolicy",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": [
-                "s3:GetBucketAcl",
-                "s3:GetBucketPolicy"
-            ],
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
-        },
-        {
-            "Sid": "AllowCURPutObject",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::386209384616:root"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
-        }
-    ]
+  "Version": "2008-10-17",
+  "Id": "s3policy",
+  "Statement": [
+    {
+      "Sid": "AllowCURBillingACLPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::386209384616:root"
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
+    },
+    {
+      "Sid": "AllowCURPutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::386209384616:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+    }
+  ]
 }
 POLICY
 }
@@ -158,10 +156,10 @@ resource "aws_cur_report_definition" "test" {
   format                     = "textORcsv"
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES"]
-  s3_bucket                  = "${aws_s3_bucket.test.id}"
+  s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
-  s3_region                  = "${aws_s3_bucket.test.region}"
+  s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, reportName, bucketName, bucketRegion)
+`, reportName, bucketName)
 }
