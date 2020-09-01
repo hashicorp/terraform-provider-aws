@@ -4,6 +4,7 @@ FEATURES
 
 * **New Data Source:** `aws_docdb_orderable_db_instance` [GH-14931]
 * **New Data Source:** `aws_lex_slot_type` [GH-8916]
+* **New Data Source:** `aws_neptune_orderable_db_instance` [GH-14953]
 * **New Data Source:** `aws_rds_orderable_db_instance` [GH-14834]
 * **New Data Source:** `aws_vpc_peering_connections` [GH-9491]
 * **New Resource:** `aws_codebuild_report_group` [GH-12573]
