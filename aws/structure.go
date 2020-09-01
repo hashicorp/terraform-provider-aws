@@ -3957,32 +3957,14 @@ func stripNonKeyAttributes(in map[string]interface{}) (map[string]interface{}, e
 
 // checkIfNonKeyAttributesChanged returns true if non_key_attributes between old map and new map are different
 func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]interface{}) bool {
-	oldNonKeyAttributes, oldNkaExists := oldMap["non_key_attributes"].([]string)
-	newNonKeyAttributes, newNkaExists := newMap["non_key_attributes"].([]string)
-	if oldNkaExists != newNkaExists {
-		return true
+	oldNonKeyAttributes, oldNkaExists := oldMap["non_key_attributes"].(*schema.Set)
+	newNonKeyAttributes, newNkaExists := newMap["non_key_attributes"].(*schema.Set)
+
+	if oldNkaExists && newNkaExists {
+		return !oldNonKeyAttributes.Equal(newNonKeyAttributes)
 	}
 
-	o := map[string]bool{}
-	for _, oldNonKeyAttribute := range oldNonKeyAttributes {
-		o[oldNonKeyAttribute] = true
-	}
-	n := map[string]bool{}
-	for _, newNonKeyAttribute := range newNonKeyAttributes {
-		n[newNonKeyAttribute] = true
-	}
-
-	// perform this check after populating map so we ignore duplicated fields in non_key_attributes
-	if len(o) != len(n) {
-		return true
-	}
-
-	for k, v := range n {
-		if oVal, oExists := o[k]; !oExists || v != oVal {
-			return true
-		}
-	}
-	return false
+	return oldNkaExists != newNkaExists
 }
 
 func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {
@@ -4263,10 +4245,6 @@ func expandDynamoDbProvisionedThroughput(data map[string]interface{}, billingMod
 func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection {
 	projection := &dynamodb.Projection{
 		ProjectionType: aws.String(data["projection_type"].(string)),
-	}
-
-	if v, ok := data["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
-		projection.NonKeyAttributes = expandStringList(v)
 	}
 
 	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
