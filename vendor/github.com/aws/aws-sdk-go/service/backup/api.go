@@ -162,9 +162,9 @@ func (c *Backup) CreateBackupSelectionRequest(input *CreateBackupSelectionInput)
 //
 //    * Resources: "arn:aws:ec2:region:account-id:volume/volume-id"
 //
-//    * ConditionKey:"department" ConditionValue:"finance" ConditionType:"STRINGEQUALS"
+//    * ConditionKey:"department" ConditionValue:"finance" ConditionType:"StringEquals"
 //
-//    * ConditionKey:"importance" ConditionValue:"critical" ConditionType:"STRINGEQUALS"
+//    * ConditionKey:"importance" ConditionValue:"critical" ConditionType:"StringEquals"
 //
 // Using these patterns would back up all Amazon Elastic Block Store (Amazon
 // EBS) volumes that are tagged as "department=finance", "importance=critical",
@@ -5197,7 +5197,7 @@ func (s *CalculatedLifecycle) SetMoveToColdStorageAt(v time.Time) *CalculatedLif
 	return s
 }
 
-// Contains an array of triplets made up of a condition type (such as STRINGEQUALS),
+// Contains an array of triplets made up of a condition type (such as StringEquals),
 // a key, and a value. Conditions are used to filter resources in a selection
 // that is assigned to a backup plan.
 type Condition struct {
@@ -5209,7 +5209,7 @@ type Condition struct {
 	// ConditionKey is a required field
 	ConditionKey *string `type:"string" required:"true"`
 
-	// An operation, such as STRINGEQUALS, that is applied to a key-value pair used
+	// An operation, such as StringEquals, that is applied to a key-value pair used
 	// to filter resources in a selection.
 	//
 	// ConditionType is a required field
@@ -11214,14 +11214,14 @@ func (s *RuleInput) SetTargetBackupVaultName(v string) *RuleInput {
 type Selection struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the IAM role that AWS Backup uses to authenticate when restoring
-	// the target resource; for example, arn:aws:iam::123456789012:role/S3Access.
+	// The ARN of the IAM role that AWS Backup uses to authenticate when backing
+	// up the target resource; for example, arn:aws:iam::123456789012:role/S3Access.
 	//
 	// IamRoleArn is a required field
 	IamRoleArn *string `type:"string" required:"true"`
 
 	// An array of conditions used to specify a set of resources to assign to a
-	// backup plan; for example, "STRINGEQUALS": {"ec2:ResourceTag/Department":
+	// backup plan; for example, "StringEquals": {"ec2:ResourceTag/Department":
 	// "accounting".
 	ListOfTags []*Condition `type:"list"`
 

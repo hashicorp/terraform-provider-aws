@@ -1368,6 +1368,102 @@ func (c *CloudFront) CreatePublicKeyWithContext(ctx aws.Context, input *CreatePu
 	return out, req.Send()
 }
 
+const opCreateRealtimeLogConfig = "CreateRealtimeLogConfig2020_05_31"
+
+// CreateRealtimeLogConfigRequest generates a "aws/request.Request" representing the
+// client's request for the CreateRealtimeLogConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateRealtimeLogConfig for more information on using the CreateRealtimeLogConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateRealtimeLogConfigRequest method.
+//    req, resp := client.CreateRealtimeLogConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateRealtimeLogConfig
+func (c *CloudFront) CreateRealtimeLogConfigRequest(input *CreateRealtimeLogConfigInput) (req *request.Request, output *CreateRealtimeLogConfigOutput) {
+	op := &request.Operation{
+		Name:       opCreateRealtimeLogConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/realtime-log-config",
+	}
+
+	if input == nil {
+		input = &CreateRealtimeLogConfigInput{}
+	}
+
+	output = &CreateRealtimeLogConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateRealtimeLogConfig API operation for Amazon CloudFront.
+//
+// Creates a real-time log configuration.
+//
+// After you create a real-time log configuration, you can attach it to one
+// or more cache behaviors to send real-time log data to the specified Amazon
+// Kinesis data stream.
+//
+// For more information about real-time log configurations, see Real-time logs
+// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html)
+// in the Amazon CloudFront Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation CreateRealtimeLogConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRealtimeLogConfigAlreadyExists "RealtimeLogConfigAlreadyExists"
+//   A real-time log configuration with this name already exists. You must provide
+//   a unique name. To modify an existing real-time log configuration, use UpdateRealtimeLogConfig.
+//
+//   * ErrCodeTooManyRealtimeLogConfigs "TooManyRealtimeLogConfigs"
+//   You have reached the maximum number of real-time log configurations for this
+//   AWS account. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+//   (formerly known as limits) in the Amazon CloudFront Developer Guide.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/CreateRealtimeLogConfig
+func (c *CloudFront) CreateRealtimeLogConfig(input *CreateRealtimeLogConfigInput) (*CreateRealtimeLogConfigOutput, error) {
+	req, out := c.CreateRealtimeLogConfigRequest(input)
+	return out, req.Send()
+}
+
+// CreateRealtimeLogConfigWithContext is the same as CreateRealtimeLogConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateRealtimeLogConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) CreateRealtimeLogConfigWithContext(ctx aws.Context, input *CreateRealtimeLogConfigInput, opts ...request.Option) (*CreateRealtimeLogConfigOutput, error) {
+	req, out := c.CreateRealtimeLogConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateStreamingDistribution = "CreateStreamingDistribution2020_05_31"
 
 // CreateStreamingDistributionRequest generates a "aws/request.Request" representing the
@@ -2383,6 +2479,102 @@ func (c *CloudFront) DeletePublicKey(input *DeletePublicKeyInput) (*DeletePublic
 // for more information on using Contexts.
 func (c *CloudFront) DeletePublicKeyWithContext(ctx aws.Context, input *DeletePublicKeyInput, opts ...request.Option) (*DeletePublicKeyOutput, error) {
 	req, out := c.DeletePublicKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteRealtimeLogConfig = "DeleteRealtimeLogConfig2020_05_31"
+
+// DeleteRealtimeLogConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRealtimeLogConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRealtimeLogConfig for more information on using the DeleteRealtimeLogConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRealtimeLogConfigRequest method.
+//    req, resp := client.DeleteRealtimeLogConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteRealtimeLogConfig
+func (c *CloudFront) DeleteRealtimeLogConfigRequest(input *DeleteRealtimeLogConfigInput) (req *request.Request, output *DeleteRealtimeLogConfigOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRealtimeLogConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/delete-realtime-log-config/",
+	}
+
+	if input == nil {
+		input = &DeleteRealtimeLogConfigInput{}
+	}
+
+	output = &DeleteRealtimeLogConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteRealtimeLogConfig API operation for Amazon CloudFront.
+//
+// Deletes a real-time log configuration.
+//
+// You cannot delete a real-time log configuration if it’s attached to a cache
+// behavior. First update your distributions to remove the real-time log configuration
+// from all cache behaviors, then delete the real-time log configuration.
+//
+// To delete a real-time log configuration, you can provide the configuration’s
+// name or its Amazon Resource Name (ARN). You must provide at least one. If
+// you provide both, CloudFront uses the name to identify the real-time log
+// configuration to delete.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation DeleteRealtimeLogConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchRealtimeLogConfig "NoSuchRealtimeLogConfig"
+//   The real-time log configuration does not exist.
+//
+//   * ErrCodeRealtimeLogConfigInUse "RealtimeLogConfigInUse"
+//   Cannot delete the real-time log configuration because it is attached to one
+//   or more cache behaviors.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/DeleteRealtimeLogConfig
+func (c *CloudFront) DeleteRealtimeLogConfig(input *DeleteRealtimeLogConfigInput) (*DeleteRealtimeLogConfigOutput, error) {
+	req, out := c.DeleteRealtimeLogConfigRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRealtimeLogConfigWithContext is the same as DeleteRealtimeLogConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRealtimeLogConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) DeleteRealtimeLogConfigWithContext(ctx aws.Context, input *DeleteRealtimeLogConfigInput, opts ...request.Option) (*DeleteRealtimeLogConfigOutput, error) {
+	req, out := c.DeleteRealtimeLogConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3865,6 +4057,93 @@ func (c *CloudFront) GetPublicKeyConfigWithContext(ctx aws.Context, input *GetPu
 	return out, req.Send()
 }
 
+const opGetRealtimeLogConfig = "GetRealtimeLogConfig2020_05_31"
+
+// GetRealtimeLogConfigRequest generates a "aws/request.Request" representing the
+// client's request for the GetRealtimeLogConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetRealtimeLogConfig for more information on using the GetRealtimeLogConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetRealtimeLogConfigRequest method.
+//    req, resp := client.GetRealtimeLogConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetRealtimeLogConfig
+func (c *CloudFront) GetRealtimeLogConfigRequest(input *GetRealtimeLogConfigInput) (req *request.Request, output *GetRealtimeLogConfigOutput) {
+	op := &request.Operation{
+		Name:       opGetRealtimeLogConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/get-realtime-log-config/",
+	}
+
+	if input == nil {
+		input = &GetRealtimeLogConfigInput{}
+	}
+
+	output = &GetRealtimeLogConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetRealtimeLogConfig API operation for Amazon CloudFront.
+//
+// Gets a real-time log configuration.
+//
+// To get a real-time log configuration, you can provide the configuration’s
+// name or its Amazon Resource Name (ARN). You must provide at least one. If
+// you provide both, CloudFront uses the name to identify the real-time log
+// configuration to get.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation GetRealtimeLogConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchRealtimeLogConfig "NoSuchRealtimeLogConfig"
+//   The real-time log configuration does not exist.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/GetRealtimeLogConfig
+func (c *CloudFront) GetRealtimeLogConfig(input *GetRealtimeLogConfigInput) (*GetRealtimeLogConfigOutput, error) {
+	req, out := c.GetRealtimeLogConfigRequest(input)
+	return out, req.Send()
+}
+
+// GetRealtimeLogConfigWithContext is the same as GetRealtimeLogConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRealtimeLogConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) GetRealtimeLogConfigWithContext(ctx aws.Context, input *GetRealtimeLogConfigInput, opts ...request.Option) (*GetRealtimeLogConfigOutput, error) {
+	req, out := c.GetRealtimeLogConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetStreamingDistribution = "GetStreamingDistribution2020_05_31"
 
 // GetStreamingDistributionRequest generates a "aws/request.Request" representing the
@@ -4582,6 +4861,97 @@ func (c *CloudFront) ListDistributionsByOriginRequestPolicyIdWithContext(ctx aws
 	return out, req.Send()
 }
 
+const opListDistributionsByRealtimeLogConfig = "ListDistributionsByRealtimeLogConfig2020_05_31"
+
+// ListDistributionsByRealtimeLogConfigRequest generates a "aws/request.Request" representing the
+// client's request for the ListDistributionsByRealtimeLogConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDistributionsByRealtimeLogConfig for more information on using the ListDistributionsByRealtimeLogConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDistributionsByRealtimeLogConfigRequest method.
+//    req, resp := client.ListDistributionsByRealtimeLogConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByRealtimeLogConfig
+func (c *CloudFront) ListDistributionsByRealtimeLogConfigRequest(input *ListDistributionsByRealtimeLogConfigInput) (req *request.Request, output *ListDistributionsByRealtimeLogConfigOutput) {
+	op := &request.Operation{
+		Name:       opListDistributionsByRealtimeLogConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2020-05-31/distributionsByRealtimeLogConfig/",
+	}
+
+	if input == nil {
+		input = &ListDistributionsByRealtimeLogConfigInput{}
+	}
+
+	output = &ListDistributionsByRealtimeLogConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDistributionsByRealtimeLogConfig API operation for Amazon CloudFront.
+//
+// Gets a list of distribution that have a cache behavior that’s associated
+// with the specified real-time log configuration.
+//
+// You can specify the real-time log configuration by its name or its Amazon
+// Resource Name (ARN). You must provide at least one. If you provide both,
+// CloudFront uses the name to identify the real-time log configuration to list
+// distributions for.
+//
+// You can optionally specify the maximum number of items to receive in the
+// response. If the total number of items in the list exceeds the maximum that
+// you specify, or the default maximum, the response is paginated. To get the
+// next page of items, send a subsequent request that specifies the NextMarker
+// value from the current response as the Marker value in the subsequent request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation ListDistributionsByRealtimeLogConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListDistributionsByRealtimeLogConfig
+func (c *CloudFront) ListDistributionsByRealtimeLogConfig(input *ListDistributionsByRealtimeLogConfigInput) (*ListDistributionsByRealtimeLogConfigOutput, error) {
+	req, out := c.ListDistributionsByRealtimeLogConfigRequest(input)
+	return out, req.Send()
+}
+
+// ListDistributionsByRealtimeLogConfigWithContext is the same as ListDistributionsByRealtimeLogConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDistributionsByRealtimeLogConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) ListDistributionsByRealtimeLogConfigWithContext(ctx aws.Context, input *ListDistributionsByRealtimeLogConfigInput, opts ...request.Option) (*ListDistributionsByRealtimeLogConfigOutput, error) {
+	req, out := c.ListDistributionsByRealtimeLogConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListDistributionsByWebACLId = "ListDistributionsByWebACLId2020_05_31"
 
 // ListDistributionsByWebACLIdRequest generates a "aws/request.Request" representing the
@@ -5138,6 +5508,86 @@ func (c *CloudFront) ListPublicKeys(input *ListPublicKeysInput) (*ListPublicKeys
 // for more information on using Contexts.
 func (c *CloudFront) ListPublicKeysWithContext(ctx aws.Context, input *ListPublicKeysInput, opts ...request.Option) (*ListPublicKeysOutput, error) {
 	req, out := c.ListPublicKeysRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListRealtimeLogConfigs = "ListRealtimeLogConfigs2020_05_31"
+
+// ListRealtimeLogConfigsRequest generates a "aws/request.Request" representing the
+// client's request for the ListRealtimeLogConfigs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListRealtimeLogConfigs for more information on using the ListRealtimeLogConfigs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListRealtimeLogConfigsRequest method.
+//    req, resp := client.ListRealtimeLogConfigsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListRealtimeLogConfigs
+func (c *CloudFront) ListRealtimeLogConfigsRequest(input *ListRealtimeLogConfigsInput) (req *request.Request, output *ListRealtimeLogConfigsOutput) {
+	op := &request.Operation{
+		Name:       opListRealtimeLogConfigs,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2020-05-31/realtime-log-config",
+	}
+
+	if input == nil {
+		input = &ListRealtimeLogConfigsInput{}
+	}
+
+	output = &ListRealtimeLogConfigsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListRealtimeLogConfigs API operation for Amazon CloudFront.
+//
+// Gets a list of real-time log configurations.
+//
+// You can optionally specify the maximum number of items to receive in the
+// response. If the total number of items in the list exceeds the maximum that
+// you specify, or the default maximum, the response is paginated. To get the
+// next page of items, send a subsequent request that specifies the NextMarker
+// value from the current response as the Marker value in the subsequent request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation ListRealtimeLogConfigs for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/ListRealtimeLogConfigs
+func (c *CloudFront) ListRealtimeLogConfigs(input *ListRealtimeLogConfigsInput) (*ListRealtimeLogConfigsOutput, error) {
+	req, out := c.ListRealtimeLogConfigsRequest(input)
+	return out, req.Send()
+}
+
+// ListRealtimeLogConfigsWithContext is the same as ListRealtimeLogConfigs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListRealtimeLogConfigs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) ListRealtimeLogConfigsWithContext(ctx aws.Context, input *ListRealtimeLogConfigsInput, opts ...request.Option) (*ListRealtimeLogConfigsOutput, error) {
+	req, out := c.ListRealtimeLogConfigsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6541,6 +6991,103 @@ func (c *CloudFront) UpdatePublicKeyWithContext(ctx aws.Context, input *UpdatePu
 	return out, req.Send()
 }
 
+const opUpdateRealtimeLogConfig = "UpdateRealtimeLogConfig2020_05_31"
+
+// UpdateRealtimeLogConfigRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateRealtimeLogConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateRealtimeLogConfig for more information on using the UpdateRealtimeLogConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateRealtimeLogConfigRequest method.
+//    req, resp := client.UpdateRealtimeLogConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateRealtimeLogConfig
+func (c *CloudFront) UpdateRealtimeLogConfigRequest(input *UpdateRealtimeLogConfigInput) (req *request.Request, output *UpdateRealtimeLogConfigOutput) {
+	op := &request.Operation{
+		Name:       opUpdateRealtimeLogConfig,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2020-05-31/realtime-log-config/",
+	}
+
+	if input == nil {
+		input = &UpdateRealtimeLogConfigInput{}
+	}
+
+	output = &UpdateRealtimeLogConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateRealtimeLogConfig API operation for Amazon CloudFront.
+//
+// Updates a real-time log configuration.
+//
+// When you update a real-time log configuration, all the parameters are updated
+// with the values provided in the request. You cannot update some parameters
+// independent of others. To update a real-time log configuration:
+//
+// Call GetRealtimeLogConfig to get the current real-time log configuration.
+//
+// Locally modify the parameters in the real-time log configuration that you
+// want to update.
+//
+// Call this API (UpdateRealtimeLogConfig) by providing the entire real-time
+// log configuration, including the parameters that you modified and those that
+// you didn’t.
+//
+// You cannot update a real-time log configuration’s Name or ARN.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudFront's
+// API operation UpdateRealtimeLogConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchRealtimeLogConfig "NoSuchRealtimeLogConfig"
+//   The real-time log configuration does not exist.
+//
+//   * ErrCodeInvalidArgument "InvalidArgument"
+//   An argument is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2020-05-31/UpdateRealtimeLogConfig
+func (c *CloudFront) UpdateRealtimeLogConfig(input *UpdateRealtimeLogConfigInput) (*UpdateRealtimeLogConfigOutput, error) {
+	req, out := c.UpdateRealtimeLogConfigRequest(input)
+	return out, req.Send()
+}
+
+// UpdateRealtimeLogConfigWithContext is the same as UpdateRealtimeLogConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateRealtimeLogConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFront) UpdateRealtimeLogConfigWithContext(ctx aws.Context, input *UpdateRealtimeLogConfigInput, opts ...request.Option) (*UpdateRealtimeLogConfigOutput, error) {
+	req, out := c.UpdateRealtimeLogConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateStreamingDistribution = "UpdateStreamingDistribution2020_05_31"
 
 // UpdateStreamingDistributionRequest generates a "aws/request.Request" representing the
@@ -7089,6 +7636,12 @@ type CacheBehavior struct {
 	// PathPattern is a required field
 	PathPattern *string `type:"string" required:"true"`
 
+	// The Amazon Resource Name (ARN) of the real-time log configuration that is
+	// attached to this cache behavior. For more information, see Real-time logs
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html)
+	// in the Amazon CloudFront Developer Guide.
+	RealtimeLogConfigArn *string `type:"string"`
+
 	// Indicates whether you want to distribute media files in the Microsoft Smooth
 	// Streaming format using the origin that is associated with this cache behavior.
 	// If so, specify true; if not, specify false. If you specify true for SmoothStreaming,
@@ -7267,6 +7820,12 @@ func (s *CacheBehavior) SetOriginRequestPolicyId(v string) *CacheBehavior {
 // SetPathPattern sets the PathPattern field's value.
 func (s *CacheBehavior) SetPathPattern(v string) *CacheBehavior {
 	s.PathPattern = &v
+	return s
+}
+
+// SetRealtimeLogConfigArn sets the RealtimeLogConfigArn field's value.
+func (s *CacheBehavior) SetRealtimeLogConfigArn(v string) *CacheBehavior {
+	s.RealtimeLogConfigArn = &v
 	return s
 }
 
@@ -9127,6 +9686,126 @@ func (s *CreatePublicKeyOutput) SetPublicKey(v *PublicKey) *CreatePublicKeyOutpu
 	return s
 }
 
+type CreateRealtimeLogConfigInput struct {
+	_ struct{} `locationName:"CreateRealtimeLogConfigRequest" type:"structure" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+
+	// Contains information about the Amazon Kinesis data stream where you are sending
+	// real-time log data.
+	//
+	// EndPoints is a required field
+	EndPoints []*EndPoint `type:"list" required:"true"`
+
+	// A list of fields to include in each real-time log record.
+	//
+	// For more information about fields, see Real-time log configuration fields
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-fields)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// Fields is a required field
+	Fields []*string `locationNameList:"Field" type:"list" required:"true"`
+
+	// A unique name to identify this real-time log configuration.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The sampling rate for this real-time log configuration. The sampling rate
+	// determines the percentage of viewer requests that are represented in the
+	// real-time log data. You must provide an integer between 1 and 100, inclusive.
+	//
+	// SamplingRate is a required field
+	SamplingRate *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateRealtimeLogConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRealtimeLogConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateRealtimeLogConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateRealtimeLogConfigInput"}
+	if s.EndPoints == nil {
+		invalidParams.Add(request.NewErrParamRequired("EndPoints"))
+	}
+	if s.Fields == nil {
+		invalidParams.Add(request.NewErrParamRequired("Fields"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.SamplingRate == nil {
+		invalidParams.Add(request.NewErrParamRequired("SamplingRate"))
+	}
+	if s.EndPoints != nil {
+		for i, v := range s.EndPoints {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "EndPoints", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEndPoints sets the EndPoints field's value.
+func (s *CreateRealtimeLogConfigInput) SetEndPoints(v []*EndPoint) *CreateRealtimeLogConfigInput {
+	s.EndPoints = v
+	return s
+}
+
+// SetFields sets the Fields field's value.
+func (s *CreateRealtimeLogConfigInput) SetFields(v []*string) *CreateRealtimeLogConfigInput {
+	s.Fields = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateRealtimeLogConfigInput) SetName(v string) *CreateRealtimeLogConfigInput {
+	s.Name = &v
+	return s
+}
+
+// SetSamplingRate sets the SamplingRate field's value.
+func (s *CreateRealtimeLogConfigInput) SetSamplingRate(v int64) *CreateRealtimeLogConfigInput {
+	s.SamplingRate = &v
+	return s
+}
+
+type CreateRealtimeLogConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A real-time log configuration.
+	RealtimeLogConfig *RealtimeLogConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateRealtimeLogConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRealtimeLogConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetRealtimeLogConfig sets the RealtimeLogConfig field's value.
+func (s *CreateRealtimeLogConfigOutput) SetRealtimeLogConfig(v *RealtimeLogConfig) *CreateRealtimeLogConfigOutput {
+	s.RealtimeLogConfig = v
+	return s
+}
+
 // The request to create a new streaming distribution.
 type CreateStreamingDistributionInput struct {
 	_ struct{} `locationName:"CreateStreamingDistributionRequest" type:"structure" payload:"StreamingDistributionConfig"`
@@ -9805,6 +10484,12 @@ type DefaultCacheBehavior struct {
 	// in the Amazon CloudFront Developer Guide.
 	OriginRequestPolicyId *string `type:"string"`
 
+	// The Amazon Resource Name (ARN) of the real-time log configuration that is
+	// attached to this cache behavior. For more information, see Real-time logs
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html)
+	// in the Amazon CloudFront Developer Guide.
+	RealtimeLogConfigArn *string `type:"string"`
+
 	// Indicates whether you want to distribute media files in the Microsoft Smooth
 	// Streaming format using the origin that is associated with this cache behavior.
 	// If so, specify true; if not, specify false. If you specify true for SmoothStreaming,
@@ -9974,6 +10659,12 @@ func (s *DefaultCacheBehavior) SetMinTTL(v int64) *DefaultCacheBehavior {
 // SetOriginRequestPolicyId sets the OriginRequestPolicyId field's value.
 func (s *DefaultCacheBehavior) SetOriginRequestPolicyId(v string) *DefaultCacheBehavior {
 	s.OriginRequestPolicyId = &v
+	return s
+}
+
+// SetRealtimeLogConfigArn sets the RealtimeLogConfigArn field's value.
+func (s *DefaultCacheBehavior) SetRealtimeLogConfigArn(v string) *DefaultCacheBehavior {
+	s.RealtimeLogConfigArn = &v
 	return s
 }
 
@@ -10548,6 +11239,52 @@ func (s DeletePublicKeyOutput) String() string {
 
 // GoString returns the string representation
 func (s DeletePublicKeyOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteRealtimeLogConfigInput struct {
+	_ struct{} `locationName:"DeleteRealtimeLogConfigRequest" type:"structure" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+
+	// The Amazon Resource Name (ARN) of the real-time log configuration to delete.
+	ARN *string `type:"string"`
+
+	// The name of the real-time log configuration to delete.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteRealtimeLogConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRealtimeLogConfigInput) GoString() string {
+	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *DeleteRealtimeLogConfigInput) SetARN(v string) *DeleteRealtimeLogConfigInput {
+	s.ARN = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteRealtimeLogConfigInput) SetName(v string) *DeleteRealtimeLogConfigInput {
+	s.Name = &v
+	return s
+}
+
+type DeleteRealtimeLogConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteRealtimeLogConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRealtimeLogConfigOutput) GoString() string {
 	return s.String()
 }
 
@@ -11727,6 +12464,62 @@ func (s *EncryptionEntity) SetProviderId(v string) *EncryptionEntity {
 // SetPublicKeyId sets the PublicKeyId field's value.
 func (s *EncryptionEntity) SetPublicKeyId(v string) *EncryptionEntity {
 	s.PublicKeyId = &v
+	return s
+}
+
+// Contains information about the Amazon Kinesis data stream where you are sending
+// real-time log data in a real-time log configuration.
+type EndPoint struct {
+	_ struct{} `type:"structure"`
+
+	// Contains information about the Amazon Kinesis data stream where you are sending
+	// real-time log data.
+	KinesisStreamConfig *KinesisStreamConfig `type:"structure"`
+
+	// The type of data stream where you are sending real-time log data. The only
+	// valid value is Kinesis.
+	//
+	// StreamType is a required field
+	StreamType *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s EndPoint) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndPoint) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EndPoint) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EndPoint"}
+	if s.StreamType == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamType"))
+	}
+	if s.KinesisStreamConfig != nil {
+		if err := s.KinesisStreamConfig.Validate(); err != nil {
+			invalidParams.AddNested("KinesisStreamConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKinesisStreamConfig sets the KinesisStreamConfig field's value.
+func (s *EndPoint) SetKinesisStreamConfig(v *KinesisStreamConfig) *EndPoint {
+	s.KinesisStreamConfig = v
+	return s
+}
+
+// SetStreamType sets the StreamType field's value.
+func (s *EndPoint) SetStreamType(v string) *EndPoint {
+	s.StreamType = &v
 	return s
 }
 
@@ -13761,6 +14554,61 @@ func (s *GetPublicKeyOutput) SetPublicKey(v *PublicKey) *GetPublicKeyOutput {
 	return s
 }
 
+type GetRealtimeLogConfigInput struct {
+	_ struct{} `locationName:"GetRealtimeLogConfigRequest" type:"structure" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+
+	// The Amazon Resource Name (ARN) of the real-time log configuration to get.
+	ARN *string `type:"string"`
+
+	// The name of the real-time log configuration to get.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetRealtimeLogConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetRealtimeLogConfigInput) GoString() string {
+	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *GetRealtimeLogConfigInput) SetARN(v string) *GetRealtimeLogConfigInput {
+	s.ARN = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *GetRealtimeLogConfigInput) SetName(v string) *GetRealtimeLogConfigInput {
+	s.Name = &v
+	return s
+}
+
+type GetRealtimeLogConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A real-time log configuration.
+	RealtimeLogConfig *RealtimeLogConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetRealtimeLogConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetRealtimeLogConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetRealtimeLogConfig sets the RealtimeLogConfig field's value.
+func (s *GetRealtimeLogConfigOutput) SetRealtimeLogConfig(v *RealtimeLogConfig) *GetRealtimeLogConfigOutput {
+	s.RealtimeLogConfig = v
+	return s
+}
+
 // To request to get a streaming distribution configuration.
 type GetStreamingDistributionConfigInput struct {
 	_ struct{} `locationName:"GetStreamingDistributionConfigRequest" type:"structure"`
@@ -14272,6 +15120,67 @@ func (s *KeyPairIds) SetQuantity(v int64) *KeyPairIds {
 	return s
 }
 
+// Contains information about the Amazon Kinesis data stream where you are sending
+// real-time log data.
+type KinesisStreamConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM)
+	// role that CloudFront can use to send real-time log data to your Kinesis data
+	// stream.
+	//
+	// For more information the IAM role, see Real-time log configuration IAM role
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-iam-role)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// RoleARN is a required field
+	RoleARN *string `type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the Kinesis data stream where you are sending
+	// real-time log data.
+	//
+	// StreamARN is a required field
+	StreamARN *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s KinesisStreamConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KinesisStreamConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *KinesisStreamConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "KinesisStreamConfig"}
+	if s.RoleARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleARN"))
+	}
+	if s.StreamARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamARN"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRoleARN sets the RoleARN field's value.
+func (s *KinesisStreamConfig) SetRoleARN(v string) *KinesisStreamConfig {
+	s.RoleARN = &v
+	return s
+}
+
+// SetStreamARN sets the StreamARN field's value.
+func (s *KinesisStreamConfig) SetStreamARN(v string) *KinesisStreamConfig {
+	s.StreamARN = &v
+	return s
+}
+
 // A complex type that contains a Lambda function association.
 type LambdaFunctionAssociation struct {
 	_ struct{} `type:"structure"`
@@ -14727,6 +15636,84 @@ func (s ListDistributionsByOriginRequestPolicyIdOutput) GoString() string {
 // SetDistributionIdList sets the DistributionIdList field's value.
 func (s *ListDistributionsByOriginRequestPolicyIdOutput) SetDistributionIdList(v *DistributionIdList) *ListDistributionsByOriginRequestPolicyIdOutput {
 	s.DistributionIdList = v
+	return s
+}
+
+type ListDistributionsByRealtimeLogConfigInput struct {
+	_ struct{} `locationName:"ListDistributionsByRealtimeLogConfigRequest" type:"structure" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+
+	// Use this field when paginating results to indicate where to begin in your
+	// list of distributions. The response includes distributions in the list that
+	// occur after the marker. To get the next page of the list, set this field’s
+	// value to the value of NextMarker from the current page’s response.
+	Marker *string `type:"string"`
+
+	// The maximum number of distributions that you want in the response.
+	MaxItems *int64 `type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the real-time log configuration whose associated
+	// distributions you want to list.
+	RealtimeLogConfigArn *string `type:"string"`
+
+	// The name of the real-time log configuration whose associated distributions
+	// you want to list.
+	RealtimeLogConfigName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListDistributionsByRealtimeLogConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDistributionsByRealtimeLogConfigInput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListDistributionsByRealtimeLogConfigInput) SetMarker(v string) *ListDistributionsByRealtimeLogConfigInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListDistributionsByRealtimeLogConfigInput) SetMaxItems(v int64) *ListDistributionsByRealtimeLogConfigInput {
+	s.MaxItems = &v
+	return s
+}
+
+// SetRealtimeLogConfigArn sets the RealtimeLogConfigArn field's value.
+func (s *ListDistributionsByRealtimeLogConfigInput) SetRealtimeLogConfigArn(v string) *ListDistributionsByRealtimeLogConfigInput {
+	s.RealtimeLogConfigArn = &v
+	return s
+}
+
+// SetRealtimeLogConfigName sets the RealtimeLogConfigName field's value.
+func (s *ListDistributionsByRealtimeLogConfigInput) SetRealtimeLogConfigName(v string) *ListDistributionsByRealtimeLogConfigInput {
+	s.RealtimeLogConfigName = &v
+	return s
+}
+
+type ListDistributionsByRealtimeLogConfigOutput struct {
+	_ struct{} `type:"structure" payload:"DistributionList"`
+
+	// A distribution list.
+	DistributionList *DistributionList `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListDistributionsByRealtimeLogConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDistributionsByRealtimeLogConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetDistributionList sets the DistributionList field's value.
+func (s *ListDistributionsByRealtimeLogConfigOutput) SetDistributionList(v *DistributionList) *ListDistributionsByRealtimeLogConfigOutput {
+	s.DistributionList = v
 	return s
 }
 
@@ -15227,6 +16214,65 @@ func (s ListPublicKeysOutput) GoString() string {
 // SetPublicKeyList sets the PublicKeyList field's value.
 func (s *ListPublicKeysOutput) SetPublicKeyList(v *PublicKeyList) *ListPublicKeysOutput {
 	s.PublicKeyList = v
+	return s
+}
+
+type ListRealtimeLogConfigsInput struct {
+	_ struct{} `locationName:"ListRealtimeLogConfigsRequest" type:"structure"`
+
+	// Use this field when paginating results to indicate where to begin in your
+	// list of real-time log configurations. The response includes real-time log
+	// configurations in the list that occur after the marker. To get the next page
+	// of the list, set this field’s value to the value of NextMarker from the
+	// current page’s response.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of real-time log configurations that you want in the response.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListRealtimeLogConfigsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRealtimeLogConfigsInput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListRealtimeLogConfigsInput) SetMarker(v string) *ListRealtimeLogConfigsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListRealtimeLogConfigsInput) SetMaxItems(v int64) *ListRealtimeLogConfigsInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListRealtimeLogConfigsOutput struct {
+	_ struct{} `type:"structure" payload:"RealtimeLogConfigs"`
+
+	// A list of real-time log configurations.
+	RealtimeLogConfigs *RealtimeLogConfigs `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListRealtimeLogConfigsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRealtimeLogConfigsOutput) GoString() string {
+	return s.String()
+}
+
+// SetRealtimeLogConfigs sets the RealtimeLogConfigs field's value.
+func (s *ListRealtimeLogConfigsOutput) SetRealtimeLogConfigs(v *RealtimeLogConfigs) *ListRealtimeLogConfigsOutput {
+	s.RealtimeLogConfigs = v
 	return s
 }
 
@@ -17608,6 +18654,157 @@ func (s *QueryStringNames) SetQuantity(v int64) *QueryStringNames {
 	return s
 }
 
+// A real-time log configuration.
+type RealtimeLogConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of this real-time log configuration.
+	//
+	// ARN is a required field
+	ARN *string `type:"string" required:"true"`
+
+	// Contains information about the Amazon Kinesis data stream where you are sending
+	// real-time log data for this real-time log configuration.
+	//
+	// EndPoints is a required field
+	EndPoints []*EndPoint `type:"list" required:"true"`
+
+	// A list of fields that are included in each real-time log record. In an API
+	// response, the fields are provided in the same order in which they are sent
+	// to the Amazon Kinesis data stream.
+	//
+	// For more information about fields, see Real-time log configuration fields
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-fields)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// Fields is a required field
+	Fields []*string `locationNameList:"Field" type:"list" required:"true"`
+
+	// The unique name of this real-time log configuration.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The sampling rate for this real-time log configuration. The sampling rate
+	// determines the percentage of viewer requests that are represented in the
+	// real-time log data. The sampling rate is an integer between 1 and 100, inclusive.
+	//
+	// SamplingRate is a required field
+	SamplingRate *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s RealtimeLogConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RealtimeLogConfig) GoString() string {
+	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *RealtimeLogConfig) SetARN(v string) *RealtimeLogConfig {
+	s.ARN = &v
+	return s
+}
+
+// SetEndPoints sets the EndPoints field's value.
+func (s *RealtimeLogConfig) SetEndPoints(v []*EndPoint) *RealtimeLogConfig {
+	s.EndPoints = v
+	return s
+}
+
+// SetFields sets the Fields field's value.
+func (s *RealtimeLogConfig) SetFields(v []*string) *RealtimeLogConfig {
+	s.Fields = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *RealtimeLogConfig) SetName(v string) *RealtimeLogConfig {
+	s.Name = &v
+	return s
+}
+
+// SetSamplingRate sets the SamplingRate field's value.
+func (s *RealtimeLogConfig) SetSamplingRate(v int64) *RealtimeLogConfig {
+	s.SamplingRate = &v
+	return s
+}
+
+// A list of real-time log configurations.
+type RealtimeLogConfigs struct {
+	_ struct{} `type:"structure"`
+
+	// A flag that indicates whether there are more real-time log configurations
+	// than are contained in this list.
+	//
+	// IsTruncated is a required field
+	IsTruncated *bool `type:"boolean" required:"true"`
+
+	// Contains the list of real-time log configurations.
+	Items []*RealtimeLogConfig `type:"list"`
+
+	// This parameter indicates where this list of real-time log configurations
+	// begins. This list includes real-time log configurations that occur after
+	// the marker.
+	//
+	// Marker is a required field
+	Marker *string `type:"string" required:"true"`
+
+	// The maximum number of real-time log configurations requested.
+	//
+	// MaxItems is a required field
+	MaxItems *int64 `type:"integer" required:"true"`
+
+	// If there are more items in the list than are in this response, this element
+	// is present. It contains the value that you should use in the Marker field
+	// of a subsequent request to continue listing real-time log configurations
+	// where you left off.
+	NextMarker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s RealtimeLogConfigs) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RealtimeLogConfigs) GoString() string {
+	return s.String()
+}
+
+// SetIsTruncated sets the IsTruncated field's value.
+func (s *RealtimeLogConfigs) SetIsTruncated(v bool) *RealtimeLogConfigs {
+	s.IsTruncated = &v
+	return s
+}
+
+// SetItems sets the Items field's value.
+func (s *RealtimeLogConfigs) SetItems(v []*RealtimeLogConfig) *RealtimeLogConfigs {
+	s.Items = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *RealtimeLogConfigs) SetMarker(v string) *RealtimeLogConfigs {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *RealtimeLogConfigs) SetMaxItems(v int64) *RealtimeLogConfigs {
+	s.MaxItems = &v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *RealtimeLogConfigs) SetNextMarker(v string) *RealtimeLogConfigs {
+	s.NextMarker = &v
+	return s
+}
+
 // A subscription configuration for additional CloudWatch metrics.
 type RealtimeMetricsSubscriptionConfig struct {
 	_ struct{} `type:"structure"`
@@ -19639,6 +20836,115 @@ func (s *UpdatePublicKeyOutput) SetPublicKey(v *PublicKey) *UpdatePublicKeyOutpu
 	return s
 }
 
+type UpdateRealtimeLogConfigInput struct {
+	_ struct{} `locationName:"UpdateRealtimeLogConfigRequest" type:"structure" xmlURI:"http://cloudfront.amazonaws.com/doc/2020-05-31/"`
+
+	// The Amazon Resource Name (ARN) for this real-time log configuration.
+	ARN *string `type:"string"`
+
+	// Contains information about the Amazon Kinesis data stream where you are sending
+	// real-time log data.
+	EndPoints []*EndPoint `type:"list"`
+
+	// A list of fields to include in each real-time log record.
+	//
+	// For more information about fields, see Real-time log configuration fields
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-fields)
+	// in the Amazon CloudFront Developer Guide.
+	Fields []*string `locationNameList:"Field" type:"list"`
+
+	// The name for this real-time log configuration.
+	Name *string `type:"string"`
+
+	// The sampling rate for this real-time log configuration. The sampling rate
+	// determines the percentage of viewer requests that are represented in the
+	// real-time log data. You must provide an integer between 1 and 100, inclusive.
+	SamplingRate *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s UpdateRealtimeLogConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRealtimeLogConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateRealtimeLogConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateRealtimeLogConfigInput"}
+	if s.EndPoints != nil {
+		for i, v := range s.EndPoints {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "EndPoints", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetARN sets the ARN field's value.
+func (s *UpdateRealtimeLogConfigInput) SetARN(v string) *UpdateRealtimeLogConfigInput {
+	s.ARN = &v
+	return s
+}
+
+// SetEndPoints sets the EndPoints field's value.
+func (s *UpdateRealtimeLogConfigInput) SetEndPoints(v []*EndPoint) *UpdateRealtimeLogConfigInput {
+	s.EndPoints = v
+	return s
+}
+
+// SetFields sets the Fields field's value.
+func (s *UpdateRealtimeLogConfigInput) SetFields(v []*string) *UpdateRealtimeLogConfigInput {
+	s.Fields = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateRealtimeLogConfigInput) SetName(v string) *UpdateRealtimeLogConfigInput {
+	s.Name = &v
+	return s
+}
+
+// SetSamplingRate sets the SamplingRate field's value.
+func (s *UpdateRealtimeLogConfigInput) SetSamplingRate(v int64) *UpdateRealtimeLogConfigInput {
+	s.SamplingRate = &v
+	return s
+}
+
+type UpdateRealtimeLogConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A real-time log configuration.
+	RealtimeLogConfig *RealtimeLogConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateRealtimeLogConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRealtimeLogConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetRealtimeLogConfig sets the RealtimeLogConfig field's value.
+func (s *UpdateRealtimeLogConfigOutput) SetRealtimeLogConfig(v *RealtimeLogConfig) *UpdateRealtimeLogConfigOutput {
+	s.RealtimeLogConfig = v
+	return s
+}
+
 // The request to update a streaming distribution.
 type UpdateStreamingDistributionInput struct {
 	_ struct{} `locationName:"UpdateStreamingDistributionRequest" type:"structure" payload:"StreamingDistributionConfig"`
@@ -19874,6 +21180,11 @@ type ViewerCertificate struct {
 	//    * vip – The distribution accepts HTTPS connections from all viewers
 	//    including those that don’t support SNI. This is not recommended, and
 	//    results in additional monthly charges from CloudFront.
+	//
+	//    * static-ip - Do not specify this value unless your distribution has been
+	//    enabled for this feature by the CloudFront team. If you have a use case
+	//    that requires static IP addresses for a distribution, contact CloudFront
+	//    through the AWS Support Center (https://console.aws.amazon.com/support/home).
 	//
 	// If the distribution uses the CloudFront domain name such as d111111abcdef8.cloudfront.net,
 	// don’t set a value for this field.
@@ -20354,6 +21665,9 @@ const (
 
 	// SSLSupportMethodVip is a SSLSupportMethod enum value
 	SSLSupportMethodVip = "vip"
+
+	// SSLSupportMethodStaticIp is a SSLSupportMethod enum value
+	SSLSupportMethodStaticIp = "static-ip"
 )
 
 // SSLSupportMethod_Values returns all elements of the SSLSupportMethod enum
@@ -20361,6 +21675,7 @@ func SSLSupportMethod_Values() []string {
 	return []string{
 		SSLSupportMethodSniOnly,
 		SSLSupportMethodVip,
+		SSLSupportMethodStaticIp,
 	}
 }
 
