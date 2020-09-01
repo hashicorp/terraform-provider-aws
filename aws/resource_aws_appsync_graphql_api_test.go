@@ -114,7 +114,7 @@ func TestAccAWSAppsyncGraphqlApi_disappears(t *testing.T) {
 				Config: testAccAppsyncGraphqlApiConfig_AuthenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
-					testAccCheckAwsAppsyncGraphqlApiDisappears(&api1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppsyncGraphqlApi(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -748,7 +748,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_APIKey(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -780,7 +780,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_AWSIAM(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -813,7 +813,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_CognitoUserPools(t *te
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -846,7 +846,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_OpenIDConnect(t *testi
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -880,7 +880,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_Multiple(t *testing.T)
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -986,20 +986,6 @@ func testAccCheckAwsAppsyncGraphqlApiExists(name string, api *appsync.GraphqlApi
 		*api = *output.GraphqlApi
 
 		return nil
-	}
-}
-
-func testAccCheckAwsAppsyncGraphqlApiDisappears(api *appsync.GraphqlApi) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
-
-		input := &appsync.DeleteGraphqlApiInput{
-			ApiId: api.ApiId,
-		}
-
-		_, err := conn.DeleteGraphqlApi(input)
-
-		return err
 	}
 }
 
