@@ -102,7 +102,7 @@ func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
 				Config: testAccAWSWafRegionalXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &v),
-					testAccCheckAWSWafRegionalXssMatchSetDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafRegionalXssMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,7 +153,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
 						"field_to_match.#":      "1",
-						"field_to_match.0.data": "GET",
+						"field_to_match.0.data": "",
 						"field_to_match.0.type": "METHOD",
 						"text_transformation":   "HTML_ENTITY_DECODE",
 					}),
@@ -194,48 +194,6 @@ func TestAccAWSWafRegionalXssMatchSet_noTuples(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAWSWafRegionalXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
-
-		wr := newWafRegionalRetryer(conn, region)
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.UpdateXssMatchSetInput{
-				ChangeToken:   token,
-				XssMatchSetId: v.XssMatchSetId,
-			}
-
-			for _, xssMatchTuple := range v.XssMatchTuples {
-				xssMatchTupleUpdate := &waf.XssMatchSetUpdate{
-					Action: aws.String(wafregional.ChangeActionDelete),
-					XssMatchTuple: &waf.XssMatchTuple{
-						FieldToMatch:       xssMatchTuple.FieldToMatch,
-						TextTransformation: xssMatchTuple.TextTransformation,
-					},
-				}
-				req.Updates = append(req.Updates, xssMatchTupleUpdate)
-			}
-			return conn.UpdateXssMatchSet(req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error updating regional WAF XSS Match Set: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-			opts := &waf.DeleteXssMatchSetInput{
-				ChangeToken:   token,
-				XssMatchSetId: v.XssMatchSetId,
-			}
-			return conn.DeleteXssMatchSet(opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting regional WAF XSS Match Set: %s", err)
-		}
-		return nil
-	}
 }
 
 func testAccCheckAWSWafRegionalXssMatchSetExists(n string, v *waf.XssMatchSet) resource.TestCheckFunc {
@@ -362,7 +320,6 @@ resource "aws_wafregional_xss_match_set" "test" {
 
     field_to_match {
       type = "METHOD"
-      data = "GET"
     }
   }
 }
