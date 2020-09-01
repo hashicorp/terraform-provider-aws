@@ -21,7 +21,7 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccAwsAppsyncFunction_description(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, testAccGetRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					testAccCheckAwsAppsyncFunctionDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppsyncFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,34 +191,6 @@ func testAccCheckAwsAppsyncFunctionExists(name string, config *appsync.FunctionC
 		*config = *output.FunctionConfiguration
 
 		return nil
-	}
-}
-
-func testAccCheckAwsAppsyncFunctionDisappears(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
-		apiID, functionID, err := decodeAppsyncFunctionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &appsync.DeleteFunctionInput{
-			ApiId:      aws.String(apiID),
-			FunctionId: aws.String(functionID),
-		}
-
-		_, err = conn.DeleteFunction(input)
-
-		return err
 	}
 }
 

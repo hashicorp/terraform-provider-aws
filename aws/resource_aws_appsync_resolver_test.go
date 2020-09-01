@@ -57,7 +57,7 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(appsyncGraphqlApiResourceName, &api1),
 					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
-					testAccCheckAwsAppsyncResolverDisappears(&api1, &resolver1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppsyncResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -199,7 +199,7 @@ func TestAccAwsAppsyncResolver_PipelineConfig(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -226,7 +226,7 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -312,22 +312,6 @@ func testAccCheckAwsAppsyncResolverExists(name string, resolver *appsync.Resolve
 		*resolver = *output.Resolver
 
 		return nil
-	}
-}
-
-func testAccCheckAwsAppsyncResolverDisappears(api *appsync.GraphqlApi, resolver *appsync.Resolver) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
-
-		input := &appsync.DeleteResolverInput{
-			ApiId:     api.ApiId,
-			FieldName: resolver.FieldName,
-			TypeName:  resolver.TypeName,
-		}
-
-		_, err := conn.DeleteResolver(input)
-
-		return err
 	}
 }
 
