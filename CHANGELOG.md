@@ -14,6 +14,8 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_route: Add `local_gateway_id` attribute [GH-14864]
+* data-source/aws_route_table: Add `route` `local_gateway_id` attribute [GH-14864]
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
 * resource/aws_autoscaling_group: Support provider-level `ignore_tags` configuration [GH-13868]
 * resource/aws_ebs_volume: Support io2 type [GH-14894]
@@ -23,6 +25,8 @@ ENHANCEMENTS
 * resource/aws_kinesis_firehose_delivery_stream: Add `elasticsearch_configuration` `cluster_endpoint` argument [GH-12484]
 * resource/aws_kinesis_firehose_delivery_stream: Add various plan-time validations for arguments [GH-12484]
 * resource/aws_msk_configuration: Support resource in-place updates and deletion [GH-14826]
+* resource/aws_route: Add `local_gateway_id` argument [GH-14864]
+* resource/aws_route_table: Add `route` `local_gateway_id` argument [GH-14864]
 * resource/aws_wafv2_rule_group: Add `ip_set_forwarded_ip_config` configuration block to `ip_set_reference_statement` [GH-14902]
 * resource/aws_wafv2_web_acl: Add `ip_set_forwarded_ip_config` configuration block to `ip_set_reference_statement` [GH-14902]
 
