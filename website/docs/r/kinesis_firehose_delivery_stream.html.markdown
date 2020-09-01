@@ -500,6 +500,8 @@ The `parameters` array objects support the following:
 * `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
+~> **NOTE:** Parameters with default values are not stored with terraform state so appear as changes. `NumberOfRetries`(3), `RoleArn`(firehose role ARN), `BufferSizeInMBs`(3), `BufferIntervalInSeconds`(60). It is therefore recommended to include only parameters without default values.
+
 The `request_configuration` object supports the following:
 
 * `content_encoding` - (Optional) Kinesis Data Firehose uses the content encoding to compress the body of a request before sending the request to the destination. Valid values are `NONE` and `GZIP`.  Default value is `NONE`.
