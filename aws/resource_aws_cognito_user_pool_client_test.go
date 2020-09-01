@@ -30,6 +30,8 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
 				),
 			},
 			{
@@ -42,7 +44,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
+func TestAccAWSCognitoUserPoolClient_refreshTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -76,7 +78,7 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_AccessTokenValidity(t *testing.T) {
+func TestAccAWSCognitoUserPoolClient_accessTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -110,7 +112,7 @@ func TestAccAWSCognitoUserPoolClient_AccessTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_IdTokenValidity(t *testing.T) {
+func TestAccAWSCognitoUserPoolClient_idTokenValidity(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool_client.test"
@@ -137,6 +139,88 @@ func TestAccAWSCognitoUserPoolClient_IdTokenValidity(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_tokenValidityUnits(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigTokenValidityUnits(rName, "days"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "days"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "days"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigTokenValidityUnits(rName, "hours"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigTokenValidityUnitsWithTokenValidity(rName, "days"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "days"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "days"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigTokenValidityUnitsWithTokenValidity(rName, "hours"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "hours"),
 					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
 			},
@@ -540,6 +624,46 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id      = aws_cognito_user_pool.test.id
 }
 `, rName, rName, validity)
+}
+
+func testAccAWSCognitoUserPoolClientConfigTokenValidityUnits(rName, units string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name              = %[1]q
+  user_pool_id      = aws_cognito_user_pool.test.id
+
+  token_validity_units {
+    access_token  = %[2]q
+    id_token      = %[2]q
+    refresh_token = %[2]q
+  }
+}
+`, rName, units)
+}
+
+func testAccAWSCognitoUserPoolClientConfigTokenValidityUnitsWithTokenValidity(rName, units string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name              = %[1]q
+  user_pool_id      = aws_cognito_user_pool.test.id
+
+  id_token_validity = 1
+
+  token_validity_units {
+    access_token  = %[2]q
+    id_token      = %[2]q
+    refresh_token = %[2]q
+  }
+}
+`, rName, units)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_Name(rName, name string) string {
