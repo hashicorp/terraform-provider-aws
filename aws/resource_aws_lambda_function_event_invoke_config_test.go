@@ -261,6 +261,33 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_FunctionName_Arn(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	lambdaFunctionResourceName := "aws_lambda_function.test"
+	resourceName := "aws_lambda_function_event_invoke_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionNameArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "$LATEST"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -677,6 +704,15 @@ func testAccAWSLambdaFunctionEventInvokeConfigFunctionNameArn(rName string) stri
 	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.arn
+}
+`
+}
+
+func testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionNameArn(rName string) string {
+	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+resource "aws_lambda_function_event_invoke_config" "test" {
+  function_name = aws_lambda_function.test.arn
+  qualifier     = "$LATEST"
 }
 `
 }
