@@ -98,7 +98,7 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.f", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail.*", map[string]string{
 						"event_source":                "aws.config",
 						"message_type":                "ConfigurationSnapshotDeliveryCompleted",
 						"maximum_execution_frequency": "",
