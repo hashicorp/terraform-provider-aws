@@ -132,6 +132,7 @@ The following arguments are supported:
 * `user_pool_id` - (Required) The user pool the client belongs to.
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
 * `analytics_configuration` - (Optional) The Amazon Pinpoint analytics configuration for collecting metrics for this user pool.
+* `token_validity_units` - (Optional) The units in which the validity times are represented in. see [Token Validity Units](#token-validity-units).
 
 ### Analytics Configuration
 
@@ -143,7 +144,16 @@ Either `application_arn` or `application_id` is required.
 * `role_arn` - (Optional) The ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
 * `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
-## Attributes Reference
+### Token Validity Units
+
+Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `days`.
+
+* `access_token` - (Optional) A time unit in for the value in `access_token_validity`, defaults to `hours`.
+* `id_token`  - (Optional) A time unit in for the value in `id_token_validity`, defaults to `hours`.
+* `refresh_token` - (Optional) A time unit in for the value in `refresh_token_validity`, defaults to `days`.
+
+
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
