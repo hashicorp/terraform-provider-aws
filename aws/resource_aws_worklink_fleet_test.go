@@ -449,7 +449,7 @@ resource "aws_worklink_fleet" "test" {
 func testAccAWSWorkLinkFleetConfigAuditStreamArn(r string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "%s_kinesis_test"
+  name        = "AmazonWorkLink-%s_kinesis_test"
   shard_count = 1
 }
 
