@@ -16,6 +16,7 @@ import (
 func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -23,10 +24,10 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "0"),
+				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
@@ -42,6 +43,7 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -49,18 +51,18 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "0"),
+				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
 				Config: testAccAWSEmrInstanceFleetConfigZeroCount(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "0"),
+				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
@@ -76,6 +78,7 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -83,10 +86,10 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrInstanceFleetConfigEbsBasic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "1"),
+				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "1"),
 				),
 			},
 			{
@@ -102,6 +105,7 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_instance_fleet.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -109,10 +113,10 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrInstanceFleetConfigFull(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists("aws_emr_instance_fleet.task", &fleet),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "instance_type_configs.#", "2"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "2"),
-					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "2"),
+				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "2"),
 				),
 			},
 			{
