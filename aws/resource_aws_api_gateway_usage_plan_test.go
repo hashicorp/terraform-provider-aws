@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
@@ -73,6 +73,11 @@ func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicTags2(name, "key1", "value1updated", "key2", "value2"),
@@ -401,6 +406,28 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayUsagePlan_disappears(t *testing.T) {
+	var conf apigateway.UsagePlan
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	resourceName := "aws_api_gateway_usage_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlan(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -509,7 +536,7 @@ resource "aws_api_gateway_integration_response" "test" {
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "test"
@@ -521,7 +548,7 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 resource "aws_api_gateway_deployment" "foo" {
-  depends_on = ["aws_api_gateway_deployment.test", "aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_deployment.test, aws_api_gateway_integration.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "foo"

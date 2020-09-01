@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -188,7 +188,7 @@ func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
-					testAccCheckAWSAPIGatewayRestAPIDisappears(&restApi),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -645,20 +645,6 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSAPIGatewayRestAPIDisappears(restApi *apigateway.RestApi) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
-
-		input := &apigateway.DeleteRestApiInput{
-			RestApiId: restApi.Id,
-		}
-
-		_, err := conn.DeleteRestApi(input)
-
-		return err
-	}
 }
 
 func testAccAWSAPIGatewayRestAPIConfig(rName string) string {

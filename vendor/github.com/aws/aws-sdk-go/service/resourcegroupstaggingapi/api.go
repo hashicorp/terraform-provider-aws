@@ -1003,6 +1003,11 @@ func (c *ResourceGroupsTaggingAPI) TagResourcesRequest(input *TagResourcesInput)
 //    service that the resource belongs to as well as permissions for adding
 //    tags. For more information, see this list (http://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/Welcome.html).
 //
+// Do not store personally identifiable information (PII) or other confidential
+// or sensitive information in tags. We use tags to provide you with billing
+// and administration services. Tags are not intended to be used for private
+// or sensitive data.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2668,6 +2673,14 @@ const (
 	ErrorCodeInvalidParameterException = "InvalidParameterException"
 )
 
+// ErrorCode_Values returns all elements of the ErrorCode enum
+func ErrorCode_Values() []string {
+	return []string{
+		ErrorCodeInternalServiceException,
+		ErrorCodeInvalidParameterException,
+	}
+}
+
 const (
 	// GroupByAttributeTargetId is a GroupByAttribute enum value
 	GroupByAttributeTargetId = "TARGET_ID"
@@ -2679,6 +2692,15 @@ const (
 	GroupByAttributeResourceType = "RESOURCE_TYPE"
 )
 
+// GroupByAttribute_Values returns all elements of the GroupByAttribute enum
+func GroupByAttribute_Values() []string {
+	return []string{
+		GroupByAttributeTargetId,
+		GroupByAttributeRegion,
+		GroupByAttributeResourceType,
+	}
+}
+
 const (
 	// TargetIdTypeAccount is a TargetIdType enum value
 	TargetIdTypeAccount = "ACCOUNT"
@@ -2689,3 +2711,12 @@ const (
 	// TargetIdTypeRoot is a TargetIdType enum value
 	TargetIdTypeRoot = "ROOT"
 )
+
+// TargetIdType_Values returns all elements of the TargetIdType enum
+func TargetIdType_Values() []string {
+	return []string{
+		TargetIdTypeAccount,
+		TargetIdTypeOu,
+		TargetIdTypeRoot,
+	}
+}
