@@ -6,6 +6,7 @@ FEATURES
 * **New Data Source:** `aws_lex_slot_type` [GH-8916]
 * **New Data Source:** `aws_rds_orderable_db_instance` [GH-14834]
 * **New Resource:** `aws_codebuild_report_group` [GH-12573]
+* **New Resource:** `aws_db_proxy` [GH-12704]
 * **New Resource:** `aws_emr_instance_fleet` [GH-14813]
 * **New Resource:** `aws_glue_user_defined_function` [GH-12537]
 * **New Resource:** `aws_lex_slot_type` [GH-8916]
