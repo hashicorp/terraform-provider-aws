@@ -119,10 +119,10 @@ func resourceAwsAmi() *schema.Resource {
 						},
 
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  ec2.VolumeTypeStandard,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      ec2.VolumeTypeStandard,
 							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 					},

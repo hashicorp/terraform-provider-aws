@@ -392,10 +392,10 @@ func resourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 
@@ -498,9 +498,9 @@ func resourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 

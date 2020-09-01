@@ -139,9 +139,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Computed: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
