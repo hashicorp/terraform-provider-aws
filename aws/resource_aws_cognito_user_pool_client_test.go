@@ -87,10 +87,10 @@ func TestAccAWSCognitoUserPoolClient_AccessTokenValidity(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName, 60),
+				Config: testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "60"),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "5"),
 				),
 			},
 			{
@@ -100,10 +100,10 @@ func TestAccAWSCognitoUserPoolClient_AccessTokenValidity(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName, 120),
+				Config: testAccAWSCognitoUserPoolClientConfigAccessTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "120"),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "1"),
 				),
 			},
 		},
@@ -121,10 +121,10 @@ func TestAccAWSCognitoUserPoolClient_IdTokenValidity(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 60),
+				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "60"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "5"),
 				),
 			},
 			{
@@ -134,10 +134,10 @@ func TestAccAWSCognitoUserPoolClient_IdTokenValidity(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 120),
+				Config: testAccAWSCognitoUserPoolClientConfigIDTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "120"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
 			},
 		},
