@@ -38,7 +38,6 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					// email and email-json not supported
 					"application",
 					"http",
 					"https",
@@ -265,6 +264,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		Attributes: attributes,
 	}
 
+	//https://docs.aws.amazon.com/cli/latest/reference/sns/subscribe.html#options
 	if strings.Contains(protocol, "email") {
 		req.ReturnSubscriptionArn = aws.Bool(true)
 	}
