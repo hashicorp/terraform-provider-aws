@@ -256,14 +256,18 @@ func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	taskFleet := flattenInstanceFleet(fleet)[0].(map[string]interface{})
-	d.Set("name", taskFleet["name"])
-	d.Set("target_on_demand_capacity", taskFleet["target_on_demand_capacity"])
-	d.Set("target_spot_capacity", taskFleet["target_spot_capacity"])
-	d.Set("instance_type_configs", taskFleet["instance_type_configs"])
-	d.Set("launch_specifications", taskFleet["launch_specifications"])
-	d.Set("provisioned_on_demand_capacity", taskFleet["provisioned_on_demand_capacity"])
-	d.Set("provisioned_spot_capacity", taskFleet["provisioned_spot_capacity"])
+	if err := d.Set("instance_type_configs", flatteninstanceTypeConfigs(fleet.InstanceTypeSpecifications)); err != nil {
+		return fmt.Errorf("error setting instance_type_configs: %w", err)
+	}
+
+	if err := d.Set("launch_specifications", flattenLaunchSpecifications(fleet.LaunchSpecifications)); err != nil {
+		return fmt.Errorf("error setting launch_specifications: %w", err)
+	}
+	d.Set("name", fleet.Name)
+	d.Set("provisioned_on_demand_capacity", fleet.ProvisionedOnDemandCapacity)
+	d.Set("provisioned_spot_capacity", fleet.ProvisionedSpotCapacity)
+	d.Set("target_on_demand_capacity", fleet.TargetOnDemandCapacity)
+	d.Set("target_spot_capacity", fleet.TargetSpotCapacity)
 	return nil
 }
 
@@ -282,18 +286,9 @@ func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Modify EMR task fleet")
 
 	modifyConfig := &emr.InstanceFleetModifyConfig{
-		InstanceFleetId: aws.String(d.Id()),
-	}
-
-	if v, ok := d.GetOk("target_on_demand_capacity"); ok {
-		modifyConfig.TargetOnDemandCapacity = aws.Int64(int64(v.(int)))
-	} else {
-		modifyConfig.TargetOnDemandCapacity = aws.Int64(0)
-	}
-	if v, ok := d.GetOk("target_spot_capacity"); ok {
-		modifyConfig.TargetSpotCapacity = aws.Int64(int64(v.(int)))
-	} else {
-		modifyConfig.TargetSpotCapacity = aws.Int64(0)
+		InstanceFleetId:        aws.String(d.Id()),
+		TargetOnDemandCapacity: aws.Int64(int64(d.Get("target_on_demand_capacity").(int))),
+		TargetSpotCapacity:     aws.Int64(int64(d.Get("target_spot_capacity").(int))),
 	}
 
 	modifyInstanceFleetInput := &emr.ModifyInstanceFleetInput{

@@ -29,6 +29,12 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -57,6 +63,12 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -77,6 +89,12 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "1"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -96,6 +114,12 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_on_demand_capacity", "2"),
 					resource.TestCheckResourceAttr("aws_emr_instance_fleet.task", "target_spot_capacity", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -155,6 +179,17 @@ func testAccCheckAWSEmrInstanceFleetExists(n string, v *emr.InstanceFleet) resou
 		}
 		v = fleet
 		return nil
+	}
+}
+
+func testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["cluster_id"], rs.Primary.ID), nil
 	}
 }
 
