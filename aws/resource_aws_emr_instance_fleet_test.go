@@ -129,6 +129,26 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
+	var fleet emr.InstanceFleet
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_instance_fleet.task"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceFleetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEmrInstanceFleetDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).emrconn
 
