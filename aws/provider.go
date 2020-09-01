@@ -506,6 +506,7 @@ func Provider() *schema.Provider {
 			"aws_db_instance_role_association":                        resourceAwsDbInstanceRoleAssociation(),
 			"aws_db_option_group":                                     resourceAwsDbOptionGroup(),
 			"aws_db_parameter_group":                                  resourceAwsDbParameterGroup(),
+			"aws_db_proxy":                                            resourceAwsDbProxy(),
 			"aws_db_security_group":                                   resourceAwsDbSecurityGroup(),
 			"aws_db_snapshot":                                         resourceAwsDbSnapshot(),
 			"aws_db_subnet_group":                                     resourceAwsDbSubnetGroup(),
