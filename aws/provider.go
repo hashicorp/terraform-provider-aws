@@ -286,6 +286,7 @@ func Provider() *schema.Provider {
 			"aws_msk_cluster":                                dataSourceAwsMskCluster(),
 			"aws_msk_configuration":                          dataSourceAwsMskConfiguration(),
 			"aws_nat_gateway":                                dataSourceAwsNatGateway(),
+			"aws_neptune_orderable_db_instance":              dataSourceAwsNeptuneOrderableDbInstance(),
 			"aws_network_acls":                               dataSourceAwsNetworkAcls(),
 			"aws_network_interface":                          dataSourceAwsNetworkInterface(),
 			"aws_network_interfaces":                         dataSourceAwsNetworkInterfaces(),
