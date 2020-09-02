@@ -2,7 +2,7 @@
 
 Each quarter the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [core services](../CORE_SERVICES.md), and internal priorities. When community pull requests exist for a given item, we will prioritize working with the original authors to include their contributions. If the author can no longer take on the implementation, HashiCorp will complete any additional work needed. 
+We select items for inclusion in the roadmap from the Top 10 Community Issues, [core services](../CORE_SERVICES.md), and internal priorities. When community pull requests exist for a given item, we will prioritize working with the original authors to include their contributions. If the author can no longer take on the implementation, HashiCorp will complete any additional work needed.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap.
 
@@ -14,7 +14,7 @@ This quarter (May-July ‘20) we will be prioritizing the following areas of wor
 
 Milestone: [v3.0.0](https://github.com/terraform-providers/terraform-provider-aws/milestone/70)
 
-Each year the TF AWS Provider team releases a major version. [Major releases](https://www.terraform.io/docs/extend/best-practices/versioning.html#example-major-number-increments) include code removals, deprecations, and breaking changes. A corresponding “upgrade guide” will be published alongside the release. 
+Each year the TF AWS Provider team releases a major version. [Major releases](https://www.terraform.io/docs/extend/best-practices/versioning.html#example-major-number-increments) include code removals, deprecations, and breaking changes. A corresponding “upgrade guide” will be published alongside the release.
 
 We'll be updating the linked milestone as we work to finalize and complete v3.0.0.
 

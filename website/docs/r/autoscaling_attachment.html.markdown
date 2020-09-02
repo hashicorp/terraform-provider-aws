@@ -15,7 +15,7 @@ both a standalone ASG Attachment resource (describing an ASG attached to
 an ELB or ALB), and an [AutoScaling Group resource](autoscaling_group.html) with
 `load_balancers` and `target_group_arns` defined in-line. At this time you can use an ASG with in-line
 `load balancers` or `target_group_arns` in conjunction with an ASG Attachment resource, however, to prevent
-unintended resource updates, the `aws_autoscaling_group` resource must be configured 
+unintended resource updates, the `aws_autoscaling_group` resource must be configured
 to ignore changes to the `load_balancers` and `target_group_arns` arguments within a [`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations).
 
 ## Example Usage

@@ -218,7 +218,7 @@ The following arguments are supported:
 
 #### open_monitoring prometheus jmx_exporter Argument Reference
 
-* `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the JMX Exporter. 
+* `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the JMX Exporter.
 
 #### open_monitoring prometheus node_exporter Argument Reference
 
@@ -230,7 +230,7 @@ The following arguments are supported:
 
 #### logging_info broker_logs cloudwatch_logs Argument Reference
 
-* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Cloudwatch Logs. 
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Cloudwatch Logs.
 * `log_group` - (Optional) Name of the Cloudwatch Log Group to deliver logs to.
 
 #### logging_info broker_logs firehose Argument Reference
@@ -241,8 +241,8 @@ The following arguments are supported:
 #### logging_info broker_logs s3 Argument Reference
 
 * `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to S3.
-* `bucket` - (Optional) Name of the S3 bucket to deliver logs to. 
-* `prefix` - (Optional) Prefix to append to the folder name. 
+* `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
+* `prefix` - (Optional) Prefix to append to the folder name.
 
 ## Attributes Reference
 
