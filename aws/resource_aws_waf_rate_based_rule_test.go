@@ -151,6 +151,55 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9659
+func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
+	var ipset waf.IPSet
+	var before, after waf.RateBasedRule
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_waf_rate_based_rule.wafrule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRateBasedRuleConfig_changeRateLimit(ruleName, 4000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafIPSetExists("aws_waf_ipset.ipset", &ipset),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+						"negated": "false",
+						"type":    "IPMatch",
+					}),
+				),
+			},
+			{
+				Config: testAccAWSWafRateBasedRuleConfig_changeRateLimit(ruleName, 3000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafIPSetExists("aws_waf_ipset.ipset", &ipset),
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+						"negated": "false",
+						"type":    "IPMatch",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSWafRateBasedRule_noPredicates(t *testing.T) {
 	var rule waf.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
@@ -311,6 +360,33 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   }
 }
 `, name, name, name)
+}
+
+func testAccAWSWafRateBasedRuleConfig_changeRateLimit(name string, rateLimit int) string {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
+  name = "%s"
+
+  ip_set_descriptors {
+    type  = "IPV4"
+    value = "192.0.7.0/24"
+  }
+}
+
+resource "aws_waf_rate_based_rule" "wafrule" {
+  depends_on  = [aws_waf_ipset.ipset]
+  name        = "%[1]s"
+  metric_name = "%[1]s"
+  rate_key    = "IP"
+  rate_limit  = %[2]d
+
+  predicates {
+    data_id = aws_waf_ipset.ipset.id
+    negated = false
+    type    = "IPMatch"
+  }
+}
+`, name, rateLimit)
 }
 
 func testAccAWSWafRateBasedRuleConfigChangeName(name string) string {
