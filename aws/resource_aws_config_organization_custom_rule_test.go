@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -65,7 +63,7 @@ func testAccConfigOrganizationCustomRule_disappears(t *testing.T) {
 				Config: testAccConfigOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationCustomRuleExists(resourceName, &rule),
-					testAccCheckConfigOrganizationCustomRuleDisappears(&rule),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -473,24 +471,6 @@ func testAccCheckConfigOrganizationCustomRuleDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckConfigOrganizationCustomRuleDisappears(rule *configservice.OrganizationConfigRule) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).configconn
-
-		input := &configservice.DeleteOrganizationConfigRuleInput{
-			OrganizationConfigRuleName: rule.OrganizationConfigRuleName,
-		}
-
-		_, err := conn.DeleteOrganizationConfigRule(input)
-
-		if err != nil {
-			return err
-		}
-
-		return configWaitForOrganizationRuleStatusDeleteSuccessful(conn, aws.StringValue(rule.OrganizationConfigRuleName), 5*time.Minute)
-	}
 }
 
 func testAccConfigOrganizationCustomRuleConfigBase(rName string) string {
