@@ -193,7 +193,7 @@ func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		detectorID, filterName, err := parseImportedId(rs.Primary.ID)
+		detectorID, filterName, err := guardDutyFilterParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -228,7 +228,7 @@ func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilt
 			return fmt.Errorf("No GuardDuty filter is set")
 		}
 
-		detectorID, name, err := parseImportedId(rs.Primary.ID)
+		detectorID, name, err := guardDutyFilterParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -250,7 +250,7 @@ func testAccCheckAwsGuardDutyFilterExists(name string, filter *guardduty.GetFilt
 func testAccGuardDutyFilterConfig_full(startDate, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_filter" "test" {
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
   action      = "ARCHIVE"
   rank        = 1
@@ -283,7 +283,7 @@ resource "aws_guardduty_detector" "test" {
 func testAccGuardDutyFilterConfigNoop_full(startDate, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_filter" "test" {
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
   action      = "NOOP"
   description = "This is a NOOP"
@@ -317,7 +317,7 @@ resource "aws_guardduty_detector" "test" {
 func testAccGuardDutyFilterConfig_multipleTags() string {
 	return `
 resource "aws_guardduty_filter" "test" {
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
   action      = "ARCHIVE"
   rank        = 1
@@ -344,7 +344,7 @@ resource "aws_guardduty_detector" "test" {
 func testAccGuardDutyFilterConfig_update() string {
 	return `
 resource "aws_guardduty_filter" "test" {
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
   action      = "ARCHIVE"
   rank        = 1
@@ -371,7 +371,7 @@ resource "aws_guardduty_detector" "test" {
 func testAccGuardDutyFilterConfig_updateTags() string {
 	return `
 resource "aws_guardduty_filter" "test" {
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
   action      = "ARCHIVE"
   rank        = 1

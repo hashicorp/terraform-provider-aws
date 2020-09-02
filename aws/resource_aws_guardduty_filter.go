@@ -154,7 +154,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
-	d.SetId(joinGuardDutyFilterID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
+	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
 	return resourceAwsGuardDutyFilterRead(d, meta)
 }
@@ -165,7 +165,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 
 	if _, ok := d.GetOk("detector_id"); !ok {
 		// If there is no "detector_id" passed, then it's an import.
-		detectorID, name, err = parseImportedId(d.Id())
+		detectorID, name, err = guardDutyFilterParseID(d.Id())
 		if err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("rank", filter.Rank)
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	d.Set("tags", keyvaluetags.GuarddutyKeyValueTags(filter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
-	d.SetId(joinGuardDutyFilterID(detectorID, name))
+	d.SetId(guardDutyFilterCreateID(detectorID, name))
 
 	return nil
 }
@@ -222,25 +222,27 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	input := guardduty.UpdateFilterInput{
-		Action:      aws.String(d.Get("action").(string)),
-		Description: aws.String(d.Get("description").(string)),
-		DetectorId:  aws.String(d.Get("detector_id").(string)),
-		FilterName:  aws.String(d.Get("name").(string)),
-		Rank:        aws.Int64(int64(d.Get("rank").(int))),
-	}
+	if d.HasChanges("action", "description", "finding_criteria", "rank") {
+		input := guardduty.UpdateFilterInput{
+			Action:      aws.String(d.Get("action").(string)),
+			Description: aws.String(d.Get("description").(string)),
+			DetectorId:  aws.String(d.Get("detector_id").(string)),
+			FilterName:  aws.String(d.Get("name").(string)),
+			Rank:        aws.Int64(int64(d.Get("rank").(int))),
+		}
 
-	var err error
-	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
-	if err != nil {
-		return err
-	}
+		var err error
+		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+		if err != nil {
+			return err
+		}
 
-	log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
+		log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
 
-	_, err = conn.UpdateFilter(&input)
-	if err != nil {
-		return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
+		_, err = conn.UpdateFilter(&input)
+		if err != nil {
+			return fmt.Errorf("error updating GuardDuty Filter %s: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -277,14 +279,16 @@ func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func joinGuardDutyFilterID(detectorID, filterName string) string {
-	return detectorID + "_" + filterName
+const guardDutyFilterIDSeparator = ":"
+
+func guardDutyFilterCreateID(detectorID, filterName string) string {
+	return detectorID + guardDutyFilterIDSeparator + filterName
 }
 
-func parseImportedId(importedId string) (string, string, error) {
-	parts := strings.Split(importedId, "_")
+func guardDutyFilterParseID(importedId string) (string, string, error) {
+	parts := strings.Split(importedId, guardDutyFilterIDSeparator)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
+		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)
 	}
 	return parts[0], parts[1], nil
 }
