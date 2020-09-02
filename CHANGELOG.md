@@ -11,6 +11,7 @@ FEATURES
 * **New Resource:** `aws_db_proxy` [GH-12704]
 * **New Resource:** `aws_emr_instance_fleet` [GH-14813]
 * **New Resource:** `aws_glue_user_defined_function` [GH-12537]
+* **New Resource:** `aws_guardduty_filter` [GH-14876]
 * **New Resource:** `aws_lex_slot_type` [GH-8916]
 
 ENHANCEMENTS
