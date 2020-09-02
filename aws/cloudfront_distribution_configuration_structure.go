@@ -225,13 +225,18 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	cb := &cloudfront.CacheBehavior{
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
-		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
-		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	if v, ok := m["cache_policy_id"]; ok && v.(string) != "" {
+		cb.CachePolicyId = aws.String(v.(string))
+	} else {
+		cb.ForwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+		cb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
+		cb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
+		cb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
 	}
 
 	if v, ok := m["trusted_signers"]; ok {
@@ -269,7 +274,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
 	}
 
-	if len(dcb.TrustedSigners.Items) > 0 {
+	if *dcb.TrustedSigners.Quantity > 0 {
 		m["trusted_signers"] = flattenTrustedSigners(dcb.TrustedSigners)
 	}
 	if len(dcb.LambdaFunctionAssociations.Items) > 0 {
@@ -301,23 +306,28 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m["field_level_encryption_id"] = aws.StringValue(cb.FieldLevelEncryptionId)
 	m["viewer_protocol_policy"] = aws.StringValue(cb.ViewerProtocolPolicy)
 	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
-	m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
-	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
 
-	if len(cb.TrustedSigners.Items) > 0 {
+	if cb.CachePolicyId != nil && *cb.CachePolicyId != "" {
+		m["cache_policy_id"] = *cb.CachePolicyId
+	} else {
+		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
+		m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
+
+		if cb.MaxTTL != nil {
+			m["max_ttl"] = int(*cb.MaxTTL)
+		}
+		if cb.DefaultTTL != nil {
+			m["default_ttl"] = int(*cb.DefaultTTL)
+		}
+	}
+	if *cb.TrustedSigners.Quantity > 0 {
 		m["trusted_signers"] = flattenTrustedSigners(cb.TrustedSigners)
 	}
 	if len(cb.LambdaFunctionAssociations.Items) > 0 {
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(cb.LambdaFunctionAssociations)
 	}
-	if cb.MaxTTL != nil {
-		m["max_ttl"] = int(*cb.MaxTTL)
-	}
 	if cb.SmoothStreaming != nil {
 		m["smooth_streaming"] = *cb.SmoothStreaming
-	}
-	if cb.DefaultTTL != nil {
-		m["default_ttl"] = int(*cb.DefaultTTL)
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = flattenAllowedMethods(cb.AllowedMethods)
@@ -1053,7 +1063,7 @@ func flattenGeoRestriction(gr *cloudfront.GeoRestriction) map[string]interface{}
 	m := make(map[string]interface{})
 
 	m["restriction_type"] = aws.StringValue(gr.RestrictionType)
-	if gr.Items != nil {
+	if *gr.Quantity > 0 {
 		m["locations"] = schema.NewSet(schema.HashString, flattenStringList(gr.Items))
 	}
 	return m

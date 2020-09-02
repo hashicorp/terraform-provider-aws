@@ -82,23 +82,11 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   # Cache behavior with precedence 0
   ordered_cache_behavior {
-    path_pattern     = "/content/immutable/*"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = local.s3_origin_id
-
-    forwarded_values {
-      query_string = false
-      headers      = ["Origin"]
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
+    path_pattern           = "/content/immutable/*"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
+    target_origin_id       = local.s3_origin_id
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed policy to disable caching
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
   }
@@ -233,7 +221,7 @@ of several sub-resources - these resources are laid out below.
     distribution (multiples allowed).
 
 * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this
-  distribution (multiples allowed).  
+  distribution (multiples allowed).
 
 * `price_class` (Optional) - The price class for this distribution. One of
     `PriceClass_All`, `PriceClass_200`, `PriceClass_100`
@@ -280,7 +268,11 @@ of several sub-resources - these resources are laid out below.
 
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
-* `forwarded_values` (Required) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
+* `cache_policy_id` (Optional) - The unique identifier of the cache
+    policy that is attached to this cache behavior. This approach should be used to
+    replace the deprecated explicit configuration using `forwarded_values`. Conflicts with `forwarded_values`, `min_ttl`, `max_ttl` and `default_ttl`.
+
+* `forwarded_values` (Optional/Deprecated) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
     handles query strings, cookies and headers (maximum one).
 
 * `lambda_function_association` (Optional) - A config block that triggers a lambda function with
@@ -307,7 +299,7 @@ of several sub-resources - these resources are laid out below.
     CloudFront to route requests to when a request matches the path pattern
     either for a cache behavior or for the default cache behavior.
 
-* `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. 
+* `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content.
 See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 
 * `viewer_protocol_policy` (Required) - Use this element to specify the
@@ -428,7 +420,7 @@ argument should not be specified.
 
 * `s3_origin_config` - The [CloudFront S3 origin](#s3-origin-config-arguments)
     configuration information. If a custom origin is required, use
-    `custom_origin_config` instead.    
+    `custom_origin_config` instead.
 
 ##### Custom Origin Config Arguments
 
@@ -499,7 +491,7 @@ The arguments of `geo_restriction` are:
     this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 
 * `minimum_protocol_version` - The minimum version of the SSL protocol that
-    you want CloudFront to use for HTTPS connections. Can only be set if 
+    you want CloudFront to use for HTTPS connections. Can only be set if
     `cloudfront_default_certificate = false`. One of `SSLv3`, `TLSv1`,
     `TLSv1_2016`, `TLSv1.1_2016`, `TLSv1.2_2018` or `TLSv1.2_2019`. Default: `TLSv1`. **NOTE**:
     If you are using a custom certificate (specified with `acm_certificate_arn`

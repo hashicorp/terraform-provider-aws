@@ -27,6 +27,42 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 	}
 }
 
+func cacheBehaviorWithPolicyConf() map[string]interface{} {
+	return map[string]interface{}{
+		"viewer_protocol_policy":      "allow-all",
+		"target_origin_id":            "myS3Origin",
+		"cache_policy_id":             "A_POLICY_ID",
+		"min_ttl":                     0,
+		"trusted_signers":             trustedSignersConf(),
+		"lambda_function_association": lambdaFunctionAssociationsConf(),
+		"max_ttl":                     31536000,
+		"smooth_streaming":            false,
+		"default_ttl":                 86400,
+		"allowed_methods":             allowedMethodsConf(),
+		"cached_methods":              cachedMethodsConf(),
+		"compress":                    true,
+		"field_level_encryption_id":   "",
+	}
+}
+
+func cacheBehaviorWithForwardedValues() map[string]interface{} {
+	return map[string]interface{}{
+		"viewer_protocol_policy":      "allow-all",
+		"target_origin_id":            "myS3Origin",
+		"forwarded_values":            []interface{}{forwardedValuesConf()},
+		"min_ttl":                     0,
+		"trusted_signers":             trustedSignersConf(),
+		"lambda_function_association": lambdaFunctionAssociationsConf(),
+		"max_ttl":                     31536000,
+		"smooth_streaming":            false,
+		"default_ttl":                 86400,
+		"allowed_methods":             allowedMethodsConf(),
+		"cached_methods":              cachedMethodsConf(),
+		"compress":                    true,
+		"field_level_encryption_id":   "",
+	}
+}
+
 func trustedSignersConf() []interface{} {
 	return []interface{}{"1234567890EX", "1234567891EX"}
 }
@@ -306,6 +342,61 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 	}
 	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf().List())) {
 		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
+	}
+}
+
+func TestCloudFrontStructure_flattenCacheBehaviorWithPolicyId(t *testing.T) {
+	data := cacheBehaviorWithPolicyConf()
+	cb := expandCacheBehavior(data)
+	out := flattenCacheBehavior(cb)
+
+	if out == nil {
+		t.Fatalf("FlattenCacheBehavior returned nil")
+	}
+	if out["cache_policy_id"] != "A_POLICY_ID" {
+		t.Fatalf("Expected cache_policy_id to be \"A_POLICY_ID\" got %v", out["cache_policy_id"])
+	}
+	if out["forwarded_values"] != nil {
+		t.Fatalf("Expected forwarded_values to be nul, got %v", out["forwarded_values"])
+	}
+}
+
+func TestCloudFrontStructure_flattenCacheBehaviorWithForwardValues(t *testing.T) {
+	data := cacheBehaviorWithForwardedValues()
+	cb := expandCacheBehavior(data)
+	out := flattenCacheBehavior(cb)
+
+	if out == nil {
+		t.Fatalf("FlattenCacheBehavior returned nil")
+	}
+	if out["cache_policy_id"] != nil {
+		t.Fatalf("Expected cache_policy_id to be nil, got %v", out["cache_policy_id"])
+	}
+}
+
+func TestCloudFrontStructure_expandCacheBehaviorWithPolicyId(t *testing.T) {
+	data := cacheBehaviorWithPolicyConf()
+	dcb := expandCacheBehavior(data)
+	if dcb == nil {
+		t.Fatalf("expandCacheBehavior returned nil")
+	}
+	if dcb.CachePolicyId == nil {
+		t.Fatalf("Expected cache_policy_id to be \"A_POLICY_ID\" got nil value")
+	}
+	if *dcb.CachePolicyId != "A_POLICY_ID" {
+		t.Fatalf("Expected cache_policy_id to be \"A_POLICY_ID\" got %v", *dcb.CachePolicyId)
+	}
+}
+
+func TestCloudFrontStructure_expandCacheBehaviorWithForwardValues(t *testing.T) {
+
+	data := cacheBehaviorWithForwardedValues()
+	dcb := expandCacheBehavior(data)
+	if dcb == nil {
+		t.Fatalf("expandCacheBehavior returned nil")
+	}
+	if dcb.CachePolicyId != nil {
+		t.Fatalf("Expected cache_policy_id to be nul, got %v", *dcb.CachePolicyId)
 	}
 }
 

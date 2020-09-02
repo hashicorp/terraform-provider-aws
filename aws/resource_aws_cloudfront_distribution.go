@@ -66,15 +66,18 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"default_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  86400,
 						},
 						"field_level_encryption_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"cache_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -144,12 +147,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  31536000,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  0,
 						},
 						"path_pattern": {
 							Type:     schema.TypeString,
