@@ -19,7 +19,7 @@ func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"db_instance_class": {
+			"instance_class": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,7 +42,7 @@ func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"preferred_db_instance_classes": {
+			"preferred_instance_classes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -62,7 +62,7 @@ func dataSourceAwsDocdbOrderableDbInstanceRead(d *schema.ResourceData, meta inte
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
 
-	if v, ok := d.GetOk("db_instance_class"); ok {
+	if v, ok := d.GetOk("instance_class"); ok {
 		input.DBInstanceClass = aws.String(v.(string))
 	}
 
@@ -106,7 +106,7 @@ func dataSourceAwsDocdbOrderableDbInstanceRead(d *schema.ResourceData, meta inte
 
 	// preferred classes
 	var found *docdb.OrderableDBInstanceOption
-	if l := d.Get("preferred_db_instance_classes").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_instance_classes").([]interface{}); len(l) > 0 {
 		for _, elem := range l {
 			preferredInstanceClass, ok := elem.(string)
 
@@ -141,7 +141,7 @@ func dataSourceAwsDocdbOrderableDbInstanceRead(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))
 
-	d.Set("db_instance_class", found.DBInstanceClass)
+	d.Set("instance_class", found.DBInstanceClass)
 
 	var availabilityZones []string
 	for _, az := range found.AvailabilityZones {

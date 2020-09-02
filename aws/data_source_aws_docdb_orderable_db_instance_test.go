@@ -24,7 +24,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAWSDocdbOrderableDbInstanceDataSourceConfigBasic(class, engine, engineVersion, license),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "db_instance_class", class),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", license),
@@ -52,7 +52,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", license),
-					resource.TestCheckResourceAttr(dataSourceName, "db_instance_class", preferredOption),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredOption),
 				),
 			},
 		},
@@ -80,10 +80,10 @@ func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
 func testAccAWSDocdbOrderableDbInstanceDataSourceConfigBasic(class, engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
-  db_instance_class = %q
-  engine            = %q
-  engine_version    = %q
-  license_model     = %q
+  instance_class = %q
+  engine         = %q
+  engine_version = %q
+  license_model  = %q
 }
 `, class, engine, version, license)
 }
@@ -95,7 +95,7 @@ data "aws_docdb_orderable_db_instance" "test" {
   engine_version = %q
   license_model  = %q
 
-  preferred_db_instance_classes = ["db.xyz.xlarge", %q, "db.t3.small"]
+  preferred_instance_classes = ["db.xyz.xlarge", %q, "db.t3.small"]
 }
 `, engine, version, license, preferredOption)
 }

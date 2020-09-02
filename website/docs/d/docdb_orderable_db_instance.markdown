@@ -18,7 +18,7 @@ data "aws_docdb_orderable_db_instance" "test" {
   engine_version = "3.6.0"
   license_model  = "na"
 
-  preferred_db_instance_classes = ["db.r5.large", "db.r4.large", "db.t3.medium"]
+  preferred_instance_classes = ["db.r5.large", "db.r4.large", "db.t3.medium"]
 }
 ```
 
@@ -27,10 +27,10 @@ data "aws_docdb_orderable_db_instance" "test" {
 The following arguments are supported:
 
 * `engine` - (Required) DB engine. Engine values include `docdb`.
-* `db_instance_class` - (Optional) DB instance class. Examples of classes are `db.r5.12xlarge`, `db.r5.24xlarge`, `db.r5.2xlarge`, `db.r5.4xlarge`, `db.r5.large`, `db.r5.xlarge`, and `db.t3.medium`.
+* `instance_class` - (Optional) DB instance class. Examples of classes are `db.r5.12xlarge`, `db.r5.24xlarge`, `db.r5.2xlarge`, `db.r5.4xlarge`, `db.r5.large`, `db.r5.xlarge`, and `db.t3.medium`.
 * `engine_version` - (Optional) Version of the DB engine. For example, `3.6.0`.
 * `license_model` - (Optional) License model. Examples of license models are `general-public-license`, `na`, `bring-your-own-license`, and `amazon-license`.
-* `preferred_db_instance_classes` - (Optional) Ordered list of preferred DocumentDB DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
+* `preferred_instance_classes` - (Optional) Ordered list of preferred DocumentDB DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
 * `vpc` - (Optional) Boolean that indicates whether to show only VPC or non-VPC offerings.
 
 ## Attribute Reference
