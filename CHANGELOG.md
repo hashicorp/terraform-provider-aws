@@ -45,6 +45,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_autoscaling_group: Prevent unnecessary tag removal and recreation within tag updates [GH-13868]
+* resource/aws_dynamodb_table: Properly update `global_secondary_index` `non_key_attributes` values [GH-9988]
 * resource/aws_emr_cluster: Prevent recreation when `ebs_config.volumes_per_instance` is greater than 1 [GH-14858]
 * resource/aws_lambda_function_event_invoke_config: Prevent unexpected format of function resource error [GH-14851]
 * resource/aws_lightsail_instance: Prevent panic with key-only tags [GH-13868]
