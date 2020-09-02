@@ -25,9 +25,10 @@ func resourceAwsCloudTrail() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"enable_logging": {
 				Type:     schema.TypeBool,
@@ -43,12 +44,14 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Optional: true,
 			},
 			"cloud_watch_logs_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"cloud_watch_logs_group_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"include_global_service_events": {
 				Type:     schema.TypeBool,
@@ -69,6 +72,10 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sns_topic_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enable_log_file_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -86,14 +93,10 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"read_write_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  cloudtrail.ReadWriteTypeAll,
-							ValidateFunc: validation.StringInSlice([]string{
-								cloudtrail.ReadWriteTypeAll,
-								cloudtrail.ReadWriteTypeReadOnly,
-								cloudtrail.ReadWriteTypeWriteOnly,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cloudtrail.ReadWriteTypeAll,
+							ValidateFunc: validation.StringInSlice(cloudtrail.ReadWriteType_Values(), false),
 						},
 
 						"include_management_events": {
@@ -210,7 +213,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		t, err = conn.CreateTrail(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CloudTrail: %s", err)
+		return fmt.Errorf("Error creating CloudTrail: %w", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
@@ -281,6 +284,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("is_multi_region_trail", trail.IsMultiRegionTrail)
 	d.Set("is_organization_trail", trail.IsOrganizationTrail)
 	d.Set("sns_topic_name", trail.SnsTopicName)
+	d.Set("sns_topic_arn", trail.SnsTopicARN)
 	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
 
 	// TODO: Make it possible to use KMS Key names, not just ARNs
@@ -288,17 +292,18 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	// https://github.com/hashicorp/terraform/pull/3928
 	d.Set("kms_key_id", trail.KmsKeyId)
 
-	d.Set("arn", trail.TrailARN)
+	arn := aws.StringValue(trail.TrailARN)
+	d.Set("arn", arn)
 	d.Set("home_region", trail.HomeRegion)
 
-	tags, err := keyvaluetags.CloudtrailListTags(conn, *trail.TrailARN)
+	tags, err := keyvaluetags.CloudtrailListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
+		return fmt.Errorf("error listing tags for Cloudtrail (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	logstatus, err := cloudTrailGetLoggingStatus(conn, trail.Name)
@@ -395,33 +400,33 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		t, err = conn.UpdateTrail(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating CloudTrail: %s", err)
+		return fmt.Errorf("Error updating CloudTrail: %w", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating ECR Repository (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
 	if d.HasChange("enable_logging") {
 		log.Printf("[DEBUG] Updating logging on CloudTrail: %s", input)
-		err := cloudTrailSetLogging(conn, d.Get("enable_logging").(bool), *input.Name)
+		err := cloudTrailSetLogging(conn, d.Get("enable_logging").(bool), aws.StringValue(input.Name))
 		if err != nil {
 			return err
 		}
 	}
 
-	if !d.IsNewResource() && d.HasChange("event_selector") {
+	if d.HasChange("event_selector") {
 		log.Printf("[DEBUG] Updating event selector on CloudTrail: %s", input)
 		if err := cloudTrailSetEventSelectors(conn, d); err != nil {
 			return err
 		}
 	}
 
-	if !d.IsNewResource() && d.HasChange("insight_selector") {
+	if d.HasChange("insight_selector") {
 		log.Printf("[DEBUG] Updating insight selector on CloudTrail: %s", input)
 		if err := cloudTrailSetInsightSelectors(conn, d); err != nil {
 			return err
@@ -450,10 +455,10 @@ func cloudTrailGetLoggingStatus(conn *cloudtrail.CloudTrail, id *string) (bool, 
 	}
 	resp, err := conn.GetTrailStatus(GetTrailStatusOpts)
 	if err != nil {
-		return false, fmt.Errorf("Error retrieving logging status of CloudTrail (%s): %s", *id, err)
+		return false, fmt.Errorf("Error retrieving logging status of CloudTrail (%s): %w", aws.StringValue(id), err)
 	}
 
-	return *resp.IsLogging, err
+	return aws.BoolValue(resp.IsLogging), err
 }
 
 func cloudTrailSetLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) error {
@@ -465,21 +470,15 @@ func cloudTrailSetLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) 
 			Name: aws.String(id),
 		}
 		if _, err := conn.StartLogging(StartLoggingOpts); err != nil {
-			return fmt.Errorf(
-				"Error starting logging on CloudTrail (%s): %s",
-				id, err)
+			return fmt.Errorf("Error starting logging on CloudTrail (%s): %w", id, err)
 		}
 	} else {
-		log.Printf(
-			"[DEBUG] Stopping logging on CloudTrail (%s)",
-			id)
+		log.Printf("[DEBUG] Stopping logging on CloudTrail (%s)", id)
 		StopLoggingOpts := &cloudtrail.StopLoggingInput{
 			Name: aws.String(id),
 		}
 		if _, err := conn.StopLogging(StopLoggingOpts); err != nil {
-			return fmt.Errorf(
-				"Error stopping logging on CloudTrail (%s): %s",
-				id, err)
+			return fmt.Errorf("Error stopping logging on CloudTrail (%s): %w", id, err)
 		}
 	}
 
@@ -496,7 +495,7 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	if len(eventSelectors) == 0 {
 		es := &cloudtrail.EventSelector{
 			IncludeManagementEvents: aws.Bool(true),
-			ReadWriteType:           aws.String("All"),
+			ReadWriteType:           aws.String(cloudtrail.ReadWriteTypeAll),
 			DataResources:           make([]*cloudtrail.DataResource, 0),
 		}
 		eventSelectors = append(eventSelectors, es)
@@ -504,12 +503,12 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
-		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	_, err := conn.PutEventSelectors(input)
 	if err != nil {
-		return fmt.Errorf("Error set event selector on CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error set event selector on CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -560,7 +559,8 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 &&
+		aws.StringValue(configured[0].ReadWriteType) == cloudtrail.ReadWriteTypeAll {
 		return eventSelectors
 	}
 
@@ -599,12 +599,12 @@ func cloudTrailSetInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.Resour
 	input.InsightSelectors = insightSelector
 
 	if err := input.Validate(); err != nil {
-		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	_, err := conn.PutInsightSelectors(input)
 	if err != nil {
-		return fmt.Errorf("Error set insight selector on CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error set insight selector on CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	return nil
