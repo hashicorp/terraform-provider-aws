@@ -5,7 +5,7 @@
 - [Pull Requests](#pull-requests)
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
-            - [Go Default Version Update](#go-default-version-update)        
+            - [Go Default Version Update](#go-default-version-update)
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [golangci-lint Updates](#golangci-lint-updates)
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
