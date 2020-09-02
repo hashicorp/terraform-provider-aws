@@ -747,7 +747,7 @@ resource "aws_redshift_cluster" "example" {
 ### Import Change
 
 Previously, importing this resource resulted in an `aws_route` resource for each route, in
-addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
+addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table`
 resource, with in-line routes, to the state.
 
 ## Resource: aws_route53_record

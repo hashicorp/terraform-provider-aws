@@ -400,7 +400,7 @@ The `rate_based_statement` block supports the following arguments:
 
 * `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `FORWARDED_IP` or `IP`. Default: `IP`.
 * `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
-* `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address. 
+* `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 
 ### Regex Pattern Set Reference Statement
@@ -424,7 +424,7 @@ The `rule_group_reference_statement` block supports the following arguments:
 
 ### Size Constraint Statement
 
-A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in 
+A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in
 the URI counts as one character.
 
 The `size_constraint_statement` block supports the following arguments:

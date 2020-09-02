@@ -185,7 +185,7 @@ In addition to all arguments above, the following attributes are exported:
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `platform_version` - The platform version for the cluster.
-* `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`. 
+* `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Additional nested attributes:
     * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.

@@ -117,10 +117,10 @@ The following attributes are exported:
 
 * `id` - The unique identifier of the instance fleet.
 
-* `provisioned_on_demand_capacity` The number of On-Demand units that have been provisioned for the instance 
+* `provisioned_on_demand_capacity` The number of On-Demand units that have been provisioned for the instance
 fleet to fulfill TargetOnDemandCapacity. This provisioned capacity might be less than or greater than TargetOnDemandCapacity.
 
-* `provisioned_spot_capacity` The number of Spot units that have been provisioned for this instance fleet 
+* `provisioned_spot_capacity` The number of Spot units that have been provisioned for this instance fleet
 to fulfill TargetSpotCapacity. This provisioned capacity might be less than or greater than TargetSpotCapacity.
 
 * `status` The current status of the instance fleet.

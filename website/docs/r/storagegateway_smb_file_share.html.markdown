@@ -46,7 +46,7 @@ The following arguments are supported:
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
 * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
 * `authentication` - (Optional) The authentication method that users use to access the file share. Defaults to `ActiveDirectory`. Valid values: `ActiveDirectory`, `GuestAccess`.
-* `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch Log Group used for the audit logs. 
+* `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch Log Group used for the audit logs.
 * `default_storage_class` - (Optional) The default storage class for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`. Valid values: `S3_STANDARD`, `S3_STANDARD_IA`, `S3_ONEZONE_IA`.
 * `guess_mime_type_enabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `invalid_user_list` - (Optional) A list of users in the Active Directory that are not allowed to access the file share. Only valid if `authentication` is set to `ActiveDirectory`.

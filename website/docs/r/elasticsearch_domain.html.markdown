@@ -215,7 +215,7 @@ The following arguments are supported:
    Note that the values for these configuration options must be strings (wrapped in quotes) or they
    may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch
    domain on every apply.
-* `advanced_security_options` - (Optional) Options for [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html). See below for more details. 
+* `advanced_security_options` - (Optional) Options for [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html). See below for more details.
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
 * `node_to_node_encryption` - (Optional) Node-to-node encryption options. See below.

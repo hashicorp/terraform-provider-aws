@@ -140,7 +140,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Crawler name
-* `arn` - The ARN of the crawler 
+* `arn` - The ARN of the crawler
 
 ## Import
 

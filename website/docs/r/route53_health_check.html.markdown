@@ -100,8 +100,8 @@ The following arguments are supported:
 * `disabled` - (Optional) A boolean value that stops Route 53 from performing health checks. When set to true, Route 53 will do the following depending on the type of health check:
     * For health checks that check the health of endpoints, Route5 53 stops submitting requests to your application, server, or other resource.
     * For calculated health checks, Route 53 stops aggregating the status of the referenced health checks.
-    * For health checks that monitor CloudWatch alarms, Route 53 stops monitoring the corresponding CloudWatch metrics. 
-    
+    * For health checks that monitor CloudWatch alarms, Route 53 stops monitoring the corresponding CloudWatch metrics.
+
     ~> **Note:** After you disable a health check, Route 53 considers the status of the health check to always be healthy. If you configured DNS failover, Route 53 continues to route traffic to the corresponding resources. If you want to stop routing traffic to a resource, change the value of `invert_healthcheck`.
 * `enable_sni` - (Optional) A boolean value that indicates whether Route53 should send the `fqdn` to the endpoint when performing the health check. This defaults to AWS' defaults: when the `type` is "HTTPS" `enable_sni` defaults to `true`, when `type` is anything else `enable_sni` defaults to `false`.
 * `child_healthchecks` - (Optional) For a specified parent health check, a list of HealthCheckId values for the associated child health checks.
