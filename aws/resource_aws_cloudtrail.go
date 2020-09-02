@@ -268,7 +268,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if trail == nil {
-		log.Printf("[WARN] CloudTrail (%s) not found", d.Id())
+		log.Printf("[WARN] CloudTrail (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
