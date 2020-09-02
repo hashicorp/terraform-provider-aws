@@ -22,6 +22,7 @@ ENHANCEMENTS
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
 * resource/aws_ami: Support `io2` value for `volume_type` argument plan-time validation [GH-14906]
 * resource/aws_autoscaling_group: Support provider-level `ignore_tags` configuration [GH-13868]
+* resource/aws_cloudtrail: Add `insight_selector` configuration block [GH-12390]
 * resource/aws_cur_report_definition: Add `refresh_closed_reports` and `report_versioning` arguments [GH-12428]
 * resource/aws_cur_report_definition: Support `ATHENA` value in `additional_artifacts` argument plan-time validation [GH-12428]
 * resource/aws_cur_report_definition: Support `Parquet` value in `compression` and `format` argument plan-time validations [GH-12428]
