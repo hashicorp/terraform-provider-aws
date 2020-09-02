@@ -324,7 +324,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				RouteTableId: aws.String(d.Id()),
 			}
 
-			if s := m["ipv6_cidr_block"].(string); s != "" {
+			if s, ok := m["ipv6_cidr_block"].(string); ok && s != "" {
 				deleteOpts.DestinationIpv6CidrBlock = aws.String(s)
 
 				log.Printf(
@@ -332,7 +332,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 					d.Id(), m["ipv6_cidr_block"].(string))
 			}
 
-			if s := m["cidr_block"].(string); s != "" {
+			if s, ok := m["cidr_block"].(string); ok && s != "" {
 				deleteOpts.DestinationCidrBlock = aws.String(s)
 
 				log.Printf(
@@ -358,43 +358,43 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				RouteTableId: aws.String(d.Id()),
 			}
 
-			if s := m["transit_gateway_id"].(string); s != "" {
+			if s, ok := m["transit_gateway_id"].(string); ok && s != "" {
 				opts.TransitGatewayId = aws.String(s)
 			}
 
-			if s := m["vpc_peering_connection_id"].(string); s != "" {
+			if s, ok := m["vpc_peering_connection_id"].(string); ok && s != "" {
 				opts.VpcPeeringConnectionId = aws.String(s)
 			}
 
-			if s := m["network_interface_id"].(string); s != "" {
+			if s, ok := m["network_interface_id"].(string); ok && s != "" {
 				opts.NetworkInterfaceId = aws.String(s)
 			}
 
-			if s := m["instance_id"].(string); s != "" {
+			if s, ok := m["instance_id"].(string); ok && s != "" {
 				opts.InstanceId = aws.String(s)
 			}
 
-			if s := m["ipv6_cidr_block"].(string); s != "" {
+			if s, ok := m["ipv6_cidr_block"].(string); ok && s != "" {
 				opts.DestinationIpv6CidrBlock = aws.String(s)
 			}
 
-			if s := m["cidr_block"].(string); s != "" {
+			if s, ok := m["cidr_block"].(string); ok && s != "" {
 				opts.DestinationCidrBlock = aws.String(s)
 			}
 
-			if s := m["gateway_id"].(string); s != "" {
+			if s, ok := m["gateway_id"].(string); ok && s != "" {
 				opts.GatewayId = aws.String(s)
 			}
 
-			if s := m["egress_only_gateway_id"].(string); s != "" {
+			if s, ok := m["egress_only_gateway_id"].(string); ok && s != "" {
 				opts.EgressOnlyInternetGatewayId = aws.String(s)
 			}
 
-			if s := m["nat_gateway_id"].(string); s != "" {
+			if s, ok := m["nat_gateway_id"].(string); ok && s != "" {
 				opts.NatGatewayId = aws.String(s)
 			}
 
-			if s := m["local_gateway_id"].(string); s != "" {
+			if s, ok := m["local_gateway_id"].(string); ok && s != "" {
 				opts.LocalGatewayId = aws.String(s)
 			}
 
