@@ -513,6 +513,7 @@ func Provider() *schema.Provider {
 			"aws_cloudhsm_v2_cluster":                                 resourceAwsCloudHsmV2Cluster(),
 			"aws_cloudhsm_v2_hsm":                                     resourceAwsCloudHsmV2Hsm(),
 			"aws_cognito_resource_server":                             resourceAwsCognitoResourceServer(),
+			"aws_cloudwatch_composite_alarm":                          resourceAwsCloudWatchCompositeAlarm(),
 			"aws_cloudwatch_metric_alarm":                             resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                                resourceAwsCloudWatchDashboard(),
 			"aws_codedeploy_app":                                      resourceAwsCodeDeployApp(),
