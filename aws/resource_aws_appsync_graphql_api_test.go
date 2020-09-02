@@ -1063,7 +1063,7 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_appsync_graphql_api" "test" {
@@ -1071,7 +1071,7 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 
   log_config {
-    cloudwatch_logs_role_arn = "${aws_iam_role.test.arn}"
+    cloudwatch_logs_role_arn = aws_iam_role.test.arn
     field_log_level          = %q
   }
 }
@@ -1103,7 +1103,7 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_appsync_graphql_api" "test" {
@@ -1111,9 +1111,9 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 
   log_config {
-    cloudwatch_logs_role_arn = "${aws_iam_role.test.arn}"
-	field_log_level          = "ALL"
-	exclude_verbose_content  = %t
+    cloudwatch_logs_role_arn = aws_iam_role.test.arn
+    field_log_level          = "ALL"
+    exclude_verbose_content  = %t
   }
 }
 `, rName, rName, excludeVerboseContent)
@@ -1187,7 +1187,7 @@ resource "aws_appsync_graphql_api" "test" {
   user_pool_config {
     aws_region     = %q
     default_action = "ALLOW"
-    user_pool_id   = "${aws_cognito_user_pool.test.id}"
+    user_pool_id   = aws_cognito_user_pool.test.id
   }
 }
 `, rName, rName, awsRegion)
@@ -1205,7 +1205,7 @@ resource "aws_appsync_graphql_api" "test" {
 
   user_pool_config {
     default_action = %q
-    user_pool_id   = "${aws_cognito_user_pool.test.id}"
+    user_pool_id   = aws_cognito_user_pool.test.id
   }
 }
 `, rName, rName, defaultAction)
@@ -1284,9 +1284,9 @@ resource "aws_appsync_graphql_api" "test" {
 
   additional_authentication_provider {
     authentication_type = "AMAZON_COGNITO_USER_POOLS"
-    
+
     user_pool_config {
-      user_pool_id = "${aws_cognito_user_pool.test.id}"
+      user_pool_id = aws_cognito_user_pool.test.id
     }
   }
 }
@@ -1318,7 +1318,7 @@ resource "aws_cognito_user_pool" "test" {
 
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name = %q
+  name                = %q
 
   additional_authentication_provider {
     authentication_type = "AWS_IAM"
@@ -1326,9 +1326,9 @@ resource "aws_appsync_graphql_api" "test" {
 
   additional_authentication_provider {
     authentication_type = "AMAZON_COGNITO_USER_POOLS"
-    
+
     user_pool_config {
-      user_pool_id = "${aws_cognito_user_pool.test.id}"
+      user_pool_id = aws_cognito_user_pool.test.id
     }
   }
 

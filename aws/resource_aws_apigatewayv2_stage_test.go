@@ -1075,7 +1075,7 @@ resource "aws_apigatewayv2_api" "test" {
 func testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName string) string {
 	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 }
 `, rName)
@@ -1084,7 +1084,7 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_basicHttp(rName string) string {
 	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 }
 `, rName)
@@ -1093,7 +1093,7 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_defaultHttpStage(rName string) string {
 	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + `
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = "$default"
 }
 `
@@ -1102,13 +1102,13 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_autoDeployHttp(rName string, autoDeploy bool) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_route" "test" {
-  api_id    = "${aws_apigatewayv2_api.test.id}"
+  api_id    = aws_apigatewayv2_api.test.id
   route_key = "GET /test"
   target    = "integrations/${aws_apigatewayv2_integration.test.id}"
 }
 
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   auto_deploy = %[2]t
@@ -1135,9 +1135,9 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
-  role = "${aws_iam_role.test.id}"
+  role = aws_iam_role.test.id
 
-policy = <<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [{
@@ -1158,7 +1158,7 @@ EOF
 }
 
 resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = "${aws_iam_role.test.arn}"
+  cloudwatch_role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -1166,11 +1166,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   access_log_settings {
-    destination_arn = "${aws_cloudwatch_log_group.test.arn}"
+    destination_arn = aws_cloudwatch_log_group.test.arn
     format          = %[2]q
   }
 
@@ -1186,10 +1186,10 @@ resource "aws_api_gateway_client_certificate" "test" {
 }
 
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
-  client_certificate_id = "${aws_api_gateway_client_certificate.test.id}"
+  client_certificate_id = aws_api_gateway_client_certificate.test.id
   description           = "Test stage"
 }
 `, rName)
@@ -1202,7 +1202,7 @@ resource "aws_api_gateway_client_certificate" "test" {
 }
 
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   description = "Test stage updated"
@@ -1215,7 +1215,7 @@ func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsWebSocket(rName strin
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   default_route_settings {
@@ -1234,7 +1234,7 @@ func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsWebSocketUpdated(rNam
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   default_route_settings {
@@ -1253,7 +1253,7 @@ func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsHttp(rName string) st
 		testAccAWSAPIGatewayV2StageConfig_apiHttp(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   default_route_settings {
@@ -1270,7 +1270,7 @@ func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsHttpUpdated(rName str
 		testAccAWSAPIGatewayV2StageConfig_apiHttp(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   default_route_settings {
@@ -1284,10 +1284,10 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_deployment(rName string) string {
 	return testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
-  deployment_id = "${aws_apigatewayv2_deployment.test.id}"
+  deployment_id = aws_apigatewayv2_deployment.test.id
 }
 `, rName)
 }
@@ -1297,7 +1297,7 @@ func testAccAWSAPIGatewayV2StageConfig_routeSettingsWebSocket(rName string) stri
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   route_settings {
@@ -1322,7 +1322,7 @@ func testAccAWSAPIGatewayV2StageConfig_routeSettingsWebSocketUpdated(rName strin
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   route_settings {
@@ -1350,7 +1350,7 @@ func testAccAWSAPIGatewayV2StageConfig_routeSettingsHttp(rName string) string {
 		testAccAWSAPIGatewayV2StageConfig_apiHttp(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   route_settings {
@@ -1369,7 +1369,7 @@ func testAccAWSAPIGatewayV2StageConfig_routeSettingsHttpUpdated(rName string) st
 		testAccAWSAPIGatewayV2StageConfig_apiHttp(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   route_settings {
@@ -1385,7 +1385,7 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_stageVariables(rName string) string {
 	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   stage_variables = {
@@ -1399,7 +1399,7 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_tags(rName string) string {
 	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
-  api_id = "${aws_apigatewayv2_api.test.id}"
+  api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   tags = {

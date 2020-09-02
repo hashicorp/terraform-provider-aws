@@ -994,9 +994,9 @@ resource "aws_apigatewayv2_api" "test" {
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
-  body = <<EOF
+  body          = <<EOF
 {
   "openapi": "3.0.1",
   "info": {
@@ -1024,9 +1024,9 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPIYaml(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
-  body = <<EOF
+  body          = <<EOF
 ---
 openapi: 3.0.1
 info:
@@ -1048,7 +1048,7 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPIYaml_corsConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
   cors_configuration {
     allow_methods = ["delete"]
@@ -1081,9 +1081,9 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPIYaml_corsConfigurationUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
-	protocol_type = "HTTP"
-  body = <<EOF
+  name          = "%s"
+  protocol_type = "HTTP"
+  body          = <<EOF
 ---
 openapi: 3.0.1
 info:
@@ -1110,9 +1110,9 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPIYaml_corsConfigurationUpdated2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
-	protocol_type = "HTTP"
-	cors_configuration {
+  name          = "%s"
+  protocol_type = "HTTP"
+  cors_configuration {
     allow_methods = ["put", "get"]
     allow_origins = ["https://www.google.de", "https://www.example.com"]
   }
@@ -1143,9 +1143,9 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPIYaml_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
-    tags = {
+  tags = {
     Key1 = "Value1"
     Key2 = "Value2"
   }
@@ -1174,7 +1174,7 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_OpenAPIYaml_tagsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
   tags = {
     Key1 = "Value1U"
@@ -1207,9 +1207,9 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_UpdatedOpenAPIYaml(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
-  body = <<EOF
+  body          = <<EOF
 ---
 openapi: 3.0.1
 info:
@@ -1231,11 +1231,11 @@ EOF
 func testAccAWSAPIGatewayV2ApiConfig_UpdatedOpenAPI2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name = "%s"
+  name          = "%s"
   protocol_type = "HTTP"
-  version = "2017-04-21T04:08:08Z"
-  description = "description test"
-  body = <<EOF
+  version       = "2017-04-21T04:08:08Z"
+  description   = "description test"
+  body          = <<EOF
 {
   "openapi": "3.0.1",
   "info": {

@@ -199,10 +199,10 @@ func testAccAWSAppsyncFunctionConfig(r1, r2, region string) string {
 %[1]s
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[2]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
 	"method": "GET",
@@ -212,7 +212,8 @@ resource "aws_appsync_function" "test" {
 	}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 	$ctx.result.body
 #else
@@ -220,7 +221,6 @@ EOF
 #end
 EOF
 }
-
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }
 
@@ -229,11 +229,11 @@ func testAccAWSAppsyncFunctionConfigDescription(r1, r2, region, description stri
 %[1]s
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[2]s"
-	description = "%[3]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  description              = "%[3]s"
+  request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
 	"method": "GET",
@@ -243,7 +243,8 @@ resource "aws_appsync_function" "test" {
 	}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 	$ctx.result.body
 #else
@@ -251,7 +252,6 @@ EOF
 #end
 EOF
 }
-
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2, description)
 }
 
@@ -260,10 +260,10 @@ func testAccAWSAppsyncFunctionConfigResponseMappingTemplate(r1, r2, region strin
 %[1]s
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[2]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
 	"method": "GET",
@@ -273,7 +273,8 @@ resource "aws_appsync_function" "test" {
 	}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 	$ctx.result.body
 #else
@@ -281,6 +282,5 @@ EOF
 #end
 EOF
 }
-
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }

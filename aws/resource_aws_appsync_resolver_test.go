@@ -343,7 +343,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "HTTP"
 
@@ -353,10 +353,10 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
-  data_source = "${aws_appsync_datasource.test.name}"
+  data_source = aws_appsync_datasource.test.name
 
   request_template = <<EOF
 {
@@ -408,7 +408,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test_ds_1" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = "test_ds_1"
   type   = "HTTP"
 
@@ -418,7 +418,7 @@ resource "aws_appsync_datasource" "test_ds_1" {
 }
 
 resource "aws_appsync_datasource" "test_ds_2" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = "test_ds_2"
   type   = "HTTP"
 
@@ -428,10 +428,10 @@ resource "aws_appsync_datasource" "test_ds_2" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
-  data_source = "${aws_appsync_datasource.%s.name}"
+  data_source = aws_appsync_datasource.%s.name
 
   request_template = <<EOF
 {
@@ -483,7 +483,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "HTTP"
 
@@ -493,10 +493,10 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
-  data_source = "${aws_appsync_datasource.test.name}"
+  data_source = aws_appsync_datasource.test.name
 
   request_template = <<EOF
 {
@@ -548,7 +548,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "HTTP"
 
@@ -558,10 +558,10 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
-  data_source = "${aws_appsync_datasource.test.name}"
+  data_source = aws_appsync_datasource.test.name
 
   request_template = <<EOF
 {
@@ -647,7 +647,7 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
   name   = %q
   type   = "HTTP"
 
@@ -664,9 +664,9 @@ resource "aws_appsync_datasource" "test" {
 func testAccAppsyncResolver_pipelineConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
-	authentication_type = "API_KEY"
-	name                = "%[1]s"
-	schema              = <<EOF
+  authentication_type = "API_KEY"
+  name                = "%[1]s"
+  schema              = <<EOF
 type Mutation {
 		putPost(id: ID!, title: String!): Post
 }
@@ -688,20 +688,20 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	name        = "%[1]s"
-	type        = "HTTP"
+  api_id = aws_appsync_graphql_api.test.id
+  name   = "%[1]s"
+  type   = "HTTP"
 
-	http_config {
-		endpoint = "http://example.com"
-	}
+  http_config {
+    endpoint = "http://example.com"
+  }
 }
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[1]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[1]s"
+  request_mapping_template = <<EOF
 {
 		"version": "2018-05-29",
 		"method": "GET",
@@ -711,7 +711,8 @@ resource "aws_appsync_function" "test" {
 		}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 		$ctx.result.body
 #else
@@ -721,11 +722,11 @@ EOF
 }
 
 resource "aws_appsync_resolver" "test" {
-	api_id           = "${aws_appsync_graphql_api.test.id}"
-	field            = "singlePost"
-	type             = "Query"
-	kind					   = "PIPELINE"
-	request_template = <<EOF
+  api_id           = aws_appsync_graphql_api.test.id
+  field            = "singlePost"
+  type             = "Query"
+  kind             = "PIPELINE"
+  request_template = <<EOF
 {
 		"version": "2018-05-29",
 		"method": "GET",
@@ -735,7 +736,8 @@ resource "aws_appsync_resolver" "test" {
 		}
 }
 EOF
-	response_template = <<EOF
+
+  response_template = <<EOF
 #if($ctx.result.statusCode == 200)
 		$ctx.result.body
 #else
@@ -743,9 +745,9 @@ EOF
 #end
 EOF
 
-	pipeline_config {
-		functions = ["${aws_appsync_function.test.function_id}"]
-	}
+  pipeline_config {
+    functions = [aws_appsync_function.test.function_id]
+  }
 }
 
 `, rName)
@@ -778,9 +780,9 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = "%[1]s"
-  type        = "HTTP"
+  api_id = aws_appsync_graphql_api.test.id
+  name   = "%[1]s"
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
@@ -788,11 +790,11 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
+  api_id           = aws_appsync_graphql_api.test.id
   field            = "singlePost"
   type             = "Query"
   kind             = "UNIT"
-  data_source      = "${aws_appsync_datasource.test.name}"
+  data_source      = aws_appsync_datasource.test.name
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -803,6 +805,7 @@ resource "aws_appsync_resolver" "test" {
     }
 }
 EOF
+
   response_template = <<EOF
 #if($ctx.result.statusCode == 200)
     $ctx.result.body
@@ -814,7 +817,7 @@ EOF
   caching_config {
     caching_keys = [
       "$context.identity.sub",
-      "$context.arguments.id"
+      "$context.arguments.id",
     ]
     ttl = 60
   }

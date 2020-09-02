@@ -152,7 +152,7 @@ func testAccAWSAMIFromInstanceConfig(rName string) string {
 resource "aws_ami_from_instance" "test" {
   name               = %[1]q
   description        = "Testing Terraform aws_ami_from_instance resource"
-  source_instance_id = "${aws_instance.test.id}"
+  source_instance_id = aws_instance.test.id
 }
 `, rName))
 }
@@ -164,7 +164,7 @@ func testAccAWSAMIFromInstanceConfigTags1(rName, tagKey1, tagValue1 string) stri
 resource "aws_ami_from_instance" "test" {
   name               = %[1]q
   description        = "Testing Terraform aws_ami_from_instance resource"
-  source_instance_id = "${aws_instance.test.id}"
+  source_instance_id = aws_instance.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -180,7 +180,7 @@ func testAccAWSAMIFromInstanceConfigTags2(rName, tagKey1, tagValue1, tagKey2, ta
 resource "aws_ami_from_instance" "test" {
   name               = %[1]q
   description        = "Testing Terraform aws_ami_from_instance resource"
-  source_instance_id = "${aws_instance.test.id}"
+  source_instance_id = aws_instance.test.id
 
   tags = {
     %[2]q = %[3]q

@@ -170,11 +170,11 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_model" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  name = "%s"
-  description = "a test schema"
+  rest_api_id  = aws_api_gateway_rest_api.test.id
+  name         = "%s"
+  description  = "a test schema"
   content_type = "application/json"
-  schema = <<EOF
+  schema       = <<EOF
 {
   "type": "object"
 }

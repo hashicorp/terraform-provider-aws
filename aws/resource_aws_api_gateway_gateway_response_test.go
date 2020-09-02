@@ -155,7 +155,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
   status_code   = "401"
   response_type = "UNAUTHORIZED"
 
@@ -177,7 +177,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
   status_code   = "477"
   response_type = "UNAUTHORIZED"
 
