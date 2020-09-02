@@ -1574,7 +1574,7 @@ func testAccAWSCloudTrailConfig_insightSelector(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
-  s3_bucket_name = "${aws_s3_bucket.test.id}"
+  s3_bucket_name = aws_s3_bucket.test.id
 
 
   insight_selector {

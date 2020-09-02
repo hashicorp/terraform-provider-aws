@@ -175,11 +175,10 @@ For **data_resource** the following attributes are supported.
 * `values` (Required) - A list of ARN for the specified S3 buckets and object prefixes..
 
 ### Insight Selector Arguments
+
 For **insight_selector** the following attributes are supported.
 
 * `insight_type` (Optional) - The type of insights to log on a trail. In this release, only `ApiCallRateInsight` is supported as an insight type.
-
-
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

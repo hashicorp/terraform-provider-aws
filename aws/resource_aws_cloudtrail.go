@@ -139,11 +139,9 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"insight_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								cloudtrail.InsightTypeApiCallRateInsight,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudtrail.InsightType_Values(), false),
 						},
 					},
 				},
@@ -327,7 +325,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		if !isAWSErr(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
-			return err
+			return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
 		}
 	}
 	if insightSelectors != nil {
