@@ -15,6 +15,7 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_outposts_outpost: Add `arn` argument [GH-14967]
 * data-source/aws_route: Add `local_gateway_id` attribute [GH-14864]
 * data-source/aws_route_table: Add `route` `local_gateway_id` attribute [GH-14864]
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
