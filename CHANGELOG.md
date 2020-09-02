@@ -15,12 +15,17 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_cur_report_definition: Add `refresh_closed_reports` and `report_versioning` attributes [GH-12428]
 * data-source/aws_outposts_outpost: Add `arn` argument [GH-14967]
 * data-source/aws_route: Add `local_gateway_id` attribute [GH-14864]
 * data-source/aws_route_table: Add `route` `local_gateway_id` attribute [GH-14864]
 * resource/aws_acm_certificate: Provide additional plan-time validation for `subject_alternative_names` argument values [GH-14782]
 * resource/aws_ami: Support `io2` value for `volume_type` argument plan-time validation [GH-14906]
 * resource/aws_autoscaling_group: Support provider-level `ignore_tags` configuration [GH-13868]
+* resource/aws_cur_report_definition: Add `refresh_closed_reports` and `report_versioning` arguments [GH-12428]
+* resource/aws_cur_report_definition: Support `ATHENA` value in `additional_artifacts` argument plan-time validation [GH-12428]
+* resource/aws_cur_report_definition: Support `Parquet` value in `compression` and `format` argument plan-time validations [GH-12428]
+* resource/aws_cur_report_definition: Support `MONTHLY` value in `time_unit` argument plan-time validation [GH-12428]
 * resource/aws_ebs_volume: Support io2 type [GH-14894]
 * resource/aws_ec2_client_vpn_endpoint: Support `authentication_options` `type` argument `federated-authentication` value and new `saml_provider_arn` argument [GH-14171]
 * resource/aws_emr_cluster: Add `core_instance_fleet` and `master_instance_fleet` configuration blocks [GH-14788]
