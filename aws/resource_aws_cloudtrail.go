@@ -52,6 +52,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
+				RequiredWith: []string{"cloud_watch_logs_role_arn"},
 			},
 			"include_global_service_events": {
 				Type:     schema.TypeBool,
