@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -79,7 +78,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	streamResourceName := "aws_kinesis_stream.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
@@ -88,15 +87,15 @@ func TestAccAWSCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint.*", map[string]string{
 						"stream_type":             "Kinesis",
 						"kinesis_stream_config.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.role_arn", roleResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.stream_arn", streamResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.role_arn", roleResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.stream_arn", streamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "fields.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sampling_rate", strconv.Itoa(samplingRate)),
 				),
@@ -117,7 +116,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
@@ -145,7 +144,7 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	stream2ResourceName := "aws_kinesis_stream.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
@@ -154,15 +153,15 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint.*", map[string]string{
 						"stream_type":             "Kinesis",
 						"kinesis_stream_config.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.role_arn", role1ResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.stream_arn", stream1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.role_arn", role1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.stream_arn", stream1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "fields.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sampling_rate", strconv.Itoa(samplingRate1)),
 				),
@@ -172,16 +171,16 @@ func TestAccAWSCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
 					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint.*", map[string]string{
 						"stream_type":             "Kinesis",
 						"kinesis_stream_config.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.role_arn", role2ResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.stream_arn", stream2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.role_arn", role2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint.*.kinesis_stream_config.0.stream_arn", stream2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "fields.#", "3"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "cs-host"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "sc-status"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "cs-host"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "sc-status"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sampling_rate", strconv.Itoa(samplingRate2)),
 				),
