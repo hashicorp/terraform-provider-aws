@@ -104,6 +104,7 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 			"tags":                       testAccAWSCloudTrail_tags,
 			"eventSelector":              testAccAWSCloudTrail_event_selector,
 			"insightSelector":            testAccAWSCloudTrail_insight_selector,
+			"disappears":                 testAccAWSCloudTrail_disappears,
 		},
 	}
 
@@ -542,7 +543,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "event_selector.1.data_resource.0.values.1", regexp.MustCompile(`^arn:[^:]+:s3:::.+/tf2$`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "event_selector.1.data_resource.1.values.0", regexp.MustCompile(`^arn:[^:]+:lambda:.+:tf-test-trail-event-select-\d+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_selector.1.data_resource.1.values.0", "aws_lambda_function.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 				),
@@ -581,6 +582,28 @@ func testAccAWSCloudTrail_insight_selector(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAWSCloudTrail_disappears(t *testing.T) {
+	var trail cloudtrail.Trail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudTrail(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
