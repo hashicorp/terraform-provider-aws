@@ -54,6 +54,7 @@ BUG FIXES
 * resource/aws_mq_configuration: Prevent additional revision creation with `tags` only updates [GH-14850]
 * resource/aws_opsworks_stack: Suppress equivalent `custom_json` differences [GH-14886]
 * resource/aws_rds_cluster_endpoint: Increase creation timeout to 30 minutes [GH-14862]
+* resource/aws_route53_resolver_rule: Correct handling for single period (`.`) value in `domain_name` argument [GH-15015]
 * resource/aws_route53_zone_association: Correctly handle zones with over 100 VPC associations [GH-14885]
 * resource/aws_waf_rate_based_rule: Properly update `rate_limit` value [GH-14964]
 * resource/aws_workspaces_workspace: Prevent error when `workspace_properties` `running_mode` is set to `ALWAYS_ON` [GH-13976]
