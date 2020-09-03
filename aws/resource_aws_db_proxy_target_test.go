@@ -75,7 +75,7 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 }
 
 func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
-	var v rds.DBProxy
+	var v rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,7 +86,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 			{
 				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyExists(resourceName, &v),
+					testAccCheckAWSDBProxyTargetExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,15 +103,21 @@ func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
+		dbProxyName, _, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		opts := rds.DescribeDBProxyTargetsInput{
+			DBProxyName: aws.String(dbProxyName),
+		}
+
 		// Try to find the Group
-		resp, err := conn.DescribeDBProxyTargets(
-			&rds.DescribeDBProxyTargetsInput{
-				DBProxyName: aws.String(rs.Primary.ID),
-			})
+		resp, err := conn.DescribeDBProxyTargets(&opts)
 
 		if err == nil {
 			if len(resp.Targets) != 0 &&
-				*resp.Targets[0].RdsResourceId == rs.Primary.ID {
+				*resp.Targets[0].RdsResourceId == rdsResourceId {
 				return fmt.Errorf("DB Proxy Target Group still exists")
 			}
 		}
@@ -137,8 +143,13 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
+		dbProxyName, _, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		opts := rds.DescribeDBProxyTargetsInput{
-			DBProxyName: aws.String(rs.Primary.ID),
+			DBProxyName: aws.String(dbProxyName),
 		}
 
 		resp, err := conn.DescribeDBProxyTargets(&opts)
@@ -148,7 +159,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 		}
 
 		if len(resp.Targets) != 1 ||
-			*resp.Targets[0].RdsResourceId != rs.Primary.ID {
+			*resp.Targets[0].RdsResourceId != rdsResourceId {
 			return fmt.Errorf("DB Proxy Target not found")
 		}
 
@@ -307,9 +318,11 @@ resource "aws_db_instance" "test" {
   db_subnet_group_name = aws_db_subnet_group.test.id
   allocated_storage    = 20
   engine               = "mysql"
+  engine_version       = "5.7"
   instance_class       = "db.t2.micro"
   password             = "testtest"
   username             = "test"
+  skip_final_snapshot  = true
 
   tags = {
     Name = "%[1]s"
@@ -330,8 +343,10 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier   = "%[1]s"
   db_subnet_group_name = aws_db_subnet_group.test.id
   engine               = "aurora-mysql"
+  engine_version       = "5.7.mysql_aurora.2.03.2"
   master_username      = "test"
   master_password      = "testtest"
+  skip_final_snapshot  = true
 
   tags = {
     Name = "%[1]s"
