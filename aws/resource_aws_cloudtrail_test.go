@@ -459,8 +459,8 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 
 func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 	var trail cloudtrail.Trail
-	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -469,7 +469,7 @@ func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_include_global_service_events(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_include_global_service_events(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
@@ -485,8 +485,9 @@ func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 }
 
 func testAccAWSCloudTrail_event_selector(t *testing.T) {
-	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	var trail cloudtrail.Trail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -495,8 +496,9 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_eventSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
@@ -513,16 +515,18 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudTrailConfig_eventSelectorReadWriteType(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_eventSelectorReadWriteType(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "WriteOnly"),
 				),
 			},
 			{
-				Config: testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_eventSelectorModified(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
@@ -544,8 +548,9 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudTrailConfig_eventSelectorNone(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "0"),
 				),
 			},
@@ -554,6 +559,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 }
 
 func testAccAWSCloudTrail_insight_selector(t *testing.T) {
+	var trail cloudtrail.Trail
 	resourceName := "aws_cloudtrail.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -566,6 +572,7 @@ func testAccAWSCloudTrail_insight_selector(t *testing.T) {
 			{
 				Config: testAccAWSCloudTrailConfig_insightSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
 				),
@@ -619,8 +626,8 @@ func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestC
 		if err != nil {
 			return err
 		}
-		if *resp.IsLogging != desired {
-			return fmt.Errorf("Expected logging status %t, given %t", desired, *resp.IsLogging)
+		if aws.BoolValue(resp.IsLogging) != desired {
+			return fmt.Errorf("Expected logging status %t, given %t", desired, aws.BoolValue(resp.IsLogging))
 		}
 
 		return nil
@@ -643,32 +650,13 @@ func testAccCheckAWSCloudTrailDestroy(s *terraform.State) error {
 
 		if err == nil {
 			if len(resp.TrailList) != 0 &&
-				*resp.TrailList[0].Name == rs.Primary.ID {
+				aws.StringValue(resp.TrailList[0].Name) == rs.Primary.ID {
 				return fmt.Errorf("CloudTrail still exists: %s", rs.Primary.ID)
 			}
 		}
 	}
 
 	return nil
-}
-
-func testAccCheckCloudTrailLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
-		input := cloudtrail.ListTagsInput{
-			ResourceIdList: []*string{trail.TrailARN},
-		}
-		out, err := conn.ListTags(&input)
-		if err != nil {
-			return err
-		}
-		log.Printf("[DEBUG] Received CloudTrail tags during test: %s", out)
-		if len(out.ResourceTagList) > 0 {
-			*tags = out.ResourceTagList[0].TagsList
-		}
-		log.Printf("[DEBUG] Loading CloudTrail tags into a var: %s", *tags)
-		return nil
-	}
 }
 
 func testAccAWSCloudTrailConfigBase(rName string) string {
@@ -1268,7 +1256,6 @@ resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar-%[1]d"
   s3_bucket_name                = aws_s3_bucket.foo.id
   include_global_service_events = false
-}
 
 data "aws_partition" "current" {}
 
@@ -1347,8 +1334,8 @@ resource "aws_cloudtrail" "foobar" {
       type = "AWS::S3::Object"
 
       values = [
-        "${aws_s3_bucket.bar.arn}/foobar",
-        "${aws_s3_bucket.bar.arn}/baz",
+        "${aws_s3_bucket.test2.arn}/foobar",
+        "${aws_s3_bucket.test2.arn}/baz",
       ]
     }
   }
@@ -1405,7 +1392,6 @@ resource "aws_cloudtrail" "foobar" {
     read_write_type           = "WriteOnly"
     include_management_events = true
   }
-}
 
 data "aws_partition" "current" {}
 
@@ -1457,8 +1443,8 @@ resource "aws_cloudtrail" "foobar" {
       type = "AWS::S3::Object"
 
       values = [
-        "${aws_s3_bucket.bar.arn}/foobar",
-        "${aws_s3_bucket.bar.arn}/baz",
+        "${aws_s3_bucket.test2.arn}/foobar",
+        "${aws_s3_bucket.test2.arn}/baz",
       ]
     }
   }
@@ -1471,8 +1457,8 @@ resource "aws_cloudtrail" "foobar" {
       type = "AWS::S3::Object"
 
       values = [
-        "${aws_s3_bucket.bar.arn}/tf1",
-        "${aws_s3_bucket.bar.arn}/tf2",
+        "${aws_s3_bucket.test2.arn}/tf1",
+        "${aws_s3_bucket.test2.arn}/tf2",
       ]
     }
 
@@ -1480,7 +1466,7 @@ resource "aws_cloudtrail" "foobar" {
       type = "AWS::Lambda::Function"
 
       values = [
-        aws_lambda_function.lambda_function_test.arn,
+        aws_lambda_function.test.arn,
       ]
     }
   }
@@ -1545,7 +1531,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
-resource "aws_lambda_function" "lambda_function_test" {
+resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "tf-test-trail-event-select-%[1]d"
   role          = aws_iam_role.iam_for_lambda.arn
@@ -1599,7 +1585,7 @@ POLICY
 }
 
 func testAccAWSCloudTrailConfig_insightSelector(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAWSCloudTrailConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
@@ -1608,7 +1594,6 @@ resource "aws_cloudtrail" "test" {
   insight_selector {
     insight_type = "ApiCallRateInsight"
   }
-}
 
 data "aws_partition" "current" {}
 
