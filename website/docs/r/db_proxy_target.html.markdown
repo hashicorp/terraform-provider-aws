@@ -51,7 +51,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 resource "aws_db_proxy_target" "example" {
   db_proxy_name          = aws_db_proxy.example.db_proxy_name
   target_group_name      = aws_db_proxy_default_target_group.example.name
-  db_instance_identifier = aws_db_instance.example.name
+  db_instance_identifier = aws_db_instance.example.id
   # db_cluster_identifier  = ""
 }
 ```
@@ -62,8 +62,8 @@ The following arguments are supported:
 
 * `db_proxy_name` - (Required, Forces new resource) The name of the DB proxy.
 * `target_group_name` - (Required, Forces new resource) The name of the target group.
-* `db_instance_identifier` - (Optional, Forces new resource) 
-* `db_cluster_identifier` - (Optional, Forces new resource)  
+* `db_instance_identifier` - (Optional, Forces new resource) DB instance identifier.
+* `db_cluster_identifier` - (Optional, Forces new resource) DB cluster identifier.
 
 **NOTE:** Either `db_instance_identifier` or `db_cluster_identifier` should be specified and both should not be specified together
 
