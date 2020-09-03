@@ -382,10 +382,10 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 
 func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	var trail cloudtrail.Trail
-	cloudTrailRandInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resourceName := "aws_cloudtrail.foobar"
-	kmsResourceName := "aws_kms_key.foo"
+	resourceName := "aws_cloudtrail.test"
+	kmsResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -394,7 +394,7 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_kmsKey(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
@@ -414,10 +414,8 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 
 func testAccAWSCloudTrail_tags(t *testing.T) {
 	var trail cloudtrail.Trail
-	var trailTags []*cloudtrail.Tag
-	var trailTagsModified []*cloudtrail.Tag
-	cloudTrailRandInt := acctest.RandInt()
-	resourceName := "aws_cloudtrail.foobar"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -426,15 +424,11 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_tags(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					testAccCheckCloudTrailLoadTags(&trail, &trailTags),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
-					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -443,26 +437,20 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudTrailConfig_tagsModified(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					testAccCheckCloudTrailLoadTags(&trail, &trailTagsModified),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Moo", "boom"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
-					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSCloudTrailConfig_tagsModifiedAgain(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckCloudTrailLoadTags(&trail, &trailTagsModified),
-					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -1192,7 +1180,11 @@ resource "aws_cloudtrail" "foobar" {
   name                          = "tf-acc-trail-log-validation-test-%[1]d"
   s3_bucket_name                = aws_s3_bucket.foo.id
   include_global_service_events = true
-  kms_key_id                    = aws_kms_key.foo.arn
+  kms_key_id                    = aws_kms_key.test.arn
+
+  depends_on = [aws_s3_bucket_policy.test]
+}
+`, rName)
 }
 
 resource "aws_s3_bucket" "foo" {
@@ -1267,9 +1259,8 @@ resource "aws_s3_bucket" "foo" {
     }
   ]
 }
-POLICY
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
-`
 
 func testAccAWSCloudTrailConfig_include_global_service_events(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
