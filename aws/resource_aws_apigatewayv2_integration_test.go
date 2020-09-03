@@ -554,7 +554,7 @@ resource "aws_lb" "test" {
 
   internal           = true
   load_balancer_type = "network"
-  subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets            = aws_subnet.test.*.id
 
   tags = {
     Name = %[1]q
@@ -565,7 +565,7 @@ resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 80
   protocol = "TCP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   health_check {
     port     = 80
@@ -578,12 +578,12 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.test.arn}"
+  load_balancer_arn = aws_lb.test.arn
   port              = "80"
   protocol          = "TCP"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -593,7 +593,7 @@ resource "aws_lb_listener" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_basic(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "MOCK"
 }
 `
@@ -602,7 +602,7 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttp(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
 
   connection_type               = "INTERNET"
@@ -628,7 +628,7 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_integrationTypeHttpUpdated(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
 
   connection_type               = "INTERNET"
@@ -641,8 +641,8 @@ resource "aws_apigatewayv2_integration" "test" {
   timeout_milliseconds          = 51
 
   request_parameters = {
-	"integration.request.header.x-userid" = "'value2'"
-	"integration.request.path.op"         = "'value3'"
+    "integration.request.header.x-userid" = "'value2'"
+    "integration.request.path.op"         = "'value3'"
   }
 
   request_templates = {
@@ -663,20 +663,20 @@ data "aws_caller_identity" "current" {}
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
   runtime       = "nodejs10.x"
 }
 
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "AWS"
 
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
-  credentials_arn           = "${data.aws_caller_identity.current.arn}"
+  credentials_arn           = data.aws_caller_identity.current.arn
   description               = "Test Lambda"
-  integration_uri           = "${aws_lambda_function.test.invoke_arn}"
+  integration_uri           = aws_lambda_function.test.invoke_arn
   passthrough_behavior      = "WHEN_NO_MATCH"
 }
 `, rName))
@@ -692,19 +692,19 @@ data "aws_caller_identity" "current" {}
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
   runtime       = "nodejs10.x"
 }
 
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "AWS_PROXY"
 
-  connection_type  = "INTERNET"
-  credentials_arn  = "${data.aws_caller_identity.current.arn}"
-  description      = "Test Lambda"
-  integration_uri  = "${aws_lambda_function.test.invoke_arn}"
+  connection_type = "INTERNET"
+  credentials_arn = data.aws_caller_identity.current.arn
+  description     = "Test Lambda"
+  integration_uri = aws_lambda_function.test.invoke_arn
 
   payload_format_version = "2.0"
 }
@@ -714,7 +714,7 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
 
   integration_method = "GET"
@@ -728,14 +728,14 @@ func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttp(rName string) string {
 		testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
 
   connection_type      = "VPC_LINK"
-  connection_id        = "${aws_apigatewayv2_vpc_link.test.id}"
+  connection_id        = aws_apigatewayv2_vpc_link.test.id
   description          = "Test private integration"
   integration_method   = "GET"
-  integration_uri      = "${aws_lb_listener.test.arn}"
+  integration_uri      = aws_lb_listener.test.arn
   timeout_milliseconds = 5001
 
   tls_config {
@@ -750,14 +750,14 @@ func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpUpdated(rName string) st
 		testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
 
   connection_type      = "VPC_LINK"
-  connection_id        = "${aws_apigatewayv2_vpc_link.test.id}"
+  connection_id        = aws_apigatewayv2_vpc_link.test.id
   description          = "Test private integration updated"
   integration_method   = "POST"
-  integration_uri      = "${aws_lb_listener.test.arn}"
+  integration_uri      = aws_lb_listener.test.arn
   timeout_milliseconds = 4999
 
   tls_config {
@@ -789,9 +789,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.10.0.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -802,7 +802,7 @@ resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
-  subnets            = ["${aws_subnet.test.id}"]
+  subnets            = [aws_subnet.test.id]
 
   tags = {
     Name = %[1]q
@@ -811,21 +811,21 @@ resource "aws_lb" "test" {
 
 resource "aws_api_gateway_vpc_link" "test" {
   name        = %[1]q
-  target_arns = ["${aws_lb.test.arn}"]
+  target_arns = [aws_lb.test.arn]
 }
 
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
 
-  connection_id                 = "${aws_api_gateway_vpc_link.test.id}"
-  connection_type               = "VPC_LINK"
-  content_handling_strategy     = "CONVERT_TO_TEXT"
-  description                   = "Test VPC Link"
-  integration_method            = "PUT"
-  integration_uri               = "http://www.example.net"
-  passthrough_behavior          = "NEVER"
-  timeout_milliseconds          = 12345
+  connection_id             = aws_api_gateway_vpc_link.test.id
+  connection_type           = "VPC_LINK"
+  content_handling_strategy = "CONVERT_TO_TEXT"
+  description               = "Test VPC Link"
+  integration_method        = "PUT"
+  integration_uri           = "http://www.example.net"
+  passthrough_behavior      = "NEVER"
+  timeout_milliseconds      = 12345
 }
 `, rName))
 }

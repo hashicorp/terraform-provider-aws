@@ -722,7 +722,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 resource "aws_acm_certificate" "cert" {
   domain_name               = "%s.terraformtesting.com"
-  certificate_authority_arn = "${aws_acmpca_certificate_authority.test.arn}"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
 `, rName)
 }
@@ -732,7 +732,7 @@ func testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlte
 resource "aws_acm_certificate" "cert" {
   domain_name               = "%s"
   subject_alternative_names = [%s]
-  validation_method = "%s"
+  validation_method         = "%s"
 }
 `, domainName, subjectAlternativeNames, validationMethod)
 }
@@ -779,8 +779,8 @@ resource "aws_acm_certificate" "test" {
 func testAccAcmCertificateConfigPrivateKey(certificate, privateKey, chain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  certificate_body =  "%[1]s"
-  private_key      =  "%[2]s"
+  certificate_body  = "%[1]s"
+  private_key       = "%[2]s"
   certificate_chain = "%[3]s"
 }
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey), tlsPemEscapeNewlines(chain))
@@ -792,7 +792,7 @@ resource "aws_acm_certificate" "cert" {
   domain_name       = "%s"
   validation_method = "%s"
   options {
-	  certificate_transparency_logging_preference = "DISABLED"
+    certificate_transparency_logging_preference = "DISABLED"
   }
 }
 `, domainName, validationMethod)

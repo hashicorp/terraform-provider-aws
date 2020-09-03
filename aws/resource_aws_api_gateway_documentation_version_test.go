@@ -179,7 +179,7 @@ func testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName string
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
   version     = "%s"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   depends_on  = [aws_api_gateway_documentation_part.test]
 }
 
@@ -189,7 +189,7 @@ resource "aws_api_gateway_documentation_part" "test" {
   }
 
   properties  = "{\"description\":\"Terraform Acceptance Test\"}"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 
 resource "aws_api_gateway_rest_api" "test" {
@@ -202,7 +202,7 @@ func testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, s
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
   version     = "%s"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   description = "%s"
   depends_on  = [aws_api_gateway_documentation_part.test]
 }
@@ -213,33 +213,33 @@ resource "aws_api_gateway_documentation_part" "test" {
   }
 
   properties  = "{\"description\":\"Terraform Acceptance Test\"}"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "400"
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.co.uk"
@@ -247,23 +247,23 @@ resource "aws_api_gateway_integration" "test" {
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_integration.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "first"
   depends_on  = [aws_api_gateway_integration_response.test]
 }
 
 resource "aws_api_gateway_stage" "test" {
   stage_name            = "%s"
-  rest_api_id           = "${aws_api_gateway_rest_api.test.id}"
-  deployment_id         = "${aws_api_gateway_deployment.test.id}"
-  documentation_version = "${aws_api_gateway_documentation_version.test.version}"
+  rest_api_id           = aws_api_gateway_rest_api.test.id
+  deployment_id         = aws_api_gateway_deployment.test.id
+  documentation_version = aws_api_gateway_documentation_version.test.version
 }
 
 resource "aws_api_gateway_rest_api" "test" {

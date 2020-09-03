@@ -133,6 +133,7 @@ resource "aws_subnet" "primary" {
     Name = "tf-testacc-%s-primary"
   }
 }
+
 resource "aws_subnet" "secondary" {
   vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[1]
@@ -238,6 +239,7 @@ resource "aws_subnet" "foo" {
     Name = "tf-acc-directory-service-directory-connector-foo"
   }
 }
+
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[1]
