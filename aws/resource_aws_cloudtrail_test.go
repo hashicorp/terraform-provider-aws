@@ -144,6 +144,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", s3ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 				),
 			},
 			{
@@ -157,8 +158,10 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "prefix"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", s3ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -221,7 +224,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 					// AWS will create the trail with logging turned off.
 					// Test that "enable_logging" default works.
 					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -235,7 +238,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					testAccCheckCloudTrailLoggingEnabled(resourceName, false),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -244,7 +247,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -268,7 +271,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -277,7 +280,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "true"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -291,7 +294,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -315,7 +318,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "true"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -329,7 +332,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -339,7 +342,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 
 func testAccAWSCloudTrail_logValidation(t *testing.T) {
 	var trail cloudtrail.Trail
-	cloudTrailRandInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudtrail.foobar"
 
 	resource.Test(t, resource.TestCase{
@@ -349,12 +352,12 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_logValidation(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_logValidation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, true, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -364,12 +367,12 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudTrailConfig_logValidationModified(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_logValidationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -396,7 +399,7 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
 				),
 			},
@@ -430,7 +433,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					testAccCheckCloudTrailLoadTags(&trail, &trailTags),
 					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -448,7 +451,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Moo", "boom"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -458,7 +461,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckCloudTrailLoadTags(&trail, &trailTagsModified),
-					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
 			},
@@ -630,37 +633,6 @@ func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestC
 		}
 		if *resp.IsLogging != desired {
 			return fmt.Errorf("Expected logging status %t, given %t", desired, *resp.IsLogging)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckCloudTrailLogValidationEnabled(n string, desired bool, trail *cloudtrail.Trail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if trail.LogFileValidationEnabled == nil {
-			return fmt.Errorf("No LogFileValidationEnabled attribute present in trail: %s", trail)
-		}
-
-		if *trail.LogFileValidationEnabled != desired {
-			return fmt.Errorf("Expected log validation status %t, given %t", desired,
-				*trail.LogFileValidationEnabled)
-		}
-
-		// local state comparison
-		enabled, ok := rs.Primary.Attributes["enable_log_file_validation"]
-		if !ok {
-			return fmt.Errorf("No enable_log_file_validation attribute defined for %s, expected %t",
-				n, desired)
-		}
-		desiredInString := fmt.Sprintf("%t", desired)
-		if enabled != desiredInString {
-			return fmt.Errorf("Expected log validation status %s, saved %s", desiredInString, enabled)
 		}
 
 		return nil
@@ -1096,8 +1068,8 @@ POLICY
 `, cloudTrailRandInt)
 }
 
-func testAccAWSCloudTrailConfig_logValidation(cloudTrailRandInt int) string {
-	return fmt.Sprintf(`
+func testAccAWSCloudTrailConfig_logValidation(rName string) string {
+	return testAccAWSCloudTrailConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-acc-trail-log-validation-test-%[1]d"
   s3_bucket_name                = aws_s3_bucket.foo.id
@@ -1142,8 +1114,8 @@ POLICY
 `, cloudTrailRandInt)
 }
 
-func testAccAWSCloudTrailConfig_logValidationModified(cloudTrailRandInt int) string {
-	return fmt.Sprintf(`
+func testAccAWSCloudTrailConfig_logValidationModified(rName string) string {
+	return testAccAWSCloudTrailConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-acc-trail-log-validation-test-%[1]d"
   s3_bucket_name                = aws_s3_bucket.foo.id
