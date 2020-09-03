@@ -271,7 +271,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 }
 
 func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if needsFunctionCodeUpdate(d) {
+	if needsFunctionCodeUpdate(d) || d.HasChange("publish") {
 		d.SetNewComputed("last_modified")
 		publish := d.Get("publish").(bool)
 		if publish {
@@ -924,7 +924,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	publish := d.Get("publish").(bool)
-	if publish && (codeUpdate || configUpdate) {
+	if publish && (codeUpdate || configUpdate || d.HasChange("publish")) {
 		versionReq := &lambda.PublishVersionInput{
 			FunctionName: aws.String(d.Id()),
 		}
