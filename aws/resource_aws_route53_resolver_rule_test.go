@@ -111,6 +111,64 @@ func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsRoute53ResolverRule_justDotDomainName(t *testing.T) {
+	var rule route53resolver.ResolverRule
+	resourceName := "aws_route53_resolver_rule.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ResolverRuleConfig("."),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "."),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
+					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
+	var rule route53resolver.ResolverRule
+	resourceName := "aws_route53_resolver_rule.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ResolverRuleConfig("example.com."),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
+					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
@@ -387,6 +445,15 @@ func testAccCheckRoute53ResolverRuleExists(n string, rule *route53resolver.Resol
 
 		return nil
 	}
+}
+
+func testAccRoute53ResolverRuleConfig(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "example" {
+  domain_name = %[1]q
+  rule_type   = "SYSTEM"
+}
+`, domainName)
 }
 
 const testAccRoute53ResolverRuleConfig_basicNoTags = `
