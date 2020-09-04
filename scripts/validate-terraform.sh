@@ -81,6 +81,9 @@ rules=(
     "--disable-rule=aws_datasync_location_nfs_invalid_subdirectory"
     "--disable-rule=aws_datasync_task_invalid_name"
     "--disable-rule=aws_db_instance_default_parameter_group"
+    "--disable-rule=aws_dlm_lifecycle_policy_invalid_description"
+    "--disable-rule=aws_dynamodb_global_table_invalid_name"
+    "--disable-rule=aws_dynamodb_table_invalid_stream_view_type"
     "--disable-rule=aws_dynamodb_table_invalid_name"
     "--disable-rule=aws_ecr_repository_invalid_name"
     "--disable-rule=aws_elasticsearch_domain_invalid_domain_name"
@@ -134,7 +137,6 @@ while read -r filename ; do
             echo "$tflint_output"
             echo
             exit_code=1
-            exit $exit_code
         fi
     done < <( $TERRAFMT_CMD blocks --fmtcompat --json "$filename" | jq --compact-output '.blocks[]?' )
 done
