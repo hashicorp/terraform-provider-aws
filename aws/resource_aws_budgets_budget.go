@@ -42,16 +42,9 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				ForceNew: true,
 			},
 			"budget_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					budgets.BudgetTypeCost,
-					budgets.BudgetTypeRiCoverage,
-					budgets.BudgetTypeRiUtilization,
-					budgets.BudgetTypeSavingsPlansCoverage,
-					budgets.BudgetTypeSavingsPlansUtilization,
-					budgets.BudgetTypeUsage,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(budgets.BudgetType_Values(), false),
 			},
 			"limit_amount": {
 				Type:     schema.TypeString,
@@ -136,14 +129,9 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				Default:  "2087-06-15_00:00",
 			},
 			"time_unit": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					budgets.TimeUnitAnnually,
-					budgets.TimeUnitDaily,
-					budgets.TimeUnitMonthly,
-					budgets.TimeUnitQuarterly,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(budgets.TimeUnit_Values(), false),
 			},
 			"cost_filters": {
 				Type:     schema.TypeMap,
@@ -157,33 +145,23 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"comparison_operator": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								budgets.ComparisonOperatorEqualTo,
-								budgets.ComparisonOperatorGreaterThan,
-								budgets.ComparisonOperatorLessThan,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(budgets.ComparisonOperator_Values(), false),
 						},
 						"threshold": {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},
 						"threshold_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								budgets.ThresholdTypeAbsoluteValue,
-								budgets.ThresholdTypePercentage,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(budgets.ThresholdType_Values(), false),
 						},
 						"notification_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								budgets.NotificationTypeActual,
-								budgets.NotificationTypeForecasted,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(budgets.NotificationType_Values(), false),
 						},
 						"subscriber_email_addresses": {
 							Type:     schema.TypeSet,
