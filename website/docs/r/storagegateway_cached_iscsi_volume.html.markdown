@@ -63,6 +63,8 @@ The following arguments are supported:
 * `volume_size_in_bytes` - (Required) The size of the volume in bytes.
 * `snapshot_id` - (Optional) The snapshot ID of the snapshot to restore as the new cached volume. e.g. `snap-1122aabb`.
 * `source_volume_arn` - (Optional) The ARN for an existing volume. Specifying this ARN makes the new volume into an exact copy of the specified existing volume's latest recovery point. The `volume_size_in_bytes` value for this new volume must be equal to or larger than the size of the existing volume, in bytes.
+* `kms_encrypted` - (Optional) Set to `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3.
+* `kms_key` - (Optional) The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server side encryption. Is required when `kms_encrypted` is set.
 * `tags` - (Optional) Key-value map of resource tags
 
 ## Attribute Reference
