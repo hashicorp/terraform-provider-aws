@@ -2067,7 +2067,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   ttl {
-    attribute_name = "${%[2]t ? "TestTTL" : ""}"
+    attribute_name = %[2]t ? "TestTTL" : ""
     enabled        = %[2]t
   }
 }
@@ -2143,10 +2143,10 @@ func testAccAWSDynamoDbTableConfigReplica0(rName string) string {
 		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name            = %[1]q
-  hash_key        = "TestTableHashKey"
-  billing_mode    = "PAY_PER_REQUEST"
-  stream_enabled  = true
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {

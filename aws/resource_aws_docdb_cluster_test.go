@@ -726,7 +726,7 @@ POLICY
 
 resource "aws_docdb_cluster" "default" {
   cluster_identifier              = "tf-docdb-cluster-%d"
-  availability_zones              = ["us-west-2a","us-west-2b","us-west-2c"]
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"

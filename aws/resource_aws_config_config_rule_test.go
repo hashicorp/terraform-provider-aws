@@ -621,7 +621,8 @@ resource "aws_config_config_rule" "test" {
   }
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
+
     %[2]s = %[3]q
     %[4]s = %[5]q
   }

@@ -196,11 +196,11 @@ resource "aws_cognito_user_group" "main" {
 func testAccAWSCognitoUserGroupConfig_complex(poolName, groupName, groupDescription string, precedence int) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
-  name = "%s"
+  name = "%[1]s"
 }
 
 resource "aws_iam_role" "group_role" {
-  name = "%s"
+  name = "%[2]s"
 
   assume_role_policy = <<EOF
 {
@@ -228,13 +228,13 @@ EOF
 }
 
 resource "aws_cognito_user_group" "main" {
-  name         = "%s"
+  name         = "%[2]s"
   user_pool_id = aws_cognito_user_pool.main.id
-  description  = "%s"
-  precedence   = %v
+  description  = "%[3]s"
+  precedence   = %[4]d
   role_arn     = aws_iam_role.group_role.arn
 }
-`, poolName, groupName, groupName, groupDescription, precedence)
+`, poolName, groupName, groupDescription, precedence)
 }
 
 func testAccAWSCognitoUserGroupConfig_RoleArn(rName string) string {

@@ -367,7 +367,7 @@ resource "aws_datasync_location_efs" "test" {
 func testAccAWSDataSyncLocationEfsConfigTags2(key1, value1, key2, value2 string) string {
 	return testAccAWSDataSyncLocationEfsConfigBase() + fmt.Sprintf(`
 resource "aws_datasync_location_efs" "test" {
-  efs_file_system_arn = "${aws_efs_mount_target.test.file_system_arn}"
+  efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
 
   ec2_config {
     security_group_arns = [aws_security_group.test.arn]

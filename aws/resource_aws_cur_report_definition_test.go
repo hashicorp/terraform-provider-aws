@@ -317,12 +317,12 @@ func testAccPreCheckAWSCur(t *testing.T) {
 func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 resource "aws_s3_bucket" "test" {
-	bucket        = "%[2]s"
-	acl           = "private"
-	force_destroy = true
+  bucket        = "%[2]s"
+  acl           = "private"
+  force_destroy = true
 }
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
@@ -359,7 +359,7 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -369,7 +369,7 @@ resource "aws_cur_report_definition" "test" {
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region
-	additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
 `, reportName, bucketName)
 }
@@ -385,12 +385,12 @@ func testAccAwsCurReportDefinitionConfig_additional(reportName string, bucketNam
 
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 resource "aws_s3_bucket" "test" {
-	bucket        = "%[2]s"
-	acl           = "private"
-	force_destroy = true
+  bucket        = "%[2]s"
+  acl           = "private"
+  force_destroy = true
 }
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
@@ -427,7 +427,7 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -438,8 +438,8 @@ resource "aws_cur_report_definition" "test" {
   s3_prefix                  = "%[3]s"
   s3_region                  = aws_s3_bucket.test.region
 	%[6]s
-	refresh_closed_reports     = %[7]t
-	report_versioning          = "%[8]s"
+  refresh_closed_reports = %[7]t
+  report_versioning      = "%[8]s"
 }
 `, reportName, bucketName, bucketPrefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
 }
