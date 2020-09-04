@@ -412,26 +412,8 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	// Changes to any of these attributes requires creation of a new object version (if bucket is versioned):
-	for _, key := range []string{
-		"cache_control",
-		"content_base64",
-		"content_disposition",
-		"content_encoding",
-		"content_language",
-		"content_type",
-		"content",
-		"etag",
-		"kms_key_id",
-		"metadata",
-		"server_side_encryption",
-		"source",
-		"storage_class",
-		"website_redirect",
-	} {
-		if d.HasChange(key) {
-			return resourceAwsS3BucketObjectPut(d, meta)
-		}
+	if d.HasChanges("cache_control", "content_base64", "content_disposition", "content_encoding", "content_language", "content_type", "content", "etag", "kms_key_id", "metadata", "server_side_encryption", "source", "storage_class", "website_redirect") {
+		return resourceAwsS3BucketObjectPut(d, meta)
 	}
 
 	conn := meta.(*AWSClient).s3conn
