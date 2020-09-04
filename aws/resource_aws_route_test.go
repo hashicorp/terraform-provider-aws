@@ -38,6 +38,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -126,6 +127,7 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -172,6 +174,7 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -213,6 +216,7 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
 					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -256,6 +260,7 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -297,6 +302,7 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -338,6 +344,7 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -379,6 +386,7 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -420,6 +428,7 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
 					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -463,6 +472,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -507,6 +517,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
 					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -614,6 +625,7 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -655,6 +667,7 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -726,6 +739,49 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	tgwResourceName := "aws_ec2_transit_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "::/0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv6TransitGateway(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
@@ -762,7 +818,18 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
 			{
@@ -1239,6 +1306,61 @@ resource "aws_route" "test" {
   destination_cidr_block = %[2]q
   route_table_id         = aws_route_table.test.id
   transit_gateway_id     = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
+}
+`, rName, destinationCidr))
+}
+
+func testAccAWSRouteConfigIpv6TransitGateway(rName, destinationCidr string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  destination_ipv6_cidr_block = %[2]q
+  route_table_id              = aws_route_table.test.id
+  transit_gateway_id          = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
 }
 `, rName, destinationCidr))
 }
