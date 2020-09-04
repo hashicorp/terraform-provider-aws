@@ -18,7 +18,7 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
 
   content_type_profile_config {
     forward_when_content_type_is_unknown = true
-    
+
     content_type_profile {
       content_type = "application/x-www-form-urlencoded"
       format       = "URLEncoded"
@@ -27,7 +27,7 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
 
   query_arg_profile_config {
     forward_when_query_arg_is_unknown = true
-    
+
     query_arg_profile {
       profile_id = aws_cloudfront_field_level_encryption_profile.test.id
       query_arg  = "URLEncoded"
