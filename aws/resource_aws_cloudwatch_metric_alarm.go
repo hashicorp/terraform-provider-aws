@@ -36,17 +36,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Computed: true,
 			},
 			"comparison_operator": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					cloudwatch.ComparisonOperatorGreaterThanOrEqualToThreshold,
-					cloudwatch.ComparisonOperatorGreaterThanThreshold,
-					cloudwatch.ComparisonOperatorGreaterThanUpperThreshold,
-					cloudwatch.ComparisonOperatorLessThanLowerOrGreaterThanUpperThreshold,
-					cloudwatch.ComparisonOperatorLessThanLowerThreshold,
-					cloudwatch.ComparisonOperatorLessThanOrEqualToThreshold,
-					cloudwatch.ComparisonOperatorLessThanThreshold,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cloudwatch.ComparisonOperator_Values(), false),
 			},
 			"evaluation_periods": {
 				Type:         schema.TypeInt,
@@ -100,8 +92,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 										Required: true,
 									},
 									"unit": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
 									},
 								},
 							},
@@ -132,13 +125,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"extended_statistic", "metric_query"},
-				ValidateFunc: validation.StringInSlice([]string{
-					cloudwatch.StatisticAverage,
-					cloudwatch.StatisticMaximum,
-					cloudwatch.StatisticMinimum,
-					cloudwatch.StatisticSampleCount,
-					cloudwatch.StatisticSum,
-				}, false),
+				ValidateFunc:  validation.StringInSlice(cloudwatch.Statistic_Values(), false),
 			},
 			"threshold": {
 				Type:          schema.TypeFloat,
@@ -196,8 +183,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Set:      schema.HashString,
 			},
 			"unit": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
 			},
 			"extended_statistic": {
 				Type:          schema.TypeString,
