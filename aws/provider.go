@@ -525,11 +525,8 @@ func Provider() *schema.Provider {
 			"aws_backup_region_settings":                              resourceAwsBackupRegionSettings(),
 			"aws_backup_selection":                                    resourceAwsBackupSelection(),
 			"aws_backup_vault":                                        resourceAwsBackupVault(),
-<<<<<<< HEAD
 			"aws_backup_vault_notifications":                          resourceAwsBackupVaultNotifications(),
 			"aws_backup_vault_policy":                                 resourceAwsBackupVaultPolicy(),
-=======
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 			"aws_budgets_budget":                                      resourceAwsBudgetsBudget(),
 			"aws_cloud9_environment_ec2":                              resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                                resourceAwsCloudFormationStack(),
@@ -539,11 +536,12 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_cache_policy":                             resourceAwsCloudFrontCachePolicy(),
 			"aws_cloudfront_distribution":                             resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_field_level_encryption_profile":           resourceAwsCloudfrontFieldLevelEncryptionProfile(),
+			"aws_cloudfront_field_level_encryption_config":            resourceAwsCloudfrontFieldLevelEncryptionConfig(),
 			"aws_cloudfront_function":                                 resourceAwsCloudFrontFunction(),
 			"aws_cloudfront_key_group":                                resourceAwsCloudFrontKeyGroup(),
+			"aws_cloudfront_origin_access_identity":                   resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":                    resourceAwsCloudFrontOriginRequestPolicy(),
 			"aws_cloudfront_realtime_log_config":                      resourceAwsCloudFrontRealtimeLogConfig(),
-			"aws_cloudtrail":                                          resourceAwsCloudTrail(),
 			"aws_cloudwatch_event_bus":                                resourceAwsCloudWatchEventBus(),
 			"aws_cloudwatch_event_permission":                         resourceAwsCloudWatchEventPermission(),
 			"aws_cloudwatch_event_rule":                               resourceAwsCloudWatchEventRule(),
