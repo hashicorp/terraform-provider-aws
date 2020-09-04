@@ -28,7 +28,7 @@ func resourceAwsCloudFrontRealtimeLogConfig() *schema.Resource {
 			},
 
 			"endpoint": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
 				MaxItems: 1,
@@ -90,7 +90,7 @@ func resourceAwsCloudFrontRealtimeLogConfigCreate(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).cloudfrontconn
 
 	input := &cloudfront.CreateRealtimeLogConfigInput{
-		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").(*schema.Set).List()),
+		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
 		Fields:       expandStringSet(d.Get("fields").(*schema.Set)),
 		Name:         aws.String(d.Get("name").(string)),
 		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
@@ -146,7 +146,7 @@ func resourceAwsCloudFrontRealtimeLogConfigUpdate(d *schema.ResourceData, meta i
 
 	input := &cloudfront.UpdateRealtimeLogConfigInput{
 		ARN:          aws.String(d.Id()),
-		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").(*schema.Set).List()),
+		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
 		Fields:       expandStringSet(d.Get("fields").((*schema.Set))),
 		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
 	}
