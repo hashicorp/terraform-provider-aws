@@ -40,7 +40,6 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfig() *schema.Resource {
 									"content_type": {
 										Type:     schema.TypeString,
 										Required: true,
-										// application/x-www-form-urlencoded
 									},
 									"format": {
 										Type:         schema.TypeString,
