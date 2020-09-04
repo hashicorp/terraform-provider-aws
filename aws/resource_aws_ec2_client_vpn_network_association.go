@@ -119,7 +119,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 
 	result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
 		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		AssociationIds:      []*string{aws.String(d.Id())},
+		Filters:             []*ec2.Filter{{Name: aws.String("association-id"), Values: []*string{aws.String(d.Id())}}},
 	})
 
 	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
