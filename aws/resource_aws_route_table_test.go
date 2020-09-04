@@ -496,9 +496,10 @@ func TestAccAWSRouteTable_Route_VpcEndpointId(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
+func TestAccAWSRouteTable_IPv4_To_LocalGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	lgwDataSourceName := "data.aws_ec2_local_gateway.first"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "0.0.0.0/0"
 
@@ -515,7 +516,7 @@ func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_peering_connection_id", pcxResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "local_gateway_id", lgwDataSourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -549,10 +550,7 @@ func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_peering_connection_id", pcxResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -1357,7 +1355,7 @@ resource "aws_instance" "test" {
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
 }
-`)
+`, rName)
 }
 
 const testAccRouteTableConfigNoTarget = `
@@ -1370,8 +1368,7 @@ resource "aws_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName)
-}
+`
 
 func testAccAWSRouteTableConfigRouteConfigModeNoBlocks(rName string) string {
 	return fmt.Sprintf(`
