@@ -413,7 +413,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 				},
 			},
 
-            "on_premises_tag_set": {
+			"on_premises_tag_set": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -542,8 +542,8 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	if attr, ok := d.GetOk("on_premises_tag_set"); ok {
-        input.OnPremisesTagSet = buildOnPremisesTagSet(attr.(*schema.Set).List())
-    }
+		input.OnPremisesTagSet = buildOnPremisesTagSet(attr.(*schema.Set).List())
+	}
 
 	if attr, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
 		onPremFilters := buildOnPremTagFilters(attr.(*schema.Set).List())
@@ -667,8 +667,8 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("on_premises_tag_set", onPremisesTagSetToMap(resp.DeploymentGroupInfo.OnPremisesTagSet)); err != nil {
-    	return err
-    }
+		return err
+	}
 
 	if err := d.Set("on_premises_instance_tag_filter", onPremisesTagFiltersToMap(resp.DeploymentGroupInfo.OnPremisesInstanceTagFilters)); err != nil {
 		return err
@@ -734,10 +734,10 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 
 	// TagFilters aren't like tags. They don't append. They simply replace.
 	if d.HasChange("on_premises_tag_set") {
-    	_, n := d.GetChange("on_premises_tag_set")
-    	onPremisesTagSet := buildOnPremisesTagSet(n.(*schema.Set).List())
-        input.OnPremisesTagSet = onPremisesTagSet
-    }
+		_, n := d.GetChange("on_premises_tag_set")
+		onPremisesTagSet := buildOnPremisesTagSet(n.(*schema.Set).List())
+		input.OnPremisesTagSet = onPremisesTagSet
+	}
 
 	if d.HasChange("on_premises_instance_tag_filter") {
 		_, n := d.GetChange("on_premises_instance_tag_filter")
@@ -1235,10 +1235,10 @@ func onPremisesTagSetToMap(tagSet *codedeploy.OnPremisesTagSet) []map[string]int
 			for _, item := range filters {
 				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
 			}
-			//tagFilters := map[string]interface{}{
-			//	"on_premises_instance_tag_filter": schema.NewSet(resourceAwsCodeDeployTagFilterHash, filtersAsIntfSlice),
-			//}
-			//result = append(result, tagFilters)
+			tagFilters := map[string]interface{}{
+				"on_premises_instance_tag_filter": schema.NewSet(resourceAwsCodeDeployOnPremTagFilterHash, filtersAsIntfSlice),
+			}
+			result = append(result, tagFilters)
 		}
 	}
 	return result
@@ -1488,7 +1488,24 @@ func resourceAwsCodeDeployTagFilterHash(v interface{}) int {
 	if v, ok := m["value"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
+	return hashcode.String(buf.String())
+}
 
+func resourceAwsCodeDeployOnPremTagFilterHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]string)
+
+	// Nothing's actually required in tag filters, so we must check the
+	// presence of all values before attempting a hash.
+	if m["Key"] != "" {
+		buf.WriteString(fmt.Sprintf("%s-", m["key"]))
+	}
+	if m["type"] != "" {
+		buf.WriteString(fmt.Sprintf("%s-", m["type"]))
+	}
+	if m["value"] != "" {
+		buf.WriteString(fmt.Sprintf("%s-", m["value"]))
+	}
 	return hashcode.String(buf.String())
 }
 
