@@ -14,7 +14,7 @@ import (
 
 func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyDefaultTargetGroupUpdate,
+		Create: resourceAwsDbProxyDefaultTargetGroupCreate,
 		Read:   resourceAwsDbProxyDefaultTargetGroupRead,
 		Update: resourceAwsDbProxyDefaultTargetGroupUpdate,
 		Delete: schema.Noop,
@@ -119,10 +119,17 @@ func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-
+func resourceAwsDbProxyDefaultTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("db_proxy_name").(string))
+	return resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutCreate)
+}
+
+func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutUpdate)
+}
+
+func resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
+	conn := meta.(*AWSClient).rdsconn
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
@@ -143,7 +150,7 @@ func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta int
 		Pending: []string{rds.DBProxyStatusModifying},
 		Target:  []string{rds.DBProxyStatusAvailable},
 		Refresh: resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(timeout),
 	}
 
 	_, err = stateChangeConf.WaitForState()
@@ -224,9 +231,4 @@ func resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName st
 
 		return tg, *tg.Status, nil
 	}
-}
-
-func resourceAwsDbProxyDefaultTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] Cannot destroy DB Proxy default target group. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
 }

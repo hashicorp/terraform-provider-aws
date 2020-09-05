@@ -31,7 +31,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
 						"connection_borrow_timeout":    "120",
-						"init_query":                   "SET x=1, y=2",
+						"init_query":                   "",
 						"max_connections_percent":      "100",
 						"max_idle_connections_percent": "50",
 					}),
@@ -51,7 +51,6 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	connectionBorrowTimeout := 90
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -59,7 +58,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "120"),
@@ -71,7 +70,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, connectionBorrowTimeout),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_ConnectionBorrowTimeout(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "90"),
@@ -85,7 +84,6 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	initQuery := "SET a=2, b=1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -93,7 +91,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_InitQuery(rName, "SET x=1, y=2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET x=1, y=2"),
@@ -105,10 +103,10 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_InitQuery(rName, initQuery),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_InitQuery(rName, "SET a=2, b=1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", initQuery),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET a=2, b=1"),
 				),
 			},
 		},
@@ -119,7 +117,6 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	maxConnectionsPercent := 75
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -127,7 +124,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "100"),
@@ -139,7 +136,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, maxConnectionsPercent),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxConnectionsPercent(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "75"),
@@ -153,7 +150,6 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	maxIdleConnectionsPercent := 33
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -161,7 +157,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "50"),
@@ -173,7 +169,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, maxIdleConnectionsPercent),
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_MaxIdleConnectionsPercent(rName, 33),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "33"),
@@ -426,11 +422,6 @@ resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
   connection_pool_config {
-    connection_borrow_timeout    = 120
-    init_query                   = "SET x=1, y=2"
-    max_connections_percent      = 100
-    max_idle_connections_percent = 50
-    session_pinning_filters      = []
   }
 }
 `
@@ -442,11 +433,7 @@ resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
   connection_pool_config {
-    connection_borrow_timeout    = %[2]d
-    init_query                   = "SET x=1, y=2"
-    max_connections_percent      = 100
-    max_idle_connections_percent = 50
-    session_pinning_filters      = []
+    connection_borrow_timeout = %[2]d
   }
 }
 `, rName, connectionBorrowTimeout)
@@ -458,11 +445,7 @@ resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
   connection_pool_config {
-    connection_borrow_timeout    = 120
-    init_query                   = "%[2]s"
-    max_connections_percent      = 100
-    max_idle_connections_percent = 50
-    session_pinning_filters      = []
+    init_query = "%[2]s"
   }
 }
 `, rName, initQuery)
@@ -474,11 +457,7 @@ resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
   connection_pool_config {
-    connection_borrow_timeout    = 120
-    init_query                   = "SET x=1, y=2"
-    max_connections_percent      = %[2]d
-    max_idle_connections_percent = 50
-    session_pinning_filters      = []
+    max_connections_percent = %[2]d
   }
 }
 `, rName, maxConnectionsPercent)
@@ -490,11 +469,7 @@ resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
   connection_pool_config {
-    connection_borrow_timeout    = 120
-    init_query                   = "SET x=1, y=2"
-    max_connections_percent      = 100
     max_idle_connections_percent = %[2]d
-    session_pinning_filters      = []
   }
 }
 `, rName, maxIdleConnectionsPercent)
@@ -506,11 +481,7 @@ resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name
 
   connection_pool_config {
-    connection_borrow_timeout    = 120
-    init_query                   = "SET x=1, y=2"
-    max_connections_percent      = 100
-    max_idle_connections_percent = 50
-    session_pinning_filters      = ["%[2]s"]
+    session_pinning_filters = ["%[2]s"]
   }
 }
 `, rName, sessionPinningFilters)
