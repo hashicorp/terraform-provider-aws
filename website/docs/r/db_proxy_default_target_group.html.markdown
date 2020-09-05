@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage an RDS DB proxy default target group resource.
 
-The `aws_db_proxy_default_target_group` behaves differently from normal resources, in that Terraform does not _create_ this resource, but instead "adopts" it into management.
+The `aws_db_proxy_default_target_group` behaves differently from normal resources, in that Terraform does not _create_ or _destroy_ this resource, since it implicitly exists as part of an RDS DB Proxy. On Terraform resource creation it is automatically imported and on resource destruction, Terraform performs no actions in RDS.
 
 ## Example Usage
 
@@ -21,15 +21,15 @@ resource "aws_db_proxy" "example" {
   engine_family          = "MYSQL"
   idle_client_timeout    = 1800
   require_tls            = true
-  role_arn               = "arn:aws:iam:us-east-1:123456789012:role/example"
-  vpc_security_group_ids = ["sg-12345678901234567"]
-  vpc_subnet_ids         = ["subnet-12345678901234567"]
+  role_arn               = aws_iam_role.example.arn
+  vpc_security_group_ids = [aws_security_group.example.id]
+  vpc_subnet_ids         = [aws_subnet.example.id]
 
   auth {
     auth_scheme = "SECRETS"
     description = "example"
     iam_auth    = "DISABLED"
-    secret_arn  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example"
+    secret_arn  = aws_secretsmanager_secret.example.arn
   }
 
   tags = {
@@ -55,7 +55,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 
 The following arguments are supported:
 
-* `db_proxy_name` - (Required) The name of the new proxy to which to assign the target group.
+* `db_proxy_name` - (Required) Name of the RDS DB Proxy.
 * `connection_pool_config` - (Optional) The settings that determine the size and behavior of the connection pool for the target group.
 
 `connection_pool_config` blocks support the following:
@@ -70,7 +70,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) for the proxy.
+* `id` - Name of the RDS DB Proxy.
 * `arn` - The Amazon Resource Name (ARN) representing the target group.
 * `name` - The name of the default target group.
 
@@ -78,7 +78,8 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_db_proxy_default_target_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
-- `update` - (Default `30 minutes`) Used for modifying DB proxy target groups.
+- `create` - (Default `30 minutes`) Timeout for modifying DB proxy target group on creation.
+- `update` - (Default `30 minutes`) Timeout for modifying DB proxy target group on update.
 
 ## Import
 

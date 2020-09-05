@@ -250,7 +250,8 @@ func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
 		// Try to find the Group
 		resp, err := conn.DescribeDBProxyTargetGroups(
 			&rds.DescribeDBProxyTargetGroupsInput{
-				DBProxyName: aws.String(rs.Primary.ID),
+				DBProxyName:     aws.String(rs.Primary.ID),
+				TargetGroupName: aws.String("default"),
 			})
 
 		if err == nil {
@@ -282,7 +283,8 @@ func testAccCheckAWSDBProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBProxyTargetGroupsInput{
-			DBProxyName: aws.String(rs.Primary.ID),
+			DBProxyName:     aws.String(rs.Primary.ID),
+			TargetGroupName: aws.String("default"),
 		}
 
 		resp, err := conn.DescribeDBProxyTargetGroups(&opts)

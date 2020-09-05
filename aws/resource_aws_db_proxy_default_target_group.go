@@ -17,7 +17,7 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 		Create: resourceAwsDbProxyDefaultTargetGroupUpdate,
 		Read:   resourceAwsDbProxyDefaultTargetGroupRead,
 		Update: resourceAwsDbProxyDefaultTargetGroupUpdate,
-		Delete: resourceAwsDbProxyDefaultTargetGroupDelete,
+		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -25,7 +25,6 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,7 +46,6 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_borrow_timeout": {
@@ -59,7 +57,6 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 						"init_query": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"max_connections_percent": {
 							Type:         schema.TypeInt,
@@ -103,7 +100,7 @@ func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta inter
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading RDS DB Proxy (%s) Default Target Group: %w", d.Id(), err)
 	}
 
 	if tg == nil {
@@ -139,7 +136,7 @@ func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Update DB Proxy default target group: %#v", params)
 	_, err := conn.ModifyDBProxyTargetGroup(&params)
 	if err != nil {
-		return fmt.Errorf("Error updating DB Proxy default target group: %s", err)
+		return fmt.Errorf("error updating RDS DB Proxy (%s) default target group: %w", d.Id(), err)
 	}
 
 	stateChangeConf := &resource.StateChangeConf{
