@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -73,29 +74,34 @@ func resourceAwsRoute() *schema.Resource {
 			},
 
 			"gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"egress_only_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"nat_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"local_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"instance_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"instance_owner_id": {
@@ -104,9 +110,10 @@ func resourceAwsRoute() *schema.Resource {
 			},
 
 			"network_interface_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"origin": {
@@ -126,13 +133,15 @@ func resourceAwsRoute() *schema.Resource {
 			},
 
 			"transit_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 
 			"vpc_peering_connection_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeTargetAttributeKeys,
 			},
 		},
 	}
@@ -406,13 +415,15 @@ type routeAttributeIPVersionSupport map[string]struct {
 	ipv6 bool
 }
 
-// Returns the attribute map's keys.
+// Returns the attribute map's keys in sorted order.
 func (m routeAttributeIPVersionSupport) keys() []string {
-	keys := []string{}
+	keys := make([]string, 0, len(m))
 
 	for k := range m {
 		keys = append(keys, k)
 	}
+
+	sort.Strings(keys)
 
 	return keys
 }
