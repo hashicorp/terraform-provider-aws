@@ -90,7 +90,6 @@ func resourceAwsRoute() *schema.Resource {
 			"local_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"instance_id": {
@@ -436,9 +435,10 @@ var (
 		"egress_only_gateway_id":    {false, true},
 		"gateway_id":                {true, true},
 		"instance_id":               {true, true},
+		"local_gateway_id":          {true, true},
 		"nat_gateway_id":            {true, false},
 		"network_interface_id":      {true, true},
-		"transit_gateway_id":        {true, false},
+		"transit_gateway_id":        {true, true},
 		"vpc_peering_connection_id": {true, true},
 	})
 
