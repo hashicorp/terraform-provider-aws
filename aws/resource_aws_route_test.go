@@ -47,6 +47,14 @@ func TestGetRouteDestinationAndTargetAttributeKeys(t *testing.T) {
 		},
 		{
 			m: map[string]interface{}{
+				"destination_ipv6_cidr_block": "::/0",
+				"transit_gateway_id":          "tgw-0000000000000000",
+			},
+			destinationKey: "destination_ipv6_cidr_block",
+			targetKey:      "transit_gateway_id",
+		},
+		{
+			m: map[string]interface{}{
 				"destination_cidr_block": "0.0.0.0/0",
 				"transit_gateway_id":     "tgw-0000000000000000",
 				"gateway_id":             "vgw-0000000000000000",
@@ -1140,6 +1148,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
