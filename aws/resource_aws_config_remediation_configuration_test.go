@@ -41,6 +41,28 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	})
 }
 
+func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
+	var rc configservice.RemediationConfiguration
+	resourceName := "aws_config_remediation_configuration.test"
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigRemediationConfigurationConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigRemediationConfiguration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservice.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
