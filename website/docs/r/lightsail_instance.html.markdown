@@ -64,34 +64,56 @@ Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`
 
 ## Blueprints
 
-Lightsail currently supports the following Blueprint IDs:
+### Latest available as of now
+The most up-to-date list of available blueprints can be obtained from AWS CLI v2 tool:
+
+```Shell
+$ aws lightsail get-blueprints --query 'blueprints[*].blueprintId'
+```
+
+And full information about the blueprint can be obtained given its ID:
+
+```
+$ aws lightsail get-blueprints --query 'blueprints[?blueprintId==`ubuntu_20_04`]'
+```
+
+Lightsail `[07/09/2020, eu-west-2a]` supports the following Blueprint IDs:
 
 ### OS Only
 
-- `amazon_linux_2018_03_0_2`
-- `centos_7_1901_01`
-- `debian_8_7`
-- `debian_9_5`
-- `freebsd_11_1`
-- `opensuse_42_2`
-- `ubuntu_16_04_2`
+- `windows_server_2019`
+- `windows_server_2016`
+- `windows_server_2012`
+- `windows_server_2016_sql_2016_express`
+- `amazon_linux_2`
+- `amazon_linux`
+- `ubuntu_20_04`
 - `ubuntu_18_04`
+- `ubuntu_16_04_2`
+- `debian_10`
+- `debian_9_5`
+- `debian_8_7`
+- `freebsd_12`
+- `opensuse_15_1`
+- `centos_7_1901_01`
 
 ### Apps and OS
 
-- `drupal_8_5_6`
-- `gitlab_11_1_4_1`
-- `joomla_3_8_11`
-- `lamp_5_6_37_2`
-- `lamp_7_1_20_1`
-- `magento_2_2_5`
-- `mean_4_0_1`
-- `nginx_1_14_0_1`
-- `nodejs_10_8_0`
-- `plesk_ubuntu_17_8_11_1`
-- `redmine_3_4_6`
-- `wordpress_4_9_8`
-- `wordpress_multisite_4_9_8`
+- `wordpress`
+- `wordpress_multisite`
+- `lamp_7`
+- `nodejs`
+- `joomla`
+- `magento`
+- `mean`
+- `drupal`
+- `gitlab`
+- `redmine`
+- `nginx`
+- `ghost_bitnami`
+- `django_bitnami`
+- `plesk_ubuntu_18_0_28`
+- `cpanel_whm_linux`
 
 ## Bundles
 
