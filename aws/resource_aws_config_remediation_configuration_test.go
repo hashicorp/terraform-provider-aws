@@ -15,7 +15,8 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.foo"
 	rInt := acctest.RandInt()
-	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
+	prefix := "Original"
+	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,7 +24,7 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig_basic(rInt),
+				Config: testAccConfigRemediationConfigurationConfig(prefix, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
@@ -45,6 +46,7 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := acctest.RandInt()
+	prefix := "original"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -52,12 +54,45 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig_basic(rInt),
+				Config: testAccConfigRemediationConfigurationConfig(prefix, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
+	var original configservice.RemediationConfiguration
+	var updated configservice.RemediationConfiguration
+	resourceName := "aws_config_remediation_configuration.test"
+	rInt := acctest.RandInt()
+
+	originalName := "Original"
+	updatedName := "Updated"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigRemediationConfigurationConfig(originalName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRemediationConfigurationExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", originalName, rInt)),
+				),
+			},
+			{
+				Config: testAccConfigRemediationConfigurationConfig(updatedName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRemediationConfigurationExists(resourceName, &updated),
+					testAccCheckConfigRemediationConfigurationRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", updatedName, rInt)),
+				),
 			},
 		},
 	})
@@ -115,7 +150,7 @@ func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccConfigRemediationConfigurationConfig_basic(randInt int) string {
+func testAccConfigRemediationConfigurationConfig(namePrefix string, randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
 	config_rule_name = aws_config_config_rule.test.name
@@ -149,7 +184,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_config_config_rule" "test" {
-  name = "tf-acc-test-%d"
+  name = "%[1]s-tf-acc-test-%[2]d"
 
   source {
     owner             = "AWS"
@@ -160,12 +195,12 @@ resource "aws_config_config_rule" "test" {
 }
 
 resource "aws_config_configuration_recorder" "test" {
-  name     = "tf-acc-test-%[1]d"
+  name     = "%[1]s-tf-acc-test-%[2]d"
   role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-acc-test-awsconfig-%[1]d"
+  name = "%[1]s-tf-acc-test-awsconfig-%[2]d"
 
   assume_role_policy = <<EOF
 {
@@ -185,7 +220,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-acc-test-awsconfig-%[1]d"
+  name = "%[1]s-tf-acc-test-awsconfig-%[2]d"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -202,5 +237,15 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, randInt)
+`, namePrefix, randInt)
+}
+
+func testAccCheckConfigRemediationConfigurationRecreated(t *testing.T,
+	before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.Arn == *after.Arn {
+			t.Fatalf("AWS Config Remediation has not been recreated")
+		}
+		return nil
+	}
 }

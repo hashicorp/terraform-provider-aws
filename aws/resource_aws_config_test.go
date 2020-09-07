@@ -62,7 +62,9 @@ func TestAccAWSConfig_serial(t *testing.T) {
 			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
 		},
 		"RemediationConfiguration": {
-			"basic": testAccConfigRemediationConfiguration_basic,
+			"basic":      testAccConfigRemediationConfiguration_basic,
+			"disappears": testAccConfigRemediationConfiguration_disappears,
+			"recreates":  testAccConfigRemediationConfiguration_recreates,
 		},
 	}
 
