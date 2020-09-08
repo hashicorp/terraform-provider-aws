@@ -1217,7 +1217,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  name = "%s"
+  name               = "%s"
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1355,7 +1355,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  name_prefix = "test-"
+  name_prefix        = "test-"
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1662,7 +1662,7 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  connection_draining = true
+  connection_draining         = true
   connection_draining_timeout = 400
 }
 `
@@ -1687,7 +1687,7 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  connection_draining = true
+  connection_draining         = true
   connection_draining_timeout = 600
 }
 `

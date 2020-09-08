@@ -682,7 +682,7 @@ resource "aws_eip" "test" {
 
 const testAccAWSEIPConfig_PublicIpv4Pool_default = `
 resource "aws_eip" "test" {
-   vpc = true
+  vpc = true
 }
 `
 
@@ -697,7 +697,7 @@ resource "aws_eip" "test" {
 
 const testAccAWSEIPInstanceEc2Classic = `
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 
 data "aws_ami" "amzn-ami-minimal-pv" {
@@ -705,18 +705,18 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-pv.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
   tags = {
     Name = "testAccAWSEIPInstanceEc2Classic"
   }
@@ -733,18 +733,18 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-pv.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 }
 
 resource "aws_eip" "test" {
@@ -758,18 +758,18 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-pv.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 }
 
 resource "aws_eip" "test" {
@@ -783,11 +783,11 @@ data "aws_ami" "amzn-ami-minimal-hvm" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
@@ -859,11 +859,11 @@ data "aws_ami" "amzn-ami-minimal-hvm" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
@@ -1104,18 +1104,18 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-pv.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 }
 
 resource "aws_eip" "test" {
@@ -1128,22 +1128,22 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["instance-store"]
   }
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-pv.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 }
 
 resource "aws_eip" "test" {
-	instance = aws_instance.test.id
+  instance = aws_instance.test.id
 }
 `
 

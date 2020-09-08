@@ -1424,8 +1424,8 @@ resource "aws_ecs_service" "mongo" {
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.test.name
-    weight = %d
-    base   = %d
+    weight            = %d
+    base              = %d
   }
 }
 `, providerName, clusterName, tdName, svcName, weight, base)
@@ -1438,7 +1438,7 @@ resource "aws_ecs_service" "mongo" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.mongo.arn
   desired_count   = 1
-  
+
   network_configuration {
     security_groups  = [aws_security_group.allow_all.id]
     subnets          = [aws_subnet.main.id]
@@ -1490,8 +1490,8 @@ resource "aws_security_group" "allow_all" {
 }
 
 resource "aws_subnet" "main" {
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
-  vpc_id            = aws_vpc.main.id
+  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
+  vpc_id     = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-ecs-service-with-multiple-capacity-providers"

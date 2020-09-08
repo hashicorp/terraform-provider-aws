@@ -149,7 +149,7 @@ resource "aws_elb" "bar" {
 
 resource "aws_instance" "foo1" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_elb_attachment" "foo1" {
@@ -188,12 +188,12 @@ resource "aws_elb" "bar" {
 
 resource "aws_instance" "foo1" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo2" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_elb_attachment" "foo1" {
@@ -237,12 +237,12 @@ resource "aws_elb" "bar" {
 
 resource "aws_instance" "foo1" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo2" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_elb_attachment" "foo1" {

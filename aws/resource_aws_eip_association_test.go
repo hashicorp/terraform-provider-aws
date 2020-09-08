@@ -24,12 +24,9 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig_instance(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(
-						"aws_eip.test", &a),
-					testAccCheckAWSEIPAssociationExists(
-						resourceName, &a),
-					testAccCheckAWSEIPAssociationExists(
-						resourceName, &a),
+					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 				),
 			},
 			{
@@ -53,10 +50,8 @@ func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig_networkInterface,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(
-						"aws_eip.test", &a),
-					testAccCheckAWSEIPAssociationExists(
-						resourceName, &a),
+					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 				),
 			},
 			{
@@ -80,18 +75,12 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(
-						"aws_eip.test.0", &a),
-					testAccCheckAWSEIPAssociationExists(
-						"aws_eip_association.by_allocation_id", &a),
-					testAccCheckAWSEIPExists(
-						"aws_eip.test.1", &a),
-					testAccCheckAWSEIPAssociationExists(
-						"aws_eip_association.by_public_ip", &a),
-					testAccCheckAWSEIPExists(
-						"aws_eip.test.2", &a),
-					testAccCheckAWSEIPAssociationExists(
-						"aws_eip_association.to_eni", &a),
+					testAccCheckAWSEIPExists("aws_eip.test.0", &a),
+					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
+					testAccCheckAWSEIPExists("aws_eip.test.1", &a),
+					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_public_ip", &a),
+					testAccCheckAWSEIPExists("aws_eip.test.2", &a),
+					testAccCheckAWSEIPAssociationExists("aws_eip_association.to_eni", &a),
 				),
 			},
 			{
@@ -303,7 +292,7 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
 }
@@ -325,9 +314,9 @@ resource "aws_instance" "test" {
   count             = 2
   ami               = data.aws_ami.amzn-ami-minimal-pv.id
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "m1.small"
+  instance_type     = "t2.small"
   subnet_id         = aws_subnet.test.id
-  private_ip        = "192.168.0.${count.index+10}"
+  private_ip        = "192.168.0.${count.index + 10}"
 }
 
 resource "aws_eip" "test" {
@@ -336,19 +325,19 @@ resource "aws_eip" "test" {
 }
 
 resource "aws_eip_association" "by_allocation_id" {
-  allocation_id = aws_eip.test.0.id
-  instance_id   = aws_instance.test.0.id
+  allocation_id = aws_eip.test[0].id
+  instance_id   = aws_instance.test[0].id
   depends_on    = [aws_instance.test]
 }
 
 resource "aws_eip_association" "by_public_ip" {
-  public_ip   = aws_eip.test.1.public_ip
-  instance_id = aws_instance.test.1.id
+  public_ip   = aws_eip.test[1].public_ip
+  instance_id = aws_instance.test[1].id
   depends_on  = [aws_instance.test]
 }
 
 resource "aws_eip_association" "to_eni" {
-  allocation_id        = aws_eip.test.2.id
+  allocation_id        = aws_eip.test[2].id
   network_interface_id = aws_network_interface.test.id
 }
 
@@ -358,7 +347,7 @@ resource "aws_network_interface" "test" {
   depends_on  = [aws_instance.test]
 
   attachment {
-    instance     = aws_instance.test.0.id
+    instance     = aws_instance.test[0].id
     device_index = 1
   }
 }
@@ -379,7 +368,7 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-pv-*"]
   }
 }
@@ -407,7 +396,7 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_instance" "foo" {
   ami               = data.aws_ami.amzn-ami-minimal-pv.id
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "m1.small"
+  instance_type     = "t2.small"
   subnet_id         = aws_subnet.sub.id
 }
 
@@ -456,7 +445,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "test" {
   ami               = data.aws_ami.ubuntu.id
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "t1.micro"
+  instance_type     = "t2.micro"
 }
 
 resource "aws_eip_association" "test" {
@@ -466,24 +455,22 @@ resource "aws_eip_association" "test" {
 `
 
 func testAccAWSEIPAssociationConfig_spotInstance(rInt int) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_eip" "test" {
-}
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfig(rInt), `
+resource "aws_eip" "test" {}
 
 resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
   instance_id   = aws_spot_instance_request.test.spot_instance_id
 }
-`, testAccAWSSpotInstanceRequestConfig(rInt))
+`)
 }
 
 func testAccAWSEIPAssociationConfig_instance() string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 }
 
 resource "aws_eip" "test" {}
