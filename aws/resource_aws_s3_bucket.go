@@ -820,11 +820,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	// RM-4400 - remove HeadBucket because it requires s3:ListBucket permission
 	input := &s3.GetBucketEncryptionInput{
 		Bucket: aws.String(d.Id()),
 	}
 
 	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
+		// RM-4400 - remove HeadBucket because it requires s3:ListBucket permission
 		_, err := s3conn.GetBucketEncryption(input)
 
 		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
@@ -835,6 +837,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 
+		// RM-4400 - remove HeadBucket because it requires s3:ListBucket permission
 		if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
 			return resource.NonRetryableError(err)
 		}
@@ -843,6 +846,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if isResourceTimeoutError(err) {
+		// RM-4400 - remove HeadBucket because it requires s3:ListBucket permission
 		_, err = s3conn.GetBucketEncryption(input)
 	}
 
@@ -852,6 +856,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting encryption configuration: %s", d.Id(), err)
 	}
@@ -875,6 +880,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				Bucket: aws.String(d.Id()),
 			})
 		})
+		// RM-4400 - more descriptive 403 errors
 		if isAWSErrRequestFailureStatusCode(err, 403) {
 			return fmt.Errorf("permissions error on S3 Bucket (%s) while getting bucket policy: %s", d.Id(), err)
 		}
@@ -909,6 +915,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				Bucket: aws.String(d.Id()),
 			})
 		})
+		// RM-4400 - more descriptive 403 errors
 		if isAWSErrRequestFailureStatusCode(err, 403) {
 			return fmt.Errorf("permissions error on S3 Bucket (%s) while getting ACL configuration: %s", d.Id(), err)
 		}
@@ -929,6 +936,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting CORS configuration: %s", d.Id(), err)
 	}
@@ -966,6 +974,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting website configuration: %s", d.Id(), err)
 	}
@@ -1038,6 +1047,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting versioning configuration: %s", d.Id(), err)
 	}
@@ -1074,6 +1084,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting acceleration configuration: %s", d.Id(), err)
 	}
@@ -1093,6 +1104,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting request payment configuration: %s", d.Id(), err)
 	}
@@ -1112,6 +1124,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting logging configuration: %s", d.Id(), err)
 	}
@@ -1144,6 +1157,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting lifecycle configuration: %s", d.Id(), err)
 	}
@@ -1278,6 +1292,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting replication configuration: %s", d.Id(), err)
 	}
@@ -1302,6 +1317,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		})
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting encryption configuration: %s", d.Id(), err)
 	}
@@ -1338,6 +1354,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		)
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting location: %s", d.Id(), err)
 	}
@@ -1389,6 +1406,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return keyvaluetags.S3BucketListTags(s3conn, d.Id())
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while listing tags: %s", d.Id(), err)
 	}

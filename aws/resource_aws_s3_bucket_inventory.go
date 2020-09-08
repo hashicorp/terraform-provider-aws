@@ -312,6 +312,7 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting inventory configuration (%s): %s", bucket, name, err)
 	}

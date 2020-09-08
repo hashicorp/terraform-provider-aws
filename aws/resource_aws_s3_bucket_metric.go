@@ -141,6 +141,7 @@ func resourceAwsS3BucketMetricRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
 	output, err := conn.GetBucketMetricsConfiguration(input)
 	if err != nil {
+		// RM-4400 - more descriptive 403 errors
 		if isAWSErrRequestFailureStatusCode(err, 403) {
 			return fmt.Errorf("permissions error on S3 Bucket (%s) while getting metrics configuration (%s): %s", bucket, name, err)
 		}

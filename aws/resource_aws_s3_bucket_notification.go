@@ -357,10 +357,13 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 	s3conn := meta.(*AWSClient).s3conn
 
 	var err error
+	// RM-4400 - remove HeadBucket because it requires s3:ListBucket permission
 	_, err = s3conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
 		Bucket: aws.String(d.Id()),
 	})
+	// RM-4400 - remove HeadBucket because it requires s3:ListBucket permission
 	if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
+		// RM-4400 - more descriptive 403 errors
 		if isAWSErrRequestFailureStatusCode(err, 403) {
 			return fmt.Errorf("permissions error on S3 Bucket (%s) while verifying bucket existence: %s", d.Id(), err)
 		}
@@ -381,6 +384,7 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 		Bucket: aws.String(d.Id()),
 	})
 
+	// RM-4400 - more descriptive 403 errors
 	if isAWSErrRequestFailureStatusCode(err, 403) {
 		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting notification configuration: %s", d.Id(), err)
 	}
