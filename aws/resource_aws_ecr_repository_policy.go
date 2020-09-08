@@ -90,7 +90,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
 			isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
-			log.Printf("[WARN] ECR Repositoy Policy %s not found, removing", d.Id())
+			log.Printf("[WARN] ECR Repository Policy %s not found, removing", d.Id())
 			d.SetId("")
 			return nil
 		}
