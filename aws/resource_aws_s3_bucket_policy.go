@@ -83,6 +83,11 @@ func resourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) err
 		Bucket: aws.String(d.Id()),
 	})
 
+	// RM-4400 - more descriptive 403 errors
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting bucket policy: %s", d.Id(), err)
+	}
+
 	v := ""
 	if err == nil && pol.Policy != nil {
 		v = *pol.Policy

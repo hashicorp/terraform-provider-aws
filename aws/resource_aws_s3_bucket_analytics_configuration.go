@@ -183,6 +183,12 @@ func resourceAwsS3BucketAnalyticsConfigurationRead(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Reading S3 bucket analytics configuration: %s", input)
 	output, err := conn.GetBucketAnalyticsConfiguration(input)
+
+	// RM-4400 - more descriptive 403 errors
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting analytics configuration (%s): %s", bucket, name, err)
+	}
+
 	if err != nil {
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			log.Printf("[WARN] %s S3 bucket analytics configuration not found, removing from state.", d.Id())
