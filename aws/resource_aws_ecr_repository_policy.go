@@ -50,7 +50,7 @@ func resourceAwsEcrRepositoryPolicyCreate(d *schema.ResourceData, meta interface
 		PolicyText:     aws.String(d.Get("policy").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating ECR resository policy: %#v", input)
+	log.Printf("[DEBUG] Creating ECR repository policy: %#v", input)
 
 	// Retry due to IAM eventual consistency
 	var err error
