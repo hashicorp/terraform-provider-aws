@@ -415,6 +415,44 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	kmsKeyResourceName1 := "aws_kms_key.test1"
+	kmsKeyResourceName2 := "aws_kms_key.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigKmsKeyId1(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigKmsKeyId2(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -750,4 +788,38 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = %[1]d
 }
 `, perUnitStorageThroughput)
+}
+
+func testAccAwsFsxLustreFileSystemConfigKmsKeyId1() string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
+resource "aws_kms_key" "test1" {
+  description             = "FSx KMS Testing key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+  kms_key_id                  = aws_kms_key.test1.arn
+}
+`
+}
+
+func testAccAwsFsxLustreFileSystemConfigKmsKeyId2() string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
+resource "aws_kms_key" "test2" {
+  description             = "FSx KMS Testing key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+  kms_key_id                  = aws_kms_key.test2.arn
+}
+`
 }
