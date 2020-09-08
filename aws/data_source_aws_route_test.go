@@ -205,7 +205,7 @@ data "aws_route" "by_instance_id" {
 
 func testAccAWSRouteDataSourceConfigTransitGatewayID() string {
 	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
-# IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+# IncorrectState: Transit Gateway is not available in some availability zones
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
