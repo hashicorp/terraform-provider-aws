@@ -790,7 +790,7 @@ resource "aws_batch_compute_environment" "ec2" {
       aws_subnet.test_acc.id
     ]
     type = "EC2"
-  tags = {
+    tags = {
       Key1 = "Value1"
     }
   }
@@ -809,7 +809,7 @@ resource "aws_batch_compute_environment" "spot" {
 
   compute_resources {
     bid_percentage = 100
-    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_role  = aws_iam_instance_profile.ecs_instance_role.arn
     instance_type = [
       "c4.large",
     ]
@@ -849,22 +849,22 @@ resource "aws_batch_compute_environment" "ec2" {
   compute_environment_name = "tf_acc_test_%[1]d"
 
   compute_resources {
-    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
-    instance_type      = ["optimal"]
-    max_vcpus          = %[2]d
-    min_vcpus          = %[3]d
+    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type = ["optimal"]
+    max_vcpus     = %[2]d
+    min_vcpus     = %[3]d
     security_group_ids = [
       aws_security_group.test_acc.id
     ]
-    subnets            = [
+    subnets = [
       aws_subnet.test_acc.id
     ]
-    type               = "EC2"
+    type = "EC2"
   }
 
   service_role = aws_iam_role.aws_batch_service_role.arn
   type         = "MANAGED"
-  depends_on  = [aws_iam_role_policy_attachment.aws_batch_service_role]
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt, maxVcpus, minVcpus)
 }

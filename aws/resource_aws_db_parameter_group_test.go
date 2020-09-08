@@ -1485,7 +1485,7 @@ resource "aws_db_parameter_group" "test" {
   family      = "mysql5.6"
 
   parameter {
-    name = "sync_binlog"
+    name  = "sync_binlog"
     value = 0
   }
 }
@@ -1496,7 +1496,7 @@ resource "aws_db_parameter_group" "test" {
   family = "mysql5.6"
 
   parameter {
-    name = "sync_binlog"
+    name  = "sync_binlog"
     value = 0
   }
 }

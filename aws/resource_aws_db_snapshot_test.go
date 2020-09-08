@@ -285,7 +285,7 @@ resource "aws_db_snapshot" "test" {
   db_snapshot_identifier = %[1]q
 
   tags = {
-  	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -298,8 +298,8 @@ resource "aws_db_snapshot" "test" {
   db_snapshot_identifier = %[1]q
 
   tags = {
-  	%[2]q = %[3]q
-  	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

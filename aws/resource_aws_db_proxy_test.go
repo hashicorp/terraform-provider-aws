@@ -601,8 +601,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_security_group" "test" {
-	name   = "%[1]s"
-	vpc_id = aws_vpc.test.id
+  name   = "%[1]s"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "test" {
@@ -803,8 +803,8 @@ resource "aws_db_proxy" "test" {
 }
 
 resource "aws_security_group" "test2" {
-	name   = "%[2]s"
-	vpc_id = aws_vpc.test.id
+  name   = "%[2]s"
+  vpc_id = aws_vpc.test.id
 }
 `, rName, nName)
 }
@@ -914,7 +914,7 @@ resource "aws_db_proxy" "test" {
   }
 
   tags = {
-	%[2]s = "%[3]s"
+    %[2]s = "%[3]s"
   }
 }
 `, rName, key, value)

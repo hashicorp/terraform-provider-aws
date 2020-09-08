@@ -41,8 +41,8 @@ func testAccCheckAWSDefaultVpcDhcpOptionsDestroy(s *terraform.State) error {
 
 const testAccAWSDefaultVpcDhcpOptionsConfigBasic = `
 resource "aws_default_vpc_dhcp_options" "foo" {
-	tags = {
-		Name = "Default DHCP Option Set"
-	}
+  tags = {
+    Name = "Default DHCP Option Set"
+  }
 }
 `
