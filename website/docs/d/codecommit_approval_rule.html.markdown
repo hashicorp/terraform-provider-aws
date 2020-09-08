@@ -30,4 +30,4 @@ In addition to all arguments above, the following attributes are exported:
 
 * `approval_rule_template_id` - The ID of the approval rule template.
 * `description` - The description of the approval rule template.
-* `content` - The content of the approval rule template. 
+* `content` - The content of the approval rule template.
