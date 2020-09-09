@@ -750,7 +750,8 @@ resource "aws_eip" "test" {
 
 func testAccAWSEIPInstanceConfig_associated() string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"), `
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -768,8 +769,9 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-resource "aws_subnet" "tf_test_subnet" {
+resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.default.id
+  availability_zone       = data.aws_availability_zones.available.names[0]
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
 
@@ -782,10 +784,10 @@ resource "aws_subnet" "tf_test_subnet" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   private_ip = "10.0.0.12"
-  subnet_id  = aws_subnet.tf_test_subnet.id
+  subnet_id  = aws_subnet.test.id
 
   tags = {
     Name = "test instance"
@@ -793,12 +795,11 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_instance" "test2" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  instance_type = "t2.micro"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   private_ip = "10.0.0.19"
-  subnet_id  = aws_subnet.tf_test_subnet.id
+  subnet_id  = aws_subnet.test.id
 
   tags = {
     Name = "test2 instance"
@@ -810,6 +811,15 @@ resource "aws_eip" "test" {
 
   instance                  = aws_instance.test2.id
   associate_with_private_ip = "10.0.0.19"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 `)
 }
@@ -834,7 +844,7 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-resource "aws_subnet" "tf_test_subnet" {
+resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.default.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
@@ -851,7 +861,7 @@ resource "aws_instance" "test" {
   instance_type = "t2.micro"
 
   private_ip = "10.0.0.12"
-  subnet_id  = aws_subnet.tf_test_subnet.id
+  subnet_id  = aws_subnet.test.id
 
   tags = {
     Name = "test instance"
@@ -864,7 +874,7 @@ resource "aws_instance" "test2" {
   instance_type = "t2.micro"
 
   private_ip = "10.0.0.19"
-  subnet_id  = aws_subnet.tf_test_subnet.id
+  subnet_id  = aws_subnet.test.id
 
   tags = {
     Name = "test2 instance"
@@ -1050,9 +1060,9 @@ resource "aws_route_table_association" "test" {
 
 func testAccAWSEIPAssociate_not_associated() string {
 	return composeConfig(
-		testAccLatestAmazonLinuxPvInstanceStoreAmiConfig(), `
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
 }
 
@@ -1063,9 +1073,9 @@ resource "aws_eip" "test" {
 
 func testAccAWSEIPAssociate_associated() string {
 	return composeConfig(
-		testAccLatestAmazonLinuxPvInstanceStoreAmiConfig(), `
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
 }
 
