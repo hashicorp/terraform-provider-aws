@@ -17,7 +17,6 @@ func dataSourceAwsCodeCommitApprovalRule() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Required: true,
 			},
 			"content": {

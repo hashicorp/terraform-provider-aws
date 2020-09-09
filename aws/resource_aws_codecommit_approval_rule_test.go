@@ -144,7 +144,8 @@ func testAccCodeCommitApprovalRule_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_approval_rule" "test" {
   name = "test_rule_%d"
-  description     = "This is a test description"
+
+  description = "This is a test description"
 
   content = <<EOF
   {
@@ -163,8 +164,8 @@ resource "aws_codecommit_approval_rule" "test" {
 func testAccCodeCommitApprovalRule_withChanges(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_approval_rule" "test" {
-  name = "test_rule_%d"
-  description     = "This is a test description - with changes"
+  name        = "test_rule_%d"
+  description = "This is a test description - with changes"
 
   content = <<EOF
   {
