@@ -18,10 +18,10 @@ in all regions - available regions are listed
 
 ```hcl
 resource "aws_codecommit_approval_rule" "test" {
-    name = "MyTestApprovalRule"
-    description = "This is a test approval rule template"
+  name        = "MyTestApprovalRule"
+  description = "This is a test approval rule template"
 
-    content = <<EOF
+  content = <<EOF
 {
     "Version": "2018-11-08",
     "DestinationReferences": ["refs/heads/master"],
