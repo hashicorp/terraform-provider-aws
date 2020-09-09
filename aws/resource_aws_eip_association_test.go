@@ -26,7 +26,6 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
-					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 				),
 			},
 			{
@@ -73,7 +72,7 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig,
+				Config: testAccAWSEIPAssociationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test.0", &a),
 					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
@@ -100,7 +99,8 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	// This test cannot run in parallel with the other EIP Association tests
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -155,35 +155,24 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 	var a ec2.Address
 
+	resourceName := "aws_eip_association.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfigDisappears,
+				Config: testAccAWSEIPAssociationConfigDisappears(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(
-						"aws_eip.bar", &a),
-					testAccCheckAWSEIPAssociationExists(
-						"aws_eip_association.by_allocation_id", &a),
-					testAccCheckEIPAssociationDisappears(&a),
+					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEipAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckEIPAssociationDisappears(address *ec2.Address) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		opts := &ec2.DisassociateAddressInput{
-			AssociationId: address.AssociationId,
-		}
-		_, err := conn.DisassociateAddress(opts)
-		return err
-	}
 }
 
 func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource.TestCheckFunc {
@@ -270,7 +259,9 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSEIPAssociationConfig = `
+func testAccAWSEIPAssociationConfig() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -284,16 +275,6 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/24"
   tags = {
     Name = "terraform-testacc-eip-association"
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-pv" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
   }
 }
 
@@ -312,7 +293,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_instance" "test" {
   count             = 2
-  ami               = data.aws_ami.amzn-ami-minimal-pv.id
+  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "t2.small"
   subnet_id         = aws_subnet.test.id
@@ -351,25 +332,18 @@ resource "aws_network_interface" "test" {
     device_index = 1
   }
 }
-`
+`)
+}
 
-const testAccAWSEIPAssociationConfigDisappears = `
+func testAccAWSEIPAssociationConfigDisappears() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-pv" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
   }
 }
 
@@ -393,22 +367,23 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 }
 
-resource "aws_instance" "foo" {
-  ami               = data.aws_ami.amzn-ami-minimal-pv.id
+resource "aws_instance" "test" {
+  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "t2.small"
   subnet_id         = aws_subnet.sub.id
 }
 
-resource "aws_eip" "bar" {
+resource "aws_eip" "test" {
   vpc = true
 }
 
-resource "aws_eip_association" "by_allocation_id" {
-  allocation_id = aws_eip.bar.id
-  instance_id   = aws_instance.foo.id
+resource "aws_eip_association" "test" {
+  allocation_id = aws_eip.test.id
+  instance_id   = aws_instance.test.id
 }
-`
+`)
+}
 
 const testAccAWSEIPAssociationConfig_ec2Classic = `
 provider "aws" {
@@ -445,7 +420,9 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "test" {
   ami               = data.aws_ami.ubuntu.id
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "t2.micro"
+
+  # tflint-ignore: aws_instance_previous_type
+  instance_type = "t1.micro"
 }
 
 resource "aws_eip_association" "test" {
@@ -457,7 +434,9 @@ resource "aws_eip_association" "test" {
 func testAccAWSEIPAssociationConfig_spotInstance(rInt int) string {
 	return composeConfig(
 		testAccAWSSpotInstanceRequestConfig(rInt), `
-resource "aws_eip" "test" {}
+resource "aws_eip" "test" {
+  vpc = true
+}
 
 resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
@@ -467,7 +446,9 @@ resource "aws_eip_association" "test" {
 }
 
 func testAccAWSEIPAssociationConfig_instance() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
@@ -479,7 +460,7 @@ resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
   instance_id   = aws_instance.test.id
 }
-`)
+`))
 }
 
 const testAccAWSEIPAssociationConfig_networkInterface = `
