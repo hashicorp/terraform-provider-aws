@@ -130,8 +130,7 @@ func testAccCheckCodeCommitApprovalRuleAssociationDestroy(s *terraform.State) er
 }
 
 func testAccCodeCommitApprovalRuleAssociation_basic() string {
-	return `
-resource "aws_codecommit_approval_rule_association" "test" {
+	return `resource "aws_codecommit_approval_rule_association" "test" {
     template_name = "test-rule"
     repository_names = ["test1"]
 }
@@ -139,8 +138,7 @@ resource "aws_codecommit_approval_rule_association" "test" {
 }
 
 func testAccCodeCommitApprovalRuleAssociation_setup() string {
-	return `
-resource "aws_codecommit_approval_rule_association" "test_change" {
+	return `resource "aws_codecommit_approval_rule_association" "test_change" {
     template_name = "test2-rule"
     repository_names = ["test1"]
 }
@@ -148,8 +146,7 @@ resource "aws_codecommit_approval_rule_association" "test_change" {
 }
 
 func testAccCodeCommitApprovalRuleAssociation_withChanges() string {
-	return `
-resource "aws_codecommit_approval_rule_association" "test_change" {
+	return `resource "aws_codecommit_approval_rule_association" "test_change" {
     template_name = "test2-rule"
     repository_names = ["test1", "test2"]
 }
