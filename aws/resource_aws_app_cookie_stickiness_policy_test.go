@@ -189,10 +189,10 @@ func TestAccAWSAppCookieStickinessPolicy_drift(t *testing.T) {
 }
 
 func testAccAppCookieStickinessPolicyConfig(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 8000
@@ -208,15 +208,15 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
   lb_port       = 80
   cookie_name   = "MyAppCookie"
 }
-`, rName)
+`, rName))
 }
 
 // Change the cookie_name to "MyOtherAppCookie".
 func testAccAppCookieStickinessPolicyConfigUpdate(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 8000
@@ -232,15 +232,15 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
   lb_port       = 80
   cookie_name   = "MyOtherAppCookie"
 }
-`, rName)
+`, rName))
 }
 
 // attempt to destroy the policy, but we'll delete the LB in the PreConfig
 func testAccAppCookieStickinessPolicyConfigDestroy(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 8000
@@ -249,5 +249,5 @@ resource "aws_elb" "lb" {
     lb_protocol       = "http"
   }
 }
-`, rName)
+`, rName))
 }
