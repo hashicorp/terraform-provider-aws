@@ -239,7 +239,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndCMK(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_type", "CUSTOMER_MANAGED_CMK"),
-					resource.TestMatchResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", regexp.MustCompile(`^arn:[^:]+:kms:[^:]+:[^:]+:key/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", "aws_kms_key.fh_test", "arn"),
 				),
 			},
 			{
