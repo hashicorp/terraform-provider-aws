@@ -1,5 +1,9 @@
 ## 3.6.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_db_proxy_default_target_group` [GH-12743]
+
 BUG FIXES
 
 * resource/aws_ec2_client_vpn_authorization_rule: Increase active and revoked timeouts from 1 to 5 minutes [GH-15037]
