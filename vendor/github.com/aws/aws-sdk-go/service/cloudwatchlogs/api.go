@@ -67,14 +67,14 @@ func (c *CloudWatchLogs) AssociateKmsKeyRequest(input *AssociateKmsKeyInput) (re
 // within Amazon CloudWatch Logs. This enables Amazon CloudWatch Logs to decrypt
 // this data whenever it is requested.
 //
-// Important: CloudWatch Logs supports only symmetric CMKs. Do not use an associate
-// an asymmetric CMK with your log group. For more information, see Using Symmetric
+// CloudWatch Logs supports only symmetric CMKs. Do not use an associate an
+// asymmetric CMK with your log group. For more information, see Using Symmetric
 // and Asymmetric Keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html).
 //
-// Note that it can take up to 5 minutes for this operation to take effect.
+// It can take up to 5 minutes for this operation to take effect.
 //
 // If you attempt to associate a CMK with a log group but the CMK does not exist
-// or the CMK is disabled, you will receive an InvalidParameterException error.
+// or the CMK is disabled, you receive an InvalidParameterException error.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -254,13 +254,16 @@ func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (
 // CreateExportTask API operation for Amazon CloudWatch Logs.
 //
 // Creates an export task, which allows you to efficiently export data from
-// a log group to an Amazon S3 bucket.
+// a log group to an Amazon S3 bucket. When you perform a CreateExportTask operation,
+// you must use credentials that have permission to write to the S3 bucket that
+// you specify as the destination.
 //
 // This is an asynchronous call. If all the required information is provided,
 // this operation initiates an export task and responds with the ID of the task.
-// After the task has started, you can use DescribeExportTasks to get the status
-// of the export task. Each account can only have one active (RUNNING or PENDING)
-// export task at a time. To cancel an export task, use CancelExportTask.
+// After the task has started, you can use DescribeExportTasks (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeExportTasks.html)
+// to get the status of the export task. Each account can only have one active
+// (RUNNING or PENDING) export task at a time. To cancel an export task, use
+// CancelExportTask (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CancelExportTask.html).
 //
 // You can export logs from multiple log groups or multiple time ranges to the
 // same S3 bucket. To separate out log data for each export task, you can specify
@@ -362,9 +365,8 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 
 // CreateLogGroup API operation for Amazon CloudWatch Logs.
 //
-// Creates a log group with the specified name.
-//
-// You can create up to 20,000 log groups per account.
+// Creates a log group with the specified name. You can create up to 20,000
+// log groups per account.
 //
 // You must use the following guidelines when naming a log group:
 //
@@ -376,6 +378,10 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 //    '_' (underscore), '-' (hyphen), '/' (forward slash), '.' (period), and
 //    '#' (number sign)
 //
+// When you create a log group, by default the log events in the log group never
+// expire. To set a retention policy so that events expire and are deleted after
+// a specified time, use PutRetentionPolicy (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html).
+//
 // If you associate a AWS Key Management Service (AWS KMS) customer master key
 // (CMK) with the log group, ingested data is encrypted using the CMK. This
 // association is stored as long as the data encrypted with the CMK is still
@@ -383,12 +389,11 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 // this data whenever it is requested.
 //
 // If you attempt to associate a CMK with the log group but the CMK does not
-// exist or the CMK is disabled, you will receive an InvalidParameterException
-// error.
+// exist or the CMK is disabled, you receive an InvalidParameterException error.
 //
-// Important: CloudWatch Logs supports only symmetric CMKs. Do not associate
-// an asymmetric CMK with your log group. For more information, see Using Symmetric
-// and Asymmetric Keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html).
+// CloudWatch Logs supports only symmetric CMKs. Do not associate an asymmetric
+// CMK with your log group. For more information, see Using Symmetric and Asymmetric
+// Keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -480,7 +485,9 @@ func (c *CloudWatchLogs) CreateLogStreamRequest(input *CreateLogStreamInput) (re
 
 // CreateLogStream API operation for Amazon CloudWatch Logs.
 //
-// Creates a log stream for the specified log group.
+// Creates a log stream for the specified log group. A log stream is a sequence
+// of log events that originate from a single source, such as an application
+// instance or a resource that is being monitored.
 //
 // There is no limit on the number of log streams that you can create for a
 // log group. There is a limit of 50 TPS on CreateLogStream operations, after
@@ -891,6 +898,97 @@ func (c *CloudWatchLogs) DeleteMetricFilter(input *DeleteMetricFilterInput) (*De
 // for more information on using Contexts.
 func (c *CloudWatchLogs) DeleteMetricFilterWithContext(ctx aws.Context, input *DeleteMetricFilterInput, opts ...request.Option) (*DeleteMetricFilterOutput, error) {
 	req, out := c.DeleteMetricFilterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteQueryDefinition = "DeleteQueryDefinition"
+
+// DeleteQueryDefinitionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteQueryDefinition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteQueryDefinition for more information on using the DeleteQueryDefinition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteQueryDefinitionRequest method.
+//    req, resp := client.DeleteQueryDefinitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteQueryDefinition
+func (c *CloudWatchLogs) DeleteQueryDefinitionRequest(input *DeleteQueryDefinitionInput) (req *request.Request, output *DeleteQueryDefinitionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteQueryDefinition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteQueryDefinitionInput{}
+	}
+
+	output = &DeleteQueryDefinitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteQueryDefinition API operation for Amazon CloudWatch Logs.
+//
+// Deletes a saved CloudWatch Logs Insights query definition. A query definition
+// contains details about a saved CloudWatch Logs Insights query.
+//
+// Each DeleteQueryDefinition operation can delete one query definition.
+//
+// You must have the logs:DeleteQueryDefinition permission to be able to perform
+// this operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch Logs's
+// API operation DeleteQueryDefinition for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   A parameter is specified incorrectly.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ServiceUnavailableException
+//   The service cannot complete the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DeleteQueryDefinition
+func (c *CloudWatchLogs) DeleteQueryDefinition(input *DeleteQueryDefinitionInput) (*DeleteQueryDefinitionOutput, error) {
+	req, out := c.DeleteQueryDefinitionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteQueryDefinitionWithContext is the same as DeleteQueryDefinition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteQueryDefinition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatchLogs) DeleteQueryDefinitionWithContext(ctx aws.Context, input *DeleteQueryDefinitionInput, opts ...request.Option) (*DeleteQueryDefinitionOutput, error) {
+	req, out := c.DeleteQueryDefinitionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1730,8 +1828,8 @@ func (c *CloudWatchLogs) DescribeMetricFiltersRequest(input *DescribeMetricFilte
 
 // DescribeMetricFilters API operation for Amazon CloudWatch Logs.
 //
-// Lists the specified metric filters. You can list all the metric filters or
-// filter the results by log name, prefix, metric name, or metric namespace.
+// Lists the specified metric filters. You can list all of the metric filters
+// or filter the results by log name, prefix, metric name, or metric namespace.
 // The results are ASCII-sorted by filter name.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1871,7 +1969,7 @@ func (c *CloudWatchLogs) DescribeQueriesRequest(input *DescribeQueriesInput) (re
 // DescribeQueries API operation for Amazon CloudWatch Logs.
 //
 // Returns a list of CloudWatch Logs Insights queries that are scheduled, executing,
-// or have been executed recently in this account. You can request all queries,
+// or have been executed recently in this account. You can request all queries
 // or limit it to queries of a specific log group or queries with a certain
 // status.
 //
@@ -1909,6 +2007,92 @@ func (c *CloudWatchLogs) DescribeQueries(input *DescribeQueriesInput) (*Describe
 // for more information on using Contexts.
 func (c *CloudWatchLogs) DescribeQueriesWithContext(ctx aws.Context, input *DescribeQueriesInput, opts ...request.Option) (*DescribeQueriesOutput, error) {
 	req, out := c.DescribeQueriesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeQueryDefinitions = "DescribeQueryDefinitions"
+
+// DescribeQueryDefinitionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeQueryDefinitions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeQueryDefinitions for more information on using the DescribeQueryDefinitions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeQueryDefinitionsRequest method.
+//    req, resp := client.DescribeQueryDefinitionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeQueryDefinitions
+func (c *CloudWatchLogs) DescribeQueryDefinitionsRequest(input *DescribeQueryDefinitionsInput) (req *request.Request, output *DescribeQueryDefinitionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeQueryDefinitions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeQueryDefinitionsInput{}
+	}
+
+	output = &DescribeQueryDefinitionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeQueryDefinitions API operation for Amazon CloudWatch Logs.
+//
+// This operation returns a paginated list of your saved CloudWatch Logs Insights
+// query definitions.
+//
+// You can use the queryDefinitionNamePrefix parameter to limit the results
+// to only the query definitions that have names that start with a certain string.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch Logs's
+// API operation DescribeQueryDefinitions for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   A parameter is specified incorrectly.
+//
+//   * ServiceUnavailableException
+//   The service cannot complete the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/DescribeQueryDefinitions
+func (c *CloudWatchLogs) DescribeQueryDefinitions(input *DescribeQueryDefinitionsInput) (*DescribeQueryDefinitionsOutput, error) {
+	req, out := c.DescribeQueryDefinitionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeQueryDefinitionsWithContext is the same as DescribeQueryDefinitions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeQueryDefinitions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatchLogs) DescribeQueryDefinitionsWithContext(ctx aws.Context, input *DescribeQueryDefinitionsInput, opts ...request.Option) (*DescribeQueryDefinitionsOutput, error) {
+	req, out := c.DescribeQueryDefinitionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2294,10 +2478,15 @@ func (c *CloudWatchLogs) FilterLogEventsRequest(input *FilterLogEventsInput) (re
 // of the log stream.
 //
 // By default, this operation returns as many log events as can fit in 1 MB
-// (up to 10,000 log events), or all the events found within the time range
-// that you specify. If the results include a token, then there are more log
-// events available, and you can get additional results by specifying the token
-// in a subsequent call.
+// (up to 10,000 log events) or all the events found within the time range that
+// you specify. If the results include a token, then there are more log events
+// available, and you can get additional results by specifying the token in
+// a subsequent call. This operation can return empty results while there are
+// more log events available through the token.
+//
+// The returned log events are sorted by event timestamp, the timestamp when
+// the event was ingested by CloudWatch Logs, and the ID of the PutLogEvents
+// request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2441,12 +2630,14 @@ func (c *CloudWatchLogs) GetLogEventsRequest(input *GetLogEventsInput) (req *req
 
 // GetLogEvents API operation for Amazon CloudWatch Logs.
 //
-// Lists log events from the specified log stream. You can list all the log
+// Lists log events from the specified log stream. You can list all of the log
 // events or filter using a time range.
 //
 // By default, this operation returns as many log events as can fit in a response
 // size of 1MB (up to 10,000 log events). You can get additional log events
-// by specifying one of the tokens in a subsequent call.
+// by specifying one of the tokens in a subsequent call. This operation can
+// return empty results while there are more log events available through the
+// token.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2589,7 +2780,9 @@ func (c *CloudWatchLogs) GetLogGroupFieldsRequest(input *GetLogGroupFieldsInput)
 // The search is limited to a time period that you specify.
 //
 // In the results, fields that start with @ are fields generated by CloudWatch
-// Logs. For example, @timestamp is the timestamp of each log event.
+// Logs. For example, @timestamp is the timestamp of each log event. For more
+// information about the fields that are generated by CloudWatch logs, see Supported
+// Logs and Discovered Fields (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_AnalyzeLogData-discoverable-fields.html).
 //
 // The response results are sorted by the frequency percentage, starting with
 // the highest percentage.
@@ -2680,12 +2873,12 @@ func (c *CloudWatchLogs) GetLogRecordRequest(input *GetLogRecordInput) (req *req
 
 // GetLogRecord API operation for Amazon CloudWatch Logs.
 //
-// Retrieves all the fields and values of a single log event. All fields are
-// retrieved, even if the original query that produced the logRecordPointer
+// Retrieves all of the fields and values of a single log event. All fields
+// are retrieved, even if the original query that produced the logRecordPointer
 // retrieved only a subset of fields. Fields are returned as field name/field
 // value pairs.
 //
-// Additionally, the entire unparsed log event is returned within @message.
+// The full unparsed log event is returned within @message.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2775,11 +2968,13 @@ func (c *CloudWatchLogs) GetQueryResultsRequest(input *GetQueryResultsInput) (re
 //
 // Returns the results from the specified query.
 //
-// Only the fields requested in the query are returned, along with a @ptr field
+// Only the fields requested in the query are returned, along with a @ptr field,
 // which is the identifier for the log record. You can use the value of @ptr
-// in a operation to get the full log record.
+// in a GetLogRecord (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_GetLogRecord.html)
+// operation to get the full log record.
 //
-// GetQueryResults does not start a query execution. To run a query, use .
+// GetQueryResults does not start a query execution. To run a query, use StartQuery
+// (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_StartQuery.html).
 //
 // If the value of the Status field in the output is Running, this operation
 // returns only partial results. If you see a value of Scheduled or Running
@@ -2955,13 +3150,17 @@ func (c *CloudWatchLogs) PutDestinationRequest(input *PutDestinationInput) (req 
 //
 // A destination encapsulates a physical resource (such as an Amazon Kinesis
 // stream) and enables you to subscribe to a real-time stream of log events
-// for a different account, ingested using PutLogEvents.
+// for a different account, ingested using PutLogEvents (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html).
 //
 // Through an access policy, a destination controls what is written to it. By
 // default, PutDestination does not set any access policy with the destination,
-// which means a cross-account user cannot call PutSubscriptionFilter against
-// this destination. To enable this, the destination owner must call PutDestinationPolicy
+// which means a cross-account user cannot call PutSubscriptionFilter (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html)
+// against this destination. To enable this, the destination owner must call
+// PutDestinationPolicy (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDestinationPolicy.html)
 // after PutDestination.
+//
+// To perform a PutDestination operation, you must also have the iam:PassRole
+// permission.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3141,14 +3340,13 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 // call. An upload in a newly created log stream does not require a sequence
 // token. You can also get the sequence token in the expectedSequenceToken field
 // from InvalidSequenceTokenException. If you call PutLogEvents twice within
-// a narrow time period using the same value for sequenceToken, both calls may
-// be successful, or one may be rejected.
+// a narrow time period using the same value for sequenceToken, both calls might
+// be successful or one might be rejected.
 //
 // The batch of events must satisfy the following constraints:
 //
-//    * The maximum batch size is 1,048,576 bytes, and this size is calculated
-//    as the sum of all event messages in UTF-8, plus 26 bytes for each log
-//    event.
+//    * The maximum batch size is 1,048,576 bytes. This size is calculated as
+//    the sum of all event messages in UTF-8, plus 26 bytes for each log event.
 //
 //    * None of the log events in the batch can be more than 2 hours in the
 //    future.
@@ -3156,7 +3354,7 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 //    * None of the log events in the batch can be older than 14 days or older
 //    than the retention period of the log group.
 //
-//    * The log events in the batch must be in chronological ordered by their
+//    * The log events in the batch must be in chronological order by their
 //    timestamp. The timestamp is the time the event occurred, expressed as
 //    the number of milliseconds after Jan 1, 1970 00:00:00 UTC. (In AWS Tools
 //    for PowerShell and the AWS SDK for .NET, the timestamp is specified in
@@ -3269,7 +3467,7 @@ func (c *CloudWatchLogs) PutMetricFilterRequest(input *PutMetricFilterInput) (re
 //
 // Creates or updates a metric filter and associates it with the specified log
 // group. Metric filters allow you to configure rules to extract metric data
-// from log events ingested through PutLogEvents.
+// from log events ingested through PutLogEvents (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html).
 //
 // The maximum number of metric filters that can be associated with a log group
 // is 100.
@@ -3314,6 +3512,103 @@ func (c *CloudWatchLogs) PutMetricFilter(input *PutMetricFilterInput) (*PutMetri
 // for more information on using Contexts.
 func (c *CloudWatchLogs) PutMetricFilterWithContext(ctx aws.Context, input *PutMetricFilterInput, opts ...request.Option) (*PutMetricFilterOutput, error) {
 	req, out := c.PutMetricFilterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutQueryDefinition = "PutQueryDefinition"
+
+// PutQueryDefinitionRequest generates a "aws/request.Request" representing the
+// client's request for the PutQueryDefinition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutQueryDefinition for more information on using the PutQueryDefinition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutQueryDefinitionRequest method.
+//    req, resp := client.PutQueryDefinitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutQueryDefinition
+func (c *CloudWatchLogs) PutQueryDefinitionRequest(input *PutQueryDefinitionInput) (req *request.Request, output *PutQueryDefinitionOutput) {
+	op := &request.Operation{
+		Name:       opPutQueryDefinition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutQueryDefinitionInput{}
+	}
+
+	output = &PutQueryDefinitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutQueryDefinition API operation for Amazon CloudWatch Logs.
+//
+// Creates or updates a query definition for CloudWatch Logs Insights. For more
+// information, see Analyzing Log Data with CloudWatch Logs Insights (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html).
+//
+// To update a query definition, specify its queryDefinitionId in your request.
+// The values of name, queryString, and logGroupNames are changed to the values
+// that you specify in your update operation. No current values are retained
+// from the current query definition. For example, if you update a current query
+// definition that includes log groups, and you don't specify the logGroupNames
+// parameter in your update operation, the query definition changes to contain
+// no log groups.
+//
+// You must have the logs:PutQueryDefinition permission to be able to perform
+// this operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch Logs's
+// API operation PutQueryDefinition for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   A parameter is specified incorrectly.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ServiceUnavailableException
+//   The service cannot complete the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/logs-2014-03-28/PutQueryDefinition
+func (c *CloudWatchLogs) PutQueryDefinition(input *PutQueryDefinitionInput) (*PutQueryDefinitionOutput, error) {
+	req, out := c.PutQueryDefinitionRequest(input)
+	return out, req.Send()
+}
+
+// PutQueryDefinitionWithContext is the same as PutQueryDefinition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutQueryDefinition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatchLogs) PutQueryDefinitionWithContext(ctx aws.Context, input *PutQueryDefinitionInput, opts ...request.Option) (*PutQueryDefinitionOutput, error) {
+	req, out := c.PutQueryDefinitionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3365,7 +3660,7 @@ func (c *CloudWatchLogs) PutResourcePolicyRequest(input *PutResourcePolicyInput)
 //
 // Creates or updates a resource policy allowing other AWS services to put log
 // events to this account, such as Amazon Route 53. An account can have up to
-// 10 resource policies per region.
+// 10 resource policies per AWS Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3544,8 +3839,12 @@ func (c *CloudWatchLogs) PutSubscriptionFilterRequest(input *PutSubscriptionFilt
 //
 // Creates or updates a subscription filter and associates it with the specified
 // log group. Subscription filters allow you to subscribe to a real-time stream
-// of log events ingested through PutLogEvents and have them delivered to a
-// specific destination. Currently, the supported destinations are:
+// of log events ingested through PutLogEvents (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html)
+// and have them delivered to a specific destination. When log events are sent
+// to the receiving service, they are Base64 encoded and compressed with the
+// gzip format.
+//
+// The following destinations are supported for subscription filters:
 //
 //    * An Amazon Kinesis stream belonging to the same account as the subscription
 //    filter, for same-account delivery.
@@ -3563,6 +3862,9 @@ func (c *CloudWatchLogs) PutSubscriptionFilterRequest(input *PutSubscriptionFilt
 // you are updating an existing filter, you must specify the correct name in
 // filterName. Otherwise, the call fails because you cannot associate a second
 // filter with a log group.
+//
+// To perform a PutSubscriptionFilter operation, you must also have the iam:PassRole
+// permission.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3654,12 +3956,12 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 // StartQuery API operation for Amazon CloudWatch Logs.
 //
 // Schedules a query of a log group using CloudWatch Logs Insights. You specify
-// the log group and time range to query, and the query string to use.
+// the log group and time range to query and the query string to use.
 //
 // For more information, see CloudWatch Logs Insights Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 //
 // Queries time out after 15 minutes of execution. If your queries are timing
-// out, reduce the time range being searched, or partition your query into a
+// out, reduce the time range being searched or partition your query into a
 // number of queries.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3672,7 +3974,7 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 // Returned Error Types:
 //   * MalformedQueryException
 //   The query string is not valid. Details about this error are displayed in
-//   a QueryCompileError object. For more information, see .
+//   a QueryCompileError object. For more information, see QueryCompileError (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_QueryCompileError.html).
 //
 //   For more information about valid query syntax, see CloudWatch Logs Insights
 //   Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
@@ -3845,11 +4147,11 @@ func (c *CloudWatchLogs) TagLogGroupRequest(input *TagLogGroupInput) (req *reque
 //
 // Adds or updates the specified tags for the specified log group.
 //
-// To list the tags for a log group, use ListTagsLogGroup. To remove tags, use
-// UntagLogGroup.
+// To list the tags for a log group, use ListTagsLogGroup (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_ListTagsLogGroup.html).
+// To remove tags, use UntagLogGroup (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_UntagLogGroup.html).
 //
 // For more information about tags, see Tag Log Groups in Amazon CloudWatch
-// Logs (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/log-group-tagging.html)
+// Logs (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html#log-group-tagging)
 // in the Amazon CloudWatch Logs User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4019,8 +4321,8 @@ func (c *CloudWatchLogs) UntagLogGroupRequest(input *UntagLogGroupInput) (req *r
 //
 // Removes the specified tags from the specified log group.
 //
-// To list the tags for a log group, use ListTagsLogGroup. To add tags, use
-// UntagLogGroup.
+// To list the tags for a log group, use ListTagsLogGroup (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_ListTagsLogGroup.html).
+// To add tags, use TagLogGroup (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_TagLogGroup.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4793,6 +5095,70 @@ func (s DeleteMetricFilterOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteQueryDefinitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the query definition that you want to delete. You can use DescribeQueryDefinitions
+	// (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeQueryDefinitions.html)
+	// to retrieve the IDs of your saved query definitions.
+	//
+	// QueryDefinitionId is a required field
+	QueryDefinitionId *string `locationName:"queryDefinitionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteQueryDefinitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteQueryDefinitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteQueryDefinitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteQueryDefinitionInput"}
+	if s.QueryDefinitionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryDefinitionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetQueryDefinitionId sets the QueryDefinitionId field's value.
+func (s *DeleteQueryDefinitionInput) SetQueryDefinitionId(v string) *DeleteQueryDefinitionInput {
+	s.QueryDefinitionId = &v
+	return s
+}
+
+type DeleteQueryDefinitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A value of TRUE indicates that the operation succeeded. FALSE indicates that
+	// the operation failed.
+	Success *bool `locationName:"success" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DeleteQueryDefinitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteQueryDefinitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSuccess sets the Success field's value.
+func (s *DeleteQueryDefinitionOutput) SetSuccess(v bool) *DeleteQueryDefinitionOutput {
+	s.Success = &v
+	return s
+}
+
 type DeleteResourcePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5224,6 +5590,9 @@ type DescribeLogGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The log groups.
+	//
+	// If the retentionInDays value if not included for a log group, then that log
+	// group is set to have its events never expire.
 	LogGroups []*LogGroup `locationName:"logGroups" type:"list"`
 
 	// The token for the next set of items to return. The token expires after 24
@@ -5272,7 +5641,7 @@ type DescribeLogStreamsInput struct {
 
 	// The prefix to match.
 	//
-	// If orderBy is LastEventTime,you cannot specify this parameter.
+	// If orderBy is LastEventTime, you cannot specify this parameter.
 	LogStreamNamePrefix *string `locationName:"logStreamNamePrefix" min:"1" type:"string"`
 
 	// The token for the next set of items to return. (You received this token from
@@ -5286,11 +5655,11 @@ type DescribeLogStreamsInput struct {
 	// If you order the results by event time, you cannot specify the logStreamNamePrefix
 	// parameter.
 	//
-	// lastEventTimestamp represents the time of the most recent log event in the
+	// lastEventTimeStamp represents the time of the most recent log event in the
 	// log stream in CloudWatch Logs. This number is expressed as the number of
 	// milliseconds after Jan 1, 1970 00:00:00 UTC. lastEventTimeStamp updates on
 	// an eventual consistency basis. It typically updates in less than an hour
-	// from ingestion, but may take longer in some rare situations.
+	// from ingestion, but in rare situations might take longer.
 	OrderBy *string `locationName:"orderBy" type:"string" enum:"OrderBy"`
 }
 
@@ -5401,7 +5770,8 @@ func (s *DescribeLogStreamsOutput) SetNextToken(v string) *DescribeLogStreamsOut
 type DescribeMetricFiltersInput struct {
 	_ struct{} `type:"structure"`
 
-	// The prefix to match.
+	// The prefix to match. CloudWatch Logs uses the value you set here only if
+	// you also include the logGroupName parameter in your request.
 	FilterNamePrefix *string `locationName:"filterNamePrefix" min:"1" type:"string"`
 
 	// The maximum number of items returned. If you don't specify a value, the default
@@ -5631,6 +6001,101 @@ func (s *DescribeQueriesOutput) SetQueries(v []*QueryInfo) *DescribeQueriesOutpu
 	return s
 }
 
+type DescribeQueryDefinitionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Limits the number of returned query definitions to the specified number.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of items to return. The token expires after 24
+	// hours.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+
+	// Use this parameter to filter your results to only the query definitions that
+	// have names that start with the prefix you specify.
+	QueryDefinitionNamePrefix *string `locationName:"queryDefinitionNamePrefix" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeQueryDefinitionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeQueryDefinitionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeQueryDefinitionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeQueryDefinitionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.QueryDefinitionNamePrefix != nil && len(*s.QueryDefinitionNamePrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryDefinitionNamePrefix", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeQueryDefinitionsInput) SetMaxResults(v int64) *DescribeQueryDefinitionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeQueryDefinitionsInput) SetNextToken(v string) *DescribeQueryDefinitionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetQueryDefinitionNamePrefix sets the QueryDefinitionNamePrefix field's value.
+func (s *DescribeQueryDefinitionsInput) SetQueryDefinitionNamePrefix(v string) *DescribeQueryDefinitionsInput {
+	s.QueryDefinitionNamePrefix = &v
+	return s
+}
+
+type DescribeQueryDefinitionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. The token expires after 24
+	// hours.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+
+	// The list of query definitions that match your request.
+	QueryDefinitions []*QueryDefinition `locationName:"queryDefinitions" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeQueryDefinitionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeQueryDefinitionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeQueryDefinitionsOutput) SetNextToken(v string) *DescribeQueryDefinitionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetQueryDefinitions sets the QueryDefinitions field's value.
+func (s *DescribeQueryDefinitionsOutput) SetQueryDefinitions(v []*QueryDefinition) *DescribeQueryDefinitionsOutput {
+	s.QueryDefinitions = v
+	return s
+}
+
 type DescribeResourcePoliciesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5847,7 +6312,7 @@ type Destination struct {
 	// A role for impersonation, used when delivering log events to the target.
 	RoleArn *string `locationName:"roleArn" min:"1" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the physical target to where the log events
+	// The Amazon Resource Name (ARN) of the physical target where the log events
 	// are delivered (for example, a Kinesis stream).
 	TargetArn *string `locationName:"targetArn" min:"1" type:"string"`
 }
@@ -5957,13 +6422,13 @@ func (s DisassociateKmsKeyOutput) GoString() string {
 type ExportTask struct {
 	_ struct{} `type:"structure"`
 
-	// The name of Amazon S3 bucket to which the log data was exported.
+	// The name of the S3 bucket to which the log data was exported.
 	Destination *string `locationName:"destination" min:"1" type:"string"`
 
 	// The prefix that was used as the start of Amazon S3 key for every object exported.
 	DestinationPrefix *string `locationName:"destinationPrefix" type:"string"`
 
-	// Execution info about the export task.
+	// Execution information about the export task.
 	ExecutionInfo *ExportTaskExecutionInfo `locationName:"executionInfo" type:"structure"`
 
 	// The start time, expressed as the number of milliseconds after Jan 1, 1970
@@ -6139,9 +6604,9 @@ type FilterLogEventsInput struct {
 	// the first log stream are searched first, then those in the next log stream,
 	// and so on. The default is false.
 	//
-	// IMPORTANT: Starting on June 17, 2019, this parameter will be ignored and
-	// the value will be assumed to be true. The response from this operation will
-	// always interleave events from multiple log streams within a log group.
+	// Important: Starting on June 17, 2019, this parameter is ignored and the value
+	// is assumed to be true. The response from this operation always interleaves
+	// events from multiple log streams within a log group.
 	//
 	// Deprecated: Starting on June 17, 2019, this parameter will be ignored and the value will be assumed to be true. The response from this operation will always interleave events from multiple log streams within a log group.
 	Interleaved *bool `locationName:"interleaved" deprecated:"true" type:"boolean"`
@@ -6175,6 +6640,9 @@ type FilterLogEventsInput struct {
 	// The start of the time range, expressed as the number of milliseconds after
 	// Jan 1, 1970 00:00:00 UTC. Events with a timestamp before this time are not
 	// returned.
+	//
+	// If you omit startTime and endTime the most recent log events are retrieved,
+	// to up 1 MB or 10,000 log events.
 	StartTime *int64 `locationName:"startTime" type:"long"`
 }
 
@@ -6280,6 +6748,9 @@ type FilterLogEventsOutput struct {
 	// after 24 hours.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
+	// IMPORTANT Starting on May 15, 2020, this parameter will be deprecated. This
+	// parameter will be an empty list after the deprecation occurs.
+	//
 	// Indicates which log streams have been searched and whether each has been
 	// searched completely.
 	SearchedLogStreams []*SearchedLogStream `locationName:"searchedLogStreams" type:"list"`
@@ -6505,13 +6976,13 @@ type GetLogEventsOutput struct {
 	Events []*OutputLogEvent `locationName:"events" type:"list"`
 
 	// The token for the next set of items in the backward direction. The token
-	// expires after 24 hours. This token will never be null. If you have reached
-	// the end of the stream, it will return the same token you passed in.
+	// expires after 24 hours. This token is never null. If you have reached the
+	// end of the stream, it returns the same token you passed in.
 	NextBackwardToken *string `locationName:"nextBackwardToken" min:"1" type:"string"`
 
 	// The token for the next set of items in the forward direction. The token expires
-	// after 24 hours. If you have reached the end of the stream, it will return
-	// the same token you passed in.
+	// after 24 hours. If you have reached the end of the stream, it returns the
+	// same token you passed in.
 	NextForwardToken *string `locationName:"nextForwardToken" min:"1" type:"string"`
 }
 
@@ -6738,14 +7209,15 @@ type GetQueryResultsOutput struct {
 
 	// Includes the number of log events scanned by the query, the number of log
 	// events that matched the query criteria, and the total number of bytes in
-	// the log events that were scanned.
+	// the log events that were scanned. These values reflect the full raw results
+	// of the query.
 	Statistics *QueryStatistics `locationName:"statistics" type:"structure"`
 
 	// The status of the most recent running of the query. Possible values are Cancelled,
 	// Complete, Failed, Running, Scheduled, Timeout, and Unknown.
 	//
 	// Queries time out after 15 minutes of execution. To avoid having your queries
-	// time out, reduce the time range being searched, or partition your query into
+	// time out, reduce the time range being searched or partition your query into
 	// a number of queries.
 	Status *string `locationName:"status" type:"string" enum:"QueryStatus"`
 }
@@ -7150,6 +7622,9 @@ type LogGroup struct {
 	// The number of days to retain the log events in the specified log group. Possible
 	// values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731,
 	// 1827, and 3653.
+	//
+	// If you omit retentionInDays in a PutRetentionPolicy operation, the events
+	// in the log group are always retained and never expire.
 	RetentionInDays *int64 `locationName:"retentionInDays" type:"integer"`
 
 	// The number of bytes stored.
@@ -7261,8 +7736,8 @@ type LogStream struct {
 	// The time of the most recent log event in the log stream in CloudWatch Logs.
 	// This number is expressed as the number of milliseconds after Jan 1, 1970
 	// 00:00:00 UTC. The lastEventTime value updates on an eventual consistency
-	// basis. It typically updates in less than an hour from ingestion, but may
-	// take longer in some rare situations.
+	// basis. It typically updates in less than an hour from ingestion, but in rare
+	// situations might take longer.
 	LastEventTimestamp *int64 `locationName:"lastEventTimestamp" type:"long"`
 
 	// The ingestion time, expressed as the number of milliseconds after Jan 1,
@@ -7274,7 +7749,7 @@ type LogStream struct {
 
 	// The number of bytes stored.
 	//
-	// IMPORTANT:On June 17, 2019, this parameter was deprecated for log streams,
+	// Important: On June 17, 2019, this parameter was deprecated for log streams,
 	// and is always reported as zero. This change applies only to log streams.
 	// The storedBytes parameter for log groups is not affected.
 	//
@@ -7344,7 +7819,7 @@ func (s *LogStream) SetUploadSequenceToken(v string) *LogStream {
 }
 
 // The query string is not valid. Details about this error are displayed in
-// a QueryCompileError object. For more information, see .
+// a QueryCompileError object. For more information, see QueryCompileError (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_QueryCompileError.html).
 //
 // For more information about valid query syntax, see CloudWatch Logs Insights
 // Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
@@ -7420,7 +7895,7 @@ type MetricFilter struct {
 	FilterName *string `locationName:"filterName" min:"1" type:"string"`
 
 	// A symbolic description of how CloudWatch Logs should interpret the data in
-	// each log event. For example, a log event may contain timestamps, IP addresses,
+	// each log event. For example, a log event can contain timestamps, IP addresses,
 	// strings, and so on. You use the filter pattern to specify what to look for
 	// in the log event message.
 	FilterPattern *string `locationName:"filterPattern" type:"string"`
@@ -7528,7 +8003,9 @@ type MetricTransformation struct {
 	// MetricName is a required field
 	MetricName *string `locationName:"metricName" type:"string" required:"true"`
 
-	// The namespace of the CloudWatch metric.
+	// A custom namespace to contain your metric in CloudWatch. Use namespaces to
+	// group together metrics that are similar. For more information, see Namespaces
+	// (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#Namespace).
 	//
 	// MetricNamespace is a required field
 	MetricNamespace *string `locationName:"metricNamespace" type:"string" required:"true"`
@@ -7796,7 +8273,7 @@ type PutDestinationPolicyInput struct {
 	_ struct{} `type:"structure"`
 
 	// An IAM policy document that authorizes cross-account users to deliver their
-	// log events to the associated destination.
+	// log events to the associated destination. This can be up to 5120 bytes.
 	//
 	// AccessPolicy is a required field
 	AccessPolicy *string `locationName:"accessPolicy" min:"1" type:"string" required:"true"`
@@ -7885,9 +8362,9 @@ type PutLogEventsInput struct {
 
 	// The sequence token obtained from the response of the previous PutLogEvents
 	// call. An upload in a newly created log stream does not require a sequence
-	// token. You can also get the sequence token using DescribeLogStreams. If you
-	// call PutLogEvents twice within a narrow time period using the same value
-	// for sequenceToken, both calls may be successful, or one may be rejected.
+	// token. You can also get the sequence token using DescribeLogStreams (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeLogStreams.html).
+	// If you call PutLogEvents twice within a narrow time period using the same
+	// value for sequenceToken, both calls might be successful or one might be rejected.
 	SequenceToken *string `locationName:"sequenceToken" min:"1" type:"string"`
 }
 
@@ -8111,6 +8588,119 @@ func (s PutMetricFilterOutput) GoString() string {
 	return s.String()
 }
 
+type PutQueryDefinitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Use this parameter to include specific log groups as part of your query definition.
+	//
+	// If you are updating a query definition and you omit this parameter, then
+	// the updated definition will contain no log groups.
+	LogGroupNames []*string `locationName:"logGroupNames" type:"list"`
+
+	// A name for the query definition. If you are saving a lot of query definitions,
+	// we recommend that you name them so that you can easily find the ones you
+	// want by using the first part of the name as a filter in the queryDefinitionNamePrefix
+	// parameter of DescribeQueryDefinitions (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeQueryDefinitions.html).
+	//
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+
+	// If you are updating a query definition, use this parameter to specify the
+	// ID of the query definition that you want to update. You can use DescribeQueryDefinitions
+	// (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeQueryDefinitions.html)
+	// to retrieve the IDs of your saved query definitions.
+	//
+	// If you are creating a query definition, do not specify this parameter. CloudWatch
+	// generates a unique ID for the new query definition and include it in the
+	// response to this operation.
+	QueryDefinitionId *string `locationName:"queryDefinitionId" type:"string"`
+
+	// The query string to use for this definition. For more information, see CloudWatch
+	// Logs Insights Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutQueryDefinitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutQueryDefinitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutQueryDefinitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutQueryDefinitionInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogGroupNames sets the LogGroupNames field's value.
+func (s *PutQueryDefinitionInput) SetLogGroupNames(v []*string) *PutQueryDefinitionInput {
+	s.LogGroupNames = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *PutQueryDefinitionInput) SetName(v string) *PutQueryDefinitionInput {
+	s.Name = &v
+	return s
+}
+
+// SetQueryDefinitionId sets the QueryDefinitionId field's value.
+func (s *PutQueryDefinitionInput) SetQueryDefinitionId(v string) *PutQueryDefinitionInput {
+	s.QueryDefinitionId = &v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *PutQueryDefinitionInput) SetQueryString(v string) *PutQueryDefinitionInput {
+	s.QueryString = &v
+	return s
+}
+
+type PutQueryDefinitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the query definition.
+	QueryDefinitionId *string `locationName:"queryDefinitionId" type:"string"`
+}
+
+// String returns the string representation
+func (s PutQueryDefinitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutQueryDefinitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetQueryDefinitionId sets the QueryDefinitionId field's value.
+func (s *PutQueryDefinitionOutput) SetQueryDefinitionId(v string) *PutQueryDefinitionOutput {
+	s.QueryDefinitionId = &v
+	return s
+}
+
 type PutResourcePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8201,6 +8791,9 @@ type PutRetentionPolicyInput struct {
 	// values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731,
 	// 1827, and 3653.
 	//
+	// If you omit retentionInDays in a PutRetentionPolicy operation, the events
+	// in the log group are always retained and never expire.
+	//
 	// RetentionInDays is a required field
 	RetentionInDays *int64 `locationName:"retentionInDays" type:"integer" required:"true"`
 }
@@ -8281,7 +8874,7 @@ type PutSubscriptionFilterInput struct {
 	// DestinationArn is a required field
 	DestinationArn *string `locationName:"destinationArn" min:"1" type:"string" required:"true"`
 
-	// The method used to distribute log data to the destination. By default log
+	// The method used to distribute log data to the destination. By default, log
 	// data is grouped by log stream, but the grouping can be set to random for
 	// a more even distribution. This property is only applicable when the destination
 	// is an Amazon Kinesis stream.
@@ -8290,7 +8883,8 @@ type PutSubscriptionFilterInput struct {
 	// A name for the subscription filter. If you are updating an existing filter,
 	// you must specify the correct name in filterName. Otherwise, the call fails
 	// because you cannot associate a second filter with a log group. To find the
-	// name of the filter currently associated with a log group, use DescribeSubscriptionFilters.
+	// name of the filter currently associated with a log group, use DescribeSubscriptionFilters
+	// (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeSubscriptionFilters.html).
 	//
 	// FilterName is a required field
 	FilterName *string `locationName:"filterName" min:"1" type:"string" required:"true"`
@@ -8469,6 +9063,69 @@ func (s *QueryCompileErrorLocation) SetEndCharOffset(v int64) *QueryCompileError
 // SetStartCharOffset sets the StartCharOffset field's value.
 func (s *QueryCompileErrorLocation) SetStartCharOffset(v int64) *QueryCompileErrorLocation {
 	s.StartCharOffset = &v
+	return s
+}
+
+// This structure contains details about a saved CloudWatch Logs Insights query
+// definition.
+type QueryDefinition struct {
+	_ struct{} `type:"structure"`
+
+	// The date that the query definition was most recently modified.
+	LastModified *int64 `locationName:"lastModified" type:"long"`
+
+	// If this query definition contains a list of log groups that it is limited
+	// to, that list appears here.
+	LogGroupNames []*string `locationName:"logGroupNames" type:"list"`
+
+	// The name of the query definition.
+	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The unique ID of the query definition.
+	QueryDefinitionId *string `locationName:"queryDefinitionId" type:"string"`
+
+	// The query string to use for this definition. For more information, see CloudWatch
+	// Logs Insights Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+	QueryString *string `locationName:"queryString" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s QueryDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryDefinition) GoString() string {
+	return s.String()
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *QueryDefinition) SetLastModified(v int64) *QueryDefinition {
+	s.LastModified = &v
+	return s
+}
+
+// SetLogGroupNames sets the LogGroupNames field's value.
+func (s *QueryDefinition) SetLogGroupNames(v []*string) *QueryDefinition {
+	s.LogGroupNames = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *QueryDefinition) SetName(v string) *QueryDefinition {
+	s.Name = &v
+	return s
+}
+
+// SetQueryDefinitionId sets the QueryDefinitionId field's value.
+func (s *QueryDefinition) SetQueryDefinitionId(v string) *QueryDefinition {
+	s.QueryDefinitionId = &v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *QueryDefinition) SetQueryString(v string) *QueryDefinition {
+	s.QueryString = &v
 	return s
 }
 
@@ -8778,6 +9435,9 @@ func (s *ResourcePolicy) SetPolicyName(v string) *ResourcePolicy {
 
 // Contains one field from one log event returned by a CloudWatch Logs Insights
 // query, along with the value of that field.
+//
+// For more information about the fields that are generated by CloudWatch logs,
+// see Supported Logs and Discovered Fields (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_AnalyzeLogData-discoverable-fields.html).
 type ResultField struct {
 	_ struct{} `type:"structure"`
 
@@ -9037,8 +9697,7 @@ func (s *StartQueryOutput) SetQueryId(v string) *StartQueryOutput {
 type StopQueryInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID number of the query to stop. If necessary, you can use DescribeQueries
-	// to find this ID number.
+	// The ID number of the query to stop. To find this ID number, use DescribeQueries.
 	//
 	// QueryId is a required field
 	QueryId *string `locationName:"queryId" type:"string" required:"true"`
@@ -9115,7 +9774,7 @@ type SubscriptionFilter struct {
 	FilterName *string `locationName:"filterName" min:"1" type:"string"`
 
 	// A symbolic description of how CloudWatch Logs should interpret the data in
-	// each log event. For example, a log event may contain timestamps, IP addresses,
+	// each log event. For example, a log event can contain timestamps, IP addresses,
 	// strings, and so on. You use the filter pattern to specify what to look for
 	// in the log event message.
 	FilterPattern *string `locationName:"filterPattern" type:"string"`
@@ -9254,7 +9913,7 @@ type TestMetricFilterInput struct {
 	_ struct{} `type:"structure"`
 
 	// A symbolic description of how CloudWatch Logs should interpret the data in
-	// each log event. For example, a log event may contain timestamps, IP addresses,
+	// each log event. For example, a log event can contain timestamps, IP addresses,
 	// strings, and so on. You use the filter pattern to specify what to look for
 	// in the log event message.
 	//
@@ -9469,6 +10128,14 @@ const (
 	DistributionByLogStream = "ByLogStream"
 )
 
+// Distribution_Values returns all elements of the Distribution enum
+func Distribution_Values() []string {
+	return []string{
+		DistributionRandom,
+		DistributionByLogStream,
+	}
+}
+
 const (
 	// ExportTaskStatusCodeCancelled is a ExportTaskStatusCode enum value
 	ExportTaskStatusCodeCancelled = "CANCELLED"
@@ -9489,6 +10156,18 @@ const (
 	ExportTaskStatusCodeRunning = "RUNNING"
 )
 
+// ExportTaskStatusCode_Values returns all elements of the ExportTaskStatusCode enum
+func ExportTaskStatusCode_Values() []string {
+	return []string{
+		ExportTaskStatusCodeCancelled,
+		ExportTaskStatusCodeCompleted,
+		ExportTaskStatusCodeFailed,
+		ExportTaskStatusCodePending,
+		ExportTaskStatusCodePendingCancel,
+		ExportTaskStatusCodeRunning,
+	}
+}
+
 const (
 	// OrderByLogStreamName is a OrderBy enum value
 	OrderByLogStreamName = "LogStreamName"
@@ -9496,6 +10175,14 @@ const (
 	// OrderByLastEventTime is a OrderBy enum value
 	OrderByLastEventTime = "LastEventTime"
 )
+
+// OrderBy_Values returns all elements of the OrderBy enum
+func OrderBy_Values() []string {
+	return []string{
+		OrderByLogStreamName,
+		OrderByLastEventTime,
+	}
+}
 
 const (
 	// QueryStatusScheduled is a QueryStatus enum value
@@ -9513,3 +10200,14 @@ const (
 	// QueryStatusCancelled is a QueryStatus enum value
 	QueryStatusCancelled = "Cancelled"
 )
+
+// QueryStatus_Values returns all elements of the QueryStatus enum
+func QueryStatus_Values() []string {
+	return []string{
+		QueryStatusScheduled,
+		QueryStatusRunning,
+		QueryStatusComplete,
+		QueryStatusFailed,
+		QueryStatusCancelled,
+	}
+}
