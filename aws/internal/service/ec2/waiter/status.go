@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
@@ -85,12 +85,7 @@ const (
 // ClientVpnAuthorizationRuleStatus fetches the Client VPN authorization rule and its Status
 func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)
-		if err != nil {
-			return nil, ClientVpnAuthorizationRuleStatusUnknown, err
-		}
-
-		result, err := finder.ClientVpnAuthorizationRule(conn, endpointID, targetNetworkCidr, accessGroupID)
+		result, err := finder.ClientVpnAuthorizationRuleByID(conn, authorizationRuleID)
 		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound) {
 			return nil, ClientVpnAuthorizationRuleStatusNotFound, nil
 		}
@@ -116,6 +111,39 @@ func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string)
 }
 
 const (
+	ClientVpnNetworkAssociationStatusNotFound = "NotFound"
+
+	ClientVpnNetworkAssociationStatusUnknown = "Unknown"
+)
+
+func ClientVpnNetworkAssociationStatus(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+			ClientVpnEndpointId: aws.String(cvepID),
+			AssociationIds:      []*string{aws.String(cvnaID)},
+		})
+
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAssociationIdNotFound) || tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
+			return nil, ClientVpnNetworkAssociationStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, ClientVpnNetworkAssociationStatusUnknown, err
+		}
+
+		if result == nil || len(result.ClientVpnTargetNetworks) == 0 || result.ClientVpnTargetNetworks[0] == nil {
+			return nil, ClientVpnNetworkAssociationStatusNotFound, nil
+		}
+
+		network := result.ClientVpnTargetNetworks[0]
+		if network.Status == nil || network.Status.Code == nil {
+			return network, ClientVpnNetworkAssociationStatusUnknown, nil
+		}
+
+		return network, aws.StringValue(network.Status.Code), nil
+	}
+}
+
+const (
 	ClientVpnRouteStatusNotFound = "NotFound"
 
 	ClientVpnRouteStatusUnknown = "Unknown"
@@ -124,12 +152,7 @@ const (
 // ClientVpnRouteStatus fetches the Client VPN route and its Status
 func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		endpointID, targetSubnetID, destinationCidr, err := tfec2.ClientVpnRouteParseID(routeID)
-		if err != nil {
-			return nil, ClientVpnRouteStatusNotFound, err
-		}
-
-		result, err := finder.ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
+		result, err := finder.ClientVpnRouteByID(conn, routeID)
 		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnRouteNotFound) {
 			return nil, ClientVpnRouteStatusNotFound, nil
 		}
@@ -151,5 +174,33 @@ func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFu
 		}
 
 		return rule, aws.StringValue(rule.Status.Code), nil
+	}
+}
+
+const (
+	SecurityGroupStatusCreated = "Created"
+
+	SecurityGroupStatusNotFound = "NotFound"
+
+	SecurityGroupStatusUnknown = "Unknown"
+)
+
+// SecurityGroupStatus fetches the security group and its status
+func SecurityGroupStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		group, err := finder.SecurityGroupByID(conn, id)
+		if tfec2.ErrCodeEquals(err, tfec2.InvalidSecurityGroupIDNotFound) ||
+			tfec2.ErrCodeEquals(err, tfec2.InvalidGroupNotFound) {
+			return nil, SecurityGroupStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, SecurityGroupStatusUnknown, err
+		}
+
+		if group == nil {
+			return nil, SecurityGroupStatusNotFound, nil
+		}
+
+		return group, SecurityGroupStatusCreated, nil
 	}
 }

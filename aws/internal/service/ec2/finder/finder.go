@@ -54,3 +54,20 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
+
+// SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.
+func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
+	req := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: aws.StringSlice([]string{id}),
+	}
+	result, err := conn.DescribeSecurityGroups(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil || len(result.SecurityGroups) == 0 || result.SecurityGroups[0] == nil {
+		return nil, nil
+	}
+
+	return result.SecurityGroups[0], nil
+}

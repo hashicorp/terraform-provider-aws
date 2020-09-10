@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -215,7 +215,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 }
 `, rName)
@@ -228,8 +228,8 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
-  secret_binary = "${base64encode("test-binary")}"
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_binary = base64encode("test-binary")
 }
 `, rName)
 }
@@ -241,7 +241,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 
   version_stages = ["one", "AWSCURRENT"]
@@ -256,7 +256,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 
   version_stages = ["two", "AWSCURRENT"]
@@ -271,7 +271,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 
   version_stages = ["one", "two", "AWSCURRENT"]

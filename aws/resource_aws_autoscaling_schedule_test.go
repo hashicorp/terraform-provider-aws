@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
@@ -267,15 +267,24 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 }
 
 func testAccAWSAutoscalingScheduleConfig(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
-  image_id      = "ami-21f78e11"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "%s"
   max_size                  = 1
   min_size                  = 1
@@ -305,15 +314,24 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_recurrence(r string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
-  image_id      = "ami-21f78e11"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "%s"
   max_size                  = 1
   min_size                  = 1
@@ -342,15 +360,24 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
-  image_id      = "ami-21f78e11"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "%s"
   max_size                  = 1
   min_size                  = 1
@@ -380,15 +407,24 @@ resource "aws_autoscaling_schedule" "foobar" {
 }
 
 func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
-  image_id      = "ami-21f78e11"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t1.micro"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "%s"
   max_size                  = 1
   min_size                  = 1

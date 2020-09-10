@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -173,11 +173,6 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"ecc_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Removed:  "Use `ecs_cluster_arn` attribute instead",
 			},
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,

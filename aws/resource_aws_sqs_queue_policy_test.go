@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
@@ -97,21 +97,22 @@ resource "aws_sqs_queue" "test" {
 }
 
 resource "aws_sqs_queue_policy" "test" {
-  queue_url = "${aws_sqs_queue.test.id}"
+  queue_url = aws_sqs_queue.test.id
+
   policy = <<POLICY
 {
-  "Version":"2012-10-17",
-  "Id":"sqspolicy",
-  "Statement":[
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement": [
     {
-      "Sid":"First",
-      "Effect":"Allow",
-      "Principal":"*",
-      "Action":"sqs:SendMessage",
-      "Resource":"${aws_sqs_queue.test.arn}",
-      "Condition":{
-        "ArnEquals":{
-          "aws:SourceArn":"${aws_sqs_queue.test.arn}"
+      "Sid": "First",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.test.arn}",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${aws_sqs_queue.test.arn}"
         }
       }
     }

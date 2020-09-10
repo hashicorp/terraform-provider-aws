@@ -32781,6 +32781,14 @@ const (
 	ApprovalStateRevoke = "REVOKE"
 )
 
+// ApprovalState_Values returns all elements of the ApprovalState enum
+func ApprovalState_Values() []string {
+	return []string{
+		ApprovalStateApprove,
+		ApprovalStateRevoke,
+	}
+}
+
 const (
 	// ChangeTypeEnumA is a ChangeTypeEnum enum value
 	ChangeTypeEnumA = "A"
@@ -32792,6 +32800,15 @@ const (
 	ChangeTypeEnumD = "D"
 )
 
+// ChangeTypeEnum_Values returns all elements of the ChangeTypeEnum enum
+func ChangeTypeEnum_Values() []string {
+	return []string{
+		ChangeTypeEnumA,
+		ChangeTypeEnumM,
+		ChangeTypeEnumD,
+	}
+}
+
 const (
 	// ConflictDetailLevelTypeEnumFileLevel is a ConflictDetailLevelTypeEnum enum value
 	ConflictDetailLevelTypeEnumFileLevel = "FILE_LEVEL"
@@ -32799,6 +32816,14 @@ const (
 	// ConflictDetailLevelTypeEnumLineLevel is a ConflictDetailLevelTypeEnum enum value
 	ConflictDetailLevelTypeEnumLineLevel = "LINE_LEVEL"
 )
+
+// ConflictDetailLevelTypeEnum_Values returns all elements of the ConflictDetailLevelTypeEnum enum
+func ConflictDetailLevelTypeEnum_Values() []string {
+	return []string{
+		ConflictDetailLevelTypeEnumFileLevel,
+		ConflictDetailLevelTypeEnumLineLevel,
+	}
+}
 
 const (
 	// ConflictResolutionStrategyTypeEnumNone is a ConflictResolutionStrategyTypeEnum enum value
@@ -32814,6 +32839,16 @@ const (
 	ConflictResolutionStrategyTypeEnumAutomerge = "AUTOMERGE"
 )
 
+// ConflictResolutionStrategyTypeEnum_Values returns all elements of the ConflictResolutionStrategyTypeEnum enum
+func ConflictResolutionStrategyTypeEnum_Values() []string {
+	return []string{
+		ConflictResolutionStrategyTypeEnumNone,
+		ConflictResolutionStrategyTypeEnumAcceptSource,
+		ConflictResolutionStrategyTypeEnumAcceptDestination,
+		ConflictResolutionStrategyTypeEnumAutomerge,
+	}
+}
+
 const (
 	// FileModeTypeEnumExecutable is a FileModeTypeEnum enum value
 	FileModeTypeEnumExecutable = "EXECUTABLE"
@@ -32825,6 +32860,15 @@ const (
 	FileModeTypeEnumSymlink = "SYMLINK"
 )
 
+// FileModeTypeEnum_Values returns all elements of the FileModeTypeEnum enum
+func FileModeTypeEnum_Values() []string {
+	return []string{
+		FileModeTypeEnumExecutable,
+		FileModeTypeEnumNormal,
+		FileModeTypeEnumSymlink,
+	}
+}
+
 const (
 	// MergeOptionTypeEnumFastForwardMerge is a MergeOptionTypeEnum enum value
 	MergeOptionTypeEnumFastForwardMerge = "FAST_FORWARD_MERGE"
@@ -32835,6 +32879,15 @@ const (
 	// MergeOptionTypeEnumThreeWayMerge is a MergeOptionTypeEnum enum value
 	MergeOptionTypeEnumThreeWayMerge = "THREE_WAY_MERGE"
 )
+
+// MergeOptionTypeEnum_Values returns all elements of the MergeOptionTypeEnum enum
+func MergeOptionTypeEnum_Values() []string {
+	return []string{
+		MergeOptionTypeEnumFastForwardMerge,
+		MergeOptionTypeEnumSquashMerge,
+		MergeOptionTypeEnumThreeWayMerge,
+	}
+}
 
 const (
 	// ObjectTypeEnumFile is a ObjectTypeEnum enum value
@@ -32850,6 +32903,16 @@ const (
 	ObjectTypeEnumSymbolicLink = "SYMBOLIC_LINK"
 )
 
+// ObjectTypeEnum_Values returns all elements of the ObjectTypeEnum enum
+func ObjectTypeEnum_Values() []string {
+	return []string{
+		ObjectTypeEnumFile,
+		ObjectTypeEnumDirectory,
+		ObjectTypeEnumGitLink,
+		ObjectTypeEnumSymbolicLink,
+	}
+}
+
 const (
 	// OrderEnumAscending is a OrderEnum enum value
 	OrderEnumAscending = "ascending"
@@ -32858,6 +32921,14 @@ const (
 	OrderEnumDescending = "descending"
 )
 
+// OrderEnum_Values returns all elements of the OrderEnum enum
+func OrderEnum_Values() []string {
+	return []string{
+		OrderEnumAscending,
+		OrderEnumDescending,
+	}
+}
+
 const (
 	// OverrideStatusOverride is a OverrideStatus enum value
 	OverrideStatusOverride = "OVERRIDE"
@@ -32865,6 +32936,14 @@ const (
 	// OverrideStatusRevoke is a OverrideStatus enum value
 	OverrideStatusRevoke = "REVOKE"
 )
+
+// OverrideStatus_Values returns all elements of the OverrideStatus enum
+func OverrideStatus_Values() []string {
+	return []string{
+		OverrideStatusOverride,
+		OverrideStatusRevoke,
+	}
+}
 
 const (
 	// PullRequestEventTypePullRequestCreated is a PullRequestEventType enum value
@@ -32895,6 +32974,21 @@ const (
 	PullRequestEventTypePullRequestApprovalStateChanged = "PULL_REQUEST_APPROVAL_STATE_CHANGED"
 )
 
+// PullRequestEventType_Values returns all elements of the PullRequestEventType enum
+func PullRequestEventType_Values() []string {
+	return []string{
+		PullRequestEventTypePullRequestCreated,
+		PullRequestEventTypePullRequestStatusChanged,
+		PullRequestEventTypePullRequestSourceReferenceUpdated,
+		PullRequestEventTypePullRequestMergeStateChanged,
+		PullRequestEventTypePullRequestApprovalRuleCreated,
+		PullRequestEventTypePullRequestApprovalRuleUpdated,
+		PullRequestEventTypePullRequestApprovalRuleDeleted,
+		PullRequestEventTypePullRequestApprovalRuleOverridden,
+		PullRequestEventTypePullRequestApprovalStateChanged,
+	}
+}
+
 const (
 	// PullRequestStatusEnumOpen is a PullRequestStatusEnum enum value
 	PullRequestStatusEnumOpen = "OPEN"
@@ -32903,6 +32997,14 @@ const (
 	PullRequestStatusEnumClosed = "CLOSED"
 )
 
+// PullRequestStatusEnum_Values returns all elements of the PullRequestStatusEnum enum
+func PullRequestStatusEnum_Values() []string {
+	return []string{
+		PullRequestStatusEnumOpen,
+		PullRequestStatusEnumClosed,
+	}
+}
+
 const (
 	// RelativeFileVersionEnumBefore is a RelativeFileVersionEnum enum value
 	RelativeFileVersionEnumBefore = "BEFORE"
@@ -32910,6 +33012,14 @@ const (
 	// RelativeFileVersionEnumAfter is a RelativeFileVersionEnum enum value
 	RelativeFileVersionEnumAfter = "AFTER"
 )
+
+// RelativeFileVersionEnum_Values returns all elements of the RelativeFileVersionEnum enum
+func RelativeFileVersionEnum_Values() []string {
+	return []string{
+		RelativeFileVersionEnumBefore,
+		RelativeFileVersionEnumAfter,
+	}
+}
 
 const (
 	// ReplacementTypeEnumKeepBase is a ReplacementTypeEnum enum value
@@ -32925,6 +33035,16 @@ const (
 	ReplacementTypeEnumUseNewContent = "USE_NEW_CONTENT"
 )
 
+// ReplacementTypeEnum_Values returns all elements of the ReplacementTypeEnum enum
+func ReplacementTypeEnum_Values() []string {
+	return []string{
+		ReplacementTypeEnumKeepBase,
+		ReplacementTypeEnumKeepSource,
+		ReplacementTypeEnumKeepDestination,
+		ReplacementTypeEnumUseNewContent,
+	}
+}
+
 const (
 	// RepositoryTriggerEventEnumAll is a RepositoryTriggerEventEnum enum value
 	RepositoryTriggerEventEnumAll = "all"
@@ -32939,6 +33059,16 @@ const (
 	RepositoryTriggerEventEnumDeleteReference = "deleteReference"
 )
 
+// RepositoryTriggerEventEnum_Values returns all elements of the RepositoryTriggerEventEnum enum
+func RepositoryTriggerEventEnum_Values() []string {
+	return []string{
+		RepositoryTriggerEventEnumAll,
+		RepositoryTriggerEventEnumUpdateReference,
+		RepositoryTriggerEventEnumCreateReference,
+		RepositoryTriggerEventEnumDeleteReference,
+	}
+}
+
 const (
 	// SortByEnumRepositoryName is a SortByEnum enum value
 	SortByEnumRepositoryName = "repositoryName"
@@ -32946,3 +33076,11 @@ const (
 	// SortByEnumLastModifiedDate is a SortByEnum enum value
 	SortByEnumLastModifiedDate = "lastModifiedDate"
 )
+
+// SortByEnum_Values returns all elements of the SortByEnum enum
+func SortByEnum_Values() []string {
+	return []string{
+		SortByEnumRepositoryName,
+		SortByEnumLastModifiedDate,
+	}
+}

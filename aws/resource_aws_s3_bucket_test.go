@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,12 +15,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -126,21 +129,18 @@ func testSweepS3Buckets(region string) error {
 }
 
 func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
-	input := &s3.GetBucketLocationInput{
-		Bucket: aws.String(bucket),
-	}
-
-	output, err := conn.GetBucketLocation(input)
-
+	region, err := s3manager.GetBucketRegionWithClient(context.Background(), conn, bucket, func(r *request.Request) {
+		// By default, GetBucketRegion forces virtual host addressing, which
+		// is not compatible with many non-AWS implementations. Instead, pass
+		// the provider s3_force_path_style configuration, which defaults to
+		// false, but allows override.
+		r.Config.S3ForcePathStyle = conn.Config.S3ForcePathStyle
+	})
 	if err != nil {
 		return "", err
 	}
 
-	if output == nil || output.LocationConstraint == nil {
-		return "us-east-1", nil
-	}
-
-	return aws.StringValue(output.LocationConstraint), nil
+	return region, nil
 }
 
 func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
@@ -259,7 +259,6 @@ func TestAccAWSS3Bucket_tagsWithNoSystemTags(t *testing.T) {
 				),
 			},
 			{
-
 				Config: testAccAWSS3BucketConfig_withNoTags(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
@@ -352,7 +351,6 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 				),
 			},
 			{
-
 				Config: testAccAWSS3BucketConfig_withNoTags(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
@@ -435,26 +433,6 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_region(t *testing.T) {
-	resourceName := "aws_s3_bucket.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSS3BucketConfigWithRegion(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region", testAccGetRegion()),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
@@ -531,24 +509,6 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 	partition := testAccGetPartition()
 	resourceName := "aws_s3_bucket.bucket"
 
-	checkFn := func(s []*terraform.InstanceState) error {
-		// Expect 2: bucket + policy
-		if len(s) != 2 {
-			return fmt.Errorf("expected 2 states: %#v", s)
-		}
-		bucketState, policyState := s[0], s[1]
-
-		if bucketState.ID != bucketName {
-			return fmt.Errorf("expected bucket of ID %s, %s received", bucketName, bucketState.ID)
-		}
-
-		if policyState.ID != bucketName {
-			return fmt.Errorf("expected policy of ID %s, %s received", bucketName, bucketState.ID)
-		}
-
-		return nil
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -562,9 +522,20 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: checkFn,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"acl",
+					"force_destroy",
+					"grant",
+					// NOTE: Prior to Terraform AWS Provider 3.0, this attribute did not import correctly either.
+					//       The Read function does not require GetBucketPolicy, if the argument is not configured.
+					//       Rather than introduce that breaking change as well with 3.0, instead we leave the
+					//       current Read behavior and note this will be deprecated in a later 3.x release along
+					//       with other inline policy attributes across the provider.
+					"policy",
+				},
 			},
 			{
 				Config: testAccAWSS3BucketConfig_Basic(bucketName),
@@ -1957,6 +1928,60 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_SameRegionReplicationSchemaV2(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationResourceName := "aws_s3_bucket.destination"
+	rNameDestination := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "replication_configuration.0.role", "iam", fmt.Sprintf("role/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExists(destinationResourceName),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						testAccProviderFunc,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("testid"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::%s", testAccGetPartition(), rNameDestination)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+								},
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("testprefix"),
+								},
+								Priority: aws.Int64(0),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+							},
+						},
+					),
+				),
+			},
+			{
+				Config:            testAccAWSS3BucketConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
@@ -2481,18 +2506,16 @@ func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackId *string) r
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cfconn
 		stackName := acctest.RandomWithPrefix("tf-acc-test-s3tags")
-		templateBody := fmt.Sprintf(`
-        {
-            "Resources": {
-                "TfTestBucket": {
-                    "Type": "AWS::S3::Bucket",
-                    "Properties": {
-                        "BucketName": "%s",
-                    }
-                }
-            }
-        }
-        `, n)
+		templateBody := fmt.Sprintf(`{
+  "Resources": {
+    "TfTestBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "%s"
+      }
+    }
+  }
+}`, n)
 
 		req := &cloudformation.CreateStackInput{
 			StackName:    aws.String(stackName),
@@ -2945,18 +2968,19 @@ func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName stri
 
 func testAccAWSS3BucketPolicy(bucketName, partition string) string {
 	return fmt.Sprintf(`{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "",
-			"Effect": "Allow",
-			"Principal": {"AWS": "*"},
-			"Action": "s3:GetObject",
-			"Resource": "arn:%[1]s:s3:::%[2]s/*"
-		}
-	]
-}
-`, partition, bucketName)
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:%[1]s:s3:::%[2]s/*"
+    }
+  ]
+}`, partition, bucketName)
 }
 
 func testAccAWSS3BucketConfig_Basic(bucketName string) string {
@@ -2970,8 +2994,8 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfig_withNoTags(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl = "private"
+  bucket        = %[1]q
+  acl           = "private"
   force_destroy = false
 }
 `, bucketName)
@@ -2980,9 +3004,10 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfig_withTags(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl = "private"
+  bucket        = %[1]q
+  acl           = "private"
   force_destroy = false
+
   tags = {
     Key1 = "AAA"
     Key2 = "BBB"
@@ -2995,9 +3020,10 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfig_withUpdatedTags(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl = "private"
+  bucket        = %[1]q
+  acl           = "private"
   force_destroy = false
+
   tags = {
     Key2 = "BBB"
     Key3 = "XXX"
@@ -3078,17 +3104,6 @@ resource "aws_s3_bucket" "bucket6" {
 `, randInt)
 }
 
-func testAccAWSS3BucketConfigWithRegion(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-  region = data.aws_region.current.name
-}
-`, bucketName)
-}
-
 func testAccAWSS3BucketWebsiteConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
@@ -3153,15 +3168,18 @@ resource "aws_s3_bucket" "bucket" {
     error_document = "error.html"
 
     routing_rules = <<EOF
-[{
-	"Condition": {
-		"KeyPrefixEquals": "docs/"
-	},
-	"Redirect": {
-		"ReplaceKeyPrefixWith": "documents/"
-	}
-}]
+[
+  {
+    "Condition": {
+      "KeyPrefixEquals": "docs/"
+    },
+    "Redirect": {
+      "ReplaceKeyPrefixWith": "documents/"
+    }
+  }
+]
 EOF
+
   }
 }
 `, bucketName)
@@ -3235,7 +3253,7 @@ resource "aws_s3_bucket" "arbitrary" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
+        kms_master_key_id = aws_kms_key.arbitrary.arn
         sse_algorithm     = "aws:kms"
       }
     }
@@ -3353,8 +3371,8 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithAcl(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = %[1]q
-	acl    = "public-read"
+  bucket = %[1]q
+  acl    = "public-read"
 }
 `, bucketName)
 }
@@ -3362,8 +3380,8 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithAclUpdate(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = %[1]q
-	acl    = "private"
+  bucket = %[1]q
+  acl    = "private"
 }
 `, bucketName)
 }
@@ -3373,12 +3391,13 @@ func testAccAWSS3BucketConfigWithGrants(bucketName string) string {
 data "aws_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = %[1]q
-	grant {
-        id = "${data.aws_canonical_user_id.current.id}"
-        type = "CanonicalUser"
-        permissions = ["FULL_CONTROL", "WRITE"]
-    }
+  bucket = %[1]q
+
+  grant {
+    id          = data.aws_canonical_user_id.current.id
+    type        = "CanonicalUser"
+    permissions = ["FULL_CONTROL", "WRITE"]
+  }
 }
 `, bucketName)
 }
@@ -3388,17 +3407,19 @@ func testAccAWSS3BucketConfigWithGrantsUpdate(bucketName string) string {
 data "aws_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
-	bucket = %[1]q
-	grant {
-        id = "${data.aws_canonical_user_id.current.id}"
-        type = "CanonicalUser"
-        permissions = ["READ"]
-    }
-    grant {
-        type = "Group"
-        permissions = ["READ_ACP"]
-        uri = "http://acs.amazonaws.com/groups/s3/LogDelivery"
-    }
+  bucket = %[1]q
+
+  grant {
+    id          = data.aws_canonical_user_id.current.id
+    type        = "CanonicalUser"
+    permissions = ["READ"]
+  }
+
+  grant {
+    type        = "Group"
+    permissions = ["READ_ACP"]
+    uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+  }
 }
 `, bucketName)
 }
@@ -3415,7 +3436,7 @@ resource "aws_s3_bucket" "bucket" {
   acl    = "private"
 
   logging {
-    target_bucket = "${aws_s3_bucket.log_bucket.id}"
+    target_bucket = aws_s3_bucket.log_bucket.id
     target_prefix = "log/"
   }
 }
@@ -3498,33 +3519,35 @@ resource "aws_s3_bucket" "bucket" {
       date = "2016-01-12"
     }
   }
-	lifecycle_rule {
-		id = "id5"
-		enabled = true
 
-		tags = {
-			"tagKey" = "tagValue"
-			"terraform" = "hashicorp"
-		}
+  lifecycle_rule {
+    id      = "id5"
+    enabled = true
 
-		transition {
-			days = 0
-			storage_class = "GLACIER"
-		}
-	}
-	lifecycle_rule {
-		id = "id6"
-		enabled = true
+    tags = {
+      "tagKey"    = "tagValue"
+      "terraform" = "hashicorp"
+    }
 
-		tags = {
-			"tagKey" = "tagValue"
-		}
+    transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
 
-		transition {
-			days = 0
-			storage_class = "GLACIER"
-		}
-	}
+  lifecycle_rule {
+    id      = "id6"
+    enabled = true
+
+    tags = {
+      "tagKey" = "tagValue"
+    }
+
+    transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
 }
 `, bucketName)
 }
@@ -3622,7 +3645,8 @@ func testAccAWSS3BucketConfigReplicationBasic(randInt int) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "role" {
-  name               = "tf-iam-role-replication-%[1]d"
+  name = "tf-iam-role-replication-%[1]d"
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -3641,7 +3665,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "destination" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
   bucket   = "tf-test-bucket-destination-%[1]d"
 
   versioning {
@@ -3654,12 +3678,12 @@ resource "aws_s3_bucket" "destination" {
 func testAccAWSS3BucketConfigReplication(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 }
 `, randInt)
 }
@@ -3667,26 +3691,27 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithConfiguration(randInt int, storageClass string) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "%[2]s"
+      }
     }
-
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            prefix = "foo"
-            status = "Enabled"
-
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "%[2]s"
-            }
-        }
-    }
+  }
 }
 `, randInt, storageClass)
 }
@@ -3694,39 +3719,40 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_kms_key" "replica" {
-  provider                = "aws.alternate"
+  provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
 
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            prefix = "foo"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-                replica_kms_key_id = "${aws_kms_key.replica.arn}"
-            }
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
 
-            source_selection_criteria {
-                sse_kms_encrypted_objects {
-                  enabled = true
-                }
-            }
+      destination {
+        bucket             = aws_s3_bucket.destination.arn
+        storage_class      = "STANDARD"
+        replica_kms_key_id = aws_kms_key.replica.arn
+      }
+
+      source_selection_criteria {
+        sse_kms_encrypted_objects {
+          enabled = true
         }
+      }
     }
+  }
 }
 `, randInt)
 }
@@ -3736,31 +3762,32 @@ func testAccAWSS3BucketConfigReplicationWithAccessControlTranslation(randInt int
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            prefix = "foo"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            destination {
-                account_id         = "${data.aws_caller_identity.current.account_id}"
-                bucket             = "${aws_s3_bucket.destination.arn}"
-                storage_class      = "STANDARD"
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
 
-                access_control_translation {
-                    owner = "Destination"
-                }
-            }
+      destination {
+        account_id    = data.aws_caller_identity.current.account_id
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+
+        access_control_translation {
+          owner = "Destination"
         }
+      }
     }
+  }
 }
 `, randInt)
 }
@@ -3801,44 +3828,45 @@ func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjectsAndAccessContr
 data "aws_caller_identity" "current" {}
 
 resource "aws_kms_key" "replica" {
-  provider                = "aws.alternate"
+  provider                = "awsalternate"
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
 
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            prefix = "foo"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            destination {
-                account_id         = "${data.aws_caller_identity.current.account_id}"
-                bucket             = "${aws_s3_bucket.destination.arn}"
-                storage_class      = "STANDARD"
-                replica_kms_key_id = "${aws_kms_key.replica.arn}"
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
 
-                access_control_translation {
-                    owner = "Destination"
-                }
-            }
+      destination {
+        account_id         = data.aws_caller_identity.current.account_id
+        bucket             = aws_s3_bucket.destination.arn
+        storage_class      = "STANDARD"
+        replica_kms_key_id = aws_kms_key.replica.arn
 
-            source_selection_criteria {
-                sse_kms_encrypted_objects {
-                  enabled = true
-                }
-            }
+        access_control_translation {
+          owner = "Destination"
         }
+      }
+
+      source_selection_criteria {
+        sse_kms_encrypted_objects {
+          enabled = true
+        }
+      }
     }
+  }
 }
 `, randInt)
 }
@@ -3846,25 +3874,26 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithoutStorageClass(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
+
+      destination {
+        bucket = aws_s3_bucket.destination.arn
+      }
     }
-
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            prefix = "foo"
-            status = "Enabled"
-
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-            }
-        }
-    }
+  }
 }
 `, randInt)
 }
@@ -3872,25 +3901,26 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithoutPrefix(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
     }
-
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            status = "Enabled"
-
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-            }
-        }
-    }
+  }
 }
 `, randInt)
 }
@@ -3898,52 +3928,93 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationNoVersioning(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            prefix = "foo"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-            }
-        }
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
     }
+  }
 }
 `, randInt)
+}
+
+func testAccAWSS3BucketConfigSameRegionReplicationWithV2ConfigurationNoTags(rName, rNameDestination string) string {
+	return composeConfig(testAccAWSS3BucketReplicationConfig_iamPolicy(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.test.arn
+
+    rules {
+      id     = "testid"
+      status = "Enabled"
+
+      filter {
+        prefix = "testprefix"
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "destination" {
+  bucket = %[2]q
+
+  versioning {
+    enabled = true
+  }
+}
+`, rName, rNameDestination))
 }
 
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+
+      filter {
+        prefix = "foo"
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
     }
-
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            status = "Enabled"
-
-            filter {
-                prefix = "foo"
-            }
-
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-            }
-        }
-    }
+  }
 }
 `, randInt)
 }
@@ -3951,33 +4022,34 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationOnlyOneTag(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            priority = 42
+    rules {
+      id     = "foobar"
+      status = "Enabled"
 
-            filter {
-  tags = {
-                    ReplicateMe = "Yes"
-                }
-            }
+      priority = 42
 
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-            }
+      filter {
+        tags = {
+          ReplicateMe = "Yes"
         }
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
     }
+  }
 }
 `, randInt)
 }
@@ -3985,36 +4057,37 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationPrefixAndTags(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            priority = 41
+    rules {
+      id     = "foobar"
+      status = "Enabled"
 
-            filter {
-                prefix = "foo"
+      priority = 41
 
-  tags = {
-                    AnotherTag  = "OK"
-                    ReplicateMe = "Yes"
-                }
-            }
+      filter {
+        prefix = "foo"
 
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-            }
+        tags = {
+          AnotherTag  = "OK"
+          ReplicateMe = "Yes"
         }
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
     }
+  }
 }
 `, randInt)
 }
@@ -4022,33 +4095,34 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationMultipleTags(randInt int) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-    bucket   = "tf-test-bucket-%[1]d"
-    acl      = "private"
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
 
-    versioning {
-        enabled = true
-    }
+  versioning {
+    enabled = true
+  }
 
-    replication_configuration {
-        role = "${aws_iam_role.role.arn}"
-        rules {
-            id     = "foobar"
-            status = "Enabled"
+  replication_configuration {
+    role = aws_iam_role.role.arn
 
-            filter {
-  tags = {
-                    AnotherTag  = "OK"
-                    Foo         = "Bar"
-                    ReplicateMe = "Yes"
-                }
-            }
+    rules {
+      id     = "foobar"
+      status = "Enabled"
 
-            destination {
-                bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
-            }
+      filter {
+        tags = {
+          AnotherTag  = "OK"
+          Foo         = "Bar"
+          ReplicateMe = "Yes"
         }
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
     }
+  }
 }
 `, randInt)
 }
@@ -4087,8 +4161,8 @@ resource "aws_s3_bucket" "arbitrary" {
 func testAccAWSS3BucketConfig_forceDestroy(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
-  acl = "private"
+  bucket        = "%s"
+  acl           = "private"
   force_destroy = true
 }
 `, bucketName)
@@ -4097,8 +4171,8 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfig_forceDestroyWithObjectLockEnabled(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
-  acl = "private"
+  bucket        = "%s"
+  acl           = "private"
   force_destroy = true
 
   versioning {
@@ -4112,6 +4186,30 @@ resource "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
+func testAccAWSS3BucketReplicationConfig_iamPolicy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+`, rName)
+}
+
 const testAccAWSS3BucketConfigBucketEmptyString = `
 resource "aws_s3_bucket" "test" {
   bucket = ""
@@ -4120,12 +4218,12 @@ resource "aws_s3_bucket" "test" {
 
 const testAccAWSS3BucketConfig_namePrefix = `
 resource "aws_s3_bucket" "test" {
-	bucket_prefix = "tf-test-"
+  bucket_prefix = "tf-test-"
 }
 `
 
 const testAccAWSS3BucketConfig_generatedName = `
 resource "aws_s3_bucket" "test" {
-	bucket_prefix = "tf-test-"
+  bucket_prefix = "tf-test-"
 }
 `
