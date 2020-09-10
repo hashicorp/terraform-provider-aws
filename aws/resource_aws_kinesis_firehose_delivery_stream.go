@@ -624,11 +624,11 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 		aws.StringValue(s.DeliveryStreamEncryptionConfiguration.Status) == firehose.DeliveryStreamEncryptionStatusEnabled {
 		sseOptions["enabled"] = true
 
-		if aws.StringValue(s.DeliveryStreamEncryptionConfiguration.KeyType) == firehose.KeyTypeCustomerManagedCmk {
-			sseOptions["kms_key_type"] = firehose.KeyTypeCustomerManagedCmk
-			sseOptions["kms_key_arn"] = s.DeliveryStreamEncryptionConfiguration.KeyARN
-		} else if aws.StringValue(s.DeliveryStreamEncryptionConfiguration.KeyType) == firehose.KeyTypeAwsOwnedCmk {
-			sseOptions["kms_key_type"] = firehose.KeyTypeAwsOwnedCmk
+		if v := s.DeliveryStreamEncryptionConfiguration.KeyARN; v != nil {
+			sseOptions["kms_key_arn"] = aws.StringValue(v)
+		}
+		if v := s.DeliveryStreamEncryptionConfiguration.KeyType; v != nil {
+			sseOptions["kms_key_type"] = aws.StringValue(v)
 		}
 	}
 
@@ -737,16 +737,9 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						},
 
 						"kms_key_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								if value != firehose.KeyTypeAwsOwnedCmk && value != firehose.KeyTypeCustomerManagedCmk {
-									errors = append(errors, fmt.Errorf("%q must be one of '%s' or '%s'",
-										k, firehose.KeyTypeAwsOwnedCmk, firehose.KeyTypeCustomerManagedCmk))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(firehose.KeyType_Values(), false),
 						},
 
 						"kms_key_arn": {
@@ -2231,11 +2224,11 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 			DeliveryStreamName:                         aws.String(sn),
 			DeliveryStreamEncryptionConfigurationInput: &firehose.DeliveryStreamEncryptionConfigurationInput{},
 		}
-		if options["kms_key_type"] == firehose.KeyTypeCustomerManagedCmk {
-			startInput.DeliveryStreamEncryptionConfigurationInput.KeyType = aws.String(firehose.KeyTypeCustomerManagedCmk)
-			startInput.DeliveryStreamEncryptionConfigurationInput.KeyARN = aws.String(options["kms_key_arn"].(string))
-		} else if options["kms_key_type"] == firehose.KeyTypeAwsOwnedCmk {
-			startInput.DeliveryStreamEncryptionConfigurationInput.KeyType = aws.String(firehose.KeyTypeAwsOwnedCmk)
+		if v, ok := options["kms_key_arn"].(string); ok && v != "" {
+			startInput.DeliveryStreamEncryptionConfigurationInput.KeyARN = aws.String(v)
+		}
+		if v, ok := options["kms_key_type"].(string); ok && v != "" {
+			startInput.DeliveryStreamEncryptionConfigurationInput.KeyType = aws.String(v)
 		}
 		_, err := conn.StartDeliveryStreamEncryption(startInput)
 		if err != nil {
@@ -2288,15 +2281,15 @@ func validateAwsKinesisFirehoseSchema(d *schema.ResourceData) error {
 		if encryptionOptions["enabled"] == true {
 			if encryptionOptions["kms_key_type"] == firehose.KeyTypeAwsOwnedCmk &&
 				encryptionOptions["kms_key_arn"] != "" {
-				return fmt.Errorf("encryption using the AWS_OWNED_CMK option must not have a key_arn specified")
+				return fmt.Errorf("encryption using the AWS_OWNED_CMK option must not have kms_key_arn specified")
 			}
 			if encryptionOptions["kms_key_type"] != firehose.KeyTypeAwsOwnedCmk &&
 				encryptionOptions["kms_key_type"] != firehose.KeyTypeCustomerManagedCmk {
-				return fmt.Errorf("a key type has to be specified, when server-side-encryption is enabled")
+				return fmt.Errorf("kms_key_type has to be specified, when server-side-encryption is enabled")
 			}
 			if encryptionOptions["kms_key_type"] == firehose.KeyTypeCustomerManagedCmk &&
 				(encryptionOptions["kms_key_arn"] == nil || encryptionOptions["kms_key_arn"] == "") {
-				return fmt.Errorf("encryption using the CUSTOMER_MANAGED_CMK option requires a key_arn specified")
+				return fmt.Errorf("encryption using the CUSTOMER_MANAGED_CMK option requires kms_key_arn specified")
 			}
 		}
 	}
@@ -2394,48 +2387,41 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("server_side_encryption") {
-		o, n := d.GetChange("server_side_encryption")
-		oldOptions := getOptionsOfConfigurationUnit(o)
+		_, n := d.GetChange("server_side_encryption")
 		newOptions := getOptionsOfConfigurationUnit(n)
 		if isKinesisFirehoseDeliveryStreamOptionDisabled(n) {
-			if !isKinesisFirehoseDeliveryStreamOptionDisabled(o) {
-				_, err := conn.StopDeliveryStreamEncryption(&firehose.StopDeliveryStreamEncryptionInput{
-					DeliveryStreamName: aws.String(sn),
-				})
-				if err != nil {
-					return fmt.Errorf("error stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
-				}
+			_, err := conn.StopDeliveryStreamEncryption(&firehose.StopDeliveryStreamEncryptionInput{
+				DeliveryStreamName: aws.String(sn),
+			})
+			if err != nil {
+				return fmt.Errorf("error stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+			}
 
-				if err := waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn, sn); err != nil {
-					return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be disabled: %s", sn, err)
-				}
+			if err := waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn, sn); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be disabled: %s", sn, err)
 			}
 		} else {
-			// cannot re-encrypt using same type, but arn change will trigger full change
-			if !(oldOptions["kms_key_type"] == firehose.KeyTypeAwsOwnedCmk &&
-				newOptions["kms_key_type"] == firehose.KeyTypeAwsOwnedCmk) {
-				startInput := &firehose.StartDeliveryStreamEncryptionInput{
-					DeliveryStreamName: aws.String(sn),
-				}
-				startInput.DeliveryStreamEncryptionConfigurationInput =
-					&firehose.DeliveryStreamEncryptionConfigurationInput{}
-				startInput.DeliveryStreamEncryptionConfigurationInput.KeyType =
-					aws.String(newOptions["kms_key_type"].(string))
-				if newOptions["kms_key_type"] == firehose.KeyTypeCustomerManagedCmk {
-					startInput.DeliveryStreamEncryptionConfigurationInput.KeyARN =
-						aws.String(newOptions["kms_key_arn"].(string))
-				}
-				_, err := conn.StartDeliveryStreamEncryption(startInput)
+			startInput := &firehose.StartDeliveryStreamEncryptionInput{
+				DeliveryStreamName: aws.String(sn),
+			}
+			startInput.DeliveryStreamEncryptionConfigurationInput =
+				&firehose.DeliveryStreamEncryptionConfigurationInput{}
+			startInput.DeliveryStreamEncryptionConfigurationInput.KeyType =
+				aws.String(newOptions["kms_key_type"].(string))
+			if newOptions["kms_key_type"] != firehose.KeyTypeAwsOwnedCmk {
+				startInput.DeliveryStreamEncryptionConfigurationInput.KeyARN =
+					aws.String(newOptions["kms_key_arn"].(string))
+			}
+			_, err := conn.StartDeliveryStreamEncryption(startInput)
 
-				if err != nil {
-					return fmt.Errorf(
-						"error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
-				}
+			if err != nil {
+				return fmt.Errorf(
+					"error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+			}
 
-				if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
-					return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) "+
-						"encryption to be enabled: %s", sn, err)
-				}
+			if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) "+
+					"encryption to be enabled: %s", sn, err)
 			}
 		}
 	}
