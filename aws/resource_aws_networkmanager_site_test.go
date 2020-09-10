@@ -222,7 +222,7 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 }
 `, description)
 }
@@ -235,7 +235,7 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
   	%q = %q
@@ -252,7 +252,7 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
   	%q = %q
@@ -270,7 +270,7 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 
  location {
   latitude  = %q	

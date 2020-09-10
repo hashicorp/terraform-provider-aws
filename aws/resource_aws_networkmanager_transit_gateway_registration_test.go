@@ -146,8 +146,8 @@ resource "aws_networkmanager_global_network" "test" {
 }
 resource "aws_ec2_transit_gateway" "test" {}
 resource "aws_networkmanager_transit_gateway_registration" "test" {
- global_network_id   = "${aws_networkmanager_global_network.test.id}"
- transit_gateway_arn = "${aws_ec2_transit_gateway.test.arn}"
+ global_network_id   = aws_networkmanager_global_network.test.id
+ transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 }
 `
 }
@@ -161,8 +161,8 @@ resource "aws_networkmanager_global_network" "test2" {
 }
 resource "aws_ec2_transit_gateway" "test" {}
 resource "aws_networkmanager_transit_gateway_registration" "test" {
- global_network_id   = "${aws_networkmanager_global_network.test2.id}"
- transit_gateway_arn = "${aws_ec2_transit_gateway.test.arn}"
+ global_network_id   = aws_networkmanager_global_network.test2.id
+ transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 }
 `
 }

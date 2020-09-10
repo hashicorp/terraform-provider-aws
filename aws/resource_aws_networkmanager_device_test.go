@@ -234,13 +234,13 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_device" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
- site_id           = "${aws_networkmanager_site.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
+ site_id           = aws_networkmanager_site.test.id
  model             = "abc"
  serial_number     = "123"
  type              = "office device"
@@ -257,13 +257,13 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_device" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
- site_id           = "${aws_networkmanager_site.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
+ site_id           = aws_networkmanager_site.test.id
 
   tags = {
     %q = %q
@@ -280,12 +280,12 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_device" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
    %q = %q
@@ -303,18 +303,18 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_site" "test2" {
  description       = "test2"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_device" "test" {
  description       = %q
- global_network_id = "${aws_networkmanager_global_network.test.id}"
- site_id           = "${aws_networkmanager_site.test2.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
+ site_id           = aws_networkmanager_site.test2.id
  model             = %q
  serial_number     = %q
  type              = %q

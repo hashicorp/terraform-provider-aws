@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSNetworkManagerGlobalNetwork(t *testing.T) {
+func TestAccDataSourceAWSNetworkManagerGlobalNetwork_basic(t *testing.T) {
 	dataSourceByIdName := "data.aws_networkmanager_global_network.test_by_id"
 	dataSourceByTagsName := "data.aws_networkmanager_global_network.test_by_tags"
 	resourceName := "aws_networkmanager_global_network.test"
@@ -58,12 +58,12 @@ resource "aws_networkmanager_global_network" "test2" {
 }
 
 data "aws_networkmanager_global_network" "test_by_id" {
-  id = "${aws_networkmanager_global_network.test.id}"
+  id = aws_networkmanager_global_network.test.id
 }
 
 data "aws_networkmanager_global_network" "test_by_tags" {
     tags = {
-	Name = "${aws_networkmanager_global_network.test.tags["Name"]}"
+	Name = aws_networkmanager_global_network.test.tags["Name"]
   }
 }
 `, acctest.RandInt())

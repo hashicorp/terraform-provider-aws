@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSNetworkManagerSite(t *testing.T) {
+func TestAccDataSourceAWSNetworkManagerSite_basic(t *testing.T) {
 	dataSourceName := "data.aws_networkmanager_site.test"
 	dataSourceByIdName := "data.aws_networkmanager_site.test_by_id"
 	dataSourceByTagsName := "data.aws_networkmanager_site.test_by_tags"
@@ -51,7 +51,7 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 
   location {
    latitude  = "18.0029784"	
@@ -65,19 +65,19 @@ resource "aws_networkmanager_site" "test" {
 }
 
 data "aws_networkmanager_site" "test" {
-  global_network_id = "${aws_networkmanager_site.test.global_network_id}"
+  global_network_id = aws_networkmanager_site.test.global_network_id
 }
 
 data "aws_networkmanager_site" "test_by_id" {
-  global_network_id = "${aws_networkmanager_global_network.test.id}"
-  id                = "${aws_networkmanager_site.test.id}"
+  global_network_id = aws_networkmanager_global_network.test.id
+  id                = aws_networkmanager_site.test.id
 }
 
 data "aws_networkmanager_site" "test_by_tags" {
-  global_network_id = "${aws_networkmanager_global_network.test.id}"
+  global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
-	Name = "${aws_networkmanager_site.test.tags["Name"]}"
+	Name = aws_networkmanager_site.test.tags["Name"]
   }
 }
 `, acctest.RandInt())

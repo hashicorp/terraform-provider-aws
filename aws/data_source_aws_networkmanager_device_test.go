@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSNetworkManagerDevice(t *testing.T) {
+func TestAccDataSourceAWSNetworkManagerDevice_basic(t *testing.T) {
 	dataSourceName := "data.aws_networkmanager_device.test"
 	dataSourceByIdName := "data.aws_networkmanager_device.test_by_id"
 	dataSourceBySiteIdName := "data.aws_networkmanager_device.test_by_site_id"
@@ -59,14 +59,14 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_site" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
 
 }
 
 resource "aws_networkmanager_device" "test" {
  description       = "test"
- global_network_id = "${aws_networkmanager_global_network.test.id}"
- site_id           = "${aws_networkmanager_site.test.id}"
+ global_network_id = aws_networkmanager_global_network.test.id
+ site_id           = aws_networkmanager_site.test.id
  model             = "abc"
  serial_number     = "123"
  type              = "office device"
@@ -84,24 +84,24 @@ resource "aws_networkmanager_device" "test" {
 }
 
 data "aws_networkmanager_device" "test" {
-  global_network_id = "${aws_networkmanager_device.test.global_network_id}"
+  global_network_id = aws_networkmanager_device.test.global_network_id
 }
 
 data "aws_networkmanager_device" "test_by_id" {
-  global_network_id = "${aws_networkmanager_global_network.test.id}"
-  id                = "${aws_networkmanager_device.test.id}"
+  global_network_id = aws_networkmanager_global_network.test.id
+  id                = aws_networkmanager_device.test.id
 }
 
 data "aws_networkmanager_device" "test_by_site_id" {
-  global_network_id = "${aws_networkmanager_device.test.global_network_id}"
-  site_id           = "${aws_networkmanager_site.test.id}"
+  global_network_id = aws_networkmanager_device.test.global_network_id
+  site_id           = aws_networkmanager_site.test.id
 }
 
 data "aws_networkmanager_device" "test_by_tags" {
-  global_network_id = "${aws_networkmanager_global_network.test.id}"
+  global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
-	Name = "${aws_networkmanager_device.test.tags["Name"]}"
+	Name = aws_networkmanager_device.test.tags["Name"]
   }
 }
 `, acctest.RandInt())
