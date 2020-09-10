@@ -180,7 +180,7 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(false),
+				Config: testAccAWSNetworkAclRuleConfigIpv6VpcNotAssignGeneratedIpv6CidrBlockUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(vpcResourceName, &vpc),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
@@ -188,7 +188,7 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 				),
 			},
 			{
-				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(true),
+				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(vpcResourceName, &vpc),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "true"),
@@ -679,10 +679,10 @@ resource "aws_network_acl_rule" "test" {
 `, rName, rName)
 }
 
-func testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(ipv6Enabled bool) string {
+func testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block = %[1]t
+  assign_generated_ipv6_cidr_block = true
   cidr_block                       = "10.3.0.0/16"
 
   tags = {
@@ -699,8 +699,6 @@ resource "aws_network_acl" "test" {
 }
 
 resource "aws_network_acl_rule" "test" {
-  count = %[1]t ? 1 : 0
-
   from_port       = 22
   ipv6_cidr_block = aws_vpc.test.ipv6_cidr_block
   network_acl_id  = aws_network_acl.test.id
@@ -709,7 +707,27 @@ resource "aws_network_acl_rule" "test" {
   rule_number     = 150
   to_port         = 22
 }
-`, ipv6Enabled)
+`)
+}
+
+func testAccAWSNetworkAclRuleConfigIpv6VpcNotAssignGeneratedIpv6CidrBlockUpdate() string {
+	return fmt.Sprint(`
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block = false
+  cidr_block                       = "10.3.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-network-acl-rule-ipv6-not-enabled"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-network-acl-rule-ipv6-not-enabled"
+  }
+}`)
 }
 
 func testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, resourceProtocol string) resource.ImportStateIdFunc {
