@@ -6992,6 +6992,155 @@ func (c *Glue) GetPartitionWithContext(ctx aws.Context, input *GetPartitionInput
 	return out, req.Send()
 }
 
+const opGetPartitionIndexes = "GetPartitionIndexes"
+
+// GetPartitionIndexesRequest generates a "aws/request.Request" representing the
+// client's request for the GetPartitionIndexes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPartitionIndexes for more information on using the GetPartitionIndexes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPartitionIndexesRequest method.
+//    req, resp := client.GetPartitionIndexesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionIndexes
+func (c *Glue) GetPartitionIndexesRequest(input *GetPartitionIndexesInput) (req *request.Request, output *GetPartitionIndexesOutput) {
+	op := &request.Operation{
+		Name:       opGetPartitionIndexes,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &GetPartitionIndexesInput{}
+	}
+
+	output = &GetPartitionIndexesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPartitionIndexes API operation for AWS Glue.
+//
+// Retrieves the partition indexes associated with a table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetPartitionIndexes for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * ConflictException
+//   The CreatePartitions API was called on a table that has indexes enabled.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetPartitionIndexes
+func (c *Glue) GetPartitionIndexes(input *GetPartitionIndexesInput) (*GetPartitionIndexesOutput, error) {
+	req, out := c.GetPartitionIndexesRequest(input)
+	return out, req.Send()
+}
+
+// GetPartitionIndexesWithContext is the same as GetPartitionIndexes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPartitionIndexes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetPartitionIndexesWithContext(ctx aws.Context, input *GetPartitionIndexesInput, opts ...request.Option) (*GetPartitionIndexesOutput, error) {
+	req, out := c.GetPartitionIndexesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// GetPartitionIndexesPages iterates over the pages of a GetPartitionIndexes operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetPartitionIndexes method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetPartitionIndexes operation.
+//    pageNum := 0
+//    err := client.GetPartitionIndexesPages(params,
+//        func(page *glue.GetPartitionIndexesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) GetPartitionIndexesPages(input *GetPartitionIndexesInput, fn func(*GetPartitionIndexesOutput, bool) bool) error {
+	return c.GetPartitionIndexesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetPartitionIndexesPagesWithContext same as GetPartitionIndexesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetPartitionIndexesPagesWithContext(ctx aws.Context, input *GetPartitionIndexesInput, fn func(*GetPartitionIndexesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetPartitionIndexesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetPartitionIndexesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*GetPartitionIndexesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opGetPartitions = "GetPartitions"
 
 // GetPartitionsRequest generates a "aws/request.Request" representing the
@@ -16218,6 +16367,63 @@ func (s *ConditionCheckFailureException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The CreatePartitions API was called on a table that has indexes enabled.
+type ConflictException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s *ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s *ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The confusion matrix shows you what your transform is predicting accurately
 // and what types of errors it is making.
 //
@@ -16342,16 +16548,6 @@ type Connection struct {
 	//    * KAFKA_BOOTSTRAP_SERVERS - A comma-separated list of host and port pairs
 	//    that are the addresses of the Apache Kafka brokers in a Kafka cluster
 	//    to which a Kafka client will connect to and bootstrap itself.
-	//
-	//    * KAFKA_SSL_ENABLED - Whether to enable or disable SSL on an Apache Kafka
-	//    connection. Default value is "true".
-	//
-	//    * KAFKA_CUSTOM_CERT - The Amazon S3 URL for the private CA cert file (.pem
-	//    format). The default is an empty string.
-	//
-	//    * KAFKA_SKIP_CUSTOM_CERT_VALIDATION - Whether to skip the validation of
-	//    the CA cert file or not. AWS Glue validates for three algorithms: SHA256withRSA,
-	//    SHA384withRSA and SHA512withRSA. Default value is "false".
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, SFTP is not supported.
@@ -16461,9 +16657,6 @@ type ConnectionInput struct {
 	//    * KAFKA - Designates a connection to an Apache Kafka streaming platform.
 	//
 	//    * MONGODB - Designates a connection to a MongoDB document database.
-	//
-	//    * NETWORK - Designates a network connection to a data source within an
-	//    Amazon Virtual Private Cloud environment (Amazon VPC).
 	//
 	// SFTP is not supported.
 	//
@@ -19233,6 +19426,10 @@ type CreateTableInput struct {
 	// DatabaseName is a required field
 	DatabaseName *string `min:"1" type:"string" required:"true"`
 
+	// A list of partition indexes, PartitionIndex structures, to create in the
+	// table.
+	PartitionIndexes []*PartitionIndex `type:"list"`
+
 	// The TableInput object that defines the metadata table to create in the catalog.
 	//
 	// TableInput is a required field
@@ -19264,6 +19461,16 @@ func (s *CreateTableInput) Validate() error {
 	if s.TableInput == nil {
 		invalidParams.Add(request.NewErrParamRequired("TableInput"))
 	}
+	if s.PartitionIndexes != nil {
+		for i, v := range s.PartitionIndexes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PartitionIndexes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.TableInput != nil {
 		if err := s.TableInput.Validate(); err != nil {
 			invalidParams.AddNested("TableInput", err.(request.ErrInvalidParams))
@@ -19285,6 +19492,12 @@ func (s *CreateTableInput) SetCatalogId(v string) *CreateTableInput {
 // SetDatabaseName sets the DatabaseName field's value.
 func (s *CreateTableInput) SetDatabaseName(v string) *CreateTableInput {
 	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionIndexes sets the PartitionIndexes field's value.
+func (s *CreateTableInput) SetPartitionIndexes(v []*PartitionIndex) *CreateTableInput {
+	s.PartitionIndexes = v
 	return s
 }
 
@@ -25214,6 +25427,119 @@ func (s *GetMappingOutput) SetMapping(v []*MappingEntry) *GetMappingOutput {
 	return s
 }
 
+type GetPartitionIndexesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The catalog ID where the table resides.
+	CatalogId *string `min:"1" type:"string"`
+
+	// Specifies the name of a database from which you want to retrieve partition
+	// indexes.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A continuation token, included if this is a continuation call.
+	NextToken *string `type:"string"`
+
+	// Specifies the name of a table for which you want to retrieve the partition
+	// indexes.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPartitionIndexesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPartitionIndexesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPartitionIndexesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPartitionIndexesInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetPartitionIndexesInput) SetCatalogId(v string) *GetPartitionIndexesInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetPartitionIndexesInput) SetDatabaseName(v string) *GetPartitionIndexesInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetPartitionIndexesInput) SetNextToken(v string) *GetPartitionIndexesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetPartitionIndexesInput) SetTableName(v string) *GetPartitionIndexesInput {
+	s.TableName = &v
+	return s
+}
+
+type GetPartitionIndexesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A continuation token, present if the current list segment is not the last.
+	NextToken *string `type:"string"`
+
+	// A list of index descriptors.
+	PartitionIndexDescriptorList []*PartitionIndexDescriptor `type:"list"`
+}
+
+// String returns the string representation
+func (s GetPartitionIndexesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPartitionIndexesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetPartitionIndexesOutput) SetNextToken(v string) *GetPartitionIndexesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPartitionIndexDescriptorList sets the PartitionIndexDescriptorList field's value.
+func (s *GetPartitionIndexesOutput) SetPartitionIndexDescriptorList(v []*PartitionIndexDescriptor) *GetPartitionIndexesOutput {
+	s.PartitionIndexDescriptorList = v
+	return s
+}
+
 type GetPartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28758,6 +29084,43 @@ func (s *JsonClassifier) SetVersion(v int64) *JsonClassifier {
 	return s
 }
 
+// A partition key pair consisting of a name and a type.
+type KeySchemaElement struct {
+	_ struct{} `type:"structure"`
+
+	// The name of a partition key.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The type of a partition key.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s KeySchemaElement) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KeySchemaElement) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *KeySchemaElement) SetName(v string) *KeySchemaElement {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *KeySchemaElement) SetType(v string) *KeySchemaElement {
+	s.Type = &v
+	return s
+}
+
 // Specifies configuration properties for a labeling set generation task run.
 type LabelingSetGenerationTaskRunProperties struct {
 	_ struct{} `type:"structure"`
@@ -30344,6 +30707,114 @@ func (s *PartitionError) SetErrorDetail(v *ErrorDetail) *PartitionError {
 // SetPartitionValues sets the PartitionValues field's value.
 func (s *PartitionError) SetPartitionValues(v []*string) *PartitionError {
 	s.PartitionValues = v
+	return s
+}
+
+// A structure for a partition index.
+type PartitionIndex struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the partition index.
+	//
+	// IndexName is a required field
+	IndexName *string `min:"1" type:"string" required:"true"`
+
+	// The keys for the partition index.
+	//
+	// Keys is a required field
+	Keys []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PartitionIndex) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PartitionIndex) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PartitionIndex) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PartitionIndex"}
+	if s.IndexName == nil {
+		invalidParams.Add(request.NewErrParamRequired("IndexName"))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.Keys == nil {
+		invalidParams.Add(request.NewErrParamRequired("Keys"))
+	}
+	if s.Keys != nil && len(s.Keys) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Keys", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *PartitionIndex) SetIndexName(v string) *PartitionIndex {
+	s.IndexName = &v
+	return s
+}
+
+// SetKeys sets the Keys field's value.
+func (s *PartitionIndex) SetKeys(v []*string) *PartitionIndex {
+	s.Keys = v
+	return s
+}
+
+// A descriptor for a partition index in a table.
+type PartitionIndexDescriptor struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the partition index.
+	//
+	// IndexName is a required field
+	IndexName *string `min:"1" type:"string" required:"true"`
+
+	// The status of the partition index.
+	//
+	// IndexStatus is a required field
+	IndexStatus *string `type:"string" required:"true" enum:"PartitionIndexStatus"`
+
+	// A list of one or more keys, as KeySchemaElement structures, for the partition
+	// index.
+	//
+	// Keys is a required field
+	Keys []*KeySchemaElement `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PartitionIndexDescriptor) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PartitionIndexDescriptor) GoString() string {
+	return s.String()
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *PartitionIndexDescriptor) SetIndexName(v string) *PartitionIndexDescriptor {
+	s.IndexName = &v
+	return s
+}
+
+// SetIndexStatus sets the IndexStatus field's value.
+func (s *PartitionIndexDescriptor) SetIndexStatus(v string) *PartitionIndexDescriptor {
+	s.IndexStatus = &v
+	return s
+}
+
+// SetKeys sets the Keys field's value.
+func (s *PartitionIndexDescriptor) SetKeys(v []*KeySchemaElement) *PartitionIndexDescriptor {
+	s.Keys = v
 	return s
 }
 
@@ -37853,6 +38324,18 @@ func NodeType_Values() []string {
 		NodeTypeCrawler,
 		NodeTypeJob,
 		NodeTypeTrigger,
+	}
+}
+
+const (
+	// PartitionIndexStatusActive is a PartitionIndexStatus enum value
+	PartitionIndexStatusActive = "ACTIVE"
+)
+
+// PartitionIndexStatus_Values returns all elements of the PartitionIndexStatus enum
+func PartitionIndexStatus_Values() []string {
+	return []string{
+		PartitionIndexStatusActive,
 	}
 }
 

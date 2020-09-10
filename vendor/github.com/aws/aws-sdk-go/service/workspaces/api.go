@@ -2217,9 +2217,10 @@ func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInpu
 
 // ImportWorkspaceImage API operation for Amazon WorkSpaces.
 //
-// Imports the specified Windows 7 or Windows 10 Bring Your Own License (BYOL)
-// image into Amazon WorkSpaces. The image must be an already licensed EC2 image
-// that is in your AWS account, and you must own the image.
+// Imports the specified Windows 10 Bring Your Own License (BYOL) image into
+// Amazon WorkSpaces. The image must be an already licensed EC2 image that is
+// in your AWS account, and you must own the image. For more information about
+// creating BYOL images, see Bring Your Own Windows Desktop Licenses (https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6262,6 +6263,13 @@ func (s *ImagePermission) SetSharedAccountId(v string) *ImagePermission {
 type ImportWorkspaceImageInput struct {
 	_ struct{} `type:"structure"`
 
+	// If specified, the version of Microsoft Office to subscribe to. Valid only
+	// for Windows 10 BYOL images. For more information about subscribing to Office
+	// for BYOL images, see Bring Your Own Windows Desktop Licenses (https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
+	//
+	// Although this parameter is an array, only one item is allowed at this time.
+	Applications []*string `min:"1" type:"list"`
+
 	// The identifier of the EC2 image.
 	//
 	// Ec2ImageId is a required field
@@ -6277,7 +6285,8 @@ type ImportWorkspaceImageInput struct {
 	// ImageName is a required field
 	ImageName *string `min:"1" type:"string" required:"true"`
 
-	// The ingestion process to be used when importing the image.
+	// The ingestion process to be used when importing the image. For non-GPU-enabled
+	// bundles (bundles other than Graphics or GraphicsPro), specify BYOL_REGULAR.
 	//
 	// IngestionProcess is a required field
 	IngestionProcess *string `type:"string" required:"true" enum:"WorkspaceImageIngestionProcess"`
@@ -6299,6 +6308,9 @@ func (s ImportWorkspaceImageInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ImportWorkspaceImageInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ImportWorkspaceImageInput"}
+	if s.Applications != nil && len(s.Applications) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Applications", 1))
+	}
 	if s.Ec2ImageId == nil {
 		invalidParams.Add(request.NewErrParamRequired("Ec2ImageId"))
 	}
@@ -6332,6 +6344,12 @@ func (s *ImportWorkspaceImageInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetApplications sets the Applications field's value.
+func (s *ImportWorkspaceImageInput) SetApplications(v []*string) *ImportWorkspaceImageInput {
+	s.Applications = v
+	return s
 }
 
 // SetEc2ImageId sets the Ec2ImageId field's value.
@@ -9986,6 +10004,22 @@ func AccessPropertyValue_Values() []string {
 	return []string{
 		AccessPropertyValueAllow,
 		AccessPropertyValueDeny,
+	}
+}
+
+const (
+	// ApplicationMicrosoftOffice2016 is a Application enum value
+	ApplicationMicrosoftOffice2016 = "Microsoft_Office_2016"
+
+	// ApplicationMicrosoftOffice2019 is a Application enum value
+	ApplicationMicrosoftOffice2019 = "Microsoft_Office_2019"
+)
+
+// Application_Values returns all elements of the Application enum
+func Application_Values() []string {
+	return []string{
+		ApplicationMicrosoftOffice2016,
+		ApplicationMicrosoftOffice2019,
 	}
 }
 

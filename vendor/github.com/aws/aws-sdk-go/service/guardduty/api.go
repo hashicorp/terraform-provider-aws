@@ -5844,7 +5844,7 @@ func (s ArchiveFindingsOutput) GoString() string {
 	return s.String()
 }
 
-// Contains information about the API operation.
+// Contains information about the API action.
 type AwsApiCallAction struct {
 	_ struct{} `type:"structure"`
 
@@ -5857,7 +5857,10 @@ type AwsApiCallAction struct {
 	// The domain information for the AWS API call.
 	DomainDetails *DomainDetails `locationName:"domainDetails" type:"structure"`
 
-	// The remote IP information of the connection.
+	// The error code of the failed AWS API action.
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The remote IP information of the connection that initiated the AWS API call.
 	RemoteIpDetails *RemoteIpDetails `locationName:"remoteIpDetails" type:"structure"`
 
 	// The AWS service name whose API was invoked.
@@ -5889,6 +5892,12 @@ func (s *AwsApiCallAction) SetCallerType(v string) *AwsApiCallAction {
 // SetDomainDetails sets the DomainDetails field's value.
 func (s *AwsApiCallAction) SetDomainDetails(v *DomainDetails) *AwsApiCallAction {
 	s.DomainDetails = v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *AwsApiCallAction) SetErrorCode(v string) *AwsApiCallAction {
+	s.ErrorCode = &v
 	return s
 }
 
@@ -7466,7 +7475,7 @@ func (s *DeclineInvitationsOutput) SetUnprocessedAccounts(v []*UnprocessedAccoun
 }
 
 // Contains information on the server side encryption method used in the S3
-// bucket. See S3 Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/atest/dev/serv-side-encryption.html)
+// bucket. See S3 Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html)
 // for more information.
 type DefaultServerSideEncryption struct {
 	_ struct{} `type:"structure"`
