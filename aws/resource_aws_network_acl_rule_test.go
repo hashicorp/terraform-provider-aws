@@ -180,6 +180,14 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccAWSNetworkAclRuleConfigIpv6VpcNotAssignGeneratedIpv6CidrBlockUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
+				),
+			},
+			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(vpcResourceName, &vpc),
@@ -193,27 +201,6 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, "tcp"),
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSNetworkAclRule_ipv6VpcNotAssignGeneratedIpv6CidrBlockUpdate(t *testing.T) {
-	var vpc ec2.Vpc
-	vpcResourceName := "aws_vpc.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSNetworkAclRuleConfigIpv6VpcNotAssignGeneratedIpv6CidrBlockUpdate(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists(vpcResourceName, &vpc),
-					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
-					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
-				),
 			},
 		},
 	})
