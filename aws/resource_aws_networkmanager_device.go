@@ -192,7 +192,7 @@ func resourceAwsNetworkManagerDeviceRead(d *schema.ResourceData, meta interface{
 func resourceAwsNetworkManagerDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
-	if d.HasChange("description") || d.HasChange("location") || d.HasChange("model") || d.HasChange("serial_number") || d.HasChange("site_id") || d.HasChange("type") || d.HasChange("vendor") {
+	if d.HasChanges("description", "location", "model", "serial_number", "site_id", "type", "vendor") {
 		request := &networkmanager.UpdateDeviceInput{
 			Description:     aws.String(d.Get("description").(string)),
 			DeviceId:        aws.String(d.Id()),

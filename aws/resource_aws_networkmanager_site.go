@@ -162,7 +162,7 @@ func resourceAwsNetworkManagerSiteRead(d *schema.ResourceData, meta interface{})
 func resourceAwsNetworkManagerSiteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
 
-	if d.HasChange("description") || d.HasChange("location") {
+	if d.HasChanges("description", "location") {
 		request := &networkmanager.UpdateSiteInput{
 			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
