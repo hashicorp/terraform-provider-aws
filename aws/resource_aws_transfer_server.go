@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -57,16 +56,6 @@ func resourceAwsTransferServer() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								validNamePattern := "^vpce-[0-9a-f]{17}$"
-								validName, nameMatchErr := regexp.MatchString(validNamePattern, value)
-								if !validName || nameMatchErr != nil {
-									errors = append(errors, fmt.Errorf(
-										"%q must match regex '%v'", k, validNamePattern))
-								}
-								return
-							},
 							DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
 								if n == "" && d.Get("endpoint_type").(string) == transfer.EndpointTypeVpc {
 									return true
@@ -465,16 +454,16 @@ func flattenTransferServerEndpointDetails(endpointDetails *transfer.EndpointDeta
 
 	e := make(map[string]interface{})
 	if endpointDetails.VpcEndpointId != nil {
-		e["vpc_endpoint_id"] = *endpointDetails.VpcEndpointId
+		e["vpc_endpoint_id"] = aws.StringValue(endpointDetails.VpcEndpointId)
 	}
 	if endpointDetails.AddressAllocationIds != nil {
-		e["address_allocation_ids"] = endpointDetails.AddressAllocationIds
+		e["address_allocation_ids"] = flattenStringSet(endpointDetails.AddressAllocationIds)
 	}
 	if endpointDetails.SubnetIds != nil {
-		e["subnet_ids"] = endpointDetails.SubnetIds
+		e["subnet_ids"] = flattenStringSet(endpointDetails.SubnetIds)
 	}
 	if endpointDetails.VpcId != nil {
-		e["vpc_id"] = *endpointDetails.VpcId
+		e["vpc_id"] = aws.StringValue(endpointDetails.VpcId)
 	}
 
 	return []interface{}{e}
