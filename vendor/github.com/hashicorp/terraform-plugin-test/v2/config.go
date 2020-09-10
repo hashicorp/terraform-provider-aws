@@ -1,6 +1,7 @@
 package tftest
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -40,7 +41,7 @@ func DiscoverConfig(sourceDir string) (*Config, error) {
 	default:
 		finders = append(finders, tfinstall.LookPath(), tfinstall.LatestVersion(tfDir, true))
 	}
-	tfExec, err := tfinstall.Find(finders...)
+	tfExec, err := tfinstall.Find(context.Background(), finders...)
 	if err != nil {
 		return nil, err
 	}
