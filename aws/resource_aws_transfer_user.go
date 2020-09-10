@@ -339,8 +339,8 @@ func flattenTransferServerUserHomeDirectoryMappings(m []*transfer.HomeDirectoryM
 	for _, e := range m {
 		if e.Entry != nil && e.Target != nil {
 			m := make(map[string]interface{})
-			m["entry"] = *e.Entry
-			m["target"] = *e.Target
+			m["entry"] = aws.StringValue(e.Entry)
+			m["target"] = aws.StringValue(e.Target)
 
 			ms = append(ms, m)
 		}

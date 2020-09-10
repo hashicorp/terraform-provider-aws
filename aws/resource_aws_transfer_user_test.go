@@ -15,27 +15,28 @@ import (
 
 func TestAccAWSTransferUser_basic(t *testing.T) {
 	var conf transfer.DescribedUser
+	resourceName := "aws_transfer_user.foo"
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_user.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_transfer_user.foo", "arn", "transfer", regexp.MustCompile(`user/.+`)),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`user/.+`)),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "server_id", "aws_transfer_server.foo", "id"),
+						resourceName, "server_id", "aws_transfer_server.foo", "id"),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 				),
 			},
 			{
-				ResourceName:      "aws_transfer_user.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -45,29 +46,30 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 
 func TestAccAWSTransferUser_restricted(t *testing.T) {
 	var conf transfer.DescribedUser
+	resourceName := "aws_transfer_user.foo"
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_user.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_restricted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_transfer_user.foo", "arn", "transfer", regexp.MustCompile(`user/.+`)),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`user/.+`)),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "server_id", "aws_transfer_server.foo", "id"),
+						resourceName, "server_id", "aws_transfer_server.foo", "id"),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory_type", "LOGICAL"),
+						resourceName, "home_directory_type", "LOGICAL"),
 				),
 			},
 			{
-				ResourceName:      "aws_transfer_user.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -77,57 +79,58 @@ func TestAccAWSTransferUser_restricted(t *testing.T) {
 
 func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	var conf transfer.DescribedUser
+	resourceName := "aws_transfer_user.foo"
 	rName := acctest.RandString(10)
 	rName2 := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_user.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_options(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory", "/home/tftestuser"),
+						resourceName, "home_directory", "/home/tftestuser"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.%", "3"),
+						resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.NAME", "tftestuser"),
+						resourceName, "tags.NAME", "tftestuser"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.ENV", "test"),
+						resourceName, "tags.ENV", "test"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.ADMIN", "test"),
+						resourceName, "tags.ADMIN", "test"),
 				),
 			},
 			{
 				Config: testAccAWSTransferUserConfig_modify(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory", "/test"),
+						resourceName, "home_directory", "/test"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.%", "2"),
+						resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.NAME", "tf-test-user"),
+						resourceName, "tags.NAME", "tf-test-user"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.TEST", "test2"),
+						resourceName, "tags.TEST", "test2"),
 				),
 			},
 			{
 				Config: testAccAWSTransferUserConfig_forceNew(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "user_name", "tftestuser2"),
+						resourceName, "user_name", "tftestuser2"),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory", "/home/tftestuser2"),
+						resourceName, "home_directory", "/home/tftestuser2"),
 				),
 			},
 		},
@@ -137,6 +140,7 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 func TestAccAWSTransferUser_disappears(t *testing.T) {
 	var serverConf transfer.DescribedServer
 	var userConf transfer.DescribedUser
+	resourceName := "aws_transfer_user.foo"
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -148,7 +152,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 				Config: testAccAWSTransferUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &serverConf),
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &userConf),
+					testAccCheckAWSTransferUserExists(resourceName, &userConf),
 					testAccCheckAWSTransferUserDisappears(&serverConf, &userConf),
 				),
 				ExpectNonEmptyPlan: true,
