@@ -97,9 +97,9 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	var assoc ec2.TargetNetwork
 	var group ec2.SecurityGroup
 	rStr := acctest.RandString(5)
-	resourceName := "aws_ec2_client_vpn_network_association.test"
+	resourceNames := []string{"aws_ec2_client_vpn_network_association.test", "aws_ec2_client_vpn_network_association.test2"}
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceNames := []string{"aws_subnet.test", "aws_subnet.test2"}
 	vpcResourceName := "aws_vpc.test"
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
@@ -111,22 +111,30 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc),
-					resource.TestMatchResourceAttr(resourceName, "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceNames[0], &assoc),
+					resource.TestMatchResourceAttr(resourceNames[0], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestMatchResourceAttr(resourceNames[1], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "id", resourceNames[0], "association_id"),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "client_vpn_endpoint_id", endpointResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "subnet_id", subnetResourceNames[0], "id"),
+					resource.TestCheckResourceAttrPair(resourceNames[1], "subnet_id", subnetResourceNames[1], "id"),
 					testAccCheckAWSDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceNames[0], "security_groups.#", "1"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceNames[0], "security_groups.*", &group),
+					resource.TestCheckResourceAttrPair(resourceNames[0], "vpc_id", vpcResourceName, "id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      resourceNames[0],
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceNames[0]),
+			},
+			{
+				ResourceName:      resourceNames[1],
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceNames[1]),
 			},
 		},
 	})
@@ -290,6 +298,11 @@ resource "aws_ec2_client_vpn_network_association" "test" {
   subnet_id              = aws_subnet.test.id
 }
 
+resource "aws_ec2_client_vpn_network_association" "test2" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test2.id
+}
+
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%[1]s"
   server_certificate_arn = aws_acm_certificate.test.arn
@@ -415,6 +428,17 @@ resource "aws_default_security_group" "test" {
 resource "aws_subnet" "test" {
   availability_zone       = data.aws_availability_zones.available.names[0]
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id                  = aws_vpc.test.id
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "tf-acc-subnet-%[1]s"
+  }
+}
+
+resource "aws_subnet" "test2" {
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
   vpc_id                  = aws_vpc.test.id
   map_public_ip_on_launch = true
 
