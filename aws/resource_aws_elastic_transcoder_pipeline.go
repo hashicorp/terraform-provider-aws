@@ -202,7 +202,7 @@ func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta int
 		ThumbnailConfig: expandETPiplineOutputConfig(d, "thumbnail_config"),
 	}
 
-	if v, ok := d.GetOk("output_bucket"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("output_bucket"); ok {
 		req.OutputBucket = aws.String(v.(string))
 	}
 

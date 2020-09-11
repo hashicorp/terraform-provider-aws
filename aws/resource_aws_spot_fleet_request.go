@@ -878,7 +878,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("spot_price"); ok {
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
