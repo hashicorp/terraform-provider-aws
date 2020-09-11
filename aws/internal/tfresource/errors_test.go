@@ -1,4 +1,4 @@
-package resourceerr
+package tfresource
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestNotFoundError(t *testing.T) {
+func TestNotFound(t *testing.T) {
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -39,7 +39,7 @@ func TestNotFoundError(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := NotFoundError(testCase.Err)
+			got := NotFound(testCase.Err)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)
@@ -48,7 +48,7 @@ func TestNotFoundError(t *testing.T) {
 	}
 }
 
-func TestTimeoutError(t *testing.T) {
+func TestTimedOut(t *testing.T) {
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -87,7 +87,7 @@ func TestTimeoutError(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := TimeoutError(testCase.Err)
+			got := TimedOut(testCase.Err)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)

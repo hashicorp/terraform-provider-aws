@@ -5,15 +5,15 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/resourceerr"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 var (
 	isAWSErr                         = tfawserr.ErrMessageContains
 	isAWSErrRequestFailureStatusCode = tfawserr.ErrStatusCodeEquals
 
-	isResourceNotFoundError = resourceerr.NotFoundError
-	isResourceTimeoutError  = resourceerr.TimeoutError
+	isResourceNotFoundError = tfresource.NotFound
+	isResourceTimeoutError  = tfresource.TimedOut
 )
 
 func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {

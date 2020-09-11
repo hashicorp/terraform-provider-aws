@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/resourceerr"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const EventualConsistencyTimeout = 5 * time.Minute
@@ -39,7 +39,7 @@ func Ec2CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error 
 		return nil
 	})
 
-	if resourceerr.TimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateTags(input)
 	}
 

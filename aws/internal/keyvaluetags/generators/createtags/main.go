@@ -97,7 +97,7 @@ import (
 {{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/resourceerr"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const EventualConsistencyTimeout = 5 * time.Minute
@@ -155,7 +155,7 @@ func {{ . | Title }}CreateTags(conn {{ . | ClientType }}, identifier string{{ if
 		return nil
 	})
 
-	if resourceerr.TimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.{{ . | TagFunction }}(input)
 	}
 	{{- else }}
