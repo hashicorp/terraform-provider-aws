@@ -65,7 +65,9 @@ behavior "deprecated_import_commenter" "sdkv1_deprecated" {
 
   message = <<-EOF
     Hello, and thank you for your contribution!
+
     This pull request appears to include the Go import path `${var.import_path}`, which was deprecated after upgrading to [V2 of the Terraform Plugin SDK](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html).
+
     You may use a now internalized version of the package found in `github.com/terraform-providers/terraform-provider-aws/aws/internal/PACKAGE`.
   EOF
 }
