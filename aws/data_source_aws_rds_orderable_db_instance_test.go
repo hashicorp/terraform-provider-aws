@@ -268,7 +268,11 @@ data "aws_rds_orderable_db_instance" "test" {
   engine_version = "5.7.22"
   license_model  = "general-public-license"
 
-  preferred_instance_classes = ["db.xyz.xlarge", %q, "db.t3.small"]
+  preferred_instance_classes = [
+    "db.xyz.xlarge",
+    %q,
+    "db.t3.small",
+  ]
 }
 `, preferredClass)
 }
@@ -280,7 +284,11 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model = "general-public-license"
   storage_type  = "standard"
 
-  preferred_engine_versions = ["18.42.32", %q, "not.a.version"]
+  preferred_engine_versions = [
+    "18.42.32",
+    %q,
+    "not.a.version",
+  ]
 }
 `, preferredVersion)
 }
@@ -291,8 +299,16 @@ data "aws_rds_orderable_db_instance" "test" {
   engine        = "mysql"
   license_model = "general-public-license"
 
-  preferred_instance_classes = ["db.xyz.xlarge", %q, "db.t3.small"]
-  preferred_engine_versions  = ["18.42.32", %q, "not.a.version"]
+  preferred_instance_classes = [
+    "db.xyz.xlarge",
+    %q,
+    "db.t3.small",
+  ]
+  preferred_engine_versions = [
+    "18.42.32",
+    %q,
+    "not.a.version",
+  ]
 }
 `, preferredClass, preferredVersion)
 }

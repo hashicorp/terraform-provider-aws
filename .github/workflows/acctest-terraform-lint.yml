@@ -7,12 +7,14 @@ on:
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
+      - aws/core_acceptance_test.go
+      - aws/data_source_aws_*_test.go
       - aws/resource_aws_[a-d]*_test.go
 
 env:
   GO_VERSION: "1.14"
   GO111MODULE: on
-  TFLINT_VERSION: "v0.19.0"
+  TFLINT_VERSION: "v0.20.0" # Not yet available
 
 jobs:
   terrafmt:
@@ -36,7 +38,9 @@ jobs:
       # - run: terrafmt diff ./aws --check --pattern '*_test.go' --quiet --fmtcompat
       - run: |
           find ./aws -type f \( \
-            -name 'resource_aws_a*_test.go' \
+            -name 'core_acceptance_test.go' \
+            -o -name 'data_source_aws_*_test.go' \
+            -o -name 'resource_aws_a*_test.go' \
             -o -name 'resource_aws_b*_test.go' \
             -o -name 'resource_aws_c*_test.go' \
             -o -name 'resource_aws_d*_test.go' \
@@ -64,10 +68,17 @@ jobs:
           git clone --branch tracking-main --single-branch https://github.com/gdavison/terrafmt terrafmt
           cd terrafmt
           go install
-      - run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
+      # - run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
+      - run: |
+          git clone --no-checkout https://github.com/terraform-linters/tflint tflint
+          cd tflint
+          git checkout --recurse-submodules 5a002e926848899d4bfbb006f95c39285a5e9afa
+          go install
       - run: |
           find ./aws -type f \( \
-            -name 'resource_aws_a*_test.go' \
+            -name 'core_acceptance_test.go' \
+            -o -name 'data_source_aws_*_test.go' \
+            -o -name 'resource_aws_a*_test.go' \
             -o -name 'resource_aws_b*_test.go' \
             -o -name 'resource_aws_c*_test.go' \
             -o -name 'resource_aws_d*_test.go' \
