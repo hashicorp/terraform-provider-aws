@@ -859,7 +859,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	codeUpdate := needsFunctionCodeUpdate(d)
-	if codeUpdate {
+	shouldPublish := configUpdate && d.Get("publish").(bool)
+	if codeUpdate || shouldPublish {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
 		}
