@@ -76,7 +76,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
 					testAccCheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.0", "us-west-2"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", "name"),
 				),
 			},
 			{
@@ -261,12 +261,14 @@ func testAccCheckAWSConfigConfigurationAggregatorDestroy(s *terraform.State) err
 
 func testAccAWSConfigConfigurationAggregatorConfig_account(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_config_configuration_aggregator" "example" {
   name = %[1]q
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = ["us-west-2"]
+    regions     = [data.aws_region.current.name]
   }
 }
 
@@ -320,12 +322,14 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 func testAccAWSConfigConfigurationAggregatorConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_config_configuration_aggregator" "example" {
   name = %[1]q
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = ["us-west-2"]
+    regions     = [data.aws_region.current.name]
   }
 
   tags = {
