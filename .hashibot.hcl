@@ -604,7 +604,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/arn*",
       "website/**/ip_ranges*",
       "website/**/partition*",
-      "website/**/region*"
+      "website/**/region*",
     ]
     "dependencies" = [
       ".github/dependabot.yml",
