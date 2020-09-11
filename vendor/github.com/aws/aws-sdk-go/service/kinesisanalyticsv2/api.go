@@ -597,6 +597,9 @@ func (c *KinesisAnalyticsV2) AddApplicationVpcConfigurationRequest(input *AddApp
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
 //
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationVpcConfiguration
 func (c *KinesisAnalyticsV2) AddApplicationVpcConfiguration(input *AddApplicationVpcConfigurationInput) (*AddApplicationVpcConfigurationOutput, error) {
 	req, out := c.AddApplicationVpcConfigurationRequest(input)
@@ -796,6 +799,9 @@ func (c *KinesisAnalyticsV2) CreateApplicationSnapshotRequest(input *CreateAppli
 //
 //   * InvalidRequestException
 //   The request JSON is not valid for the operation.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/CreateApplicationSnapshot
 func (c *KinesisAnalyticsV2) CreateApplicationSnapshot(input *CreateApplicationSnapshotInput) (*CreateApplicationSnapshotOutput, error) {
@@ -1461,6 +1467,9 @@ func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfigurationRequest(input *Del
 //   Exception thrown as a result of concurrent modifications to an application.
 //   This error can be the result of attempting to modify an application without
 //   using the current application ID.
+//
+//   * InvalidApplicationConfigurationException
+//   The user-provided application configuration is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationVpcConfiguration
 func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfiguration(input *DeleteApplicationVpcConfigurationInput) (*DeleteApplicationVpcConfigurationOutput, error) {
@@ -7110,7 +7119,7 @@ type InputSchemaUpdate struct {
 
 	// Specifies the encoding of the records in the streaming source; for example,
 	// UTF-8.
-	RecordEncodingUpdate *string `type:"string"`
+	RecordEncodingUpdate *string `min:"5" type:"string"`
 
 	// Specifies the format of the records on the streaming source.
 	RecordFormatUpdate *RecordFormat `type:"structure"`
@@ -7131,6 +7140,9 @@ func (s *InputSchemaUpdate) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "InputSchemaUpdate"}
 	if s.RecordColumnUpdates != nil && len(s.RecordColumnUpdates) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RecordColumnUpdates", 1))
+	}
+	if s.RecordEncodingUpdate != nil && len(*s.RecordEncodingUpdate) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("RecordEncodingUpdate", 5))
 	}
 	if s.RecordColumnUpdates != nil {
 		for i, v := range s.RecordColumnUpdates {
@@ -9339,7 +9351,7 @@ type RecordColumn struct {
 	// or reference table.
 	//
 	// Name is a required field
-	Name *string `type:"string" required:"true"`
+	Name *string `min:"1" type:"string" required:"true"`
 
 	// The type of column created in the in-application input stream or reference
 	// table.
@@ -9363,6 +9375,9 @@ func (s *RecordColumn) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "RecordColumn"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.SqlType == nil {
 		invalidParams.Add(request.NewErrParamRequired("SqlType"))
@@ -9936,6 +9951,10 @@ type RunConfigurationDescription struct {
 
 	// Describes the restore behavior of a restarting application.
 	ApplicationRestoreConfigurationDescription *ApplicationRestoreConfiguration `type:"structure"`
+
+	// Describes the starting parameters for an Apache Flink-based Kinesis Data
+	// Analytics application.
+	FlinkRunConfigurationDescription *FlinkRunConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -9951,6 +9970,12 @@ func (s RunConfigurationDescription) GoString() string {
 // SetApplicationRestoreConfigurationDescription sets the ApplicationRestoreConfigurationDescription field's value.
 func (s *RunConfigurationDescription) SetApplicationRestoreConfigurationDescription(v *ApplicationRestoreConfiguration) *RunConfigurationDescription {
 	s.ApplicationRestoreConfigurationDescription = v
+	return s
+}
+
+// SetFlinkRunConfigurationDescription sets the FlinkRunConfigurationDescription field's value.
+func (s *RunConfigurationDescription) SetFlinkRunConfigurationDescription(v *FlinkRunConfiguration) *RunConfigurationDescription {
+	s.FlinkRunConfigurationDescription = v
 	return s
 }
 
@@ -10529,7 +10554,7 @@ type SourceSchema struct {
 
 	// Specifies the encoding of the records in the streaming source. For example,
 	// UTF-8.
-	RecordEncoding *string `type:"string"`
+	RecordEncoding *string `min:"5" type:"string"`
 
 	// Specifies the format of the records on the streaming source.
 	//
@@ -10555,6 +10580,9 @@ func (s *SourceSchema) Validate() error {
 	}
 	if s.RecordColumns != nil && len(s.RecordColumns) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RecordColumns", 1))
+	}
+	if s.RecordEncoding != nil && len(*s.RecordEncoding) < 5 {
+		invalidParams.Add(request.NewErrParamMinLen("RecordEncoding", 5))
 	}
 	if s.RecordFormat == nil {
 		invalidParams.Add(request.NewErrParamRequired("RecordFormat"))
@@ -11766,6 +11794,9 @@ const (
 
 	// ApplicationStatusUpdating is a ApplicationStatus enum value
 	ApplicationStatusUpdating = "UPDATING"
+
+	// ApplicationStatusAutoscaling is a ApplicationStatus enum value
+	ApplicationStatusAutoscaling = "AUTOSCALING"
 )
 
 // ApplicationStatus_Values returns all elements of the ApplicationStatus enum
@@ -11777,6 +11808,7 @@ func ApplicationStatus_Values() []string {
 		ApplicationStatusReady,
 		ApplicationStatusRunning,
 		ApplicationStatusUpdating,
+		ApplicationStatusAutoscaling,
 	}
 }
 

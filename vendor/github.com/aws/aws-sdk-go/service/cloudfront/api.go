@@ -75,7 +75,7 @@ func (c *CloudFront) CreateCachePolicyRequest(input *CreateCachePolicyInput) (re
 // are automatically included in requests that CloudFront sends to the origin.
 // CloudFront sends a request when it can’t find an object in its cache that
 // matches the request’s cache key. If you want to send values to the origin
-// but not include them in the cache key, use CreateOriginRequestPolicy.
+// but not include them in the cache key, use OriginRequestPolicy.
 //
 // For more information about cache policies, see Controlling the cache key
 // (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html)
@@ -1212,7 +1212,7 @@ func (c *CloudFront) CreateOriginRequestPolicyRequest(input *CreateOriginRequest
 //
 // CloudFront sends a request when it can’t find a valid object in its cache
 // that matches the request. If you want to send values to the origin and also
-// include them in the cache key, use CreateCachePolicy.
+// include them in the cache key, use CachePolicy.
 //
 // For more information about origin request policies, see Controlling origin
 // requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html)
@@ -4905,7 +4905,7 @@ func (c *CloudFront) ListDistributionsByRealtimeLogConfigRequest(input *ListDist
 
 // ListDistributionsByRealtimeLogConfig API operation for Amazon CloudFront.
 //
-// Gets a list of distribution that have a cache behavior that’s associated
+// Gets a list of distributions that have a cache behavior that’s associated
 // with the specified real-time log configuration.
 //
 // You can specify the real-time log configuration by its name or its Amazon
@@ -8720,10 +8720,10 @@ func (s *CookieNames) SetQuantity(v int64) *CookieNames {
 // origin request policy instead of this field.
 //
 // If you want to include cookies in the cache key, use CookiesConfig in a cache
-// policy. See CreateCachePolicy.
+// policy. See CachePolicy.
 //
 // If you want to send cookies to the origin but not include them in the cache
-// key, use CookiesConfig in an origin request policy. See CreateOriginRequestPolicy.
+// key, use CookiesConfig in an origin request policy. See OriginRequestPolicy.
 //
 // A complex type that specifies whether you want CloudFront to forward cookies
 // to the origin and, if so, which ones. For more information about forwarding
@@ -17336,7 +17336,7 @@ func (s *OriginGroups) SetQuantity(v int64) *OriginGroups {
 //
 // CloudFront sends a request when it can’t find an object in its cache that
 // matches the request. If you want to send values to the origin and also include
-// them in the cache key, use CreateCachePolicy.
+// them in the cache key, use CachePolicy.
 type OriginRequestPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -17403,7 +17403,7 @@ func (s *OriginRequestPolicy) SetOriginRequestPolicyConfig(v *OriginRequestPolic
 //
 // CloudFront sends a request when it can’t find an object in its cache that
 // matches the request. If you want to send values to the origin and also include
-// them in the cache key, use CreateCachePolicy.
+// them in the cache key, use CachePolicy.
 type OriginRequestPolicyConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -17942,7 +17942,7 @@ func (s *Origins) SetQuantity(v int64) *Origins {
 // are automatically included in requests that CloudFront sends to the origin.
 // CloudFront sends a request when it can’t find an object in its cache that
 // matches the request’s cache key. If you want to send values to the origin
-// but not include them in the cache key, use CreateOriginRequestPolicy.
+// but not include them in the cache key, use OriginRequestPolicy.
 type ParametersInCacheKeyAndForwardedToOrigin struct {
 	_ struct{} `type:"structure"`
 
@@ -17953,34 +17953,58 @@ type ParametersInCacheKeyAndForwardedToOrigin struct {
 	// CookiesConfig is a required field
 	CookiesConfig *CachePolicyCookiesConfig `type:"structure" required:"true"`
 
-	// A flag that determines whether the Accept-Encoding HTTP header is included
+	// A flag that can affect whether the Accept-Encoding HTTP header is included
 	// in the cache key and included in requests that CloudFront sends to the origin.
 	//
-	// If this field is true and the viewer request includes the Accept-Encoding
-	// header, then CloudFront normalizes the value of the viewer’s Accept-Encoding
-	// header to one of the following:
+	// This field is related to the EnableAcceptEncodingGzip field. If one or both
+	// of these fields is true and the viewer request includes the Accept-Encoding
+	// header, then CloudFront does the following:
 	//
-	//    * Accept-Encoding: gzip (if gzip is in the viewer’s Accept-Encoding
-	//    header)
+	//    * Normalizes the value of the viewer’s Accept-Encoding header
 	//
-	//    * Accept-Encoding: identity (if gzip is not in the viewer’s Accept-Encoding
-	//    header)
+	//    * Includes the normalized header in the cache key
 	//
-	// CloudFront includes the normalized header in the cache key and includes it
-	// in requests that CloudFront sends to the origin.
+	//    * Includes the normalized header in the request to the origin
 	//
-	// If this field is false, then CloudFront treats the Accept-Encoding header
-	// the same as any other HTTP header in the viewer request. By default, it’s
-	// not included in the cache key and it’s not included in origin requests.
-	// You can manually add Accept-Encoding to the headers whitelist like any other
-	// HTTP header.
-	//
-	// When this field is true, you should not whitelist the Accept-Encoding header
-	// in the cache policy or in an origin request policy attached to the same cache
-	// behavior.
+	// If one or both of these fields are true, you should not whitelist the Accept-Encoding
+	// header in the cache policy or in an origin request policy attached to the
+	// same cache behavior.
 	//
 	// For more information, see Cache compressed objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-policy-compressed-objects)
 	// in the Amazon CloudFront Developer Guide.
+	//
+	// If both of these fields are false, then CloudFront treats the Accept-Encoding
+	// header the same as any other HTTP header in the viewer request. By default,
+	// it’s not included in the cache key and it’s not included in origin requests.
+	// In this case, you can manually add Accept-Encoding to the headers whitelist
+	// like any other HTTP header.
+	EnableAcceptEncodingBrotli *bool `type:"boolean"`
+
+	// A flag that can affect whether the Accept-Encoding HTTP header is included
+	// in the cache key and included in requests that CloudFront sends to the origin.
+	//
+	// This field is related to the EnableAcceptEncodingBrotli field. If one or
+	// both of these fields is true and the viewer request includes the Accept-Encoding
+	// header, then CloudFront does the following:
+	//
+	//    * Normalizes the value of the viewer’s Accept-Encoding header
+	//
+	//    * Includes the normalized header in the cache key
+	//
+	//    * Includes the normalized header in the request to the origin
+	//
+	// If one or both of these fields are true, you should not whitelist the Accept-Encoding
+	// header in the cache policy or in an origin request policy attached to the
+	// same cache behavior.
+	//
+	// For more information, see Cache compressed objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-policy-compressed-objects)
+	// in the Amazon CloudFront Developer Guide.
+	//
+	// If both of these fields are false, then CloudFront treats the Accept-Encoding
+	// header the same as any other HTTP header in the viewer request. By default,
+	// it’s not included in the cache key and it’s not included in origin requests.
+	// In this case, you can manually add Accept-Encoding to the headers whitelist
+	// like any other HTTP header.
 	//
 	// EnableAcceptEncodingGzip is a required field
 	EnableAcceptEncodingGzip *bool `type:"boolean" required:"true"`
@@ -18050,6 +18074,12 @@ func (s *ParametersInCacheKeyAndForwardedToOrigin) Validate() error {
 // SetCookiesConfig sets the CookiesConfig field's value.
 func (s *ParametersInCacheKeyAndForwardedToOrigin) SetCookiesConfig(v *CachePolicyCookiesConfig) *ParametersInCacheKeyAndForwardedToOrigin {
 	s.CookiesConfig = v
+	return s
+}
+
+// SetEnableAcceptEncodingBrotli sets the EnableAcceptEncodingBrotli field's value.
+func (s *ParametersInCacheKeyAndForwardedToOrigin) SetEnableAcceptEncodingBrotli(v bool) *ParametersInCacheKeyAndForwardedToOrigin {
+	s.EnableAcceptEncodingBrotli = &v
 	return s
 }
 
@@ -18550,10 +18580,10 @@ func (s *QueryArgProfiles) SetQuantity(v int64) *QueryArgProfiles {
 // origin request policy instead of this field.
 //
 // If you want to include query strings in the cache key, use QueryStringsConfig
-// in a cache policy. See CreateCachePolicy.
+// in a cache policy. See CachePolicy.
 //
 // If you want to send query strings to the origin but not include them in the
-// cache key, use QueryStringsConfig in an origin request policy. See CreateOriginRequestPolicy.
+// cache key, use QueryStringsConfig in an origin request policy. See OriginRequestPolicy.
 //
 // A complex type that contains information about the query string parameters
 // that you want CloudFront to use for caching for a cache behavior.

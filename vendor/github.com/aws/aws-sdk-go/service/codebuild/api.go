@@ -1043,11 +1043,8 @@ func (c *CodeBuild) DeleteReportGroupRequest(input *DeleteReportGroupInput) (req
 
 // DeleteReportGroup API operation for AWS CodeBuild.
 //
-// DeleteReportGroup: Deletes a report group. Before you delete a report group,
-// you must delete its reports. Use ListReportsForReportGroup (https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListReportsForReportGroup.html)
-// to get the reports in a report group. Use DeleteReport (https://docs.aws.amazon.com/codebuild/latest/APIReference/API_DeleteReport.html)
-// to delete the reports. If you call DeleteReportGroup for a report group that
-// contains one or more reports, an exception is thrown.
+// Deletes a report group. Before you delete a report group, you must delete
+// its reports.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7097,6 +7094,16 @@ type DeleteReportGroupInput struct {
 	//
 	// Arn is a required field
 	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+
+	// If true, deletes any reports that belong to a report group before deleting
+	// the report group.
+	//
+	// If false, you must delete any reports in the report group. Use ListReportsForReportGroup
+	// (https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListReportsForReportGroup.html)
+	// to get the reports in a report group. Use DeleteReport (https://docs.aws.amazon.com/codebuild/latest/APIReference/API_DeleteReport.html)
+	// to delete the reports. If you call DeleteReportGroup for a report group that
+	// contains one or more reports, an exception is thrown.
+	DeleteReports *bool `locationName:"deleteReports" type:"boolean"`
 }
 
 // String returns the string representation
@@ -7128,6 +7135,12 @@ func (s *DeleteReportGroupInput) Validate() error {
 // SetArn sets the Arn field's value.
 func (s *DeleteReportGroupInput) SetArn(v string) *DeleteReportGroupInput {
 	s.Arn = &v
+	return s
+}
+
+// SetDeleteReports sets the DeleteReports field's value.
+func (s *DeleteReportGroupInput) SetDeleteReports(v bool) *DeleteReportGroupInput {
+	s.DeleteReports = &v
 	return s
 }
 
@@ -7752,14 +7765,16 @@ type EnvironmentVariable struct {
 	//
 	//    * PARAMETER_STORE: An environment variable stored in Amazon EC2 Systems
 	//    Manager Parameter Store. To learn how to specify a parameter store environment
-	//    variable, see parameter store reference-key in the buildspec file (https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#parameter-store-build-spec).
+	//    variable, see env/parameter-store (https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.env.parameter-store)
+	//    in the AWS CodeBuild User Guide.
 	//
 	//    * PLAINTEXT: An environment variable in plain text format. This is the
 	//    default value.
 	//
 	//    * SECRETS_MANAGER: An environment variable stored in AWS Secrets Manager.
-	//    To learn how to specify a secrets manager environment variable, see secrets
-	//    manager reference-key in the buildspec file (https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#secrets-manager-build-spec).
+	//    To learn how to specify a secrets manager environment variable, see env/secrets-manager
+	//    (https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.env.secrets-manager)
+	//    in the AWS CodeBuild User Guide.
 	Type *string `locationName:"type" type:"string" enum:"EnvironmentVariableType"`
 
 	// The value of the environment variable.
@@ -10366,12 +10381,14 @@ type ProjectEnvironment struct {
 	// The image tag or image digest that identifies the Docker image to use for
 	// this build project. Use the following formats:
 	//
-	//    * For an image tag: registry/repository:tag. For example, to specify an
-	//    image with the tag "latest," use registry/repository:latest.
+	//    * For an image tag: <registry>/<repository>:<tag>. For example, in the
+	//    Docker repository that CodeBuild uses to manage its Docker images, this
+	//    would be aws/codebuild/standard:4.0. To specify the latest version of
+	//    this image, this would be aws/codebuild/standard:latest.
 	//
-	//    * For an image digest: registry/repository@digest. For example, to specify
-	//    an image with the digest "sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf,"
-	//    use registry/repository@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf.
+	//    * For an image digest: <registry>/<repository>@<digest>. For example,
+	//    to specify an image with the digest "sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf,"
+	//    use <registry>/<repository>@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf.
 	//
 	// Image is a required field
 	Image *string `locationName:"image" min:"1" type:"string" required:"true"`
@@ -13204,12 +13221,28 @@ func (s *TestCase) SetTestRawDataPath(v string) *TestCase {
 	return s
 }
 
-// A filter used to return specific types of test cases.
+// A filter used to return specific types of test cases. In order to pass the
+// filter, the report must meet all of the filter properties.
 type TestCaseFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The status used to filter test cases. Valid statuses are SUCCEEDED, FAILED,
-	// ERROR, SKIPPED, and UNKNOWN. A TestCaseFilter can have one status.
+	// A keyword that is used to filter on the name or the prefix of the test cases.
+	// Only test cases where the keyword is a substring of the name or the prefix
+	// will be returned.
+	Keyword *string `locationName:"keyword" type:"string"`
+
+	// The status used to filter test cases. A TestCaseFilter can have one status.
+	// Valid values are:
+	//
+	//    * SUCCEEDED
+	//
+	//    * FAILED
+	//
+	//    * ERROR
+	//
+	//    * SKIPPED
+	//
+	//    * UNKNOWN
 	Status *string `locationName:"status" type:"string"`
 }
 
@@ -13221,6 +13254,12 @@ func (s TestCaseFilter) String() string {
 // GoString returns the string representation
 func (s TestCaseFilter) GoString() string {
 	return s.String()
+}
+
+// SetKeyword sets the Keyword field's value.
+func (s *TestCaseFilter) SetKeyword(v string) *TestCaseFilter {
+	s.Keyword = &v
+	return s
 }
 
 // SetStatus sets the Status field's value.
