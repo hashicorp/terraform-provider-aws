@@ -1953,7 +1953,6 @@ resource "aws_efs_access_point" "access_point_1" {
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  publish       = true
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2009,7 +2008,6 @@ resource "aws_efs_access_point" "access_point_2" {
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  publish       = true
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
