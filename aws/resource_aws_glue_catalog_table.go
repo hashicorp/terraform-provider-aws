@@ -500,11 +500,11 @@ func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	s := l[0].(map[string]interface{})
 	serDeInfo := &glue.SerDeInfo{}
 
-	if v, ok := s["name"]; ok {
+	if v := s["name"]; len(v.(string)) > 0 {
 		serDeInfo.Name = aws.String(v.(string))
 	}
 
-	if v, ok := s["parameters"]; ok {
+	if v := s["parameters"]; len(v.(map[string]interface{})) > 0 {
 		paramsMap := map[string]string{}
 		for key, value := range v.(map[string]interface{}) {
 			paramsMap[key] = value.(string)
@@ -512,7 +512,7 @@ func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
 		serDeInfo.Parameters = aws.StringMap(paramsMap)
 	}
 
-	if v, ok := s["serialization_library"]; ok {
+	if v := s["serialization_library"]; len(v.(string)) > 0 {
 		serDeInfo.SerializationLibrary = aws.String(v.(string))
 	}
 
