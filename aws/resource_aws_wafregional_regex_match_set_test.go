@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/wafregional/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -28,51 +30,64 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	}
 	conn := client.(*AWSClient).wafregionalconn
 
-	req := &waf.ListRegexMatchSetsInput{}
-	resp, err := conn.ListRegexMatchSets(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Regex Match Set sweep for %s: %s", region, err)
-			return nil
+	var sweeperErrs *multierror.Error
+
+	err = ListRegexMatchSetsPages(conn, &waf.ListRegexMatchSetsInput{}, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing WAF Regional Regex Match Sets: %s", err)
+
+		for _, r := range page.RegexMatchSets {
+			id := aws.StringValue(r.RegexMatchSetId)
+
+			set, err := finder.RegexMatchSetByID(conn, id)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving WAF Regional Regex Match Set (%s): %w", id, err))
+				continue
+			}
+
+			tuples := getRegexMatchTuplesFromAPIResource(set)
+			err = clearRegexMatchTuples(conn, region, id, tuples)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error clearing WAF Regional Regex Match Set (%s): %w", id, err))
+				continue
+			}
+
+			err = deleteRegexMatchSet(conn, region, id)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", id, err))
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Regex Match Set sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Regional Regex Match Sets: %w", err))
 	}
 
-	if len(resp.RegexMatchSets) == 0 {
-		log.Print("[DEBUG] No AWS WAF Regional Regex Match Sets to sweep")
-		return nil
-	}
+	return sweeperErrs.ErrorOrNil()
+}
 
-	for _, s := range resp.RegexMatchSets {
-		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
-			RegexMatchSetId: s.RegexMatchSetId,
-		})
+func ListRegexMatchSetsPages(conn *wafregional.WAFRegional, input *waf.ListRegexMatchSetsInput, fn func(*waf.ListRegexMatchSetsOutput, bool) bool) error {
+	for {
+		output, err := conn.ListRegexMatchSets(input)
 		if err != nil {
 			return err
 		}
-		set := resp.RegexMatchSet
 
-		oldTuples := flattenWafRegexMatchTuples(set.RegexMatchTuples)
-		noTuples := []interface{}{}
-		err = updateRegexMatchSetResourceWR(*set.RegexMatchSetId, oldTuples, noTuples, conn, region)
-		if err != nil {
-			return fmt.Errorf("Error updating WAF Regional Regex Match Set: %s", err)
+		lastPage := aws.StringValue(output.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
 		}
 
-		wr := newWafRegionalRetryer(conn, region)
-		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.DeleteRegexMatchSetInput{
-				ChangeToken:     token,
-				RegexMatchSetId: set.RegexMatchSetId,
-			}
-			log.Printf("[INFO] Deleting WAF Regional Regex Match Set: %s", req)
-			return conn.DeleteRegexMatchSet(req)
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %s", aws.StringValue(set.RegexMatchSetId), err)
-		}
+		input.NextMarker = output.NextMarker
 	}
-
 	return nil
 }
 
