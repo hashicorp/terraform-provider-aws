@@ -144,7 +144,7 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -212,7 +212,7 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
