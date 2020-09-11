@@ -11229,6 +11229,10 @@ type AwsSecurityFinding struct {
 	// A user-defined note added to a finding.
 	Note *Note `type:"structure"`
 
+	// Provides an overview of the patch compliance status for an instance against
+	// a selected compliance standard.
+	PatchSummary *PatchSummary `type:"structure"`
+
 	// The details of process-related information about a finding.
 	Process *ProcessDetails `type:"structure"`
 
@@ -11386,6 +11390,11 @@ func (s *AwsSecurityFinding) Validate() error {
 			invalidParams.AddNested("Note", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.PatchSummary != nil {
+		if err := s.PatchSummary.Validate(); err != nil {
+			invalidParams.AddNested("PatchSummary", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.RelatedFindings != nil {
 		for i, v := range s.RelatedFindings {
 			if v == nil {
@@ -11504,6 +11513,12 @@ func (s *AwsSecurityFinding) SetNetworkPath(v []*NetworkPathComponent) *AwsSecur
 // SetNote sets the Note field's value.
 func (s *AwsSecurityFinding) SetNote(v *Note) *AwsSecurityFinding {
 	s.Note = v
+	return s
+}
+
+// SetPatchSummary sets the PatchSummary field's value.
+func (s *AwsSecurityFinding) SetPatchSummary(v *PatchSummary) *AwsSecurityFinding {
+	s.PatchSummary = v
 	return s
 }
 
@@ -16917,6 +16932,149 @@ func (s *NumberFilter) SetGte(v float64) *NumberFilter {
 // SetLte sets the Lte field's value.
 func (s *NumberFilter) SetLte(v float64) *NumberFilter {
 	s.Lte = &v
+	return s
+}
+
+// Provides an overview of the patch compliance status for an instance against
+// a selected compliance standard.
+type PatchSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The number of patches from the compliance standard that failed to install.
+	FailedCount *int64 `type:"integer"`
+
+	// The identifier of the compliance standard that was used to determine the
+	// patch compliance status.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// The number of patches from the compliance standard that were installed successfully.
+	InstalledCount *int64 `type:"integer"`
+
+	// The number of installed patches that are not part of the compliance standard.
+	InstalledOtherCount *int64 `type:"integer"`
+
+	// The number of patches that were installed since the last time the instance
+	// was rebooted.
+	InstalledPendingReboot *int64 `type:"integer"`
+
+	// The number of patches that are installed but are also on a list of patches
+	// that the customer rejected.
+	InstalledRejectedCount *int64 `type:"integer"`
+
+	// The number of patches that are part of the compliance standard but are not
+	// installed. The count includes patches that failed to install.
+	MissingCount *int64 `type:"integer"`
+
+	// The type of patch operation performed. For Patch Manager, the values are
+	// SCAN and INSTALL.
+	Operation *string `type:"string"`
+
+	// Indicates when the operation completed.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	OperationEndTime *string `type:"string"`
+
+	// Indicates when the operation started.
+	//
+	// Uses the date-time format specified in RFC 3339 section 5.6, Internet Date/Time
+	// Format (https://tools.ietf.org/html/rfc3339#section-5.6). The value cannot
+	// contain spaces. For example, 2020-03-22T13:22:13.933Z.
+	OperationStartTime *string `type:"string"`
+
+	// The reboot option specified for the instance.
+	RebootOption *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PatchSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PatchSummary) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PatchSummary) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PatchSummary"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFailedCount sets the FailedCount field's value.
+func (s *PatchSummary) SetFailedCount(v int64) *PatchSummary {
+	s.FailedCount = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *PatchSummary) SetId(v string) *PatchSummary {
+	s.Id = &v
+	return s
+}
+
+// SetInstalledCount sets the InstalledCount field's value.
+func (s *PatchSummary) SetInstalledCount(v int64) *PatchSummary {
+	s.InstalledCount = &v
+	return s
+}
+
+// SetInstalledOtherCount sets the InstalledOtherCount field's value.
+func (s *PatchSummary) SetInstalledOtherCount(v int64) *PatchSummary {
+	s.InstalledOtherCount = &v
+	return s
+}
+
+// SetInstalledPendingReboot sets the InstalledPendingReboot field's value.
+func (s *PatchSummary) SetInstalledPendingReboot(v int64) *PatchSummary {
+	s.InstalledPendingReboot = &v
+	return s
+}
+
+// SetInstalledRejectedCount sets the InstalledRejectedCount field's value.
+func (s *PatchSummary) SetInstalledRejectedCount(v int64) *PatchSummary {
+	s.InstalledRejectedCount = &v
+	return s
+}
+
+// SetMissingCount sets the MissingCount field's value.
+func (s *PatchSummary) SetMissingCount(v int64) *PatchSummary {
+	s.MissingCount = &v
+	return s
+}
+
+// SetOperation sets the Operation field's value.
+func (s *PatchSummary) SetOperation(v string) *PatchSummary {
+	s.Operation = &v
+	return s
+}
+
+// SetOperationEndTime sets the OperationEndTime field's value.
+func (s *PatchSummary) SetOperationEndTime(v string) *PatchSummary {
+	s.OperationEndTime = &v
+	return s
+}
+
+// SetOperationStartTime sets the OperationStartTime field's value.
+func (s *PatchSummary) SetOperationStartTime(v string) *PatchSummary {
+	s.OperationStartTime = &v
+	return s
+}
+
+// SetRebootOption sets the RebootOption field's value.
+func (s *PatchSummary) SetRebootOption(v string) *PatchSummary {
+	s.RebootOption = &v
 	return s
 }
 

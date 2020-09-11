@@ -1784,6 +1784,9 @@ func (c *XRay) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req 
 
 // ListTagsForResource API operation for AWS X-Ray.
 //
+// Returns a list of tags that are applied to the specified AWS X-Ray group
+// or sampling rule.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1799,6 +1802,8 @@ func (c *XRay) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req 
 //   The request exceeds the maximum number of requests per second.
 //
 //   * ResourceNotFoundException
+//   The resource was not found. Verify that the name or ARN of the resource is
+//   correct.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ListTagsForResource
 func (c *XRay) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -2159,6 +2164,8 @@ func (c *XRay) TagResourceRequest(input *TagResourceInput) (req *request.Request
 
 // TagResource API operation for AWS X-Ray.
 //
+// Applies tags to an existing AWS X-Ray group or sampling rule.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2174,8 +2181,11 @@ func (c *XRay) TagResourceRequest(input *TagResourceInput) (req *request.Request
 //   The request exceeds the maximum number of requests per second.
 //
 //   * ResourceNotFoundException
+//   The resource was not found. Verify that the name or ARN of the resource is
+//   correct.
 //
 //   * TooManyTagsException
+//   You have exceeded the maximum number of tags you can apply to this resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/TagResource
 func (c *XRay) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -2244,6 +2254,9 @@ func (c *XRay) UntagResourceRequest(input *UntagResourceInput) (req *request.Req
 
 // UntagResource API operation for AWS X-Ray.
 //
+// Removes tags from an AWS X-Ray group or sampling rule. You cannot edit or
+// delete system tags (those with an aws: prefix).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2259,6 +2272,8 @@ func (c *XRay) UntagResourceRequest(input *UntagResourceInput) (req *request.Req
 //   The request exceeds the maximum number of requests per second.
 //
 //   * ResourceNotFoundException
+//   The resource was not found. Verify that the name or ARN of the resource is
+//   correct.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/UntagResource
 func (c *XRay) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -2717,6 +2732,30 @@ type CreateGroupInput struct {
 	// GroupName is a required field
 	GroupName *string `min:"1" type:"string" required:"true"`
 
+	// The structure containing configurations related to insights. The InsightsEnabled
+	// boolean can be set to true to enable insights for the new group or false
+	// to disable insights for the new group.
+	InsightsConfiguration *InsightsConfiguration `type:"structure"`
+
+	// A map that contains one or more tag keys and tag values to attach to an X-Ray
+	// group. For more information about ways to use tags, see Tagging AWS resources
+	// (https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) in the AWS
+	// General Reference.
+	//
+	// The following restrictions apply to tags:
+	//
+	//    * Maximum number of user-applied tags per resource: 50
+	//
+	//    * Maximum tag key length: 128 Unicode characters
+	//
+	//    * Maximum tag value length: 256 Unicode characters
+	//
+	//    * Valid values for key and value: a-z, A-Z, 0-9, space, and the following
+	//    characters: _ . : / = + - and @
+	//
+	//    * Tag keys and values are case sensitive.
+	//
+	//    * Don't use aws: as a prefix for keys; it's reserved for AWS use.
 	Tags []*Tag `type:"list"`
 }
 
@@ -2768,6 +2807,12 @@ func (s *CreateGroupInput) SetGroupName(v string) *CreateGroupInput {
 	return s
 }
 
+// SetInsightsConfiguration sets the InsightsConfiguration field's value.
+func (s *CreateGroupInput) SetInsightsConfiguration(v *InsightsConfiguration) *CreateGroupInput {
+	s.InsightsConfiguration = v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateGroupInput) SetTags(v []*Tag) *CreateGroupInput {
 	s.Tags = v
@@ -2778,8 +2823,8 @@ type CreateGroupOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The group that was created. Contains the name of the group that was created,
-	// the ARN of the group that was generated based on the group name, and the
-	// filter expression that was assigned to the group.
+	// the ARN of the group that was generated based on the group name, the filter
+	// expression, and the insight configuration that was assigned to the group.
 	Group *Group `type:"structure"`
 }
 
@@ -2807,6 +2852,25 @@ type CreateSamplingRuleInput struct {
 	// SamplingRule is a required field
 	SamplingRule *SamplingRule `type:"structure" required:"true"`
 
+	// A map that contains one or more tag keys and tag values to attach to an X-Ray
+	// sampling rule. For more information about ways to use tags, see Tagging AWS
+	// resources (https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)
+	// in the AWS General Reference.
+	//
+	// The following restrictions apply to tags:
+	//
+	//    * Maximum number of user-applied tags per resource: 50
+	//
+	//    * Maximum tag key length: 128 Unicode characters
+	//
+	//    * Maximum tag value length: 256 Unicode characters
+	//
+	//    * Valid values for key and value: a-z, A-Z, 0-9, space, and the following
+	//    characters: _ . : / = + - and @
+	//
+	//    * Tag keys and values are case sensitive.
+	//
+	//    * Don't use aws: as a prefix for keys; it's reserved for AWS use.
 	Tags []*Tag `type:"list"`
 }
 
@@ -4466,6 +4530,11 @@ type Group struct {
 
 	// The unique case-sensitive name of the group.
 	GroupName *string `type:"string"`
+
+	// The structure containing configurations related to insights. The InsightsEnabled
+	// boolean can be set to true to enable insights for the group or false to disable
+	// insights for the group.
+	InsightsConfiguration *InsightsConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -4496,6 +4565,12 @@ func (s *Group) SetGroupName(v string) *Group {
 	return s
 }
 
+// SetInsightsConfiguration sets the InsightsConfiguration field's value.
+func (s *Group) SetInsightsConfiguration(v *InsightsConfiguration) *Group {
+	s.InsightsConfiguration = v
+	return s
+}
+
 // Details for a group without metadata.
 type GroupSummary struct {
 	_ struct{} `type:"structure"`
@@ -4508,6 +4583,11 @@ type GroupSummary struct {
 
 	// The unique case-sensitive name of the group.
 	GroupName *string `type:"string"`
+
+	// The structure containing configurations related to insights. The InsightsEnabled
+	// boolean can be set to true to enable insights for the groups or false to
+	// disable insights for the groups.
+	InsightsConfiguration *InsightsConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -4535,6 +4615,12 @@ func (s *GroupSummary) SetGroupARN(v string) *GroupSummary {
 // SetGroupName sets the GroupName field's value.
 func (s *GroupSummary) SetGroupName(v string) *GroupSummary {
 	s.GroupName = &v
+	return s
+}
+
+// SetInsightsConfiguration sets the InsightsConfiguration field's value.
+func (s *GroupSummary) SetInsightsConfiguration(v *InsightsConfiguration) *GroupSummary {
+	s.InsightsConfiguration = v
 	return s
 }
 
@@ -4632,6 +4718,31 @@ func (s *Http) SetUserAgent(v string) *Http {
 	return s
 }
 
+// The structure containing configurations related to insights.
+type InsightsConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Set the InsightsEnabled value to true to enable insights or false to disable
+	// insights.
+	InsightsEnabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s InsightsConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InsightsConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetInsightsEnabled sets the InsightsEnabled field's value.
+func (s *InsightsConfiguration) SetInsightsEnabled(v bool) *InsightsConfiguration {
+	s.InsightsEnabled = &v
+	return s
+}
+
 // A list of EC2 instance IDs corresponding to the segments in a trace.
 type InstanceIdDetail struct {
 	_ struct{} `type:"structure"`
@@ -4715,8 +4826,13 @@ func (s *InvalidRequestException) RequestID() string {
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
+	// A pagination token. If multiple pages of results are returned, use the NextToken
+	// value returned with the current page of results as the value of this parameter
+	// to get the next page of results.
 	NextToken *string `type:"string"`
 
+	// The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
+	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 }
@@ -4762,8 +4878,12 @@ func (s *ListTagsForResourceInput) SetResourceARN(v string) *ListTagsForResource
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
+	// A pagination token. If multiple pages of results are returned, use the NextToken
+	// value returned with the current page of results to get the next page of results.
 	NextToken *string `type:"string"`
 
+	// A list of tags, as key and value pairs, that is associated with the specified
+	// X-Ray group or sampling rule.
 	Tags []*Tag `type:"list"`
 }
 
@@ -5043,6 +5163,8 @@ func (s *ResourceARNDetail) SetARN(v string) *ResourceARNDetail {
 	return s
 }
 
+// The resource was not found. Verify that the name or ARN of the resource is
+// correct.
 type ResourceNotFoundException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -6287,12 +6409,33 @@ func (s *ServiceStatistics) SetTotalResponseTime(v float64) *ServiceStatistics {
 	return s
 }
 
+// A map that contains tag keys and tag values to attach to an AWS X-Ray group
+// or sampling rule. For more information about ways to use tags, see Tagging
+// AWS resources (https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)
+// in the AWS General Reference.
+//
+// The following restrictions apply to tags:
+//
+//    * Maximum number of user-applied tags per resource: 50
+//
+//    * Tag keys and values are case sensitive.
+//
+//    * Don't use aws: as a prefix for keys; it's reserved for AWS use. You
+//    cannot edit or delete system tags.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
+	// A tag key, such as Stage or Name. A tag key cannot be empty. The key can
+	// be a maximum of 128 characters, and can contain only Unicode letters, numbers,
+	// or separators, or the following special characters: + - = . _ : /
+	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
+	// An optional tag value, such as Production or test-only. The value can be
+	// a maximum of 255 characters, and contain only Unicode letters, numbers, or
+	// separators, or the following special characters: + - = . _ : /
+	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`
 }
@@ -6341,9 +6484,32 @@ func (s *Tag) SetValue(v string) *Tag {
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
+	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 
+	// A map that contains one or more tag keys and tag values to attach to an X-Ray
+	// group or sampling rule. For more information about ways to use tags, see
+	// Tagging AWS resources (https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)
+	// in the AWS General Reference.
+	//
+	// The following restrictions apply to tags:
+	//
+	//    * Maximum number of user-applied tags per resource: 50
+	//
+	//    * Maximum tag key length: 128 Unicode characters
+	//
+	//    * Maximum tag value length: 256 Unicode characters
+	//
+	//    * Valid values for key and value: a-z, A-Z, 0-9, space, and the following
+	//    characters: _ . : / = + - and @
+	//
+	//    * Tag keys and values are case sensitive.
+	//
+	//    * Don't use aws: as a prefix for keys; it's reserved for AWS use. You
+	//    cannot edit or delete system tags.
+	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
 }
@@ -6596,6 +6762,7 @@ func (s *TimeSeriesServiceStatistics) SetTimestamp(v time.Time) *TimeSeriesServi
 	return s
 }
 
+// You have exceeded the maximum number of tags you can apply to this resource.
 type TooManyTagsException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -7020,9 +7187,14 @@ func (s *UnprocessedTraceSegment) SetMessage(v string) *UnprocessedTraceSegment 
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Number (ARN) of an X-Ray group or sampling rule.
+	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 
+	// Keys for one or more tags that you want to remove from an X-Ray group or
+	// sampling rule.
+	//
 	// TagKeys is a required field
 	TagKeys []*string `type:"list" required:"true"`
 }
@@ -7093,6 +7265,11 @@ type UpdateGroupInput struct {
 
 	// The case-sensitive name of the group.
 	GroupName *string `min:"1" type:"string"`
+
+	// The structure containing configurations related to insights. The InsightsEnabled
+	// boolean can be set to true to enable insights for the group or false to disable
+	// insights for the group.
+	InsightsConfiguration *InsightsConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -7139,12 +7316,18 @@ func (s *UpdateGroupInput) SetGroupName(v string) *UpdateGroupInput {
 	return s
 }
 
+// SetInsightsConfiguration sets the InsightsConfiguration field's value.
+func (s *UpdateGroupInput) SetInsightsConfiguration(v *InsightsConfiguration) *UpdateGroupInput {
+	s.InsightsConfiguration = v
+	return s
+}
+
 type UpdateGroupOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The group that was updated. Contains the name of the group that was updated,
-	// the ARN of the group that was updated, and the updated filter expression
-	// assigned to the group.
+	// the ARN of the group that was updated, the updated filter expression, and
+	// the updated insight configuration assigned to the group.
 	Group *Group `type:"structure"`
 }
 

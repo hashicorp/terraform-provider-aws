@@ -2791,6 +2791,14 @@ type DashPackage struct {
 
 	// Duration (in seconds) to delay live content before presentation.
 	SuggestedPresentationDelaySeconds *int64 `locationName:"suggestedPresentationDelaySeconds" type:"integer"`
+
+	// Determines the type of UTCTiming included in the Media Presentation Description
+	// (MPD)
+	UtcTiming *string `locationName:"utcTiming" type:"string" enum:"UtcTiming"`
+
+	// Specifies the value attribute of the UTCTiming field when utcTiming is set
+	// to HTTP-ISO or HTTP-HEAD
+	UtcTimingUri *string `locationName:"utcTimingUri" type:"string"`
 }
 
 // String returns the string representation
@@ -2893,6 +2901,18 @@ func (s *DashPackage) SetStreamSelection(v *StreamSelection) *DashPackage {
 // SetSuggestedPresentationDelaySeconds sets the SuggestedPresentationDelaySeconds field's value.
 func (s *DashPackage) SetSuggestedPresentationDelaySeconds(v int64) *DashPackage {
 	s.SuggestedPresentationDelaySeconds = &v
+	return s
+}
+
+// SetUtcTiming sets the UtcTiming field's value.
+func (s *DashPackage) SetUtcTiming(v string) *DashPackage {
+	s.UtcTiming = &v
+	return s
+}
+
+// SetUtcTimingUri sets the UtcTimingUri field's value.
+func (s *DashPackage) SetUtcTimingUri(v string) *DashPackage {
+	s.UtcTimingUri = &v
 	return s
 }
 
@@ -6132,6 +6152,26 @@ func StreamOrder_Values() []string {
 		StreamOrderOriginal,
 		StreamOrderVideoBitrateAscending,
 		StreamOrderVideoBitrateDescending,
+	}
+}
+
+const (
+	// UtcTimingNone is a UtcTiming enum value
+	UtcTimingNone = "NONE"
+
+	// UtcTimingHttpHead is a UtcTiming enum value
+	UtcTimingHttpHead = "HTTP-HEAD"
+
+	// UtcTimingHttpIso is a UtcTiming enum value
+	UtcTimingHttpIso = "HTTP-ISO"
+)
+
+// UtcTiming_Values returns all elements of the UtcTiming enum
+func UtcTiming_Values() []string {
+	return []string{
+		UtcTimingNone,
+		UtcTimingHttpHead,
+		UtcTimingHttpIso,
 	}
 }
 

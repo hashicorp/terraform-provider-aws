@@ -7,6 +7,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
+      - aws/core_acceptance_test.go
+      - aws/data_source_aws_*_test.go
       - aws/resource_aws_[a-g]*_test.go
 
 env:
@@ -36,7 +38,9 @@ jobs:
       # - run: terrafmt diff ./aws --check --pattern '*_test.go' --quiet --fmtcompat
       - run: |
           find ./aws -type f \( \
-            -name 'resource_aws_a*_test.go' \
+            -name 'core_acceptance_test.go' \
+            -o -name 'data_source_aws_*_test.go' \
+            -o -name 'resource_aws_a*_test.go' \
             -o -name 'resource_aws_b*_test.go' \
             -o -name 'resource_aws_c*_test.go' \
             -o -name 'resource_aws_d*_test.go' \
@@ -77,7 +81,9 @@ jobs:
           go install
       - run: |
           find ./aws -type f \( \
-            -name 'resource_aws_a*_test.go' \
+            -name 'core_acceptance_test.go' \
+            -o -name 'data_source_aws_*_test.go' \
+            -o -name 'resource_aws_a*_test.go' \
             -o -name 'resource_aws_b*_test.go' \
             -o -name 'resource_aws_c*_test.go' \
             -o -name 'resource_aws_d*_test.go' \

@@ -12239,6 +12239,9 @@ type CreateAccountCustomizationInput struct {
 
 	// The QuickSight namespace that you want to add customizations to.
 	Namespace *string `location:"querystring" locationName:"namespace" type:"string"`
+
+	// A list of the tags that you want to attach to this resource.
+	Tags []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -12262,6 +12265,19 @@ func (s *CreateAccountCustomizationInput) Validate() error {
 	}
 	if s.AwsAccountId != nil && len(*s.AwsAccountId) < 12 {
 		invalidParams.Add(request.NewErrParamMinLen("AwsAccountId", 12))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -12288,11 +12304,21 @@ func (s *CreateAccountCustomizationInput) SetNamespace(v string) *CreateAccountC
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateAccountCustomizationInput) SetTags(v []*Tag) *CreateAccountCustomizationInput {
+	s.Tags = v
+	return s
+}
+
 type CreateAccountCustomizationOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The QuickSight customizations you're adding in the current AWS Region.
 	AccountCustomization *AccountCustomization `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the customization that you created for
+	// this AWS account.
+	Arn *string `type:"string"`
 
 	// The ID for the AWS account that you want to customize QuickSight for.
 	AwsAccountId *string `min:"12" type:"string"`
@@ -12320,6 +12346,12 @@ func (s CreateAccountCustomizationOutput) GoString() string {
 // SetAccountCustomization sets the AccountCustomization field's value.
 func (s *CreateAccountCustomizationOutput) SetAccountCustomization(v *AccountCustomization) *CreateAccountCustomizationOutput {
 	s.AccountCustomization = v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateAccountCustomizationOutput) SetArn(v string) *CreateAccountCustomizationOutput {
+	s.Arn = &v
 	return s
 }
 
@@ -18516,6 +18548,10 @@ type DescribeAccountCustomizationOutput struct {
 	// The QuickSight customizations that exist in the current AWS Region.
 	AccountCustomization *AccountCustomization `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the customization that's associated with
+	// this AWS account.
+	Arn *string `type:"string"`
+
 	// The ID for the AWS account that you're describing.
 	AwsAccountId *string `min:"12" type:"string"`
 
@@ -18542,6 +18578,12 @@ func (s DescribeAccountCustomizationOutput) GoString() string {
 // SetAccountCustomization sets the AccountCustomization field's value.
 func (s *DescribeAccountCustomizationOutput) SetAccountCustomization(v *AccountCustomization) *DescribeAccountCustomizationOutput {
 	s.AccountCustomization = v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeAccountCustomizationOutput) SetArn(v string) *DescribeAccountCustomizationOutput {
+	s.Arn = &v
 	return s
 }
 
@@ -29497,6 +29539,10 @@ type UpdateAccountCustomizationOutput struct {
 	// The QuickSight customizations you're updating in the current AWS Region.
 	AccountCustomization *AccountCustomization `type:"structure"`
 
+	// The Amazon Resource Name (ARN) for the updated customization for this AWS
+	// account.
+	Arn *string `type:"string"`
+
 	// The ID for the AWS account that you want to update QuickSight customizations
 	// for.
 	AwsAccountId *string `min:"12" type:"string"`
@@ -29524,6 +29570,12 @@ func (s UpdateAccountCustomizationOutput) GoString() string {
 // SetAccountCustomization sets the AccountCustomization field's value.
 func (s *UpdateAccountCustomizationOutput) SetAccountCustomization(v *AccountCustomization) *UpdateAccountCustomizationOutput {
 	s.AccountCustomization = v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateAccountCustomizationOutput) SetArn(v string) *UpdateAccountCustomizationOutput {
+	s.Arn = &v
 	return s
 }
 

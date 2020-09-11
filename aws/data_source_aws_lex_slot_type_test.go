@@ -69,7 +69,7 @@ func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
 func testAccDataSourceAwsLexSlotTypeConfig_basic() string {
 	return `
 data "aws_lex_slot_type" "test" {
-  name    = "${aws_lex_slot_type.test.name}"
+  name = aws_lex_slot_type.test.name
 }
 `
 }
@@ -77,7 +77,7 @@ data "aws_lex_slot_type" "test" {
 func testAccDataSourceAwsLexSlotTypeConfig_withVersion() string {
 	return `
 data "aws_lex_slot_type" "test" {
-  name    = "${aws_lex_slot_type.test.name}"
+  name    = aws_lex_slot_type.test.name
   version = "1"
 }
 `
