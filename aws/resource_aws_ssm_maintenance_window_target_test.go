@@ -171,7 +171,7 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "resource-groups:ResourceTypeFilters"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::Instance"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "resource-groups:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "1"),
