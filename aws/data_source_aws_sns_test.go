@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccDataSourceAwsSnsTopic(t *testing.T) {
+func TestAccDataSourceAwsSnsTopic_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -61,6 +61,6 @@ resource "aws_sns_topic" "tf_wrong2" {
 }
 
 data "aws_sns_topic" "by_name" {
-  name = "${aws_sns_topic.tf_test.name}"
+  name = aws_sns_topic.tf_test.name
 }
 `

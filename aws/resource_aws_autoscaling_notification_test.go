@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSASGNotification_basic(t *testing.T) {
@@ -71,7 +71,7 @@ func TestAccAWSASGNotification_Pagination(t *testing.T) {
 		CheckDestroy: testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccASGNotificationConfig_pagination,
+				Config: testAccASGNotificationConfig_pagination(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example",
 						[]string{
@@ -211,19 +211,28 @@ func testAccCheckAWSASGNotificationAttributes(n string, asgn *autoscaling.Descri
 }
 
 func testAccASGNotificationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
 resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
-  image_id      = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "foobar1-terraform-test-%s"
   max_size                  = 1
   min_size                  = 1
@@ -249,19 +258,28 @@ resource "aws_autoscaling_notification" "example" {
 }
 
 func testAccASGNotificationConfig_update(rName string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
 resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
-  image_id      = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_autoscaling_group" "bar" {
-  availability_zones        = ["us-west-2a"]
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = "foobar1-terraform-test-%s"
   max_size                  = 1
   min_size                  = 1
@@ -274,7 +292,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones        = ["us-west-2b"]
+  availability_zones        = [data.aws_availability_zones.available.names[2]]
   name                      = "barfoo-terraform-test-%s"
   max_size                  = 1
   min_size                  = 1
@@ -303,18 +321,28 @@ resource "aws_autoscaling_notification" "example" {
 `, rName, rName, rName, rName)
 }
 
-const testAccASGNotificationConfig_pagination = `
+func testAccASGNotificationConfig_pagination() string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
+  image_id = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[1]]
   count = 20
   name = "foobar3-terraform-test-${count.index}"
   max_size = 1
@@ -357,4 +385,5 @@ resource "aws_autoscaling_notification" "example" {
     "autoscaling:TEST_NOTIFICATION"
   ]
 	topic_arn = "${aws_sns_topic.user_updates.arn}"
-}`
+}`)
+}

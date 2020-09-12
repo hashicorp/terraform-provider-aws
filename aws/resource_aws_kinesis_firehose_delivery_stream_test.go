@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -1272,7 +1272,6 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 				var matchHECEndpointType, matchHECAcknowledgmentTimeoutInSeconds, matchS3BackupMode, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.SplunkDestinationDescription != nil {
-
 						if *d.SplunkDestinationDescription.HECEndpointType == *s.HECEndpointType {
 							matchHECEndpointType = true
 						}
@@ -1356,21 +1355,21 @@ func baseAccFirehoseAWSLambdaConfig(policyName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"
-  role = "${aws_iam_role.iam_for_lambda.id}"
+  role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
-	{
-		"Effect": "Allow",
-		"Action": [
-			"logs:CreateLogGroup",
-			"logs:CreateLogStream",
-			"logs:PutLogEvents"
-		],
-		"Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
-	},
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    },
     {
       "Effect": "Allow",
       "Action": [
@@ -1410,11 +1409,11 @@ EOF
 func testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName string) string {
 	return fmt.Sprintf(baseAccFirehoseAWSLambdaConfig(policyName, roleName)+`
 resource "aws_lambda_function" "lambda_function_test" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs12.x"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 }
 `, funcName)
 }
@@ -1426,6 +1425,7 @@ data "aws_partition" "current" {}
 
 resource "aws_iam_role" "firehose" {
   name = "tf_acctest_firehose_delivery_role_%d"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1450,12 +1450,13 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_iam_role_policy" "firehose" {
   name = "tf_acctest_firehose_delivery_policy_%d"
-  role = "${aws_iam_role.firehose.id}"
+  role = aws_iam_role.firehose.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1490,17 +1491,17 @@ resource "aws_iam_role_policy" "firehose" {
 }
 EOF
 }
-
 `
 
 const testAccFirehoseKinesisStreamSource = `
 resource "aws_kinesis_stream" "source" {
-  name = "terraform-kinesis-source-stream-basictest-%d"
+  name        = "terraform-kinesis-source-stream-basictest-%d"
   shard_count = 1
 }
 
 resource "aws_iam_role" "kinesis_source" {
   name = "tf_acctest_kinesis_source_role_%d"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1525,7 +1526,8 @@ EOF
 
 resource "aws_iam_role_policy" "kinesis_source" {
   name = "tf_acctest_kinesis_source_policy_%d"
-  role = "${aws_iam_role.kinesis_source.id}"
+  role = aws_iam_role.kinesis_source.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1546,7 +1548,6 @@ resource "aws_iam_role_policy" "kinesis_source" {
 }
 EOF
 }
-
 `
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(rInt int) string {
@@ -1582,7 +1583,7 @@ EOF
 
 resource "aws_iam_role_policy" "firehose" {
   name = "tf_acctest_firehose_delivery_policy_%d"
-  role = "${aws_iam_role.firehose.id}"
+  role = aws_iam_role.firehose.id
 
   policy = <<EOF
 {
@@ -1629,22 +1630,22 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_cloudwatch_log_stream" "test" {
   name           = "sample-log-stream-test-%d"
-  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  log_group_name = aws_cloudwatch_log_group.test.name
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = ["aws_iam_role_policy.firehose"]
+  depends_on  = [aws_iam_role_policy.firehose]
   name        = "terraform-kinesis-firehose-cloudwatch-%d"
   destination = "s3"
 
   s3_configuration {
-    role_arn   = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
 
     cloudwatch_logging_options {
       enabled         = true
-      log_group_name  = "${aws_cloudwatch_log_group.test.name}"
-      log_stream_name = "${aws_cloudwatch_log_stream.test.name}"
+      log_group_name  = aws_cloudwatch_log_group.test.name
+      log_stream_name = aws_cloudwatch_log_stream.test.name
     }
   }
 }
@@ -1653,25 +1654,28 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3basic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "s3"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
-}`
+}
+`
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName string, rInt int, sseEnabled bool) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "%s"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "%s"
   destination = "s3"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
 
   server_side_encryption {
@@ -1684,87 +1688,102 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rInt int) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
-	resource "aws_kinesis_firehose_delivery_stream" "test" {
-		depends_on = ["aws_iam_role_policy.firehose"]
-		name = "%s"
-		destination = "s3"
-		s3_configuration {
-			role_arn = "${aws_iam_role.firehose.arn}"
-			bucket_arn = "${aws_s3_bucket.bucket.arn}"
-		}
-	tags = {
-			Environment = "production"
-			Usage = "original"
-		}
-	}
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "%s"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    Environment = "production"
+    Usage       = "original"
+  }
+}
 `, rName)
 }
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName string, rInt int) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
-	resource "aws_kinesis_firehose_delivery_stream" "test" {
-		depends_on = ["aws_iam_role_policy.firehose"]
-		name = "%s"
-		destination = "s3"
-		s3_configuration {
-			role_arn = "${aws_iam_role.firehose.arn}"
-			bucket_arn = "${aws_s3_bucket.bucket.arn}"
-		}
-	tags = {
-			Usage = "changed"
-		}
-	}
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "%s"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    Usage = "changed"
+  }
+}
 `, rName)
 }
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.kinesis_source]
+  name       = "terraform-kinesis-firehose-basictest-%d"
+
   kinesis_source_configuration {
-    kinesis_stream_arn = "${aws_kinesis_stream.source.arn}"
-    role_arn = "${aws_iam_role.kinesis_source.arn}"
+    kinesis_stream_arn = aws_kinesis_stream.source.arn
+    role_arn           = aws_iam_role.kinesis_source.arn
   }
+
   destination = "s3"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
-}`
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3Updates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-s3test-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-s3test-%d"
   destination = "s3"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    buffer_size = 10
-    buffer_interval = 400
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
+    buffer_size        = 10
+    buffer_interval    = 400
     compression_format = "GZIP"
   }
-}`
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
+
   extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+
     processing_configuration {
       enabled = true
+
       processors {
         type = "Lambda"
+
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
       }
     }
+
     s3_backup_mode = "Disabled"
   }
 }
@@ -1772,18 +1791,22 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3_KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.kinesis_source]
+  name       = "terraform-kinesis-firehose-basictest-%d"
+
   kinesis_source_configuration {
-    kinesis_stream_arn = "${aws_kinesis_stream.source.arn}"
-    role_arn = "${aws_iam_role.kinesis_source.arn}"
+    kinesis_stream_arn = aws_kinesis_stream.source.arn
+    role_arn           = aws_iam_role.kinesis_source.arn
   }
+
   destination = "extended_s3"
+
   extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
-}`
+}
+`
 
 func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_Enabled(rName string, rInt int, enabled bool) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
@@ -1792,7 +1815,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = "%s"
 
   storage_descriptor {
@@ -1808,10 +1831,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "%s"
 
   extended_s3_configuration {
-    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
     buffer_size = 128
-    role_arn    = "${aws_iam_role.firehose.arn}"
+    role_arn    = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       enabled = %t
@@ -1829,14 +1852,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
 
       schema_configuration {
-        database_name = "${aws_glue_catalog_table.test.database_name}"
-        role_arn      = "${aws_iam_role.firehose.arn}"
-        table_name    = "${aws_glue_catalog_table.test.name}"
+        database_name = aws_glue_catalog_table.test.database_name
+        role_arn      = aws_iam_role.firehose.arn
+        table_name    = aws_glue_catalog_table.test.name
       }
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName, enabled)
 }
@@ -1848,7 +1871,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = "%s"
 
   storage_descriptor {
@@ -1864,10 +1887,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "%s"
 
   extended_s3_configuration {
-    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
     buffer_size = 128
-    role_arn    = "${aws_iam_role.firehose.arn}"
+    role_arn    = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -1883,14 +1906,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
 
       schema_configuration {
-        database_name = "${aws_glue_catalog_table.test.database_name}"
-        role_arn      = "${aws_iam_role.firehose.arn}"
-        table_name    = "${aws_glue_catalog_table.test.name}"
+        database_name = aws_glue_catalog_table.test.database_name
+        role_arn      = aws_iam_role.firehose.arn
+        table_name    = aws_glue_catalog_table.test.name
       }
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -1902,8 +1925,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "%s"
 
   extended_s3_configuration {
-    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
-    role_arn    = "${aws_iam_role.firehose.arn}"
+    bucket_arn = aws_s3_bucket.bucket.arn
+    role_arn   = aws_iam_role.firehose.arn
   }
 }
 `, rName)
@@ -1916,7 +1939,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = "%s"
 
   storage_descriptor {
@@ -1932,10 +1955,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "%s"
 
   extended_s3_configuration {
-    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
     buffer_size = 128
-    role_arn    = "${aws_iam_role.firehose.arn}"
+    role_arn    = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -1951,14 +1974,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
 
       schema_configuration {
-        database_name = "${aws_glue_catalog_table.test.database_name}"
-        role_arn      = "${aws_iam_role.firehose.arn}"
-        table_name    = "${aws_glue_catalog_table.test.name}"
+        database_name = aws_glue_catalog_table.test.database_name
+        role_arn      = aws_iam_role.firehose.arn
+        table_name    = aws_glue_catalog_table.test.name
       }
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -1970,7 +1993,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = "%s"
 
   storage_descriptor {
@@ -1986,10 +2009,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "%s"
 
   extended_s3_configuration {
-    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
     buffer_size = 128
-    role_arn    = "${aws_iam_role.firehose.arn}"
+    role_arn    = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -2005,14 +2028,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
 
       schema_configuration {
-        database_name = "${aws_glue_catalog_table.test.database_name}"
-        role_arn      = "${aws_iam_role.firehose.arn}"
-        table_name    = "${aws_glue_catalog_table.test.name}"
+        database_name = aws_glue_catalog_table.test.database_name
+        role_arn      = aws_iam_role.firehose.arn
+        table_name    = aws_glue_catalog_table.test.name
       }
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -2024,7 +2047,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  database_name = "${aws_glue_catalog_database.test.name}"
+  database_name = aws_glue_catalog_database.test.name
   name          = "%s"
 
   storage_descriptor {
@@ -2040,10 +2063,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "%s"
 
   extended_s3_configuration {
-    bucket_arn  = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
     buffer_size = 128
-    role_arn    = "${aws_iam_role.firehose.arn}"
+    role_arn    = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -2059,14 +2082,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
 
       schema_configuration {
-        database_name = "${aws_glue_catalog_table.test.database_name}"
-        role_arn      = "${aws_iam_role.firehose.arn}"
-        table_name    = "${aws_glue_catalog_table.test.name}"
+        database_name = aws_glue_catalog_table.test.database_name
+        role_arn      = aws_iam_role.firehose.arn
+        table_name    = aws_glue_catalog_table.test.name
       }
     }
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, rName, rName)
 }
@@ -2078,12 +2101,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %q
 
   extended_s3_configuration {
-    bucket_arn          = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn          = aws_s3_bucket.bucket.arn
     error_output_prefix = %q
-    role_arn            = "${aws_iam_role.firehose.arn}"
+    role_arn            = aws_iam_role.firehose.arn
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName, errorOutputPrefix)
 }
@@ -2095,13 +2118,13 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
 
   extended_s3_configuration {
-    bucket_arn  = aws_s3_bucket.bucket.arn
-    role_arn    = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+    role_arn   = aws_iam_role.firehose.arn
 
     processing_configuration {}
   }
 
-  depends_on = ["aws_iam_role_policy.firehose"]
+  depends_on = [aws_iam_role_policy.firehose]
 }
 `, rName)
 }
@@ -2112,19 +2135,23 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
+
   extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    kms_key_arn = "${aws_kms_key.test.arn}"
+    role_arn    = aws_iam_role.firehose.arn
+    bucket_arn  = aws_s3_bucket.bucket.arn
+    kms_key_arn = aws_kms_key.test.arn
+
     processing_configuration {
       enabled = false
+
       processors {
         type = "Lambda"
+
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
       }
@@ -2135,29 +2162,35 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_Initial = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
+
   extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+
     processing_configuration {
       enabled = true
+
       processors {
         type = "Lambda"
+
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
       }
     }
-    buffer_size = 10
-    buffer_interval = 400
+
+    buffer_size        = 10
+    buffer_interval    = 400
     compression_format = "GZIP"
-    s3_backup_mode = "Enabled"
+    s3_backup_mode     = "Enabled"
+
     s3_backup_configuration {
-      role_arn = "${aws_iam_role.firehose.arn}"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
     }
   }
 }
@@ -2165,19 +2198,21 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_RemoveProcessors = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
+
   extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    buffer_size = 10
-    buffer_interval = 400
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
+    buffer_size        = 10
+    buffer_interval    = 400
     compression_format = "GZIP"
-    s3_backup_mode = "Enabled"
+    s3_backup_mode     = "Enabled"
+
     s3_backup_configuration {
-      role_arn = "${aws_iam_role.firehose.arn}"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
     }
   }
 }
@@ -2187,7 +2222,7 @@ func testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName string, rInt i
 	return composeConfig(
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
@@ -2206,8 +2241,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -2217,19 +2252,19 @@ resource "aws_subnet" "test" {
 resource "aws_redshift_subnet_group" "test" {
   name        = %[1]q
   description = "test"
-  subnet_ids  = ["${aws_subnet.test.id}"]
-  }
+  subnet_ids  = [aws_subnet.test.id]
+}
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier        = %[1]q
-  availability_zone         = "${data.aws_availability_zones.current.names[0]}"
+  availability_zone         = data.aws_availability_zones.available.names[0]
   database_name             = "test"
   master_username           = "testuser"
   master_password           = "T3stPass"
   node_type                 = "dc1.large"
   cluster_type              = "single-node"
   skip_final_snapshot       = true
-  cluster_subnet_group_name = "${aws_redshift_subnet_group.test.id}"
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.id
   publicly_accessible       = false
 }
 `, rName))
@@ -2244,12 +2279,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "redshift"
 
   s3_configuration {
-    role_arn   = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
 
   redshift_configuration {
-    role_arn        = "${aws_iam_role.firehose.arn}"
+    role_arn        = aws_iam_role.firehose.arn
     cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
     username        = "testuser"
     password        = "T3stPass"
@@ -2269,23 +2304,23 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "redshift"
 
   s3_configuration {
-    role_arn           = "${aws_iam_role.firehose.arn}"
-    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
     buffer_size        = 10
     buffer_interval    = 400
     compression_format = "GZIP"
   }
 
   redshift_configuration {
-    role_arn        = "${aws_iam_role.firehose.arn}"
+    role_arn        = aws_iam_role.firehose.arn
     cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
     username        = "testuser"
     password        = "T3stPass"
     s3_backup_mode  = "Enabled"
 
     s3_backup_configuration {
-      role_arn   = "${aws_iam_role.firehose.arn}"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
     }
 
     data_table_name    = "test-table"
@@ -2311,62 +2346,73 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basicsplunktest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basicsplunktest-%d"
   destination = "splunk"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   splunk_configuration {
     hec_endpoint = "https://input-test.com:443"
-    hec_token = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+    hec_token    = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
   }
-}`
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basicsplunktest-%d"
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basicsplunktest-%d"
   destination = "splunk"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    buffer_size = 10
-    buffer_interval = 400
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
+    buffer_size        = 10
+    buffer_interval    = 400
     compression_format = "GZIP"
   }
+
   splunk_configuration {
-    hec_endpoint = "https://input-test.com:443"
-    hec_token = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+    hec_endpoint               = "https://input-test.com:443"
+    hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
     hec_acknowledgment_timeout = 600
-    hec_endpoint_type = "Event"
-    s3_backup_mode = "FailedEventsOnly"
+    hec_endpoint_type          = "Event"
+    s3_backup_mode             = "FailedEventsOnly"
+
     processing_configuration {
       enabled = true
+
       processors {
         type = "Lambda"
 
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
+
         parameters {
-          parameter_name = "RoleArn"
-          parameter_value = "${aws_iam_role.firehose.arn}"
+          parameter_name  = "RoleArn"
+          parameter_value = aws_iam_role.firehose.arn
         }
+
         parameters {
-          parameter_name = "BufferSizeInMBs"
+          parameter_name  = "BufferSizeInMBs"
           parameter_value = 1
         }
+
         parameters {
-          parameter_name = "BufferIntervalInSeconds"
+          parameter_name  = "BufferIntervalInSeconds"
           parameter_value = 120
         }
       }
     }
   }
-}`
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_elasticsearch_domain" "test_cluster" {
@@ -2383,8 +2429,9 @@ resource "aws_elasticsearch_domain" "test_cluster" {
 }
 
 resource "aws_iam_role_policy" "firehose-elasticsearch" {
-  name   = "elasticsearch"
-  role   = "${aws_iam_role.firehose.id}"
+  name = "elasticsearch"
+  role = aws_iam_role.firehose.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2407,50 +2454,59 @@ EOF
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
-  name = "terraform-kinesis-firehose-es-%d"
+  name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   elasticsearch_configuration {
-    domain_arn = "${aws_elasticsearch_domain.test_cluster.arn}"
-    role_arn = "${aws_iam_role.firehose.arn}"
+    domain_arn = aws_elasticsearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
-    type_name = "test"
+    type_name  = "test"
   }
-}`
+}
+`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
-  name = "terraform-kinesis-firehose-es-%d"
+  name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   elasticsearch_configuration {
-    domain_arn = "${aws_elasticsearch_domain.test_cluster.arn}"
-    role_arn = "${aws_iam_role.firehose.arn}"
-    index_name = "test"
-    type_name = "test"
+    domain_arn         = aws_elasticsearch_domain.test_cluster.arn
+    role_arn           = aws_iam_role.firehose.arn
+    index_name         = "test"
+    type_name          = "test"
     buffering_interval = 500
+
     processing_configuration {
       enabled = false
+
       processors {
         type = "Lambda"
+
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
       }
     }
   }
-}`
+}
+`
 
 func testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(rInt int) string {
 	return fmt.Sprintf(`
@@ -2478,7 +2534,7 @@ EOF
 
 resource "aws_iam_role_policy" "firehose" {
   name = "tf_acctest_firehose_delivery_policy_%d"
-  role = "${aws_iam_role.firehose.id}"
+  role = aws_iam_role.firehose.id
 
   policy = <<EOF
 {
@@ -2524,12 +2580,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = "${aws_iam_role.firehose.arn}"
+    role_arn           = aws_iam_role.firehose.arn
     prefix             = "tracking/autocomplete_stream/"
     buffer_interval    = 300
     buffer_size        = 5
     compression_format = "GZIP"
-    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn         = aws_s3_bucket.bucket.arn
   }
 }
 `, rInt, rInt, rInt, rInt)

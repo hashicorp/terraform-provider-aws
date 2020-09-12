@@ -4900,11 +4900,18 @@ type ComputeLimits struct {
 	// MaximumCapacityUnits is a required field
 	MaximumCapacityUnits *int64 `type:"integer" required:"true"`
 
-	// The upper boundary of on-demand EC2 units. It is measured through VCPU cores
+	// The upper boundary of EC2 units for core node type in a cluster. It is measured
+	// through VCPU cores or instances for instance groups and measured through
+	// units for instance fleets. The core units are not allowed to scale beyond
+	// this boundary. The parameter is used to split capacity allocation between
+	// core and task nodes.
+	MaximumCoreCapacityUnits *int64 `type:"integer"`
+
+	// The upper boundary of On-Demand EC2 units. It is measured through VCPU cores
 	// or instances for instance groups and measured through units for instance
-	// fleets. The on-demand units are not allowed to scale beyond this boundary.
-	// The limit only applies to the core and task nodes. The master node cannot
-	// be scaled after initial configuration.
+	// fleets. The On-Demand units are not allowed to scale beyond this boundary.
+	// The parameter is used to split capacity allocation between On-Demand and
+	// Spot instances.
 	MaximumOnDemandCapacityUnits *int64 `type:"integer"`
 
 	// The lower boundary of EC2 units. It is measured through VCPU cores or instances
@@ -4954,6 +4961,12 @@ func (s *ComputeLimits) Validate() error {
 // SetMaximumCapacityUnits sets the MaximumCapacityUnits field's value.
 func (s *ComputeLimits) SetMaximumCapacityUnits(v int64) *ComputeLimits {
 	s.MaximumCapacityUnits = &v
+	return s
+}
+
+// SetMaximumCoreCapacityUnits sets the MaximumCoreCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumCoreCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumCoreCapacityUnits = &v
 	return s
 }
 
@@ -6549,18 +6562,25 @@ func (s *InstanceFleetModifyConfig) SetTargetSpotCapacity(v int64) *InstanceFlee
 }
 
 // The launch specification for Spot instances in the fleet, which determines
-// the defined duration and provisioning timeout behavior.
+// the defined duration, provisioning timeout behavior, and allocation strategy.
 //
 // The instance fleet configuration is available only in Amazon EMR versions
-// 4.8.0 and later, excluding 5.0.x versions.
+// 4.8.0 and later, excluding 5.0.x versions. On-Demand and Spot instance allocation
+// strategies are available in Amazon EMR version 5.12.1 and later.
 type InstanceFleetProvisioningSpecifications struct {
 	_ struct{} `type:"structure"`
 
-	// The launch specification for Spot instances in the fleet, which determines
-	// the defined duration and provisioning timeout behavior.
+	// The launch specification for On-Demand instances in the instance fleet, which
+	// determines the allocation strategy.
 	//
-	// SpotSpecification is a required field
-	SpotSpecification *SpotProvisioningSpecification `type:"structure" required:"true"`
+	// The instance fleet configuration is available only in Amazon EMR versions
+	// 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation
+	// strategy is available in Amazon EMR version 5.12.1 and later.
+	OnDemandSpecification *OnDemandProvisioningSpecification `type:"structure"`
+
+	// The launch specification for Spot instances in the fleet, which determines
+	// the defined duration, provisioning timeout behavior, and allocation strategy.
+	SpotSpecification *SpotProvisioningSpecification `type:"structure"`
 }
 
 // String returns the string representation
@@ -6576,8 +6596,10 @@ func (s InstanceFleetProvisioningSpecifications) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *InstanceFleetProvisioningSpecifications) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "InstanceFleetProvisioningSpecifications"}
-	if s.SpotSpecification == nil {
-		invalidParams.Add(request.NewErrParamRequired("SpotSpecification"))
+	if s.OnDemandSpecification != nil {
+		if err := s.OnDemandSpecification.Validate(); err != nil {
+			invalidParams.AddNested("OnDemandSpecification", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.SpotSpecification != nil {
 		if err := s.SpotSpecification.Validate(); err != nil {
@@ -6589,6 +6611,12 @@ func (s *InstanceFleetProvisioningSpecifications) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetOnDemandSpecification sets the OnDemandSpecification field's value.
+func (s *InstanceFleetProvisioningSpecifications) SetOnDemandSpecification(v *OnDemandProvisioningSpecification) *InstanceFleetProvisioningSpecifications {
+	s.OnDemandSpecification = v
+	return s
 }
 
 // SetSpotSpecification sets the SpotSpecification field's value.
@@ -9632,6 +9660,52 @@ func (s ModifyInstanceGroupsOutput) GoString() string {
 	return s.String()
 }
 
+// The launch specification for On-Demand instances in the instance fleet, which
+// determines the allocation strategy.
+//
+// The instance fleet configuration is available only in Amazon EMR versions
+// 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation
+// strategy is available in Amazon EMR version 5.12.1 and later.
+type OnDemandProvisioningSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the strategy to use in launching On-Demand instance fleets. Currently,
+	// the only option is lowest-price (the default), which launches the lowest
+	// price first.
+	//
+	// AllocationStrategy is a required field
+	AllocationStrategy *string `type:"string" required:"true" enum:"OnDemandProvisioningAllocationStrategy"`
+}
+
+// String returns the string representation
+func (s OnDemandProvisioningSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnDemandProvisioningSpecification) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OnDemandProvisioningSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OnDemandProvisioningSpecification"}
+	if s.AllocationStrategy == nil {
+		invalidParams.Add(request.NewErrParamRequired("AllocationStrategy"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *OnDemandProvisioningSpecification) SetAllocationStrategy(v string) *OnDemandProvisioningSpecification {
+	s.AllocationStrategy = &v
+	return s
+}
+
 // The Amazon EC2 Availability Zone configuration of the cluster (job flow).
 type PlacementType struct {
 	_ struct{} `type:"structure"`
@@ -11193,12 +11267,20 @@ func (s *SimpleScalingPolicyConfiguration) SetScalingAdjustment(v int64) *Simple
 }
 
 // The launch specification for Spot instances in the instance fleet, which
-// determines the defined duration and provisioning timeout behavior.
+// determines the defined duration, provisioning timeout behavior, and allocation
+// strategy.
 //
 // The instance fleet configuration is available only in Amazon EMR versions
-// 4.8.0 and later, excluding 5.0.x versions.
+// 4.8.0 and later, excluding 5.0.x versions. Spot instance allocation strategy
+// is available in Amazon EMR version 5.12.1 and later.
 type SpotProvisioningSpecification struct {
 	_ struct{} `type:"structure"`
+
+	// Specifies the strategy to use in launching Spot instance fleets. Currently,
+	// the only option is capacity-optimized (the default), which launches instances
+	// from Spot instance pools with optimal capacity for the number of instances
+	// that are launching.
+	AllocationStrategy *string `type:"string" enum:"SpotProvisioningAllocationStrategy"`
 
 	// The defined duration for Spot instances (also known as Spot blocks) in minutes.
 	// When specified, the Spot instance does not terminate before the defined duration
@@ -11253,6 +11335,12 @@ func (s *SpotProvisioningSpecification) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *SpotProvisioningSpecification) SetAllocationStrategy(v string) *SpotProvisioningSpecification {
+	s.AllocationStrategy = &v
+	return s
 }
 
 // SetBlockDurationMinutes sets the BlockDurationMinutes field's value.
@@ -11899,6 +11987,16 @@ const (
 	ActionOnFailureContinue = "CONTINUE"
 )
 
+// ActionOnFailure_Values returns all elements of the ActionOnFailure enum
+func ActionOnFailure_Values() []string {
+	return []string{
+		ActionOnFailureTerminateJobFlow,
+		ActionOnFailureTerminateCluster,
+		ActionOnFailureCancelAndWait,
+		ActionOnFailureContinue,
+	}
+}
+
 const (
 	// AdjustmentTypeChangeInCapacity is a AdjustmentType enum value
 	AdjustmentTypeChangeInCapacity = "CHANGE_IN_CAPACITY"
@@ -11909,6 +12007,15 @@ const (
 	// AdjustmentTypeExactCapacity is a AdjustmentType enum value
 	AdjustmentTypeExactCapacity = "EXACT_CAPACITY"
 )
+
+// AdjustmentType_Values returns all elements of the AdjustmentType enum
+func AdjustmentType_Values() []string {
+	return []string{
+		AdjustmentTypeChangeInCapacity,
+		AdjustmentTypePercentChangeInCapacity,
+		AdjustmentTypeExactCapacity,
+	}
+}
 
 const (
 	// AutoScalingPolicyStatePending is a AutoScalingPolicyState enum value
@@ -11930,6 +12037,18 @@ const (
 	AutoScalingPolicyStateFailed = "FAILED"
 )
 
+// AutoScalingPolicyState_Values returns all elements of the AutoScalingPolicyState enum
+func AutoScalingPolicyState_Values() []string {
+	return []string{
+		AutoScalingPolicyStatePending,
+		AutoScalingPolicyStateAttaching,
+		AutoScalingPolicyStateAttached,
+		AutoScalingPolicyStateDetaching,
+		AutoScalingPolicyStateDetached,
+		AutoScalingPolicyStateFailed,
+	}
+}
+
 const (
 	// AutoScalingPolicyStateChangeReasonCodeUserRequest is a AutoScalingPolicyStateChangeReasonCode enum value
 	AutoScalingPolicyStateChangeReasonCodeUserRequest = "USER_REQUEST"
@@ -11941,6 +12060,15 @@ const (
 	AutoScalingPolicyStateChangeReasonCodeCleanupFailure = "CLEANUP_FAILURE"
 )
 
+// AutoScalingPolicyStateChangeReasonCode_Values returns all elements of the AutoScalingPolicyStateChangeReasonCode enum
+func AutoScalingPolicyStateChangeReasonCode_Values() []string {
+	return []string{
+		AutoScalingPolicyStateChangeReasonCodeUserRequest,
+		AutoScalingPolicyStateChangeReasonCodeProvisionFailure,
+		AutoScalingPolicyStateChangeReasonCodeCleanupFailure,
+	}
+}
+
 const (
 	// CancelStepsRequestStatusSubmitted is a CancelStepsRequestStatus enum value
 	CancelStepsRequestStatusSubmitted = "SUBMITTED"
@@ -11948,6 +12076,14 @@ const (
 	// CancelStepsRequestStatusFailed is a CancelStepsRequestStatus enum value
 	CancelStepsRequestStatusFailed = "FAILED"
 )
+
+// CancelStepsRequestStatus_Values returns all elements of the CancelStepsRequestStatus enum
+func CancelStepsRequestStatus_Values() []string {
+	return []string{
+		CancelStepsRequestStatusSubmitted,
+		CancelStepsRequestStatusFailed,
+	}
+}
 
 const (
 	// ClusterStateStarting is a ClusterState enum value
@@ -11971,6 +12107,19 @@ const (
 	// ClusterStateTerminatedWithErrors is a ClusterState enum value
 	ClusterStateTerminatedWithErrors = "TERMINATED_WITH_ERRORS"
 )
+
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateStarting,
+		ClusterStateBootstrapping,
+		ClusterStateRunning,
+		ClusterStateWaiting,
+		ClusterStateTerminating,
+		ClusterStateTerminated,
+		ClusterStateTerminatedWithErrors,
+	}
+}
 
 const (
 	// ClusterStateChangeReasonCodeInternalError is a ClusterStateChangeReasonCode enum value
@@ -11998,6 +12147,20 @@ const (
 	ClusterStateChangeReasonCodeAllStepsCompleted = "ALL_STEPS_COMPLETED"
 )
 
+// ClusterStateChangeReasonCode_Values returns all elements of the ClusterStateChangeReasonCode enum
+func ClusterStateChangeReasonCode_Values() []string {
+	return []string{
+		ClusterStateChangeReasonCodeInternalError,
+		ClusterStateChangeReasonCodeValidationError,
+		ClusterStateChangeReasonCodeInstanceFailure,
+		ClusterStateChangeReasonCodeInstanceFleetTimeout,
+		ClusterStateChangeReasonCodeBootstrapFailure,
+		ClusterStateChangeReasonCodeUserRequest,
+		ClusterStateChangeReasonCodeStepFailure,
+		ClusterStateChangeReasonCodeAllStepsCompleted,
+	}
+}
+
 const (
 	// ComparisonOperatorGreaterThanOrEqual is a ComparisonOperator enum value
 	ComparisonOperatorGreaterThanOrEqual = "GREATER_THAN_OR_EQUAL"
@@ -12012,6 +12175,16 @@ const (
 	ComparisonOperatorLessThanOrEqual = "LESS_THAN_OR_EQUAL"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorGreaterThanOrEqual,
+		ComparisonOperatorGreaterThan,
+		ComparisonOperatorLessThan,
+		ComparisonOperatorLessThanOrEqual,
+	}
+}
+
 const (
 	// ComputeLimitsUnitTypeInstanceFleetUnits is a ComputeLimitsUnitType enum value
 	ComputeLimitsUnitTypeInstanceFleetUnits = "InstanceFleetUnits"
@@ -12023,6 +12196,15 @@ const (
 	ComputeLimitsUnitTypeVcpu = "VCPU"
 )
 
+// ComputeLimitsUnitType_Values returns all elements of the ComputeLimitsUnitType enum
+func ComputeLimitsUnitType_Values() []string {
+	return []string{
+		ComputeLimitsUnitTypeInstanceFleetUnits,
+		ComputeLimitsUnitTypeInstances,
+		ComputeLimitsUnitTypeVcpu,
+	}
+}
+
 const (
 	// InstanceCollectionTypeInstanceFleet is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceFleet = "INSTANCE_FLEET"
@@ -12030,6 +12212,14 @@ const (
 	// InstanceCollectionTypeInstanceGroup is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceGroup = "INSTANCE_GROUP"
 )
+
+// InstanceCollectionType_Values returns all elements of the InstanceCollectionType enum
+func InstanceCollectionType_Values() []string {
+	return []string{
+		InstanceCollectionTypeInstanceFleet,
+		InstanceCollectionTypeInstanceGroup,
+	}
+}
 
 const (
 	// InstanceFleetStateProvisioning is a InstanceFleetState enum value
@@ -12054,6 +12244,19 @@ const (
 	InstanceFleetStateTerminated = "TERMINATED"
 )
 
+// InstanceFleetState_Values returns all elements of the InstanceFleetState enum
+func InstanceFleetState_Values() []string {
+	return []string{
+		InstanceFleetStateProvisioning,
+		InstanceFleetStateBootstrapping,
+		InstanceFleetStateRunning,
+		InstanceFleetStateResizing,
+		InstanceFleetStateSuspended,
+		InstanceFleetStateTerminating,
+		InstanceFleetStateTerminated,
+	}
+}
+
 const (
 	// InstanceFleetStateChangeReasonCodeInternalError is a InstanceFleetStateChangeReasonCode enum value
 	InstanceFleetStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -12068,6 +12271,16 @@ const (
 	InstanceFleetStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
 
+// InstanceFleetStateChangeReasonCode_Values returns all elements of the InstanceFleetStateChangeReasonCode enum
+func InstanceFleetStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceFleetStateChangeReasonCodeInternalError,
+		InstanceFleetStateChangeReasonCodeValidationError,
+		InstanceFleetStateChangeReasonCodeInstanceFailure,
+		InstanceFleetStateChangeReasonCodeClusterTerminated,
+	}
+}
+
 const (
 	// InstanceFleetTypeMaster is a InstanceFleetType enum value
 	InstanceFleetTypeMaster = "MASTER"
@@ -12078,6 +12291,15 @@ const (
 	// InstanceFleetTypeTask is a InstanceFleetType enum value
 	InstanceFleetTypeTask = "TASK"
 )
+
+// InstanceFleetType_Values returns all elements of the InstanceFleetType enum
+func InstanceFleetType_Values() []string {
+	return []string{
+		InstanceFleetTypeMaster,
+		InstanceFleetTypeCore,
+		InstanceFleetTypeTask,
+	}
+}
 
 const (
 	// InstanceGroupStateProvisioning is a InstanceGroupState enum value
@@ -12114,6 +12336,23 @@ const (
 	InstanceGroupStateEnded = "ENDED"
 )
 
+// InstanceGroupState_Values returns all elements of the InstanceGroupState enum
+func InstanceGroupState_Values() []string {
+	return []string{
+		InstanceGroupStateProvisioning,
+		InstanceGroupStateBootstrapping,
+		InstanceGroupStateRunning,
+		InstanceGroupStateReconfiguring,
+		InstanceGroupStateResizing,
+		InstanceGroupStateSuspended,
+		InstanceGroupStateTerminating,
+		InstanceGroupStateTerminated,
+		InstanceGroupStateArrested,
+		InstanceGroupStateShuttingDown,
+		InstanceGroupStateEnded,
+	}
+}
+
 const (
 	// InstanceGroupStateChangeReasonCodeInternalError is a InstanceGroupStateChangeReasonCode enum value
 	InstanceGroupStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -12128,6 +12367,16 @@ const (
 	InstanceGroupStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
 
+// InstanceGroupStateChangeReasonCode_Values returns all elements of the InstanceGroupStateChangeReasonCode enum
+func InstanceGroupStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceGroupStateChangeReasonCodeInternalError,
+		InstanceGroupStateChangeReasonCodeValidationError,
+		InstanceGroupStateChangeReasonCodeInstanceFailure,
+		InstanceGroupStateChangeReasonCodeClusterTerminated,
+	}
+}
+
 const (
 	// InstanceGroupTypeMaster is a InstanceGroupType enum value
 	InstanceGroupTypeMaster = "MASTER"
@@ -12139,6 +12388,15 @@ const (
 	InstanceGroupTypeTask = "TASK"
 )
 
+// InstanceGroupType_Values returns all elements of the InstanceGroupType enum
+func InstanceGroupType_Values() []string {
+	return []string{
+		InstanceGroupTypeMaster,
+		InstanceGroupTypeCore,
+		InstanceGroupTypeTask,
+	}
+}
+
 const (
 	// InstanceRoleTypeMaster is a InstanceRoleType enum value
 	InstanceRoleTypeMaster = "MASTER"
@@ -12149,6 +12407,15 @@ const (
 	// InstanceRoleTypeTask is a InstanceRoleType enum value
 	InstanceRoleTypeTask = "TASK"
 )
+
+// InstanceRoleType_Values returns all elements of the InstanceRoleType enum
+func InstanceRoleType_Values() []string {
+	return []string{
+		InstanceRoleTypeMaster,
+		InstanceRoleTypeCore,
+		InstanceRoleTypeTask,
+	}
+}
 
 const (
 	// InstanceStateAwaitingFulfillment is a InstanceState enum value
@@ -12167,6 +12434,17 @@ const (
 	InstanceStateTerminated = "TERMINATED"
 )
 
+// InstanceState_Values returns all elements of the InstanceState enum
+func InstanceState_Values() []string {
+	return []string{
+		InstanceStateAwaitingFulfillment,
+		InstanceStateProvisioning,
+		InstanceStateBootstrapping,
+		InstanceStateRunning,
+		InstanceStateTerminated,
+	}
+}
+
 const (
 	// InstanceStateChangeReasonCodeInternalError is a InstanceStateChangeReasonCode enum value
 	InstanceStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -12183,6 +12461,17 @@ const (
 	// InstanceStateChangeReasonCodeClusterTerminated is a InstanceStateChangeReasonCode enum value
 	InstanceStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
+
+// InstanceStateChangeReasonCode_Values returns all elements of the InstanceStateChangeReasonCode enum
+func InstanceStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceStateChangeReasonCodeInternalError,
+		InstanceStateChangeReasonCodeValidationError,
+		InstanceStateChangeReasonCodeInstanceFailure,
+		InstanceStateChangeReasonCodeBootstrapFailure,
+		InstanceStateChangeReasonCodeClusterTerminated,
+	}
+}
 
 // The type of instance.
 const (
@@ -12211,6 +12500,20 @@ const (
 	JobFlowExecutionStateFailed = "FAILED"
 )
 
+// JobFlowExecutionState_Values returns all elements of the JobFlowExecutionState enum
+func JobFlowExecutionState_Values() []string {
+	return []string{
+		JobFlowExecutionStateStarting,
+		JobFlowExecutionStateBootstrapping,
+		JobFlowExecutionStateRunning,
+		JobFlowExecutionStateWaiting,
+		JobFlowExecutionStateShuttingDown,
+		JobFlowExecutionStateTerminated,
+		JobFlowExecutionStateCompleted,
+		JobFlowExecutionStateFailed,
+	}
+}
+
 const (
 	// MarketTypeOnDemand is a MarketType enum value
 	MarketTypeOnDemand = "ON_DEMAND"
@@ -12218,6 +12521,26 @@ const (
 	// MarketTypeSpot is a MarketType enum value
 	MarketTypeSpot = "SPOT"
 )
+
+// MarketType_Values returns all elements of the MarketType enum
+func MarketType_Values() []string {
+	return []string{
+		MarketTypeOnDemand,
+		MarketTypeSpot,
+	}
+}
+
+const (
+	// OnDemandProvisioningAllocationStrategyLowestPrice is a OnDemandProvisioningAllocationStrategy enum value
+	OnDemandProvisioningAllocationStrategyLowestPrice = "lowest-price"
+)
+
+// OnDemandProvisioningAllocationStrategy_Values returns all elements of the OnDemandProvisioningAllocationStrategy enum
+func OnDemandProvisioningAllocationStrategy_Values() []string {
+	return []string{
+		OnDemandProvisioningAllocationStrategyLowestPrice,
+	}
+}
 
 const (
 	// RepoUpgradeOnBootSecurity is a RepoUpgradeOnBoot enum value
@@ -12227,6 +12550,14 @@ const (
 	RepoUpgradeOnBootNone = "NONE"
 )
 
+// RepoUpgradeOnBoot_Values returns all elements of the RepoUpgradeOnBoot enum
+func RepoUpgradeOnBoot_Values() []string {
+	return []string{
+		RepoUpgradeOnBootSecurity,
+		RepoUpgradeOnBootNone,
+	}
+}
+
 const (
 	// ScaleDownBehaviorTerminateAtInstanceHour is a ScaleDownBehavior enum value
 	ScaleDownBehaviorTerminateAtInstanceHour = "TERMINATE_AT_INSTANCE_HOUR"
@@ -12235,6 +12566,26 @@ const (
 	ScaleDownBehaviorTerminateAtTaskCompletion = "TERMINATE_AT_TASK_COMPLETION"
 )
 
+// ScaleDownBehavior_Values returns all elements of the ScaleDownBehavior enum
+func ScaleDownBehavior_Values() []string {
+	return []string{
+		ScaleDownBehaviorTerminateAtInstanceHour,
+		ScaleDownBehaviorTerminateAtTaskCompletion,
+	}
+}
+
+const (
+	// SpotProvisioningAllocationStrategyCapacityOptimized is a SpotProvisioningAllocationStrategy enum value
+	SpotProvisioningAllocationStrategyCapacityOptimized = "capacity-optimized"
+)
+
+// SpotProvisioningAllocationStrategy_Values returns all elements of the SpotProvisioningAllocationStrategy enum
+func SpotProvisioningAllocationStrategy_Values() []string {
+	return []string{
+		SpotProvisioningAllocationStrategyCapacityOptimized,
+	}
+}
+
 const (
 	// SpotProvisioningTimeoutActionSwitchToOnDemand is a SpotProvisioningTimeoutAction enum value
 	SpotProvisioningTimeoutActionSwitchToOnDemand = "SWITCH_TO_ON_DEMAND"
@@ -12242,6 +12593,14 @@ const (
 	// SpotProvisioningTimeoutActionTerminateCluster is a SpotProvisioningTimeoutAction enum value
 	SpotProvisioningTimeoutActionTerminateCluster = "TERMINATE_CLUSTER"
 )
+
+// SpotProvisioningTimeoutAction_Values returns all elements of the SpotProvisioningTimeoutAction enum
+func SpotProvisioningTimeoutAction_Values() []string {
+	return []string{
+		SpotProvisioningTimeoutActionSwitchToOnDemand,
+		SpotProvisioningTimeoutActionTerminateCluster,
+	}
+}
 
 const (
 	// StatisticSampleCount is a Statistic enum value
@@ -12260,6 +12619,17 @@ const (
 	StatisticMaximum = "MAXIMUM"
 )
 
+// Statistic_Values returns all elements of the Statistic enum
+func Statistic_Values() []string {
+	return []string{
+		StatisticSampleCount,
+		StatisticAverage,
+		StatisticSum,
+		StatisticMinimum,
+		StatisticMaximum,
+	}
+}
+
 const (
 	// StepCancellationOptionSendInterrupt is a StepCancellationOption enum value
 	StepCancellationOptionSendInterrupt = "SEND_INTERRUPT"
@@ -12267,6 +12637,14 @@ const (
 	// StepCancellationOptionTerminateProcess is a StepCancellationOption enum value
 	StepCancellationOptionTerminateProcess = "TERMINATE_PROCESS"
 )
+
+// StepCancellationOption_Values returns all elements of the StepCancellationOption enum
+func StepCancellationOption_Values() []string {
+	return []string{
+		StepCancellationOptionSendInterrupt,
+		StepCancellationOptionTerminateProcess,
+	}
+}
 
 const (
 	// StepExecutionStatePending is a StepExecutionState enum value
@@ -12291,6 +12669,19 @@ const (
 	StepExecutionStateInterrupted = "INTERRUPTED"
 )
 
+// StepExecutionState_Values returns all elements of the StepExecutionState enum
+func StepExecutionState_Values() []string {
+	return []string{
+		StepExecutionStatePending,
+		StepExecutionStateRunning,
+		StepExecutionStateContinue,
+		StepExecutionStateCompleted,
+		StepExecutionStateCancelled,
+		StepExecutionStateFailed,
+		StepExecutionStateInterrupted,
+	}
+}
+
 const (
 	// StepStatePending is a StepState enum value
 	StepStatePending = "PENDING"
@@ -12314,10 +12705,30 @@ const (
 	StepStateInterrupted = "INTERRUPTED"
 )
 
+// StepState_Values returns all elements of the StepState enum
+func StepState_Values() []string {
+	return []string{
+		StepStatePending,
+		StepStateCancelPending,
+		StepStateRunning,
+		StepStateCompleted,
+		StepStateCancelled,
+		StepStateFailed,
+		StepStateInterrupted,
+	}
+}
+
 const (
 	// StepStateChangeReasonCodeNone is a StepStateChangeReasonCode enum value
 	StepStateChangeReasonCodeNone = "NONE"
 )
+
+// StepStateChangeReasonCode_Values returns all elements of the StepStateChangeReasonCode enum
+func StepStateChangeReasonCode_Values() []string {
+	return []string{
+		StepStateChangeReasonCodeNone,
+	}
+}
 
 const (
 	// UnitNone is a Unit enum value
@@ -12401,3 +12812,36 @@ const (
 	// UnitCountPerSecond is a Unit enum value
 	UnitCountPerSecond = "COUNT_PER_SECOND"
 )
+
+// Unit_Values returns all elements of the Unit enum
+func Unit_Values() []string {
+	return []string{
+		UnitNone,
+		UnitSeconds,
+		UnitMicroSeconds,
+		UnitMilliSeconds,
+		UnitBytes,
+		UnitKiloBytes,
+		UnitMegaBytes,
+		UnitGigaBytes,
+		UnitTeraBytes,
+		UnitBits,
+		UnitKiloBits,
+		UnitMegaBits,
+		UnitGigaBits,
+		UnitTeraBits,
+		UnitPercent,
+		UnitCount,
+		UnitBytesPerSecond,
+		UnitKiloBytesPerSecond,
+		UnitMegaBytesPerSecond,
+		UnitGigaBytesPerSecond,
+		UnitTeraBytesPerSecond,
+		UnitBitsPerSecond,
+		UnitKiloBitsPerSecond,
+		UnitMegaBitsPerSecond,
+		UnitGigaBitsPerSecond,
+		UnitTeraBitsPerSecond,
+		UnitCountPerSecond,
+	}
+}
