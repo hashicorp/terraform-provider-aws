@@ -113,7 +113,7 @@ The following arguments are supported:
 * `name_prefix` - Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - Description of the launch template.
 * `default_version` - Default Version of the launch template.
-* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`. 
+* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`.
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -175,12 +175,12 @@ The `ebs` block supports the following:
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 * `iops` - The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
+  This must be set with a `volume_type` of `"io1/io2"`.
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
 * `volume_size` - The size of the volume in gigabytes.
-* `volume_type` - The type of volume. Can be `"standard"`, `"gp2"`, or `"io1"`. (Default: `"standard"`).
+* `volume_type` - The type of volume. Can be `"standard"`, `"gp2"`, `"io1"` or `"io2"`. (Default: `"standard"`).
 
 ### Capacity Reservation Specification
 

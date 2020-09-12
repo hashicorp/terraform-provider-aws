@@ -172,6 +172,7 @@ The following arguments are supported:
     Defaults to `false`.
 * `kms_key_id` - (Optional) Specifies the KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `event_selector` - (Optional) Specifies an event selector for enabling data event logging. Fields documented below. Please note the [CloudTrail limits](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/WhatIsCloudTrail-Limits.html) when configuring these.
+* `insight_selector` - (Optional) Specifies an insight selector for identifying unusual operational activity. Fields documented below.
 * `tags` - (Optional) A map of tags to assign to the trail
 
 ### Event Selector Arguments
@@ -186,6 +187,12 @@ For **data_resource** the following attributes are supported.
 
 * `type` (Required) - The resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function"
 * `values` (Required) - A list of ARN for the specified S3 buckets and object prefixes..
+
+### Insight Selector Arguments
+
+For **insight_selector** the following attributes are supported.
+
+* `insight_type` (Optional) - The type of insights to log on a trail. In this release, only `ApiCallRateInsight` is supported as an insight type.
 
 ## Attribute Reference
 

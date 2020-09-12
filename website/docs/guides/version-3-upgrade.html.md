@@ -645,7 +645,7 @@ resource "aws_autoscaling_group" "example" {
 
 Previously, the `active_trusted_signers` computed attribute was implemented with a Map that did not support accessing its computed `items` attribute in Terraform 0.12 correctly.
 To address this, the `active_trusted_signers` attribute has been renamed to `trusted_signers` and is now implemented as a List with a computed `items` List attribute and computed `enabled` boolean attribute.
-The nested `items` attribute includes computed `aws_account_number` and `key_pair_ids` sub-fields, with the latter implemented as a List. 
+The nested `items` attribute includes computed `aws_account_number` and `key_pair_ids` sub-fields, with the latter implemented as a List.
 Thus, user configurations referencing the `active_trusted_signers` attribute and its sub-fields will need to be changed as follows.
 
 Given these previous references:
@@ -655,7 +655,7 @@ aws_cloudfront_distribution.example.active_trusted_signers.enabled
 aws_cloudfront_distribution.example.active_trusted_signers.items
 ```
 
-Updated references: 
+Updated references:
 
 ```
 aws_cloudfront_distribution.example.trusted_signers[0].enabled
@@ -879,8 +879,8 @@ resource "aws_dx_gateway_association_proposal" "example" {
 
 ### iops Argument Apply-Time Validation
 
-Previously when the `iops` argument was configured with a `type` other than `io1` (either explicitly or omitted, indicating the default type `gp2`), the Terraform AWS Provider would automatically disregard the value provided to `iops` as it is only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for types other than `io1`. 
-Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`. 
+Previously when the `iops` argument was configured with a `type` other than `io1` (either explicitly or omitted, indicating the default type `gp2`), the Terraform AWS Provider would automatically disregard the value provided to `iops` as it is only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for types other than `io1`.
+Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`.
 
 ## Resource: aws_elastic_transcoder_preset
 
@@ -1091,7 +1091,7 @@ Previously when the `certificate_body`, `certificate_chain`, and `private_key` a
 ### ebs_block_device.iops and root_block_device.iops Argument Apply-Time Validations
 
 Previously when the `iops` argument was configured in either the `ebs_block_device` or `root_block_device` configuration block, the Terraform AWS Provider would automatically disregard the value provided to `iops` if the `type` argument was also configured with a value other than `io1` (either explicitly or omitted, indicating the default type `gp2`) as `iops` are only configurable for the `io1` volume type per the AWS EC2 API. This behavior has changed such that the Terraform AWS Provider will instead return an error at apply time indicating an `iops` value is invalid for volume types other than `io1`.
-Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`. 
+Exceptions to this are in cases where `iops` is set to `null` or `0` such that the Terraform AWS Provider will continue to accept the value regardless of `type`.
 
 ## Resource: aws_lambda_alias
 
@@ -1194,7 +1194,7 @@ resource "aws_msk_cluster" "example" {
 
 ### scaling_configuration.min_capacity Now Defaults to 1
 
-Previously when the `min_capacity` argument in a `scaling_configuration` block was not configured, the resource would default to 2. This behavior has been updated to align with the AWS RDS Cluster API default of 1. 
+Previously when the `min_capacity` argument in a `scaling_configuration` block was not configured, the resource would default to 2. This behavior has been updated to align with the AWS RDS Cluster API default of 1.
 
 ## Resource: aws_route53_resolver_rule
 
@@ -1242,7 +1242,7 @@ resource "aws_s3_bucket" "example" {
 
 ### filter configuration block Plan-Time Validation Change
 
-The `filter` configuration block no longer supports the empty block `{}` and requires at least one of the `prefix` or `tags` attributes to be specified.   
+The `filter` configuration block no longer supports the empty block `{}` and requires at least one of the `prefix` or `tags` attributes to be specified.
 
 For example, given this previous configuration:
 

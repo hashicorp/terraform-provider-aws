@@ -156,6 +156,7 @@ resource "aws_ec2_transit_gateway" "peer" {
     Name = %[1]q
   }
 }
+
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "awsalternate"
 

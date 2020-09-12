@@ -289,7 +289,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigParseId(id string) (string, strin
 			return id, "", nil
 		}
 
-		functionParts := strings.Split(id, ":")
+		functionParts := strings.Split(function, ":")
 
 		if len(functionParts) != 2 || functionParts[0] == "" || functionParts[1] == "" {
 			return "", "", fmt.Errorf("unexpected format of function resource (%s), expected name:qualifier", id)

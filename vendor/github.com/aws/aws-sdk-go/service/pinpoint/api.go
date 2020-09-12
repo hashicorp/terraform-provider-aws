@@ -28780,7 +28780,8 @@ type SMSMessage struct {
 	// your dedicated number.
 	Keyword *string `type:"string"`
 
-	// The URL of an image or video to display in the SMS message.
+	// The URL of an image or video to display in the SMS message. This field is
+	// reserved for future use.
 	MediaUrl *string `type:"string"`
 
 	// The SMS message type. Valid values are TRANSACTIONAL (for messages that are

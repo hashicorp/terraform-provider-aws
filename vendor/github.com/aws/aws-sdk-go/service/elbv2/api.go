@@ -4046,6 +4046,9 @@ type AvailabilityZone struct {
 	// a private IP address from the IPv4 range of the subnet.
 	LoadBalancerAddresses []*LoadBalancerAddress `type:"list"`
 
+	// [Application Load Balancers on Outposts] The ID of the Outpost.
+	OutpostId *string `type:"string"`
+
 	// The ID of the subnet. You can specify one subnet per Availability Zone.
 	SubnetId *string `type:"string"`
 
@@ -4066,6 +4069,12 @@ func (s AvailabilityZone) GoString() string {
 // SetLoadBalancerAddresses sets the LoadBalancerAddresses field's value.
 func (s *AvailabilityZone) SetLoadBalancerAddresses(v []*LoadBalancerAddress) *AvailabilityZone {
 	s.LoadBalancerAddresses = v
+	return s
+}
+
+// SetOutpostId sets the OutpostId field's value.
+func (s *AvailabilityZone) SetOutpostId(v string) *AvailabilityZone {
+	s.OutpostId = &v
 	return s
 }
 
@@ -4357,6 +4366,10 @@ func (s *CreateListenerOutput) SetListeners(v []*Listener) *CreateListenerOutput
 type CreateLoadBalancerInput struct {
 	_ struct{} `type:"structure"`
 
+	// [Application Load Balancers on Outposts] The ID of the customer-owned address
+	// pool (CoIP pool).
+	CustomerOwnedIpv4Pool *string `type:"string"`
+
 	// [Application Load Balancers] The type of IP addresses used by the subnets
 	// for your load balancer. The possible values are ipv4 (for IPv4 addresses)
 	// and dualstack (for IPv4 and IPv6 addresses). Internal load balancers must
@@ -4395,6 +4408,11 @@ type CreateLoadBalancerInput struct {
 	// [Application Load Balancers] You must specify subnets from at least two Availability
 	// Zones. You cannot specify Elastic IP addresses for your subnets.
 	//
+	// [Application Load Balancers on Outposts] You must specify one Outpost subnet.
+	//
+	// [Application Load Balancers on Local Zones] You can specify subnets from
+	// one or more Local Zones.
+	//
 	// [Network Load Balancers] You can specify subnets from one or more Availability
 	// Zones. You can specify one Elastic IP address per subnet if you need static
 	// IP addresses for your internet-facing load balancer. For internal load balancers,
@@ -4407,6 +4425,11 @@ type CreateLoadBalancerInput struct {
 	//
 	// [Application Load Balancers] You must specify subnets from at least two Availability
 	// Zones.
+	//
+	// [Application Load Balancers on Outposts] You must specify one Outpost subnet.
+	//
+	// [Application Load Balancers on Local Zones] You can specify subnets from
+	// one or more Local Zones.
 	//
 	// [Network Load Balancers] You can specify subnets from one or more Availability
 	// Zones.
@@ -4453,6 +4476,12 @@ func (s *CreateLoadBalancerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomerOwnedIpv4Pool sets the CustomerOwnedIpv4Pool field's value.
+func (s *CreateLoadBalancerInput) SetCustomerOwnedIpv4Pool(v string) *CreateLoadBalancerInput {
+	s.CustomerOwnedIpv4Pool = &v
+	return s
 }
 
 // SetIpAddressType sets the IpAddressType field's value.
@@ -6482,7 +6511,7 @@ func (s *Listener) SetSslPolicy(v string) *Listener {
 type LoadBalancer struct {
 	_ struct{} `type:"structure"`
 
-	// The Availability Zones for the load balancer.
+	// The subnets for the load balancer.
 	AvailabilityZones []*AvailabilityZone `type:"list"`
 
 	// The ID of the Amazon Route 53 hosted zone associated with the load balancer.
@@ -6490,6 +6519,10 @@ type LoadBalancer struct {
 
 	// The date and time the load balancer was created.
 	CreatedTime *time.Time `type:"timestamp"`
+
+	// [Application Load Balancers on Outposts] The ID of the customer-owned address
+	// pool.
+	CustomerOwnedIpv4Pool *string `type:"string"`
 
 	// The public DNS name of the load balancer.
 	DNSName *string `type:"string"`
@@ -6554,6 +6587,12 @@ func (s *LoadBalancer) SetCanonicalHostedZoneId(v string) *LoadBalancer {
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *LoadBalancer) SetCreatedTime(v time.Time) *LoadBalancer {
 	s.CreatedTime = &v
+	return s
+}
+
+// SetCustomerOwnedIpv4Pool sets the CustomerOwnedIpv4Pool field's value.
+func (s *LoadBalancer) SetCustomerOwnedIpv4Pool(v string) *LoadBalancer {
+	s.CustomerOwnedIpv4Pool = &v
 	return s
 }
 
@@ -8409,7 +8448,7 @@ func (s *SetSubnetsInput) SetSubnets(v []*string) *SetSubnetsInput {
 type SetSubnetsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the subnet and Availability Zone.
+	// Information about the subnets.
 	AvailabilityZones []*AvailabilityZone `type:"list"`
 }
 

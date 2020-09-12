@@ -326,8 +326,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"encrypted": "true",
 					}),
-					// TODO: TypeSet check implement attr pair helper
-					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 		},
@@ -1600,7 +1599,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyIOPS(t *testing.T) {
+func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io1(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1608,6 +1607,48 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS(t *testing.T) {
 	volumeSize := "30"
 	deleteOnTermination := "true"
 	volumeType := "io1"
+
+	originalIOPS := "100"
+	updatedIOPS := "200"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", originalIOPS),
+				),
+			},
+			{
+				Config: testAccAwsEc2InstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &updated),
+					testAccCheckInstanceNotRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io2(t *testing.T) {
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+
+	volumeSize := "30"
+	deleteOnTermination := "true"
+	volumeType := "io2"
 
 	originalIOPS := "100"
 	updatedIOPS := "200"

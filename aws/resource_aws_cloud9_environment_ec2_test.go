@@ -346,7 +346,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   subnet_id     = aws_subnet.test.id
 }
 
-// By default, the Cloud9 environment EC2 is owned by the creator
+# By default, the Cloud9 environment EC2 is owned by the creator
 data "aws_caller_identity" "current" {}
 `, name)
 }

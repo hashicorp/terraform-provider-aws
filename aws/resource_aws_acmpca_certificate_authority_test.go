@@ -649,7 +649,7 @@ resource "aws_acmpca_certificate_authority" "test" {
       custom_cname       = "%s"
       enabled            = true
       expiration_in_days = 1
-      s3_bucket_name     = "${aws_s3_bucket.test.id}"
+      s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
 
@@ -678,7 +678,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     crl_configuration {
       enabled            = %t
       expiration_in_days = 1
-      s3_bucket_name     = "${aws_s3_bucket.test.id}"
+      s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
 }
@@ -705,7 +705,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     crl_configuration {
       enabled            = true
       expiration_in_days = %d
-      s3_bucket_name     = "${aws_s3_bucket.test.id}"
+      s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
 }
@@ -729,7 +729,7 @@ data "aws_iam_policy_document" "acmpca_bucket_access" {
     ]
 
     resources = [
-      "${aws_s3_bucket.test.arn}",
+      aws_s3_bucket.test.arn,
       "${aws_s3_bucket.test.arn}/*",
     ]
 
@@ -741,8 +741,8 @@ data "aws_iam_policy_document" "acmpca_bucket_access" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = "${aws_s3_bucket.test.id}"
-  policy = "${data.aws_iam_policy_document.acmpca_bucket_access.json}"
+  bucket = aws_s3_bucket.test.id
+  policy = data.aws_iam_policy_document.acmpca_bucket_access.json
 }
 `, rName)
 }

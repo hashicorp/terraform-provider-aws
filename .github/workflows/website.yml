@@ -43,7 +43,8 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: avto-dev/markdown-lint@v1.3.0
+      - uses: actions/checkout@v2
+      - uses: avto-dev/markdown-lint@v1
         with:
           config: '.markdownlint.yml'
           args: 'website/docs'

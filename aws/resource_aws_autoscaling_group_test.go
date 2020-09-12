@@ -1188,6 +1188,51 @@ func testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(group *autoscali
 	}
 }
 
+// testAccCheckTags can be used to check the tags on a resource.
+func testAccCheckAutoscalingTags(
+	ts *[]*autoscaling.TagDescription, key string, expected map[string]interface{}) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		m := autoscalingTagDescriptionsToMap(ts)
+		v, ok := m[key]
+		if !ok {
+			return fmt.Errorf("Missing tag: %s", key)
+		}
+
+		if v["value"] != expected["value"].(string) ||
+			v["propagate_at_launch"] != expected["propagate_at_launch"].(bool) {
+			return fmt.Errorf("%s: bad value: %s", key, v)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAutoscalingTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		m := autoscalingTagDescriptionsToMap(ts)
+		if _, ok := m[key]; ok {
+			return fmt.Errorf("Tag exists when it should not: %s", key)
+		}
+
+		return nil
+	}
+}
+
+// autoscalingTagDescriptionsToMap turns the list of tags into a map.
+func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
+	tags := make(map[string]map[string]interface{})
+	for _, t := range *ts {
+		tag := map[string]interface{}{
+			"key":                 aws.StringValue(t.Key),
+			"value":               aws.StringValue(t.Value),
+			"propagate_at_launch": aws.BoolValue(t.PropagateAtLaunch),
+		}
+		tags[aws.StringValue(t.Key)] = tag
+	}
+
+	return tags
+}
+
 // testAccCheckAWSALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
 // sure that all instances in it are healthy.
 func testAccCheckAWSALBTargetGroupHealthy(res *elbv2.TargetGroup) resource.TestCheckFunc {
@@ -3680,7 +3725,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_elb" "test" {
-  count = %[2]d
+  count      = %[2]d
   depends_on = [aws_internet_gateway.test]
 
   subnets = [aws_subnet.test.id]
@@ -3745,11 +3790,11 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type   = "t2.micro"
+        instance_type     = "t2.micro"
         weighted_capacity = "1"
       }
       override {
-        instance_type   = "t3.small"
+        instance_type     = "t3.small"
         weighted_capacity = "2"
       }
     }
@@ -4052,11 +4097,11 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type = "t2.micro"
+        instance_type     = "t2.micro"
         weighted_capacity = "2"
       }
       override {
-        instance_type = "t3.small"
+        instance_type     = "t3.small"
         weighted_capacity = "4"
       }
     }

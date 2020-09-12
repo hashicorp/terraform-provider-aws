@@ -321,6 +321,12 @@ const (
 	// The specified public key doesn't exist.
 	ErrCodeNoSuchPublicKey = "NoSuchPublicKey"
 
+	// ErrCodeNoSuchRealtimeLogConfig for service response error code
+	// "NoSuchRealtimeLogConfig".
+	//
+	// The real-time log configuration does not exist.
+	ErrCodeNoSuchRealtimeLogConfig = "NoSuchRealtimeLogConfig"
+
 	// ErrCodeNoSuchResource for service response error code
 	// "NoSuchResource".
 	//
@@ -386,6 +392,20 @@ const (
 	//
 	// No profile specified for the field-level encryption query argument.
 	ErrCodeQueryArgProfileEmpty = "QueryArgProfileEmpty"
+
+	// ErrCodeRealtimeLogConfigAlreadyExists for service response error code
+	// "RealtimeLogConfigAlreadyExists".
+	//
+	// A real-time log configuration with this name already exists. You must provide
+	// a unique name. To modify an existing real-time log configuration, use UpdateRealtimeLogConfig.
+	ErrCodeRealtimeLogConfigAlreadyExists = "RealtimeLogConfigAlreadyExists"
+
+	// ErrCodeRealtimeLogConfigInUse for service response error code
+	// "RealtimeLogConfigInUse".
+	//
+	// Cannot delete the real-time log configuration because it is attached to one
+	// or more cache behaviors.
+	ErrCodeRealtimeLogConfigInUse = "RealtimeLogConfigInUse"
 
 	// ErrCodeStreamingDistributionAlreadyExists for service response error code
 	// "StreamingDistributionAlreadyExists".
@@ -633,6 +653,14 @@ const (
 	// For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
 	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
 	ErrCodeTooManyQueryStringsInOriginRequestPolicy = "TooManyQueryStringsInOriginRequestPolicy"
+
+	// ErrCodeTooManyRealtimeLogConfigs for service response error code
+	// "TooManyRealtimeLogConfigs".
+	//
+	// You have reached the maximum number of real-time log configurations for this
+	// AWS account. For more information, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+	// (formerly known as limits) in the Amazon CloudFront Developer Guide.
+	ErrCodeTooManyRealtimeLogConfigs = "TooManyRealtimeLogConfigs"
 
 	// ErrCodeTooManyStreamingDistributionCNAMEs for service response error code
 	// "TooManyStreamingDistributionCNAMEs".

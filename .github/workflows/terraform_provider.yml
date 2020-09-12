@@ -10,6 +10,7 @@ on:
       - .github/workflows/terraform_provider.yml
       - .golangci.yml
       - .goreleaser.yml
+      - .semgrep.yml
       - aws/**
       - awsproviderlint/**
       - docs/index.md
@@ -251,6 +252,15 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           args: build --snapshot --timeout 1h
+
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+       fetch-depth: 0
+    - name: semgrep
+      uses: returntocorp/semgrep-action@v1
 
   tfproviderdocs:
     needs: [terraform_providers_schema]

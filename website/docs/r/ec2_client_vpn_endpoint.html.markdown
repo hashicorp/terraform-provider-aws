@@ -51,9 +51,10 @@ The following arguments are supported:
 
 One of the following arguments must be supplied:
 
-* `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, or `directory-service-authentication` to use Active Directory authentication.
+* `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
 * `active_directory_id` - (Optional) The ID of the Active Directory to be used for authentication if type is `directory-service-authentication`.
 * `root_certificate_chain_arn` - (Optional) The ARN of the client certificate. The certificate must be signed by a certificate authority (CA) and it must be provisioned in AWS Certificate Manager (ACM). Only necessary when type is set to `certificate-authentication`.
+* `saml_provider_arn` - (Optional) The ARN of the IAM SAML identity provider if type is `federated-authentication`.
 
 ### `connection_log_options` Argument Reference
 

@@ -296,7 +296,7 @@ func testAccBatchJobQueueConfigBase(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",

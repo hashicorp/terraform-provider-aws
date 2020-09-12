@@ -1296,6 +1296,37 @@ func TestAccAWSEMRCluster_step_concurrency_level(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_ebs_config(t *testing.T) {
+	var cluster emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrEbsConfig(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 	var cluster emr.Cluster
 
@@ -1322,6 +1353,49 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 					"configurations",
 					"keep_job_flow_alive_when_no_steps",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_instance_fleet(t *testing.T) {
+	var cluster emr.Cluster
+
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigInstanceFleets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_instance_fleet_master_only(t *testing.T) {
+	var cluster emr.Cluster
+
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigInstanceFleetsMasterOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+				),
 			},
 		},
 	})
@@ -3108,75 +3182,9 @@ EOT
 
 resource "aws_iam_role_policy_attachment" "emr_service" {
   role       = aws_iam_role.emr_service.id
-  policy_arn = aws_iam_policy.emr_service.arn
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole"
 }
 
-resource "aws_iam_policy" "emr_service" {
-  name = "%[1]s_emr"
-
-  policy = <<EOT
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "ec2:AuthorizeSecurityGroupEgress",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:CancelSpotInstanceRequests",
-            "ec2:CreateNetworkInterface",
-            "ec2:CreateSecurityGroup",
-            "ec2:CreateTags",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DeleteSecurityGroup",
-            "ec2:DeleteTags",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeAccountAttributes",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstances",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeNetworkAcls",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DescribePrefixLists",
-            "ec2:DescribeRouteTables",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeSpotInstanceRequests",
-            "ec2:DescribeSpotPriceHistory",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeVpcAttribute",
-            "ec2:DescribeVpcEndpoints",
-            "ec2:DescribeVpcEndpointServices",
-            "ec2:DescribeVpcs",
-            "ec2:DetachNetworkInterface",
-            "ec2:ModifyImageAttribute",
-            "ec2:ModifyInstanceAttribute",
-            "ec2:RequestSpotInstances",
-            "ec2:RevokeSecurityGroupEgress",
-            "ec2:RunInstances",
-            "ec2:TerminateInstances",
-            "ec2:DeleteVolume",
-            "ec2:DescribeVolumeStatus",
-            "iam:GetRole",
-            "iam:GetRolePolicy",
-            "iam:ListInstanceProfiles",
-            "iam:ListRolePolicies",
-            "iam:PassRole",
-            "s3:CreateBucket",
-            "s3:Get*",
-            "s3:List*",
-            "sdb:BatchPutAttributes",
-            "sdb:Select",
-            "sqs:CreateQueue",
-            "sqs:Delete*",
-            "sqs:GetQueue*",
-            "sqs:PurgeQueue",
-            "sqs:ReceiveMessage"
-        ]
-    }]
-}
-EOT
-}
 `, r)
 }
 
@@ -3396,4 +3404,178 @@ EOF
   acl = "public-read"
 }
 `, r)
+}
+
+func testAccAWSEmrEbsConfig(rName string, volumesPerInstance int) string {
+	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = "%[1]s"
+  release_label                     = "emr-5.28.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+	ebs_config {
+      size                 = 32
+      type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
+	ebs_config {
+	  size                 = 50
+	  type                 = "gp2"
+	  volumes_per_instance = %[2]d
+	}
+  }
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "m4.large"
+    ebs_config {
+      size                 = 32
+      type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, volumesPerInstance),
+	)
+}
+
+func testAccAWSEmrClusterConfigInstanceFleets(r string) string {
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name                 = "%[1]s"
+  release_label        = "emr-5.30.1"
+  applications         = ["Hadoop", "Hive"]
+  log_uri              = "s3n://terraform/testlog/"
+
+  master_instance_fleet    {
+    instance_type_configs        {
+          instance_type = "m3.xlarge"
+        }
+    
+      target_on_demand_capacity = 1
+    }
+  core_instance_fleet {
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 80
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m3.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.2xlarge"
+      weighted_capacity = 2
+    }
+    launch_specifications {
+      spot_specification {
+		allocation_strategy      = "capacity-optimized"
+        block_duration_minutes   = 0
+        timeout_action           = "SWITCH_TO_ON_DEMAND"
+        timeout_duration_minutes = 10
+      }
+    }
+    name                      = "core fleet"
+    target_on_demand_capacity = 0
+    target_spot_capacity      = 2
+  }
+  service_role = aws_iam_role.emr_service.arn
+  depends_on   = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+}
+`, r),
+	)
+}
+
+func testAccAWSEmrClusterConfigInstanceFleetsMasterOnly(r string) string {
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name                 = "%[1]s"
+  release_label        = "emr-5.30.1"
+  applications         = ["Hadoop", "Hive"]
+  log_uri              = "s3n://terraform/testlog/"
+
+  master_instance_fleet    {
+    instance_type_configs        {
+          instance_type = "m3.xlarge"
+        }
+    
+      target_on_demand_capacity = 1
+    }
+  service_role = aws_iam_role.emr_service.arn
+  depends_on   = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+}
+`, r),
+	)
 }

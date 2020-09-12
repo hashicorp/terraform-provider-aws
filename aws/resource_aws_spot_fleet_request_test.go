@@ -565,6 +565,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
+	availabilityZonesDataSource := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
@@ -577,12 +578,8 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"availability_zone": "us-west-2a",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"availability_zone": "us-west-2b",
-					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.1"),
 				),
 			},
 			{
@@ -629,6 +626,8 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
+	instanceTypeDataSource := "data.aws_ec2_instance_type_offering.available"
+	availabilityZonesDataSource := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
@@ -641,13 +640,10 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSource, "instance_type"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"instance_type":     "m1.small",
-						"availability_zone": "us-west-2a",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"instance_type":     "m3.large",
-						"availability_zone": "us-west-2a",
+						"instance_type": "m3.large",
 					}),
 				),
 			},
@@ -695,6 +691,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
+	instanceTypeDataSourceName := "data.aws_ec2_instance_type_offering.available"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
@@ -712,10 +709,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 						"spot_price":    "0.05",
 						"instance_type": "m3.large",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"spot_price":    "", //there will not be a value here since it's not overriding
-						"instance_type": "m1.small",
-					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSourceName, "instance_type"),
 				),
 			},
 			{
@@ -1311,17 +1305,9 @@ func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(sfr *ec2.SpotFleetReq
 func testAccAWSSpotFleetRequestConfigBase(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
@@ -1406,7 +1392,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name      = aws_key_pair.test.key_name
   }
@@ -1428,7 +1414,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name      = aws_key_pair.test.key_name
   }
@@ -1454,7 +1440,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name      = aws_key_pair.test.key_name
   }
@@ -1480,7 +1466,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type               = "m1.small"
+    instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
     ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name                    = aws_key_pair.test.key_name
     associate_public_ip_address = true
@@ -1503,7 +1489,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 
@@ -1652,7 +1638,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 
@@ -1673,7 +1659,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 
@@ -1738,7 +1724,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type            = "m1.small"
+    instance_type            = data.aws_ec2_instance_type_offering.available.instance_type
     ami                      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name                 = aws_key_pair.test.key_name
     iam_instance_profile_arn = aws_iam_instance_profile.test-iam-instance-profile1.arn
@@ -1760,7 +1746,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name      = aws_key_pair.test.key_name
   }
@@ -1781,14 +1767,14 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
   }
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[1]
@@ -2006,7 +1992,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
@@ -2082,7 +2068,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
@@ -2111,7 +2097,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
@@ -2141,7 +2127,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
@@ -2178,7 +2164,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
@@ -2245,7 +2231,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
     ebs_block_device {
@@ -2376,7 +2362,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    instance_type = "m1.small"
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
     ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
     tags = {
@@ -2405,7 +2391,7 @@ resource "aws_spot_fleet_request" "test" {
   terminate_instances_with_expiration = true
 
   launch_specification {
-    instance_type     = "m1.small"
+    instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
     ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     key_name          = aws_key_pair.test.key_name
     placement_tenancy = "dedicated"

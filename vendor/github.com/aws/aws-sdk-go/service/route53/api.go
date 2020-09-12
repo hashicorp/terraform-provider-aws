@@ -60,22 +60,13 @@ func (c *Route53) AssociateVPCWithHostedZoneRequest(input *AssociateVPCWithHoste
 // Associates an Amazon VPC with a private hosted zone.
 //
 // To perform the association, the VPC and the private hosted zone must already
-// exist. Also, you can't convert a public hosted zone into a private hosted
-// zone.
+// exist. You can't convert a public hosted zone into a private hosted zone.
 //
-// If you want to associate a VPC that was created by one AWS account with a
-// private hosted zone that was created by a different account, do one of the
-// following:
-//
-//    * Use the AWS account that created the private hosted zone to submit a
-//    CreateVPCAssociationAuthorization (https://docs.aws.amazon.com/Route53/latest/APIReference/API_CreateVPCAssociationAuthorization.html)
-//    request. Then use the account that created the VPC to submit an AssociateVPCWithHostedZone
-//    request.
-//
-//    * If a subnet in the VPC was shared with another account, you can use
-//    the account that the subnet was shared with to submit an AssociateVPCWithHostedZone
-//    request. For more information about sharing subnets, see Working with
-//    Shared VPCs (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html).
+// If you want to associate a VPC that was created by using one AWS account
+// with a private hosted zone that was created by using a different account,
+// the AWS account that created the private hosted zone must first submit a
+// CreateVPCAssociationAuthorization request. Then the account that created
+// the VPC must submit an AssociateVPCWithHostedZone request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2012,6 +2003,19 @@ func (c *Route53) DeleteTrafficPolicyRequest(input *DeleteTrafficPolicyInput) (r
 //
 // Deletes a traffic policy.
 //
+// When you delete a traffic policy, Route 53 sets a flag on the policy to indicate
+// that it has been deleted. However, Route 53 never fully deletes the traffic
+// policy. Note the following:
+//
+//    * Deleted traffic policies aren't listed if you run ListTrafficPolicies
+//    (https://docs.aws.amazon.com/Route53/latest/APIReference/API_ListTrafficPolicies.html).
+//
+//    * There's no way to get a list of deleted policies.
+//
+//    * If you retain the ID of the policy, you can get information about the
+//    policy, including the traffic policy document, by running GetTrafficPolicy
+//    (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetTrafficPolicy.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3605,6 +3609,9 @@ func (c *Route53) GetTrafficPolicyRequest(input *GetTrafficPolicyInput) (req *re
 //
 // Gets information about a specific traffic policy version.
 //
+// For information about how of deleting a traffic policy affects the response
+// from GetTrafficPolicy, see DeleteTrafficPolicy (https://docs.aws.amazon.com/Route53/latest/APIReference/API_DeleteTrafficPolicy.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5086,6 +5093,9 @@ func (c *Route53) ListTrafficPoliciesRequest(input *ListTrafficPoliciesInput) (r
 // Gets information about the latest version for every traffic policy that is
 // associated with the current AWS account. Policies are listed in the order
 // that they were created in.
+//
+// For information about how of deleting a traffic policy affects the response
+// from ListTrafficPolicies, see DeleteTrafficPolicy (https://docs.aws.amazon.com/Route53/latest/APIReference/API_DeleteTrafficPolicy.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11492,8 +11502,8 @@ type ListHostedZonesByVPCInput struct {
 	// (Optional) The maximum number of hosted zones that you want Amazon Route
 	// 53 to return. If the specified VPC is associated with more than MaxItems
 	// hosted zones, the response includes a NextToken element. NextToken contains
-	// the hosted zone ID of the first hosted zone that Route 53 will return if
-	// you submit another request.
+	// an encrypted token that identifies the first hosted zone that Route 53 will
+	// return if you submit another request.
 	MaxItems *string `location:"querystring" locationName:"maxitems" type:"string"`
 
 	// If the previous response included a NextToken element, the specified VPC

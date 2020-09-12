@@ -277,14 +277,14 @@ func testAccBackupSelectionConfigBasic(rName string) string {
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id      = aws_backup_plan.test.id
+  plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
-    type = "STRINGEQUALS"
-    key = "foo"
+    type  = "STRINGEQUALS"
+    key   = "foo"
     value = "bar"
   }
 
@@ -300,20 +300,20 @@ func testAccBackupSelectionConfigWithTags(rName string) string {
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id      = aws_backup_plan.test.id
+  plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
-    type = "STRINGEQUALS"
-    key = "foo"
+    type  = "STRINGEQUALS"
+    key   = "foo"
     value = "bar"
   }
 
   selection_tag {
-    type = "STRINGEQUALS"
-    key = "boo"
+    type  = "STRINGEQUALS"
+    key   = "boo"
     value = "far"
   }
 
@@ -349,21 +349,18 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_backup_selection" "test" {
-  plan_id      = aws_backup_plan.test.id
+  plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
-    type = "STRINGEQUALS"
-    key = "foo"
+    type  = "STRINGEQUALS"
+    key   = "foo"
     value = "bar"
   }
 
-  resources = [
-    aws_ebs_volume.test.0.arn,
-    aws_ebs_volume.test.1.arn,
-  ]
+  resources = aws_ebs_volume.test[*].arn
 }
 `, rName))
 }
@@ -373,14 +370,14 @@ func testAccBackupSelectionConfigUpdateTag(rName string) string {
 		testAccBackupSelectionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id      = aws_backup_plan.test.id
+  plan_id = aws_backup_plan.test.id
 
   name         = %[1]q
   iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
-    type = "STRINGEQUALS"
-    key = "foo2"
+    type  = "STRINGEQUALS"
+    key   = "foo2"
     value = "bar2"
   }
 

@@ -377,6 +377,30 @@ func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
+	var routeTable1 ec2.RouteTable
+	resourceName := "aws_route_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigRouteLocalGatewayID(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRouteTableDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -957,6 +981,48 @@ resource "aws_route_table" "test" {
     cidr_block         = "0.0.0.0/0"
     transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
   }
+}
+`
+}
+
+func testAccAWSRouteTableConfigRouteLocalGatewayID() string {
+	return `
+data "aws_ec2_local_gateways" "all" {}
+data "aws_ec2_local_gateway" "first" {
+  id = tolist(data.aws_ec2_local_gateways.all.ids)[0]
+}
+
+data "aws_ec2_local_gateway_route_tables" "all" {}
+data "aws_ec2_local_gateway_route_table" "first" {
+  local_gateway_route_table_id = tolist(data.aws_ec2_local_gateway_route_tables.all.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
+  local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.first.id
+  vpc_id                       = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block         = "0.0.0.0/0"
+    local_gateway_id = data.aws_ec2_local_gateway.first.id
+  }
+  depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
 }
 `
 }

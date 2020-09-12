@@ -31,8 +31,7 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 				Config: testAccAwsOpsworksStackConfigNoVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksStackExists(resourceName, false, &opsstack),
-					testAccCheckAWSOpsworksCreateStackAttributes(&opsstack, "us-east-1a", stackName),
-					testAccAwsOpsworksStackCheckResourceAttrsCreate("us-east-1a", stackName),
+					testAccCheckAWSOpsworksCreateStackAttributes("us-east-1a", stackName),
 				),
 			},
 			{
@@ -90,8 +89,7 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 				Config: testAccAwsOpsworksStackConfigVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksStackExists(resourceName, true, &opsstack),
-					testAccCheckAWSOpsworksCreateStackAttributes(&opsstack, "us-west-2a", stackName),
-					testAccAwsOpsworksStackCheckResourceAttrsCreate("us-west-2a", stackName),
+					testAccCheckAWSOpsworksCreateStackAttributes("us-west-2a", stackName),
 				),
 			},
 			{
@@ -103,8 +101,18 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 				Config: testAccAWSOpsworksStackConfigVpcUpdate(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSOpsworksStackExists(resourceName, true, &opsstack),
-					testAccCheckAWSOpsworksUpdateStackAttributes(&opsstack, "us-west-2a", stackName),
-					testAccAwsOpsworksStackCheckResourceAttrsUpdate("us-west-2a", stackName),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, "default_availability_zone", "us-west-2a"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2015.09"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
+					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
+					resource.TestCheckResourceAttr(resourceName, "manage_berkshelf", "true"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.revision", "master"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
 				),
 			},
 		},
@@ -151,8 +159,10 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 /////////////////////////////
 
 func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) {
+	resourceName := "aws_opsworks_stack.tf-acc"
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -161,16 +171,21 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 			{
 				Config: testAccAWSOpsworksStackConfig_CustomCookbooks_Set(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists("aws_opsworks_stack.tf-acc", true, &opsstack),
-					testAccCheckAWSOpsworksCreateStackAttributesWithCookbooks(&opsstack, "us-west-2a", stackName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_stack.tf-acc",
-						"custom_cookbooks_source.0.password",
-						"password"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_stack.tf-acc",
-						"custom_cookbooks_source.0.ssh_key",
-						sshKey),
+					testAccCheckAWSOpsworksStackExists(resourceName, true, &opsstack),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, "default_availability_zone", "us-west-2a"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
+					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.revision", "master"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "username"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.password", "password"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.ssh_key", sshKey),
 				),
 			},
 		},
@@ -212,10 +227,9 @@ func TestAccAWSOpsWorksStack_classicEndpoints(t *testing.T) {
 
 }
 
-func testAccCheckAWSOpsworksStackRecreated(t *testing.T,
-	before, after *opsworks.Stack) resource.TestCheckFunc {
+func testAccCheckAWSOpsworksStackRecreated(t *testing.T, before, after *opsworks.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.StackId == *after.StackId {
+		if aws.StringValue(before.StackId) == aws.StringValue(after.StackId) {
 			t.Fatalf("Expected change of Opsworks StackIds, but both were %v", before.StackId)
 		}
 		return nil
@@ -229,10 +243,10 @@ provider "aws" {
 }
 
 resource "aws_opsworks_stack" "main" {
-  name                         = "%s"
-  region                       = "us-west-2"
-  service_role_arn             = aws_iam_role.opsworks_service.arn
-  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  name                          = "%s"
+  region                        = "us-west-2"
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
 
   configuration_manager_version = "12"
   default_availability_zone     = "us-west-2b"
@@ -317,10 +331,10 @@ provider "aws" {
 }
 
 resource "aws_opsworks_stack" "main" {
-  name                         = "%s"
-  region                       = "us-west-2"
-  service_role_arn             = aws_iam_role.opsworks_service.arn
-  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  name                          = "%s"
+  region                        = "us-west-2"
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
 
   configuration_manager_version = "12"
   default_availability_zone     = "us-west-2b"
@@ -402,108 +416,16 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 //// Checkers and Utilities
 ////////////////////////////
 
-func testAccAwsOpsworksStackCheckResourceAttrsCreate(zone, stackName string) resource.TestCheckFunc {
+func testAccCheckAWSOpsworksCreateStackAttributes(zone, stackName string) resource.TestCheckFunc {
+	resourceName := "aws_opsworks_stack.tf-acc"
 	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"name",
-			stackName,
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"default_availability_zone",
-			zone,
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"default_os",
-			"Amazon Linux 2016.09",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"default_root_device_type",
-			"ebs",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"custom_json",
-			`{"key": "value"}`,
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"configuration_manager_version",
-			"11.10",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"use_opsworks_security_groups",
-			"false",
-		),
-	)
-}
-
-func testAccAwsOpsworksStackCheckResourceAttrsUpdate(zone, stackName string) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"name",
-			stackName,
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"default_availability_zone",
-			zone,
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"default_os",
-			"Amazon Linux 2015.09",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"default_root_device_type",
-			"ebs",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"custom_json",
-			`{"key": "value"}`,
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"configuration_manager_version",
-			"11.10",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"use_opsworks_security_groups",
-			"false",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"use_custom_cookbooks",
-			"true",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"manage_berkshelf",
-			"true",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"custom_cookbooks_source.0.type",
-			"git",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"custom_cookbooks_source.0.revision",
-			"master",
-		),
-		resource.TestCheckResourceAttr(
-			"aws_opsworks_stack.tf-acc",
-			"custom_cookbooks_source.0.url",
-			"https://github.com/aws/opsworks-example-cookbooks.git",
-		),
+		resource.TestCheckResourceAttr(resourceName, "name", stackName),
+		resource.TestCheckResourceAttr(resourceName, "default_availability_zone", zone),
+		resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
+		resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+		resource.TestCheckResourceAttr(resourceName, "custom_json", customJson),
+		resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
+		resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 	)
 }
 
@@ -537,153 +459,12 @@ func testAccCheckAWSOpsworksStackExists(
 		*opsstack = *resp.Stacks[0]
 
 		if vpc {
-			if rs.Primary.Attributes["vpc_id"] != *opsstack.VpcId {
+			if rs.Primary.Attributes["vpc_id"] != aws.StringValue(opsstack.VpcId) {
 				return fmt.Errorf("VPCID Got %s, expected %s", *opsstack.VpcId, rs.Primary.Attributes["vpc_id"])
 			}
-			if rs.Primary.Attributes["default_subnet_id"] != *opsstack.DefaultSubnetId {
+			if rs.Primary.Attributes["default_subnet_id"] != aws.StringValue(opsstack.DefaultSubnetId) {
 				return fmt.Errorf("Default subnet Id Got %s, expected %s", *opsstack.DefaultSubnetId, rs.Primary.Attributes["default_subnet_id"])
 			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSOpsworksCreateStackAttributes(
-	opsstack *opsworks.Stack, zone, stackName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *opsstack.Name != stackName {
-			return fmt.Errorf("Unnexpected stackName: %s", *opsstack.Name)
-		}
-
-		if *opsstack.DefaultAvailabilityZone != zone {
-			return fmt.Errorf("Unnexpected DefaultAvailabilityZone: %s", *opsstack.DefaultAvailabilityZone)
-		}
-
-		if *opsstack.DefaultOs != "Amazon Linux 2016.09" {
-			return fmt.Errorf("Unnexpected stackName: %s", *opsstack.DefaultOs)
-		}
-
-		if *opsstack.DefaultRootDeviceType != "ebs" {
-			return fmt.Errorf("Unnexpected DefaultRootDeviceType: %s", *opsstack.DefaultRootDeviceType)
-		}
-
-		if *opsstack.CustomJson != `{"key": "value"}` {
-			return fmt.Errorf("Unnexpected CustomJson: %s", *opsstack.CustomJson)
-		}
-
-		if *opsstack.ConfigurationManager.Version != "11.10" {
-			return fmt.Errorf("Unnexpected Version: %s", *opsstack.ConfigurationManager.Version)
-		}
-
-		if *opsstack.UseOpsworksSecurityGroups {
-			return fmt.Errorf("Unnexpected UseOpsworksSecurityGroups: %t", *opsstack.UseOpsworksSecurityGroups)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSOpsworksCreateStackAttributesWithCookbooks(
-	opsstack *opsworks.Stack, zone, stackName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *opsstack.Name != stackName {
-			return fmt.Errorf("Unnexpected stackName: %s", *opsstack.Name)
-		}
-
-		if *opsstack.DefaultAvailabilityZone != zone {
-			return fmt.Errorf("Unnexpected DefaultAvailabilityZone: %s", *opsstack.DefaultAvailabilityZone)
-		}
-
-		if *opsstack.DefaultOs != "Amazon Linux 2016.09" {
-			return fmt.Errorf("Unnexpected defaultOs: %s", *opsstack.DefaultOs)
-		}
-
-		if *opsstack.DefaultRootDeviceType != "ebs" {
-			return fmt.Errorf("Unnexpected DefaultRootDeviceType: %s", *opsstack.DefaultRootDeviceType)
-		}
-
-		if *opsstack.CustomJson != `{"key": "value"}` {
-			return fmt.Errorf("Unnexpected CustomJson: %s", *opsstack.CustomJson)
-		}
-
-		if *opsstack.ConfigurationManager.Version != "11.10" {
-			return fmt.Errorf("Unnexpected Version: %s", *opsstack.ConfigurationManager.Version)
-		}
-
-		if *opsstack.UseOpsworksSecurityGroups {
-			return fmt.Errorf("Unnexpected UseOpsworksSecurityGroups: %t", *opsstack.UseOpsworksSecurityGroups)
-		}
-
-		if !*opsstack.UseCustomCookbooks {
-			return fmt.Errorf("Unnexpected UseCustomCookbooks: %t", *opsstack.UseCustomCookbooks)
-		}
-
-		if *opsstack.CustomCookbooksSource.Type != "git" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Type)
-		}
-
-		if *opsstack.CustomCookbooksSource.Revision != "master" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Revision)
-		}
-
-		if *opsstack.CustomCookbooksSource.Url != "https://github.com/aws/opsworks-example-cookbooks.git" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Url)
-		}
-
-		if *opsstack.CustomCookbooksSource.Username != "username" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Username)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSOpsworksUpdateStackAttributes(
-	opsstack *opsworks.Stack, zone, stackName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *opsstack.Name != stackName {
-			return fmt.Errorf("Unnexpected stackName: %s", *opsstack.Name)
-		}
-
-		if *opsstack.DefaultAvailabilityZone != zone {
-			return fmt.Errorf("Unnexpected DefaultAvailabilityZone: %s", *opsstack.DefaultAvailabilityZone)
-		}
-
-		if *opsstack.DefaultOs != "Amazon Linux 2015.09" {
-			return fmt.Errorf("Unnexpected stackName: %s", *opsstack.DefaultOs)
-		}
-
-		if *opsstack.DefaultRootDeviceType != "ebs" {
-			return fmt.Errorf("Unnexpected DefaultRootDeviceType: %s", *opsstack.DefaultRootDeviceType)
-		}
-
-		if *opsstack.CustomJson != `{"key": "value"}` {
-			return fmt.Errorf("Unnexpected CustomJson: %s", *opsstack.CustomJson)
-		}
-
-		if *opsstack.ConfigurationManager.Version != "11.10" {
-			return fmt.Errorf("Unnexpected Version: %s", *opsstack.ConfigurationManager.Version)
-		}
-
-		if !*opsstack.UseCustomCookbooks {
-			return fmt.Errorf("Unnexpected UseCustomCookbooks: %t", *opsstack.UseCustomCookbooks)
-		}
-
-		if !*opsstack.ChefConfiguration.ManageBerkshelf {
-			return fmt.Errorf("Unnexpected ManageBerkshelf: %t", *opsstack.ChefConfiguration.ManageBerkshelf)
-		}
-
-		if *opsstack.CustomCookbooksSource.Type != "git" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Type)
-		}
-
-		if *opsstack.CustomCookbooksSource.Revision != "master" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Revision)
-		}
-
-		if *opsstack.CustomCookbooksSource.Url != "https://github.com/aws/opsworks-example-cookbooks.git" {
-			return fmt.Errorf("Unnexpected *opsstack.CustomCookbooksSource.Type: %s", *opsstack.CustomCookbooksSource.Url)
 		}
 
 		return nil
@@ -1545,3 +1326,7 @@ const sshKey = "-----BEGIN RSA PRIVATE KEY-----" +
 	"Cdy6djI120bqDOifre1qnBjoHezrG+ejaQOTpocOVwT5Zl7BhjoXQZRGiQXj+2aD" +
 	"tmm0+hpmkjX7jiPcljjs8S8gh+uCWieJoO4JNPk2SXRiePpYgKzdlg==" +
 	"-----END RSA PRIVATE KEY-----"
+
+const customJson = `{
+  "key": "value"
+}`

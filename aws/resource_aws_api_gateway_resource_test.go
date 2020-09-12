@@ -202,9 +202,9 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 `, rName)
 }
@@ -216,9 +216,9 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test_changed"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test_changed"
 }
 `, rName)
 }

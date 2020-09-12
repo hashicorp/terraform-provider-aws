@@ -268,7 +268,7 @@ func testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName string) string {
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
   runtime       = "nodejs10.x"
 }
@@ -313,9 +313,9 @@ resource "aws_cognito_user_pool" "test" {
 func testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName string) string {
 	return testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   authorizer_type  = "REQUEST"
-  authorizer_uri   = "${aws_lambda_function.test.invoke_arn}"
+  authorizer_uri   = aws_lambda_function.test.invoke_arn
   identity_sources = ["route.request.header.Auth"]
   name             = %[1]q
 }
@@ -325,13 +325,13 @@ resource "aws_apigatewayv2_authorizer" "test" {
 func testAccAWSAPIGatewayV2AuthorizerConfig_credentials(rName string) string {
 	return testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   authorizer_type  = "REQUEST"
-  authorizer_uri   = "${aws_lambda_function.test.invoke_arn}"
+  authorizer_uri   = aws_lambda_function.test.invoke_arn
   identity_sources = ["route.request.header.Auth"]
   name             = %[1]q
 
-  authorizer_credentials_arn = "${aws_iam_role.test.arn}"
+  authorizer_credentials_arn = aws_iam_role.test.arn
 }
 `, rName)
 }
@@ -339,13 +339,13 @@ resource "aws_apigatewayv2_authorizer" "test" {
 func testAccAWSAPIGatewayV2AuthorizerConfig_credentialsUpdated(rName string) string {
 	return testAccAWSAPIGatewayV2AuthorizerConfig_baseWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   authorizer_type  = "REQUEST"
-  authorizer_uri   = "${aws_lambda_function.test.invoke_arn}"
+  authorizer_uri   = aws_lambda_function.test.invoke_arn
   identity_sources = ["route.request.header.Auth", "route.request.querystring.Name"]
   name             = "%[1]s-updated"
 
-  authorizer_credentials_arn = "${aws_iam_role.test.arn}"
+  authorizer_credentials_arn = aws_iam_role.test.arn
 }
 `, rName)
 }
@@ -353,7 +353,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 func testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName string) string {
 	return testAccAWSAPIGatewayV2AuthorizerConfig_baseHttp(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   authorizer_type  = "JWT"
   identity_sources = ["$request.header.Authorization"]
   name             = %[1]q
@@ -369,7 +369,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 func testAccAWSAPIGatewayV2AuthorizerConfig_jwtUpdated(rName string) string {
 	return testAccAWSAPIGatewayV2AuthorizerConfig_baseHttp(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   authorizer_type  = "JWT"
   identity_sources = ["$request.header.Authorization"]
   name             = %[1]q

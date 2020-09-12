@@ -198,6 +198,40 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 	})
 }
 
+// TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn
+// validates workspace resource creation/import when workspace_properties.running_mode is set to ALWAYS_ON
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13558
+func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
+	var v1 workspaces.Workspace
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_workspaces_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
 	rName := acctest.RandString(8)
 
@@ -234,7 +268,7 @@ func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_workspace" {
+		if rs.Type != "aws_workspaces_workspace" {
 			continue
 		}
 

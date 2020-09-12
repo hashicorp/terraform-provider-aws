@@ -3051,8 +3051,8 @@ resource "aws_db_instance" "test" {
 
 var testAccAWSDBInstanceConfigKmsKeyId = `
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    policy = <<POLICY
+  description = "Terraform acc test %s"
+  policy      = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -3237,7 +3237,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
   policy_arn = aws_iam_policy.test.arn
 }
 
-//  Make sure EVERYTHING required is here...
+#  Make sure EVERYTHING required is here...
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -4306,15 +4306,15 @@ resource "aws_db_instance" "test" {
 
 var testAccAWSDBInstanceConfigAutoMinorVersion = fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-  identifier = "foobarbaz-test-terraform-%d"
-	allocated_storage = 10
-	engine = "MySQL"
-	engine_version = "5.6"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	skip_final_snapshot = true
+  identifier          = "foobarbaz-test-terraform-%d"
+  allocated_storage   = 10
+  engine              = "MySQL"
+  engine_version      = "5.6"
+  instance_class      = "db.t2.micro"
+  name                = "baz"
+  password            = "barbarbarbar"
+  username            = "foo"
+  skip_final_snapshot = true
 }
 `, acctest.RandInt())
 
@@ -4564,7 +4564,7 @@ resource "aws_db_instance" "bar" {
   allocated_storage    = 10
   engine               = "mysql"
   engine_version       = "5.6"
-  instance_class       = "db.m3.medium"
+  instance_class       = "db.m5.large"
   name                 = "baz"
   password             = "barbarbarbar"
   username             = "foo"
@@ -4628,7 +4628,7 @@ resource "aws_db_subnet_group" "test" {
 
 resource "aws_db_instance" "test" {
   allocated_storage    = 5
-  db_subnet_group_name = aws_db_subnet_group.test.name 
+  db_subnet_group_name = aws_db_subnet_group.test.name
   engine               = "mysql"
   identifier           = %[1]q
   instance_class       = "db.t2.micro"
@@ -4713,15 +4713,15 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage       = 5
-  db_subnet_group_name    = aws_db_subnet_group.test.name 
-  engine                  = "mysql"
-  identifier              = %[1]q
-  instance_class          = "db.t2.micro"
-  password                = "avoid-plaintext-passwords"
-  username                = "tfacctest"
-  skip_final_snapshot     = true
-  vpc_security_group_ids  = [aws_security_group.test.id]
+  allocated_storage      = 5
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  engine                 = "mysql"
+  identifier             = %[1]q
+  instance_class         = "db.t2.micro"
+  password               = "avoid-plaintext-passwords"
+  username               = "tfacctest"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 `, rName)
 }
@@ -4768,15 +4768,15 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage       = 5
-  db_subnet_group_name    = aws_db_subnet_group.test.name 
-  engine                  = "mysql"
-  identifier              = %[1]q
-  instance_class          = "db.t2.micro"
-  password                = "avoid-plaintext-passwords"
-  username                = "tfacctest"
-  skip_final_snapshot     = true
-  vpc_security_group_ids  = [aws_security_group.test.id]
+  allocated_storage      = 5
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  engine                 = "mysql"
+  identifier             = %[1]q
+  instance_class         = "db.t2.micro"
+  password               = "avoid-plaintext-passwords"
+  username               = "tfacctest"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 `, rName)
 }
@@ -5135,11 +5135,11 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_instance" "test" {
-  db_subnet_group_name   = aws_db_subnet_group.test.name
-  identifier             = %[1]q
-  instance_class         = aws_db_instance.source.instance_class
-  replicate_source_db    = aws_db_instance.source.arn
-  skip_final_snapshot    = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  replicate_source_db  = aws_db_instance.source.arn
+  skip_final_snapshot  = true
 }
 `, rName)
 }
@@ -6597,7 +6597,7 @@ resource "aws_db_instance" "test" {
   engine                  = "mysql"
   engine_version          = "5.6.41"
   identifier              = %[1]q
-  instance_class          = "db.m3.medium"
+  instance_class          = "db.m5.large"
   name                    = "mydb"
   password                = "mustbeeightcharaters"
   skip_final_snapshot     = true
@@ -6614,7 +6614,7 @@ resource "aws_db_instance" "test" {
   engine                                = "mysql"
   engine_version                        = "5.6.41"
   identifier                            = %[1]q
-  instance_class                        = "db.m3.medium"
+  instance_class                        = "db.m5.large"
   name                                  = "mydb"
   password                              = "mustbeeightcharaters"
   performance_insights_enabled          = true
@@ -6634,7 +6634,7 @@ resource "aws_kms_key" "test" {
 resource "aws_db_instance" "test" {
   engine                  = "mysql"
   identifier              = %[1]q
-  instance_class          = "db.m3.medium"
+  instance_class          = "db.m5.large"
   allocated_storage       = 5
   backup_retention_period = 0
   name                    = "mydb"
@@ -6657,7 +6657,7 @@ resource "aws_db_instance" "test" {
   engine                                = "mysql"
   engine_version                        = "5.6.41"
   identifier                            = %[1]q
-  instance_class                        = "db.m3.medium"
+  instance_class                        = "db.m5.large"
   name                                  = "mydb"
   password                              = "mustbeeightcharaters"
   performance_insights_enabled          = true
@@ -6677,7 +6677,7 @@ resource "aws_db_instance" "test" {
   engine                                = "mysql"
   engine_version                        = "5.6.41"
   identifier                            = %[1]q
-  instance_class                        = "db.m3.medium"
+  instance_class                        = "db.m5.large"
   name                                  = "mydb"
   password                              = "mustbeeightcharaters"
   performance_insights_enabled          = true
@@ -6718,7 +6718,7 @@ resource "aws_db_instance" "source" {
   engine                  = "mysql"
   engine_version          = "5.6.41"
   identifier              = "%s-source"
-  instance_class          = "db.m3.medium"
+  instance_class          = "db.m5.large"
   password                = "mustbeeightcharaters"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -6765,7 +6765,7 @@ resource "aws_db_instance" "source" {
   engine              = "mysql"
   engine_version      = "5.6.41"
   identifier          = "%s-source"
-  instance_class      = "db.m3.medium"
+  instance_class      = "db.m5.large"
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
