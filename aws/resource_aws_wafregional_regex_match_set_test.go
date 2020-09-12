@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -46,16 +47,11 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 				continue
 			}
 
-			tuples := getRegexMatchTuplesFromAPIResource(set)
-			err = clearRegexMatchTuples(conn, region, id, tuples)
+			err = deleteRegexMatchSetResource(conn, region, region, id, getRegexMatchTuplesFromAPIResource(set))
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error clearing WAF Regional Regex Match Set (%s): %w", id, err))
-				continue
-			}
-
-			err = deleteRegexMatchSet(conn, region, id)
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", id, err))
+				if !tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", id, err))
+				}
 				continue
 			}
 		}
@@ -250,52 +246,12 @@ func testAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &matchSet),
-					testAccCheckAWSWafRegionalRegexMatchSetDisappears(&matchSet),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafRegionalRegexMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckAWSWafRegionalRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
-
-		wr := newWafRegionalRetryer(conn, region)
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.UpdateRegexMatchSetInput{
-				ChangeToken:     token,
-				RegexMatchSetId: set.RegexMatchSetId,
-			}
-
-			for _, tuple := range set.RegexMatchTuples {
-				req.Updates = append(req.Updates, &waf.RegexMatchSetUpdate{
-					Action:          aws.String("DELETE"),
-					RegexMatchTuple: tuple,
-				})
-			}
-
-			return conn.UpdateRegexMatchSet(req)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regional Regex Match Set: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-			opts := &waf.DeleteRegexMatchSetInput{
-				ChangeToken:     token,
-				RegexMatchSetId: set.RegexMatchSetId,
-			}
-			return conn.DeleteRegexMatchSet(opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed deleting WAF Regional Regex Match Set: %s", err)
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckAWSWafRegionalRegexMatchSetExists(n string, v *waf.RegexMatchSet) resource.TestCheckFunc {
@@ -345,7 +301,7 @@ func testAccCheckAWSWafRegionalRegexMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Regex Pattern Set is already destroyed
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 
