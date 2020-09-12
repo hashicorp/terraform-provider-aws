@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
@@ -213,24 +213,34 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.environment_properties.0.property_group.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.environment_properties.0.property_group.323763127.property_group_id", "abcdef"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.environment_properties.0.property_group.323763127.property_map.%", "2"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.environment_properties.0.property_group.323763127.property_map.key1", "val1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.environment_properties.0.property_group.323763127.property_map.key2", "val2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
+
+						"property_group_id": "abcdef",
+						"property_map.key1": "val1",
+						"property_map.key2": "val2",
+					}),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.2352194959.checkpointing_enabled", "true"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.2352194959.checkpoint_interval", "30000"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.2352194959.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.2352194959.min_pause_between_checkpoints", "10000"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.flink_application_configuration.0.checkpoint_configuration.*", map[string]string{
+
+						"checkpointing_enabled":         "true",
+						"checkpoint_interval":           "30000",
+						"configuration_type":            "CUSTOM",
+						"min_pause_between_checkpoints": "10000",
+					}),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.4100071217.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.4100071217.log_level", "WARN"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.4100071217.metrics_level", "APPLICATION"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.1948903381.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.1948903381.autoscaling_enabled", "true"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.1948903381.parallelism", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.1948903381.parallelism_per_kpu", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.flink_application_configuration.0.monitoring_configuration.*", map[string]string{
+
+						"configuration_type": "CUSTOM",
+						"log_level":          "WARN",
+						"metrics_level":      "APPLICATION",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.*", map[string]string{
+
+						"configuration_type":  "CUSTOM",
+						"autoscaling_enabled": "true",
+						"parallelism":         "1",
+						"parallelism_per_kpu": "1",
+					}),
 				),
 			},
 			{
@@ -263,7 +273,9 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplicationUpdate(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.4212968000.autoscaling_enabled", "false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.*", map[string]string{
+						"autoscaling_enabled": "false",
+					}),
 				),
 			},
 			{
@@ -415,18 +427,13 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsKinesisStream(t *testing.T) 
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.name",
-							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
-							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
-						},
-						[]string{
-							"test_name",
-							"1",
-							"1",
-							"JSON",
-						}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
+
+						"name":                        "test_name",
+						"kinesis_stream.#":            "1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "JSON",
+					}),
 				),
 			},
 			{
@@ -492,17 +499,11 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsAdd(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.name",
-							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
-							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
-						},
-						[]string{
-							"test_name",
-							"1",
-							"1",
-						}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
+						"name":             "test_name",
+						"kinesis_stream.#": "1",
+						"schema.#":         "1",
+					}),
 				),
 			},
 			{
@@ -532,19 +533,12 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.name",
-							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
-							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
-							"application_configuration.0.sql_application_configuration.0.output.%s.schema.0.record_format_type",
-						},
-						[]string{
-							"test_name",
-							"1",
-							"1",
-							"JSON",
-						}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
+						"name":                        "test_name",
+						"kinesis_stream.#":            "1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "JSON",
+					}),
 				),
 			},
 			{
@@ -553,29 +547,12 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.name",
-							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
-							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
-							"application_configuration.0.sql_application_configuration.0.output.%s.schema.0.record_format_type",
-						},
-						[]string{
-							"test_name2",
-							"1",
-							"1",
-							"CSV",
-						}),
-					testCheckResourceAttrPairUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.0.resource_arn",
-						},
-						[]string{
-							"aws_kinesis_stream.test",
-						},
-						[]string{
-							"arn",
-						}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
+						"name":                        "test_name2",
+						"kinesis_stream.#":            "1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+					}),
 				),
 			},
 			{
@@ -589,7 +566,6 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 
 func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Add(t *testing.T) {
 	var application1, application2 kinesisanalyticsv2.ApplicationDetail
-	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
@@ -612,18 +588,10 @@ func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Add(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testCheckResourceAttrUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.lambda.#",
-						},
-						[]string{
-							"1",
-						}),
-					testCheckResourceAttrPairUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{"application_configuration.0.sql_application_configuration.0.output.%s.lambda.0.resource_arn"},
-						[]string{lambdaFunctionResourceName},
-						[]string{"arn"},
-					),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
+
+						"lambda.#": "1",
+					}),
 				),
 			},
 			{
@@ -637,7 +605,6 @@ func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Add(t *testing.T) {
 
 func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Create(t *testing.T) {
 	var application1 kinesisanalyticsv2.ApplicationDetail
-	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
@@ -652,18 +619,9 @@ func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Create(t *testing.T)
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testCheckResourceAttrUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{
-							"application_configuration.0.sql_application_configuration.0.output.%s.lambda.#",
-						},
-						[]string{
-							"1",
-						}),
-					testCheckResourceAttrPairUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
-						[]string{"application_configuration.0.sql_application_configuration.0.output.%s.lambda.0.resource_arn"},
-						[]string{lambdaFunctionResourceName},
-						[]string{"arn"},
-					),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
+						"lambda.#": "1",
+					}),
 				),
 			},
 			{
@@ -1865,52 +1823,4 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 }
 `, rInt, rInt, tag1, tag2, tag3),
 	)
-}
-
-func testCheckResourceAttrUnknownSetId(resourceName, parentResource string, testResources []string, expectedVals []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		setId, err := getSetId(s, resourceName, parentResource)
-		if err != nil {
-			return err
-		}
-		for i, r := range testResources {
-			if err := resource.TestCheckResourceAttr(resourceName, fmt.Sprintf(r, setId), expectedVals[i])(s); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
-
-func testCheckResourceAttrPairUnknownSetId(resourceName, parentResource string, namesFirst, keysSecond,
-	namesSecond []string) resource.TestCheckFunc {
-
-	return func(s *terraform.State) error {
-		setId, err := getSetId(s, resourceName, parentResource)
-		if err != nil {
-			return err
-		}
-		for i, name := range namesFirst {
-			if err := resource.TestCheckResourceAttrPair(resourceName, fmt.Sprintf(name, setId),
-				keysSecond[i], namesSecond[i])(s); err != nil {
-
-				return err
-			}
-		}
-		return nil
-	}
-}
-
-func getSetId(s *terraform.State, resourceName, parentResource string) (string, error) {
-	rs, ok := s.RootModule().Resources[resourceName]
-	if !ok {
-		return ``, fmt.Errorf("Not found: %s", resourceName)
-	}
-
-	if rs.Primary.ID == "" {
-		return ``, fmt.Errorf("No ID is set")
-	}
-	stateStr := fmt.Sprintf("%+v", rs.Primary)
-	idx := strings.LastIndex(stateStr, parentResource) + len(parentResource)
-	return strings.SplitN(stateStr[idx:], ".", 3)[1], nil
 }
