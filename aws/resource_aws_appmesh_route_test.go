@@ -1038,7 +1038,7 @@ resource "aws_appmesh_route" "test" {
     http_route {
       match {
         prefix = "/"
-     }
+      }
 
       retry_policy {
         http_retry_events = [
