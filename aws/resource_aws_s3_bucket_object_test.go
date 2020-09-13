@@ -976,6 +976,9 @@ func TestAccAWSS3BucketObject_ignoreTags(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj, "stuff"),
 					testAccCheckAWSS3BucketObjectUpdateTags(resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckAWSS3BucketObjectCheckTags(resourceName, map[string]string{
+						"ignorekey1": "ignorevalue1",
+					}),
 				),
 			},
 			{
