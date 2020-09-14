@@ -4,6 +4,10 @@ ENHANCEMENTS
 
 * resource/aws_db_cluster_snapshot: Add plan-time validation for `db_cluster_snapshot_identifier` argument [GH-15132]
 
+BUG FIXES
+
+* resource/aws_acm_certificate: Prevent tagging is not permitted on re-import error [GH-15060]
+
 ## 3.6.0 (September 11, 2020)
 
 FEATURES
