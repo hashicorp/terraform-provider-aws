@@ -217,6 +217,24 @@ func route53GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion s
 	for {
 		output, err := conn.ListHostedZonesByVPC(input)
 
+		if isAWSErr(err, "AccessDenied", "") {
+			log.Printf("[WARN] AccessDenied when trying to get VPC details for %s - ignoring due to likely cross account issue", vpcID)
+
+			input := &route53.GetHostedZoneInput{
+				Id: aws.String(zoneID),
+			}
+
+			hostedzone, err := conn.GetHostedZone(input)
+
+			return &route53.HostedZoneSummary{
+				HostedZoneId: aws.String(zoneID),
+				Name:         hostedzone.HostedZone.Name,
+				Owner: &route53.HostedZoneOwner{
+					OwningAccount: nil,
+				},
+			}, err
+		}
+
 		if err != nil {
 			return nil, err
 		}
