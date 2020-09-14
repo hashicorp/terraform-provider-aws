@@ -279,12 +279,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 															},
 
 															"value": {
@@ -303,12 +300,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 															},
 
 															"value": {
@@ -398,12 +392,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 															},
 
 															"value": {
@@ -660,12 +651,9 @@ func appmeshRouteHttpRouteSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"unit": {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												appmesh.DurationUnitMs,
-												appmesh.DurationUnitS,
-											}, false),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 										},
 
 										"value": {
@@ -684,12 +672,9 @@ func appmeshRouteHttpRouteSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"unit": {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												appmesh.DurationUnitMs,
-												appmesh.DurationUnitS,
-											}, false),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 										},
 
 										"value": {
