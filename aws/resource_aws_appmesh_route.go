@@ -264,69 +264,6 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 										},
 									},
 
-									"retry_policy": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"grpc_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-													Set:      schema.HashString,
-												},
-
-												"http_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-													Set:      schema.HashString,
-												},
-
-												"max_retries": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-
-												"per_retry_timeout": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
-															},
-
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
-													},
-												},
-
-												"tcp_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-													Set:      schema.HashString,
-												},
-											},
-										},
-									},
-
 									"timeout": {
 										Type:     schema.TypeList,
 										Optional: true,

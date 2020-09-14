@@ -5708,9 +5708,6 @@ func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
 						httpRouteHeader.Match.Range = &appmesh.MatchRange{}
 
-					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
-						httpRouteHeader.Match.Range = &appmesh.MatchRange{}
-
 						mRange := vRange[0].(map[string]interface{})
 
 						if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
