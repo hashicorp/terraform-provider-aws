@@ -4942,6 +4942,28 @@ data "aws_ami" "amzn-ami-minimal-pv-ebs" {
 `)
 }
 
+// testAccLatestAmazonLinuxPvInstanceStoreAmiConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func testAccLatestAmazonLinuxPvInstanceStoreAmiConfig() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`)
+}
+
 // testAccLatestWindowsServer2016CoreAmiConfig returns the configuration for a data source that
 // describes the latest Microsoft Windows Server 2016 Core AMI.
 // The data source is named 'win2016core-ami'.

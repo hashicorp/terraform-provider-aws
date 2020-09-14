@@ -108,9 +108,9 @@ func testAccAWSEmrManagedScalingPolicy_basic(r string) string {
 resource "aws_emr_managed_scaling_policy" "testpolicy" {
   cluster_id = aws_emr_cluster.test.id
   compute_limits {
-    unit_type                       = "Instances"
-    minimum_capacity_units          = 1
-    maximum_capacity_units          = 2
+    unit_type              = "Instances"
+    minimum_capacity_units = 1
+    maximum_capacity_units = 2
   }
 }
 `, r)
@@ -121,9 +121,9 @@ func testAccAWSEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(r 
 resource "aws_emr_managed_scaling_policy" "testpolicy" {
   cluster_id = aws_emr_cluster.test.id
   compute_limits {
-    unit_type                       = "Instances"
-    minimum_capacity_units          = 1
-    maximum_capacity_units          = 2
+    unit_type                   = "Instances"
+    minimum_capacity_units      = 1
+    maximum_capacity_units      = 2
     maximum_core_capacity_units = %[2]d
   }
 }
@@ -439,10 +439,10 @@ EOT
 }
 
 resource "aws_emr_cluster" "test" {
-  name                 = "%[1]s"
-  release_label        = "emr-5.30.1"
-  applications         = ["Hadoop", "Hive"]
-  log_uri              = "s3n://terraform/testlog/"
+  name          = "%[1]s"
+  release_label = "emr-5.30.1"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
 
   master_instance_group {
     instance_type = "c4.large"
@@ -454,7 +454,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   service_role = aws_iam_role.emr_service.arn
-  depends_on   = [
+  depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,

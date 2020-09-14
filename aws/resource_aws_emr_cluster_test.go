@@ -1650,10 +1650,10 @@ func testAccAWSEmrClusterConfig_bootstrap(r string) string {
 		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
-  name                 = "%[1]s"
-  release_label        = "emr-5.0.0"
-  applications         = ["Hadoop", "Hive"]
-  log_uri              = "s3n://terraform/testlog/"
+  name          = "%[1]s"
+  release_label = "emr-5.0.0"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
 
   master_instance_group {
     instance_type = "c4.large"
@@ -1665,7 +1665,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   service_role = aws_iam_role.emr_service.arn
-  depends_on   = [
+  depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,
@@ -1712,10 +1712,10 @@ func testAccAWSEmrClusterConfig_bootstrapAdd(r string) string {
 		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
-  name                 = "%[1]s"
-  release_label        = "emr-5.0.0"
-  applications         = ["Hadoop", "Hive"]
-  log_uri              = "s3n://terraform/testlog/"
+  name          = "%[1]s"
+  release_label = "emr-5.0.0"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
 
   master_instance_group {
     instance_type = "c4.large"
@@ -1727,7 +1727,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   service_role = aws_iam_role.emr_service.arn
-  depends_on   = [
+  depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,
@@ -1780,10 +1780,10 @@ func testAccAWSEmrClusterConfig_bootstrapReorder(r string) string {
 		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
-  name                 = "%[1]s"
-  release_label        = "emr-5.0.0"
-  applications         = ["Hadoop", "Hive"]
-  log_uri              = "s3n://terraform/testlog/"
+  name          = "%[1]s"
+  release_label = "emr-5.0.0"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
 
   master_instance_group {
     instance_type = "c4.large"
@@ -1795,7 +1795,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   service_role = aws_iam_role.emr_service.arn
-  depends_on   = [
+  depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,
@@ -3424,16 +3424,16 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   master_instance_group {
     instance_type = "m4.large"
-	ebs_config {
+    ebs_config {
       size                 = 32
       type                 = "gp2"
       volumes_per_instance = %[2]d
     }
-	ebs_config {
-	  size                 = 50
-	  type                 = "gp2"
-	  volumes_per_instance = %[2]d
-	}
+    ebs_config {
+      size                 = 50
+      type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
   }
   core_instance_group {
     instance_count = 1
@@ -3458,18 +3458,18 @@ func testAccAWSEmrClusterConfigInstanceFleets(r string) string {
 		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name                 = "%[1]s"
-  release_label        = "emr-5.30.1"
-  applications         = ["Hadoop", "Hive"]
-  log_uri              = "s3n://terraform/testlog/"
+  name          = "%[1]s"
+  release_label = "emr-5.30.1"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
 
-  master_instance_fleet    {
-    instance_type_configs        {
-          instance_type = "m3.xlarge"
-        }
-    
-      target_on_demand_capacity = 1
+  master_instance_fleet {
+    instance_type_configs {
+      instance_type = "m3.xlarge"
     }
+
+    target_on_demand_capacity = 1
+  }
   core_instance_fleet {
     instance_type_configs {
       bid_price_as_percentage_of_on_demand_price = 80
@@ -3503,7 +3503,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     }
     launch_specifications {
       spot_specification {
-		allocation_strategy      = "capacity-optimized"
+        allocation_strategy      = "capacity-optimized"
         block_duration_minutes   = 0
         timeout_action           = "SWITCH_TO_ON_DEMAND"
         timeout_duration_minutes = 10
@@ -3514,7 +3514,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     target_spot_capacity      = 2
   }
   service_role = aws_iam_role.emr_service.arn
-  depends_on   = [
+  depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,
@@ -3544,20 +3544,20 @@ func testAccAWSEmrClusterConfigInstanceFleetsMasterOnly(r string) string {
 		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name                 = "%[1]s"
-  release_label        = "emr-5.30.1"
-  applications         = ["Hadoop", "Hive"]
-  log_uri              = "s3n://terraform/testlog/"
+  name          = "%[1]s"
+  release_label = "emr-5.30.1"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
 
-  master_instance_fleet    {
-    instance_type_configs        {
-          instance_type = "m3.xlarge"
-        }
-    
-      target_on_demand_capacity = 1
+  master_instance_fleet {
+    instance_type_configs {
+      instance_type = "m3.xlarge"
     }
+
+    target_on_demand_capacity = 1
+  }
   service_role = aws_iam_role.emr_service.arn
-  depends_on   = [
+  depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.emr_service,
     aws_iam_role_policy_attachment.emr_instance_profile,
