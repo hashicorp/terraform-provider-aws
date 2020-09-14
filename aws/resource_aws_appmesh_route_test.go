@@ -1558,7 +1558,7 @@ resource "aws_appmesh_route" "test" {
 }
 
 func testAccAwsAppmeshRouteConfig_grpcRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
   mesh_name           = aws_appmesh_mesh.test.id
@@ -1593,11 +1593,11 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_grpcRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
   mesh_name           = aws_appmesh_mesh.test.id
@@ -1632,7 +1632,7 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName string) string {
@@ -1855,7 +1855,7 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAwsAppmeshRouteConfig_http2Route(meshName, vrName, vn1Name, vn2Name, rName string) string {
@@ -1961,7 +1961,7 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
@@ -2050,7 +2050,7 @@ resource "aws_appmesh_route" "test" {
 }
 
 func testAccAppmeshRouteConfig_httpRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
   mesh_name           = aws_appmesh_mesh.test.id
@@ -2078,11 +2078,11 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppmeshRouteConfig_httpRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "http", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
   mesh_name           = aws_appmesh_mesh.test.id
@@ -2115,7 +2115,7 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
@@ -2192,7 +2192,7 @@ resource "aws_appmesh_route" "test" {
 }
 
 func testAccAppmeshRouteConfig_tcpRouteWithTimeout(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "tcp", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "tcp", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
   mesh_name           = aws_appmesh_mesh.test.id
@@ -2216,11 +2216,11 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppmeshRouteConfig_tcpRouteWithTimeoutUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return testAccAppmeshRouteConfigBase(meshName, vrName, "tcp", vn1Name, vn2Name) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshRouteConfigBase(meshName, vrName, "tcp", vn1Name, vn2Name), fmt.Sprintf(`
 resource "aws_appmesh_route" "test" {
   name                = %[1]q
   mesh_name           = aws_appmesh_mesh.test.id
@@ -2244,7 +2244,7 @@ resource "aws_appmesh_route" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {

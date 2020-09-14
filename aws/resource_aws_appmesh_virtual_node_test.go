@@ -961,18 +961,18 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccAppmeshVirtualNodeConfig_basic(meshName, vnName string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
 }
-`, vnName)
+`, vnName))
 }
 
 func testAccAppmeshVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, attrKey, attrValue string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   name = %[2]q
 }
@@ -1007,11 +1007,11 @@ resource "aws_appmesh_virtual_node" "test" {
     }
   }
 }
-`, vnName, rName, attrKey, attrValue)
+`, vnName, rName, attrKey, attrValue))
 }
 
 func testAccAppmeshVirtualNodeConfig_listenerHealthChecks(meshName, vnName string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1046,11 +1046,11 @@ resource "aws_appmesh_virtual_node" "test" {
     }
   }
 }
-`, vnName)
+`, vnName))
 }
 
 func testAccAppmeshVirtualNodeConfig_listenerHealthChecksUpdated(meshName, vnName string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1091,11 +1091,11 @@ resource "aws_appmesh_virtual_node" "test" {
     }
   }
 }
-`, vnName)
+`, vnName))
 }
 
 func testAccAppmeshVirtualNodeConfig_listenerTimeout(meshName, vnName string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1130,11 +1130,11 @@ resource "aws_appmesh_virtual_node" "test" {
     }
   }
 }
-`, vnName)
+`, vnName))
 }
 
 func testAccAppmeshVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1174,11 +1174,11 @@ resource "aws_appmesh_virtual_node" "test" {
     }
   }
 }
-`, vnName)
+`, vnName))
 }
 
 func testAccAppmeshVirtualNodeConfig_logging(meshName, vnName, path string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1212,11 +1212,11 @@ resource "aws_appmesh_virtual_node" "test" {
     }
   }
 }
-`, vnName, path)
+`, vnName, path))
 }
 
 func testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1228,7 +1228,7 @@ resource "aws_appmesh_virtual_node" "test" {
     %[4]s = %[5]q
   }
 }
-`, vnName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, vnName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAppmeshVirtualNodeConfig_tlsFile(meshName, vnName string) string {
