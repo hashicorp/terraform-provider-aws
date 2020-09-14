@@ -1,4 +1,9 @@
 ## 3.7.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_db_cluster_snapshot: Add plan-time validation for `db_cluster_snapshot_identifier` argument [GH-15132]
+
 ## 3.6.0 (September 11, 2020)
 
 FEATURES
