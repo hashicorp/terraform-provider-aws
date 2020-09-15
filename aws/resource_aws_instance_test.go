@@ -2987,7 +2987,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t4g(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckOffersEc2InstanceType(t, "t4g.micro") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -3014,7 +3014,7 @@ func TestAccAWSInstance_creditSpecificationT4g_unspecifiedDefaultsToUnlimited(t 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckOffersEc2InstanceType(t, "t4g.micro") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -3041,7 +3041,7 @@ func TestAccAWSInstance_creditSpecificationT4g_standardCpuCredits(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckOffersEc2InstanceType(t, "t4g.micro") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -3076,7 +3076,7 @@ func TestAccAWSInstance_creditSpecificationT4g_unlimitedCpuCredits(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckOffersEc2InstanceType(t, "t4g.micro") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -3111,7 +3111,7 @@ func TestAccAWSInstance_creditSpecificationT4g_updateCpuCredits(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckOffersEc2InstanceType(t, "t4g.micro") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -5527,4 +5527,24 @@ data "aws_ec2_instance_type_offering" "available" {
   preferred_instance_types = ["%[2]v"]
 }
 `, availabilityZoneName, strings.Join(preferredInstanceTypes, "\", \""))
+}
+
+// testAccPreCheckOffersEc2InstanceType checks that the test region offers the specified EC2 instance type.
+// This acceptance test pre-check should be used when the test configuration requires a specific instance type.
+// Prefer use of testAccAvailableEc2InstanceTypeForRegion() or testAccAvailableEc2InstanceTypeForAvailabilityZone().
+func testAccPreCheckOffersEc2InstanceType(t *testing.T, instanceType string) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	resp, err := client.ec2conn.DescribeInstanceTypeOfferings(&ec2.DescribeInstanceTypeOfferingsInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			"instance-type": instanceType,
+		}),
+		LocationType: aws.String(ec2.LocationTypeRegion),
+	})
+	if testAccPreCheckSkipError(err) || len(resp.InstanceTypeOfferings) == 0 {
+		t.Skipf("skipping tests; %s does not offer EC2 instance type: %s", client.region, instanceType)
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 instance type offerings: %s", err)
+	}
 }
