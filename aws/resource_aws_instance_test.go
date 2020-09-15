@@ -2981,6 +2981,173 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 	})
 }
 
+func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t4g(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits_arm64(rName, "t4g.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT4g_unspecifiedDefaultsToUnlimited(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT4g_standardCpuCredits(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT4g_unlimitedCpuCredits(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT4g_updateCpuCredits(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t4g(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_disappears(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4773,6 +4940,23 @@ resource "aws_instance" "test" {
 `
 }
 
+func testAccInstanceConfig_creditSpecification_unspecified_t4g(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinux2Arm64HvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-arm64-ami-minimal-hvm-ebs.id
+  instance_type = "t4g.micro"
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
 func testAccInstanceConfig_creditSpecification_standardCpuCredits(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
@@ -4799,6 +4983,27 @@ resource "aws_instance" "test" {
   }
 }
 `
+}
+
+func testAccInstanceConfig_creditSpecification_standardCpuCredits_t4g(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinux2Arm64HvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-arm64-ami-minimal-hvm-ebs.id
+  instance_type = "t4g.micro"
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`, rName))
 }
 
 func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rName string) string {
@@ -4829,6 +5034,27 @@ resource "aws_instance" "test" {
 `
 }
 
+func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t4g(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinux2Arm64HvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-arm64-ami-minimal-hvm-ebs.id
+  instance_type = "t4g.micro"
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+`, rName))
+}
+
 func testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
@@ -4853,6 +5079,25 @@ resource "aws_instance" "test" {
   credit_specification {}
 }
 `, instanceType)
+}
+
+func testAccInstanceConfig_creditSpecification_unknownCpuCredits_arm64(rName, instanceType string) string {
+	return composeConfig(
+		testAccLatestAmazonLinux2Arm64HvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-arm64-ami-minimal-hvm-ebs.id
+  instance_type = %[2]q
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  credit_specification {}
+}
+`, rName, instanceType))
 }
 
 func testAccInstanceConfig_UserData_Unspecified(rName string) string {
@@ -4893,6 +5138,33 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   filter {
     name   = "root-device-type"
     values = ["ebs"]
+  }
+}
+`
+}
+
+// testAccLatestAmazonLinux2Arm64HvmEbsAmiConfig returns the configuration for a data source that
+// describes the latest Amazon Linux 2 Arm64 AMI using HVM virtualization and an EBS root device.
+// The data source is named 'amzn2-arm64-ami-minimal-hvm-ebs'.
+func testAccLatestAmazonLinux2Arm64HvmEbsAmiConfig() string {
+	return `
+data "aws_ami" "amzn2-arm64-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
   }
 }
 `

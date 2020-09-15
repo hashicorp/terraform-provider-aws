@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -951,19 +952,33 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
-	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
-		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+	{
+		instanceType := d.Get("instance_type").(string)
 
-		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
-		// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
-		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
-			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
+		instanceTypeInfo, err := finder.InstanceTypeInfo(conn, instanceType)
+
+		if err != nil {
+			return fmt.Errorf("error finding instance type (%s) details: %w", instanceType, err)
 		}
 
-		if err := d.Set("credit_specification", creditSpecifications); err != nil {
-			return fmt.Errorf("error setting credit_specification: %s", err)
+		if instanceTypeInfo == nil {
+			return fmt.Errorf("error finding instance type (%s) details", instanceType)
+		}
+
+		// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
+		// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
+		if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+			creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+
+			// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
+			if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
+				return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
+			}
+
+			if err := d.Set("credit_specification", creditSpecifications); err != nil {
+				return fmt.Errorf("error setting credit_specification: %s", err)
+			}
 		}
 	}
 
@@ -1296,14 +1311,25 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("credit_specification") && !d.IsNewResource() {
-		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			creditSpecification := v.([]interface{})[0].(map[string]interface{})
+		instanceType := d.Get("instance_type").(string)
+
+		instanceTypeInfo, err := finder.InstanceTypeInfo(conn, instanceType)
+
+		if err != nil {
+			return fmt.Errorf("error finding instance type (%s) details: %w", instanceType, err)
+		}
+
+		if instanceTypeInfo == nil {
+			return fmt.Errorf("error finding instance type (%s) details", instanceType)
+		}
+
+		if v, ok := d.Get("credit_specification").([]interface{}); ok && len(v) > 0 && v[0] != nil && aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
 			_, err := conn.ModifyInstanceCreditSpecification(&ec2.ModifyInstanceCreditSpecificationInput{
 				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{
 					{
 						InstanceId: aws.String(d.Id()),
-						CpuCredits: aws.String(creditSpecification["cpu_credits"].(string)),
+						CpuCredits: aws.String(v[0].(map[string]interface{})["cpu_credits"].(string)),
 					},
 				},
 			})
@@ -2156,6 +2182,17 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 	conn := meta.(*AWSClient).ec2conn
 
 	instanceType := d.Get("instance_type").(string)
+
+	instanceTypeInfo, err := finder.InstanceTypeInfo(conn, instanceType)
+
+	if err != nil {
+		return nil, fmt.Errorf("error finding instance type (%s) details: %w", instanceType, err)
+	}
+
+	if instanceTypeInfo == nil {
+		return nil, fmt.Errorf("error finding instance type (%s) details", instanceType)
+	}
+
 	opts := &awsInstanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
@@ -2164,25 +2201,9 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 	}
 
-	// Set default cpu_credits as Unlimited for T3 instance type
-	if strings.HasPrefix(instanceType, "t3") {
+	if v, ok := d.Get("credit_specification").([]interface{}); ok && len(v) > 0 && v[0] != nil && aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-			CpuCredits: aws.String("unlimited"),
-		}
-	}
-
-	if v, ok := d.GetOk("credit_specification"); ok {
-		// Only T2 and T3 are burstable performance instance types and supports Unlimited
-		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
-			if cs, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-				opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-					CpuCredits: aws.String(cs["cpu_credits"].(string)),
-				}
-			} else {
-				log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
-			}
-		} else {
-			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")
+			CpuCredits: aws.String(v[0].(map[string]interface{})["cpu_credits"].(string)),
 		}
 	}
 
