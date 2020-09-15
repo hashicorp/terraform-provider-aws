@@ -35,6 +35,10 @@ Our policy is described on the Terraform website [here](https://www.terraform.io
 
 Due to the constant release pace of AWS and the relatively infrequent major version releases of the provider, there can be cases where a minor version update may contain unexpected changes depending on your configuration or environment. These may include items such as a resource requiring additional IAM permissions to support newer functionality. We typically base these decisions on a pragmatic compromise between introducing a relatively minor one-time inconvenience for a subset of the community versus better overall user experience for the entire community.
 
+### Once a major release is published, will new features and fixes be backported to previous versions?
+
+Generally new features and fixes will only be added to the most recent major version. Due to the high touch nature of provider development and the extensive regression testing required to ensure stability, maintaining multiple versions of the provider is not sustainable at this time. An exception to this could be a discovered security vulnerability for which backporting may be the most reasonable course of action. These would be reviewed on a case by case basis.
+
 ### AWS just announced a new region, when will I see it in the provider.
 
 Normally pretty quickly. We usually see the region appear within the `aws-go-sdk` within a couple days of the announcement. Depending on when it lands, we can often get it out within the current or following weekly release. Comparatively, adding support for a new  region in the S3 backend can take a little longer, as it is shipped as part of Terraform Core and not via the AWS Provider.
