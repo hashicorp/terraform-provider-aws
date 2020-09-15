@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func dataSourceAwsInstance() *schema.Resource {
@@ -512,12 +512,23 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		}
 	}
 
+	instanceType := d.Get("instance_type").(string)
+
+	instanceTypeInfo, err := finder.InstanceTypeInfo(conn, instanceType)
+
+	if err != nil {
+		return fmt.Errorf("error finding instance type (%s) details: %w", instanceType, err)
+	}
+
+	if instanceTypeInfo == nil {
+		return fmt.Errorf("error finding instance type (%s) details", instanceType)
+	}
+
 	var creditSpecifications []map[string]interface{}
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
-	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
-		var err error
+	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 		creditSpecifications, err = getCreditSpecifications(conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
