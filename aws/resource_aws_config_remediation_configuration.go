@@ -146,13 +146,13 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("resource_type"); ok {
 		remediationConfigurationInput.ResourceType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("target_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("target_id"); ok {
 		remediationConfigurationInput.TargetId = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("target_type"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("target_type"); ok {
 		remediationConfigurationInput.TargetType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("target_version"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("target_version"); ok {
 		remediationConfigurationInput.TargetVersion = aws.String(v.(string))
 	}
 
