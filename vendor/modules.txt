@@ -145,6 +145,7 @@ github.com/aws/aws-sdk-go/service/glue
 github.com/aws/aws-sdk-go/service/greengrass
 github.com/aws/aws-sdk-go/service/guardduty
 github.com/aws/aws-sdk-go/service/iam
+github.com/aws/aws-sdk-go/service/identitystore
 github.com/aws/aws-sdk-go/service/imagebuilder
 github.com/aws/aws-sdk-go/service/inspector
 github.com/aws/aws-sdk-go/service/iot
@@ -208,6 +209,7 @@ github.com/aws/aws-sdk-go/service/simpledb
 github.com/aws/aws-sdk-go/service/sns
 github.com/aws/aws-sdk-go/service/sqs
 github.com/aws/aws-sdk-go/service/ssm
+github.com/aws/aws-sdk-go/service/ssoadmin
 github.com/aws/aws-sdk-go/service/storagegateway
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
