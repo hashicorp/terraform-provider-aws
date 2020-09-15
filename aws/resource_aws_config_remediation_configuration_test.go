@@ -13,10 +13,10 @@ import (
 
 func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	var rc configservice.RemediationConfiguration
-	resourceName := "aws_config_remediation_configuration.foo"
+	resourceName := "aws_config_remediation_configuration.test"
 	rInt := acctest.RandInt()
 	prefix := "Original"
-	version := 1
+	sseAlgorithm := "AES256"
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
@@ -25,13 +25,13 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(prefix, version, rInt),
+				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
-					resource.TestCheckResourceAttr(resourceName, "target_id", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS-PublishSNSNotification"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 				),
 			},
 			{
@@ -48,7 +48,7 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_config_remediation_configuration.test"
 	rInt := acctest.RandInt()
 	prefix := "original"
-	version := 1
+	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -56,7 +56,7 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(prefix, version, rInt),
+				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigRemediationConfiguration(), resourceName),
@@ -75,22 +75,22 @@ func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
 
 	originalName := "Original"
 	updatedName := "Updated"
-	version := 1
+	sseAlgorithm := "AES256"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(originalName, version, rInt),
+				Config: testAccConfigRemediationConfigurationConfig(originalName, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", originalName, rInt)),
 				),
 			},
 			{
-				Config: testAccConfigRemediationConfigurationConfig(updatedName, version, rInt),
+				Config: testAccConfigRemediationConfigurationConfig(updatedName, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &updated),
 					testAccCheckConfigRemediationConfigurationRecreated(t, &original, &updated),
@@ -108,27 +108,27 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	name := "Original"
-	originalVersion := 1
-	updatedVersion := 2
+	originalSseAlgorithm := "AES256"
+	updatedSseAlgorithm := "aws:kms"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRemediationConfigurationConfig(name, originalVersion, rInt),
+				Config: testAccConfigRemediationConfigurationConfig(name, originalSseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &original),
-					resource.TestCheckResourceAttr(resourceName, "target_version", fmt.Sprintf("%d", originalVersion)),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", originalSseAlgorithm),
 				),
 			},
 			{
-				Config: testAccConfigRemediationConfigurationConfig(name, updatedVersion, rInt),
+				Config: testAccConfigRemediationConfigurationConfig(name, updatedSseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &updated),
 					testAccCheckConfigRemediationConfigurationNotRecreated(t, &original, &updated),
-					resource.TestCheckResourceAttr(resourceName, "target_version", fmt.Sprintf("%d", updatedVersion)),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", updatedSseAlgorithm),
 				),
 			},
 		},
@@ -148,7 +148,7 @@ func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservi
 
 		conn := testAccProvider.Meta().(*AWSClient).configconn
 		out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
-			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["name"])},
+			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to describe config rule: %s", err)
@@ -173,7 +173,7 @@ func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error
 		}
 
 		resp, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
-			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["name"])},
+			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
 		})
 
 		if err == nil {
@@ -187,33 +187,28 @@ func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccConfigRemediationConfigurationConfig(namePrefix string, targetVersion, randInt int) string {
+func testAccConfigRemediationConfigurationConfig(namePrefix, sseAlgorithm string, randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
 	config_rule_name = aws_config_config_rule.test.name
 
-	resource_type = ""
-	target_id = "SSM_DOCUMENT"
-	target_type = "AWS-PublishSNSNotification"
-	target_version = "%[2]d"
+	resource_type = "AWS::S3::Bucket"
+	target_id = "AWS-EnableS3BucketEncryption"
+	target_type = "SSM_DOCUMENT"
+	target_version = "1"
 
 	parameter {
-		resource_value = "Message"
-	}
-
-	parameter {
-		static_value {
-			key   = "TopicArn"
-		f	value = aws_sns_topic.test.arn
-		}
-	}
-
-	parameter {
-		static_value {
-			key   = "AutomationAssumeRole"
-			value = aws_iam_role.test.arn
-		}
-	}
+    name         = "AutomationAssumeRole"
+    static_value = aws_iam_role.test.arn
+  }
+  parameter {
+    name           = "BucketName"
+    resource_value = "RESOURCE_ID"
+  }
+  parameter {
+    name         = "SSEAlgorithm"
+    static_value = "%[2]s"
+  }
 }
 
 resource "aws_sns_topic" "test" {
@@ -233,7 +228,7 @@ resource "aws_config_config_rule" "test" {
 
 resource "aws_config_configuration_recorder" "test" {
   name     = "%[1]s-tf-acc-test-%[3]d"
-  role_arn = aws_iam_role.r.arn
+  role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -274,7 +269,7 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, namePrefix, targetVersion, randInt)
+`, namePrefix, sseAlgorithm, randInt)
 }
 
 func testAccCheckConfigRemediationConfigurationNotRecreated(t *testing.T,

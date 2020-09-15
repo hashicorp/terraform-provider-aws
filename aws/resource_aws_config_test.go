@@ -65,6 +65,7 @@ func TestAccAWSConfig_serial(t *testing.T) {
 			"basic":      testAccConfigRemediationConfiguration_basic,
 			"disappears": testAccConfigRemediationConfiguration_disappears,
 			"recreates":  testAccConfigRemediationConfiguration_recreates,
+			"updates":    testAccConfigRemediationConfiguration_updates,
 		},
 	}
 
