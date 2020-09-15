@@ -190,14 +190,14 @@ func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error
 func testAccConfigRemediationConfigurationConfig(namePrefix, sseAlgorithm string, randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
-	config_rule_name = aws_config_config_rule.test.name
+  config_rule_name = aws_config_config_rule.test.name
 
-	resource_type = "AWS::S3::Bucket"
-	target_id = "AWS-EnableS3BucketEncryption"
-	target_type = "SSM_DOCUMENT"
-	target_version = "1"
+  resource_type  = "AWS::S3::Bucket"
+  target_id      = "AWS-EnableS3BucketEncryption"
+  target_type    = "SSM_DOCUMENT"
+  target_version = "1"
 
-	parameter {
+  parameter {
     name         = "AutomationAssumeRole"
     static_value = aws_iam_role.test.arn
   }
