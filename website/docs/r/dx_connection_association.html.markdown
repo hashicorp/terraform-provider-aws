@@ -16,13 +16,13 @@ Associates a Direct Connect Connection with a LAG.
 resource "aws_dx_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
 }
 
 resource "aws_dx_connection_association" "example" {
