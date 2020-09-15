@@ -217,7 +217,7 @@ func resourceAwsConfigRemediationConfigurationDelete(d *schema.ResourceData, met
 		ConfigRuleName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("resource_type"); ok {
 		deleteRemediationConfigurationInput.ResourceType = aws.String(v.(string))
 	}
 
