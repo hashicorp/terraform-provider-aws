@@ -47,9 +47,7 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 			"target_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					configservice.RemediationTargetTypeSsmDocument,
-				}, false),
+				ValidateFunc: validation.StringInSlice(RemediationTargetType_Values(), false),
 			},
 			"target_version": {
 				Type:     schema.TypeString,
