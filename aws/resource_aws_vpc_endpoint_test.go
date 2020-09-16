@@ -184,15 +184,14 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "AmazonLinux2AMIRepositoryAccess",
+      "Sid": "ReadOnly",
       "Principal": "*",
       "Action": [
-        "s3:GetObject"
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables"
       ],
       "Effect": "Allow",
-      "Resource": [
-        "arn:aws:s3:::amazonlinux.*.amazonaws.com/*"
-      ]
+      "Resource": "*"
     }
   ]
 }
@@ -774,7 +773,7 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVpcEndpointConfigGatewayPolicy(rName, policy string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
-  service = "s3"
+  service = "dynamodb"
 }
 
 resource "aws_vpc" "test" {
