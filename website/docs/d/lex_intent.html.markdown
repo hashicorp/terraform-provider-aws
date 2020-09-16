@@ -1,9 +1,9 @@
 ---
+subcategory: "Lex"
 layout: "aws"
 page_title: "AWS: aws_lex_intent"
-sidebar_current: "docs-aws-lex-intent"
 description: |-
-    Provides details about a specific Amazon Lex Intent
+  Provides details about a specific Amazon Lex Intent
 ---
 
 # Data Source: aws_lex_intent

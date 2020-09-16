@@ -15,7 +15,7 @@ import (
 // This means we cannot reference the SlotType in the Intent with interpolation because Terraform will try to delete
 // the SlotType first which will fail. So we do not have a test for custom slot types.
 
-func TestAccAwsLexIntent(t *testing.T) {
+func TestAccAwsLexIntent_basic(t *testing.T) {
 	resourceName := "aws_lex_intent.test"
 	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	testIntentID := "test_intent_" + testID
@@ -23,7 +23,7 @@ func TestAccAwsLexIntent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy(testIntentID, "$LATEST"),
+		CheckDestroy: testAccCheckAwsLexIntentDestroy(testIntentID),
 
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +141,7 @@ func testAccCheckAwsLexIntentExists(intentName, intentVersion string) resource.T
 	}
 }
 
-func testAccCheckAwsLexIntentDestroy(intentName, intentVersion string) resource.TestCheckFunc {
+func testAccCheckAwsLexIntentDestroy(intentName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
 
