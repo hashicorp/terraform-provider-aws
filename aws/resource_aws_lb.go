@@ -261,7 +261,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		elbOpts.Tags = tags
 	}
 
-	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
+	if _, ok := d.GetOk("internal"); ok {
 		elbOpts.Scheme = aws.String("internal")
 	}
 
