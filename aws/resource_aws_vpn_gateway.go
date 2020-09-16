@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -329,4 +330,43 @@ func vpnGatewayGetAttachment(vgw *ec2.VpnGateway) *ec2.VpcAttachment {
 		}
 	}
 	return nil
+}
+
+func vpnGatewayAttachmentStateRefresh(conn *ec2.EC2, vpcId, vgwId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
+			Filters: buildEC2AttributeFilterList(map[string]string{
+				"attachment.vpc-id": vpcId,
+			}),
+			VpnGatewayIds: []*string{aws.String(vgwId)},
+		})
+
+		if err != nil {
+			awsErr, ok := err.(awserr.Error)
+			if ok {
+				switch awsErr.Code() {
+				case "InvalidVpnGatewayID.NotFound":
+					fallthrough
+				case "InvalidVpnGatewayAttachment.NotFound":
+					return nil, "", nil
+				}
+			}
+
+			return nil, "", err
+		}
+
+		vgw := resp.VpnGateways[0]
+
+		return vgw, vpnGatewayGetAttachmentState(vgw, vpcId), nil
+	}
+}
+
+// vpnGatewayGetAttachmentState returns the state of any VGW attachment to the specified VPC or "detached".
+func vpnGatewayGetAttachmentState(vgw *ec2.VpnGateway, vpcId string) string {
+	for _, vpcAttachment := range vgw.VpcAttachments {
+		if aws.StringValue(vpcAttachment.VpcId) == vpcId {
+			return aws.StringValue(vpcAttachment.State)
+		}
+	}
+	return ec2.AttachmentStatusDetached
 }
