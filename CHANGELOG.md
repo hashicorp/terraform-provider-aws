@@ -16,6 +16,7 @@ FEATURES
 
 BUG FIXES
 
+* data-source/aws_kms_secrets: Prevent `plaintext` values to appear in CLI output with Terraform 0.13 [GH-15169]
 * resource/aws_ec2_client_vpn_authorization_rule: Increase active and revoked timeouts from 1 to 5 minutes ([#15037](https://github.com/terraform-providers/terraform-provider-aws/issues/15037))
 
 ## 3.5.0 (September 03, 2020)
