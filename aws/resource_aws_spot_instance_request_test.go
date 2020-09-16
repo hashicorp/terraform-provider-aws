@@ -621,17 +621,18 @@ resource "aws_spot_instance_request" "test" {
 }
 
 func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
   key_name   = "tmp-key-%d"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
-%v
-
 resource "aws_spot_instance_request" "foo" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.debugging.key_name
 
   # base price is $0.044 hourly, so bidding above that should theoretically
@@ -650,21 +651,22 @@ resource "aws_spot_instance_request" "foo" {
     Name = "terraform-test"
   }
 }
-`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig(), validUntil)
+`, rInt, validUntil))
 }
 
 func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
   key_name   = "tmp-key-%d"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
-%v
-
 resource "aws_spot_instance_request" "foo" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.debugging.key_name
 
   # no spot price so AWS *should* default max bid to current on-demand price
@@ -677,21 +679,22 @@ resource "aws_spot_instance_request" "foo" {
     Name = "terraform-test"
   }
 }
-`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
+`, rInt))
 }
 
 func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
   key_name   = "tmp-key-%d"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
-%v
-
 resource "aws_spot_instance_request" "foo" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.debugging.key_name
 
   # base price is $0.044 hourly, so bidding above that should theoretically
@@ -708,21 +711,22 @@ resource "aws_spot_instance_request" "foo" {
     Name = "terraform-test"
   }
 }
-`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
+`, rInt))
 }
 
 func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
   key_name   = "tmp-key-%d"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
-%v
-
 resource "aws_spot_instance_request" "foo" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.debugging.key_name
 
   # base price is $0.044 hourly, so bidding above that should theoretically
@@ -739,21 +743,15 @@ resource "aws_spot_instance_request" "foo" {
     Name = "terraform-test"
   }
 }
-`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
+`, rInt))
 }
 
 func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_vpc" "foo_VPC" {
   cidr_block = "10.1.0.0/16"
 
@@ -776,11 +774,10 @@ resource "aws_key_pair" "debugging" {
   key_name   = "tmp-key-%d"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
-%v
 
 resource "aws_spot_instance_request" "foo_VPC" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.debugging.key_name
 
   # base price is $0.044 hourly, so bidding above that should theoretically
@@ -798,25 +795,18 @@ resource "aws_spot_instance_request" "foo_VPC" {
     Name = "terraform-test-VPC"
   }
 }
-`, rInt, testAccLatestAmazonLinuxHvmEbsAmiConfig())
+`, rInt))
 }
 
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-%v
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "foo" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "m1.small"
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price                  = "0.05"
   wait_for_fulfillment        = true
   subnet_id                   = aws_subnet.tf_test_subnet.id
@@ -845,19 +835,21 @@ resource "aws_subnet" "tf_test_subnet" {
 }
 
 resource "aws_security_group" "tf_test_sg_ssh" {
-  name        = "tf_test_sg_ssh-%d"
+  name        = "tf_test_sg_ssh-%[1]d"
   description = "tf_test_sg_ssh"
   vpc_id      = aws_vpc.default.id
 
   tags = {
-    Name = "tf_test_sg_ssh-%d"
+    Name = "tf_test_sg_ssh-%[1]d"
   }
 }
-`, testAccLatestAmazonLinuxHvmEbsAmiConfig(), rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 # Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
 data "aws_ami" "win2016core" {
   most_recent = true
@@ -876,22 +868,23 @@ resource "aws_key_pair" "foo" {
 
 resource "aws_spot_instance_request" "foo" {
   ami                  = data.aws_ami.win2016core.id
-  instance_type        = "m1.small"
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   key_name             = aws_key_pair.foo.key_name
   wait_for_fulfillment = true
   get_password_data    = true
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) string {
-	return fmt.Sprintf(`
-%v
-
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("c5.large", "c4.large"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "foo" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "c5.large"
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   # base price is $0.067 hourly, so bidding above that should theoretically
   # always fulfill
@@ -903,5 +896,5 @@ resource "aws_spot_instance_request" "foo" {
 
   instance_interruption_behaviour = "%s"
 }
-`, testAccLatestAmazonLinuxHvmEbsAmiConfig(), interruption_behavior)
+`, interruption_behavior))
 }
