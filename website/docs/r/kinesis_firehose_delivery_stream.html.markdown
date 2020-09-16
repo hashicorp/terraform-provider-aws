@@ -356,6 +356,8 @@ The `kinesis_source_configuration` object supports the following:
 The `server_side_encryption` object supports the following:
 
 * `enabled` - (Optional) Whether to enable encryption at rest. Default is `false`.
+* `kms_key_type`- (Required, when `enabled` is `true`) The type of encryption. Valid values are `AWS_OWNED_CMK` and `CUSTOMER_MANAGED_CMK`
+* `kms_key_arn` - (Required, when `kms_key_type` is `CUSTOMER_MANAGED_CMK`) The ARN of the key used for encryption.
 
 The `s3_configuration` object supports the following:
 
