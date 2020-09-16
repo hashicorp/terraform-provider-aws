@@ -46,6 +46,6 @@ resource "aws_lex_intent" "test" {
 }
 
 data "aws_lex_intent" "test" {
-  name = "${aws_lex_intent.test.name}"
+  name = aws_lex_intent.test.name
 }
 `
